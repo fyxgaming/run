@@ -1,0 +1,58 @@
+{
+    "name": "run",
+    "repository": "git://github.com/runonbitcoin/run.git",
+    "version": "0.3.4",
+    "description": "Run JavaScript library",
+    "main": "lib/index.js",
+    "scripts": {
+        "lint": "standard --fix",
+        "build": "webpack",
+        "postinstall": "webpack",
+        "test": "standard --fix && jest --t=\"^((?!perf).)*$\"",
+        "test:node": "jest --t=\"^((?!perf).)*$\" --env=node",
+        "test:cover": "jest --t=\"^((?!perf).)*$\" --coverage --globals '{ \"TEST_BUILD\": false, \"TEST_COVER\": true }'",
+        "test:perf": "jest --t=perf --env=node --globals '{ \"TEST_BUILD\": false, \"TEST_COVER\": false }'",
+        "test:build": "npm run build && jest --t=\"^((?!perf).)*$\" --env=node --globals '{ \"TEST_BUILD\": true, \"TEST_COVER\": false }'"
+    },
+    "standard": {
+        "globals": [
+            "jest",
+            "test",
+            "describe",
+            "it",
+            "expect",
+            "beforeAll",
+            "beforeEach",
+            "afterAll",
+            "afterEach",
+            "TEST_BUILD",
+            "TEST_COVER",
+            "caller"
+        ],
+        "ignore": [
+            "dist/**"
+        ]
+    },
+    "jest": {
+        "coveragePathIgnorePatterns": [
+            "/node_modules/",
+            "/test/"
+        ],
+        "globals": {
+            "TEST_BUILD": false,
+            "TEST_COVER": false
+        }
+    },
+    "dependencies": {
+        "axios": "^0.19.0",
+        "bsv": "^1.0.0",
+        "terser-webpack-plugin": "^2.2.1",
+        "webpack": "^4.41.2",
+        "webpack-cli": "^3.3.10",
+        "vm-browserify": "^1.1.2"
+    },
+    "devDependencies": {
+        "jest": "^24.9.0",
+        "standard": "^14.3.1"
+    }
+}

@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+<head>
+    <script src="../../dist/bsv.browser.min.js"></script>
+    <script src="../../dist/run.browser.min.js"></script>
+</head>
+<body>Hello</body>
+<script>
+    const run = new Run({ network: 'mock' })
+    class A extends Jig { }
+    const a = new A()
+    console.log(a)
+</script>
+</html>
