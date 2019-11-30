@@ -2,6 +2,7 @@ const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
 const path = require('path')
 const fs = require('fs')
+const packageJson = require('./package.json')
 
 if (!fs.existsSync('./dist')) fs.mkdirSync('./dist')
 fs.copyFileSync(require.resolve('bsv/bsv.min.js'), './dist/bsv.browser.min.js')
@@ -230,7 +231,8 @@ const browser = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      TEST_COVER: false
+      TEST_COVER: false,
+      RUN_VERSION: JSON.stringify(packageJson.version)
     }),
     obfuscatePlugin
   ],
