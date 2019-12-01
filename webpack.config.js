@@ -121,7 +121,8 @@ const propertiesToObfuscate = [
   'queued',
 
   // state.js
-  'maxSizeMB'
+  'sizeBytes',
+  'maxSizeBytes'
 ]
 
 const globalsToObfuscate = [
