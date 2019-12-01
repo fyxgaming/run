@@ -273,7 +273,7 @@ const nodeUnminified = {
   output: {
     filename: 'run.node.js',
     path: path.join(__dirname, './dist/'),
-    library: 'Run'
+    libraryTarget: 'commonjs2'
   },
   optimization: { minimize: false }
 }
