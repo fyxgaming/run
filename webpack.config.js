@@ -235,11 +235,6 @@ const browser = {
       TEST_COVER: false,
       RUN_VERSION: JSON.stringify(packageJson.version)
     }),
-
-    // In prod builds, we override RUN_VERSION using the define plugin above,
-    // so we don't need to compile package.json.
-    new webpack.IgnorePlugin(/package\.json/),
-
     obfuscatePlugin
   ],
   stats: 'errors-only'
