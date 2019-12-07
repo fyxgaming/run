@@ -31,7 +31,8 @@
             "caller"
         ],
         "ignore": [
-            "dist/**"
+            "dist/**",
+            "examples/**"
         ]
     },
     "jest": {

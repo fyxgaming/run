@@ -130,6 +130,7 @@ const globalsToObfuscate = [
   'control',
   'ProtoTransaction',
   'PROTOCOL_VERSION',
+  'SerialTaskQueue',
 
   // code.js
   'stringProps',
