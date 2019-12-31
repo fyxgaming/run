@@ -1,7 +1,9 @@
-const Run = TEST_BUILD ? require('../../dist/run.node.min') : require('..')
+global.DIST = require('process').env.DIST
+global.COVER = require('process').env.COVER
 
-const obfuscationMap = require('../../dist/obfuscation-map.json')
-const getObfuscatedKey = key => (TEST_BUILD && key in obfuscationMap) ? obfuscationMap[key] : key
+const Run = require(DIST ? '../dist/run.node.min' : '..')
+const obfuscationMap = require('../dist/obfuscation-map.json')
+const getObfuscatedKey = key => (DIST && key in obfuscationMap) ? obfuscationMap[key] : key
 const syncerKey = getObfuscatedKey('syncer')
 const queuedKey = getObfuscatedKey('queued')
 
@@ -68,7 +70,5 @@ async function deploy (Class) {
 
   console.log(properties)
 }
-
-test.skip('skip', () => {}) // Ignore the jest error saying there are no tests in this file
 
 module.exports = { createRun, hookPay, Run, Jig: Run.Jig, getObfuscatedKey, deploy }

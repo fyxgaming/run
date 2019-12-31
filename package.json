@@ -10,9 +10,11 @@
         "postinstall": "webpack",
         "test": "standard --fix && jest --t=\"^((?!perf).)*$\"",
         "test:node": "jest --t=\"^((?!perf).)*$\" --env=node",
-        "test:cover": "jest --t=\"^((?!perf).)*$\" --coverage --globals '{ \"TEST_BUILD\": false, \"TEST_COVER\": true }'",
-        "test:perf": "jest --t=perf --env=node --globals '{ \"TEST_BUILD\": false, \"TEST_COVER\": false }'",
-        "test:build": "npm run build && jest --t=\"^((?!perf).)*$\" --env=node --globals '{ \"TEST_BUILD\": true, \"TEST_COVER\": false }'"
+        "test:cover": "jest --t=\"^((?!perf).)*$\" --coverage --globals '{ \"TEST_BUILD\": false, \"COVER\": true }'",
+        "test:perf": "jest --t=perf --env=node --globals '{ \"TEST_BUILD\": false, \"COVER\": false }'",
+        "test:build": "npm run build && jest --t=\"^((?!perf).)*$\" --env=node --globals '{ \"TEST_BUILD\": true, \"COVER\": false }'",
+        "mocha": "mocha",
+        "mocha:dist": "DIST=true mocha"
     },
     "standard": {
         "globals": [
@@ -26,7 +28,7 @@
             "afterAll",
             "afterEach",
             "TEST_BUILD",
-            "TEST_COVER",
+            "COVER",
             "RUN_VERSION",
             "caller"
         ],
@@ -42,7 +44,7 @@
         ],
         "globals": {
             "TEST_BUILD": false,
-            "TEST_COVER": false
+            "COVER": false
         }
     },
     "dependencies": {
@@ -54,7 +56,9 @@
         "vm-browserify": "1.1.2"
     },
     "devDependencies": {
+        "chai": "^4.2.0",
         "jest": "^24.9.0",
+        "mocha": "^6.2.2",
         "standard": "^14.3.1"
     }
 }

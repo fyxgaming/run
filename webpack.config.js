@@ -233,7 +233,7 @@ const browser = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      TEST_COVER: false,
+      COVER: false,
       RUN_VERSION: JSON.stringify(packageJson.version)
     }),
     obfuscatePlugin
