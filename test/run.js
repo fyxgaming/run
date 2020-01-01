@@ -53,14 +53,6 @@ describe('Run', () => {
     })
 
     describe('logger', () => {
-      it('default logs only warnings and error', () => {
-        const run = createRun({ logger: undefined })
-        expect(run.logger.info.toString()).to.equal('() => {}')
-        expect(run.logger.debug.toString()).to.equal('() => {}')
-        expect(run.logger.warn).to.equal(console.warn)
-        expect(run.logger.error).to.equal(console.error)
-      })
-
       it('custom logger', () => {
         let infoMessage = ''; let errorMessage = ''; let errorData = null
         const run = createRun({
@@ -92,7 +84,6 @@ describe('Run', () => {
       class A { }
       await run.deploy(A)
       const run2 = createRun()
-      expect(Run.instance).to.equal(run2)
       await expect(run.load(A.location)).to.be.rejectedWith('run instance is not active. call run.activate() first.')
     })
 
