@@ -8,7 +8,7 @@
         "lint": "standard --fix",
         "build": "webpack",
         "postinstall": "webpack",
-        "dev": "npm run lint && TEST_MODE=lib mocha",
+        "dev": "npm run lint && TEST_MODE=lib mocha test/token.js",
         "test": "npm run build && TEST_MODE=dist mocha",
         "cover": "TEST_MODE=cover nyc mocha",
         "browser": "mocha-headless-chrome -f ./test/browser.html"
@@ -23,9 +23,6 @@
             "dist/**",
             "examples/**"
         ]
-    },
-    "mocha": {
-        "spec": "./test/index.js"
     },
     "dependencies": {
         "axios": "0.19.0",
