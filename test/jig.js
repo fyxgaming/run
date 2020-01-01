@@ -930,7 +930,7 @@ describe('Jig', () => {
     })
   })
 
-  describe.only('delete', () => {
+  describe('delete', () => {
     it('allowed internally', () => {
       class A extends Jig {
         init () { this.n = 1 }
@@ -1182,7 +1182,7 @@ describe('Jig', () => {
       expectAction(a, 'add', [1], [a], [a], [a])
       a.add(2)
       expectAction(a, 'add', [2], [a], [a], [a])
-      expect(Array.from(a.a)).to.equal([1, 2])
+      expect(Array.from(a.a)).to.deep.equal([1, 2])
       expectNoAction()
       const e = [1, 2]
       for (const x of a.a) { expect(x).to.equal(e.shift()) }
@@ -1206,7 +1206,7 @@ describe('Jig', () => {
     })
   })
 
-  describe('owner', () => {
+  describe.only('owner', () => {
     it('defined before init', () => {
       class A extends Jig { init () { this.ownerAtInit = this.owner }}
       const a = new A()
