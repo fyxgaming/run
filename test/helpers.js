@@ -6,7 +6,6 @@
 
 const Run = require('./run')
 const { expect } = require('chai')
-const mocha = require('mocha')
 
 const testPurses = {
   main: [
