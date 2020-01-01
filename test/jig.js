@@ -1,5 +1,8 @@
 const { describe, it } = require('mocha')
-const { expect } = require('chai')
+const chai = require('chai')
+const chaiAsPromised = require('chai-as-promised')
+chai.use(chaiAsPromised)
+const { expect } = chai
 const { PrivateKey } = require('bsv')
 const Run = require('./run')
 const { Jig } = Run
@@ -16,7 +19,7 @@ beforeEach(() => Run.code.flush())
 // afterEach(() => run.sync())
 
 describe('Jig', () => {
-  describe.only('constructor', () => {
+  describe('constructor', () => {
     it('basic jig', async () => {
       class A extends Jig { }
       const a = new A()
@@ -100,8 +103,8 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(a).toBeInstanceOf(A)
-      expect(a).toBeInstanceOf(Jig)
+      expect(a).to.be.instanceOf(A)
+      expect(a).to.be.instanceOf(Jig)
     })
 
     it('match extensions', () => {
@@ -112,15 +115,15 @@ describe('Jig', () => {
       expectAction(b, 'init', [], [], [b], [])
       const c = new C()
       expectAction(c, 'init', [], [], [c], [])
-      expect(b).toBeInstanceOf(A)
-      expect(b).toBeInstanceOf(B)
-      expect(b).toBeInstanceOf(Jig)
-      expect(c).not.toBeInstanceOf(B)
-      expect(c).toBeInstanceOf(Jig)
+      expect(b).to.be.instanceOf(A)
+      expect(b).to.be.instanceOf(B)
+      expect(b).to.be.instanceOf(Jig)
+      expect(c).not.to.be.instanceOf(B)
+      expect(c).to.be.instanceOf(Jig)
     })
 
     it('fail to match non-instances', () => {
-      expect(new class { }()).not.toBeInstanceOf(Jig)
+      expect(new class { }()).not.to.be.instanceOf(Jig)
       expect(new class { }() instanceof Jig).to.equal(false)
     })
 
@@ -177,7 +180,7 @@ describe('Jig', () => {
     })
   })
 
-  describe('sync', () => {
+  describe.only('sync', () => {
     it('sets origins and locations on class and instance', async () => {
       class A extends Jig { }
       const a = new A()
@@ -222,7 +225,7 @@ describe('Jig', () => {
       a2.set(2)
       await a2.sync()
       run.activate()
-      expect(a.x).toBeUndefined()
+      expect(a.x).to.equal(undefined)
       await a.sync()
       expect(a.x).to.equal(2)
     })
@@ -240,7 +243,7 @@ describe('Jig', () => {
       b2.set('n', 1)
       await b2.sync()
       run.activate()
-      expect(a.b.n).toBeUndefined()
+      expect(a.b.n).to.equal(undefined)
       await a.sync()
       expect(a.b.n).to.equal(1)
     })
@@ -259,7 +262,7 @@ describe('Jig', () => {
       b2.set('a', a2)
       await b2.sync()
       run.activate()
-      expect(a.b.a).toBeUndefined()
+      expect(a.b.a).to.equal(undefined)
       await a.sync()
       expect(a.b.a.location).to.equal(a.location)
     })
@@ -274,17 +277,25 @@ describe('Jig', () => {
       a2.set(1)
       await a2.sync()
       run.activate()
-      expect(a.x).toBeUndefined()
+      expect(a.x).to.equal(undefined)
       await a.sync({ forward: false })
-      expect(a.x).toBeUndefined()
+      expect(a.x).to.equal(undefined)
     })
 
     it('forward unsupported', async () => {
-      createRun({ network: 'test', blockchain: 'whatsonchain' })
       class A extends Jig { }
       const a = new A()
       await a.sync() // pending transactions must publish first
-      await expect(a.sync()).rejects.to.throw('Blockchain API does not support forward syncing.')
+      const oldFetch = run.blockchain.fetch
+      run.blockchain.fetch = async (...args) => {
+        const tx = await oldFetch.call(run.blockchain, ...args)
+        tx.outputs.forEach(output => delete output.spentTxId)
+        tx.outputs.forEach(output => delete output.spentIndex)
+        tx.outputs.forEach(output => delete output.spentHeight)
+        return tx
+      }
+      await expect(a.sync()).to.be.rejectedWith('Blockchain API does not support forward syncing.')
+      run.blockchain.fetch = oldFetch
     })
 
     it('forward conflict', async () => {
@@ -298,7 +309,7 @@ describe('Jig', () => {
       await a2.sync()
       run.activate()
       a.set(2)
-      await expect(a.sync()).rejects.to.throw('tx input 0 missing or spent')
+      await expect(a.sync()).to.be.rejectedWith('tx input 0 missing or spent')
       expect(a.x).to.equal(1)
     })
 
@@ -308,7 +319,7 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const tx = await run.blockchain.fetch(a.location.slice(0, 64))
       tx.outputs[2].spentTxId = '123'
-      await expect(a.sync()).rejects.to.throw('tx not found')
+      await expect(a.sync()).to.be.rejectedWith('tx not found')
     })
 
     it('wrong spentTxId', async () => {
@@ -320,7 +331,7 @@ describe('Jig', () => {
       await run.sync()
       const tx = await run.blockchain.fetch(a.location.slice(0, 64))
       tx.outputs[2].spentTxId = b.location.slice(0, 64)
-      await expect(a.sync()).rejects.to.throw('jig not found')
+      await expect(a.sync()).to.be.rejectedWith('jig not found')
     })
   })
 
@@ -390,8 +401,8 @@ describe('Jig', () => {
       expect(a.n).to.equal(1)
       expect(a.arr).to.equal(['a', { b: 1 }])
       expect(a.self).to.equal(a)
-      expect(a.b.z).toBeUndefined()
-      expect(c.n).toBeUndefined()
+      expect(a.b.z).to.equal(undefined)
+      expect(c.n).to.equal(undefined)
     })
 
     it('internal errors', () => {
@@ -443,7 +454,7 @@ describe('Jig', () => {
       class A extends Jig { f () { this.n = 1; return this } }
       const a = await new A().sync()
       createRun({ network: 'test' })
-      await expect(a.f().sync()).rejects.to.throw()
+      await expect(a.f().sync()).to.be.rejected()
     })
   })
 
@@ -718,7 +729,7 @@ describe('Jig', () => {
       b.apply(a)
       b2.apply(a2)
       run.transaction.end()
-      await expect(run.sync()).rejects.to.throw(`read different locations of same jig ${a.origin}`)
+      await expect(run.sync()).to.be.rejectedWith(`read different locations of same jig ${a.origin}`)
     })
 
     it('prevents stale posts', async () => {
@@ -730,7 +741,7 @@ describe('Jig', () => {
       const a2 = await run.load(a.location)
       a2.set(1)
       b.apply(a)
-      await expect(run.sync()).rejects.to.throw(`Read ${a.location} is not the latest. Must sync() jigs`)
+      await expect(run.sync()).to.be.rejectedWith(`Read ${a.location} is not the latest. Must sync() jigs`)
     })
 
     it('prevents maybe stale posts', async () => {
@@ -754,7 +765,7 @@ describe('Jig', () => {
           return tx
         }
         b.apply(a)
-        await expect(run.sync()).rejects.to.throw(`Read ${a.location} may not be latest. Blockchain did not return spentTxId. Aborting`)
+        await expect(run.sync()).to.be.rejectedWith(`Read ${a.location} may not be latest. Blockchain did not return spentTxId. Aborting`)
       } finally { run.blockchain.fetch = oldFetch }
     })
 
@@ -779,7 +790,7 @@ describe('Jig', () => {
           if (txid === b.location.slice(0, 64)) tx.time = Date.now()
           return tx
         }
-        await expect(run2.load(b.location)).rejects.to.throw(`${a.location} is stale. Aborting.`)
+        await expect(run2.load(b.location)).to.be.rejectedWith(`${a.location} is stale. Aborting.`)
       } finally { run.blockchain.fetch = oldFetch }
     })
   })
@@ -930,7 +941,7 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       a.delete()
       expectAction(a, 'delete', [], [a], [a], [])
-      expect(a.n).toBeUndefined()
+      expect(a.n).to.equal(undefined)
     })
 
     it('throws if external', () => {
@@ -1423,7 +1434,7 @@ describe('Jig', () => {
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      await expect(a.sync()).rejects.to.throw()
+      await expect(a.sync()).to.be.rejected()
       expect(() => a.origin).to.throw()
       expect(() => a.n).to.throw()
       expect(() => Reflect.ownKeys(a)).to.throw()
@@ -1445,11 +1456,11 @@ describe('Jig', () => {
       // test when just init, no inputs
       expectAction(a2, 'init', [], [], [a2], [])
       const suggestion = 'Hint: Is the purse funded to pay for this transaction?'
-      await expect(run.sync()).rejects.to.throw(`Broadcast failed, tx has no inputs\n\n${suggestion}`)
+      await expect(run.sync()).to.be.rejectedWith(`Broadcast failed, tx has no inputs\n\n${suggestion}`)
       // test with a spend, pre-existing inputs
       a.set(1)
       expectAction(a, 'set', [1], [a], [a], [])
-      await expect(run.sync()).rejects.to.throw(`Broadcast failed, tx fee too low\n\n${suggestion}`)
+      await expect(run.sync()).to.be.rejectedWith(`Broadcast failed, tx fee too low\n\n${suggestion}`)
       run.purse.pay = oldPay
     })
 
@@ -1464,7 +1475,7 @@ describe('Jig', () => {
       const oldSign = run._sign
       run._sign = async (tx) => { return tx }
       a.f()
-      await expect(a.sync()).rejects.to.throw('Signature missing for A')
+      await expect(a.sync()).to.be.rejectedWith('Signature missing for A')
       run._sign = oldSign
     })
 
@@ -1499,7 +1510,7 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const oldBroadcast = run.blockchain.broadcast
       run.blockchain.broadcast = async (tx) => { throw new Error() }
-      expect(a.n).toBeUndefined()
+      expect(a.n).to.equal(undefined)
       a.f()
       expectAction(a, 'f', [], [a], [a], [])
       expect(a.n).to.equal(1)
@@ -1701,8 +1712,8 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
-      await expect(run.load(a.location.slice(0, 64) + '_o0')).rejects.to.throw()
-      await expect(run.load(a.location.slice(0, 64) + '_o3')).rejects.to.throw()
+      await expect(run.load(a.location.slice(0, 64) + '_o0')).to.be.rejected()
+      await expect(run.load(a.location.slice(0, 64) + '_o3')).to.be.rejected()
     })
 
     it('multiple writes', async () => {
@@ -1968,7 +1979,7 @@ describe('Jig', () => {
       run.transaction.end()
       expect(a.n).to.equal(11)
       expect(b.n).to.equal(30)
-      await expect(a.sync()).rejects.to.throw()
+      await expect(a.sync()).to.be.rejected()
       expect(a.n).to.equal(2)
       expect(b.n).to.equal(20)
     })

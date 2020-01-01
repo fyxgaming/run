@@ -29,7 +29,6 @@ function createRun (options = { }) {
   const purse = network === 'mock' ? undefined : testPurses[network][0]
   const sandbox = TEST_MODE === 'cover' ? /^((?!Jig|Token).)*$/ : true
   const run = new Run({ network, purse, sandbox, logger: null, blockchain, ...options })
-  if (network !== 'mock') jest.setTimeout(30000)
   return run
 }
 
