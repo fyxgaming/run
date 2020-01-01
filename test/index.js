@@ -5,6 +5,7 @@
  */
 
 require('./jig')
+require('./purse')
 require('./state')
 require('./token')
 require('./transaction')
