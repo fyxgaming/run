@@ -1679,7 +1679,7 @@ describe('Jig', () => {
     })
   })
 
-  describe.only('load', () => {
+  describe('load', () => {
     it('single jig', async () => {
       class A extends Jig { f (n) { this.n = n }}
       const a = new A()
@@ -1844,8 +1844,7 @@ describe('Jig', () => {
       const t1 = Date.now()
       await run.load(a.location)
       const t2 = Date.now()
-      expect(t1 - t0 > 1000).to.equal(true)
-      expect(t2 - t1 < 100).to.equal(true)
+      expect((t1 - t0) / (t2 - t1) > 10).to.equal(true) // Load without state cache is 10x slower
 
       const run2 = createRun({ blockchain: run.blockchain, state: new Run.StateCache() })
       const t3 = Date.now()
@@ -1853,8 +1852,7 @@ describe('Jig', () => {
       const t4 = Date.now()
       await run2.load(a.location)
       const t5 = Date.now()
-      expect(t4 - t3 > 1000).to.equal(true)
-      expect(t5 - t4 < 100).to.equal(true)
+      expect((t4 - t3) / (t5 - t4) > 10).to.equal(true) // Load without state cache is 10x slower
     })
   })
 
@@ -1941,8 +1939,8 @@ describe('Jig', () => {
       const run2 = createRun({ blockchain: run.blockchain })
       const a2 = await run2.load(a.location)
       expect(a.origin).to.equal(a2.origin)
-      expect(a2).to.equal(a2.n)
-      expect(a.n).to.equal(a2.n)
+      expect(a2).to.deep.equal(a2.n)
+      expect(a.n).to.deep.equal(a2.n)
       expect(a.owner).to.equal(a2.owner)
     })
 
