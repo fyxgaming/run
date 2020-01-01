@@ -88,7 +88,7 @@ networks.forEach(network => {
 
 describe('Api', () => {
   describe('utxos', () => {
-    it('correct for server returning duplicates', async () => {
+    it('should correct for server returning duplicates', async () => {
       const address = bsv.PrivateKey('mainnet').toAddress().toString()
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
       const api = unobfuscate({ })
