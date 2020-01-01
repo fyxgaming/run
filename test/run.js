@@ -20,6 +20,8 @@ if (TEST_MODE === 'cover') Run = require('../lib')
 if (TEST_MODE === 'dist') Run = require('../dist/run.node.min')
 if (TEST_MODE === 'webpack') Run = require('run')
 
+const { Jig } = Run
+
 // We check if _util is defined on Run to see if Run was obfuscated. If it was, we return a proxy
 // that allows tests to access the original properties as if they were unobfuscated.
 if (typeof Run._util === 'undefined') {
@@ -31,6 +33,7 @@ if (typeof Run._util === 'undefined') {
       const key = prop in obfuscationMap ? obfuscationMap[prop] : prop
       const val = target[key]
       if (typeof val === 'function' && !val.prototype) return val.bind(target)
+      if (val instanceof Jig) return val
       if (prop !== 'prototype' && typeof val === 'object') return new Proxy(val, handler)
       return val
     },

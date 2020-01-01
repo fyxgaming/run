@@ -24,7 +24,7 @@ describe('Transaction', () => {
       // expect(run.transaction.outputs.length).to.equal(0)
     })
 
-    it('init', () => {
+    it('init', async () => {
       class A extends Jig { init (x) { this.x = x } }
       run.transaction.begin()
       const a = new A(1)
