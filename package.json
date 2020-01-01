@@ -11,44 +11,18 @@
         "dev": "npm run lint && TEST_MODE=lib mocha",
         "test": "npm run build && TEST_MODE=dist mocha",
         "cover": "TEST_MODE=cover nyc mocha",
-        "browser": "mocha-headless-chrome -f ./test/browser.html",
-        "test2": "standard --fix && jest --t=\"^((?!perf).)*$\"",
-        "test2:node": "jest --t=\"^((?!perf).)*$\" --env=node",
-        "test2:cover": "jest --t=\"^((?!perf).)*$\" --coverage --globals '{ \"TEST_BUILD\": false, \"COVER\": true }'",
-        "test2:perf": "jest --t=perf --env=node --globals '{ \"TEST_BUILD\": false, \"COVER\": false }'",
-        "test2:build": "npm run build && jest --t=\"^((?!perf).)*$\" --env=node --globals '{ \"TEST_BUILD\": true, \"COVER\": false }'"
+        "browser": "mocha-headless-chrome -f ./test/browser.html"
     },
     "standard": {
         "globals": [
-            "jest",
-            "test",
-            "describe",
-            "it",
-            "expect",
-            "beforeAll",
-            "beforeEach",
-            "afterAll",
-            "afterEach",
-            "TEST_MODE",
-            "TEST_BUILD",
-            "COVER",
             "RUN_VERSION",
+            "TEST_MODE",
             "caller"
         ],
         "ignore": [
             "dist/**",
             "examples/**"
         ]
-    },
-    "jest": {
-        "coveragePathIgnorePatterns": [
-            "/node_modules/",
-            "/test/"
-        ],
-        "globals": {
-            "TEST_BUILD": false,
-            "COVER": false
-        }
     },
     "mocha": {
         "spec": "./test/index.js"
@@ -64,7 +38,6 @@
     "devDependencies": {
         "chai": "^4.2.0",
         "chai-as-promised": "^7.1.1",
-        "jest": "^24.9.0",
         "mocha": "^6.2.2",
         "mocha-headless-chrome": "^2.0.3",
         "nyc": "^15.0.0",

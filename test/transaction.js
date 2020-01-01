@@ -3,6 +3,7 @@ const Run = require('./run')
 const { Jig } = Run
 const { createRun } = require('./helpers')
 const { expect } = require('chai')
+const { describe, it, beforeEach, afterEach } = require('mocha')
 const { extractRunData, encryptRunData, decryptRunData } = Run._util
 
 describe('Transaction', () => {
@@ -13,8 +14,8 @@ describe('Transaction', () => {
   afterEach(() => run.transaction.rollback())
   afterEach(() => run.sync())
 
-  describe('inspect', () => {
-    it.only('nothing', () => {
+  describe.only('inspect', () => {
+    it('nothing', () => {
       expect(run.transaction.actions.length).to.equal(0)
       class A extends Jig { }
       new A() // eslint-disable-line
@@ -27,9 +28,9 @@ describe('Transaction', () => {
       class A extends Jig { init (x) { this.x = x } }
       run.transaction.begin()
       const a = new A(1)
-      expect(run.transaction.actions).toEqual([{ target: a, method: 'init', args: [1] }])
+      expect(run.transaction.actions).to.deep.equal([{ target: a, method: 'init', args: [1] }])
       // expect(run.transaction.inputs.length).to.equal(0)
-      // expect(run.transaction.outputs).toEqual([a])
+      // expect(run.transaction.outputs).to.deep.equal([a])
     })
 
     it('method', () => {
@@ -37,9 +38,9 @@ describe('Transaction', () => {
       const a = new A()
       run.transaction.begin()
       a.set(a)
-      expect(run.transaction.actions).toEqual([{ target: a, method: 'set', args: [a] }])
-      // expect(run.transaction.inputs).toEqual([a])
-      // expect(run.transaction.outputs).toEqual([a])
+      expect(run.transaction.actions).to.deep.equal([{ target: a, method: 'set', args: [a] }])
+      // expect(run.transaction.inputs).to.deep.equal([a])
+      // expect(run.transaction.outputs).to.deep.equal([a])
     })
 
     it('batch', () => {
@@ -50,14 +51,14 @@ describe('Transaction', () => {
       a.set(1)
       a.set([a])
       b.set(2)
-      expect(run.transaction.actions).toEqual([
+      expect(run.transaction.actions).to.deep.equal([
         { target: a, method: 'init', args: [] },
         { target: a, method: 'set', args: [1] },
         { target: a, method: 'set', args: [[a]] },
         { target: b, method: 'set', args: [2] }
       ])
-      // expect(run.transaction.inputs).toEqual([b])
-      // expect(run.transaction.outputs).toEqual([a, a])
+      // expect(run.transaction.inputs).to.deep.equal([b])
+      // expect(run.transaction.outputs).to.deep.equal([a, a])
     })
   })
 
@@ -69,7 +70,7 @@ describe('Transaction', () => {
       expect(tx.inputs.length).to.equal(0)
       expect(tx.outputs.length).to.equal(1)
       const runData = extractRunData(tx)
-      expect(runData).toEqual({ code: [], actions: [], jigs: 0 })
+      expect(runData).to.deep.equal({ code: [], actions: [], jigs: 0 })
     })
 
     it('basic jig', () => {
@@ -80,7 +81,7 @@ describe('Transaction', () => {
       expect(tx.inputs.length).to.equal(0)
       expect(tx.outputs.length).to.equal(3)
       const runData = extractRunData(tx)
-      expect(runData).toEqual({
+      expect(runData).to.deep.equal({
         code: [{ text: A.toString(), owner: run.owner.pubkey }],
         actions: [{ target: '_o1', method: 'init', args: [], creator: run.owner.pubkey }],
         jigs: 1
@@ -244,8 +245,8 @@ describe('Transaction', () => {
     it('basic jig', async () => {
       class A extends Jig {}
       const a = await new A().sync()
-      expect(data.code).toEqual([{ text: A.toString(), owner }])
-      expect(data.actions).toEqual([{ target: '_o1', method: 'init', args: [], creator: owner }])
+      expect(data.code).to.deep.equal([{ text: A.toString(), owner }])
+      expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args: [], creator: owner }])
       expect(data.jigs).to.equal(1)
       expect(A.location).to.equal(`${tx.hash}_o1`)
       expect(a.location).to.equal(`${tx.hash}_o2`)
@@ -288,9 +289,9 @@ describe('Transaction', () => {
       class A extends Jig {}
       const a = new A()
       await new A().sync() // eslint-disable-line
-      expect(data.code).toEqual([])
+      expect(data.code).to.deep.equal([])
       const target = `${a.origin.slice(0, 64)}_o1`
-      expect(data.actions).toEqual([{ target, method: 'init', args: [], creator: run.owner.pubkey }])
+      expect(data.actions).to.deep.equal([{ target, method: 'init', args: [], creator: run.owner.pubkey }])
       expect(data.jigs).to.equal(1)
     })
 
@@ -300,8 +301,8 @@ describe('Transaction', () => {
       new A() // eslint-disable-line
       new A() // eslint-disable-line
       await run.transaction.end().sync()
-      expect(data.code).toEqual([{ text: A.toString(), owner }])
-      expect(data.actions).toEqual([
+      expect(data.code).to.deep.equal([{ text: A.toString(), owner }])
+      expect(data.actions).to.deep.equal([
         { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey },
         { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey }
       ])
@@ -315,11 +316,11 @@ describe('Transaction', () => {
       new A() // eslint-disable-line
       new B() // eslint-disable-line
       await run.transaction.end().sync()
-      expect(data.code).toEqual([
+      expect(data.code).to.deep.equal([
         { text: A.toString(), owner },
         { text: B.toString(), owner }
       ])
-      expect(data.actions).toEqual([
+      expect(data.actions).to.deep.equal([
         { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey },
         { target: '_o2', method: 'init', args: [], creator: run.owner.pubkey }
       ])
@@ -329,7 +330,7 @@ describe('Transaction', () => {
     it('basic args', async () => {
       class A extends Jig { init (a, b) { this.a = a; this.b = b }}
       await new A(1, { a: 'a' }).sync() // eslint-disable-line
-      expect(data.actions).toEqual([{ target: '_o1', method: 'init', args: [1, { a: 'a' }], creator: run.owner.pubkey }])
+      expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args: [1, { a: 'a' }], creator: run.owner.pubkey }])
     })
 
     it('jig args', async () => {
@@ -342,8 +343,8 @@ describe('Transaction', () => {
       const b = await new A(2).sync()
       await a.f(b).sync()
       const arg = { $ref: '_r0' }
-      expect(data.actions).toEqual([{ target: '_i0', method: 'f', args: [arg] }])
-      expect(data.refs).toEqual([b.location])
+      expect(data.actions).to.deep.equal([{ target: '_i0', method: 'f', args: [arg] }])
+      expect(data.refs).to.deep.equal([b.location])
     })
 
     it('jig args without read', async () => {
@@ -355,7 +356,7 @@ describe('Transaction', () => {
       const arg2 = { a: { $ref: '_i0' } }
       const arg3 = [{ $ref: b.location }]
       const args = [arg1, arg2, arg3]
-      expect(data.actions).toEqual([{ target: '_i0', method: 'f', args: args }])
+      expect(data.actions).to.deep.equal([{ target: '_i0', method: 'f', args: args }])
     })
 
     it('class args', async () => {
@@ -368,18 +369,18 @@ describe('Transaction', () => {
       class C extends A { }
       const a = await new A(A).sync()
       const args = [{ $ref: '_o1' }]
-      expect(data.code).toEqual([{ text: A.toString(), owner }])
-      expect(data.actions).toEqual([{ target: '_o1', method: 'init', args, creator: run.owner.pubkey }])
+      expect(data.code).to.deep.equal([{ text: A.toString(), owner }])
+      expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args, creator: run.owner.pubkey }])
       expect(data.jigs).to.equal(1)
       await a.set(B).sync()
-      expect(data.code).toEqual([{ text: B.toString(), owner }])
-      expect(data.actions).toEqual([{ target: '_i0', method: 'set', args: [{ $ref: '_o1' }] }])
+      expect(data.code).to.deep.equal([{ text: B.toString(), owner }])
+      expect(data.actions).to.deep.equal([{ target: '_i0', method: 'set', args: [{ $ref: '_o1' }] }])
       expect(data.jigs).to.equal(1)
       await new C().sync()
       await a.set(C).sync()
-      expect(data.actions).toEqual([{ target: '_i0', method: 'set', args: [{ $ref: `${C.location}` }] }])
+      expect(data.actions).to.deep.equal([{ target: '_i0', method: 'set', args: [{ $ref: `${C.location}` }] }])
       await a.set(A).sync()
-      expect(data.actions).toEqual([{ target: '_i0', method: 'set', args: [{ $ref: `${A.location}` }] }])
+      expect(data.actions).to.deep.equal([{ target: '_i0', method: 'set', args: [{ $ref: `${A.location}` }] }])
     })
 
     it('class args batch', async () => {
@@ -390,11 +391,11 @@ describe('Transaction', () => {
       a.set(B)
       run.transaction.end()
       await run.sync()
-      expect(data.code).toEqual([
+      expect(data.code).to.deep.equal([
         { text: A.toString(), owner },
         { text: B.toString(), owner }
       ])
-      expect(data.actions).toEqual([
+      expect(data.actions).to.deep.equal([
         { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey },
         { target: '_o3', method: 'set', args: [{ $ref: '_o2' }] }
       ])
@@ -409,7 +410,7 @@ describe('Transaction', () => {
       a.f(2)
       a.f(3)
       await run.transaction.end().sync()
-      expect(data.actions).toEqual([
+      expect(data.actions).to.deep.equal([
         { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey },
         { target: '_o2', method: 'f', args: [1] },
         { target: '_o2', method: 'f', args: [2] },
@@ -437,8 +438,8 @@ describe('Transaction', () => {
       const defC = { text: C.toString(), props: { m: 'n' }, owner }
       const propsA = { s: 'a', n: 1, a: [true, 'true'], b: false, x: null, o: { x: 2 }, j: { $ref: `${b.location}` } }
       const defA = { text: A.toString(), deps: { C: '_o1' }, props: propsA, owner }
-      expect(data.code).toEqual([defC, defA])
-      expect(data.actions).toEqual([])
+      expect(data.code).to.deep.equal([defC, defA])
+      expect(data.actions).to.deep.equal([])
       expect(data.jigs).to.equal(0)
       expect(A.location).to.equal(`${tx.hash}_o2`)
     })
@@ -454,7 +455,7 @@ describe('Transaction', () => {
       const b = new B()
       b.apply(a2)
       await run.sync()
-      expect(data).toEqual({
+      expect(data).to.deep.equal({
         code: [],
         actions: [{ target: '_i0', method: 'apply', args: [{ $ref: '_r0' }] }],
         jigs: 1,
