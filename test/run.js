@@ -27,8 +27,14 @@ if (typeof Run._util === 'undefined') {
 
   const handler = {
     get: (target, prop) => {
-      const val = prop in obfuscationMap ? target[obfuscationMap[prop]] : target[prop]
+      const key = prop in obfuscationMap ? obfuscationMap[prop] : prop
+      const val = target[key]
       return prop !== 'prototype' && typeof val === 'object' ? new Proxy(val, handler) : val
+    },
+
+    set: (target, prop, value) => {
+      const key = prop in obfuscationMap ? obfuscationMap[prop] : prop
+      target[key] = value
     }
   }
 
