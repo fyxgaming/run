@@ -2062,10 +2062,10 @@ describe('Jig', () => {
       }
       const a = new A()
       a.f()
-      expect(a.caller).toBeNull()
+      expect(a.caller).to.equal(null)
       await run.sync()
       const a2 = await run.load(a.location)
-      expect(a2.caller).toBeNull()
+      expect(a2.caller).to.equal(null)
     })
 
     it('caller is parent', async () => {
