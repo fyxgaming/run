@@ -8,16 +8,16 @@
         "lint": "standard --fix",
         "build": "webpack",
         "postinstall": "webpack",
-        "test": "standard --fix && jest --t=\"^((?!perf).)*$\"",
-        "test:node": "jest --t=\"^((?!perf).)*$\" --env=node",
-        "test:cover": "jest --t=\"^((?!perf).)*$\" --coverage --globals '{ \"TEST_BUILD\": false, \"COVER\": true }'",
-        "test:perf": "jest --t=perf --env=node --globals '{ \"TEST_BUILD\": false, \"COVER\": false }'",
-        "test:build": "npm run build && jest --t=\"^((?!perf).)*$\" --env=node --globals '{ \"TEST_BUILD\": true, \"COVER\": false }'",
-        "mocha": "TEST_MODE=lib mocha",
+        "dev": "npm run lint && TEST_MODE=lib mocha",
+        "test": "npm run build && TEST_MODE=dist mocha",
         "cover": "TEST_MODE=cover nyc mocha",
-        "dist": "TEST_MODE=dist mocha",
         "browser": "mocha-headless-chrome -f ./test/browser.html",
-        "all": "npm run lint && npm run build && npm run browser && npm run cover"
+
+        "test2": "standard --fix && jest --t=\"^((?!perf).)*$\"",
+        "test2:node": "jest --t=\"^((?!perf).)*$\" --env=node",
+        "test2:cover": "jest --t=\"^((?!perf).)*$\" --coverage --globals '{ \"TEST_BUILD\": false, \"COVER\": true }'",
+        "test2:perf": "jest --t=perf --env=node --globals '{ \"TEST_BUILD\": false, \"COVER\": false }'",
+        "test2:build": "npm run build && jest --t=\"^((?!perf).)*$\" --env=node --globals '{ \"TEST_BUILD\": true, \"COVER\": false }'"
     },
     "standard": {
         "globals": [
