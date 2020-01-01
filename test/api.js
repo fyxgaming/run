@@ -1,3 +1,9 @@
+/**
+ * api.js
+ *
+ * Tests for ../lib/api.js
+ */
+
 const bsv = require('bsv')
 const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')

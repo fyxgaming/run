@@ -1,3 +1,9 @@
+/**
+ * state.js
+ *
+ * Tests for ../lib/state.js
+ */
+
 const bsv = require('bsv')
 const { describe, it, beforeEach, afterEach } = require('mocha')
 const chai = require('chai')

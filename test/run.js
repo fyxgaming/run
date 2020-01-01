@@ -1,3 +1,9 @@
+/**
+ * run.js
+ *
+ * Tests for ../lib/index.js
+ */
+
 const { describe, it } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')

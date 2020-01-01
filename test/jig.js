@@ -1,3 +1,9 @@
+/**
+ * jig.js
+ *
+ * Tests for ../lib/jig.js
+ */
+
 const { describe, it, beforeEach } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')

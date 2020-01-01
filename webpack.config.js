@@ -1,3 +1,9 @@
+/**
+ * webpack.config.js
+ *
+ * All the settings to build run variants and the browser tests using webpack
+ */
+
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
 const path = require('path')

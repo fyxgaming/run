@@ -1,3 +1,9 @@
+/**
+ * transaction.js
+ *
+ * Tests for ../lib/transaction.js
+ */
+
 const bsv = require('bsv')
 const { Run, Jig, createRun } = require('./helpers')
 const chai = require('chai')

@@ -1,3 +1,9 @@
+/**
+ * purse.js
+ *
+ * Tests for ../lib/purse.js
+ */
+
 const bsv = require('bsv')
 const { describe, it, beforeEach } = require('mocha')
 const chai = require('chai')

@@ -1,3 +1,9 @@
+/**
+ * owner.js
+ *
+ * Tests for ../lib/owner.js
+ */
+
 const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const chai = require('chai')

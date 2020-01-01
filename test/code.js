@@ -1,3 +1,9 @@
+/**
+ * code.js
+ *
+ * Tests for ../lib/code.js
+ */
+
 const { describe, it, beforeEach } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')

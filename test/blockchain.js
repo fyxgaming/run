@@ -1,3 +1,9 @@
+/**
+ * blockchain.js
+ *
+ * Tests for ../lib/blockchain.js
+ */
+
 const { PrivateKey, Transaction } = require('bsv')
 const { describe, it } = require('mocha')
 const chai = require('chai')

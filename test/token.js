@@ -1,3 +1,8 @@
+/**
+ * token.js
+ *
+ * Tests for ../lib/token.js
+ */
 
 const bsv = require('bsv')
 const { describe, it, beforeEach } = require('mocha')

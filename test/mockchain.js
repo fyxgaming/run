@@ -1,3 +1,9 @@
+/**
+ * mockchain.js
+ *
+ * Tests for ../lib/mockchain.js
+ */
+
 const { PrivateKey, Transaction } = require('bsv')
 const { describe, it, before, beforeEach } = require('mocha')
 const chai = require('chai')

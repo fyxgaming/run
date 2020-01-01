@@ -1,3 +1,9 @@
+/**
+ * expect.js
+ *
+ * Tests for ../lib/expect.js
+ */
+
 const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
 const { Run, createRun, deploy } = require('./helpers')
