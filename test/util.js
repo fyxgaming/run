@@ -1,7 +1,15 @@
+/**
+ * util.js
+ * 
+ * Tests for ../lib/util.js
+ */
+
 const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { createRun, Run, Jig } = require('./setup')
+const Run = require('./run')
+const { Jig } = Run
+const { createRun } = require('./helpers')
 const {
   checkOwner,
   checkSatoshis,

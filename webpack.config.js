@@ -276,7 +276,7 @@ const nodeUnminified = {
 }
 
 const tests = {
-  entry: path.join(__dirname, './test/webpack-tests.js'),
+  entry: path.join(__dirname, './test'),
   output: {
     filename: 'run.tests.js',
     path: path.join(__dirname, './dist/')
