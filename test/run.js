@@ -29,11 +29,12 @@ if (typeof Run._util === 'undefined') {
 
   const handler = {
     get: (target, prop) => {
-      if (prop === 'constructor') return new Proxy(target.constructor, handler)
-      const key = prop in obfuscationMap ? obfuscationMap[prop] : prop
+      const key = typeof obfuscationMap[prop] === 'string' ? obfuscationMap[prop] : prop
       const val = target[key]
       if (typeof val === 'function' && !val.prototype) return val.bind(target)
       if (val instanceof Jig) return val
+      const descriptor = Object.getOwnPropertyDescriptor(target, key)
+      if (descriptor && !descriptor.writable && !descriptor.configurable) return val
       if (prop !== 'prototype' && typeof val === 'object') return new Proxy(val, handler)
       return val
     },

@@ -229,7 +229,7 @@ describe('Transaction', () => {
     })
   })
 
-  describe('publish', () => {
+  describe.only('publish', () => {
     const run = createRun({ app: 'biz' })
     const owner = run.owner.pubkey
     let tx = null; let data = null
