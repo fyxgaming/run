@@ -1,80 +1,216 @@
-/**
- * process.js
- *
- * Provides the Run build for tests
- *
- * The same tests run in different environments (node, browser) and with different Run builds
- * (lib, dist). This module outputs the appropriate instance for the test environment.
- */
+const { describe, it } = require('mocha')
+const chai = require('chai')
+const chaiAsPromised = require('chai-as-promised')
+chai.use(chaiAsPromised)
+const { expect } = chai
+const { Jig, Run, createRun } = require('./helpers')
+const bsv = require('bsv')
+const packageInfo = require('../package.json')
 
-const process = require('process')
+describe('Run', () => {
+  describe('constructor', () => {
+    it('basic properties', () => {
+      const run = createRun()
+      expect(Run.version).to.equal(packageInfo.version)
+      expect(run.owner.privkey).not.to.equal(run.purse.privkey)
+      expect(run.owner.bsvPrivateKey.publicKey.toString()).to.equal(run.owner.pubkey)
+      expect(run.owner.bsvPrivateKey.toAddress().toString()).to.equal(run.owner.address)
+      expect(run.purse.privkey.toAddress().toString()).to.equal(run.purse.address.toString())
+      expect(run.app).to.equal('')
+    })
 
-// The test mode determines the Run build. It is either an environment variable or a webpack define.
-// We override global.TEST_MODE so that we can just use TEST_MODE.
-global.TEST_MODE = process.env.TEST_MODE
+    it('sets global bsv network', () => {
+      createRun()
+      expect(bsv.Networks.defaultNetwork).to.equal('testnet')
+      createRun({ network: 'main' })
+      expect(bsv.Networks.defaultNetwork).to.equal('mainnet')
+    })
 
-let Run = null
+    it('networks', () => {
+      // TODO: re-enable stn
+      const networks = ['main', 'test', 'mock']
+      networks.forEach(network => {
+        expect(createRun({ network }).blockchain.network).to.equal(network)
+      })
+    })
 
-if (TEST_MODE === 'lib') Run = require('../lib')
-if (TEST_MODE === 'cover') Run = require('../lib')
-if (TEST_MODE === 'dist') Run = require('../dist/run.node.min')
-if (TEST_MODE === 'webpack') Run = require('run')
+    it('null purse', () => {
+      expect(createRun({ purse: null }).purse).not.to.equal(null)
+    })
 
-// We check if _util is defined on Run to see if Run was obfuscated. If it was, we return a proxy
-// that allows tests to access the original properties as if they were unobfuscated.
-const needsUnobfuscation = typeof Run._util === 'undefined'
+    it('null owner', () => {
+      expect(createRun({ owner: null }).owner).not.to.equal(null)
+    })
 
-// Wraps an object to unobfuscate its properties for testing in obfuscated builds
-function unobfuscate (obj) {
-  if (!needsUnobfuscation) return obj
+    it('custom app', () => {
+      expect(createRun({ app: 'biz' }).app).to.equal('biz')
+    })
 
-  const obfuscationMap = require('../dist/obfuscation-map.json')
+    it('bad app', () => {
+      expect(() => createRun({ app: 0 })).to.throw('app must be a string')
+      expect(() => createRun({ app: true })).to.throw('app must be a string')
+      expect(() => createRun({ app: { name: 'biz' } })).to.throw('app must be a string')
+    })
 
-  const handler = {
-    get: (target, prop) => {
-      // If we're getting a constructor, we can simply reproxy and return it here
-      if (prop === 'constructor') return new Proxy(target.constructor, handler)
+    describe('logger', () => {
+      it('default logs only warnings and error', () => {
+        const run = createRun({ logger: undefined })
+        expect(run.logger.info.toString()).to.equal('() => {}')
+        expect(run.logger.debug.toString()).to.equal('() => {}')
+        expect(run.logger.warn).to.equal(console.warn)
+        expect(run.logger.error).to.equal(console.error)
+      })
 
-      // If the obfuscation map has the key, use its transalted version
-      const key = typeof obfuscationMap[prop] === 'string' ? obfuscationMap[prop] : prop
-      const val = target[key]
+      it('custom logger', () => {
+        let infoMessage = ''; let errorMessage = ''; let errorData = null
+        const run = createRun({
+          logger: {
+            info: message => { infoMessage = message },
+            error: (message, data) => { errorMessage = message; errorData = data }
+          }
+        })
+        run.logger.info('info')
+        run.logger.debug('debug')
+        run.logger.warn('warn')
+        run.logger.error('error', 1)
+        expect(infoMessage).to.equal('info')
+        expect(errorMessage).to.equal('error')
+        expect(errorData).to.equal(1)
+      })
 
-      // If val is null, we can return it directly
-      if (!val) return val
+      it('bad logger throws', () => {
+        expect(() => createRun({ logger: 1 })).to.throw('logger must be an object, found 1')
+        expect(() => createRun({ logger: false })).to.throw('logger must be an object, found false')
+        expect(() => createRun({ logger: function log (message) {} })).to.throw('logger must be an object, found')
+      })
+    })
+  })
 
-      // Regular functions get bound to the target not the proxy for better reliability
-      if (typeof val === 'function' && !val.prototype) return val.bind(target)
+  describe('load', () => {
+    it('inactive', async () => {
+      const run = createRun()
+      class A { }
+      await run.deploy(A)
+      const run2 = createRun()
+      expect(Run.instance).to.equal(run2)
+      await expect(run.load(A.location)).to.be.rejectedWith('run instance is not active. call run.activate() first.')
+    })
 
-      // Jigs don't need to be proxied and cause problems when they are
-      if (val.constructor && val.constructor.name === 'Jig') return val
+    it('invalid arg', async () => {
+      const run = createRun()
+      await expect(run.load()).to.be.rejectedWith('typeof location is undefined - must be string')
+      await expect(run.load(123)).to.be.rejectedWith('typeof location is number - must be string')
+      await expect(run.load({})).to.be.rejectedWith('typeof location is object - must be string')
+    })
+  })
 
-      // Read-only non-confurable properties cannot be proxied
-      const descriptor = Object.getOwnPropertyDescriptor(target, key)
-      if (descriptor && descriptor.writable === false && descriptor.configurable === false) return val
+  describe('deploy', () => {
+    it('inactive', async () => {
+      class A { }
+      const run = createRun()
+      createRun()
+      await expect(run.deploy(A)).to.be.rejectedWith('run instance is not active. call run.activate() first.')
+    })
 
-      // Objects get re-proxied so that their sub-properties are unobfuscated
-      if (typeof val === 'object' && prop !== 'prototype') return new Proxy(val, handler)
+    it('batch', async () => {
+      class A { }
+      const run = createRun()
+      run.transaction.begin()
+      await run.deploy(A)
+      run.transaction.end()
+    })
+  })
 
-      // All other objects we return directly
-      return val
-    },
+  describe('misc', () => {
+    it('same owner and purse', async () => {
+      const key = new bsv.PrivateKey('testnet')
+      const run = createRun({ owner: key, purse: key })
+      class A extends Jig { set (name) { this.name = name; return this } }
+      const a = await new A().sync()
+      const purseUtxos = await run.purse.utxos()
+      expect(purseUtxos.length).to.equal(10)
+      await run.sync()
+      expect(run.owner.code.length).to.equal(1)
+      expect(run.owner.jigs.length).to.equal(1)
 
-    set: (target, prop, value) => {
-      // Sets are applied to the obfuscated properties if they exist
-      const key = prop in obfuscationMap ? obfuscationMap[prop] : prop
-      target[key] = value
-      return true
-    },
+      const txid = run.owner.code[0].location.slice(0, 64)
+      const codeVout = parseInt(run.owner.code[0].location.slice(66))
+      const jigVout = parseInt(run.owner.jigs[0].location.slice(66))
+      expect(codeVout).to.equal(1)
+      expect(jigVout).to.equal(2)
 
-    construct: (T, args) => {
-      // If we construct from a type, the new instance gets proxied to be unobfuscated too
-      return new Proxy(new T(...args), handler)
-    }
-  }
+      purseUtxos.forEach(utxo => {
+        expect(utxo.txid !== txid || utxo.vout !== jigVout).to.equal(true)
+        expect(utxo.txid !== txid || utxo.vout !== codeVout).to.equal(true)
+      })
 
-  return new Proxy(obj, handler)
-}
+      await a.set('a').sync()
+    })
 
-Run = unobfuscate(Run)
+    it('multiple simultaneous loads', async () => {
+      // This tests a tricky timing issue where class dependencies need to be fully
+      // loaded before load() returns. There used to be a case where that was possible.
+      const run = createRun({ network: 'mock' })
+      class A extends Jig { }
+      class B extends A { }
+      await run.deploy(B)
+      class C extends Jig { init () { if (!B) throw new Error() } }
+      C.deps = { B }
+      await run.deploy(C)
+      class D extends C { }
+      const d = new D()
+      await run.sync()
+      Run.code.flush()
+      run.state.clear()
+      const p1 = run.load(d.location)
+      const p2 = run.load(d.location)
+      await Promise.all([p1, p2])
+    })
 
-module.exports = { Run, unobfuscate }
+    it('reuse state cache', async () => {
+      async function timeLoad (network, location) {
+        const run = createRun({ network })
+        const before = new Date()
+        await run.load(location)
+        return new Date() - before
+      }
+
+      const testLocation = '7d96e1638074471796c6981b12239865b0daeff24ea72fee207338cf2d388ffd_o1'
+      const mainLocation = 'a0dd3999349d0cdd116a1a607eb07e5e394355484af3ba7a7a5babe0c2efc5ca_o1'
+
+      expect(await timeLoad('test', testLocation) > 1000).to.equal(true)
+      expect(await timeLoad('test', testLocation) > 1000).to.equal(false)
+
+      expect(await timeLoad('main', mainLocation) > 1000).to.equal(true)
+      expect(await timeLoad('main', mainLocation) > 1000).to.equal(false)
+    }).timeout(30000)
+
+    // TODO: Remove
+    it.skip('True Reviews Test', async () => {
+      const run = createRun({
+        network: 'main',
+        owner: '1N3U7rCvbjYu3zAgJzMa1xpxndmqDpU2jg',
+        logger: console
+      })
+
+      const before = new Date()
+      await run.sync()
+
+      console.log(new Date() - before)
+
+      // ---
+
+      console.log('---')
+
+      const run2 = createRun({
+        network: 'main',
+        owner: '1N3U7rCvbjYu3zAgJzMa1xpxndmqDpU2jg',
+        logger: console
+      })
+
+      const before2 = new Date()
+      await run2.sync()
+      console.log(new Date() - before2)
+    }).timeout(30000)
+  })
+})

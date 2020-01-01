@@ -7,9 +7,7 @@
 const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { Run } = require('./run')
-const { Jig } = Run
-const { createRun } = require('./helpers')
+const { Run, Jig, createRun } = require('./helpers')
 const {
   checkOwner,
   checkSatoshis,

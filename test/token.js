@@ -1,8 +1,7 @@
 
 const bsv = require('bsv')
 const { describe, it, beforeEach } = require('mocha')
-const { Run } = require('./run')
-const { createRun, deploy } = require('./helpers')
+const { Run, createRun, deploy } = require('./helpers')
 const { Token } = Run
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')

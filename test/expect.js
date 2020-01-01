@@ -1,7 +1,6 @@
 const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
-const { createRun, deploy } = require('./helpers')
-const { Run } = require('./run')
+const { Run, createRun, deploy } = require('./helpers')
 
 describe('expect', () => {
   const run = createRun()

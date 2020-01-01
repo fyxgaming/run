@@ -4,9 +4,8 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Run } = require('./run')
+const { Run, createRun } = require('./helpers')
 const { Api } = Run
-const { createRun } = require('./helpers')
 
 describe('Blockchain', () => {
   describe('constructor', () => {

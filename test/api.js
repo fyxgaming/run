@@ -1,9 +1,8 @@
 const bsv = require('bsv')
 const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
-const { createRun } = require('./helpers')
+const { Run, unobfuscate, createRun } = require('./helpers')
 const runBlockchainTestSuite = require('./blockchain')
-const { Run, unobfuscate } = require('./run')
 const { Api } = Run
 
 // sample transactions with spent outputs in mined blocks on each network

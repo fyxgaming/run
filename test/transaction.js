@@ -1,7 +1,5 @@
 const bsv = require('bsv')
-const { Run } = require('./run')
-const { Jig } = Run
-const { createRun } = require('./helpers')
+const { Run, Jig, createRun } = require('./helpers')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 const { expect } = chai
