@@ -1206,7 +1206,7 @@ describe('Jig', () => {
     })
   })
 
-  describe.only('owner', () => {
+  describe('owner', () => {
     it('defined before init', () => {
       class A extends Jig { init () { this.ownerAtInit = this.owner }}
       const a = new A()
@@ -1504,7 +1504,7 @@ describe('Jig', () => {
       expectAction(a, 'add', [[b, b2]], [a, b2, b], [a, b2, b, b3, b4], [b2, b])
     })
 
-    it('uncaught errors', async done => {
+    it('uncaught errors', async () => {
       class A extends Jig { f () { this.n = 1 } }
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
@@ -1514,19 +1514,21 @@ describe('Jig', () => {
       a.f()
       expectAction(a, 'f', [], [a], [a], [])
       expect(a.n).to.equal(1)
-      setTimeout(() => {
-        let completed = false
-        try { a.origin } catch (e) { completed = true } // eslint-disable-line
-        if (completed) {
-          run.blockchain.broadcast = oldBroadcast
-          expect(() => a.origin).to.throw('a previous update failed')
-          expect(() => a.location).to.throw('a previous update failed')
-          expect(() => a.owner).to.throw('a previous update failed')
-          expect(() => a.n).to.throw('a previous update failed')
-          expect(() => a.f()).to.throw('a previous update failed')
-          done()
-        }
-      }, 1)
+      await new Promise(resolve => {
+        setTimeout(() => {
+          let completed = false
+          try { a.origin } catch (e) { completed = true } // eslint-disable-line
+          if (completed) {
+            run.blockchain.broadcast = oldBroadcast
+            expect(() => a.origin).to.throw('a previous update failed')
+            expect(() => a.location).to.throw('a previous update failed')
+            expect(() => a.owner).to.throw('a previous update failed')
+            expect(() => a.n).to.throw('a previous update failed')
+            expect(() => a.f()).to.throw('a previous update failed')
+            resolve()
+          }
+        }, 1)
+      })
     })
   })
 
@@ -1677,7 +1679,7 @@ describe('Jig', () => {
     })
   })
 
-  describe('load', () => {
+  describe.only('load', () => {
     it('single jig', async () => {
       class A extends Jig { f (n) { this.n = n }}
       const a = new A()
