@@ -6,6 +6,7 @@
 
 require('./api')
 require('./blockchain')
+require('./code')
 require('./jig')
 require('./mockchain')
 require('./owner')
