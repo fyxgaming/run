@@ -5,6 +5,7 @@
  */
 
 const Run = require('./run')
+const { expect } = require('chai')
 
 const testPurses = {
   main: [
@@ -41,6 +42,36 @@ async function hookPay (run, ...enables) {
   }
 }
 
+let action = null
+
+function hookStoreAction (run) {
+  const origAction = run.transaction.storeAction.bind(run.transaction)
+  run.transaction.storeAction = (target, method, args, inputs, outputs, reads, before, after, proxies) => {
+    origAction(target, method, args, inputs, outputs, reads, before, after, proxies)
+    target = proxies.get(target)
+    inputs = new Set(Array.from(inputs.keys()).map(i => proxies.get(i)))
+    outputs = new Set(Array.from(outputs.keys()).map(o => proxies.get(o)))
+    reads = new Set(Array.from(reads.keys()).map(o => proxies.get(o)))
+    action = { target, method, args, inputs, outputs, reads }
+  }
+  return run
+}
+
+function expectAction (target, method, args, inputs, outputs, reads) {
+  expect(action.target).to.equal(target)
+  expect(action.method).to.equal(method)
+  expect(action.args).to.deep.equal(args)
+  expect(action.inputs.size).to.equal(inputs.length)
+  Array.from(action.inputs.values()).forEach((i, n) => expect(i).to.equal(inputs[n]))
+  expect(action.outputs.size).to.equal(outputs.length)
+  Array.from(action.outputs.values()).forEach((o, n) => expect(o).to.equal(outputs[n]))
+  expect(action.reads.size).to.equal(reads.length)
+  Array.from(action.reads.values()).forEach((x, n) => expect(x).to.equal(reads[n]))
+  action = null
+}
+
+function expectNoAction () { if (action) { throw new Error('Unexpected transaction') } }
+
 async function deploy (Class) {
   const app = 'Star ▸ Library'
   const networks = [['test', 'Testnet'], ['main', 'Mainnet']]
@@ -70,4 +101,4 @@ async function deploy (Class) {
   console.log(properties)
 }
 
-module.exports = { createRun, hookPay, deploy }
+module.exports = { createRun, hookPay, hookStoreAction, expectAction, expectNoAction, deploy }
