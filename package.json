@@ -15,7 +15,8 @@
         "test:build": "npm run build && jest --t=\"^((?!perf).)*$\" --env=node --globals '{ \"TEST_BUILD\": true, \"COVER\": false }'",
         "mocha": "TEST_MODE=lib mocha",
         "dist": "TEST_MODE=dist mocha",
-        "browser": "mocha-headless-chrome -f ./test/browser.html"
+        "browser": "mocha-headless-chrome -f ./test/browser.html",
+        "all": "npm run lint && npm run build && npm run mocha && npm run browser"
     },
     "standard": {
         "globals": [
