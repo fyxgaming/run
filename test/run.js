@@ -83,7 +83,7 @@ describe('Run', () => {
       const run = createRun()
       class A { }
       await run.deploy(A)
-      const run2 = createRun()
+      createRun()
       await expect(run.load(A.location)).to.be.rejectedWith('run instance is not active. call run.activate() first.')
     })
 
