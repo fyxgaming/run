@@ -2,7 +2,10 @@ const bsv = require('bsv')
 const Run = require('./run')
 const { Jig } = Run
 const { createRun } = require('./helpers')
-const { expect } = require('chai')
+const chai = require('chai')
+const chaiAsPromised = require('chai-as-promised')
+const { expect } = chai
+chai.use(chaiAsPromised)
 const { describe, it, beforeEach, afterEach } = require('mocha')
 const { extractRunData, encryptRunData, decryptRunData } = Run._util
 
@@ -14,7 +17,7 @@ describe('Transaction', () => {
   afterEach(() => run.transaction.rollback())
   afterEach(() => run.sync())
 
-  describe.only('inspect', () => {
+  describe('inspect', () => {
     it('nothing', () => {
       expect(run.transaction.actions.length).to.equal(0)
       class A extends Jig { }
@@ -64,7 +67,7 @@ describe('Transaction', () => {
 
   describe('export', () => {
     it('nothing', () => {
-      expect(() => run.transaction.export()).toThrow('No transaction in progress')
+      expect(() => run.transaction.export()).to.throw('No transaction in progress')
       run.transaction.begin()
       const tx = run.transaction.export()
       expect(tx.inputs.length).to.equal(0)
@@ -93,7 +96,7 @@ describe('Transaction', () => {
       const a = new A()
       run.transaction.begin()
       a.set(1)
-      expect(() => run.transaction.export()).toThrow('must not have any queued transactions before exporting')
+      expect(() => run.transaction.export()).to.throw('must not have any queued transactions before exporting')
     })
 
     it('caches repeated calls', async () => {
@@ -135,7 +138,7 @@ describe('Transaction', () => {
       await run.transaction.import(tx)
       expect(run.transaction.actions.length).to.equal(1)
       const a = run.transaction.actions[0].target
-      expect(() => a.origin).toThrow('sync required before reading origin')
+      expect(() => a.origin).to.throw('sync required before reading origin')
       a.set(1)
       expect(run.transaction.actions.length).to.equal(2)
       const tx2 = run.transaction.export()
@@ -143,7 +146,7 @@ describe('Transaction', () => {
     })
 
     it('invalid throws', async () => {
-      await expect(run.transaction.import(new bsv.Transaction())).rejects.toThrow('not a run tx')
+      await expect(run.transaction.import(new bsv.Transaction())).to.be.rejectedWith('not a run tx')
     })
 
     it('already in progress throws', async () => {
@@ -153,7 +156,7 @@ describe('Transaction', () => {
       run.transaction.rollback()
       run.transaction.begin()
       run.deploy(class A {})
-      await expect(run.transaction.import(tx)).rejects.toThrow('transaction already in progress. cannot import.')
+      await expect(run.transaction.import(tx)).to.be.rejectedWith('transaction already in progress. cannot import.')
     })
 
     it('export then import', async () => {
@@ -607,8 +610,8 @@ describe('Transaction', () => {
         const utxos = await run.purse.utxos()
         const tx = new bsv.Transaction().from(utxos).change(run.purse.address).sign(run.purse.privkey)
         await run.blockchain.broadcast(tx)
-        await expect(run.load(tx.hash + '_o0')).rejects.toThrow(`not a run tx: ${tx.hash}`)
-        await expect(run.load(tx.hash + '_o1')).rejects.toThrow(`not a run tx: ${tx.hash}`)
+        await expect(run.load(tx.hash + '_o0')).to.be.rejectedWith(`not a run tx: ${tx.hash}`)
+        await expect(run.load(tx.hash + '_o1')).to.be.rejectedWith(`not a run tx: ${tx.hash}`)
       })
 
       it('bad output target', async () => {
@@ -616,7 +619,7 @@ describe('Transaction', () => {
         const a = await new A().sync()
         const actions = [{ target: '_o1', method: 'f', args: [] }]
         const txid = await build([], actions, [a.location], null, 1)
-        await expect(run.load(txid + '_o1')).rejects.toThrow('target _o1 missing')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('target _o1 missing')
       })
 
       it('bad input target', async () => {
@@ -627,7 +630,7 @@ describe('Transaction', () => {
         const tx = await run.blockchain.fetch(txid)
         const purseOutput = tx.inputs[1].prevTxId.toString('hex') + '_o' + tx.inputs[1].outputIndex
         const error = `Error loading ref _i1 at ${purseOutput}`
-        await expect(run.load(txid + '_o1')).rejects.toThrow(error)
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith(error)
       })
 
       it('nonexistant target', async () => {
@@ -635,7 +638,7 @@ describe('Transaction', () => {
         const a = await new A().sync()
         const actions = [{ target: 'abc_o1', method: 'f', args: [] }]
         const txid = await build([], actions, [a.location], null, 1)
-        await expect(run.load(txid + '_o1')).rejects.toThrow() // TODO: check error
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith() // TODO: check error
       })
 
       it('bad method', async () => {
@@ -643,7 +646,7 @@ describe('Transaction', () => {
         const a = await new A().sync()
         const actions = [{ target: '_i0', method: 'f', args: [] }]
         const txid = await build([], actions, [a.location], null, 1)
-        await expect(run.load(txid + '_o1')).rejects.toThrow() // TODO: check error
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith() // TODO: check error
       })
 
       it('bad json args', async () => {
@@ -651,7 +654,7 @@ describe('Transaction', () => {
         const a = await new A().sync()
         const actions = [{ target: '_i0', method: 'f', args: 0 }]
         const txid = await build([], actions, [a.location], null, 1)
-        await expect(run.load(txid + '_o1')).rejects.toThrow() // TODO: check error
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith() // TODO: check error
       })
 
       it('bad class arg', async () => {
@@ -659,7 +662,7 @@ describe('Transaction', () => {
         const a = await new A().sync()
         const actions = [{ target: '_i0', method: 'f', args: [{ $class: 'Map' }] }]
         const txid = await build([], actions, [a.location], null, 1)
-        await expect(run.load(txid + '_o1')).rejects.toThrow('$ properties must not be defined')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('$ properties must not be defined')
       })
 
       it('nonexistant jig arg', async () => {
@@ -668,7 +671,7 @@ describe('Transaction', () => {
         const nonexistant = { $ref: 'abc_o2' }
         const actions = [{ target: '_i0', method: 'f', args: [nonexistant] }]
         const txid = await build([], actions, [a.location], null, 1)
-        await expect(run.load(txid + '_o1')).rejects.toThrow() // TODO: check error
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith() // TODO: check error
       })
 
       it('bad number of jigs', async () => {
@@ -676,7 +679,7 @@ describe('Transaction', () => {
         const a = await new A().sync()
         const actions = [{ target: '_i0', method: 'f', args: [] }]
         const txid = await build([], actions, [a.location], null, 0)
-        await expect(run.load(txid + '_o1')).rejects.toThrow('bad number of jigs')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('bad number of jigs')
       })
 
       it('missing read input', async () => {
@@ -687,7 +690,7 @@ describe('Transaction', () => {
         const args = [{ $ref: `${b.location}` }]
         const actions = [{ target: '_o1', method: 'init', args, creator: run.owner.pubkey }]
         const txid = await build(code, actions, [], null, 2)
-        await expect(run.load(txid + '_o3')).rejects.toThrow() // TODO: check error
+        await expect(run.load(txid + '_o3')).to.be.rejectedWith() // TODO: check error
       })
 
       it('missing write input', async () => {
@@ -698,7 +701,7 @@ describe('Transaction', () => {
         const args = [{ $ref: `${b.location}` }]
         const actions = [{ target: '_i1', method: 'f', args }]
         const txid = await build([], actions, [a.location], null, 2)
-        await expect(run.load(txid + '_o2')).rejects.toThrow() // TODO: check error
+        await expect(run.load(txid + '_o2')).to.be.rejectedWith() // TODO: check error
       })
 
       it('missing read output', async () => {
@@ -709,7 +712,7 @@ describe('Transaction', () => {
         const args = [{ $ref: '_i0' }]
         const actions = [{ target: '_o1', method: 'init', args, creator: run.owner.pubkey }]
         const txid = await build(code, actions, [b.location], null, 2, [], 2)
-        await expect(run.load(txid + '_o2')).rejects.toThrow() // TODO: check error
+        await expect(run.load(txid + '_o2')).to.be.rejectedWith() // TODO: check error
       })
 
       it('missing write output', async () => {
@@ -720,7 +723,7 @@ describe('Transaction', () => {
         const args = [{ $ref: '_i0' }]
         const actions = [{ target: '_i1', method: 'f', args }]
         const txid = await build([], actions, [b.location, a.location], null, 2, [], 1)
-        await expect(run.load(txid + '_o2')).rejects.toThrow() // TODO: check error
+        await expect(run.load(txid + '_o2')).to.be.rejectedWith() // TODO: check error
       })
 
       it('method throw', async () => {
@@ -728,7 +731,7 @@ describe('Transaction', () => {
         const a = await new A().sync()
         const actions = [{ target: '_i0', method: 'f', args: [] }]
         const txid = await build([], actions, [a.location], null, 1)
-        await expect(run.load(txid + '_o1')).rejects.toThrow('unexpected exception in f')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('unexpected exception in f')
       })
 
       it('batch missing input', async () => {
@@ -738,7 +741,7 @@ describe('Transaction', () => {
         const args = [{ $ref: '_i0' }]
         const actions = [action1, { target: '_i1', method: 'f', args }]
         const txid = await build(code, actions, [], null, 2)
-        await expect(run.load(txid + '_o3')).rejects.toThrow() // TODO: check error
+        await expect(run.load(txid + '_o3')).to.be.rejectedWith() // TODO: check error
       })
 
       it('batch missing output', async () => {
@@ -749,7 +752,7 @@ describe('Transaction', () => {
         const args = [{ $ref: '_o3' }]
         const actions = [action1, { target: '_o2', method: 'init', args, creator: run.owner.pubkey }]
         const txid = await build(code, actions, [], null, 1, 2)
-        await expect(run.load(txid + '_o4')).rejects.toThrow() // TODO: check error
+        await expect(run.load(txid + '_o4')).to.be.rejectedWith() // TODO: check error
       })
 
       it('initial jig owner does not match pk script', async () => {
@@ -758,7 +761,7 @@ describe('Transaction', () => {
         const anotherOwner = new bsv.PrivateKey('testnet').publicKey.toString()
         const actions = [{ target: '_o1', method: 'init', args: [], creator: anotherOwner }]
         const txid = await build(code, actions, [], null, 1)
-        await expect(run.load(txid + '_o2')).rejects.toThrow('bad owner on output 2')
+        await expect(run.load(txid + '_o2')).to.be.rejectedWith('bad owner on output 2')
       })
 
       it('updated jig owner does not match pk script', async () => {
@@ -768,13 +771,13 @@ describe('Transaction', () => {
         const privkey2 = new bsv.PrivateKey('testnet')
         const actions = [{ target: '_i0', method: 'send', args: [`${privkey1.publicKey.toString()}`] }]
         const txid = await build([], actions, [a.location], privkey2.toAddress().toString(), 1)
-        await expect(run.load(txid + '_o1')).rejects.toThrow('bad owner on output 1')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('bad owner on output 1')
       })
 
       it('missing target', async () => {
         const actions = [{ target: '_o1`', method: 'init', args: '[]', creator: run.owner.pubkey }]
         const txid = await build([], actions, [], null, 1)
-        await expect(run.load(txid + '_o1')).rejects.toThrow('missing target _o1')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('missing target _o1')
       })
 
       it('bad satoshis', async () => {
@@ -782,17 +785,17 @@ describe('Transaction', () => {
         const a = await new A().sync()
         const actions = [{ target: '_i0', method: 'f', args: [1000] }]
         const txid = await build([], actions, [a.location], null, 1, [], 1, [bsv.Transaction.DUST_AMOUNT])
-        await expect(run.load(txid + '_o1')).rejects.toThrow('bad satoshis on output 1')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('bad satoshis on output 1')
       })
 
       it('bad class props', async () => {
         class A extends Jig { }
         const code = [{ text: A.toString(), props: { n: { $class: 'Set' } }, owner }]
         const txid = await build(code, [], [], null, 0)
-        await expect(run.load(txid + '_o1')).rejects.toThrow('$ properties must not be defined')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('$ properties must not be defined')
         const code2 = [{ text: A.toString(), props: { n: { $ref: 123 } }, owner }]
         const txid2 = await build(code2, [], [], null, 0)
-        await expect(run.load(txid2 + '_o1')).rejects.toThrow('typeof location is number - must be string')
+        await expect(run.load(txid2 + '_o1')).to.be.rejectedWith('typeof location is number - must be string')
       })
 
       it('non-existant ref', async () => {
@@ -803,7 +806,7 @@ describe('Transaction', () => {
         await run.sync()
         const actions = [{ target: '_i0', method: 'apply', args: [{ $ref: '_r1' }] }]
         const txid = await build([], actions, [b.location], null, 1, [a.location])
-        await expect(run.load(txid + '_o1')).rejects.toThrow('unexpected ref _r1')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('unexpected ref _r1')
       })
 
       it('same jig arg different locations', async () => {
@@ -819,7 +822,7 @@ describe('Transaction', () => {
         const args = [{ $ref: '_r0' }, { $ref: '_r1' }]
         const actions = [{ target: '_i0', method: 'apply', args }]
         const txid = await build([], actions, [b.location], null, 1, [a.location, a2.location])
-        await expect(run.load(txid + '_o1')).rejects.toThrow('referenced different locations of same jig: [jig A]')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('referenced different locations of same jig: [jig A]')
       })
 
       it('same ref different locations', async () => {
@@ -835,7 +838,7 @@ describe('Transaction', () => {
         const args = [{ $ref: `${a.location}` }, { $ref: `${a2.location}` }]
         const actions = [{ target: '_i0', method: 'apply', args }]
         const txid = await build([], actions, [b.location], null, 1)
-        await expect(run.load(txid + '_o1')).rejects.toThrow('referenced different locations of same jig: [jig A]')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('referenced different locations of same jig: [jig A]')
       })
 
       it('bad refs array', async () => {
@@ -851,7 +854,7 @@ describe('Transaction', () => {
         const args = [{ $ref: '_r0' }, { $ref: '_r1' }]
         const actions = [{ target: '_i0', method: 'apply', args }]
         const txid = await build([], actions, [b.location], null, 1, args)
-        await expect(run.load(txid + '_o1')).rejects.toThrow() // TODO: check error
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith() // TODO: check error
       })
 
       it('bad def owner', async () => {
@@ -859,7 +862,7 @@ describe('Transaction', () => {
         const differentOwner = new bsv.PrivateKey().publicKey.toString()
         const code = [{ text: A.toString(), owner: differentOwner }]
         const txid = await build(code, [], [], null, 0)
-        await expect(run.load(txid + '_o1')).rejects.toThrow(`bad def owner: ${txid}_o1`)
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith(`bad def owner: ${txid}_o1`)
       })
     })
   })
