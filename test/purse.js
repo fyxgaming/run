@@ -4,7 +4,8 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Jig } = require('./run')
+const { Run } = require('./run')
+const { Jig } = Run
 const { createRun } = require('./helpers')
 
 describe('Purse', () => {

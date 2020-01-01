@@ -3,7 +3,7 @@ const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
 const { createRun } = require('./helpers')
 const runBlockchainTestSuite = require('./blockchain')
-const Run = require('./run')
+const { Run, unobfuscate } = require('./run')
 const { Api } = Run
 
 // sample transactions with spent outputs in mined blocks on each network
@@ -49,7 +49,7 @@ const errors = {
 }
 
 networks.forEach(network => {
-  describe.only(`Star (${network})`, function () {
+  describe(`Star (${network})`, function () {
     const run = createRun({ network, blockchain: 'star' })
     beforeEach(() => run.activate())
     this.timeout(30000)
@@ -81,12 +81,12 @@ networks.forEach(network => {
   })
 })
 
-describe('api', () => {
+describe('Api', () => {
   describe('utxos', () => {
     it('correct for server returning duplicates', async () => {
       const address = bsv.PrivateKey('mainnet').toAddress().toString()
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
-      const api = { }
+      const api = unobfuscate({ })
       api.utxosUrl = (network, address) => 'https://www.google.com'
       api.utxosResp = (data, address) => {
         const utxo = { txid, vout: 0, satoshis: 0, script: new bsv.Script() }

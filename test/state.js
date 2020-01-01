@@ -4,7 +4,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const Run = require('./run')
+const { Run } = require('./run')
 const { Jig, StateCache } = Run
 const { createRun } = require('./helpers')
 

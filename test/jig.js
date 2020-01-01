@@ -4,7 +4,7 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { PrivateKey } = require('bsv')
-const Run = require('./run')
+const { Run } = require('./run')
 const { Jig } = Run
 const { createRun, hookPay, hookStoreAction, expectAction, expectNoAction } = require('./helpers')
 

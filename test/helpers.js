@@ -4,7 +4,7 @@
  * Helper functions used across test modules
  */
 
-const Run = require('./run')
+const { Run } = require('./run')
 const { expect } = require('chai')
 
 const testPurses = {

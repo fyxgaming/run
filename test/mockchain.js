@@ -4,7 +4,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const unobfuscate = require('./unobfuscate')
+const { unobfuscate } = require('./run')
 const { createRun } = require('./helpers')
 const runBlockchainTestSuite = require('./blockchain')
 
