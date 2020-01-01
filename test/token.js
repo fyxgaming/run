@@ -9,16 +9,14 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-const run = createRun()
-
-beforeEach(() => run.activate())
-beforeEach(() => run.blockchain.block())
-
-class TestToken extends Token { }
-
-TestToken.decimals = 2
-
 describe('Token', () => {
+  const run = createRun()
+  beforeEach(() => run.activate())
+  beforeEach(() => run.blockchain.block())
+
+  class TestToken extends Token { }
+  TestToken.decimals = 2
+
   describe('init', () => {
     it('mint', () => {
       const token = new TestToken(100)

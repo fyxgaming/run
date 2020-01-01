@@ -8,17 +8,16 @@ const Run = require('./run')
 const { Jig } = Run
 const { createRun, hookPay, hookStoreAction, expectAction, expectNoAction } = require('./helpers')
 
-const run = hookStoreAction(createRun())
-
-beforeEach(() => run.blockchain.block())
-beforeEach(() => run.activate())
-beforeEach(() => Run.code.flush())
-
-// Turn this on for easier debugging because the tests won't bleed into one another.
-// (We leave this off by default to enable state bleeding and more complexity in the tests)
-// afterEach(() => run.sync())
-
 describe('Jig', () => {
+  const run = hookStoreAction(createRun())
+  beforeEach(() => run.blockchain.block())
+  beforeEach(() => run.activate())
+  beforeEach(() => Run.code.flush())
+
+  // Turn this on for easier debugging because the tests won't bleed into one another.
+  // (We leave this off by default to enable state bleeding and more complexity in the tests)
+  // afterEach(() => run.sync())
+
   describe('constructor', () => {
     it('basic jig', async () => {
       class A extends Jig { }
