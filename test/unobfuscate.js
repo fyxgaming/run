@@ -4,7 +4,7 @@
  * Wraps an object to unobfuscate its properties for testing in obfuscated builds
  */
 
-module.exports = function unobfuscate(obj) {
+module.exports = function unobfuscate (obj) {
   const obfuscationMap = require('../dist/obfuscation-map.json')
 
   const handler = {

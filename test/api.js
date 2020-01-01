@@ -1,5 +1,5 @@
 const bsv = require('bsv')
-const { describe, it } = require('mocha')
+const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
 const { createRun } = require('./helpers')
 const runBlockchainTestSuite = require('./blockchain')
@@ -49,8 +49,10 @@ const errors = {
 }
 
 networks.forEach(network => {
-  describe(`Star (${network})`, () => {
+  describe.only(`Star (${network})`, function () {
     const run = createRun({ network, blockchain: 'star' })
+    beforeEach(() => run.activate())
+    this.timeout(30000)
     runBlockchainTestSuite(run.blockchain, run.purse.privkey,
       sampleTransactions[network], true /* supportsSpentTxIdInBlocks */,
       true /* supportsSpentTxIdInMempool */, 0 /* indexingLatency */, errors)
@@ -58,8 +60,10 @@ networks.forEach(network => {
 })
 
 networks.forEach(network => {
-  describe(`BitIndex (${network})`, () => {
+  describe(`BitIndex (${network})`, function () {
     const run = createRun({ network, blockchain: 'bitindex' })
+    beforeEach(() => run.activate())
+    this.timeout(30000)
     runBlockchainTestSuite(run.blockchain, run.purse.privkey,
       sampleTransactions[network], true /* supportsSpentTxId */,
       true /* supportsSpentTxIdInMempool */, 1000 /* indexingLatency */, errors)
@@ -67,8 +71,10 @@ networks.forEach(network => {
 })
 
 networks.forEach(network => {
-  describe(`WhatsOnChain (${network})`, () => {
+  describe(`WhatsOnChain (${network})`, function () {
     const run = createRun({ network, blockchain: 'whatsonchain' })
+    beforeEach(() => run.activate())
+    this.timeout(30000)
     runBlockchainTestSuite(run.blockchain, run.purse.privkey,
       sampleTransactions[network], false /* supportsSpentTxId */,
       false /* supportsSpentTxIdInMempool */, 1000 /* indexingLatency */, errors)
