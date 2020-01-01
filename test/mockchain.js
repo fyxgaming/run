@@ -4,10 +4,11 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
+const unobfuscate = require('./unobfuscate')
 const { createRun } = require('./helpers')
 const runBlockchainTestSuite = require('./blockchain')
 
-describe.only('Mockchain', () => {
+describe('Mockchain', () => {
   const run = createRun({ network: 'mock' })
   const tx = run.blockchain.transactions.values().next().value
   beforeEach(() => run.blockchain.block())
@@ -55,8 +56,8 @@ describe.only('Mockchain', () => {
       for (let i = 0; i < 25; i++) {
         const utxo = (await run.blockchain.utxos(run.purse.address))[0]
         const tx = new Transaction().from(utxo).change(run.purse.address).sign(run.purse.privkey)
-        txns.push(tx)
         await run.blockchain.broadcast(tx)
+        txns.push(unobfuscate(tx))
       }
       for (let i = 0; i < txns.length; i++) {
         expect(txns[i].blockHeight).to.equal(-1)
