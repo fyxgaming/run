@@ -72,6 +72,7 @@ describe('Jig', () => {
       class B extends Jig { init () { x = 2 } } // eslint-disable-line
       expect(() => new B()).to.throw()
       expectNoAction()
+      delete global.x
     })
 
     it('jig env inaccessible', () => {
@@ -450,12 +451,12 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('inactive network', async () => {
+    it('wrong network', async () => {
       class A extends Jig { f () { this.n = 1; return this } }
       const a = await new A().sync()
       createRun({ network: 'test' })
-      await expect(a.f().sync()).to.be.rejected
-    })
+      await expect(a.f().sync()).to.be.rejectedWith('Signature missing for A')
+    }).timeout(30000)
   })
 
   describe('arguments', () => {
@@ -1241,7 +1242,7 @@ describe('Jig', () => {
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
       const publicKey = new PrivateKey().publicKey
-      expect(() => a.send(publicKey)).to.throw('PublicKey cannot be serialized to json')
+      expect(() => a.send(publicKey)).to.throw('cannot be serialized to json')
       expect(() => a.send(JSON.parse(JSON.stringify(publicKey)))).to.throw('owner must be a pubkey string')
       expect(() => a.send('123')).to.throw('owner is not a valid public key')
       expectNoAction()
@@ -1337,7 +1338,7 @@ describe('Jig', () => {
       a.f(50)
       await run.sync()
       await run.load(a.location)
-    })
+    }).timeout(30000)
 
     it('set invalid', () => {
       class A extends Jig {
@@ -1537,7 +1538,7 @@ describe('Jig', () => {
       class A extends Jig { }
       for (let i = 0; i < 100; i++) { new A() } // eslint-disable-line
       await run.sync()
-    })
+    }).timeout(10000)
 
     it.skip('long mempool chain (jig)', async () => {
       class A extends Jig { set (n) { this.n = n } }
@@ -2144,7 +2145,7 @@ describe('Jig', () => {
 
     it('set caller is error', () => {
       class A extends Jig { init () { caller = 1 } } // eslint-disable-line
-      expect(() => new A()).to.throw('Cannot set property caller')
+      expect(() => new A()).to.throw()
     })
   })
 
