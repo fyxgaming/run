@@ -180,7 +180,7 @@ describe('Jig', () => {
     })
   })
 
-  describe.only('sync', () => {
+  describe('sync', () => {
     it('sets origins and locations on class and instance', async () => {
       class A extends Jig { }
       const a = new A()
@@ -346,7 +346,7 @@ describe('Jig', () => {
       await dragon.sync()
       run.state.cache.clear()
       const dragon2 = await run.load(dragon.location)
-      expect(dragon).to.equal(dragon2)
+      expect(dragon).to.deep.equal(dragon2)
     })
 
     it('rearrange jigs', () => {
@@ -399,7 +399,7 @@ describe('Jig', () => {
       expect(() => a.f(c)).to.throw()
       expectNoAction()
       expect(a.n).to.equal(1)
-      expect(a.arr).to.equal(['a', { b: 1 }])
+      expect(a.arr).to.deep.equal(['a', { b: 1 }])
       expect(a.self).to.equal(a)
       expect(a.b.z).to.equal(undefined)
       expect(c.n).to.equal(undefined)
@@ -454,7 +454,7 @@ describe('Jig', () => {
       class A extends Jig { f () { this.n = 1; return this } }
       const a = await new A().sync()
       createRun({ network: 'test' })
-      await expect(a.f().sync()).to.be.rejected()
+      await expect(a.f().sync()).to.be.rejected
     })
   })
 
@@ -489,7 +489,7 @@ describe('Jig', () => {
       expectNoAction()
       expect(() => a.f(Symbol.hasInstance)).to.throw('Symbol(Symbol.hasInstance) cannot be serialized to json')
       expectNoAction()
-      expect(() => a.f(() => { })).to.throw('() => {} cannot be serialized to json')
+      expect(() => a.f(() => { })).to.throw('cannot be serialized to json')
     })
 
     it('changes in method', () => {
@@ -517,7 +517,7 @@ describe('Jig', () => {
     })
   })
 
-  describe('get', () => {
+  describe.only('get', () => {
     it('no change no action', () => {
       class B extends Jig {
         set (n) { this.n = n }
@@ -1434,7 +1434,7 @@ describe('Jig', () => {
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      await expect(a.sync()).to.be.rejected()
+      await expect(a.sync()).to.be.rejected
       expect(() => a.origin).to.throw()
       expect(() => a.n).to.throw()
       expect(() => Reflect.ownKeys(a)).to.throw()
@@ -1712,8 +1712,8 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
-      await expect(run.load(a.location.slice(0, 64) + '_o0')).to.be.rejected()
-      await expect(run.load(a.location.slice(0, 64) + '_o3')).to.be.rejected()
+      await expect(run.load(a.location.slice(0, 64) + '_o0')).to.be.rejected
+      await expect(run.load(a.location.slice(0, 64) + '_o3')).to.be.rejected
     })
 
     it('multiple writes', async () => {
@@ -1979,7 +1979,7 @@ describe('Jig', () => {
       run.transaction.end()
       expect(a.n).to.equal(11)
       expect(b.n).to.equal(30)
-      await expect(a.sync()).to.be.rejected()
+      await expect(a.sync()).to.be.rejected
       expect(a.n).to.equal(2)
       expect(b.n).to.equal(20)
     })
