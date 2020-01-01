@@ -244,9 +244,9 @@ describe('util', () => {
     })
 
     it('function', () => {
-      expect(() => richObjectToJson(() => {})).to.throw('() => {} cannot be serialized to json')
-      expect(() => richObjectToJson(function () {})).to.throw('function () {} cannot be serialized to json')
-      expect(() => richObjectToJson(Math.sin)).to.throw('function sin() { [native code] } cannot be serialized to json')
+      expect(() => richObjectToJson(() => {})).to.throw('cannot be serialized to json')
+      expect(() => richObjectToJson(function () {})).to.throw('cannot be serialized to json')
+      expect(() => richObjectToJson(Math.sin)).to.throw('cannot be serialized to json')
     })
 
     it('symbol', () => {
@@ -290,11 +290,11 @@ describe('util', () => {
     })
 
     it('unsupported type', () => {
-      expect(() => richObjectToJson(new class {}())).to.throw('[object Object] cannot be serialized to json')
-      expect(() => richObjectToJson(new class extends Array {}())).to.throw('Array cannot be serialized to json')
-      expect(() => richObjectToJson(new Set())).to.throw('Set cannot be serialized to json')
-      expect(() => richObjectToJson(new Map())).to.throw('Map cannot be serialized to json')
-      expect(() => richObjectToJson(Buffer.alloc(0))).to.throw('Buffer cannot be serialized to json')
+      expect(() => richObjectToJson(new class {}())).to.throw('cannot be serialized to json')
+      expect(() => richObjectToJson(new class extends Array {}())).to.throw('cannot be serialized to json')
+      expect(() => richObjectToJson(new Set())).to.throw('cannot be serialized to json')
+      expect(() => richObjectToJson(new Map())).to.throw('cannot be serialized to json')
+      expect(() => richObjectToJson(Buffer.alloc(0))).to.throw('cannot be serialized to json')
     })
 
     it('undefined', () => {
@@ -341,9 +341,9 @@ describe('util', () => {
     })
 
     it('function', () => {
-      expect(() => jsonToRichObject(() => {})).to.throw('JSON should not contain () => {}')
-      expect(() => jsonToRichObject(function () {})).to.throw('JSON should not contain function () {}')
-      expect(() => jsonToRichObject(Math.sin)).to.throw('JSON should not contain function sin() { [native code] }')
+      expect(() => jsonToRichObject(() => {})).to.throw('JSON should not contain')
+      expect(() => jsonToRichObject(function () {})).to.throw('JSON should not contain')
+      expect(() => jsonToRichObject(Math.sin)).to.throw('JSON should not contain function')
     })
 
     it('symbol', () => {
@@ -376,11 +376,11 @@ describe('util', () => {
     })
 
     it('unsupported types', () => {
-      expect(() => jsonToRichObject(new class {}())).to.throw('JSON should not contain [object Object]')
-      expect(() => jsonToRichObject(new class extends Array {}())).to.throw('JSON should not contain Array')
-      expect(() => jsonToRichObject(new Set())).to.throw('JSON should not contain Set')
-      expect(() => jsonToRichObject(new Map())).to.throw('JSON should not contain Map')
-      expect(() => jsonToRichObject(Buffer.alloc(0))).to.throw('JSON should not contain Buffer')
+      expect(() => jsonToRichObject(new class {}())).to.throw('JSON should not contain')
+      expect(() => jsonToRichObject(new class extends Array {}())).to.throw('JSON should not contain')
+      expect(() => jsonToRichObject(new Set())).to.throw('JSON should not contain')
+      expect(() => jsonToRichObject(new Map())).to.throw('JSON should not contain')
+      expect(() => jsonToRichObject(Buffer.alloc(0))).to.throw('JSON should not contain')
     })
 
     it('undefined', () => {
