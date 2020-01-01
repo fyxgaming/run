@@ -517,7 +517,7 @@ describe('Jig', () => {
     })
   })
 
-  describe.only('get', () => {
+  describe('get', () => {
     it('no change no action', () => {
       class B extends Jig {
         set (n) { this.n = n }
@@ -864,7 +864,7 @@ describe('Jig', () => {
       expect(() => a.g()).to.throw('Symbol(Symbol.hasInstance) cannot be serialized to json')
       expectNoAction()
       expect(typeof a.n).to.equal('undefined')
-      expect(() => a.h()).to.throw('() => {} cannot be serialized to json')
+      expect(() => a.h()).to.throw('cannot be serialized to json')
       expectNoAction()
       expect(typeof a.n).to.equal('undefined')
     })
@@ -930,7 +930,7 @@ describe('Jig', () => {
     })
   })
 
-  describe('delete', () => {
+  describe.only('delete', () => {
     it('allowed internally', () => {
       class A extends Jig {
         init () { this.n = 1 }
