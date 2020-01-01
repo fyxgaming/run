@@ -16,6 +16,7 @@ global.TEST_MODE = process.env.TEST_MODE
 let Run = null
 
 if (TEST_MODE === 'lib') Run = require('../lib')
+if (TEST_MODE === 'cover') Run = require('../lib')
 if (TEST_MODE === 'dist') Run = require('../dist/run.node.min')
 if (TEST_MODE === 'webpack') Run = require('run')
 
