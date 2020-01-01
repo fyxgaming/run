@@ -1,6 +1,9 @@
 const bsv = require('bsv')
 const { describe, it, beforeEach, afterEach } = require('mocha')
-const { expect } = require('chai')
+const chai = require('chai')
+const chaiAsPromised = require('chai-as-promised')
+chai.use(chaiAsPromised)
+const { expect } = chai
 const Run = require('./run')
 const { Jig, StateCache } = Run
 const { createRun } = require('./helpers')
@@ -181,7 +184,7 @@ describe('StateCache', () => {
       await a.sync()
       expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
       stateGetOverrides.set(a.location, { n: 1 })
-      await expect(run.load(a.location)).rejects.toThrow('hello')
+      await expect(run.load(a.location)).to.be.rejectedWith('hello')
       expectStateGet(a.location)
     })
 
