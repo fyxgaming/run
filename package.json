@@ -28,6 +28,7 @@
             "beforeEach",
             "afterAll",
             "afterEach",
+            "TEST_MODE",
             "TEST_BUILD",
             "COVER",
             "RUN_VERSION",

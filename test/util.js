@@ -1,6 +1,6 @@
 /**
  * util.js
- * 
+ *
  * Tests for ../lib/util.js
  */
 
@@ -403,14 +403,11 @@ describe('util', () => {
     it('custom', () => {
       const setUnpacker = x => { if (x.$class === 'set') return new Set() }
       const mapUnpacker = x => { if (x.$class === 'map') return new Map() }
-      expect(jsonToRichObject({ a: [1], s: { $class: 'set' }, m: { $class: 'map' } },
-        [setUnpacker, mapUnpacker])).to.deep.equal
-({ a: [1], s: new Set(), m: new Map() })
+      expect(jsonToRichObject({ a: [1], s: { $class: 'set' }, m: { $class: 'map' } }, [setUnpacker, mapUnpacker])).to.deep.equal({ a: [1], s: new Set(), m: new Map() })
       const rootUnpacker = (x, p, k) => { if (p === null) return 1 }
       expect(jsonToRichObject({}, [rootUnpacker])).to.equal(1)
       const namedUnpacker = (x, p, k) => { if (k === 'a') return 1 }
-      expect(jsonToRichObject({ a: [], b: 2 }, [namedUnpacker])).to.deep.equal
-({ a: 1, b: 2 })
+      expect(jsonToRichObject({ a: [], b: 2 }, [namedUnpacker])).to.deep.equal({ a: 1, b: 2 })
     })
   })
 
@@ -420,8 +417,7 @@ describe('util', () => {
       const arr = []
       const obj = { a: new A(), b: [new A(), A] }
       const json = richObjectToJson(obj, [extractJigsAndCodeToArray(arr)])
-      expect(json).to.deep.equal
-({ a: { $index: 0 }, b: [{ $index: 1 }, { $index: 2 }] })
+      expect(json).to.deep.equal({ a: { $index: 0 }, b: [{ $index: 1 }, { $index: 2 }] })
       expect(arr.length).to.equal(3)
       expect(arr[0]).to.equal(obj.a)
       expect(arr[1]).to.equal(obj.b[0])
@@ -445,12 +441,9 @@ describe('util', () => {
     function expectTraverse (target, expectedVisitArgs) {
       deepTraverse(target, (target, parent, name) => {
         const [expectedTarget, expectedParent, expectedName] = expectedVisitArgs.shift()
-        expect(target).to.deep.equal
-(expectedTarget)
-        expect(parent).to.deep.equal
-(expectedParent)
-        expect(name).to.deep.equal
-(expectedName)
+        expect(target).to.deep.equal(expectedTarget)
+        expect(parent).to.deep.equal(expectedParent)
+        expect(name).to.deep.equal(expectedName)
       })
     }
 

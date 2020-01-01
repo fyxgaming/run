@@ -1,8 +1,8 @@
 /**
  * process.js
- * 
+ *
  * Provides the Run build for tests
- * 
+ *
  * The same tests run in different environments (node, browser) and with different Run builds
  * (lib, dist). This module outputs the appropriate instance for the test environment.
  */
@@ -26,7 +26,7 @@ if (typeof Run._util === 'undefined') {
 
   const handler = {
     get: (target, prop) => {
-      const val = prop in obfuscationMap? target[obfuscationMap[prop]] : target[prop]
+      const val = prop in obfuscationMap ? target[obfuscationMap[prop]] : target[prop]
       return prop !== 'prototype' && typeof val === 'object' ? new Proxy(val, handler) : val
     }
   }

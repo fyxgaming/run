@@ -289,14 +289,14 @@ const tests = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      TEST_MODE: '"webpack"',
+      TEST_MODE: '"webpack"'
     })
   ],
   optimization: {
     minimize: false
   },
-  stats: 'errors-only',
-  
+  stats: 'errors-only'
+
   // Fix for mocha/webpack issue
   // https://github.com/react-boilerplate/react-boilerplate/issues/2279
   // node: { fs: 'empty' }

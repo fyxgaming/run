@@ -1,6 +1,6 @@
 /**
  * helpers.js
- * 
+ *
  * Helper functions used across test modules
  */
 
@@ -33,9 +33,7 @@ function createRun (options = { }) {
 }
 
 async function hookPay (run, ...enables) {
-  const syncerKey = getObfuscatedKey('syncer')
-  const queuedKey = getObfuscatedKey('queued')
-  enables = new Array(run[syncerKey][queuedKey].length).fill(true).concat(enables)
+  enables = new Array(run.syncer.queued.length).fill(true).concat(enables)
   const orig = run.purse.pay.bind(run.purse)
   run.purse.pay = async (tx) => {
     if (!enables.length) { return orig(tx) }
