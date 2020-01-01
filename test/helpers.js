@@ -70,7 +70,9 @@ function expectAction (target, method, args, inputs, outputs, reads) {
   action = null
 }
 
-function expectNoAction () { if (action) { throw new Error('Unexpected transaction') } }
+function expectNoAction () {
+  if (action) throw new Error('Unexpected transaction')
+}
 
 async function deploy (Class) {
   const app = 'Star ▸ Library'

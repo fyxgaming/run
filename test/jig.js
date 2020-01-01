@@ -16,8 +16,8 @@ beforeEach(() => Run.code.flush())
 // afterEach(() => run.sync())
 
 describe('Jig', () => {
-  describe('constructor', () => {
-    it.only('basic jig', async () => {
+  describe.only('constructor', () => {
+    it('basic jig', async () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -27,13 +27,13 @@ describe('Jig', () => {
     })
 
     it('must be extended', () => {
-      expect(() => new Jig()).toThrow()
+      expect(() => new Jig()).to.throw()
       expectNoAction()
     })
 
     it('must not have constructor', () => {
       class A extends Jig { constructor () { super(); this.n = 1 } }
-      expect(() => new A()).toThrow()
+      expect(() => new A()).to.throw('Jig must use init() instead of constructor()')
       expectNoAction()
     })
 
@@ -63,17 +63,17 @@ describe('Jig', () => {
     it('locals and globals inaccessible', () => {
       let n = 1 // eslint-disable-line
       class A extends Jig { init () { n = 2 } }
-      expect(() => new A()).toThrow()
+      expect(() => new A()).to.throw()
       expectNoAction()
       global.x = 1 // eslint-disable-line
       class B extends Jig { init () { x = 2 } } // eslint-disable-line
-      expect(() => new B()).toThrow()
+      expect(() => new B()).to.throw()
       expectNoAction()
     })
 
     it('jig env inaccessible', () => {
       class A extends Jig { init () { control.stack.push(1) } } // eslint-disable-line
-      expect(() => new A()).toThrow()
+      expect(() => new A()).to.throw()
       expectNoAction()
     })
 
@@ -91,7 +91,7 @@ describe('Jig', () => {
     it('useful error when creating date', () => {
       class A extends Jig { createDate () { return new Date() } }
       const a = new A()
-      expect(() => a.createDate()).toThrow('Hint: Date is disabled inside jigs because it is non-deterministic.')
+      expect(() => a.createDate()).to.throw('Hint: Date is disabled inside jigs because it is non-deterministic.')
     })
   })
 
@@ -155,7 +155,7 @@ describe('Jig', () => {
       class A extends Jig { init (n) { this.n = n } }
       const a = new A(5)
       expectAction(a, 'init', [5], [], [a], [])
-      expect(() => a.init(6)).toThrow()
+      expect(() => a.init(6)).to.throw()
       expectNoAction()
     })
 
@@ -167,13 +167,13 @@ describe('Jig', () => {
       }
       const a = new A(5)
       expectAction(a, 'init', [5], [], [a], [])
-      expect(() => a.f(6)).toThrow()
+      expect(() => a.f(6)).to.throw()
       expectNoAction()
     })
 
     it('throws if return', async () => {
       class A extends Jig { init () { return {} }}
-      expect(() => new A()).toThrow()
+      expect(() => new A()).to.throw()
     })
   })
 
@@ -197,17 +197,17 @@ describe('Jig', () => {
     it('throws if called internally', () => {
       class A extends Jig { init () { this.sync() } }
       class B extends Jig { f () { this.sync() } }
-      expect(() => new A()).toThrow()
+      expect(() => new A()).to.throw()
       expectNoAction()
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f()).toThrow()
+      expect(() => b.f()).to.throw()
       expectNoAction()
     })
 
     it('throws if override sync', () => {
       class A extends Jig { sync () { } }
-      expect(() => new A()).toThrow()
+      expect(() => new A()).to.throw()
       expectNoAction()
     })
 
@@ -284,7 +284,7 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       await a.sync() // pending transactions must publish first
-      await expect(a.sync()).rejects.toThrow('Blockchain API does not support forward syncing.')
+      await expect(a.sync()).rejects.to.throw('Blockchain API does not support forward syncing.')
     })
 
     it('forward conflict', async () => {
@@ -298,7 +298,7 @@ describe('Jig', () => {
       await a2.sync()
       run.activate()
       a.set(2)
-      await expect(a.sync()).rejects.toThrow('tx input 0 missing or spent')
+      await expect(a.sync()).rejects.to.throw('tx input 0 missing or spent')
       expect(a.x).to.equal(1)
     })
 
@@ -308,7 +308,7 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const tx = await run.blockchain.fetch(a.location.slice(0, 64))
       tx.outputs[2].spentTxId = '123'
-      await expect(a.sync()).rejects.toThrow('tx not found')
+      await expect(a.sync()).rejects.to.throw('tx not found')
     })
 
     it('wrong spentTxId', async () => {
@@ -320,7 +320,7 @@ describe('Jig', () => {
       await run.sync()
       const tx = await run.blockchain.fetch(a.location.slice(0, 64))
       tx.outputs[2].spentTxId = b.location.slice(0, 64)
-      await expect(a.sync()).rejects.toThrow('jig not found')
+      await expect(a.sync()).rejects.to.throw('jig not found')
     })
   })
 
@@ -385,7 +385,7 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a, a.b], [])
       const c = new C()
       expectAction(c, 'init', [], [], [c], [])
-      expect(() => a.f(c)).toThrow()
+      expect(() => a.f(c)).to.throw()
       expectNoAction()
       expect(a.n).to.equal(1)
       expect(a.arr).to.equal(['a', { b: 1 }])
@@ -400,7 +400,7 @@ describe('Jig', () => {
       A.deps = { B }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f()).toThrow('internal errors must not be swallowed\n\nError: some error message')
+      expect(() => a.f()).to.throw('internal errors must not be swallowed\n\nError: some error message')
       expectNoAction()
     })
 
@@ -410,7 +410,7 @@ describe('Jig', () => {
       A.deps = { $: Preconditions }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.set(0)).toThrow()
+      expect(() => a.set(0)).to.throw()
       expectNoAction()
       a.set(1)
       expectAction(a, 'set', [1], [a], [a], [])
@@ -435,7 +435,7 @@ describe('Jig', () => {
       expectAction(a, 'setB', [b], [a], [a], [])
       b.setA(a)
       expectAction(b, 'setA', [a], [b], [b], [])
-      expect(() => b.f()).toThrow()
+      expect(() => b.f()).to.throw()
       expectNoAction()
     })
 
@@ -443,7 +443,7 @@ describe('Jig', () => {
       class A extends Jig { f () { this.n = 1; return this } }
       const a = await new A().sync()
       createRun({ network: 'test' })
-      await expect(a.f().sync()).rejects.toThrow()
+      await expect(a.f().sync()).rejects.to.throw()
     })
   })
 
@@ -468,17 +468,17 @@ describe('Jig', () => {
       class A extends Jig { f (...args) { this.args = args } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f(NaN)).toThrow('NaN cannot be serialized to json')
+      expect(() => a.f(NaN)).to.throw('NaN cannot be serialized to json')
       expectNoAction()
-      expect(() => a.f(Infinity)).toThrow('Infinity cannot be serialized to json')
+      expect(() => a.f(Infinity)).to.throw('Infinity cannot be serialized to json')
       expectNoAction()
-      expect(() => a.f(new Set())).toThrow('Set cannot be serialized to json')
+      expect(() => a.f(new Set())).to.throw('Set cannot be serialized to json')
       expectNoAction()
-      expect(() => a.f(new Map())).toThrow('Map cannot be serialized to json')
+      expect(() => a.f(new Map())).to.throw('Map cannot be serialized to json')
       expectNoAction()
-      expect(() => a.f(Symbol.hasInstance)).toThrow('Symbol(Symbol.hasInstance) cannot be serialized to json')
+      expect(() => a.f(Symbol.hasInstance)).to.throw('Symbol(Symbol.hasInstance) cannot be serialized to json')
       expectNoAction()
-      expect(() => a.f(() => { })).toThrow('() => {} cannot be serialized to json')
+      expect(() => a.f(() => { })).to.throw('() => {} cannot be serialized to json')
     })
 
     it('changes in method', () => {
@@ -689,7 +689,7 @@ describe('Jig', () => {
         apply (a2) { this.n = this.a + a2.n }
       }
       const b = new B(a)
-      expect(() => b.apply(a2)).toThrow('referenced different locations of same jig: [jig A]')
+      expect(() => b.apply(a2)).to.throw('referenced different locations of same jig: [jig A]')
     })
 
     it('different read and write instances', async () => {
@@ -701,7 +701,7 @@ describe('Jig', () => {
       const a2 = await run.load(a.location)
       a2.set(2)
       const b = new B()
-      expect(() => b.apply(a, a2)).toThrow('referenced different locations of same jig: [jig A]')
+      expect(() => b.apply(a, a2)).to.throw('referenced different locations of same jig: [jig A]')
     })
 
     it('different read instances batch', async () => {
@@ -718,7 +718,7 @@ describe('Jig', () => {
       b.apply(a)
       b2.apply(a2)
       run.transaction.end()
-      await expect(run.sync()).rejects.toThrow(`read different locations of same jig ${a.origin}`)
+      await expect(run.sync()).rejects.to.throw(`read different locations of same jig ${a.origin}`)
     })
 
     it('prevents stale posts', async () => {
@@ -730,7 +730,7 @@ describe('Jig', () => {
       const a2 = await run.load(a.location)
       a2.set(1)
       b.apply(a)
-      await expect(run.sync()).rejects.toThrow(`Read ${a.location} is not the latest. Must sync() jigs`)
+      await expect(run.sync()).rejects.to.throw(`Read ${a.location} is not the latest. Must sync() jigs`)
     })
 
     it('prevents maybe stale posts', async () => {
@@ -754,7 +754,7 @@ describe('Jig', () => {
           return tx
         }
         b.apply(a)
-        await expect(run.sync()).rejects.toThrow(`Read ${a.location} may not be latest. Blockchain did not return spentTxId. Aborting`)
+        await expect(run.sync()).rejects.to.throw(`Read ${a.location} may not be latest. Blockchain did not return spentTxId. Aborting`)
       } finally { run.blockchain.fetch = oldFetch }
     })
 
@@ -779,7 +779,7 @@ describe('Jig', () => {
           if (txid === b.location.slice(0, 64)) tx.time = Date.now()
           return tx
         }
-        await expect(run2.load(b.location)).rejects.toThrow(`${a.location} is stale. Aborting.`)
+        await expect(run2.load(b.location)).rejects.to.throw(`${a.location} is stale. Aborting.`)
       } finally { run.blockchain.fetch = oldFetch }
     })
   })
@@ -847,13 +847,13 @@ describe('Jig', () => {
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f()).toThrow('Set cannot be serialized to json')
+      expect(() => a.f()).to.throw('Set cannot be serialized to json')
       expectNoAction()
       expect(typeof a.n).to.equal('undefined')
-      expect(() => a.g()).toThrow('Symbol(Symbol.hasInstance) cannot be serialized to json')
+      expect(() => a.g()).to.throw('Symbol(Symbol.hasInstance) cannot be serialized to json')
       expectNoAction()
       expect(typeof a.n).to.equal('undefined')
-      expect(() => a.h()).toThrow('() => {} cannot be serialized to json')
+      expect(() => a.h()).to.throw('() => {} cannot be serialized to json')
       expectNoAction()
       expect(typeof a.n).to.equal('undefined')
     })
@@ -864,9 +864,9 @@ describe('Jig', () => {
       B.deps = { A }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => { a.n = 1 }).toThrow()
+      expect(() => { a.n = 1 }).to.throw()
       expectNoAction()
-      expect(() => new B()).toThrow()
+      expect(() => new B()).to.throw()
       expectNoAction()
     })
 
@@ -882,11 +882,11 @@ describe('Jig', () => {
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.g()).toThrow()
+      expect(() => a.g()).to.throw()
       expectNoAction()
-      expect(() => a.h()).toThrow()
+      expect(() => a.h()).to.throw()
       expectNoAction()
-      expect(() => a.i()).toThrow()
+      expect(() => a.i()).to.throw()
       expectNoAction()
     })
 
@@ -900,9 +900,9 @@ describe('Jig', () => {
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f()).toThrow('must not set n on method sync')
+      expect(() => a.f()).to.throw('must not set n on method sync')
       expectNoAction()
-      expect(() => a.g()).toThrow('must not set n on method filter')
+      expect(() => a.g()).to.throw('must not set n on method filter')
       expectNoAction()
     })
 
@@ -937,7 +937,7 @@ describe('Jig', () => {
       class A extends Jig { init () { this.n = 1 }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => { delete a.n }).toThrow()
+      expect(() => { delete a.n }).to.throw()
       expectNoAction()
     })
 
@@ -945,7 +945,7 @@ describe('Jig', () => {
       class A extends Jig { f () { } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => { delete a.sync }).toThrow()
+      expect(() => { delete a.sync }).to.throw()
     })
 
     it('unchanged', () => {
@@ -982,8 +982,8 @@ describe('Jig', () => {
       class A extends Jig { f () { Reflect.setPrototypeOf(this, Object) }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => Reflect.setPrototypeOf(a, Object)).toThrow()
-      expect(() => a.f()).toThrow()
+      expect(() => Reflect.setPrototypeOf(a, Object)).to.throw()
+      expect(() => a.f()).to.throw()
       expectNoAction()
     })
   })
@@ -993,8 +993,8 @@ describe('Jig', () => {
       class A extends Jig { f () { Object.preventExtensions(this) }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => Object.preventExtensions(a)).toThrow()
-      expect(() => a.f()).toThrow()
+      expect(() => Object.preventExtensions(a)).to.throw()
+      expect(() => a.f()).to.throw()
       expectNoAction()
     })
   })
@@ -1004,8 +1004,8 @@ describe('Jig', () => {
       class A extends Jig { f () { Object.defineProperty(this, 'n', { value: 1 }) }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => Object.defineProperty(a, 'n', { value: 1 })).toThrow()
-      expect(() => a.f()).toThrow()
+      expect(() => Object.defineProperty(a, 'n', { value: 1 })).to.throw()
+      expect(() => a.f()).to.throw()
       expectNoAction()
     })
   })
@@ -1114,16 +1114,16 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const err = func => `internal method ${func} may not be called to change state`
       const writeOps = [
-        () => expect(() => a.a.copyWithin(1)).toThrow(err('copyWithin')),
-        () => expect(() => a.a.pop()).toThrow(err('pop')),
-        () => expect(() => a.a.push(1)).toThrow(err('push')),
-        () => expect(() => a.a.reverse()).toThrow(err('reverse')),
-        () => expect(() => a.a.shift()).toThrow(err('shift')),
-        () => expect(() => a.a.sort()).toThrow(err('sort')),
-        () => expect(() => a.a.splice(0, 1)).toThrow(err('splice')),
-        () => expect(() => a.a.unshift(4)).toThrow(err('unshift')),
-        () => expect(() => a.a.fill(0)).toThrow(err('fill')),
-        () => expect(() => new B()).toThrow(err('push'))
+        () => expect(() => a.a.copyWithin(1)).to.throw(err('copyWithin')),
+        () => expect(() => a.a.pop()).to.throw(err('pop')),
+        () => expect(() => a.a.push(1)).to.throw(err('push')),
+        () => expect(() => a.a.reverse()).to.throw(err('reverse')),
+        () => expect(() => a.a.shift()).to.throw(err('shift')),
+        () => expect(() => a.a.sort()).to.throw(err('sort')),
+        () => expect(() => a.a.splice(0, 1)).to.throw(err('splice')),
+        () => expect(() => a.a.unshift(4)).to.throw(err('unshift')),
+        () => expect(() => a.a.fill(0)).to.throw(err('fill')),
+        () => expect(() => new B()).to.throw(err('push'))
       ]
       writeOps.forEach(op => { op(); expectNoAction() })
     })
@@ -1134,25 +1134,25 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const readOps = [
         () => expect(a.a.length).to.equal(0),
-        () => expect(() => a.a.concat([1])).not.toThrow(),
-        () => expect(() => a.a.entries()).not.toThrow(),
-        () => expect(() => a.a.every(() => true)).not.toThrow(),
-        () => expect(() => a.a.filter(() => true)).not.toThrow(),
-        () => expect(() => a.a.find(() => true)).not.toThrow(),
-        () => expect(() => a.a.findIndex(() => true)).not.toThrow(),
-        () => expect(() => a.a.forEach(() => {})).not.toThrow(),
-        () => expect(() => a.a.includes(1)).not.toThrow(),
-        () => expect(() => a.a.indexOf(1)).not.toThrow(),
-        () => expect(() => a.a.join()).not.toThrow(),
-        () => expect(() => a.a.keys()).not.toThrow(),
-        () => expect(() => a.a.lastIndexOf(1)).not.toThrow(),
-        () => expect(() => a.a.map(() => true)).not.toThrow(),
-        () => expect(() => a.a.reduce(() => true, 0)).not.toThrow(),
-        () => expect(() => a.a.reduceRight(() => true, 0)).not.toThrow(),
-        () => expect(() => a.a.slice(0)).not.toThrow(),
-        () => expect(() => a.a.some(() => true)).not.toThrow(),
-        () => expect(() => a.a.toLocaleString()).not.toThrow(),
-        () => expect(() => a.a.toString()).not.toThrow()
+        () => expect(() => a.a.concat([1])).not.to.throw(),
+        () => expect(() => a.a.entries()).not.to.throw(),
+        () => expect(() => a.a.every(() => true)).not.to.throw(),
+        () => expect(() => a.a.filter(() => true)).not.to.throw(),
+        () => expect(() => a.a.find(() => true)).not.to.throw(),
+        () => expect(() => a.a.findIndex(() => true)).not.to.throw(),
+        () => expect(() => a.a.forEach(() => {})).not.to.throw(),
+        () => expect(() => a.a.includes(1)).not.to.throw(),
+        () => expect(() => a.a.indexOf(1)).not.to.throw(),
+        () => expect(() => a.a.join()).not.to.throw(),
+        () => expect(() => a.a.keys()).not.to.throw(),
+        () => expect(() => a.a.lastIndexOf(1)).not.to.throw(),
+        () => expect(() => a.a.map(() => true)).not.to.throw(),
+        () => expect(() => a.a.reduce(() => true, 0)).not.to.throw(),
+        () => expect(() => a.a.reduceRight(() => true, 0)).not.to.throw(),
+        () => expect(() => a.a.slice(0)).not.to.throw(),
+        () => expect(() => a.a.some(() => true)).not.to.throw(),
+        () => expect(() => a.a.toLocaleString()).not.to.throw(),
+        () => expect(() => a.a.toString()).not.to.throw()
       ]
       readOps.forEach(op => { op(); expectNoAction() })
 
@@ -1188,9 +1188,9 @@ describe('Jig', () => {
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f()).toThrow()
+      expect(() => a.f()).to.throw()
       expectNoAction()
-      expect(() => a.g()).toThrow()
+      expect(() => a.g()).to.throw()
       expectNoAction()
     })
   })
@@ -1230,9 +1230,9 @@ describe('Jig', () => {
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
       const publicKey = new PrivateKey().publicKey
-      expect(() => a.send(publicKey)).toThrow('PublicKey cannot be serialized to json')
-      expect(() => a.send(JSON.parse(JSON.stringify(publicKey)))).toThrow('owner must be a pubkey string')
-      expect(() => a.send('123')).toThrow('owner is not a valid public key')
+      expect(() => a.send(publicKey)).to.throw('PublicKey cannot be serialized to json')
+      expect(() => a.send(JSON.parse(JSON.stringify(publicKey)))).to.throw('owner must be a pubkey string')
+      expect(() => a.send('123')).to.throw('owner is not a valid public key')
       expectNoAction()
     })
 
@@ -1240,9 +1240,9 @@ describe('Jig', () => {
       class A extends Jig { f () { delete this.owner }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => { delete a.owner }).toThrow()
+      expect(() => { delete a.owner }).to.throw()
       expectNoAction()
-      expect(() => a.f()).toThrow()
+      expect(() => a.f()).to.throw()
       expectNoAction()
     })
 
@@ -1250,13 +1250,13 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => { a.owner = '123' }).toThrow()
+      expect(() => { a.owner = '123' }).to.throw()
       expectNoAction()
     })
 
     it('owner method throws', () => {
       class A extends Jig { owner () {} }
-      expect(() => new A()).toThrow()
+      expect(() => new A()).to.throw()
       expectNoAction()
     })
 
@@ -1338,21 +1338,21 @@ describe('Jig', () => {
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f(-1)).toThrow()
+      expect(() => a.f(-1)).to.throw()
       expectNoAction()
-      expect(() => a.f('1')).toThrow()
+      expect(() => a.f('1')).to.throw()
       expectNoAction()
-      expect(() => a.f(100000001)).toThrow()
+      expect(() => a.f(100000001)).to.throw()
       expectNoAction()
-      expect(() => a.g()).toThrow()
+      expect(() => a.g()).to.throw()
       expectNoAction()
-      expect(() => a.h()).toThrow()
+      expect(() => a.h()).to.throw()
       expectNoAction()
     })
 
     it('satoshis method throws', () => {
       class A extends Jig { owner () {} }
-      expect(() => new A()).toThrow()
+      expect(() => new A()).to.throw()
       expectNoAction()
     })
 
@@ -1360,9 +1360,9 @@ describe('Jig', () => {
       class A extends Jig { f () { delete this.satoshis }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => { delete a.satoshis }).toThrow()
+      expect(() => { delete a.satoshis }).to.throw()
       expectNoAction()
-      expect(() => a.f()).toThrow()
+      expect(() => a.f()).to.throw()
       expectNoAction()
     })
 
@@ -1370,7 +1370,7 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => { a.satoshis = 1 }).toThrow()
+      expect(() => { a.satoshis = 1 }).to.throw()
       expectNoAction()
     })
 
@@ -1398,18 +1398,18 @@ describe('Jig', () => {
 
     it('throws if $class or $ref property', () => {
       class A extends Jig { init () { this.o = { $class: 'undefined' } } }
-      expect(() => new A()).toThrow()
+      expect(() => new A()).to.throw()
       expectNoAction()
       class B extends Jig { init () { this.o = { $ref: '123' } } }
-      expect(() => new B()).toThrow()
+      expect(() => new B()).to.throw()
       expectNoAction()
     })
 
     it('throws if $class or $ref arg', () => {
       class A extends Jig { init (o) { this.o = o } }
-      expect(() => new A({ $class: 'undefined' })).toThrow()
+      expect(() => new A({ $class: 'undefined' })).to.throw()
       expectNoAction()
-      expect(() => new A({ $ref: '123' })).toThrow()
+      expect(() => new A({ $ref: '123' })).to.throw()
       expectNoAction()
     })
 
@@ -1423,11 +1423,11 @@ describe('Jig', () => {
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      await expect(a.sync()).rejects.toThrow()
-      expect(() => a.origin).toThrow()
-      expect(() => a.n).toThrow()
-      expect(() => Reflect.ownKeys(a)).toThrow()
-      expect(() => a.f()).toThrow()
+      await expect(a.sync()).rejects.to.throw()
+      expect(() => a.origin).to.throw()
+      expect(() => a.n).to.throw()
+      expect(() => Reflect.ownKeys(a)).to.throw()
+      expect(() => a.f()).to.throw()
       expectNoAction()
       try { console.log(a.n) } catch (e) {
         expect(e.toString().startsWith('Error: deploy failed')).to.equal(true)
@@ -1445,11 +1445,11 @@ describe('Jig', () => {
       // test when just init, no inputs
       expectAction(a2, 'init', [], [], [a2], [])
       const suggestion = 'Hint: Is the purse funded to pay for this transaction?'
-      await expect(run.sync()).rejects.toThrow(`Broadcast failed, tx has no inputs\n\n${suggestion}`)
+      await expect(run.sync()).rejects.to.throw(`Broadcast failed, tx has no inputs\n\n${suggestion}`)
       // test with a spend, pre-existing inputs
       a.set(1)
       expectAction(a, 'set', [1], [a], [a], [])
-      await expect(run.sync()).rejects.toThrow(`Broadcast failed, tx fee too low\n\n${suggestion}`)
+      await expect(run.sync()).rejects.to.throw(`Broadcast failed, tx fee too low\n\n${suggestion}`)
       run.purse.pay = oldPay
     })
 
@@ -1464,7 +1464,7 @@ describe('Jig', () => {
       const oldSign = run._sign
       run._sign = async (tx) => { return tx }
       a.f()
-      await expect(a.sync()).rejects.toThrow('Signature missing for A')
+      await expect(a.sync()).rejects.to.throw('Signature missing for A')
       run._sign = oldSign
     })
 
@@ -1508,11 +1508,11 @@ describe('Jig', () => {
         try { a.origin } catch (e) { completed = true } // eslint-disable-line
         if (completed) {
           run.blockchain.broadcast = oldBroadcast
-          expect(() => a.origin).toThrow('a previous update failed')
-          expect(() => a.location).toThrow('a previous update failed')
-          expect(() => a.owner).toThrow('a previous update failed')
-          expect(() => a.n).toThrow('a previous update failed')
-          expect(() => a.f()).toThrow('a previous update failed')
+          expect(() => a.origin).to.throw('a previous update failed')
+          expect(() => a.location).to.throw('a previous update failed')
+          expect(() => a.owner).to.throw('a previous update failed')
+          expect(() => a.n).to.throw('a previous update failed')
+          expect(() => a.f()).to.throw('a previous update failed')
           done()
         }
       }, 1)
@@ -1561,11 +1561,11 @@ describe('Jig', () => {
       class A extends Jig { f () { this.origin2 = this.origin }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.origin).toThrow('sync required before reading origin')
-      expect(() => a.f()).toThrow('sync required before reading origin')
+      expect(() => a.origin).to.throw('sync required before reading origin')
+      expect(() => a.f()).to.throw('sync required before reading origin')
       await a.sync()
-      expect(() => a.origin).not.toThrow()
-      expect(() => a.f()).not.toThrow()
+      expect(() => a.origin).not.to.throw()
+      expect(() => a.f()).not.to.throw()
     })
 
     it('read internally after sync', async () => {
@@ -1581,9 +1581,9 @@ describe('Jig', () => {
       class A extends Jig { f () { delete this.origin }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => { delete a.origin }).toThrow('must not delete origin')
+      expect(() => { delete a.origin }).to.throw('must not delete origin')
       expectNoAction()
-      expect(() => a.f()).toThrow('must not delete origin')
+      expect(() => a.f()).to.throw('must not delete origin')
       expectNoAction()
     })
 
@@ -1591,15 +1591,15 @@ describe('Jig', () => {
       class A extends Jig { f () { this.origin = '123' }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => { a.origin = '123' }).toThrow('must not set origin')
+      expect(() => { a.origin = '123' }).to.throw('must not set origin')
       expectNoAction()
-      expect(() => a.f()).toThrow('must not set origin')
+      expect(() => a.f()).to.throw('must not set origin')
       expectNoAction()
     })
 
     it('origin method throws', () => {
       class A extends Jig { origin () {} }
-      expect(() => new A()).toThrow('must not override origin')
+      expect(() => new A()).to.throw('must not override origin')
       expectNoAction()
     })
   })
@@ -1609,9 +1609,9 @@ describe('Jig', () => {
       class A extends Jig {}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.location).toThrow('sync required before reading location')
+      expect(() => a.location).to.throw('sync required before reading location')
       await a.sync()
-      expect(() => a.location).not.toThrow()
+      expect(() => a.location).not.to.throw()
     })
 
     it('read internally after sync', async () => {
@@ -1622,7 +1622,7 @@ describe('Jig', () => {
       a.f()
       expectAction(a, 'f', [], [a], [a], [a])
       expect(a.location2).to.equal(a.origin)
-      expect(() => a.f()).toThrow('sync required before reading location')
+      expect(() => a.f()).to.throw('sync required before reading location')
       expectNoAction()
       await a.sync()
       const secondLocation = a.location
@@ -1634,18 +1634,18 @@ describe('Jig', () => {
     it.skip('read quickly', async () => {
       class A extends Jig { f () { this.n = 1 } }
       const a = new A()
-      expect(a.location).not.toThrow()
+      expect(a.location).not.to.throw()
       a.f()
-      expect(a.location).not.toThrow()
+      expect(a.location).not.to.throw()
     })
 
     it('delete throws', () => {
       class A extends Jig { f () { delete this.location }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => { delete a.location }).toThrow('must not delete location')
+      expect(() => { delete a.location }).to.throw('must not delete location')
       expectNoAction()
-      expect(() => a.f()).toThrow('must not delete location')
+      expect(() => a.f()).to.throw('must not delete location')
       expectNoAction()
     })
 
@@ -1653,15 +1653,15 @@ describe('Jig', () => {
       class A extends Jig { f () { this.location = '123' }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => { a.location = '123' }).toThrow('must not set location')
+      expect(() => { a.location = '123' }).to.throw('must not set location')
       expectNoAction()
-      expect(() => a.f()).toThrow('must not set location')
+      expect(() => a.f()).to.throw('must not set location')
       expectNoAction()
     })
 
     it('location method throws', () => {
       class A extends Jig { location () {} }
-      expect(() => new A()).toThrow('must not override location')
+      expect(() => new A()).to.throw('must not override location')
       expectNoAction()
     })
   })
@@ -1701,8 +1701,8 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
-      await expect(run.load(a.location.slice(0, 64) + '_o0')).rejects.toThrow()
-      await expect(run.load(a.location.slice(0, 64) + '_o3')).rejects.toThrow()
+      await expect(run.load(a.location.slice(0, 64) + '_o0')).rejects.to.throw()
+      await expect(run.load(a.location.slice(0, 64) + '_o3')).rejects.to.throw()
     })
 
     it('multiple writes', async () => {
@@ -1762,7 +1762,7 @@ describe('Jig', () => {
       await a2.f(2).sync()
       expectAction(a2, 'f', [2], [a2], [a2], [])
       class B extends Jig { init (x, y) { this.n = x.n + y.n }}
-      expect(() => new B(a, a2)).toThrow()
+      expect(() => new B(a, a2)).to.throw()
     })
 
     it('children', async () => {
@@ -1968,7 +1968,7 @@ describe('Jig', () => {
       run.transaction.end()
       expect(a.n).to.equal(11)
       expect(b.n).to.equal(30)
-      await expect(a.sync()).rejects.toThrow()
+      await expect(a.sync()).rejects.to.throw()
       expect(a.n).to.equal(2)
       expect(b.n).to.equal(20)
     })
@@ -1985,9 +1985,9 @@ describe('Jig', () => {
       class L extends Jig { has (a, x) { return x in a } }
       expect('_x' in new J()).to.equal(true)
       expect(new K().has(new K(), '_x')).to.equal(true)
-      expect(() => new L().has(new J(), '_x')).toThrow('cannot check _x because it is private')
-      expect(() => new K().has(new J(), '_x')).toThrow('cannot check _x because it is private')
-      expect(() => new J().has(new K(), '_x')).toThrow('cannot check _x because it is private')
+      expect(() => new L().has(new J(), '_x')).to.throw('cannot check _x because it is private')
+      expect(() => new K().has(new J(), '_x')).to.throw('cannot check _x because it is private')
+      expect(() => new J().has(new K(), '_x')).to.throw('cannot check _x because it is private')
     })
 
     it('get', () => {
@@ -2000,9 +2000,9 @@ describe('Jig', () => {
       class L extends Jig { get (a, x) { return a[x] } }
       expect(new J()._x).to.equal(1)
       expect(new K().get(new K(), '_x')).to.equal(1)
-      expect(() => new L().get(new J(), '_x')).toThrow('cannot get _x because it is private')
-      expect(() => new K().get(new J(), '_x')).toThrow('cannot get _x because it is private')
-      expect(() => new J().get(new K(), '_x')).toThrow('cannot get _x because it is private')
+      expect(() => new L().get(new J(), '_x')).to.throw('cannot get _x because it is private')
+      expect(() => new K().get(new J(), '_x')).to.throw('cannot get _x because it is private')
+      expect(() => new J().get(new K(), '_x')).to.throw('cannot get _x because it is private')
     })
 
     it('method', () => {
@@ -2018,10 +2018,10 @@ describe('Jig', () => {
       expect(new J().g()).to.equal(1)
       expect(new K().call(new K(), '_f')).to.equal(1)
       expect(new L().call(new J(), 'g')).to.equal(1)
-      expect(() => new J()._f()).toThrow('cannot call _f because it is private')
-      expect(() => new L().call(new J(), '_f')).toThrow('cannot get _f because it is private')
-      expect(() => new K().call(new J(), '_f')).toThrow('cannot get _f because it is private')
-      expect(() => new J().call(new K(), '_f')).toThrow('cannot get _f because it is private')
+      expect(() => new J()._f()).to.throw('cannot call _f because it is private')
+      expect(() => new L().call(new J(), '_f')).to.throw('cannot get _f because it is private')
+      expect(() => new K().call(new J(), '_f')).to.throw('cannot get _f because it is private')
+      expect(() => new J().call(new K(), '_f')).to.throw('cannot get _f because it is private')
     })
 
     it('ownKeys', () => {
@@ -2133,7 +2133,7 @@ describe('Jig', () => {
 
     it('set caller is error', () => {
       class A extends Jig { init () { caller = 1 } } // eslint-disable-line
-      expect(() => new A()).toThrow('Cannot set property caller')
+      expect(() => new A()).to.throw('Cannot set property caller')
     })
   })
 
@@ -2148,9 +2148,9 @@ describe('Jig', () => {
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.obj.toString()).not.toThrow()
-      expect(() => a.arr.indexOf(3)).not.toThrow()
-      expect(() => a.buf.indexOf(2)).not.toThrow()
+      expect(() => a.obj.toString()).not.to.throw()
+      expect(() => a.arr.indexOf(3)).not.to.throw()
+      expect(() => a.buf.indexOf(2)).not.to.throw()
     })
 
     it('calling a read-only method on an internal property from another jig', () => {
@@ -2172,7 +2172,7 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).not.toThrow()
+      expect(() => b.f(a)).not.to.throw()
     })
 
     it('calling a write method on an internal property from outside', () => {
@@ -2184,9 +2184,9 @@ describe('Jig', () => {
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.arr.push(1)).toThrow('internal method push may not be called to change state')
+      expect(() => a.arr.push(1)).to.throw('internal method push may not be called to change state')
       expectNoAction()
-      expect(() => a.buf.sort()).toThrow('internal method sort may not be called to change state')
+      expect(() => a.buf.sort()).to.throw('internal method sort may not be called to change state')
       expectNoAction()
     })
 
@@ -2206,9 +2206,9 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).toThrow('internal method push may not be called to change state')
+      expect(() => b.f(a)).to.throw('internal method push may not be called to change state')
       expectNoAction()
-      expect(() => b.g(a)).toThrow('internal method sort may not be called to change state')
+      expect(() => b.g(a)).to.throw('internal method sort may not be called to change state')
       expectNoAction()
     })
 
@@ -2216,8 +2216,8 @@ describe('Jig', () => {
       class A extends Jig { init () { this.arr = [1, 2, 3] } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.arr.filter(x => x === 1)).not.toThrow()
-      expect(() => a.arr.indexOf(Symbol.hasInstance)).not.toThrow()
+      expect(() => a.arr.filter(x => x === 1)).not.to.throw()
+      expect(() => a.arr.indexOf(Symbol.hasInstance)).not.to.throw()
     })
 
     it('saving an internal property on another jig throws', () => {
@@ -2239,9 +2239,9 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).toThrow('property x is owned by a different jig')
-      expect(() => b.g(a)).toThrow('property y is owned by a different jig')
-      expect(() => b.h(a)).toThrow('property z is owned by a different jig')
+      expect(() => b.f(a)).to.throw('property x is owned by a different jig')
+      expect(() => b.g(a)).to.throw('property y is owned by a different jig')
+      expect(() => b.h(a)).to.throw('property z is owned by a different jig')
     })
 
     it('saving a copy of an internal property on another jig does not throw', () => {
@@ -2263,9 +2263,9 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).not.toThrow()
-      expect(() => b.g(a)).not.toThrow()
-      expect(() => b.h(a)).not.toThrow()
+      expect(() => b.f(a)).not.to.throw()
+      expect(() => b.g(a)).not.to.throw()
+      expect(() => b.h(a)).not.to.throw()
     })
 
     it('saving an internal method on another jig throws', () => {
@@ -2275,7 +2275,7 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).toThrow('property x is owned by a different jig')
+      expect(() => b.f(a)).to.throw('property x is owned by a different jig')
     })
   })
 })

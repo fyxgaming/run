@@ -13,7 +13,7 @@ const { createRun } = require('./helpers')
 const {
   checkOwner,
   checkSatoshis,
-  codeText,
+  getNormalizedSourceCode,
   deployable,
   checkRunTransaction,
   extractRunData,
@@ -162,21 +162,27 @@ describe('util', () => {
     })
   })
 
-  describe('codeText', () => {
+  describe('getNormalizedSourceCode', () => {
     it('basic class', () => {
       class A {}
-      expect(codeText(A)).to.equal('class A {}')
+      expect(getNormalizedSourceCode(A)).to.equal('class A {}')
     })
 
     it('basic function', () => {
       function f () { return 1 }
-      expect(codeText(f)).to.equal('function f () { return 1 }')
+      expect(getNormalizedSourceCode(f)).to.equal('function f () { return 1 }')
     })
 
     it('class extends different parent', () => {
       const SomeLibrary = { B: class B { } }
       class A extends SomeLibrary.B {}
-      expect(codeText(A)).to.equal('class A extends B {}')
+      expect(getNormalizedSourceCode(A)).to.equal('class A extends B {}')
+    })
+
+    it('single-line class', () => {
+      class B { }
+      class A extends B { f () {} }
+      expect(getNormalizedSourceCode(A)).to.equal('class A extends B { f () {} }')
     })
   })
 

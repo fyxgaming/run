@@ -19,7 +19,7 @@ const methodsToObfuscate = [
   'checkRunTransaction',
   'extractRunData',
   'outputType',
-  'codeText',
+  'getNormalizedSourceCode',
   'deployable',
   'encryptRunData',
   'decryptRunData',
