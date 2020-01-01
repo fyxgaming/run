@@ -233,7 +233,7 @@ const browser = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      COVER: false,
+      TEST_MODE: '"default"',
       RUN_VERSION: JSON.stringify(packageJson.version)
     }),
     obfuscatePlugin
@@ -275,4 +275,31 @@ const nodeUnminified = {
   optimization: { minimize: false }
 }
 
-module.exports = [browser, node, browserUnminified, nodeUnminified]
+const tests = {
+  entry: path.join(__dirname, './test/webpack-tests.js'),
+  output: {
+    filename: 'run.tests.js',
+    path: path.join(__dirname, './dist/')
+  },
+  externals: {
+    bsv: 'bsv',
+    run: 'Run',
+    mocha: 'Mocha',
+    chai: 'chai'
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      TEST_MODE: '"webpack"',
+    })
+  ],
+  optimization: {
+    minimize: false
+  },
+  stats: 'errors-only',
+  
+  // Fix for mocha/webpack issue
+  // https://github.com/react-boilerplate/react-boilerplate/issues/2279
+  // node: { fs: 'empty' }
+}
+
+module.exports = [browser, node, browserUnminified, nodeUnminified, tests]

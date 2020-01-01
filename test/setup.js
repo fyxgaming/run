@@ -1,11 +1,45 @@
-global.DIST = require('process').env.DIST
-global.COVER = require('process').env.COVER
+/**
+ * setup.js
+ * 
+ * Configures the tests
+ */
 
-const Run = require(DIST ? '../dist/run.node.min' : '..')
+const process = require('process')
+
+// ------------------------------------------------------------------------------------------------
+// SETUP RUN
+// ------------------------------------------------------------------------------------------------
+
+// The same tests execute across many different builds of Run. To keep the test files simple, we
+// hook the global "require" function so that test files can simply do require('run') and get the
+// appropriate build.
+
+global.TEST_MODE = process.env.TEST_MODE
+
+let Run = null
+
+if (TEST_MODE === 'lib') Run = require('../lib')
+if (TEST_MODE === 'dist') Run = require('../dist/run.node.min')
+if (TEST_MODE === 'webpack') Run = require('run')
+
 const obfuscationMap = require('../dist/obfuscation-map.json')
-const getObfuscatedKey = key => (DIST && key in obfuscationMap) ? obfuscationMap[key] : key
-const syncerKey = getObfuscatedKey('syncer')
-const queuedKey = getObfuscatedKey('queued')
+
+function unobfuscateRun(Run) {
+  if (typeof Run._util !== 'undefined') return Run
+  const handler = {
+    get: (target, prop) => {
+      const val = prop in obfuscationMap? target[obfuscationMap[prop]] : target[prop]
+      return prop !== 'prototype' && typeof val === 'object' ? new Proxy(val, handler) : val
+    }
+  }
+  return new Proxy(Run, handler)
+}
+
+Run = unobfuscateRun(Run)
+
+// ------------------------------------------------------------------------------------------------
+// PURSES
+// ------------------------------------------------------------------------------------------------
 
 const testPurses = {
   main: [
@@ -23,17 +57,23 @@ const testPurses = {
   ]
 }
 
+// ------------------------------------------------------------------------------------------------
+// HELPERS
+// ------------------------------------------------------------------------------------------------
+
 function createRun (options = { }) {
   const network = options.network || 'mock'
   const blockchain = network !== 'mock' ? 'star' : undefined
   const purse = network === 'mock' ? undefined : testPurses[network][0]
-  const sandbox = COVER ? /^((?!Jig|Token).)*$/ : true
+  const sandbox = TEST_MODE === 'cover' ? /^((?!Jig|Token).)*$/ : true
   const run = new Run({ network, purse, sandbox, logger: null, blockchain, ...options })
   if (network !== 'mock') jest.setTimeout(30000)
   return run
 }
 
 async function hookPay (run, ...enables) {
+  const syncerKey = getObfuscatedKey('syncer')
+  const queuedKey = getObfuscatedKey('queued')
   enables = new Array(run[syncerKey][queuedKey].length).fill(true).concat(enables)
   const orig = run.purse.pay.bind(run.purse)
   run.purse.pay = async (tx) => {
@@ -71,4 +111,4 @@ async function deploy (Class) {
   console.log(properties)
 }
 
-module.exports = { createRun, hookPay, Run, Jig: Run.Jig, getObfuscatedKey, deploy }
+module.exports = { createRun, hookPay, deploy, Run, Jig: Run.Jig }

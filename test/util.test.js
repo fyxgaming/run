@@ -1,25 +1,24 @@
 const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { createRun, Run, Jig, getObfuscatedKey } = require('./test-util')
-
-const util = Run[getObfuscatedKey('_util')]
-const checkOwner = util[getObfuscatedKey('checkOwner')]
-const checkSatoshis = util[getObfuscatedKey('checkSatoshis')]
-const codeText = util[getObfuscatedKey('codeText')]
-const deployable = util[getObfuscatedKey('deployable')]
-const checkRunTransaction = util[getObfuscatedKey('checkRunTransaction')]
-const extractRunData = util[getObfuscatedKey('extractRunData')]
-const outputType = util[getObfuscatedKey('outputType')]
-const encryptRunData = util[getObfuscatedKey('encryptRunData')]
-const decryptRunData = util[getObfuscatedKey('decryptRunData')]
-const richObjectToJson = util[getObfuscatedKey('richObjectToJson')]
-const jsonToRichObject = util[getObfuscatedKey('jsonToRichObject')]
-const extractJigsAndCodeToArray = util[getObfuscatedKey('extractJigsAndCodeToArray')]
-const injectJigsAndCodeFromArray = util[getObfuscatedKey('injectJigsAndCodeFromArray')]
-const deepTraverse = util[getObfuscatedKey('deepTraverse')]
-const SerialTaskQueue = util[getObfuscatedKey('SerialTaskQueue')]
-const intrinsicsKey = getObfuscatedKey('intrinsics')
+const { createRun, Run, Jig } = require('./setup')
+const {
+  checkOwner,
+  checkSatoshis,
+  codeText,
+  deployable,
+  checkRunTransaction,
+  extractRunData,
+  outputType,
+  encryptRunData,
+  decryptRunData,
+  richObjectToJson,
+  jsonToRichObject,
+  extractJigsAndCodeToArray,
+  injectJigsAndCodeFromArray,
+  deepTraverse,
+  SerialTaskQueue
+} = Run._util
 
 createRun()
 
@@ -369,7 +368,7 @@ describe('util', () => {
     })
 
     it('uint8array', () => {
-      const Uint8Array = Run.code[intrinsicsKey].Uint8Array
+      const Uint8Array = Run.code.intrinsics.Uint8Array
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: '' })).to.deep.equal(new Uint8Array(0))
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: 'AA==' })).to.deep.equal(new Uint8Array(1))
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: 'AQID' })).to.deep.equal(new Uint8Array([1, 2, 3]))

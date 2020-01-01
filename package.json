@@ -13,8 +13,8 @@
         "test:cover": "jest --t=\"^((?!perf).)*$\" --coverage --globals '{ \"TEST_BUILD\": false, \"COVER\": true }'",
         "test:perf": "jest --t=perf --env=node --globals '{ \"TEST_BUILD\": false, \"COVER\": false }'",
         "test:build": "npm run build && jest --t=\"^((?!perf).)*$\" --env=node --globals '{ \"TEST_BUILD\": true, \"COVER\": false }'",
-        "mocha": "mocha",
-        "mocha:dist": "DIST=true mocha"
+        "mocha": "TEST_MODE=lib mocha",
+        "dist": "TEST_MODE=dist mocha"
     },
     "standard": {
         "globals": [
