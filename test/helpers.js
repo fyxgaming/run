@@ -4,6 +4,7 @@
  * Helper functions used across test modules
  */
 
+const bsv = require('bsv')
 const process = require('process')
 const { expect } = require('chai')
 
@@ -173,6 +174,50 @@ async function deploy (Class) {
   console.log(properties)
 }
 
+async function payFor (tx, privateKey, blockchain) {
+  const numSplits = 10
+
+  const address = new bsv.PrivateKey(privateKey).toAddress()
+  let utxos = await blockchain.utxos(address)
+
+  function shuffle (a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]]
+    }
+    return a
+  }
+  utxos = shuffle(utxos)
+
+  const satoshisRequired = () => Math.max(1000, tx._estimateFee() + tx._getOutputAmount())
+
+  let total = 0
+  utxos.forEach(utxo => { total += utxo.satoshis })
+  const averageSatoshisPerSplit = total / numSplits
+
+  // Walk through each UTXO, adding it to the transaction, and checking if we can stop
+  let addedChange = false
+  for (const utxo of utxos) {
+    tx.from(utxo)
+
+    if (!addedChange) {
+      addedChange = true
+      tx.change(address)
+    } else {
+      tx.to(address, averageSatoshisPerSplit)
+    }
+
+    if (tx._getInputAmount() >= satoshisRequired()) break
+  }
+
+  // make sure we actually have enough inputs
+  if (tx._getInputAmount() < satoshisRequired()) throw new Error('not enough funds')
+
+  tx.sign(privateKey)
+
+  return tx
+}
+
 module.exports = {
   Run,
   Jig: Run.Jig,
@@ -182,5 +227,6 @@ module.exports = {
   hookStoreAction,
   expectAction,
   expectNoAction,
-  deploy
+  deploy,
+  payFor
 }

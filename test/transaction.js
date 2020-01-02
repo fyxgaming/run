@@ -5,7 +5,7 @@
  */
 
 const bsv = require('bsv')
-const { Run, Jig, createRun } = require('./helpers')
+const { Run, Jig, createRun, payFor } = require('./helpers')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 const { expect } = chai
@@ -484,7 +484,6 @@ describe('Transaction', () => {
       const addr = outputAddr || new bsv.Address(run.owner.address, bsvNetwork).toString()
       const data = { code, actions, jigs, refs }
       const payload = Buffer.from(encryptRunData(data), 'utf8')
-      const purseUtxos = await run.blockchain.utxos(run.purse.address)
       const script = bsv.Script.buildSafeDataOut([
         Buffer.from('run', 'utf8'),
         Buffer.from([Run.protocol], 'hex'),
@@ -500,7 +499,8 @@ describe('Transaction', () => {
         const output = (await run.blockchain.fetch(txid)).outputs[vout]
         tx.from({ txid, vout, script: output.script, satoshis: output.satoshis })
       }
-      tx.from(purseUtxos).change(run.purse.address).sign(run.purse.privkey).sign(run.owner.bsvPrivateKey)
+      await payFor(tx, run.purse.privkey, run.blockchain)
+      tx.sign(run.owner.bsvPrivateKey)
       await run.blockchain.broadcast(tx)
       return tx.hash
     }
@@ -611,8 +611,7 @@ describe('Transaction', () => {
 
     describe('errors', () => {
       it('should throw if no data', async () => {
-        const utxos = await run.purse.utxos()
-        const tx = new bsv.Transaction().from(utxos).change(run.purse.address).sign(run.purse.privkey)
+        const tx = await payFor(new bsv.Transaction(), run.purse.privkey, run.blockchain)
         await run.blockchain.broadcast(tx)
         await expect(run.load(tx.hash + '_o0')).to.be.rejectedWith(`not a run tx: ${tx.hash}`)
         await expect(run.load(tx.hash + '_o1')).to.be.rejectedWith(`not a run tx: ${tx.hash}`)

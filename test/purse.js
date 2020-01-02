@@ -10,7 +10,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Jig, createRun } = require('./helpers')
+const { Jig, createRun, payFor } = require('./helpers')
 
 describe('Purse', () => {
   const run = createRun()
@@ -62,16 +62,14 @@ describe('Purse', () => {
 
   describe('balance', () => {
     it('should sum non-jig and non-class utxos', async () => {
-      const utxos = await run.blockchain.utxos(run.purse.address)
       const address = new bsv.PrivateKey().toAddress()
-      const send = new bsv.Transaction().from(utxos).to(address, 9999)
-        .change(run.purse.address).sign(run.purse.privkey)
+      const send = await payFor(new bsv.Transaction().to(address, 9999), run.purse.privkey, run.blockchain)
       await run.blockchain.broadcast(send)
       createRun({ owner: run.purse.privkey, blockchain: run.blockchain })
       class A extends Jig { init () { this.satoshis = 8888 } }
       await new A().sync()
-      const utxos2 = await run.blockchain.utxos(run.purse.address)
-      const nonJigUtxos = utxos2.filter(utxo => utxo.satoshis > 100000)
+      const utxos = await run.blockchain.utxos(run.purse.address)
+      const nonJigUtxos = utxos.filter(utxo => utxo.satoshis > 100000)
       const balance = nonJigUtxos.reduce((sum, utxo) => sum + utxo.satoshis, 0)
       expect(await run.purse.balance()).to.equal(balance)
     })

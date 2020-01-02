@@ -10,7 +10,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Run, createRun } = require('./helpers')
+const { Run, createRun, payFor } = require('./helpers')
 const { Api } = Run
 
 describe('Blockchain', () => {
@@ -43,8 +43,7 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
 
   describe('broadcast', () => {
     it('should support sending to self', async () => {
-      const utxos = (await blockchain.utxos(address)).slice(0, 1)
-      const tx = new Transaction().from(utxos).change(address).fee(250).sign(privateKey)
+      const tx = await payFor(new Transaction(), privateKey, blockchain)
       await blockchain.broadcast(tx)
     })
 
@@ -74,7 +73,7 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
 
     it('should throw if not signed', async () => {
       const utxos = await blockchain.utxos(address)
-      const tx = new Transaction().from(utxos).change(address).fee(250)
+      const tx = new Transaction().from(utxos).change(address)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.notFullySigned)
     })
 
@@ -111,8 +110,7 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
     })
 
     it('should set spent information for transaction in mempool and unspent', async () => {
-      const utxos = await blockchain.utxos(address)
-      const tx = new Transaction().from(utxos).change(address).sign(privateKey)
+      const tx = await payFor(new Transaction(), privateKey, blockchain)
       await blockchain.broadcast(tx)
       function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
       const tx2 = await blockchain.fetch(tx.hash)
@@ -139,23 +137,23 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
     })
 
     it('should set spent information for transaction in mempool and spent', async () => {
-      const utxos = await blockchain.utxos(address)
-      const tx = new Transaction().from(utxos).change(address).sign(privateKey)
+      const tx = await payFor(new Transaction(), privateKey, blockchain)
       await blockchain.broadcast(tx)
       function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
       if (blockchain instanceof Api) {
         await sleep(indexingLatency)
         blockchain.txCache.clear()
       }
-      const prev = await blockchain.fetch(utxos[0].txid)
+      const firstInput = tx.inputs[0]
+      const prev = await blockchain.fetch(firstInput.prevTxId.toString('hex'))
       if (supportsSpentTxIdInMempool) {
-        expect(prev.outputs[utxos[0].vout].spentTxId).to.equal(tx.hash)
-        expect(prev.outputs[utxos[0].vout].spentIndex).to.equal(0)
-        expect(prev.outputs[utxos[0].vout].spentHeight).to.equal(-1)
+        expect(prev.outputs[firstInput.outputIndex].spentTxId).to.equal(tx.hash)
+        expect(prev.outputs[firstInput.outputIndex].spentIndex).to.equal(0)
+        expect(prev.outputs[firstInput.outputIndex].spentHeight).to.equal(-1)
       } else {
-        expect(prev.outputs[utxos[0].vout].spentTxId).to.equal(undefined)
-        expect(prev.outputs[utxos[0].vout].spentIndex).to.equal(undefined)
-        expect(prev.outputs[utxos[0].vout].spentHeight).to.equal(undefined)
+        expect(prev.outputs[firstInput.outputIndex].spentTxId).to.equal(undefined)
+        expect(prev.outputs[firstInput.outputIndex].spentIndex).to.equal(undefined)
+        expect(prev.outputs[firstInput.outputIndex].spentHeight).to.equal(undefined)
       }
     })
 
@@ -198,13 +196,12 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
     })
 
     it('should not return spent outputs', async () => {
-      const prevUtxos = await blockchain.utxos(address)
-      const tx = new Transaction().from(prevUtxos[0]).change(address).fee(250).sign(privateKey)
+      const tx = await payFor(new Transaction(), privateKey, blockchain)
       await blockchain.broadcast(tx)
       const utxos = await blockchain.utxos(address)
-      expect(utxos.length).to.equal(prevUtxos.length)
-      expect(utxos[prevUtxos.length - 1].txid).to.equal(tx.hash)
-      expect(utxos[prevUtxos.length - 1].vout).to.equal(0)
+      expect(utxos.some(utxo => utxo.txid === tx.inputs[0].prevTxId.toString() &&
+        utxo.vout === tx.inputs[0].outputIndex)).to.equal(false)
+      expect(utxos.some(utxo => utxo.txid === tx.hash && utxo.vout === 0)).to.equal(true)
     })
 
     it('should cache repeated calls', async () => {
