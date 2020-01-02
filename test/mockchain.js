@@ -56,7 +56,7 @@ describe('Mockchain', () => {
     0 /* indexingLatency */, errors)
 
   describe('block', () => {
-    it('updates block heights', async () => {
+    it('should update block heights', async () => {
       const txns = []
       for (let i = 0; i < 25; i++) {
         const utxo = (await run.blockchain.utxos(run.purse.address))[0]
@@ -76,7 +76,7 @@ describe('Mockchain', () => {
       }
     })
 
-    it('25 chain limit', async () => {
+    it('should respect 25 chain limit', async () => {
       for (let i = 0; i < 25; i++) {
         const utxo = (await run.blockchain.utxos(run.purse.address))[0]
         const tx = new Transaction().from(utxo).change(run.purse.address).sign(run.purse.privkey)
@@ -91,7 +91,7 @@ describe('Mockchain', () => {
   })
 
   describe('performance', () => {
-    it('broadcast', async () => {
+    it('should support fast broadcsts', async () => {
       const utxo = (await run.blockchain.utxos(run.purse.address))[0]
       const start = new Date()
       const tx = new Transaction().from(utxo).change(run.purse.address).sign(run.purse.privkey)
@@ -99,7 +99,7 @@ describe('Mockchain', () => {
       expect(new Date() - start < 200).to.equal(true)
     })
 
-    it('fetch', async () => {
+    it('should support fast fetches', async () => {
       let utxo = (await run.blockchain.utxos(run.purse.address))[0]
       const earlyTxid = utxo.txid
       const measures = []
@@ -119,7 +119,7 @@ describe('Mockchain', () => {
       expect(end < 10).to.equal(true)
     }).timeout(10000)
 
-    it('utxos', async () => {
+    it('should support fast utxo queries', async () => {
       const privateKeys = []; const addresses = []
       for (let i = 0; i < 10; i++) { privateKeys.push(new PrivateKey()) }
       privateKeys.forEach(privateKey => addresses.push(privateKey.toAddress()))
