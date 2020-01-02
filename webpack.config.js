@@ -1,7 +1,7 @@
 /**
  * webpack.config.js
  *
- * All the settings to build run variants and the browser tests using webpack
+ * All the settings to build run variants using webpack
  */
 
 const webpack = require('webpack')
@@ -281,31 +281,4 @@ const nodeUnminified = {
   optimization: { minimize: false }
 }
 
-const tests = {
-  entry: path.join(__dirname, './test'),
-  output: {
-    filename: 'run.tests.js',
-    path: path.join(__dirname, './dist/')
-  },
-  externals: {
-    bsv: 'bsv',
-    run: 'Run',
-    mocha: 'Mocha',
-    chai: 'chai'
-  },
-  plugins: [
-    new webpack.DefinePlugin({
-      TEST_MODE: '"webpack"'
-    })
-  ],
-  optimization: {
-    minimize: false
-  },
-  stats: 'errors-only'
-
-  // Fix for mocha/webpack issue
-  // https://github.com/react-boilerplate/react-boilerplate/issues/2279
-  // node: { fs: 'empty' }
-}
-
-module.exports = [browser, node, browserUnminified, nodeUnminified, tests]
+module.exports = [browser, node, browserUnminified, nodeUnminified]
