@@ -17,7 +17,7 @@ describe('Code', () => {
   beforeEach(() => run.blockchain.block())
 
   describe('deploy', () => {
-    it('basic class', async () => {
+    it('should deploy a basic class', async () => {
       class A { }
       await run.deploy(A)
       expect(A.location).not.to.equal(undefined)
@@ -28,27 +28,27 @@ describe('Code', () => {
       expect(A.ownerMocknet).to.equal(run.owner.pubkey)
     })
 
-    it('detects previous installs', async () => {
+    it('should not deploy previous install', async () => {
       class A { }
       const loc = await run.deploy(A)
       expect(loc).to.equal(await run.deploy(A))
     })
 
-    it('functions', async () => {
+    it('should deploy functions', async () => {
       function f (a, b) { return a + b }
       const loc = await run.deploy(f)
       expect(f.origin).to.equal(loc)
       expect(f.location).to.equal(loc)
     })
 
-    it('throws for non-deployables', async () => {
+    it('should throw for non-deployables', async () => {
       await expect(run.deploy(2)).to.be.rejected
       await expect(run.deploy('abc')).to.be.rejected
       await expect(run.deploy({ n: 1 })).to.be.rejected
       await expect(run.deploy(Math.random)).to.be.rejected
     })
 
-    it('throws if parent dep is different', async () => {
+    it('should throw if parent dep mismatch', async () => {
       class C { }
       class B { }
       class A extends B { }
@@ -56,7 +56,7 @@ describe('Code', () => {
       await expect(run.deploy(A)).to.be.rejectedWith('unexpected parent dependency B')
     })
 
-    it('does not throw if parent dep is its sandbox', async () => {
+    it('should support parent dep set to its sandbox', async () => {
       class B { }
       const B2 = await run.load(await run.deploy(B))
       class A extends B { }
@@ -64,7 +64,7 @@ describe('Code', () => {
       await run.deploy(A)
     })
 
-    it('deploys parents', async () => {
+    it('should deploy parents', async () => {
       class Grandparent { }
       class Parent extends Grandparent { f () { this.n = 1 } }
       class Child extends Parent { f () { super.f(); this.n += 1 } }
@@ -77,7 +77,7 @@ describe('Code', () => {
       expect(Child2.deps).to.deep.equal({ Parent: await run.load(Parent.origin) })
     })
 
-    it('deploys dependencies', async () => {
+    it('should deploy dependencies', async () => {
       class A { createB () { return new B() } }
       class B { constructor () { this.n = 1 } }
       A.deps = { B }
@@ -85,7 +85,7 @@ describe('Code', () => {
       expect(new A2().createB().n).to.equal(1)
     })
 
-    it('does not have parent deps as deps', async () => {
+    it('should always deploy parents', async () => {
       function f () { }
       class A { callF () { f() } }
       A.deps = { f }
@@ -96,13 +96,11 @@ describe('Code', () => {
       expect(() => b.callF2()).to.throw()
     })
 
-    it('dependency instances are expected', async () => {
+    it('should return deployed dependencies in jigs', async () => {
       class B { }
       class A {
         bInstanceofB () { return new B() instanceof B }
-
         bPrototype () { return Object.getPrototypeOf(new B()) }
-
         nameOfB () { return B.name }
       }
       A.deps = { B }
@@ -112,7 +110,7 @@ describe('Code', () => {
       expect(new A2().bPrototype()).to.equal(B2.prototype)
     })
 
-    it('rename dependencies', async () => {
+    it('should support renaming dependencies', async () => {
       class A { createB() { return new B() } } // eslint-disable-line
       class C { constructor () { this.n = 1 } }
       A.deps = { B: C }
@@ -120,14 +118,14 @@ describe('Code', () => {
       expect(new A2().createB().n).to.equal(1)
     })
 
-    it('throw for undefined dependencies', async () => {
+    it('should throw for undefined dependencies', async () => {
       class B { }
       class A { createB () { return new B() } }
       const A2 = await run.load(await run.deploy(A))
       expect(() => new A2().createB()).to.throw('B is not defined')
     })
 
-    it('circular dependencies', async () => {
+    it('should support circular dependencies', async () => {
       class A { createB () { return new B() } }
       class B { createA () { return new A() } }
       A.deps = { B }
@@ -138,7 +136,7 @@ describe('Code', () => {
       expect(new B2().createA()).to.be.instanceOf(A2)
     })
 
-    it('temporary origins and locations before sync', async () => {
+    it('should set temporary origins and locations before sync', async () => {
       class B { }
       class A { }
       A.deps = { B }
@@ -163,7 +161,7 @@ describe('Code', () => {
       expect(A.locationMocknet.startsWith('_')).to.equal(false)
     })
 
-    it('batch', async () => {
+    it('should support batch deploys', async () => {
       class A { }
       class B { }
       class C { }
@@ -200,7 +198,7 @@ describe('Code', () => {
       expect(C.locationMocknet.startsWith(txid)).to.equal(true)
     })
 
-    it('queued', async () => {
+    it('should deploy all queued', async () => {
       class A { }
       class B { }
       run.deploy(A)
@@ -210,7 +208,7 @@ describe('Code', () => {
       expect(A.location.split('_')[0]).not.to.equal(B.location.split('_')[0])
     })
 
-    it('fail ', async () => {
+    it('should revert metadata for deploy failures', async () => {
       hookPay(run, false)
       class A { }
       await expect(run.deploy(A)).to.be.rejected
@@ -220,7 +218,7 @@ describe('Code', () => {
       expect(A.locationMocknet).to.equal(undefined)
     })
 
-    it('queued fail', async () => {
+    it('should revert metadata for queued deploy failures', async () => {
       hookPay(run, true, false)
       class A { }
       class B { }
@@ -245,7 +243,7 @@ describe('Code', () => {
       expect(B.locationMocknet).to.equal(undefined)
     })
 
-    it('to testnet', async () => {
+    it('should deploy to testnet', async () => {
       const run = createRun({ network: 'test' })
       class C { g () { return 1 } }
       class B { }
@@ -284,7 +282,7 @@ describe('Code', () => {
       // console.log('owner', A.ownerTestnet)
     }).timeout(30000)
 
-    it('standard library', async () => {
+    it('should support presets', async () => {
       const run = createRun({ network: 'test' })
       class A { }
       await run.deploy(A)
@@ -298,7 +296,7 @@ describe('Code', () => {
       expect(location).to.equal(A.locationTestnet)
     }).timeout(30000)
 
-    it('standard library origin only', async () => {
+    it('should support origin-only presets', async () => {
       const run = createRun({ network: 'main' })
       class A { }
       await run.deploy(A)
@@ -312,7 +310,7 @@ describe('Code', () => {
       expect(location).to.equal(A.locationMainnet)
     }).timeout(30000)
 
-    it('standard library location only', async () => {
+    it('should support location-only presets', async () => {
       const run = createRun({ network: 'test' })
       class A { }
       await run.deploy(A)
@@ -329,13 +327,13 @@ describe('Code', () => {
   })
 
   describe('load', () => {
-    it('from cached', async () => {
+    it('should load from cache', async () => {
       class A { f () { return 1 } }
       const A2 = await run.load(await run.deploy(A))
       expect(await run.load(A.origin)).to.equal(A2)
     })
 
-    it('from mockchain cached', async () => {
+    it('should load from mockchain when cached', async () => {
       class A { f () { return 1 } }
       const A2 = await run.load(await run.deploy(A))
       const run2 = createRun({ blockchain: run.blockchain })
@@ -343,7 +341,7 @@ describe('Code', () => {
       expect(A2).to.equal(A3)
     })
 
-    it('from mockchain uncached', async () => {
+    it('should load from mockchain when uncached', async () => {
       class A { f () { return 1 } }
       const A2 = await run.load(await run.deploy(A))
       Run.code.flush()
@@ -354,7 +352,7 @@ describe('Code', () => {
       expect(A3.owner).to.equal(A2.owner)
     })
 
-    it('from testnet', async () => {
+    it('should load from testnet', async () => {
       const run = createRun({ network: 'test' })
       // TODO: do automatically
       // generate this from the 'to testnet' test above
@@ -370,19 +368,19 @@ describe('Code', () => {
       expect(new A().createC().g()).to.equal(1)
     }).timeout(30000)
 
-    it('temporary location throws', async () => {
+    it('should throw if load temporary location', async () => {
       class A { f () { return 1 } }
       run.deploy(A).catch(e => {})
       await expect(run.load(A.locationMocknet)).to.be.rejected
     })
 
-    it('functions', async () => {
+    it('should load functions', async () => {
       function f (a, b) { return a + b }
       const f2 = await run.load(await run.deploy(f))
       expect(f(1, 2)).to.equal(f2(1, 2))
     })
 
-    it('load after deploy with preset', async () => {
+    it('should load after deploy with preset', async () => {
       // get a location
       class A { }
       await run.deploy(A)
@@ -396,7 +394,7 @@ describe('Code', () => {
       expect(Run.code.installs.get(A)).to.equal(await run2.load(A.location))
     })
 
-    it('dependencies in different transactions', async () => {
+    it('should support dependencies in different transactions', async () => {
       class A {}
       class B extends A {}
       class C {}
@@ -412,7 +410,7 @@ describe('Code', () => {
   })
 
   describe('static props', () => {
-    it('circular props', async () => {
+    it('should support circular props', async () => {
       class A extends Jig { }
       class B extends Jig { }
       A.B = B
@@ -425,7 +423,7 @@ describe('Code', () => {
       expect(B2.A).to.equal(A2)
     })
 
-    it('deploy then load', async () => {
+    it('should correctly deploy then load static properties', async () => {
       class J extends Jig {}
       class K extends Jig {}
       class C { }
@@ -480,7 +478,7 @@ describe('Code', () => {
       await checkAllProperties(await run2.load(A.origin))
     })
 
-    it('bad deps', async () => {
+    it('should throw for bad deps', async () => {
       class B { }
       class A extends Jig { }
       A.deps = [B]
@@ -489,7 +487,7 @@ describe('Code', () => {
       await expect(run.deploy(A)).to.be.rejectedWith('deps must be an object')
     })
 
-    it('bad strings', async () => {
+    it('should throw for bad strings', async () => {
       class A extends Jig { }
       const stringProps = ['origin', 'location', 'originMainnet', 'locationMainnet', 'originTestnet',
         'locationTestnet', 'originStn', 'locationStn', 'originMocknet', 'locationMocknet']
@@ -502,7 +500,7 @@ describe('Code', () => {
       }
     })
 
-    it('unpackable', async () => {
+    it('should throw if unpackable', async () => {
       class A { }
       A.set = new Set()
       await expect(run.deploy(A)).to.be.rejectedWith('cannot be serialized to json')
@@ -522,7 +520,7 @@ describe('Code', () => {
   })
 
   describe('sandbox', () => {
-    it('sandbox', async () => {
+    it('should sandbox methods from locals', async () => {
       const s = 'abc'
       class A {
         add (n) { return n + 1 }
@@ -535,7 +533,7 @@ describe('Code', () => {
       expect(() => new A2().break()).to.throw()
     })
 
-    it('inaccessible globals', async () => {
+    it('should sandbox methods from globals', async () => {
       class A {
         isUndefined (x) {
           return typeof (typeof window !== 'undefined' ? window : global)[x] === 'undefined'
@@ -554,7 +552,7 @@ describe('Code', () => {
   })
 
   describe('misc', () => {
-    it('instanceof', async () => {
+    it('should pass instanceof checks', async () => {
       class A { }
       const A2 = await run.load(await run.deploy(A))
       expect(new A()).to.be.instanceOf(A)
@@ -563,14 +561,14 @@ describe('Code', () => {
       expect(new A2()).to.be.instanceOf(A2)
     })
 
-    it('deploy without run', async () => {
+    it('should throw if deploy without run', async () => {
       Run.instance = null
       expect(() => Run.code.deploy(class A { })).to.throw('Run not instantiated')
     })
   })
 
   describe('activate', () => {
-    it('activate different network', async () => {
+    it('should support activating different network', async () => {
       class A { }
       await run.deploy(A)
       expect(A.location.length).to.equal(67)
@@ -593,7 +591,7 @@ describe('Code', () => {
       expect(Run.code.installs.size).to.equal(6)
     }).timeout(30000)
 
-    it('check owner on different networks', async () => {
+    it('should set correct owner for different networks', async () => {
       class A { }
       class B extends Jig { init () { if (this.owner !== A.owner) throw new Error() } }
       B.deps = { A }
