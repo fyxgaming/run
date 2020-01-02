@@ -11,7 +11,7 @@
         "dev": "npm run lint && TEST_MODE=lib mocha",
         "test": "npm run build && TEST_MODE=dist mocha",
         "cover": "TEST_MODE=cover nyc mocha",
-        "browser": "mocha-headless-chrome -f ./test/browser.html"
+        "browser": "mocha-headless-chrome -f ./test/browser.html -t 600000"
     },
     "standard": {
         "globals": [
