@@ -23,7 +23,7 @@ describe('Jig', () => {
   // afterEach(() => run.sync())
 
   describe('constructor', () => {
-    it('basic jig', async () => {
+    it('should create basic jig', async () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -32,18 +32,18 @@ describe('Jig', () => {
       expect(A.origin.length).to.equal(67)
     })
 
-    it('must be extended', () => {
+    it('throws if not extended', () => {
       expect(() => new Jig()).to.throw()
       expectNoAction()
     })
 
-    it('must not have constructor', () => {
+    it('throws if constructor method exists', () => {
       class A extends Jig { constructor () { super(); this.n = 1 } }
       expect(() => new A()).to.throw('Jig must use init() instead of constructor()')
       expectNoAction()
     })
 
-    it('calls init with args', () => {
+    it('should call init method with constructor args', () => {
       class A extends Jig { init (a, b) { this.a = a; this.b = b } }
       const a = new A(1, 'z')
       expectAction(a, 'init', [1, 'z'], [], [a], [])
@@ -51,7 +51,7 @@ describe('Jig', () => {
       expect(a.b).to.equal('z')
     })
 
-    it('grandchildren', async () => {
+    it('should all supers', async () => {
       class A extends Jig { f () { this.a = true }}
       class B extends A { f () { super.f(); this.b = true }}
       class C extends B { f () { super.f(); this.c = true }}
@@ -66,7 +66,7 @@ describe('Jig', () => {
   })
 
   describe('sandbox', () => {
-    it('locals and globals inaccessible', () => {
+    it('should throw if access external variables', () => {
       let n = 1 // eslint-disable-line
       class A extends Jig { init () { n = 2 } }
       expect(() => new A()).to.throw()
@@ -78,13 +78,13 @@ describe('Jig', () => {
       delete global.x
     })
 
-    it('jig env inaccessible', () => {
+    it('should throw if access jig control', () => {
       class A extends Jig { init () { control.stack.push(1) } } // eslint-disable-line
       expect(() => new A()).to.throw()
       expectNoAction()
     })
 
-    it('inaccessible globals', () => {
+    it('should throw if access globals', () => {
       class A extends Jig {
         isUndefined (x) {
           return typeof (typeof window !== 'undefined' ? window : global)[x] === 'undefined'
@@ -95,7 +95,7 @@ describe('Jig', () => {
       bad.forEach(x => expect(a.isUndefined(x)).to.equal(true))
     })
 
-    it('useful error when creating date', () => {
+    it('should throw useful error when creating date', () => {
       class A extends Jig { createDate () { return new Date() } }
       const a = new A()
       expect(() => a.createDate()).to.throw('Hint: Date is disabled inside jigs because it is non-deterministic.')
@@ -103,7 +103,7 @@ describe('Jig', () => {
   })
 
   describe('instanceof', () => {
-    it('match basic jigs', () => {
+    it('should match basic jigs', () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -111,7 +111,7 @@ describe('Jig', () => {
       expect(a).to.be.instanceOf(Jig)
     })
 
-    it('match extensions', () => {
+    it('should match class extensions', () => {
       class A extends Jig { }
       class B extends A { }
       class C extends Jig { }
@@ -126,12 +126,12 @@ describe('Jig', () => {
       expect(c).to.be.instanceOf(Jig)
     })
 
-    it('fail to match non-instances', () => {
+    it('should not match non-instances', () => {
       expect(new class { }()).not.to.be.instanceOf(Jig)
       expect(new class { }() instanceof Jig).to.equal(false)
     })
 
-    it('search for uninstalled class', async () => {
+    it('should support searching owner for an uninstalled class', async () => {
       class A extends Jig { }
       class B extends Jig { }
       const a = new A() // eslint-disable-line
@@ -139,7 +139,7 @@ describe('Jig', () => {
       run.owner.jigs.find(jig => jig instanceof B)
     })
 
-    it('standard library', async () => {
+    it('should match loaded instances', async () => {
       class A extends Jig { }
       const a = new A()
       await run.sync()
@@ -148,7 +148,7 @@ describe('Jig', () => {
       expect(a2 instanceof A).to.equal(true)
     })
 
-    it('does not match prototypes', () => {
+    it('should not match prototypes', () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -158,7 +158,7 @@ describe('Jig', () => {
   })
 
   describe('init', () => {
-    it('throws if called externally', () => {
+    it('should throw if called externally', () => {
       class A extends Jig { init (n) { this.n = n } }
       const a = new A(5)
       expectAction(a, 'init', [5], [], [a], [])
@@ -166,7 +166,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('throws if called internally', () => {
+    it('should throw if called internally', () => {
       class A extends Jig {
         init (n) { this.n = n }
 
@@ -178,14 +178,14 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('throws if return', async () => {
+    it('should throw if init returns a value', async () => {
       class A extends Jig { init () { return {} }}
       expect(() => new A()).to.throw()
     })
   })
 
   describe('sync', () => {
-    it('sets origins and locations on class and instance', async () => {
+    it('should set origins and locations on class and instance', async () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -201,7 +201,7 @@ describe('Jig', () => {
       expect(a.location.endsWith('_o2')).to.equal(true)
     })
 
-    it('throws if called internally', () => {
+    it('should throw if called internally', () => {
       class A extends Jig { init () { this.sync() } }
       class B extends Jig { f () { this.sync() } }
       expect(() => new A()).to.throw()
@@ -212,13 +212,13 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('throws if override sync', () => {
+    it('should throw if override sync', () => {
       class A extends Jig { sync () { } }
       expect(() => new A()).to.throw()
       expectNoAction()
     })
 
-    it('forward', async () => {
+    it('should forward sync', async () => {
       class A extends Jig { set (x) { this.x = x } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -234,7 +234,7 @@ describe('Jig', () => {
       expect(a.x).to.equal(2)
     })
 
-    it('forward inner', async () => {
+    it('should forward sync inner jigs', async () => {
       class A extends Jig { set (x, y) { this[x] = y } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -252,7 +252,7 @@ describe('Jig', () => {
       expect(a.b.n).to.equal(1)
     })
 
-    it('forward circular', async () => {
+    it('should forward sync circularly referenced jigs', async () => {
       class A extends Jig { set (x, y) { this[x] = y } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -271,7 +271,7 @@ describe('Jig', () => {
       expect(a.b.a.location).to.equal(a.location)
     })
 
-    it('forward off', async () => {
+    it('should support disabling forward sync', async () => {
       class A extends Jig { set (x) { this.x = x } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -286,7 +286,7 @@ describe('Jig', () => {
       expect(a.x).to.equal(undefined)
     })
 
-    it('forward unsupported', async () => {
+    it('should throw if forward sync is unsupported', async () => {
       class A extends Jig { }
       const a = new A()
       await a.sync() // pending transactions must publish first
@@ -302,7 +302,7 @@ describe('Jig', () => {
       run.blockchain.fetch = oldFetch
     })
 
-    it('forward conflict', async () => {
+    it('should throw if attempt to update an old state', async () => {
       class A extends Jig { set (x) { this.x = x } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -317,7 +317,7 @@ describe('Jig', () => {
       expect(a.x).to.equal(1)
     })
 
-    it('missing spentTxId', async () => {
+    it('should throw if spentTxId is missing', async () => {
       class A extends Jig { }
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
@@ -326,7 +326,7 @@ describe('Jig', () => {
       await expect(a.sync()).to.be.rejectedWith('tx not found')
     })
 
-    it('wrong spentTxId', async () => {
+    it('should throw if spentTxId is incorrect', async () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -340,7 +340,7 @@ describe('Jig', () => {
   })
 
   describe('method', () => {
-    it('null args', async () => {
+    it('should support passing null in args', async () => {
       class Dragon extends Jig {
         init (lair) {
           this.lair = lair
@@ -353,7 +353,7 @@ describe('Jig', () => {
       expect(dragon).to.deep.equal(dragon2)
     })
 
-    it('rearrange jigs', () => {
+    it('should support swapping inner jigs', () => {
       class A extends Jig {
         setX (a) { this.x = a }
 
@@ -375,7 +375,7 @@ describe('Jig', () => {
       expectAction(a, 'swapXY', [], [a], [a], [a])
     })
 
-    it('restores on error', () => {
+    it('should restore old state if method throws', () => {
       class C extends Jig { f () { this.n = 1 } }
       class B extends Jig { g () { this.z = 1 } }
       class A extends Jig {
@@ -409,7 +409,7 @@ describe('Jig', () => {
       expect(c.n).to.equal(undefined)
     })
 
-    it('internal errors', () => {
+    it('should throw if swallow internal errors', () => {
       class B extends Jig { init () { throw new Error('some error message') } }
       class A extends Jig { f () { try { return new B() } catch (e) { } } }
       A.deps = { B }
@@ -419,7 +419,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('static libraries', () => {
+    it('should support calling static helpers', () => {
       class Preconditions { static checkArgument (b) { if (!b) throw new Error() } }
       class A extends Jig { set (n) { $.checkArgument(n > 0); this.n = n } } // eslint-disable-line
       A.deps = { $: Preconditions }
@@ -431,7 +431,7 @@ describe('Jig', () => {
       expectAction(a, 'set', [1], [a], [a], [])
     })
 
-    it('bounce call stack set', () => {
+    it('should throw if set a property directly on another jig in the call stack', () => {
       class A extends Jig {
         setB (b) { this.b = b }
 
@@ -454,7 +454,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('wrong network', async () => {
+    it('should throw if update on wrong network', async () => {
       class A extends Jig { f () { this.n = 1; return this } }
       const a = await new A().sync()
       createRun({ network: 'test' })
@@ -463,7 +463,7 @@ describe('Jig', () => {
   })
 
   describe('arguments', () => {
-    it('allowed', () => {
+    it('should support serializable arguments', () => {
       class A extends Jig { f (...args) { this.args = args } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -479,7 +479,7 @@ describe('Jig', () => {
       expectAction(a, 'f', [a, [a], { a }], [a], [a], [])
     })
 
-    it('throws if not allowed', () => {
+    it('should throw if not arguments not serializable', () => {
       class A extends Jig { f (...args) { this.args = args } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -496,7 +496,7 @@ describe('Jig', () => {
       expect(() => a.f(() => { })).to.throw('cannot be serialized to json')
     })
 
-    it('changes in method', () => {
+    it('should support changing args in method', () => {
       class A extends Jig { f (arr, obj) { arr.pop(); obj.n = 1; this.n = 0 } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -504,7 +504,7 @@ describe('Jig', () => {
       expectAction(a, 'f', [[1], { n: 0 }], [a], [a], [])
     })
 
-    it('constructor checks', async () => {
+    it('should allow checking jig constructors', async () => {
       class A extends Jig { init (b) { this.test = b.constructor === B } }
       class B extends Jig { init () { this.x = A.owner } }
       A.deps = { B }
@@ -522,7 +522,7 @@ describe('Jig', () => {
   })
 
   describe('get', () => {
-    it('no change no action', () => {
+    it('should not publish transaction if no changes', () => {
       class B extends Jig {
         set (n) { this.n = n }
 
@@ -541,7 +541,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('does not spend undefined reads', () => {
+    it('should not spend reads', () => {
       class B extends Jig { }
       class A extends Jig { init (b) { this.n = b.n } }
       const b = new B()
@@ -550,7 +550,7 @@ describe('Jig', () => {
       expectAction(a, 'init', [b], [], [a], [b])
     })
 
-    it('getter', async () => {
+    it('should support gettesr', async () => {
       class A extends Jig {
         init () { this.n = 1 }
 
@@ -572,7 +572,7 @@ describe('Jig', () => {
   })
 
   describe('spending rules', () => {
-    it('changed jigs spend callers', async () => {
+    it('should spend all callers when a jig changes', async () => {
       class A extends Jig { set (n) { this.n = n }}
       class B extends Jig { set (a, n) { a.set(n); return this } }
       const a = new A()
@@ -586,7 +586,7 @@ describe('Jig', () => {
       expect(a2.n).to.equal(2)
     })
 
-    it('creates spend callers', async () => {
+    it('should spend all callers for instantiation', async () => {
       class A extends Jig { create () { return new A() } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -596,7 +596,7 @@ describe('Jig', () => {
       await run.load(a2.location)
     })
 
-    it('multiple caller stacks', async () => {
+    it('should spend all callers across multiple call stacks', async () => {
       class A extends Jig { set (n) { this.n = n } }
       class B extends Jig { f (a, c) { a.set(1); c.g(a) } }
       class C extends Jig { g (a) { a.set(2) } }
@@ -614,7 +614,7 @@ describe('Jig', () => {
       expect(a2.n).to.equal(2)
     })
 
-    it('call self in stack', async () => {
+    it('should support calling self', async () => {
       class A extends Jig {
         g (b, c) { b.h(this, c) }
 
@@ -642,8 +642,8 @@ describe('Jig', () => {
       expect(a2.n).to.equal(1)
     })
 
-    // TODO: Long term, this probably should not spend.
-    it('uninvolved reads spend', async () => {
+    // TODO: Long term, this probably should not spend if we can figure out a way to do it.
+    it('should spend reads uninvolved in the change', async () => {
       class A extends Jig {
         set (n) { this.n = n }
 
@@ -671,7 +671,7 @@ describe('Jig', () => {
   })
 
   describe('non-spending reads', () => {
-    it('basic refs', async () => {
+    it('should reference but not spend reads', async () => {
       class A extends Jig { init (n) { this.n = n } }
       class B extends Jig {
         init () { this.a = new A(3) }
@@ -691,7 +691,7 @@ describe('Jig', () => {
       expect(b2.n).to.equal(5)
     })
 
-    it('different read instances', async () => {
+    it('should throw if read different instances of same jig', async () => {
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       a.set(1)
@@ -707,7 +707,7 @@ describe('Jig', () => {
       expect(() => b.apply(a2)).to.throw('referenced different locations of same jig: [jig A]')
     })
 
-    it('different read and write instances', async () => {
+    it('should throw if read different instance than written', async () => {
       class A extends Jig { set (n) { this.n = n } }
       class B extends Jig { apply (a, a2) { this.n = a.n; a2.set(3) } }
       const a = new A()
@@ -719,7 +719,7 @@ describe('Jig', () => {
       expect(() => b.apply(a, a2)).to.throw('referenced different locations of same jig: [jig A]')
     })
 
-    it('different read instances batch', async () => {
+    it('should throw if read different instances of a jig across a batch', async () => {
       class A extends Jig { set (n) { this.n = n } }
       class B extends Jig { apply (a) { this.n = a.n } }
       const a = new A()
@@ -736,7 +736,7 @@ describe('Jig', () => {
       await expect(run.sync()).to.be.rejectedWith(`read different locations of same jig ${a.origin}`)
     })
 
-    it('prevents stale posts', async () => {
+    it('should throw if attempt to read old version of jig', async () => {
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       class B extends Jig { apply (a) { this.n = a.n } }
@@ -748,7 +748,7 @@ describe('Jig', () => {
       await expect(run.sync()).to.be.rejectedWith(`Read ${a.location} is not the latest. Must sync() jigs`)
     })
 
-    it('prevents maybe stale posts', async () => {
+    it('should throw if unknown whether read is stale', async () => {
       class A extends Jig { set (n) { this.n = n } }
       class B extends Jig { apply (a) { this.n = a.n } }
       const a = new A()
@@ -773,7 +773,7 @@ describe('Jig', () => {
       } finally { run.blockchain.fetch = oldFetch }
     })
 
-    it('load stale', async () => {
+    it('should throw if read is stale during load', async () => {
       class A extends Jig { set (n) { this.n = n } }
       class B extends Jig { apply (a) { this.n = a.n } }
       const a = new A()
@@ -800,7 +800,7 @@ describe('Jig', () => {
   })
 
   describe('uint8array', () => {
-    it('basic checks', async () => {
+    it('should match instanceof checks', async () => {
       class A extends Jig {
         set () { this.buf = Uint8Array.from([1, 2, 3]) }
 
@@ -824,7 +824,7 @@ describe('Jig', () => {
       }
     })
 
-    it('gets and returns', async () => {
+    it('should support gets and returns', async () => {
       class A extends Jig {
         init () { this.buf = new Uint8Array([1, 2, 3]) }
 
@@ -852,7 +852,7 @@ describe('Jig', () => {
   })
 
   describe('set', () => {
-    it('throws if unsupported', () => {
+    it('should throw if unserializable value', () => {
       class A extends Jig {
         f () { this.n = new Set() }
 
@@ -873,7 +873,7 @@ describe('Jig', () => {
       expect(typeof a.n).to.equal('undefined')
     })
 
-    it('throws if external', () => {
+    it('should throw if set is external', () => {
       class A extends Jig { }
       class B extends Jig { init () { this.a = new A(); this.a.n = 1 }}
       B.deps = { A }
@@ -885,7 +885,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('cannot override methods', () => {
+    it('should throw if attempt to override methods', () => {
       class A extends Jig {
         f () { }
 
@@ -905,7 +905,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('cannot set properties on internal methods', () => {
+    it('should throw if set properties on methods', () => {
       class A extends Jig {
         init () { this.arr = [] }
 
@@ -921,7 +921,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('unchanged', () => {
+    it('should not create transaction if no value change', () => {
       class A extends Jig {
         init () { this.n = 1 }
 
@@ -935,7 +935,7 @@ describe('Jig', () => {
   })
 
   describe('delete', () => {
-    it('allowed internally', () => {
+    it('should support deleting internally', () => {
       class A extends Jig {
         init () { this.n = 1 }
 
@@ -948,7 +948,7 @@ describe('Jig', () => {
       expect(a.n).to.equal(undefined)
     })
 
-    it('throws if external', () => {
+    it('should throw if delete externally', () => {
       class A extends Jig { init () { this.n = 1 }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -956,14 +956,14 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('cannot delete methods', () => {
+    it('should throw if delete method', () => {
       class A extends Jig { f () { } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
       expect(() => { delete a.sync }).to.throw()
     })
 
-    it('unchanged', () => {
+    it('should not create transaction if delete did not change object', () => {
       class A extends Jig { delete () { this.n = 1; delete this.n } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -973,7 +973,7 @@ describe('Jig', () => {
   })
 
   describe('getPrototypeOf', () => {
-    it('does not read', () => {
+    it('should not spend or reference jigs', () => {
       class A extends Jig {
         f () { this.a2 = new A() }
 
@@ -993,7 +993,7 @@ describe('Jig', () => {
   })
 
   describe('setPrototypeOf', () => {
-    it('throws', () => {
+    it('should throw if change prototype', () => {
       class A extends Jig { f () { Reflect.setPrototypeOf(this, Object) }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1004,7 +1004,7 @@ describe('Jig', () => {
   })
 
   describe('preventExtensions', () => {
-    it('throws', () => {
+    it('should throw if prevent extensions', () => {
       class A extends Jig { f () { Object.preventExtensions(this) }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1015,7 +1015,7 @@ describe('Jig', () => {
   })
 
   describe('defineProperty', () => {
-    it('throws', () => {
+    it('should throw is define property', () => {
       class A extends Jig { f () { Object.defineProperty(this, 'n', { value: 1 }) }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1026,7 +1026,7 @@ describe('Jig', () => {
   })
 
   describe('has', () => {
-    it('reads non-permanents', () => {
+    it('should add non-permanent properties to reads', () => {
       class A extends Jig { init () { this.arr = [1] }}
       class B extends Jig {
         f (a) { this.x = 'n' in a }
@@ -1047,7 +1047,7 @@ describe('Jig', () => {
       expectAction(b, 'h', [a], [b], [b], [a])
     })
 
-    it('does not read permanents', () => {
+    it('should not add permanant properties to reads', () => {
       class A extends Jig { f () {} }
       class B extends Jig {
         f (a) {
@@ -1068,7 +1068,7 @@ describe('Jig', () => {
       expectAction(b, 'f', [a], [b], [b], [])
     })
 
-    it('undefined', () => {
+    it('should support has for undefined values', () => {
       class A extends Jig {
         init () { this.x = undefined }
       }
@@ -1078,7 +1078,7 @@ describe('Jig', () => {
   })
 
   describe('ownKeys', () => {
-    it('reads if change', () => {
+    it('should add to reads if call ownKeys', () => {
       class A extends Jig {}
       class B extends Jig { f (a) { this.x = Reflect.ownKeys(a) }}
       const a = new A()
@@ -1091,7 +1091,7 @@ describe('Jig', () => {
   })
 
   describe('getOwnPropertyDescriptor', () => {
-    it('reads if change', () => {
+    it('should add to reads if call getOwnPropertyDescriptor', () => {
       class A extends Jig { init () { this.n = 1 }}
       class B extends Jig { f (a) { this.x = Object.getOwnPropertyDescriptor(a, 'n') }}
       const a = new A()
@@ -1104,7 +1104,7 @@ describe('Jig', () => {
   })
 
   describe('array', () => {
-    it('push internally', async () => {
+    it('should support calling push internally', async () => {
       class A extends Jig {
         init () { this.a = [] }
 
@@ -1117,7 +1117,7 @@ describe('Jig', () => {
       expectAction(a, 'add', [1], [a], [a], [a])
     })
 
-    it('throws if write externally', () => {
+    it('should throw if change array externally', () => {
       class A extends Jig {
         init () { this.a = [3, 1, 2, 5, 0] }
 
@@ -1143,7 +1143,7 @@ describe('Jig', () => {
       writeOps.forEach(op => { op(); expectNoAction() })
     })
 
-    it('read-only methods', () => {
+    it('should support read-only methods without spending', () => {
       class A extends Jig { init () { this.a = [] } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1174,7 +1174,7 @@ describe('Jig', () => {
       // TODO: test no change
     })
 
-    it('iterate', () => {
+    it('should support iteration', () => {
       class A extends Jig {
         init () { this.a = [] }
 
@@ -1193,7 +1193,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('throws if overwrite or delete method', () => {
+    it('should throw if overwrite or delete method on array', () => {
       class A extends Jig {
         init () { this.a = [] }
 
@@ -1211,14 +1211,14 @@ describe('Jig', () => {
   })
 
   describe('owner', () => {
-    it('defined before init', () => {
+    it('should be defined before init is called', () => {
       class A extends Jig { init () { this.ownerAtInit = this.owner }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [a])
       expect(a.ownerAtInit).to.equal(run.owner.pubkey)
     })
 
-    it('assigned to creator', async () => {
+    it('should be assigned to creator', async () => {
       class A extends Jig {
         send (to) { this.owner = to }
 
@@ -1240,7 +1240,7 @@ describe('Jig', () => {
       expect(a3.owner).to.equal(pubkey)
     })
 
-    it('throws if not public key', async () => {
+    it('should throw if not set to a public key', async () => {
       class A extends Jig { send (owner) { this.owner = owner }}
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
@@ -1251,7 +1251,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('delete throws', () => {
+    it('should throw if delete owner', () => {
       class A extends Jig { f () { delete this.owner }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1261,7 +1261,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('set externally throws', () => {
+    it('should throw if set owner externally', () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1269,13 +1269,13 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('owner method throws', () => {
+    it('should throw if define owner method', () => {
       class A extends Jig { owner () {} }
       expect(() => new A()).to.throw()
       expectNoAction()
     })
 
-    it('reads if changed', () => {
+    it('should add to reads', () => {
       class A extends Jig { f (a) { this.x = a.owner }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1285,7 +1285,7 @@ describe('Jig', () => {
       expectAction(a, 'f', [a2], [a], [a], [a2])
     })
 
-    it('only class owner may create instances', async () => {
+    it('should support only class owner creating instances', async () => {
       const privkey = new PrivateKey()
       class A extends Jig {
         init (owner) {
@@ -1303,14 +1303,14 @@ describe('Jig', () => {
   })
 
   describe('satoshis', () => {
-    it('defined before init', () => {
+    it('should be defined before init', () => {
       class A extends Jig { init () { this.satoshisAtInit = this.satoshis }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [a])
       expect(a.satoshisAtInit).to.equal(0)
     })
 
-    it('set valid', async () => {
+    it('should support setting to valid numbers', async () => {
       class A extends Jig { f (s) { this.satoshis = s }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1323,27 +1323,7 @@ describe('Jig', () => {
       await run.sync()
     })
 
-    it('load mocknet', async () => {
-      class A extends Jig { f (s) { this.satoshis = s }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      a.f(50)
-      expectAction(a, 'f', [50], [a], [a], [])
-      await run.sync()
-      const a2 = await run.load(a.location)
-      expect(a2.satoshis).to.equal(50)
-    })
-
-    it('load testnet', async () => {
-      const run = createRun({ network: 'test' })
-      class A extends Jig { f (s) { this.satoshis = s }}
-      const a = new A()
-      a.f(50)
-      await run.sync()
-      await run.load(a.location)
-    }).timeout(30000)
-
-    it('set invalid', () => {
+    it('should throw if set to invalid number', () => {
       class A extends Jig {
         f (s) { this.satoshis = s }
 
@@ -1365,13 +1345,33 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('satoshis method throws', () => {
+    it('should load satoshis from mocknet', async () => {
+      class A extends Jig { f (s) { this.satoshis = s }}
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      a.f(50)
+      expectAction(a, 'f', [50], [a], [a], [])
+      await run.sync()
+      const a2 = await run.load(a.location)
+      expect(a2.satoshis).to.equal(50)
+    })
+
+    it('should load satoshis from testnet', async () => {
+      const run = createRun({ network: 'test' })
+      class A extends Jig { f (s) { this.satoshis = s }}
+      const a = new A()
+      a.f(50)
+      await run.sync()
+      await run.load(a.location)
+    }).timeout(30000)
+
+    it('should throw if create satoshis method', () => {
       class A extends Jig { owner () {} }
       expect(() => new A()).to.throw()
       expectNoAction()
     })
 
-    it('delete throws', () => {
+    it('should throw if delete satoshis property', () => {
       class A extends Jig { f () { delete this.satoshis }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1381,7 +1381,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('set externally throws', () => {
+    it('should throw if set externally', () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1389,7 +1389,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('decrease adds to purse', async () => {
+    it('should add to purse when satoshis decreased', async () => {
       class A extends Jig { f (satoshis) { this.satoshis = satoshis; return this }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1404,14 +1404,14 @@ describe('Jig', () => {
   })
 
   describe('misc', () => {
-    it('custom toJSON method', () => {
+    it('should support custom toJSON method', () => {
       class A extends Jig { toJSON () { return [1, 2, 3] } }
       const a = new A()
       expect(JSON.stringify(a)).to.equal('[1,2,3]')
       expectAction(a, 'init', [], [], [a], [])
     })
 
-    it('throws if $class or $ref property', () => {
+    it('should throw if $class or $ref property', () => {
       class A extends Jig { init () { this.o = { $class: 'undefined' } } }
       expect(() => new A()).to.throw()
       expectNoAction()
@@ -1420,7 +1420,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('throws if $class or $ref arg', () => {
+    it('should throw if $class or $ref arg', () => {
       class A extends Jig { init (o) { this.o = o } }
       expect(() => new A({ $class: 'undefined' })).to.throw()
       expectNoAction()
@@ -1428,7 +1428,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('deploy failed', async () => {
+    it('should make unusable when deploy fails', async () => {
       const oldPay = run.purse.pay
       run.purse.pay = async tx => tx
       class A extends Jig {
@@ -1451,7 +1451,7 @@ describe('Jig', () => {
       run.purse.pay = oldPay
     })
 
-    it('pay incomplete', async () => {
+    it('should throw if transaction is unpaid', async () => {
       class A extends Jig { set (x) { this.x = x } }
       const a = await new A().sync()
       const oldPay = run.purse.pay
@@ -1468,7 +1468,7 @@ describe('Jig', () => {
       run.purse.pay = oldPay
     })
 
-    it('sign incomplete', async () => {
+    it('should throw if owner signature is missing', async () => {
       class A extends Jig {
         init () { this.n = 1 }
 
@@ -1483,7 +1483,7 @@ describe('Jig', () => {
       run._sign = oldSign
     })
 
-    it('ordering', async () => {
+    it('should pass reads and writes in correct order', async () => {
       class B extends Jig {
         init (n) { this.n = n }
 
@@ -1508,7 +1508,7 @@ describe('Jig', () => {
       expectAction(a, 'add', [[b, b2]], [a, b2, b], [a, b2, b, b3, b4], [b2, b])
     })
 
-    it('uncaught errors', async () => {
+    it('should detect uncaught errors', async () => {
       class A extends Jig { f () { this.n = 1 } }
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
@@ -1537,13 +1537,13 @@ describe('Jig', () => {
   })
 
   describe('mempool chain', () => {
-    it('long mempool chain (purse)', async () => {
+    it('should support long mempool chain for purse', async () => {
       class A extends Jig { }
       for (let i = 0; i < 100; i++) { new A() } // eslint-disable-line
       await run.sync()
     }).timeout(10000)
 
-    it.skip('long mempool chain (jig)', async () => {
+    it.skip('should support long mempool chain for jig', async () => {
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       for (let i = 0; i < 100; i++) {
@@ -1552,20 +1552,20 @@ describe('Jig', () => {
       }
     })
 
-    it.skip('multiple jigs different lengths', async () => {
+    it.skip('should support multiple jigs with different length chains', async () => {
       // TODO
     })
   })
 
   describe('toString', () => {
-    it('default', () => {
+    it('should return a default value', () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
       expect(a.toString()).to.equal('[jig A]')
     })
 
-    it('override', () => {
+    it('should support overriding toString', () => {
       class A extends Jig { toString () { return 'hello' }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1574,7 +1574,7 @@ describe('Jig', () => {
   })
 
   describe('origin', () => {
-    it('read before sync throws', async () => {
+    it('throw if read origin before sync', async () => {
       class A extends Jig { f () { this.origin2 = this.origin }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1585,7 +1585,7 @@ describe('Jig', () => {
       expect(() => a.f()).not.to.throw()
     })
 
-    it('read internally after sync', async () => {
+    it('should support reading internally after sync', async () => {
       class A extends Jig { f () { this.origin2 = this.origin }}
       const a = new A()
       await a.sync()
@@ -1594,7 +1594,7 @@ describe('Jig', () => {
       expectAction(a, 'f', [], [a], [a], [])
     })
 
-    it('delete throws', () => {
+    it('should throw if delete origin', () => {
       class A extends Jig { f () { delete this.origin }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1604,7 +1604,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('set throws', () => {
+    it('should throw if set origin', () => {
       class A extends Jig { f () { this.origin = '123' }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1614,7 +1614,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('origin method throws', () => {
+    it('should throw if origin method exists', () => {
       class A extends Jig { origin () {} }
       expect(() => new A()).to.throw('must not override origin')
       expectNoAction()
@@ -1622,7 +1622,7 @@ describe('Jig', () => {
   })
 
   describe('location', () => {
-    it('read before sync throws', async () => {
+    it('should throw if read before sync', async () => {
       class A extends Jig {}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1631,7 +1631,7 @@ describe('Jig', () => {
       expect(() => a.location).not.to.throw()
     })
 
-    it('read internally after sync', async () => {
+    it('should support reading internally after sync', async () => {
       class A extends Jig { f () { this.location2 = this.location }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1648,7 +1648,8 @@ describe('Jig', () => {
       expect(a.location2).to.equal(secondLocation)
     })
 
-    it.skip('read quickly', async () => {
+    // TODO: This is probably possible to support in many cases
+    it.skip('should support reading location quickly', async () => {
       class A extends Jig { f () { this.n = 1 } }
       const a = new A()
       expect(a.location).not.to.throw()
@@ -1656,7 +1657,7 @@ describe('Jig', () => {
       expect(a.location).not.to.throw()
     })
 
-    it('delete throws', () => {
+    it('should throw if delete location', () => {
       class A extends Jig { f () { delete this.location }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1666,7 +1667,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('set throws', () => {
+    it('should throw if set location', () => {
       class A extends Jig { f () { this.location = '123' }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1676,7 +1677,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('location method throws', () => {
+    it('should throw if location method exists', () => {
       class A extends Jig { location () {} }
       expect(() => new A()).to.throw('must not override location')
       expectNoAction()
@@ -1684,7 +1685,7 @@ describe('Jig', () => {
   })
 
   describe('load', () => {
-    it('single jig', async () => {
+    it('should load single jig', async () => {
       class A extends Jig { f (n) { this.n = n }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1699,7 +1700,7 @@ describe('Jig', () => {
       expect(a2.n.n).to.equal(3)
     })
 
-    it('previous state', async () => {
+    it('should load older state', async () => {
       class A extends Jig { f (n) { this.n = n }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1714,7 +1715,7 @@ describe('Jig', () => {
       expect(a2.n).to.equal(1)
     })
 
-    it('throws if bad id', async () => {
+    it('should throw if location is bad', async () => {
       class A extends Jig { }
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
@@ -1722,7 +1723,7 @@ describe('Jig', () => {
       await expect(run.load(a.location.slice(0, 64) + '_o3')).to.be.rejected
     })
 
-    it('multiple writes', async () => {
+    it('should support loading jig with multiple updates', async () => {
       class A extends Jig { set (n) { this.n = n }}
       class B extends Jig {
         init () { this.a = new A() }
@@ -1741,7 +1742,7 @@ describe('Jig', () => {
       expect(a2.n).to.equal(2)
     })
 
-    it('arg writes', async () => {
+    it('should support loading jigs that updated other jigs', async () => {
       class A extends Jig { set (n) { this.n = n }}
       class B extends Jig { set (n, a) { a.set(n) } }
       B.deps = { A }
@@ -1756,7 +1757,7 @@ describe('Jig', () => {
       expect(a2.n).to.equal(2)
     })
 
-    it('same locations different jigs', async () => {
+    it('should support arguments with different instances of the same jig location', async () => {
       class A extends Jig { init (n) { this.n = n }}
       const a = await new A(1).sync()
       expectAction(a, 'init', [1], [], [a], [])
@@ -1769,7 +1770,7 @@ describe('Jig', () => {
       expect(b.n).to.equal(2)
     })
 
-    it('same origins different locations', async () => {
+    it('should throw if pass different locations of same jig as arguments', async () => {
       class A extends Jig { f (n) { this.n = n; return this }}
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
@@ -1782,7 +1783,7 @@ describe('Jig', () => {
       expect(() => new B(a, a2)).to.throw()
     })
 
-    it('children', async () => {
+    it('should support loading instances of extended classes', async () => {
       class A extends Jig { }
       class B extends A { }
       const b = await new B().sync()
@@ -1791,7 +1792,7 @@ describe('Jig', () => {
       await run2.load(b.location)
     })
 
-    it('arg read', async () => {
+    it('should support reading jigs as arguments', async () => {
       class A extends Jig { init (n) { this.n = n } }
       class B extends Jig { init (a) { this.n = a.n } }
       const a = await new A(1).sync()
@@ -1802,7 +1803,7 @@ describe('Jig', () => {
       expect(b2.n).to.equal(1)
     })
 
-    it('inner read', async () => {
+    it('should add inner jigs to reads', async () => {
       class A extends Jig { set (n) { this.n = n } }
       class B extends Jig {
         init (a) { this.a = a }
@@ -1827,7 +1828,7 @@ describe('Jig', () => {
   })
 
   describe('state cache', () => {
-    it('caches local updates', async () => {
+    it('should cache local updates', async () => {
       class A extends Jig {
         init () { this.undef = undefined }
 
@@ -1861,7 +1862,7 @@ describe('Jig', () => {
   })
 
   describe('class props', () => {
-    it('read from outside', async () => {
+    it('should be able to access class properties from instances', async () => {
       class A extends Jig {}
       A.n = 1
       const a = await new A().sync()
@@ -1870,7 +1871,7 @@ describe('Jig', () => {
       expect(a2.constructor.n).to.equal(1)
     })
 
-    it('read from inside', () => {
+    it('should support reads of class properties from inside jig methods', () => {
       class A extends Jig { f () { this.n = this.constructor.n }}
       A.n = 1
       const a = new A()
@@ -1878,7 +1879,7 @@ describe('Jig', () => {
       expect(a.n).to.equal(1)
     })
 
-    it('read dependencies from inside from pre-deployed', () => {
+    it('should support reading properties on preset classes', () => {
       class B extends Jig { }
       B.originMocknet = B.locationMocknet = '123'
       B.ownerMocknet = 'abc'
@@ -1893,7 +1894,7 @@ describe('Jig', () => {
   })
 
   describe('batch', () => {
-    it('load multiple inits', async () => {
+    it('should support load of batch with multiple instantiations', async () => {
       class A extends Jig { }
       run.transaction.begin()
       const a = new A()
@@ -1910,7 +1911,7 @@ describe('Jig', () => {
       expect(b.origin).to.equal(b2.origin)
     })
 
-    it('load multiple updates', async () => {
+    it('should support load of batch with multiple jig updates', async () => {
       class A extends Jig { f (n) { this.n = n }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -1931,7 +1932,7 @@ describe('Jig', () => {
       expect(b2.n).to.equal(2)
     })
 
-    it('load with self reference', async () => {
+    it('should support load of batch with self-references', async () => {
       class A extends Jig { f (a) { this.n = a } }
       run.transaction.begin()
       const a = new A()
@@ -1948,7 +1949,7 @@ describe('Jig', () => {
       expect(a.owner).to.equal(a2.owner)
     })
 
-    it('circular reference in same transaction', async () => {
+    it('should support load of batch with circularly referenced jigs', async () => {
       class A extends Jig { set (x) { this.x = x } }
       run.transaction.begin()
       const a = new A()
@@ -1961,7 +1962,7 @@ describe('Jig', () => {
       await run.load(b.location)
     })
 
-    it('batch fail with args rollback', async () => {
+    it('should roll back all jigs from batch failures', async () => {
       hookPay(run, true, true, true, false)
       class A extends Jig { f (n) { this.n = n } }
       class B extends Jig { f (a, n) { a.f(a.n + 1); this.n = n } }
@@ -1990,7 +1991,7 @@ describe('Jig', () => {
   })
 
   describe('private', () => {
-    it('has', () => {
+    it('should handle has of private property', () => {
       class J extends Jig {
         init () { this._x = 1 }
 
@@ -2005,7 +2006,7 @@ describe('Jig', () => {
       expect(() => new J().has(new K(), '_x')).to.throw('cannot check _x because it is private')
     })
 
-    it('get', () => {
+    it('should handle get of private property', () => {
       class J extends Jig {
         init () { this._x = 1 }
 
@@ -2020,7 +2021,7 @@ describe('Jig', () => {
       expect(() => new J().get(new K(), '_x')).to.throw('cannot get _x because it is private')
     })
 
-    it('method', () => {
+    it('should handle private method', () => {
       class J extends Jig {
         g () { return this._f() }
 
@@ -2039,7 +2040,7 @@ describe('Jig', () => {
       expect(() => new J().call(new K(), '_f')).to.throw('cannot get _f because it is private')
     })
 
-    it('ownKeys', () => {
+    it('should not return private properties in ownKeys', () => {
       class J extends Jig {
         init () { this._x = 1 }
 
@@ -2056,7 +2057,7 @@ describe('Jig', () => {
   })
 
   describe('caller', () => {
-    it('caller is null', async () => {
+    it('should set caller to null if external', async () => {
       class A extends Jig {
         init () {
           if (caller !== null) throw new Error()
@@ -2072,7 +2073,7 @@ describe('Jig', () => {
       expect(a2.caller).to.equal(null)
     })
 
-    it('caller is parent', async () => {
+    it('should set caller correctly if internal', async () => {
       class Parent extends Jig {
         createChild () { return new Child(this.origin) }
 
@@ -2100,7 +2101,7 @@ describe('Jig', () => {
       expect(child2.caller.constructor.name).to.equal('Parent') // TODO: compare with type
     })
 
-    it('caller is this', async () => {
+    it('should support caller being this', async () => {
       class A extends Jig {
         init () { this.f() }
 
@@ -2112,7 +2113,7 @@ describe('Jig', () => {
       expect(a2.caller).to.equal(a2)
     })
 
-    it('calling a method on the caller', async () => {
+    it('should support calling a method on the caller', async () => {
       class A extends Jig {
         set (n) { this.n = n }
 
@@ -2128,7 +2129,7 @@ describe('Jig', () => {
       expect(a2.n).to.equal(1)
     })
 
-    it('local variable caller takes precedence', async () => {
+    it('should allow local variables named caller', async () => {
       class A extends Jig { init () { const caller = 2; this.n = caller } }
       const a = await new A().sync()
       expect(a.n).to.equal(2)
@@ -2136,7 +2137,7 @@ describe('Jig', () => {
       expect(a2.n).to.equal(2)
     })
 
-    it('dependency caller takes precedence', async () => {
+    it('should allow dependencies named caller', async () => {
       function caller () { return 2 }
       class A extends Jig { init () { this.n = caller() } }
       A.deps = { caller }
@@ -2146,14 +2147,14 @@ describe('Jig', () => {
       expect(a2.n).to.equal(2)
     })
 
-    it('set caller is error', () => {
+    it('should throw if set caller', () => {
       class A extends Jig { init () { caller = 1 } } // eslint-disable-line
       expect(() => new A()).to.throw()
     })
   })
 
   describe('internal properties and methods', () => {
-    it('calling a read-only method on an internal property from outside', () => {
+    it('should support calling a read-only method on an internal property from outside', () => {
       class A extends Jig {
         init () {
           this.obj = { n: 1 }
@@ -2168,7 +2169,7 @@ describe('Jig', () => {
       expect(() => a.buf.indexOf(2)).not.to.throw()
     })
 
-    it('calling a read-only method on an internal property from another jig', () => {
+    it('should support calling a read-only method on an internal property from another jig', () => {
       class A extends Jig {
         init () {
           this.obj = { n: 1 }
@@ -2190,7 +2191,7 @@ describe('Jig', () => {
       expect(() => b.f(a)).not.to.throw()
     })
 
-    it('calling a write method on an internal property from outside', () => {
+    it('should support calling a write method on an internal property from outside', () => {
       class A extends Jig {
         init () {
           this.arr = [1, 2, 3]
@@ -2205,7 +2206,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('calling a write method on an internal property from another jig', () => {
+    it('should support calling a write method on an internal property from another jig', () => {
       class A extends Jig {
         init () {
           this.arr = [1, 2, 3]
@@ -2227,7 +2228,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('internal methods do not require args to be serializable', () => {
+    it('should support internal methods that do not require args to be serializable', () => {
       class A extends Jig { init () { this.arr = [1, 2, 3] } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -2235,7 +2236,7 @@ describe('Jig', () => {
       expect(() => a.arr.indexOf(Symbol.hasInstance)).not.to.throw()
     })
 
-    it('saving an internal property on another jig throws', () => {
+    it('should throw if save an internal property on another jig', () => {
       class A extends Jig {
         init () {
           this.obj = { n: 1 }
@@ -2259,7 +2260,7 @@ describe('Jig', () => {
       expect(() => b.h(a)).to.throw('property z is owned by a different jig')
     })
 
-    it('saving a copy of an internal property on another jig does not throw', () => {
+    it('should not throw if save a copy of an internal property on another jig', () => {
       class A extends Jig {
         init () {
           this.obj = { n: 1 }
@@ -2283,7 +2284,7 @@ describe('Jig', () => {
       expect(() => b.h(a)).not.to.throw()
     })
 
-    it('saving an internal method on another jig throws', () => {
+    it('should throw if save an internal method on another jig', () => {
       class A extends Jig { init () { this.arr = [] } }
       class B extends Jig { f (a) { this.x = a.arr.filter } }
       const a = new A()
