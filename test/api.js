@@ -92,7 +92,7 @@ describe('Api', () => {
       const address = bsv.PrivateKey('mainnet').toAddress().toString()
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
       const api = unobfuscate({ })
-      api.utxosUrl = (network, address) => 'https://www.google.com'
+      api.utxosUrl = (network, address) => 'https://api.run.network/v1/main/status'
       api.utxosResp = (data, address) => {
         const utxo = { txid, vout: 0, satoshis: 0, script: new bsv.Script() }
         return [utxo, utxo]
@@ -103,6 +103,6 @@ describe('Api', () => {
       const utxos = await blockchain.utxos(address)
       expect(utxos.length).to.equal(1)
       expect(logger.lastWarning).to.equal(`duplicate utxo returned from server: ${txid}_o0`)
-    })
+    }).timeout(30000)
   })
 })
