@@ -536,7 +536,8 @@ describe('Code', () => {
     it('should sandbox methods from globals', async () => {
       class A {
         isUndefined (x) {
-          return typeof (typeof window !== 'undefined' ? window : global)[x] === 'undefined'
+          const globalObj = typeof window !== 'undefined' ? window : global
+          return !globalObj || typeof globalObj[x] === 'undefined'
         }
       }
       const A1 = await run.load(await run.deploy(A))

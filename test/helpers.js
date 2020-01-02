@@ -64,7 +64,12 @@ function unobfuscate (obj) {
       if (typeof val === 'function' && !val.prototype) return val.bind(target)
 
       // Jigs don't need to be proxied and cause problems when they are
-      if (val.constructor && val.constructor.name === 'Jig') return val
+      // "val instanceof Jig" causes problems. Checking class names is good enough for tests.
+      let type = val.constructor
+      while (type) {
+        if (type.name === 'Jig') return val
+        type = Object.getPrototypeOf(type)
+      }
 
       // Read-only non-confurable properties cannot be proxied
       const descriptor = Object.getOwnPropertyDescriptor(target, key)

@@ -87,7 +87,8 @@ describe('Jig', () => {
     it('should throw if access globals', () => {
       class A extends Jig {
         isUndefined (x) {
-          return typeof (typeof window !== 'undefined' ? window : global)[x] === 'undefined'
+          const globalObj = typeof window !== 'undefined' ? window : global
+          return !globalObj || typeof globalObj[x] === 'undefined'
         }
       }
       const a = new A()
