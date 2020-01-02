@@ -15,7 +15,7 @@ const packageInfo = require('../package.json')
 
 describe('Run', () => {
   describe('constructor', () => {
-    it('basic properties', () => {
+    it('should set basic properties', () => {
       const run = createRun()
       expect(Run.version).to.equal(packageInfo.version)
       expect(run.owner.privkey).not.to.equal(run.purse.privkey)
@@ -25,14 +25,14 @@ describe('Run', () => {
       expect(run.app).to.equal('')
     })
 
-    it('sets global bsv network', () => {
+    it('should set global bsv network', () => {
       createRun()
       expect(bsv.Networks.defaultNetwork).to.equal('testnet')
       createRun({ network: 'main' })
       expect(bsv.Networks.defaultNetwork).to.equal('mainnet')
     })
 
-    it('networks', () => {
+    it('should support all networks', () => {
       // TODO: re-enable stn
       const networks = ['main', 'test', 'mock']
       networks.forEach(network => {
@@ -40,26 +40,26 @@ describe('Run', () => {
       })
     })
 
-    it('null purse', () => {
+    it('should support null purse', () => {
       expect(createRun({ purse: null }).purse).not.to.equal(null)
     })
 
-    it('null owner', () => {
+    it('should support null owner', () => {
       expect(createRun({ owner: null }).owner).not.to.equal(null)
     })
 
-    it('custom app', () => {
+    it('shoudl support custom app name', () => {
       expect(createRun({ app: 'biz' }).app).to.equal('biz')
     })
 
-    it('bad app', () => {
+    it('should throw if bad app name', () => {
       expect(() => createRun({ app: 0 })).to.throw('app must be a string')
       expect(() => createRun({ app: true })).to.throw('app must be a string')
       expect(() => createRun({ app: { name: 'biz' } })).to.throw('app must be a string')
     })
 
     describe('logger', () => {
-      it('custom logger', () => {
+      it('should support custom logger', () => {
         let infoMessage = ''; let errorMessage = ''; let errorData = null
         const run = createRun({
           logger: {
@@ -76,7 +76,7 @@ describe('Run', () => {
         expect(errorData).to.equal(1)
       })
 
-      it('bad logger throws', () => {
+      it('should throw if bad logger', () => {
         expect(() => createRun({ logger: 1 })).to.throw('logger must be an object, found 1')
         expect(() => createRun({ logger: false })).to.throw('logger must be an object, found false')
         expect(() => createRun({ logger: function log (message) {} })).to.throw('logger must be an object, found')
@@ -85,7 +85,7 @@ describe('Run', () => {
   })
 
   describe('load', () => {
-    it('inactive', async () => {
+    it('should throw if inactive', async () => {
       const run = createRun()
       class A { }
       await run.deploy(A)
@@ -93,7 +93,7 @@ describe('Run', () => {
       await expect(run.load(A.location)).to.be.rejectedWith('run instance is not active. call run.activate() first.')
     })
 
-    it('invalid arg', async () => {
+    it('should throw for invalid arg', async () => {
       const run = createRun()
       await expect(run.load()).to.be.rejectedWith('typeof location is undefined - must be string')
       await expect(run.load(123)).to.be.rejectedWith('typeof location is number - must be string')
@@ -102,14 +102,14 @@ describe('Run', () => {
   })
 
   describe('deploy', () => {
-    it('inactive', async () => {
+    it('should throw if inactive', async () => {
       class A { }
       const run = createRun()
       createRun()
       await expect(run.deploy(A)).to.be.rejectedWith('run instance is not active. call run.activate() first.')
     })
 
-    it('batch', async () => {
+    it('should support batch deploy', async () => {
       class A { }
       const run = createRun()
       run.transaction.begin()
@@ -119,7 +119,7 @@ describe('Run', () => {
   })
 
   describe('misc', () => {
-    it('same owner and purse', async () => {
+    it('should support same owner and purse', async () => {
       const key = new bsv.PrivateKey('testnet')
       const run = createRun({ owner: key, purse: key })
       class A extends Jig { set (name) { this.name = name; return this } }
@@ -144,7 +144,7 @@ describe('Run', () => {
       await a.set('a').sync()
     })
 
-    it('multiple simultaneous loads', async () => {
+    it('should support multiple simultaneous loads', async () => {
       // This tests a tricky timing issue where class dependencies need to be fully
       // loaded before load() returns. There used to be a case where that was possible.
       const run = createRun({ network: 'mock' })
@@ -164,7 +164,7 @@ describe('Run', () => {
       await Promise.all([p1, p2])
     })
 
-    it('reuse state cache', async () => {
+    it('should reuse state cache', async () => {
       async function timeLoad (network, location) {
         const run = createRun({ network })
         const before = new Date()
@@ -180,34 +180,6 @@ describe('Run', () => {
 
       expect(await timeLoad('main', mainLocation) > 1000).to.equal(true)
       expect(await timeLoad('main', mainLocation) > 1000).to.equal(false)
-    }).timeout(30000)
-
-    // TODO: Remove
-    it.skip('True Reviews Test', async () => {
-      const run = createRun({
-        network: 'main',
-        owner: '1N3U7rCvbjYu3zAgJzMa1xpxndmqDpU2jg',
-        logger: console
-      })
-
-      const before = new Date()
-      await run.sync()
-
-      console.log(new Date() - before)
-
-      // ---
-
-      console.log('---')
-
-      const run2 = createRun({
-        network: 'main',
-        owner: '1N3U7rCvbjYu3zAgJzMa1xpxndmqDpU2jg',
-        logger: console
-      })
-
-      const before2 = new Date()
-      await run2.sync()
-      console.log(new Date() - before2)
     }).timeout(30000)
   })
 })
