@@ -17,28 +17,28 @@ describe('Purse', () => {
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
-    it('generates random purse', () => {
+    it('should generate random purse if unspecified', () => {
       expect(run.purse.privkey.toString()).not.to.equal(createRun().purse.privkey.toString())
     })
 
-    it('address expected', () => {
+    it('should calculate address correctly from private key', () => {
       expect(run.purse.privkey.toAddress().toString()).to.equal(run.purse.address.toString())
     })
 
-    it('supports passing in privkey', () => {
+    it('should support passing in private key', () => {
       const privkey = new bsv.PrivateKey()
       const run = createRun({ purse: privkey })
       expect(run.purse.privkey.toString()).to.equal(privkey.toString())
     })
 
-    it('purse privkey on wrong network', () => {
+    it('should throw if private key is on wrong network', () => {
       const purse = new bsv.PrivateKey('mainnet').toString()
       expect(() => createRun({ purse, network: 'test' })).to.throw('Private key network mismatch')
     })
   })
 
   describe('pay', () => {
-    it('adds inputs and outputs', async () => {
+    it('should adds inputs and outputs', async () => {
       const address = new bsv.PrivateKey().toAddress()
       const tx = new bsv.Transaction().to(address, 100)
       const tx2 = await run.purse.pay(tx)
@@ -46,13 +46,13 @@ describe('Purse', () => {
       expect(tx2.outputs.length).to.equal(2)
     })
 
-    it('not enough funds', async () => {
+    it('should throw if not enough funds', async () => {
       const address = new bsv.PrivateKey().toAddress()
       const tx = new bsv.Transaction().to(address, Number.MAX_SAFE_INTEGER)
       await expect(run.purse.pay(tx)).to.be.rejectedWith('not enough funds')
     })
 
-    it('automatically splits utxos', async () => {
+    it('should automatically split utxos', async () => {
       const address = new bsv.PrivateKey().toAddress()
       await run.purse.pay(new bsv.Transaction().to(address, 100))
       const utxos = await run.blockchain.utxos(run.purse.address)
@@ -61,7 +61,7 @@ describe('Purse', () => {
   })
 
   describe('balance', () => {
-    it('sum of non-jig and non-class utxos', async () => {
+    it('should sum non-jig and non-class utxos', async () => {
       const utxos = await run.blockchain.utxos(run.purse.address)
       const address = new bsv.PrivateKey().toAddress()
       const send = new bsv.Transaction().from(utxos).to(address, 9999)
@@ -78,7 +78,7 @@ describe('Purse', () => {
   })
 
   describe('utxos', () => {
-    it('non-jig and non-class utxos', async () => {
+    it('should return non-jig and non-class utxos', async () => {
       const run2 = createRun({ owner: run.purse.privkey, blockchain: run.blockchain })
       class A extends Jig { init () { this.satoshis = 8888 } }
       await new A().sync()
