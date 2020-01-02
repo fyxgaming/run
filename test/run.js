@@ -48,7 +48,7 @@ describe('Run', () => {
       expect(createRun({ owner: null }).owner).not.to.equal(null)
     })
 
-    it('shoudl support custom app name', () => {
+    it('should support custom app name', () => {
       expect(createRun({ app: 'biz' }).app).to.equal('biz')
     })
 
