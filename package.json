@@ -8,7 +8,7 @@
         "lint": "standard --fix",
         "build": "webpack",
         "postinstall": "webpack",
-        "dev": "npm run lint && TEST_MODE=lib mocha test/token.js",
+        "dev": "npm run lint && TEST_MODE=lib mocha",
         "test": "npm run build && TEST_MODE=dist mocha",
         "cover": "TEST_MODE=cover nyc mocha",
         "browser": "mocha-headless-chrome -f ./test/browser.html"
