@@ -14,7 +14,7 @@ const { Jig, createRun, hookPay } = require('./helpers')
 
 describe('Owner', () => {
   describe('constructor', () => {
-    it('from bsv private key (testnet)', () => {
+    it('should support creating from bsv private key on testnet', () => {
       const privkey = new bsv.PrivateKey('testnet')
       const run = createRun({ owner: privkey })
       expect(run.owner.privkey).to.equal(privkey.toString())
@@ -22,7 +22,7 @@ describe('Owner', () => {
       expect(run.owner.address).to.equal(privkey.toAddress().toString())
     })
 
-    it('from string private key (mainnet)', () => {
+    it('should support creating from string private key on mainnet', () => {
       const privkey = new bsv.PrivateKey('mainnet')
       const run = createRun({ network: 'main', owner: privkey.toString() })
       expect(run.owner.privkey).to.equal(privkey.toString())
@@ -30,7 +30,7 @@ describe('Owner', () => {
       expect(run.owner.address).to.equal(privkey.toAddress().toString())
     })
 
-    it('from bsv public key (mainnet)', () => {
+    it('should support creating from bsv public key on mainnet', () => {
       const pubkey = new bsv.PrivateKey('mainnet').publicKey
       const run = createRun({ network: 'main', owner: pubkey })
       expect(run.owner.privkey).to.equal(undefined)
@@ -38,7 +38,7 @@ describe('Owner', () => {
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
     })
 
-    it('from string public key (mocknet)', () => {
+    it('should support creating from string public key on mocknet', () => {
       const pubkey = new bsv.PrivateKey('testnet').publicKey
       const run = createRun({ network: 'mock', owner: pubkey.toString() })
       expect(run.owner.privkey).to.equal(undefined)
@@ -46,7 +46,7 @@ describe('Owner', () => {
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
     })
 
-    it('from bsv address (stn)', () => {
+    it('should support creating from bsv address on stn', () => {
       const address = new bsv.PrivateKey('testnet').toAddress()
       const run = createRun({ network: 'stn', owner: address })
       expect(run.owner.privkey).to.equal(undefined)
@@ -54,7 +54,7 @@ describe('Owner', () => {
       expect(run.owner.address).to.equal(address.toString())
     })
 
-    it('from string address (mainnet)', () => {
+    it('should support creating from string address on mainnet', () => {
       const address = new bsv.PrivateKey('livenet').toAddress()
       const run = createRun({ network: 'main', owner: address.toString() })
       expect(run.owner.privkey).to.equal(undefined)
@@ -62,18 +62,18 @@ describe('Owner', () => {
       expect(run.owner.address).to.equal(address.toString())
     })
 
-    it('bad owner', () => {
+    it('should throw if bad owner', () => {
       expect(() => createRun({ owner: '123' })).to.throw('bad owner key or address: 123')
     })
 
-    it('owner privkey on wrong network', () => {
+    it('throw if owner private key is on wrong network', () => {
       const owner = new bsv.PrivateKey('testnet').toString()
       expect(() => createRun({ owner, network: 'main' })).to.throw('Private key network mismatch')
     })
   })
 
   describe('code', () => {
-    it('live updates', async () => {
+    it('should update with code deployed', async () => {
       const run = createRun()
       class A extends Jig { set (x) { this.x = x }}
       run.deploy(A)
@@ -93,7 +93,7 @@ describe('Owner', () => {
       expect(run.owner.code.length).to.equal(2)
     })
 
-    it('fail to post', async () => {
+    it('should remove if code fails to post', async () => {
       const run = createRun()
       hookPay(run, false)
       class A {}
@@ -108,7 +108,7 @@ describe('Owner', () => {
   })
 
   describe('jigs', () => {
-    it('live updates', async () => {
+    it('should update with jigs created', async () => {
       const run = createRun()
       class A extends Jig { createB () { return new B() }}
       class B extends Jig { send (to) { this.owner = to } }
@@ -125,7 +125,7 @@ describe('Owner', () => {
       expect(run.owner.jigs).to.deep.equal([a])
     })
 
-    it('sync', async () => {
+    it('should update jigs on sync', async () => {
       const run = createRun()
       class A extends Jig { createB () { return new B() }}
       class B extends Jig { }
@@ -140,7 +140,7 @@ describe('Owner', () => {
       expect(run2.owner.jigs).to.deep.equal([a, b, c])
     })
 
-    it('fail to post', async () => {
+    it('should remove jigs when fail to post', async () => {
       const run = createRun()
       hookPay(run, false)
       class A extends Jig {}
@@ -152,7 +152,7 @@ describe('Owner', () => {
       expect(run.owner.code.length).to.equal(0)
     })
 
-    it('filter by class', async () => {
+    it('should support filtering jigs by class', async () => {
       const run = createRun()
       class A extends Jig {}
       class B extends Jig {}
@@ -161,7 +161,7 @@ describe('Owner', () => {
       expect(run.owner.jigs.find(x => x instanceof A)).to.deep.equal(a)
     })
 
-    it('without key', async () => {
+    it('should support getting jigs without private key', async () => {
       const run = createRun()
       class A extends Jig {}
       const a = await new A().sync()
