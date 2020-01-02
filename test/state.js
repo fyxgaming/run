@@ -149,7 +149,7 @@ describe('StateCache', () => {
       expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: 1 } })
     })
 
-    it('should return original state, async () => {
+    it('should return original state', async () => {
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       a.set(1)

@@ -22,29 +22,29 @@ describe('Token', () => {
   TestToken.decimals = 2
 
   describe('init', () => {
-    it('mint', () => {
+    it('should mint new tokens', () => {
       const token = new TestToken(100)
       expect(token.amount).to.equal(100)
       expect(token.owner).to.equal(TestToken.owner)
     })
 
-    it('only class owner may mint', async () => {
+    it('should throw if owner is not minting', async () => {
       await run.deploy(TestToken)
       createRun({ blockchain: run.blockchain })
       expect(() => new TestToken(100)).to.throw('Only TestToken\'s owner may mint')
       run.activate()
     })
 
-    it('must be extended', () => {
+    it('should throw if class is not extended', () => {
       expect(() => new Token(100)).to.throw('Token must be extended')
     })
 
-    it('large amounts', () => {
+    it('should support large amounts', () => {
       expect(new TestToken(2147483647).amount).to.equal(2147483647)
       expect(new TestToken(Number.MAX_SAFE_INTEGER).amount).to.equal(Number.MAX_SAFE_INTEGER)
     })
 
-    it('bad amount', () => {
+    it('should throw for bad amounts', () => {
       expect(() => new TestToken()).to.throw('amount is not a number')
       expect(() => new TestToken('1')).to.throw('amount is not a number')
       expect(() => new TestToken(0)).to.throw('amount must be positive')
@@ -57,7 +57,7 @@ describe('Token', () => {
   })
 
   describe('send', () => {
-    it('full amount', () => {
+    it('should support sending full amount', () => {
       const pubkey = new bsv.PrivateKey().publicKey.toString()
       const token = new TestToken(100)
       expect(token.send(pubkey)).to.equal(null)
@@ -65,7 +65,7 @@ describe('Token', () => {
       expect(token.amount).to.equal(100)
     })
 
-    it('partial amount', () => {
+    it('should support sending partial amount', () => {
       const pubkey = new bsv.PrivateKey().publicKey.toString()
       const token = new TestToken(100)
       const change = token.send(pubkey, 30)
@@ -76,13 +76,13 @@ describe('Token', () => {
       expect(token.amount).to.equal(30)
     })
 
-    it('too much', () => {
+    it('should throw if send too much', () => {
       const pubkey = new bsv.PrivateKey().publicKey.toString()
       const token = new TestToken(100)
       expect(() => token.send(pubkey, 101)).to.throw('not enough funds')
     })
 
-    it('bad amount', () => {
+    it('should throw if send bad amount', () => {
       const pubkey = new bsv.PrivateKey().publicKey.toString()
       const token = new TestToken(100)
       expect(() => token.send(pubkey, {})).to.throw('amount is not a number')
@@ -95,7 +95,7 @@ describe('Token', () => {
       expect(() => token.send(pubkey, NaN)).to.throw('NaN cannot be serialized to json')
     })
 
-    it('bad owner', () => {
+    it('should throw if send to bad owner', () => {
       const token = new TestToken(100)
       expect(() => token.send(10)).to.throw('owner must be a pubkey string')
       expect(() => token.send('abc', 10)).to.throw('owner is not a valid public key')
@@ -103,7 +103,7 @@ describe('Token', () => {
   })
 
   describe('combine', () => {
-    it('two tokens', () => {
+    it('should support combining two tokens', () => {
       const a = new TestToken(30)
       const b = new TestToken(70)
       const c = TestToken.combine(a, b)
@@ -116,7 +116,7 @@ describe('Token', () => {
       expect(b.owner).not.to.equal(run.owner.pubkey)
     })
 
-    it('many tokens', () => {
+    it('should support combining many tokens', () => {
       const tokens = []
       for (let i = 0; i < 10; ++i) tokens.push(new TestToken(1))
       const combined = TestToken.combine(...tokens)
@@ -129,7 +129,7 @@ describe('Token', () => {
       })
     })
 
-    it('load after combine', async () => {
+    it('should support load after combine', async () => {
       const a = new TestToken(30)
       const b = new TestToken(70)
       const c = TestToken.combine(a, b)
@@ -141,7 +141,7 @@ describe('Token', () => {
       run.activate()
     })
 
-    it('different owners', async () => {
+    it('should throw if combine different owners without signatures', async () => {
       const a = new TestToken(1)
       const b = new TestToken(2)
       const pubkey = new bsv.PrivateKey().publicKey.toString()
@@ -149,28 +149,28 @@ describe('Token', () => {
       await expect(TestToken.combine(a, b).sync()).to.be.rejectedWith('Signature missing for TestToken')
     })
 
-    it('amount too large', () => {
+    it('should throw if combined amount is too large', () => {
       const a = new TestToken(Number.MAX_SAFE_INTEGER)
       const b = new TestToken(1)
       expect(() => TestToken.combine(a, b)).to.throw('amount too large')
     })
 
-    it('one token', () => {
+    it('should throw if combine only one token', () => {
       expect(() => TestToken.combine(new TestToken(1))).to.throw('must combine at least two tokens')
     })
 
-    it('no tokens', () => {
+    it('should throw if combine no tokens', () => {
       expect(() => TestToken.combine()).to.throw('must combine at least two tokens')
     })
 
-    it('non-tokens', () => {
+    it('should throw if combine non-tokens', () => {
       const error = 'cannot combine different token classes'
       expect(() => TestToken.combine(new TestToken(1), 1)).to.throw(error)
       expect(() => TestToken.combine(new TestToken(1), {})).to.throw(error)
       expect(() => TestToken.combine(new TestToken(1), new TestToken(1), {})).to.throw(error)
     })
 
-    it('different token classes', () => {
+    it('should throw if combine different token classes', () => {
       const error = 'cannot combine different token classes'
       class DifferentToken extends Token { }
       class ExtendedToken extends TestToken { }
@@ -178,31 +178,31 @@ describe('Token', () => {
       expect(() => TestToken.combine(new TestToken(1), new ExtendedToken(1))).to.throw(error)
     })
 
-    it('duplicate tokens', () => {
+    it('should throw if combine duplicate tokens', () => {
       const token = new TestToken(1)
       expect(() => TestToken.combine(token, token)).to.throw('cannot combine duplicate tokens')
     })
   })
 
   describe('value', () => {
-    it('defaults to 0', () => {
+    it('should default to 0', () => {
       class Token2 extends Token { }
       expect(Token2.decimals).to.equal(0)
       expect(new Token2(120).value).to.equal(120)
     })
 
-    it('divides by decimals', () => {
+    it('should divide amount by decimals', () => {
       expect(new TestToken(120).value).to.equal(1.2)
     })
   })
 
   describe('_onMint', () => {
-    it.skip('limit supply', async () => {
+    it.skip('should support limiting supply', async () => {
       // TODO: need a good way to do this, ideally using class properties
     })
   })
 
-  it.skip('deploy', async () => {
+  it.skip('should deploy', async () => {
     await deploy(Token)
   })
 })
