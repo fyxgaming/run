@@ -48,7 +48,7 @@ describe('StateCache', () => {
   beforeEach(() => run.activate())
 
   describe('set', () => {
-    it('called for each update after sync', async () => {
+    it('should call set for each update after sync', async () => {
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       await a.sync()
@@ -58,14 +58,14 @@ describe('StateCache', () => {
       expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: 3 } })
     })
 
-    it('satoshis', async () => {
+    it('should cache satoshis', async () => {
       class A extends Jig { init () { this.satoshis = 3000 } }
       const a = new A()
       await a.sync()
       expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 3000 } })
     })
 
-    it('owner', async () => {
+    it('should cache owner', async () => {
       const owner = new bsv.PrivateKey().publicKey.toString()
       class A extends Jig { init (owner) { this.owner = owner } }
       const a = new A(owner)
@@ -73,7 +73,7 @@ describe('StateCache', () => {
       expectStateSet(a.location, { type: '_o1', state: { owner, satoshis: 0 } })
     })
 
-    it('new jig ref', async () => {
+    it('should cache new jig references', async () => {
       class B extends Jig { }
       class A extends Jig { init () { this.b = new B() } }
       A.deps = { B }
@@ -83,7 +83,7 @@ describe('StateCache', () => {
       expectStateSet(a.b.location, { type: '_o2', state: { owner: run.owner.pubkey, satoshis: 0 } })
     })
 
-    it('prior jig ref', async () => {
+    it('should cache pre-existing jig references', async () => {
       class B extends Jig { }
       class A extends Jig { set (b) { this.b = b } }
       const b = new B()
@@ -95,7 +95,7 @@ describe('StateCache', () => {
       expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, b: { $ref: b.location } } })
     })
 
-    it('code ref', async () => {
+    it('should cache code references', async () => {
       class B extends Jig { }
       run.deploy(B)
       class A extends Jig { init () { this.A = A; this.B = B } }
@@ -105,7 +105,7 @@ describe('StateCache', () => {
       expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0, A: { $ref: '_o1' }, B: { $ref: B.location } } })
     })
 
-    it('respects max size', async () => {
+    it('should respect max cache size', async () => {
       const state = new Run.StateCache({ maxSizeMB: 400 / 1000 / 1000 })
       for (let i = 0; i < 100; i++) {
         state.set('x' + i, i)
@@ -115,7 +115,7 @@ describe('StateCache', () => {
       expect(state.cache.has('x0')).to.equal(false)
     })
 
-    it('existing value gets moved to the top', async () => {
+    it('should move existing values to the front of the cache', async () => {
       const state = new Run.StateCache({ maxSizeMB: 30 })
       state.set('a', 1)
       state.set('b', 2)
@@ -129,7 +129,7 @@ describe('StateCache', () => {
     })
 
     // Re-enable in next release
-    it.skip('different values is error', () => {
+    it.skip('should throw for different values of same key', () => {
       const state = new Run.StateCache({ maxSizeMB: 30 })
       state.set('a', 1)
       expect(() => state.set('a', 2)).toThrow('different values')
@@ -137,7 +137,7 @@ describe('StateCache', () => {
   })
 
   describe('get', () => {
-    it('load latest state', async () => {
+    it('should return latest state', async () => {
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       a.set(1)
@@ -149,7 +149,7 @@ describe('StateCache', () => {
       expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: 1 } })
     })
 
-    it('load original state', async () => {
+    it('should return original state, async () => {
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       a.set(1)
@@ -164,7 +164,7 @@ describe('StateCache', () => {
       expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: 1 } })
     })
 
-    it('load middle state', async () => {
+    it('should return middle state', async () => {
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       a.set(1)
@@ -183,7 +183,7 @@ describe('StateCache', () => {
       expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: { $ref: '_o1' } } })
     })
 
-    it.skip('hashed state does not match', async () => {
+    it.skip('should throw if hashed state does not match', async () => {
       class A extends Jig { }
       const a = new A()
       await a.sync()
