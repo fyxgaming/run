@@ -8,10 +8,17 @@ const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
 const path = require('path')
 const fs = require('fs')
+const child_process = require('child_process')
 const packageJson = require('./package.json')
 
+// Create the dist directory if necessary
 if (!fs.existsSync('./dist')) fs.mkdirSync('./dist')
-fs.copyFileSync(require.resolve('bsv/bsv.min.js'), './dist/bsv.browser.min.js')
+
+// Create and copy the browser build of the bsv library if necessary
+if (!fs.existsSync('./dist/bsv.browser.min.js')) {
+  child_process.execSync('npm explore bsv -- npm run build-bsv')
+  fs.copyFileSync(require.resolve('bsv/bsv.min.js'), './dist/bsv.browser.min.js')
+}
 
 const methodsToObfuscate = [
   // index.js
@@ -150,6 +157,24 @@ const globalsToObfuscate = [
   'spentLocations'
 ]
 
+// Generate the obfuscation map
+const replacements = {}
+const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('')
+let n = 1
+function nextRandomName () {
+  let name = 'aa'
+  let rem = n
+  while (rem > 0) {
+    name = name + alphabet[rem % alphabet.length]
+    rem = Math.floor(rem / alphabet.length)
+  }
+  n += 1
+  return name
+}
+const allPropertiesToObfuscate = methodsToObfuscate.concat(propertiesToObfuscate).concat(globalsToObfuscate)
+allPropertiesToObfuscate.forEach(prop => { replacements[prop] = nextRandomName() })
+fs.writeFileSync('./dist/obfuscation-map.json', JSON.stringify(replacements, null, 2), 'utf8')
+
 const obfuscatePlugin = {
   apply: (compiler) => {
     compiler.hooks.afterEmit.tap('ObfuscatePlugin', compilation => {
@@ -158,23 +183,7 @@ const obfuscatePlugin = {
 
       let text = fs.readFileSync(path, 'utf8')
 
-      const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('')
-      let n = 1
-      function nextRandomName () {
-        let name = 'aa'
-        let rem = n
-        while (rem > 0) {
-          name = name + alphabet[rem % alphabet.length]
-          rem = Math.floor(rem / alphabet.length)
-        }
-        n += 1
-        return name
-      }
-
-      const replacements = {}
-
       methodsToObfuscate.forEach(method => {
-        replacements[method] = nextRandomName()
         const before = text
         text = text.replace(new RegExp(`${method}\\(`, 'g'), `${replacements[method]}(`)
         text = text.replace(new RegExp(`${method}\\:`, 'g'), `${replacements[method]}:`)
@@ -182,7 +191,6 @@ const obfuscatePlugin = {
       })
 
       propertiesToObfuscate.forEach(property => {
-        replacements[property] = nextRandomName()
         const before = text
         text = text.replace(new RegExp(`\\.${property}`, 'g'), `.${replacements[property]}`)
         text = text.replace(new RegExp(`${property}\\:`, 'g'), `${replacements[property]}:`)
@@ -190,7 +198,6 @@ const obfuscatePlugin = {
       })
 
       globalsToObfuscate.forEach(property => {
-        replacements[property] = nextRandomName()
         const before = text
         text = text.replace(new RegExp(`${property}`, 'g'), `${replacements[property]}`)
         if (text === before) console.warn(`Warning: ${property} was not obfuscated`)
@@ -210,7 +217,6 @@ const obfuscatePlugin = {
       */\n`, '')
 
       fs.writeFileSync(path, text, 'utf8')
-      fs.writeFileSync(compilation.outputOptions.path + 'obfuscation-map.json', JSON.stringify(replacements, null, 2), 'utf8')
     })
   }
 }
@@ -281,4 +287,27 @@ const nodeUnminified = {
   optimization: { minimize: false }
 }
 
-module.exports = [browser, node, browserUnminified, nodeUnminified]
+const tests = {
+  entry: path.join(__dirname, './test'),
+  output: {
+    filename: 'run.tests.js',
+    path: path.join(__dirname, './dist/')
+  },
+  externals: {
+    bsv: 'bsv',
+    run: 'Run',
+    mocha: 'Mocha',
+    chai: 'chai'
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      TEST_MODE: '"webpack"'
+    })
+  ],
+  optimization: {
+    minimize: false
+  },
+  stats: 'errors-only'
+}
+
+module.exports = [browser, node, browserUnminified, nodeUnminified, tests]

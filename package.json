@@ -1,18 +1,16 @@
 {
     "name": "run",
     "repository": "git://github.com/runonbitcoin/run.git",
-    "version": "0.3.11",
+    "version": "0.3.12",
     "description": "Run JavaScript library",
     "main": "lib/index.js",
     "scripts": {
         "lint": "standard --fix",
         "build": "webpack",
-        "build:test": "webpack --config ./test/webpack.config.js",
         "test": "npm run build && TEST_MODE=dist mocha",
         "test:dev": "npm run lint && TEST_MODE=lib mocha",
         "test:cover": "TEST_MODE=cover nyc mocha",
-        "test:browser": "npm run build:test && mocha-headless-chrome -f ./test/browser.html -t 600000",
-        "postinstall": "npm run build"
+        "test:browser": "npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000"
     },
     "standard": {
         "globals": [
@@ -27,9 +25,9 @@
     },
     "dependencies": {
         "axios": "0.19.0",
-        "bsv": "1.0.0",
-        "terser-webpack-plugin": "2.2.1",
-        "webpack": "4.41.2",
+        "bsv": "1.2.0",
+        "terser-webpack-plugin": "2.3.1",
+        "webpack": "4.41.5",
         "webpack-cli": "3.3.10",
         "vm-browserify": "1.1.2"
     },
