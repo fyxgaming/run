@@ -183,6 +183,26 @@ describe('StateCache', () => {
       expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: { $ref: '_o1' } } })
     })
 
+    it('should throw if invalid state', async () => {
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
+      // Load without a type property
+      stateGetOverrides.set(a.location, { state: { owner: run.owner.pubkey, satoshis: 0 } })
+      await expect(run.load(a.location)).to.be.rejectedWith('Cached state is missing a valid type and/or state property')
+      expectStateGet(a.location)
+      // Load without a state property
+      stateGetOverrides.set(a.location, { type: A.location })
+      await expect(run.load(a.location)).to.be.rejectedWith('Cached state is missing a valid type and/or state property')
+      expectStateGet(a.location)
+      // Load correct state
+      stateGetOverrides.clear()
+      await run.load(a.location)
+      expectStateGet(a.location)
+      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
+    })
+
     it.skip('should throw if hashed state does not match', async () => {
       class A extends Jig { }
       const a = new A()
