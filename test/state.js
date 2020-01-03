@@ -53,7 +53,7 @@ describe('StateCache', () => {
       const a = new A()
       await a.sync()
       expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
-      a.set(3)
+      await a.set(3)
       await a.sync()
       expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: 3 } })
     })
@@ -88,7 +88,7 @@ describe('StateCache', () => {
       class A extends Jig { set (b) { this.b = b } }
       const b = new B()
       const a = new A()
-      a.set(b)
+      await a.set(b)
       await run.sync()
       expectStateSet(b.location, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
       expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
@@ -108,7 +108,7 @@ describe('StateCache', () => {
     it('should respect max cache size', async () => {
       const state = new Run.StateCache({ maxSizeMB: 400 / 1000 / 1000 })
       for (let i = 0; i < 100; i++) {
-        state.set('x' + i, i)
+        await state.set('x' + i, i)
       }
       expect(state.cache.size < 100).to.equal(true)
       expect(state.cache.has('x99')).to.equal(true)
@@ -117,22 +117,21 @@ describe('StateCache', () => {
 
     it('should move existing values to the front of the cache', async () => {
       const state = new Run.StateCache({ maxSizeMB: 30 })
-      state.set('a', 1)
-      state.set('b', 2)
-      state.set('c', 3)
+      await state.set('a', 1)
+      await state.set('b', 2)
+      await state.set('c', 3)
       expect(state.cache.keys().next().value).to.equal('a')
       const sizeBytesBefore = state.sizeBytes
       expect(sizeBytesBefore).not.to.equal(0)
-      state.set('a', 1)
+      await state.set('a', 1)
       expect(state.sizeBytes).to.equal(sizeBytesBefore)
       expect(state.cache.keys().next().value).to.equal('b')
     })
 
-    // Re-enable in next release
-    it.skip('should throw for different values of same key', () => {
+    it('should throw for different values of same key', async () => {
       const state = new Run.StateCache({ maxSizeMB: 30 })
-      state.set('a', 1)
-      expect(() => state.set('a', 2)).toThrow('different values')
+      await state.set('a', 1)
+      await expect(state.set('a', 2)).to.be.rejectedWith('Attempt to set different states for the same location')
     })
   })
 
