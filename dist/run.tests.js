@@ -353,7 +353,7 @@ module.exports = bsv;
 "use strict";
 
 /* eslint-disable no-invalid-this */
-let checkError = __webpack_require__(13);
+let checkError = __webpack_require__(9);
 
 module.exports = (chai, utils) => {
     const Assertion = chai.Assertion;
@@ -750,38 +750,18 @@ module.exports = g;
  * Tests for ../lib/blockchain.js
  */
 
-const { PrivateKey, Transaction } = __webpack_require__(3)
-const { describe, it } = __webpack_require__(1)
+const bsv = __webpack_require__(3)
+const { describe, it, beforeEach } = __webpack_require__(1)
 const chai = __webpack_require__(0)
 const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Run, createRun, payFor } = __webpack_require__(2)
-const { Api } = Run
+const { Run, createRun, payFor, unobfuscate } = __webpack_require__(2)
+const { BlockchainServer } = Run
 
-describe('Blockchain', () => {
-  describe('constructor', () => {
-    it('should return mainnet blockchain for main network', () => {
-      expect(createRun({ network: 'main' }).blockchain).not.to.equal(undefined)
-    })
-
-    it('should return testnet blockchain for test network', () => {
-      expect(createRun({ network: 'test' }).blockchain).not.to.equal(undefined)
-    })
-
-    it('should return scaling blockchain for stn network', () => {
-      expect(createRun({ network: 'stn' }).blockchain).not.to.equal(undefined)
-    })
-
-    it('should return mock blockchain for mock network', () => {
-      expect(createRun({ network: 'mock' }).blockchain).not.to.equal(undefined)
-    })
-
-    it('should throw for bad network', () => {
-      expect(() => createRun({ network: 'bitcoin' })).to.throw()
-    })
-  })
-})
+// ------------------------------------------------------------------------------------------------
+// Universal blockchain API test suite
+// ------------------------------------------------------------------------------------------------
 
 function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
   supportsSpentTxIdInBlocks, supportsSpentTxIdInMempool, indexingLatency, errors) {
@@ -789,43 +769,43 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
 
   describe('broadcast', () => {
     it('should support sending to self', async () => {
-      const tx = await payFor(new Transaction(), privateKey, blockchain)
+      const tx = await payFor(new bsv.Transaction(), privateKey, blockchain)
       await blockchain.broadcast(tx)
     })
 
     it('should throw if missing input', async () => {
       const utxos = await blockchain.utxos(address)
       const utxo = { ...utxos[0], vout: 999 }
-      const tx = new Transaction().from(utxo).change(address).fee(250).sign(privateKey)
+      const tx = new bsv.Transaction().from(utxo).change(address).fee(250).sign(privateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.missingInput)
     })
 
     it('should throw if no inputs', async () => {
-      const tx = new Transaction().to(address, 100)
+      const tx = new bsv.Transaction().to(address, 100)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.noInputs)
     })
 
     it('should throw if no outputs', async () => {
       const utxos = await blockchain.utxos(address)
-      const tx = new Transaction().from(utxos).sign(privateKey)
+      const tx = new bsv.Transaction().from(utxos).sign(privateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.noOutputs)
     })
 
     it('should throw if fee too low', async () => {
       const utxos = await blockchain.utxos(address)
-      const tx = new Transaction().from(utxos).change(address).fee(0).sign(privateKey)
+      const tx = new bsv.Transaction().from(utxos).change(address).fee(0).sign(privateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.feeTooLow)
     })
 
     it('should throw if not signed', async () => {
       const utxos = await blockchain.utxos(address)
-      const tx = new Transaction().from(utxos).change(address)
+      const tx = new bsv.Transaction().from(utxos).change(address)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.notFullySigned)
     })
 
     it('should throw if duplicate input', async () => {
       const utxos = await blockchain.utxos(address)
-      const tx = new Transaction().from(utxos).from(utxos).change(address).sign(privateKey)
+      const tx = new bsv.Transaction().from(utxos).from(utxos).change(address).sign(privateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.duplicateInput)
     })
   })
@@ -856,7 +836,7 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
     })
 
     it('should set spent information for transaction in mempool and unspent', async () => {
-      const tx = await payFor(new Transaction(), privateKey, blockchain)
+      const tx = await payFor(new bsv.Transaction(), privateKey, blockchain)
       await blockchain.broadcast(tx)
       function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
       const tx2 = await blockchain.fetch(tx.hash)
@@ -865,9 +845,9 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
       expect(tx2.outputs[0].spentIndex).to.equal(null)
       expect(tx2.outputs[0].spentHeight).to.equal(null)
       // check the uncached copy
-      if (blockchain instanceof Api) {
+      if (blockchain instanceof BlockchainServer) {
         await sleep(indexingLatency)
-        blockchain.txCache.clear()
+        blockchain.cache.transactions.clear()
       }
       const tx3 = await blockchain.fetch(tx.hash)
       if (supportsSpentTxIdInMempool) {
@@ -883,12 +863,12 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
     })
 
     it('should set spent information for transaction in mempool and spent', async () => {
-      const tx = await payFor(new Transaction(), privateKey, blockchain)
+      const tx = await payFor(new bsv.Transaction(), privateKey, blockchain)
       await blockchain.broadcast(tx)
       function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
-      if (blockchain instanceof Api) {
+      if (blockchain instanceof BlockchainServer) {
         await sleep(indexingLatency)
-        blockchain.txCache.clear()
+        blockchain.cache.transactions.clear()
       }
       const firstInput = tx.inputs[0]
       const prev = await blockchain.fetch(firstInput.prevTxId.toString('hex'))
@@ -923,6 +903,20 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
         expect(tx.confirmations > sampleTx.minConfirmations).to.equal(true)
       }
     })
+
+    it('should keep spent info when force fetch', async () => {
+      const privateKey2 = new bsv.PrivateKey(privateKey.network)
+      const address2 = privateKey2.toAddress()
+      const tx1 = await payFor(new bsv.Transaction().to(address2, 1000).sign(privateKey), privateKey, blockchain)
+      await blockchain.broadcast(tx1)
+      const utxo = { txid: tx1.hash, vout: 0, script: tx1.outputs[0].script, satoshis: 1000 }
+      const tx2 = (await payFor(new bsv.Transaction().from(utxo), privateKey, blockchain)).sign(privateKey2)
+      await blockchain.broadcast(tx2)
+      const tx1b = await blockchain.fetch(tx1.hash, true)
+      expect(tx1b.outputs[0].spentTxId).to.equal(tx1.outputs[0].spentTxId)
+      expect(tx1b.outputs[0].spentIndex).to.equal(tx1.outputs[0].spentIndex)
+      expect(tx1b.outputs[0].spentHeight).to.equal(tx1.outputs[0].spentHeight)
+    })
   })
 
   describe('utxos', () => {
@@ -936,13 +930,13 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
     })
 
     it('should return empty list if no utxos', async () => {
-      const address = new PrivateKey(privateKey.network).toAddress()
+      const address = new bsv.PrivateKey(privateKey.network).toAddress()
       const utxos = await blockchain.utxos(address)
       expect(utxos.length).to.equal(0)
     })
 
     it('should not return spent outputs', async () => {
-      const tx = await payFor(new Transaction(), privateKey, blockchain)
+      const tx = await payFor(new bsv.Transaction(), privateKey, blockchain)
       await blockchain.broadcast(tx)
       const utxos = await blockchain.utxos(address)
       expect(utxos.some(utxo => utxo.txid === tx.inputs[0].prevTxId.toString() &&
@@ -963,6 +957,216 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
   })
 }
 
+// ------------------------------------------------------------------------------------------------
+// Blockchain tests
+// ------------------------------------------------------------------------------------------------
+
+describe('Blockchain', () => {
+  describe('constructor', () => {
+    it('should return mainnet blockchain for main network', () => {
+      expect(createRun({ network: 'main' }).blockchain).not.to.equal(undefined)
+    })
+
+    it('should return testnet blockchain for test network', () => {
+      expect(createRun({ network: 'test' }).blockchain).not.to.equal(undefined)
+    })
+
+    it('should return scaling blockchain for stn network', () => {
+      expect(createRun({ network: 'stn' }).blockchain).not.to.equal(undefined)
+    })
+
+    it('should return mock blockchain for mock network', () => {
+      expect(createRun({ network: 'mock' }).blockchain).not.to.equal(undefined)
+    })
+
+    it('should throw for bad network', () => {
+      expect(() => createRun({ network: 'bitcoin' })).to.throw()
+    })
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// BlockchainServer tests
+// ------------------------------------------------------------------------------------------------
+
+describe('BlockchainServer', () => {
+  describe('constructor', () => {
+    it('should default network to main', () => {
+      expect(new BlockchainServer().network).to.equal('main')
+    })
+
+    it('should throw for bad network', () => {
+      expect(() => new BlockchainServer({ network: 'bad' })).to.throw('Unknown network: bad')
+      expect(() => new BlockchainServer({ network: 0 })).to.throw('Invalid network: 0')
+      expect(() => new BlockchainServer({ network: {} })).to.throw('Invalid network: [object Object]')
+      expect(() => new BlockchainServer({ network: null })).to.throw('Invalid network: null')
+    })
+
+    it('should support null loggers', () => {
+      expect(new BlockchainServer({ logger: null }).logger).to.equal(null)
+    })
+
+    it('should throw for bad logger', () => {
+      expect(() => new BlockchainServer({ logger: 'bad' })).to.throw('Invalid logger: bad')
+      expect(() => new BlockchainServer({ logger: false })).to.throw('Invalid logger: false')
+    })
+
+    it('should default to star api', () => {
+      expect(unobfuscate(new BlockchainServer()).api.broadcastUrl('main').startsWith('https://api.star.store')).to.equal(true)
+    })
+
+    it('should throw for bad api', () => {
+      expect(() => new BlockchainServer({ api: 'bad' })).to.throw('Unknown blockchain API: bad')
+      expect(() => new BlockchainServer({ api: null })).to.throw('Invalid blockchain API: null')
+      expect(() => new BlockchainServer({ api: 123 })).to.throw('Invalid blockchain API: 123')
+    })
+
+    it('should support passing invalid caches', () => {
+      const cache = {}
+      expect(new BlockchainServer({ cache })).not.to.equal(cache)
+    })
+
+    it('should support custom timeouts', () => {
+      expect(new BlockchainServer({ timeout: 3333 }).axios.defaults.timeout).to.equal(3333)
+    })
+
+    it('should default timeout to 10000', () => {
+      expect(new BlockchainServer().axios.defaults.timeout).to.equal(10000)
+    })
+
+    it('should throw for bad timeout', () => {
+      expect(() => new BlockchainServer({ timeout: 'bad' })).to.throw('Invalid timeout: bad')
+      expect(() => new BlockchainServer({ timeout: null })).to.throw('Invalid timeout: null')
+      expect(() => new BlockchainServer({ timeout: -1 })).to.throw('Invalid timeout: -1')
+      expect(() => new BlockchainServer({ timeout: NaN })).to.throw('Invalid timeout: NaN')
+    })
+  })
+
+  describe('utxos', () => {
+    it('should correct for server returning duplicates', async () => {
+      const address = bsv.PrivateKey('mainnet').toAddress().toString()
+      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
+      const api = unobfuscate({ })
+      api.utxosUrl = (network, address) => 'https://api.run.network/v1/main/status'
+      api.utxosResp = (data, address) => {
+        const utxo = { txid, vout: 0, satoshis: 0, script: new bsv.Script() }
+        return [utxo, utxo]
+      }
+      function warn (warning) { this.lastWarning = warning }
+      const logger = { warn, info: () => {} }
+      const blockchain = new BlockchainServer({ network: 'main', api, logger })
+      const utxos = await blockchain.utxos(address)
+      expect(utxos.length).to.equal(1)
+      expect(logger.lastWarning).to.equal(`Duplicate utxo returned from server: ${txid}_o0`)
+    }).timeout(30000)
+
+    it('should throw if API is down', async () => {
+      const api = unobfuscate({ })
+      api.utxosUrl = (network, address) => 'bad-url'
+      const blockchain = new BlockchainServer({ network: 'main', api })
+      const address = bsv.PrivateKey('mainnet').toAddress().toString()
+      const requests = [blockchain.utxos(address), blockchain.utxos(address)]
+      await expect(Promise.all(requests)).to.be.rejected
+    })
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// BlockchainServerCache tests
+// ------------------------------------------------------------------------------------------------
+
+describe('BlockchainServerCache', () => {
+  describe('get', () => {
+    it('should not return expired transactions', async () => {
+      const cache = unobfuscate(new BlockchainServer.Cache())
+      cache.expiration = 1
+      const tx = new bsv.Transaction()
+      cache.fetched(tx)
+      const sleep = ms => { return new Promise(resolve => setTimeout(resolve, ms)) }
+      await sleep(10)
+      expect(cache.get(tx.hash)).not.to.equal(tx)
+    })
+  })
+
+  describe('fetched', () => {
+    it('should flush oldest transcation when full', () => {
+      const cache = unobfuscate(new BlockchainServer.Cache({ size: 1 }))
+      cache.size = 1
+      const tx1 = new bsv.Transaction().addData('1')
+      const tx2 = new bsv.Transaction().addData('2')
+      cache.fetched(tx1)
+      cache.fetched(tx2)
+      expect(cache.transactions.size).to.equal(1)
+      expect(cache.transactions.get(tx2.hash)).to.equal(tx2)
+    })
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// API tests
+// ------------------------------------------------------------------------------------------------
+
+// sample transactions with spent outputs in mined blocks on each network
+const sampleTransactions = {
+  main: {
+    txid: 'afc557ef2970af0b5fb8bc1a70a320af425c7a45ca5d40eac78475109563c5f8',
+    blockhash: '000000000000000005609907e3092b92882c522fffb0705c73e91ddc3a6941ed',
+    blocktime: 1556620117,
+    time: 1556620117000,
+    minConfirmations: 15000,
+    vout: [{
+      spentTxId: '26fb663eeb8d3cd407276b045a8d71da9f625ef3dca66f51cb047d97a8cad3a6',
+      spentIndex: 0,
+      spentHeight: 580333
+    }]
+  },
+  test: {
+    txid: 'acf2d978febb09e3a0d5817f180b19df675a0e95f75a2a1efeec739ebff865a7',
+    blockhash: '00000000000001ffaf368388b7ac954a562bd76fe39f6e114b171655273a38a7',
+    blocktime: 1556695666,
+    time: 1556695666000,
+    minConfirmations: 18000,
+    vout: [{
+      spentTxId: '806444d15f416477b00b6bbd937c02ff3c8f8c5e09dae28425c87a8a0ef58af0',
+      spentIndex: 0,
+      spentHeight: 1298618
+    }]
+  },
+  stn: {
+    txid: 'a40ee613c5982d6b39d2425368eb2375f49b38a45b457bd72db4ec666d96d4c6'
+  }
+}
+
+const errors = {
+  noInputs: 'tx has no inputs',
+  noOutputs: 'tx has no outputs',
+  feeTooLow: 'tx fee too low',
+  notFullySigned: 'tx not fully signed',
+  duplicateInput: /transaction input [0-9]* duplicate input/,
+  missingInput: 'Missing inputs'
+}
+
+const apis = { Star: 'star', BitIndex: 'bitindex', WhatsOnChain: 'whatsonchain' }
+const networks = ['main', 'test']
+const supportsSpentTxIdInBlocks = { Star: true, BitIndex: true, WhatsOnChain: false }
+const supportsSpentTxIdInMempool = { Star: true, BitIndex: true, WhatsOnChain: false }
+
+// Iterate networks first, then APIs, so that we can reuse the caches when possible
+networks.forEach(network => {
+  Object.keys(apis).forEach(api => {
+    describe(`${api} (${network})`, function () {
+      const run = createRun({ network, blockchain: apis[api] })
+      beforeEach(() => run.activate())
+      this.timeout(30000)
+      runBlockchainTestSuite(run.blockchain, run.purse.privkey,
+        sampleTransactions[network], supportsSpentTxIdInBlocks[api],
+        supportsSpentTxIdInMempool[api], 1000 /* indexingLatency */, errors)
+    })
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+
 module.exports = runBlockchainTestSuite
 
 
@@ -981,9 +1185,9 @@ module.exports = runBlockchainTestSuite
 
 
 
-var base64 = __webpack_require__(25)
-var ieee754 = __webpack_require__(26)
-var isArray = __webpack_require__(27)
+var base64 = __webpack_require__(24)
+var ieee754 = __webpack_require__(25)
+var isArray = __webpack_require__(26)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -2773,133 +2977,197 @@ function isnan (val) {
  * Includes all the tests that run using mocha
  */
 
-__webpack_require__(9)
 __webpack_require__(6)
+__webpack_require__(13)
 __webpack_require__(14)
 __webpack_require__(15)
 __webpack_require__(16)
 __webpack_require__(17)
 __webpack_require__(18)
 __webpack_require__(19)
-__webpack_require__(20)
+__webpack_require__(21)
 __webpack_require__(22)
 __webpack_require__(23)
-__webpack_require__(24)
-__webpack_require__(28)
+__webpack_require__(27)
 
 
 /***/ }),
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/**
- * api.js
- *
- * Tests for ../lib/api.js
+"use strict";
+
+
+/* !
+ * Chai - checkError utility
+ * Copyright(c) 2012-2016 Jake Luer <jake@alogicalparadox.com>
+ * MIT Licensed
  */
 
-const bsv = __webpack_require__(3)
-const { describe, it, beforeEach } = __webpack_require__(1)
-const { expect } = __webpack_require__(0)
-const { Run, unobfuscate, createRun } = __webpack_require__(2)
-const runBlockchainTestSuite = __webpack_require__(6)
-const { Api } = Run
+/**
+ * ### .checkError
+ *
+ * Checks that an error conforms to a given set of criteria and/or retrieves information about it.
+ *
+ * @api public
+ */
 
-// sample transactions with spent outputs in mined blocks on each network
-const sampleTransactions = {
-  main: {
-    txid: 'afc557ef2970af0b5fb8bc1a70a320af425c7a45ca5d40eac78475109563c5f8',
-    blockhash: '000000000000000005609907e3092b92882c522fffb0705c73e91ddc3a6941ed',
-    blocktime: 1556620117,
-    time: 1556620117000,
-    minConfirmations: 15000,
-    vout: [{
-      spentTxId: '26fb663eeb8d3cd407276b045a8d71da9f625ef3dca66f51cb047d97a8cad3a6',
-      spentIndex: 0,
-      spentHeight: 580333
-    }]
-  },
-  test: {
-    txid: 'acf2d978febb09e3a0d5817f180b19df675a0e95f75a2a1efeec739ebff865a7',
-    blockhash: '00000000000001ffaf368388b7ac954a562bd76fe39f6e114b171655273a38a7',
-    blocktime: 1556695666,
-    time: 1556695666000,
-    minConfirmations: 18000,
-    vout: [{
-      spentTxId: '806444d15f416477b00b6bbd937c02ff3c8f8c5e09dae28425c87a8a0ef58af0',
-      spentIndex: 0,
-      spentHeight: 1298618
-    }]
-  },
-  stn: {
-    txid: 'a40ee613c5982d6b39d2425368eb2375f49b38a45b457bd72db4ec666d96d4c6'
+/**
+ * ### .compatibleInstance(thrown, errorLike)
+ *
+ * Checks if two instances are compatible (strict equal).
+ * Returns false if errorLike is not an instance of Error, because instances
+ * can only be compatible if they're both error instances.
+ *
+ * @name compatibleInstance
+ * @param {Error} thrown error
+ * @param {Error|ErrorConstructor} errorLike object to compare against
+ * @namespace Utils
+ * @api public
+ */
+
+function compatibleInstance(thrown, errorLike) {
+  return errorLike instanceof Error && thrown === errorLike;
+}
+
+/**
+ * ### .compatibleConstructor(thrown, errorLike)
+ *
+ * Checks if two constructors are compatible.
+ * This function can receive either an error constructor or
+ * an error instance as the `errorLike` argument.
+ * Constructors are compatible if they're the same or if one is
+ * an instance of another.
+ *
+ * @name compatibleConstructor
+ * @param {Error} thrown error
+ * @param {Error|ErrorConstructor} errorLike object to compare against
+ * @namespace Utils
+ * @api public
+ */
+
+function compatibleConstructor(thrown, errorLike) {
+  if (errorLike instanceof Error) {
+    // If `errorLike` is an instance of any error we compare their constructors
+    return thrown.constructor === errorLike.constructor || thrown instanceof errorLike.constructor;
+  } else if (errorLike.prototype instanceof Error || errorLike === Error) {
+    // If `errorLike` is a constructor that inherits from Error, we compare `thrown` to `errorLike` directly
+    return thrown.constructor === errorLike || thrown instanceof errorLike;
   }
+
+  return false;
 }
 
-const networks = ['main', 'test']
+/**
+ * ### .compatibleMessage(thrown, errMatcher)
+ *
+ * Checks if an error's message is compatible with a matcher (String or RegExp).
+ * If the message contains the String or passes the RegExp test,
+ * it is considered compatible.
+ *
+ * @name compatibleMessage
+ * @param {Error} thrown error
+ * @param {String|RegExp} errMatcher to look for into the message
+ * @namespace Utils
+ * @api public
+ */
 
-const errors = {
-  noInputs: 'tx has no inputs',
-  noOutputs: 'tx has no outputs',
-  feeTooLow: 'tx fee too low',
-  notFullySigned: 'tx not fully signed',
-  duplicateInput: /transaction input [0-9]* duplicate input/,
-  missingInput: 'Missing inputs'
+function compatibleMessage(thrown, errMatcher) {
+  var comparisonString = typeof thrown === 'string' ? thrown : thrown.message;
+  if (errMatcher instanceof RegExp) {
+    return errMatcher.test(comparisonString);
+  } else if (typeof errMatcher === 'string') {
+    return comparisonString.indexOf(errMatcher) !== -1; // eslint-disable-line no-magic-numbers
+  }
+
+  return false;
 }
 
-networks.forEach(network => {
-  describe(`Star (${network})`, function () {
-    const run = createRun({ network, blockchain: 'star' })
-    beforeEach(() => run.activate())
-    this.timeout(30000)
-    runBlockchainTestSuite(run.blockchain, run.purse.privkey,
-      sampleTransactions[network], true /* supportsSpentTxIdInBlocks */,
-      true /* supportsSpentTxIdInMempool */, 0 /* indexingLatency */, errors)
-  })
-})
+/**
+ * ### .getFunctionName(constructorFn)
+ *
+ * Returns the name of a function.
+ * This also includes a polyfill function if `constructorFn.name` is not defined.
+ *
+ * @name getFunctionName
+ * @param {Function} constructorFn
+ * @namespace Utils
+ * @api private
+ */
 
-networks.forEach(network => {
-  describe(`BitIndex (${network})`, function () {
-    const run = createRun({ network, blockchain: 'bitindex' })
-    beforeEach(() => run.activate())
-    this.timeout(30000)
-    runBlockchainTestSuite(run.blockchain, run.purse.privkey,
-      sampleTransactions[network], true /* supportsSpentTxId */,
-      true /* supportsSpentTxIdInMempool */, 1000 /* indexingLatency */, errors)
-  })
-})
+var functionNameMatch = /\s*function(?:\s|\s*\/\*[^(?:*\/)]+\*\/\s*)*([^\(\/]+)/;
+function getFunctionName(constructorFn) {
+  var name = '';
+  if (typeof constructorFn.name === 'undefined') {
+    // Here we run a polyfill if constructorFn.name is not defined
+    var match = String(constructorFn).match(functionNameMatch);
+    if (match) {
+      name = match[1];
+    }
+  } else {
+    name = constructorFn.name;
+  }
 
-networks.forEach(network => {
-  describe(`WhatsOnChain (${network})`, function () {
-    const run = createRun({ network, blockchain: 'whatsonchain' })
-    beforeEach(() => run.activate())
-    this.timeout(30000)
-    runBlockchainTestSuite(run.blockchain, run.purse.privkey,
-      sampleTransactions[network], false /* supportsSpentTxId */,
-      false /* supportsSpentTxIdInMempool */, 1000 /* indexingLatency */, errors)
-  })
-})
+  return name;
+}
 
-describe('Api', () => {
-  describe('utxos', () => {
-    it('should correct for server returning duplicates', async () => {
-      const address = bsv.PrivateKey('mainnet').toAddress().toString()
-      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
-      const api = unobfuscate({ })
-      api.utxosUrl = (network, address) => 'https://api.run.network/v1/main/status'
-      api.utxosResp = (data, address) => {
-        const utxo = { txid, vout: 0, satoshis: 0, script: new bsv.Script() }
-        return [utxo, utxo]
-      }
-      function warn (warning) { this.lastWarning = warning }
-      const logger = { info: () => {}, warn }
-      const blockchain = new Api({ network: 'main', api, logger })
-      const utxos = await blockchain.utxos(address)
-      expect(utxos.length).to.equal(1)
-      expect(logger.lastWarning).to.equal(`duplicate utxo returned from server: ${txid}_o0`)
-    }).timeout(30000)
-  })
-})
+/**
+ * ### .getConstructorName(errorLike)
+ *
+ * Gets the constructor name for an Error instance or constructor itself.
+ *
+ * @name getConstructorName
+ * @param {Error|ErrorConstructor} errorLike
+ * @namespace Utils
+ * @api public
+ */
+
+function getConstructorName(errorLike) {
+  var constructorName = errorLike;
+  if (errorLike instanceof Error) {
+    constructorName = getFunctionName(errorLike.constructor);
+  } else if (typeof errorLike === 'function') {
+    // If `err` is not an instance of Error it is an error constructor itself or another function.
+    // If we've got a common function we get its name, otherwise we may need to create a new instance
+    // of the error just in case it's a poorly-constructed error. Please see chaijs/chai/issues/45 to know more.
+    constructorName = getFunctionName(errorLike).trim() ||
+        getFunctionName(new errorLike()); // eslint-disable-line new-cap
+  }
+
+  return constructorName;
+}
+
+/**
+ * ### .getMessage(errorLike)
+ *
+ * Gets the error message from an error.
+ * If `err` is a String itself, we return it.
+ * If the error has no message, we return an empty string.
+ *
+ * @name getMessage
+ * @param {Error|String} errorLike
+ * @namespace Utils
+ * @api public
+ */
+
+function getMessage(errorLike) {
+  var msg = '';
+  if (errorLike && errorLike.message) {
+    msg = errorLike.message;
+  } else if (typeof errorLike === 'string') {
+    msg = errorLike;
+  }
+
+  return msg;
+}
+
+module.exports = {
+  compatibleInstance: compatibleInstance,
+  compatibleConstructor: compatibleConstructor,
+  compatibleMessage: compatibleMessage,
+  getMessage: getMessage,
+  getConstructorName: getConstructorName,
+};
 
 
 /***/ }),
@@ -3102,189 +3370,10 @@ module.exports = Run;
 /* 12 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"_sign\":\"aab\",\"_setupBsv\":\"aac\",\"checkActive\":\"aad\",\"checkOwner\":\"aae\",\"checkSatoshis\":\"aaf\",\"checkRunTransaction\":\"aag\",\"extractRunData\":\"aah\",\"outputType\":\"aai\",\"getNormalizedSourceCode\":\"aaj\",\"deployable\":\"aak\",\"encryptRunData\":\"aal\",\"decryptRunData\":\"aam\",\"richObjectToJson\":\"aan\",\"jsonToRichObject\":\"aao\",\"extractJigsAndCodeToArray\":\"aap\",\"injectJigsAndCodeFromArray\":\"aaq\",\"deepTraverse\":\"aar\",\"activeRunInstance\":\"aas\",\"sameJig\":\"aat\",\"networkSuffix\":\"aau\",\"broadcastUrl\":\"aav\",\"broadcastData\":\"aaw\",\"fetchUrl\":\"aax\",\"fetchResp\":\"aay\",\"utxosUrl\":\"aaz\",\"utxosResp\":\"aaab\",\"_correctForServerUtxoIndexDelay\":\"aabb\",\"banNondeterministicGlobals\":\"aacb\",\"isSandbox\":\"aadb\",\"getInstalled\":\"aaeb\",\"installFromTx\":\"aafb\",\"installJig\":\"aagb\",\"fastForward\":\"aahb\",\"finish\":\"aaib\",\"publishNext\":\"aajb\",\"publish\":\"aakb\",\"storeCode\":\"aalb\",\"storeAction\":\"aamb\",\"setProtoTxAndCreator\":\"aanb\",\"buildBsvTransaction\":\"aaob\",\"_fromPrivateKey\":\"aapb\",\"_fromPublicKey\":\"aaqb\",\"_fromAddress\":\"aarb\",\"_queryLatest\":\"aasb\",\"_removeErrorRefs\":\"aatb\",\"_update\":\"aaub\",\"_estimateSize\":\"aavb\",\"_util\":\"aawb\",\"intrinsics\":\"aaxb\",\"proxies\":\"aayb\",\"enforce\":\"aazb\",\"stack\":\"aaac\",\"reads\":\"aabc\",\"creates\":\"aacc\",\"saves\":\"aadc\",\"callers\":\"aaec\",\"locals\":\"aafc\",\"txCacheExpiration\":\"aagc\",\"txCacheMaxSize\":\"aahc\",\"txCache\":\"aaic\",\"requests\":\"aajc\",\"broadcastCacheTime\":\"aakc\",\"broadcastCache\":\"aalc\",\"lastFetchedTime\":\"aamc\",\"unspentOutputs\":\"aanc\",\"transactions\":\"aaoc\",\"blockHeight\":\"aapc\",\"installs\":\"aaqc\",\"syncer\":\"aarc\",\"protoTx\":\"aasc\",\"beginCount\":\"aatc\",\"cachedTx\":\"aauc\",\"syncListeners\":\"aavc\",\"onBroadcastListeners\":\"aawc\",\"lastPosted\":\"aaxc\",\"queued\":\"aayc\",\"sizeBytes\":\"aazc\",\"maxSizeBytes\":\"aaad\",\"control\":\"aabd\",\"ProtoTransaction\":\"aacd\",\"PROTOCOL_VERSION\":\"aadd\",\"SerialTaskQueue\":\"aaed\",\"stringProps\":\"aafd\",\"extractProps\":\"aagd\",\"onReadyForPublish\":\"aahd\",\"spentJigs\":\"aaid\",\"spentLocations\":\"aajd\"}");
+module.exports = JSON.parse("{\"_sign\":\"aab\",\"_setupBsv\":\"aac\",\"checkActive\":\"aad\",\"checkOwner\":\"aae\",\"checkSatoshis\":\"aaf\",\"checkRunTransaction\":\"aag\",\"extractRunData\":\"aah\",\"outputType\":\"aai\",\"getNormalizedSourceCode\":\"aaj\",\"deployable\":\"aak\",\"encryptRunData\":\"aal\",\"decryptRunData\":\"aam\",\"richObjectToJson\":\"aan\",\"jsonToRichObject\":\"aao\",\"extractJigsAndCodeToArray\":\"aap\",\"injectJigsAndCodeFromArray\":\"aaq\",\"deepTraverse\":\"aar\",\"activeRunInstance\":\"aas\",\"sameJig\":\"aat\",\"networkSuffix\":\"aau\",\"broadcastUrl\":\"aav\",\"broadcastData\":\"aaw\",\"fetchUrl\":\"aax\",\"fetchResp\":\"aay\",\"utxosUrl\":\"aaz\",\"utxosResp\":\"aaab\",\"_dedupUtxos\":\"aabb\",\"correctForServerUtxoIndexingDelay\":\"aacb\",\"fetched\":\"aadb\",\"broadcasted\":\"aaeb\",\"banNondeterministicGlobals\":\"aafb\",\"isSandbox\":\"aagb\",\"getInstalled\":\"aahb\",\"installFromTx\":\"aaib\",\"installJig\":\"aajb\",\"fastForward\":\"aakb\",\"finish\":\"aalb\",\"publishNext\":\"aamb\",\"publish\":\"aanb\",\"storeCode\":\"aaob\",\"storeAction\":\"aapb\",\"setProtoTxAndCreator\":\"aaqb\",\"buildBsvTransaction\":\"aarb\",\"_fromPrivateKey\":\"aasb\",\"_fromPublicKey\":\"aatb\",\"_fromAddress\":\"aaub\",\"_queryLatest\":\"aavb\",\"_removeErrorRefs\":\"aawb\",\"_update\":\"aaxb\",\"_estimateSize\":\"aayb\",\"_util\":\"aazb\",\"intrinsics\":\"aaac\",\"proxies\":\"aabc\",\"enforce\":\"aacc\",\"stack\":\"aadc\",\"reads\":\"aaec\",\"creates\":\"aafc\",\"saves\":\"aagc\",\"callers\":\"aahc\",\"locals\":\"aaic\",\"requests\":\"aajc\",\"broadcasts\":\"aakc\",\"expiration\":\"aalc\",\"indexingDelay\":\"aamc\",\"fetchedTime\":\"aanc\",\"unspentOutputs\":\"aaoc\",\"transactions\":\"aapc\",\"blockHeight\":\"aaqc\",\"installs\":\"aarc\",\"syncer\":\"aasc\",\"protoTx\":\"aatc\",\"beginCount\":\"aauc\",\"cachedTx\":\"aavc\",\"syncListeners\":\"aawc\",\"onBroadcastListeners\":\"aaxc\",\"lastPosted\":\"aayc\",\"queued\":\"aazc\",\"sizeBytes\":\"aaad\",\"maxSizeBytes\":\"aabd\",\"control\":\"aacd\",\"ProtoTransaction\":\"aadd\",\"PROTOCOL_VERSION\":\"aaed\",\"SerialTaskQueue\":\"aafd\",\"stringProps\":\"aagd\",\"extractProps\":\"aahd\",\"onReadyForPublish\":\"aaid\",\"spentJigs\":\"aajd\",\"spentLocations\":\"aakd\"}");
 
 /***/ }),
 /* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* !
- * Chai - checkError utility
- * Copyright(c) 2012-2016 Jake Luer <jake@alogicalparadox.com>
- * MIT Licensed
- */
-
-/**
- * ### .checkError
- *
- * Checks that an error conforms to a given set of criteria and/or retrieves information about it.
- *
- * @api public
- */
-
-/**
- * ### .compatibleInstance(thrown, errorLike)
- *
- * Checks if two instances are compatible (strict equal).
- * Returns false if errorLike is not an instance of Error, because instances
- * can only be compatible if they're both error instances.
- *
- * @name compatibleInstance
- * @param {Error} thrown error
- * @param {Error|ErrorConstructor} errorLike object to compare against
- * @namespace Utils
- * @api public
- */
-
-function compatibleInstance(thrown, errorLike) {
-  return errorLike instanceof Error && thrown === errorLike;
-}
-
-/**
- * ### .compatibleConstructor(thrown, errorLike)
- *
- * Checks if two constructors are compatible.
- * This function can receive either an error constructor or
- * an error instance as the `errorLike` argument.
- * Constructors are compatible if they're the same or if one is
- * an instance of another.
- *
- * @name compatibleConstructor
- * @param {Error} thrown error
- * @param {Error|ErrorConstructor} errorLike object to compare against
- * @namespace Utils
- * @api public
- */
-
-function compatibleConstructor(thrown, errorLike) {
-  if (errorLike instanceof Error) {
-    // If `errorLike` is an instance of any error we compare their constructors
-    return thrown.constructor === errorLike.constructor || thrown instanceof errorLike.constructor;
-  } else if (errorLike.prototype instanceof Error || errorLike === Error) {
-    // If `errorLike` is a constructor that inherits from Error, we compare `thrown` to `errorLike` directly
-    return thrown.constructor === errorLike || thrown instanceof errorLike;
-  }
-
-  return false;
-}
-
-/**
- * ### .compatibleMessage(thrown, errMatcher)
- *
- * Checks if an error's message is compatible with a matcher (String or RegExp).
- * If the message contains the String or passes the RegExp test,
- * it is considered compatible.
- *
- * @name compatibleMessage
- * @param {Error} thrown error
- * @param {String|RegExp} errMatcher to look for into the message
- * @namespace Utils
- * @api public
- */
-
-function compatibleMessage(thrown, errMatcher) {
-  var comparisonString = typeof thrown === 'string' ? thrown : thrown.message;
-  if (errMatcher instanceof RegExp) {
-    return errMatcher.test(comparisonString);
-  } else if (typeof errMatcher === 'string') {
-    return comparisonString.indexOf(errMatcher) !== -1; // eslint-disable-line no-magic-numbers
-  }
-
-  return false;
-}
-
-/**
- * ### .getFunctionName(constructorFn)
- *
- * Returns the name of a function.
- * This also includes a polyfill function if `constructorFn.name` is not defined.
- *
- * @name getFunctionName
- * @param {Function} constructorFn
- * @namespace Utils
- * @api private
- */
-
-var functionNameMatch = /\s*function(?:\s|\s*\/\*[^(?:*\/)]+\*\/\s*)*([^\(\/]+)/;
-function getFunctionName(constructorFn) {
-  var name = '';
-  if (typeof constructorFn.name === 'undefined') {
-    // Here we run a polyfill if constructorFn.name is not defined
-    var match = String(constructorFn).match(functionNameMatch);
-    if (match) {
-      name = match[1];
-    }
-  } else {
-    name = constructorFn.name;
-  }
-
-  return name;
-}
-
-/**
- * ### .getConstructorName(errorLike)
- *
- * Gets the constructor name for an Error instance or constructor itself.
- *
- * @name getConstructorName
- * @param {Error|ErrorConstructor} errorLike
- * @namespace Utils
- * @api public
- */
-
-function getConstructorName(errorLike) {
-  var constructorName = errorLike;
-  if (errorLike instanceof Error) {
-    constructorName = getFunctionName(errorLike.constructor);
-  } else if (typeof errorLike === 'function') {
-    // If `err` is not an instance of Error it is an error constructor itself or another function.
-    // If we've got a common function we get its name, otherwise we may need to create a new instance
-    // of the error just in case it's a poorly-constructed error. Please see chaijs/chai/issues/45 to know more.
-    constructorName = getFunctionName(errorLike).trim() ||
-        getFunctionName(new errorLike()); // eslint-disable-line new-cap
-  }
-
-  return constructorName;
-}
-
-/**
- * ### .getMessage(errorLike)
- *
- * Gets the error message from an error.
- * If `err` is a String itself, we return it.
- * If the error has no message, we return an empty string.
- *
- * @name getMessage
- * @param {Error|String} errorLike
- * @namespace Utils
- * @api public
- */
-
-function getMessage(errorLike) {
-  var msg = '';
-  if (errorLike && errorLike.message) {
-    msg = errorLike.message;
-  } else if (typeof errorLike === 'string') {
-    msg = errorLike;
-  }
-
-  return msg;
-}
-
-module.exports = {
-  compatibleInstance: compatibleInstance,
-  compatibleConstructor: compatibleConstructor,
-  compatibleMessage: compatibleMessage,
-  getMessage: getMessage,
-  getConstructorName: getConstructorName,
-};
-
-
-/***/ }),
-/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -3904,7 +3993,7 @@ describe('Code', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -4083,7 +4172,7 @@ describe('expect', () => {
 
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -6388,7 +6477,7 @@ describe('Jig', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -6537,7 +6626,7 @@ describe('Mockchain', () => {
 
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -6717,7 +6806,7 @@ describe('Owner', () => {
 
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -6809,7 +6898,7 @@ describe('Purse', () => {
 
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -6825,10 +6914,12 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 const { Jig, Run, createRun } = __webpack_require__(2)
 const bsv = __webpack_require__(3)
-const packageInfo = __webpack_require__(21)
+const packageInfo = __webpack_require__(20)
 
 describe('Run', () => {
   describe('constructor', () => {
+    // TODO: Test sandbox
+
     it('should set basic properties', () => {
       const run = createRun()
       expect(Run.version).to.equal(packageInfo.version)
@@ -6867,9 +6958,9 @@ describe('Run', () => {
     })
 
     it('should throw if bad app name', () => {
-      expect(() => createRun({ app: 0 })).to.throw('app must be a string')
-      expect(() => createRun({ app: true })).to.throw('app must be a string')
-      expect(() => createRun({ app: { name: 'biz' } })).to.throw('app must be a string')
+      expect(() => createRun({ app: 0 })).to.throw('Option \'app\' must be a string. Received: 0')
+      expect(() => createRun({ app: true })).to.throw('Option \'app\' must be a string. Received: true')
+      expect(() => createRun({ app: { name: 'biz' } })).to.throw('Option \'app\' must be a string. Received: [object Object]')
     })
 
     describe('logger', () => {
@@ -6891,9 +6982,9 @@ describe('Run', () => {
       })
 
       it('should throw if bad logger', () => {
-        expect(() => createRun({ logger: 1 })).to.throw('logger must be an object, found 1')
-        expect(() => createRun({ logger: false })).to.throw('logger must be an object, found false')
-        expect(() => createRun({ logger: function log (message) {} })).to.throw('logger must be an object, found')
+        expect(() => createRun({ logger: 1 })).to.throw('Option \'logger\' must be an object. Received: 1')
+        expect(() => createRun({ logger: false })).to.throw('Option \'logger\' must be an object. Received: false')
+        expect(() => createRun({ logger: function log (message) {} })).to.throw('Option \'logger\' must be an object. Received:')
       })
     })
   })
@@ -7000,13 +7091,13 @@ describe('Run', () => {
 
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.3.11\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\",\"caller\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\",\"vm-browserify\":\"1.1.2\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
+module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.3.12\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\",\"caller\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\",\"vm-browserify\":\"1.1.2\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -7229,7 +7320,7 @@ describe('StateCache', () => {
 
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -7443,7 +7534,7 @@ describe('Token', () => {
 
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -8322,7 +8413,7 @@ describe('Transaction', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7).Buffer))
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8481,7 +8572,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -8571,7 +8662,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -8582,7 +8673,7 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**

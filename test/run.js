@@ -15,6 +15,8 @@ const packageInfo = require('../package.json')
 
 describe('Run', () => {
   describe('constructor', () => {
+    // TODO: Test sandbox
+
     it('should set basic properties', () => {
       const run = createRun()
       expect(Run.version).to.equal(packageInfo.version)
@@ -53,9 +55,9 @@ describe('Run', () => {
     })
 
     it('should throw if bad app name', () => {
-      expect(() => createRun({ app: 0 })).to.throw('app must be a string')
-      expect(() => createRun({ app: true })).to.throw('app must be a string')
-      expect(() => createRun({ app: { name: 'biz' } })).to.throw('app must be a string')
+      expect(() => createRun({ app: 0 })).to.throw('Option \'app\' must be a string. Received: 0')
+      expect(() => createRun({ app: true })).to.throw('Option \'app\' must be a string. Received: true')
+      expect(() => createRun({ app: { name: 'biz' } })).to.throw('Option \'app\' must be a string. Received: [object Object]')
     })
 
     describe('logger', () => {
@@ -77,9 +79,9 @@ describe('Run', () => {
       })
 
       it('should throw if bad logger', () => {
-        expect(() => createRun({ logger: 1 })).to.throw('logger must be an object, found 1')
-        expect(() => createRun({ logger: false })).to.throw('logger must be an object, found false')
-        expect(() => createRun({ logger: function log (message) {} })).to.throw('logger must be an object, found')
+        expect(() => createRun({ logger: 1 })).to.throw('Option \'logger\' must be an object. Received: 1')
+        expect(() => createRun({ logger: false })).to.throw('Option \'logger\' must be an object. Received: false')
+        expect(() => createRun({ logger: function log (message) {} })).to.throw('Option \'logger\' must be an object. Received:')
       })
     })
   })

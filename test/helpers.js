@@ -198,7 +198,7 @@ async function payFor (tx, privateKey, blockchain) {
 
   let total = 0
   utxos.forEach(utxo => { total += utxo.satoshis })
-  const averageSatoshisPerSplit = total / numSplits
+  const averageSatoshisPerSplit = Math.floor(total / numSplits)
 
   // Walk through each UTXO, adding it to the transaction, and checking if we can stop
   let addedChange = false

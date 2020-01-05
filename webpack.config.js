@@ -8,7 +8,7 @@ const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
 const path = require('path')
 const fs = require('fs')
-const child_process = require('child_process')
+const { execSync } = require('child_process')
 const packageJson = require('./package.json')
 
 // Create the dist directory if necessary
@@ -16,7 +16,7 @@ if (!fs.existsSync('./dist')) fs.mkdirSync('./dist')
 
 // Create and copy the browser build of the bsv library if necessary
 if (!fs.existsSync('./dist/bsv.browser.min.js')) {
-  child_process.execSync('npm explore bsv -- npm run build-bsv')
+  execSync('npm explore bsv -- npm run build-bsv')
   fs.copyFileSync(require.resolve('bsv/bsv.min.js'), './dist/bsv.browser.min.js')
 }
 
@@ -45,14 +45,17 @@ const methodsToObfuscate = [
   'sameJig',
   'networkSuffix',
 
-  // api.js
+  // blockchain.js
   'broadcastUrl',
   'broadcastData',
   'fetchUrl',
   'fetchResp',
   'utxosUrl',
   'utxosResp',
-  '_correctForServerUtxoIndexDelay',
+  '_dedupUtxos',
+  'correctForServerUtxoIndexingDelay',
+  'fetched',
+  'broadcasted',
 
   // code.js
   'banNondeterministicGlobals',
@@ -106,14 +109,12 @@ const propertiesToObfuscate = [
   'locals',
   // 'error', - interfers with console.error
 
-  // api.js
-  'txCacheExpiration',
-  'txCacheMaxSize',
-  'txCache',
+  // blockchain.js
   'requests',
-  'broadcastCacheTime',
-  'broadcastCache',
-  'lastFetchedTime',
+  'broadcasts',
+  'expiration',
+  'indexingDelay',
+  'fetchedTime',
 
   // mockchain.js
   'unspentOutputs',

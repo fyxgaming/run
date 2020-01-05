@@ -433,7 +433,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */(function(global) {/**
  * index.js
  *
- * Run class
+ * The primary Run class we export that manager for all other components
  */
 
 const bsv = __webpack_require__(2)
@@ -443,42 +443,97 @@ const { Transaction } = __webpack_require__(7)
 const util = __webpack_require__(3)
 const { Purse } = __webpack_require__(24)
 const Owner = __webpack_require__(25)
-const Api = __webpack_require__(26)
+const { BlockchainServer } = __webpack_require__(26)
 const Mockchain = __webpack_require__(45)
-const { StateCache } = __webpack_require__(47)
+const { StateCache } = __webpack_require__(46)
 const { PrivateKey } = bsv
 
-const defaultLogger = { warn: console.warn, error: console.error }
-
+/**
+ * The main Run class that users create.
+ */
 class Run {
+  /**
+   * Creates Run and sets up all properties
+   * @param {object=} options Configuration settings
+   * @param {boolean=} options.sandbox Whether to put code in a secure sandbox. Default is true.
+   * @param {object=} options.logger Console-like logger object. Default will log warnings and errors.
+   * @param {string=} options.app App string to differentiate transaction. Defaults to empty.
+   */
   constructor (options = {}) {
-    this.sandbox = options.sandbox || true
+    // ------------------------------------------------------------------------
+    // this.sandbox
+    // ------------------------------------------------------------------------
 
-    // the default logger will log all warnings and errors
-    if (typeof options.logger !== 'undefined' && typeof options.logger !== 'object') {
-      throw new Error(`logger must be an object, found ${options.logger}`)
-    }
-    this.logger = options.logger || (options.logger === null ? {} : defaultLogger)
-    const loggerMethods = ['info', 'debug', 'warn', 'error']
-    loggerMethods.forEach(method => { this.logger[method] = this.logger[method] || (() => {}) })
-
-    if (typeof options.blockchain === 'object') {
-      this.blockchain = options.blockchain
-    } else {
-      const network = options.network || 'main'
-      this.blockchain = network === 'mock' ? new Mockchain()
-        : new Api({ network, api: options.blockchain, logger: this.logger })
-      if (Run.instance && Run.instance.blockchain.network === network) {
-        // TODO: Check if instance of API
-        if (typeof this.blockchain._copyCache !== 'undefined') {
-          this.blockchain._copyCache(Run.instance.blockchain)
+    switch (typeof options.sandbox) {
+      case 'boolean': this.sandbox = options.sandbox; break
+      case 'object':
+        if (options.sandbox && options.sandbox instanceof RegExp) {
+          this.sandbox = options.sandbox
+          break
         }
-      }
+        throw new Error(`Invalid option 'sandbox'. Received: ${options.sandbox}`)
+      case 'undefined': this.sandbox = true; break
+      default: throw new Error(`Option 'sandbox' must be a boolean. Received: ${options.sandbox}`)
     }
 
-    const appType = typeof options.app
-    if (appType !== 'undefined' && appType !== 'string') throw new Error('app must be a string')
-    this.app = options.app || ''
+    // ------------------------------------------------------------------------
+    // this.logger
+    // ------------------------------------------------------------------------
+
+    // When no logger is provided, we log warnings and errors by default
+    const defaultLogger = { warn: console.warn, error: console.error }
+
+    switch (typeof options.logger) {
+      case 'object': this.logger = options.logger === null ? {} : options.logger; break
+      case 'undefined': this.logger = defaultLogger; break
+      default: throw new Error(`Option 'logger' must be an object. Received: ${options.logger}`)
+    }
+
+    // Fill this.logger with all supported methods
+    const methods = ['info', 'debug', 'warn', 'error']
+    this.logger = { ...this.logger }
+    methods.forEach(method => { this.logger[method] = this.logger[method] || (() => {}) })
+
+    // ------------------------------------------------------------------------
+    // this.app
+    // ------------------------------------------------------------------------
+
+    switch (typeof options.app) {
+      case 'string': this.app = options.app; break
+      case 'undefined': this.app = ''; break
+      default: throw new Error(`Option 'app' must be a string. Received: ${options.app}`)
+    }
+
+    // ------------------------------------------------------------------------
+    // this.blockchain
+    // ------------------------------------------------------------------------
+
+    switch (typeof options.blockchain) {
+      case 'object':
+        if (!options.blockchain) throw new Error('Option \'blockchain\' must not be null')
+        this.blockchain = options.blockchain
+        break
+
+      case 'string':
+      case 'undefined': {
+        const network = options.network || 'main'
+        const cache = Run.instance ? Run.instance.blockchain.cache : null
+        const api = options.blockchain || 'star'
+
+        if (network === 'mock') {
+          this.blockchain = new Mockchain({ cache })
+        } else {
+          this.blockchain = new BlockchainServer({ network, cache, api, logger: this.logger })
+        }
+        break
+      }
+
+      default: throw new Error(`Option 'blockchain' must be an object or string. Received: ${options.blockchain}`)
+    }
+
+    // ------------------------------------------------------------------------
+    // this.state
+    // ------------------------------------------------------------------------
 
     if (typeof options.state === 'object') {
       this.state = options.state
@@ -491,6 +546,22 @@ class Run {
       }
       this.state = new StateCache()
     }
+
+    // ------------------------------------------------------------------------
+    // this.owner
+    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------
+    // this.purse
+    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------
+    // this.syncer
+    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------
+    // this.transaction
+    // ------------------------------------------------------------------------
 
     this._setupBsv()
     this.activate()
@@ -561,10 +632,10 @@ class Run {
   }
 }
 
-Run.version =  false ? undefined : "0.3.11"
+Run.version =  false ? undefined : "0.3.12"
 Run.protocol = util.PROTOCOL_VERSION
 Run._util = util
-Run.Api = Api
+Run.BlockchainServer = BlockchainServer
 Run.Mockchain = Mockchain
 Run.StateCache = StateCache
 
@@ -580,7 +651,7 @@ Object.defineProperty(Run, 'code', {
 
 const options = { configurable: true, enumerable: true }
 Object.defineProperty(Run, 'Jig', { ...options, get () { return Run.code.Jig } })
-Object.defineProperty(Run, 'Token', { ...options, get () { return __webpack_require__(48) } })
+Object.defineProperty(Run, 'Token', { ...options, get () { return __webpack_require__(47) } })
 Object.defineProperty(Run, 'expect', { ...options, get () { return __webpack_require__(16) } })
 Object.defineProperty(global, 'Jig', { ...options, get () { return Run.Jig } })
 Object.defineProperty(global, 'Token', { ...options, get () { return Run.Token } })
@@ -5971,6 +6042,8 @@ owner: ${spentJigs[i].owner}`)
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(3)
 
+// TODO: Shift to similar to owner, where address and bsvAddress
+
 /**
  * API to pay for transactions
  */
@@ -6006,7 +6079,7 @@ class Purse {
   }
 
   async pay (tx) {
-    let utxos = await this.blockchain.utxos(this.address)
+    let utxos = await this.blockchain.utxos(this.address.toString())
 
     if (!utxos.length) {
       const suggestion = `Hint: Have you funded the purse address ${this.address}?`
@@ -6026,7 +6099,7 @@ class Purse {
       tx.change(this.address)
       tx.sign(this.privkey)
       await this.blockchain.broadcast(tx)
-      utxos = await this.blockchain.utxos(this.address)
+      utxos = await this.blockchain.utxos(this.address.toString())
     }
 
     // randomly order utxos for the purse
@@ -6070,7 +6143,7 @@ class Purse {
   }
 
   async utxos () {
-    const utxos = await this.blockchain.utxos(this.address)
+    const utxos = await this.blockchain.utxos(this.address.toString())
     const txns = await Promise.all(utxos.map(o => this.blockchain.fetch(o.txid)))
     return utxos.filter((o, i) => util.outputType(txns[i], o.vout) === 'other')
   }
@@ -6197,7 +6270,7 @@ class Owner {
   }
 
   async _queryLatest () {
-    const newUtxos = await this.run.blockchain.utxos(this.bsvAddress)
+    const newUtxos = await this.run.blockchain.utxos(this.address)
 
     // create a new ref set initially comprised of all pending refs, since they won't
     // be in the utxos, and also a map of our non-pending jigs to their present
@@ -6253,14 +6326,348 @@ module.exports = Owner
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
- * api.js
+ * blockchain.js
  *
- * Rest API implementations of Blockchain
+ * Blockchain API and its default REST implementation
  */
 
-const axios = __webpack_require__(27)
 const { Address, Script, Transaction } = __webpack_require__(2)
+const axios = __webpack_require__(27)
 const util = __webpack_require__(3)
+
+// ------------------------------------------------------------------------------------------------
+// Blockchain API
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Generic Blockchain API that Run uses to interface with the blockchain
+ */
+class Blockchain {
+  /**
+   * @returns {string} Network string, one of 'main', 'test', 'stn', or 'mock'
+   */
+  get network () { throw new Error('Not implemented') }
+
+  /**
+   * Submits a transaction to the network
+   * @param {bsv.Transaction} tx Transaction to broadcast
+   */
+  async broadcast (tx) { throw new Error('not implemented') }
+
+  /**
+   * Queries the network for a transaction
+   * @param {string} txid Transaction id hex string
+   * @param {boolean} force Whether to force-refresh the transaction, and never use the cache
+   * @returns {bsv.Transaction} Transaction with additional metadata including:
+   * - `time` {number} Time in milliseconds for acceptance into a block or mempool
+   * - `confirmations` {number} Number of confirmations, 0 for mempool
+   * - `blockhash` {string} Hash of block this tx was included in
+   * - `blockheight` {string} Height of block this tx was included in
+   * - `blocktime` {number} Time in milliseconds the block was published
+   * - `vout` {Array<{spentTxId, spentIndex, spentHeight}>} Output spend information`
+   */
+  async fetch (txid, force) { throw new Error('not implemented') }
+
+  /**
+   * Queries the utxos for an address
+   * @param {string} address Address string
+   * @returns {Array<{txid, vout, script, satoshis}>}
+   */
+  async utxos (address) { throw new Error('not implemented') }
+}
+
+// ------------------------------------------------------------------------------------------------
+// BlockchainServer
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Implements the Blockchain API using a network service
+ */
+class BlockchainServer {
+  constructor (options = {}) {
+    this.network = parseNetwork(options.network)
+    this.logger = parseLogger(options.logger)
+    this.api = parseApi(options.api)
+    this.cache = parseCache(options.cache)
+    this.axios = axios.create({ timeout: parseTimeout(options.timeout) })
+    this.bsvNetwork = util.bsvNetwork(this.network)
+    this.requests = new Map() // txid|address -> Array<Function>
+  }
+
+  async broadcast (tx) {
+    // Verify the tx locally. It is faster to find problems here than to wait for a server response.
+    if (tx.inputs.length === 0) throw new Error('tx has no inputs')
+    if (tx.outputs.length === 0) throw new Error('tx has no outputs')
+    if (tx.getFee() < tx.toBuffer().length) throw new Error('tx fee too low')
+    if (tx.verify() !== true) throw new Error(tx.verify())
+    if (tx.isFullySigned() !== true) throw new Error('tx not fully signed')
+
+    // Set properties on the tx that run expects
+    tx.time = Date.now()
+    tx.confirmations = 0
+    tx.outputs.forEach(o => { o.spentTxId = null; o.spentIndex = null; o.spentHeight = null })
+
+    // Broadcast the transaction
+    await this._post(this.api.broadcastUrl(this.network), this.api.broadcastData(tx))
+
+    // Cache the transaction for later fetches and also put in our sent list so that
+    // we can correct UTXOs returned for the server.
+    this.cache.broadcasted(tx)
+  }
+
+  async fetch (txid, force = false) {
+    // Check the cache for this transaction if we are not force-refreshing the transaction
+    const cached = this.cache.get(txid)
+    if (!force && cached) return cached
+
+    // If we already are fetching this transaction, then piggy-back on the response
+    const prior = this.requests.get(txid)
+    if (prior) return new Promise((resolve, reject) => prior.push({ resolve, reject }))
+
+    // Otherwise, create a new promise list for this request
+    this.requests.set(txid, [])
+
+    try {
+      // Fetch the transaction by its txid
+      const data = (await this._get(this.api.fetchUrl(this.network, txid))).data
+      const tx = this.api.fetchResp(data)
+
+      // If we have a local cached copy, make sure the spent data is up-to-date
+      if (cached) {
+        for (let vout = 0; vout < tx.outputs.length; vout++) {
+          tx.outputs[vout].spentTxId = tx.outputs[vout].spentTxId || cached.outputs[vout].spentTxId
+          tx.outputs[vout].spentIndex = tx.outputs[vout].spentIndex || cached.outputs[vout].spentIndex
+          tx.outputs[vout].spentHeight = tx.outputs[vout].spentHeight || cached.outputs[vout].spentHeight
+        }
+      }
+
+      // Cache it
+      this.cache.fetched(tx)
+
+      // If there is other code waiting for this result, resolve their promises now
+      this.requests.get(txid).forEach(promise => promise.resolve(tx))
+
+      return tx
+    } catch (e) {
+      // If the request fails, notify all other code that is waiting for this request
+      this.requests.get(txid).forEach(promise => promise.reject(e))
+
+      throw e
+    } finally {
+      // Whether fetch succeeds or fails, remove all callbacks for this request
+      this.requests.delete(txid)
+    }
+  }
+
+  async utxos (address) {
+    // Whether we are passed a bsv.Address or a string, convert it to a string
+    address = new Address(address, this.bsvNetwork).toString()
+
+    // If we are already querying the utxos for this address, piggy-back on that request
+    const prior = this.requests.get(address)
+    if (prior) return new Promise((resolve, reject) => prior.push({ resolve, reject }))
+
+    // Create a new promise list for other code to piggy-back on
+    this.requests.set(address, [])
+
+    try {
+      // Query the utxos
+      const data = (await this._get(this.api.utxosUrl(this.network, address))).data
+      const utxos = this.api.utxosResp(data, address)
+
+      // In case the utxos from the server have any duplicates, dedup them
+      const dedupedUtxos = this._dedupUtxos(utxos)
+
+      // The server may not index utxos right away. update the utxos with our own broadcasted txns
+      const correctedUtxos = this.cache.correctForServerUtxoIndexingDelay(dedupedUtxos, address)
+
+      // Notify all other code that was also waiting for this request
+      this.requests.get(address).forEach(o => o.resolve(correctedUtxos))
+
+      return correctedUtxos
+    } catch (e) {
+      // Notify all other code that this request failed
+      this.requests.get(address).forEach(o => o.reject(e))
+
+      throw e
+    } finally {
+      // Whether we succeeded or failed, remove the promises for this request
+      this.requests.delete(address)
+    }
+  }
+
+  _dedupUtxos (utxos) {
+    // In case the server has a bug, run must be able to handle duplicate utxos returned. If we
+    // don't dedup, then later we will create a transaction with more than one of the same input.
+    const locations = new Set()
+    return utxos.filter(utxo => {
+      const location = `${utxo.txid}_o${utxo.vout}`
+      if (!locations.has(location)) {
+        locations.add(location)
+        return true
+      } else {
+        if (this.logger) this.logger.warn(`Duplicate utxo returned from server: ${location}`)
+        return false
+      }
+    })
+  }
+
+  async _post (url, data) {
+    if (this.logger) this.logger.info(`POST ${url}`)
+    return call(this.axios.post(url, data))
+  }
+
+  async _get (url) {
+    if (this.logger) this.logger.info(`GET ${url}`)
+    return call(this.axios.get(url))
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Parameter validation
+// ------------------------------------------------------------------------------------------------
+
+function parseNetwork (network) {
+  if (network === 'main' || network === 'test' || network === 'stn') return network
+  switch (typeof network) {
+    case 'string': throw new Error(`Unknown network: ${network}`)
+    case 'undefined': return 'main'
+    default: throw new Error(`Invalid network: ${network}`)
+  }
+}
+
+function parseLogger (logger) {
+  switch (typeof logger) {
+    case 'object': return logger
+    case 'undefined': return null
+    default: throw new Error(`Invalid logger: ${logger}`)
+  }
+}
+
+function parseTimeout (timeout) {
+  switch (typeof timeout) {
+    case 'number':
+      if (Number.isNaN(timeout) || timeout < 0) throw new Error(`Invalid timeout: ${timeout}`)
+      return timeout
+    case 'undefined': return 10000
+    default: throw new Error(`Invalid timeout: ${timeout}`)
+  }
+}
+
+function parseApi (api) {
+  switch (typeof api) {
+    case 'string':
+      switch (api) {
+        case 'bitindex': return bitIndexApi
+        case 'whatsonchain': return whatsOnChainApi
+        case 'star': return starApi
+        default: throw new Error(`Unknown blockchain API: ${api}`)
+      }
+    case 'object':
+      if (!api) throw new Error(`Invalid blockchain API: ${api}`)
+      return api
+    case 'undefined': return starApi
+    default: throw new Error(`Invalid blockchain API: ${api}`)
+  }
+}
+
+function parseCache (cache) {
+  return cache && cache instanceof BlockchainServerCache ? cache : new BlockchainServerCache()
+}
+
+// ------------------------------------------------------------------------------------------------
+// BlockchainServerCache
+// ------------------------------------------------------------------------------------------------
+
+class BlockchainServerCache {
+  constructor () {
+    this.transactions = new Map() // txid -> tx
+    this.broadcasts = [] // Array<Transaction>
+    this.size = 10000
+    this.expiration = 10 * 60 * 1000
+    this.indexingDelay = 10 * 1000
+  }
+
+  get (txid) {
+    const tx = this.transactions.get(txid)
+    if (!tx) return
+
+    // If the transaction is expired, remove it
+    const expired = Date.now() - tx.fetchedTime > this.expiration
+    if (expired) {
+      this.transactions.delete(txid)
+      return
+    }
+
+    // Bump the transaction to the top and return it
+    this.transactions.delete(txid)
+    this.transactions.set(txid, tx)
+    return tx
+  }
+
+  fetched (tx) {
+    tx.fetchedTime = Date.now()
+
+    this.transactions.set(tx.hash, tx)
+
+    // If the cache is full, remove the oldest transaction
+    if (this.transactions.size > this.size) {
+      const oldest = this.transactions.keys().next().value
+      this.transactions.delete(oldest)
+    }
+  }
+
+  broadcasted (tx) {
+    this.fetched(tx)
+
+    // Remove all transactions from our broadcast past the indexing delay
+    const now = Date.now()
+    this.broadcasts = this.broadcasts.filter(tx => now - tx.time < this.indexingDelay)
+
+    this.broadcasts.push(tx)
+
+    // Update our known transactions with spent info
+    tx.inputs.forEach((input, vin) => {
+      const spent = this.transactions.get(input.prevTxId.toString('hex'))
+      if (spent) {
+        spent.outputs[input.outputIndex].spentTxId = tx.hash
+        spent.outputs[input.outputIndex].spentIndex = vin
+        spent.outputs[input.outputIndex].spentHeight = -1
+      }
+    })
+  }
+
+  correctForServerUtxoIndexingDelay (utxos, address) {
+    // First remove all expired txns from our broadcast cache
+    const now = Date.now()
+    this.broadcasts = this.broadcasts.filter(tx => now - tx.time < this.indexingDelay)
+
+    // Add all utxos from our broadcast cache for this address that aren't already there
+    this.broadcasts.forEach(tx => {
+      tx.outputs.forEach((output, vout) => {
+        if (output.script.toAddress(this.bsvNetwork).toString() === address &&
+              !utxos.some(utxo => utxo.txid === tx.hash && utxo.vout === vout)) {
+          utxos.push({ txid: tx.hash, vout, script: output.script, satoshis: output.satoshis })
+        }
+      })
+    })
+
+    // Remove all utxos that we know are spent because they are in our broadcast cache
+    this.broadcasts.forEach(tx => {
+      const inputSpendsUtxo = (input, utxo) =>
+        input.prevTxId.toString('hex') === utxo.txid &&
+        input.outputIndex === utxo.vout
+
+      utxos = utxos.filter(utxo => !tx.inputs.some(input => inputSpendsUtxo(input, utxo)))
+    })
+
+    return utxos
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Helper methods
+// ------------------------------------------------------------------------------------------------
 
 async function call (promise) {
   try { return await promise } catch (e) {
@@ -6273,7 +6680,7 @@ async function call (promise) {
   }
 }
 
-function txJsonToObject (json) {
+function jsonToTx (json) {
   const tx = new Transaction(json.hex || json.rawtx)
   tx.time = json.time * 1000 || Date.now()
   if (json.blockhash && json.blockhash.length) tx.blockhash = json.blockhash
@@ -6290,12 +6697,16 @@ function txJsonToObject (json) {
   return tx
 }
 
+// ------------------------------------------------------------------------------------------------
+// REST APIs
+// ------------------------------------------------------------------------------------------------
+
 const starApiHost = 'https://api.star.store'
 const starApi = {
   broadcastUrl: network => `${starApiHost}/v1/${network}/tx`,
   broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
   fetchUrl: (network, txid) => `${starApiHost}/v1/${network}/tx/${txid}`,
-  fetchResp: data => txJsonToObject(data),
+  fetchResp: data => jsonToTx(data),
   utxosUrl: (network, address) => `${starApiHost}/v1/${network}/utxos/${address.toString()}`,
   utxosResp: (data, address) => data
 }
@@ -6304,7 +6715,7 @@ const bitIndexApi = {
   broadcastUrl: network => `https://api.bitindex.network/api/v3/${network}/tx/send`,
   broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
   fetchUrl: (network, txid) => `https://api.bitindex.network/api/v3/${network}/tx/${txid}`,
-  fetchResp: data => { const ret = txJsonToObject(data); ret.confirmations = ret.confirmations || 0; return ret },
+  fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
   utxosUrl: (network, address) => `https://api.bitindex.network/api/v3/${network}/addr/${address.toString()}/utxo`,
   utxosResp: (data, address) => data.map(o => { return { ...o, script: new Script(o.scriptPubKey) } })
 }
@@ -6313,242 +6724,18 @@ const whatsOnChainApi = {
   broadcastUrl: network => `https://api.whatsonchain.com/v1/bsv/${network}/tx/raw`,
   broadcastData: tx => { return { txhex: tx.toBuffer().toString('hex') } },
   fetchUrl: (network, txid) => `https://api.whatsonchain.com/v1/bsv/${network}/tx/hash/${txid}`,
-  fetchResp: data => { const ret = txJsonToObject(data); ret.confirmations = ret.confirmations || 0; return ret },
+  fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
   utxosUrl: (network, address) => `https://api.whatsonchain.com/v1/bsv/${network}/address/${address.toString()}/unspent`,
   utxosResp: (data, address) => data.map(o => {
     return { txid: o.tx_hash, vout: o.tx_pos, satoshis: o.value, script: Script.fromAddress(address) }
   })
 }
 
-// TODO: Should we have a global cache strategy, that aligns with code, jig, and api?
-const DEFAULT_TX_CACHE_MAX_SIZE = 10000 // max number of txns to cache
-const DEFAULT_TX_CACHE_EXPIRATION = 10 * 60 * 1000 // 10 minutes until transactions must be refetched
-const DEFAULT_BROADCAST_CACHE_TIME = 10 * 60 * 1000 // 10 minutes until we stop correcting for broadcasted transactions
+// ------------------------------------------------------------------------------------------------
 
-class Api {
-  constructor (options) {
-    this.network = options.network
-    this.bsvNetwork = util.bsvNetwork(options.network)
-    if (typeof options.api === 'string') {
-      this.api = options.api === 'bitindex' ? bitIndexApi
-        : options.api === 'whatsonchain' ? whatsOnChainApi : starApi
-    } else if (typeof options.api === 'object') {
-      this.api = options.api
-    } else {
-      this.api = starApi
-    }
-    this.axios = axios.create({ timeout: 10000 })
-    this.txCache = new Map() // txid -> tx
-    this.txCacheMaxSize = typeof options.cacheSize === 'undefined' ? DEFAULT_TX_CACHE_MAX_SIZE : options.cacheSize
-    this.txCacheExpiration = typeof options.cacheExpiration === 'undefined' ? DEFAULT_TX_CACHE_EXPIRATION : options.cacheExpiration
-    this.broadcastCache = [] // Array<Transaction>
-    this.broadcastCacheTime = DEFAULT_BROADCAST_CACHE_TIME
-    this.requests = new Map() // txid|address -> Array<Function>
-    this.logger = options.logger
-  }
+BlockchainServer.Cache = BlockchainServerCache
 
-  async broadcast (tx) {
-    // verify the tx locally. it is faster to problems errors here than to wait for a server response.
-    if (tx.inputs.length === 0) throw new Error('tx has no inputs')
-    if (tx.outputs.length === 0) throw new Error('tx has no outputs')
-    if (tx.getFee() < tx.toBuffer().length) throw new Error('tx fee too low')
-    if (tx.verify() !== true) throw new Error(tx.verify())
-    if (tx.isFullySigned() !== true) throw new Error('tx not fully signed')
-
-    // broadcast the transaction
-    await this._post(this.api.broadcastUrl(this.network), this.api.broadcastData(tx))
-
-    // cache the transaction for fetches
-    const now = Date.now()
-    tx.time = now
-    tx.lastFetchedTime = now
-    tx.outputs.forEach(o => { o.spentTxId = null; o.spentIndex = null; o.spentHeight = null })
-    this.txCache.set(tx.hash, tx)
-
-    // if the fetch cache is full, remove the oldest item
-    if (this.txCache.size > this.txCacheMaxSize) {
-      const oldestTxid = this.txCache.keys().next().value
-      this.txCache.delete(oldestTxid)
-    }
-
-    // remember transactions that we broadcast so that we can correct the utxos returned from the
-    // server if they are stale. many APIs don't index utxos right away.
-    this.broadcastCache = this.broadcastCache.filter(tx => now - tx.time < this.broadcastCacheTime)
-    this.broadcastCache.push(tx)
-
-    for (let i = 0; i < tx.inputs.length; i++) {
-      const input = tx.inputs[i]
-      const cached = this.txCache.get(input.prevTxId.toString('hex'))
-      if (cached) {
-        cached.outputs[input.outputIndex].spentTxId = tx.hash
-        cached.outputs[input.outputIndex].spentIndex = i
-        cached.outputs[input.outputIndex].spentHeight = -1
-      }
-    }
-  }
-
-  async fetch (txid, refresh = false) {
-    // if this transaction is cached, and the transaction is recent, then return it directly
-    const cached = this.txCache.get(txid)
-    if (!refresh && cached && Date.now() - cached.lastFetchedTime < this.txCacheExpiration) {
-      this.txCache.delete(txid)
-      this.txCache.set(txid, cached)
-      return cached
-    }
-
-    // if we already are fetching this transaction, then piggy-back on the response
-    const inProgressRequestCallbacks = this.requests.get(txid)
-    if (inProgressRequestCallbacks) {
-      return new Promise((resolve, reject) => {
-        inProgressRequestCallbacks.push({ resolve, reject })
-      })
-    }
-
-    // otherwise, create a new callback set
-    this.requests.set(txid, [])
-
-    try {
-      // fetch the transaction by its txid
-      const data = (await this._get(this.api.fetchUrl(this.network, txid))).data
-      const tx = this.api.fetchResp(data)
-
-      // If we have a local cached copy, make sure the spent data is up-to-date
-      if (cached) {
-        for (let vout = 0; vout < tx.outputs.length; vout++) {
-          tx.outputs[vout].spentTxId = tx.outputs[vout].spentTxId || cached.outputs[vout].spentTxId
-          tx.outputs[vout].spentIndex = tx.outputs[vout].spentIndex || cached.outputs[vout].spentIndex
-          tx.outputs[vout].spentHeight = tx.outputs[vout].spentHeight || cached.outputs[vout].spentHeight
-        }
-      }
-
-      // cache it
-      tx.lastFetchedTime = Date.now()
-      this.txCache.set(txid, tx)
-
-      // if the cache is full, remove the oldest item
-      if (this.txCache.size > this.txCacheMaxSize) {
-        const oldestTxid = this.txCache.keys().next().value
-        this.txCache.delete(oldestTxid)
-      }
-
-      // if other code is waiting for this same call, call their callbacks too
-      this.requests.get(txid).forEach(o => o.resolve(tx))
-
-      return tx
-    } catch (e) {
-      // if the request fails, notify all other code that is waiting for this callback
-      this.requests.get(txid).forEach(o => o.reject(e))
-
-      throw e
-    } finally {
-      // whether fetch succeeds or fails, remove the callbacks for this request
-      this.requests.delete(txid)
-    }
-  }
-
-  async utxos (address) {
-    // whether we are passed a bsv.Address or a string, convert it to a string
-    address = new Address(address, this.bsvNetwork).toString()
-
-    // if we are already querying the utxos for this address, piggy-back on that request
-    const inProgressRequestCallbacks = this.requests.get(address)
-    if (inProgressRequestCallbacks) {
-      return new Promise((resolve, reject) => {
-        inProgressRequestCallbacks.push({ resolve, reject })
-      })
-    }
-
-    // create new callbacks for other code to piggy-back on
-    this.requests.set(address, [])
-
-    try {
-      // query the utxos
-      const data = (await this._get(this.api.utxosUrl(this.network, address))).data
-      const utxos = this.api.utxosResp(data, address)
-
-      // in case the utxos from the server have any duplicates, dedup them
-      const dedupedUtxos = this._dedupUtxos(utxos)
-
-      // the server may not index utxos right away. update the utxos with our own broadcasted txns
-      const correctedUtxos = this._correctForServerUtxoIndexDelay(dedupedUtxos, address)
-
-      // notify all other code that was also waiting for this request
-      this.requests.get(address).forEach(o => o.resolve(correctedUtxos))
-
-      return correctedUtxos
-    } catch (e) {
-      // notify all other code that this request failed
-      this.requests.get(address).forEach(o => o.reject(e))
-
-      throw e
-    } finally {
-      // whether we succeeded or failed, remove the callbacks for this request
-      this.requests.delete(address)
-    }
-  }
-
-  _dedupUtxos (utxos) {
-    // In case the server has a bug, run must be able to handle duplicate utxos returned. If we
-    // don't dedup, then later we will create a transaction with more than one of the same input.
-    const locations = new Set()
-    return utxos.filter(utxo => {
-      const location = `${utxo.txid}_o${utxo.vout}`
-      if (!locations.has(location)) {
-        locations.add(location)
-        return true
-      } else {
-        if (this.logger) this.logger.warn(`duplicate utxo returned from server: ${location}`)
-        return false
-      }
-    })
-  }
-
-  _correctForServerUtxoIndexDelay (utxos, address) {
-    // first remove all expired txns from our broadcast cache
-    const now = Date.now()
-    this.broadcastCache = this.broadcastCache.filter(tx => now - tx.time < this.broadcastCacheTime)
-
-    // add all utxos from our broadcast cache for this address that aren't already there
-    this.broadcastCache.forEach(tx => {
-      tx.outputs.forEach((output, vout) => {
-        if (output.script.toAddress(this.bsvNetwork).toString() === address &&
-              !utxos.some(utxo => utxo.txid === tx.hash && utxo.vout === vout)) {
-          utxos.push({ txid: tx.hash, vout, script: output.script, satoshis: output.satoshis })
-        }
-      })
-    })
-
-    // remove all utxos that we know are spent because they are in our broadcast cache
-    this.broadcastCache.forEach(tx => {
-      const inputSpendsUtxo = (input, utxo) =>
-        input.prevTxId.toString('hex') === utxo.txid &&
-        input.outputIndex === utxo.vout
-
-      utxos = utxos.filter(utxo => !tx.inputs.some(input => inputSpendsUtxo(input, utxo)))
-    })
-
-    return utxos
-  }
-
-  async _post (url, data) {
-    if (this.logger) this.logger.info(`POST ${url}`)
-    return call(this.axios.post(url, data))
-  }
-
-  async _get (url) {
-    if (this.logger) this.logger.info(`GET ${url}`)
-    return call(this.axios.get(url))
-  }
-
-  _copyCache (blockchain) {
-    // TODO: Should this respect the max cache sizes?
-    // TODO: Add tests
-    this.txCache = new Map(blockchain.txCache)
-    this.broadcastCache = [...blockchain.broadcastCache]
-  }
-}
-
-module.exports = Api
+module.exports = { Blockchain, BlockchainServer }
 
 
 /***/ }),
@@ -7541,13 +7728,11 @@ module.exports = function spread(callback) {
  * In-memory Blockchain implementation
  */
 
-const Blockchain = __webpack_require__(46)
 const { Address, Transaction } = __webpack_require__(2)
 
-module.exports = class Mockchain extends Blockchain {
+module.exports = class Mockchain {
   constructor () {
-    super('mock')
-
+    this.network = 'mock'
     this.transactions = new Map()
     this.unspentOutputs = []
     this.blockHeight = -1
@@ -7643,68 +7828,6 @@ module.exports = class Mockchain extends Blockchain {
 
 /***/ }),
 /* 46 */
-/***/ (function(module, exports) {
-
-/**
- * blockchain.js
- *
- * Generic Blockchain API that runs uses to talk to the network
- */
-
-/**
- * Standard API to interact with the Bitcoin network
- */
-module.exports = class Blockchain {
-  /**
-   * Creates a blockchain API for a given network
-   * @param {string} network 'main', 'test', 'stn', or 'mock'
-   */
-  constructor (network) {
-    if (network !== 'main' && network !== 'test' && network !== 'stn' && network !== 'mock') {
-      throw new Error(`Unknown network: ${network}`)
-    }
-    this.network = network
-  }
-
-  /**
-   * Submits a transaction to the network
-   * @param {bsv.Transaction} tx Transaction to broadcast
-   */
-  async broadcast (tx) {
-    throw new Error('not implemented')
-  }
-
-  /**
-   * Returns the transaction for a given txid.
-   *
-   * Additional metadata set on the transaction when available:
-   * - `time` {number} Time in milliseconds for acceptance into a block or mempool
-   * - `confirmations` {number} Number of confirmations, 0 for mempool
-   * - `blockhash` {string} Hash of block this tx was included in
-   * - `blockheight` {string} Height of block this tx was included in
-   * - `blocktime` {number} Time in milliseconds the block was published
-   * - `vout` {Array<{spentTxId, spentIndex, spentHeight}>} Output spend information`
-   * @param {string} txid Id of transaction to fetch
-   * @param {boolean} refresh Whether to force-refresh the transaction, and never use the cache.
-   * @returns {bsv.Transaction} bsv.Transaction with additional metadata
-   */
-  async fetch (txid, refresh) {
-    throw new Error('not implemented')
-  }
-
-  /**
-   * Returns the utxos for an address
-   * @param {Address|string} address
-   * @returns {Array<{txid, vout, script, satoshis}>}
-   */
-  async utxos (address) {
-    throw new Error('not implemented')
-  }
-}
-
-
-/***/ }),
-/* 47 */
 /***/ (function(module, exports) {
 
 /**
@@ -7824,7 +7947,7 @@ module.exports = { State, StateCache }
 
 
 /***/ }),
-/* 48 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
