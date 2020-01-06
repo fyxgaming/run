@@ -1012,7 +1012,7 @@ describe('BlockchainServer', () => {
     })
 
     it('should default to star api', () => {
-      expect(unobfuscate(new BlockchainServer()).api.broadcastUrl('main').startsWith('https://api.star.store')).to.equal(true)
+      expect(unobfuscate(new BlockchainServer()).api.name).to.equal('star')
     })
 
     it('should throw for bad api', () => {
@@ -4526,7 +4526,7 @@ describe('Jig', () => {
       }
       const dragon = new Dragon(null)
       await dragon.sync()
-      if (run.state) run.state.cache.clear()
+      run.state.cache.clear()
       const dragon2 = await run.load(dragon.location)
       expect(dragon).to.deep.equal(dragon2)
     })
@@ -6918,54 +6918,27 @@ const packageInfo = __webpack_require__(20)
 
 describe('Run', () => {
   describe('constructor', () => {
-    // TODO: Test sandbox
-    // TODO: Test null state
-
-    it('should set basic properties', () => {
-      const run = createRun()
-      expect(Run.version).to.equal(packageInfo.version)
-      expect(run.owner.privkey).not.to.equal(run.purse.privkey)
-      expect(run.owner.bsvPrivateKey.publicKey.toString()).to.equal(run.owner.pubkey)
-      expect(run.owner.bsvPrivateKey.toAddress().toString()).to.equal(run.owner.address)
-      expect(run.purse.privkey.toAddress().toString()).to.equal(run.purse.address.toString())
-      expect(run.app).to.equal('')
-    })
-
-    it('should set global bsv network', () => {
-      createRun()
-      expect(bsv.Networks.defaultNetwork).to.equal('testnet')
-      createRun({ network: 'main' })
-      expect(bsv.Networks.defaultNetwork).to.equal('mainnet')
-    })
-
-    it('should support all networks', () => {
-      // TODO: re-enable stn
-      const networks = ['main', 'test', 'mock']
-      networks.forEach(network => {
-        expect(createRun({ network }).blockchain.network).to.equal(network)
-      })
-    })
-
-    it('should support null purse', () => {
-      expect(createRun({ purse: null }).purse).not.to.equal(null)
-    })
-
-    it('should support null owner', () => {
-      expect(createRun({ owner: null }).owner).not.to.equal(null)
-    })
-
-    it('should support custom app name', () => {
-      expect(createRun({ app: 'biz' }).app).to.equal('biz')
-    })
-
-    it('should throw if bad app name', () => {
-      expect(() => createRun({ app: 0 })).to.throw('Option \'app\' must be a string. Received: 0')
-      expect(() => createRun({ app: true })).to.throw('Option \'app\' must be a string. Received: true')
-      expect(() => createRun({ app: { name: 'biz' } })).to.throw('Option \'app\' must be a string. Received: [object Object]')
-    })
-
     describe('logger', () => {
-      it('should support custom logger', () => {
+      it('should create default logger', () => {
+        expect(!!new Run().logger).to.equal(true)
+      })
+
+      it('should accept custom logger', () => {
+        const logger = { error: e => console.error(e) }
+        expect(new Run({ logger }).logger.error).to.equal(logger.error)
+      })
+
+      it('should accept null logger', () => {
+        expect(() => new Run({ logger: null })).not.to.throw()
+      })
+
+      it('should throw for invalid logger', () => {
+        expect(() => new Run({ logger: 1 })).to.throw('Option \'logger\' must be an object. Received: 1')
+        expect(() => new Run({ logger: false })).to.throw('Option \'logger\' must be an object. Received: false')
+        expect(() => new Run({ logger: () => {} })).to.throw('Option \'logger\' must be an object. Received: ')
+      })
+
+      it('should complete methods for custom logger', () => {
         let infoMessage = ''; let errorMessage = ''; let errorData = null
         const run = createRun({
           logger: {
@@ -6981,12 +6954,165 @@ describe('Run', () => {
         expect(errorMessage).to.equal('error')
         expect(errorData).to.equal(1)
       })
+    })
 
-      it('should throw if bad logger', () => {
-        expect(() => createRun({ logger: 1 })).to.throw('Option \'logger\' must be an object. Received: 1')
-        expect(() => createRun({ logger: false })).to.throw('Option \'logger\' must be an object. Received: false')
-        expect(() => createRun({ logger: function log (message) {} })).to.throw('Option \'logger\' must be an object. Received:')
+    describe('blockchain', () => {
+      it('should create default blockchain', () => {
+        const run = new Run()
+        expect(run.blockchain instanceof Run.BlockchainServer).to.equal(true)
+        expect(run.blockchain.network).to.equal('main')
+        expect(run.blockchain.api.name).to.equal('star')
       })
+
+      it('should support creating mockchain', () => {
+        const run = new Run({ network: 'mock' })
+        expect(run.blockchain instanceof Run.Mockchain).to.equal(true)
+        expect(run.blockchain.network).to.equal('mock')
+      })
+
+      it('should support creating blockchain service', () => {
+        const run = new Run({ blockchain: 'whatsonchain', network: 'test' })
+        expect(run.blockchain instanceof Run.BlockchainServer).to.equal(true)
+        expect(run.blockchain.api.name).to.equal('whatsonchain')
+        expect(run.blockchain.network).to.equal('test')
+      })
+
+      it('should accept custom blockchain', () => {
+        const blockchain = { broadcast: async () => {}, fetch: async () => {}, utxos: async () => {}, network: 'main' }
+        expect(new Run({ blockchain }).blockchain).to.equal(blockchain)
+      })
+
+      it('should throw for invalid custom blockchain', () => {
+        const blockchain = { broadcast: async () => {}, fetch: async () => {}, utxos: async () => {}, network: 'main' }
+        expect(() => new Run({ blockchain: {...blockchain, broadcast: null} })).to.throw('Blockchain requires a broadcast method')
+        expect(() => new Run({ blockchain: {...blockchain, fetch: null} })).to.throw('Blockchain requires a fetch method')
+        expect(() => new Run({ blockchain: {...blockchain, utxos: null} })).to.throw('Blockchain requires a utxos method')
+        expect(() => new Run({ blockchain: {...blockchain, network: null} })).to.throw('Blockchain requires a network string')
+      })
+
+      it('should throw for null blockchain', () => {
+        expect(() => new Run({ blockchain: null })).to.throw(`Option 'blockchain' must not be null`)
+      })
+
+      it('should throw for invalid blockchain', () => {
+        expect(() => new Run({ blockchain: 123 })).to.throw(`Option 'blockchain' must be an object or string. Received: 123`)
+        expect(() => new Run({ blockchain: false })).to.throw(`Option 'blockchain' must be an object or string. Received: false`)
+        expect(() => new Run({ blockchain: () => {} })).to.throw(`Option 'blockchain' must be an object or string. Received: `)
+      })
+
+      it('should support all networks', () => {
+        const networks = ['main', 'test', 'stn', 'mock']
+        networks.forEach(network => {
+          expect(createRun({ network }).blockchain.network).to.equal(network)
+        })
+      })
+
+      it('should copy cache from previous blockchain', () => {
+        const run1 = new Run()
+        const run2 = new Run()
+        expect(run1.blockchain).not.to.equal(run2.blockchain)
+        expect(run1.blockchain.cache).to.equal(run2.blockchain.cache)
+      })
+    })
+
+    describe('sandbox', () => {
+      it('should default to sandbox enabled', () => {
+        expect(new Run({ network: 'mock' }).sandbox).to.equal(true)
+        class A extends Jig { init() { this.version = Run.version } }
+        expect(() => new A()).to.throw()
+      })
+
+      it('should support enabling sandbox', () => {
+        expect(new Run({ sandbox: true }).sandbox).to.equal(true)
+      })
+
+      it('should support disabling sandbox', () => {
+        expect(new Run({ network: 'mock', sandbox: false }).sandbox).to.equal(false)
+        class A extends Jig { init() { this.version = Run.version } }
+        expect(() => new A()).not.to.throw()
+      })
+
+      it('should support RegExp sandbox', () => {
+        expect(new Run({ network: 'mock', sandbox: /A/ }).sandbox instanceof RegExp).to.equal(true)
+        class A extends Jig { init() { this.version = Run.version } }
+        class B extends Jig { init() { this.version = Run.version } }
+        expect(() => new A()).to.throw()
+        expect(() => new B()).not.to.throw()
+      })
+
+      it('should throw for bad sandbox', () => {
+        expect(() => new Run({ sandbox: null })).to.throw(`Invalid option 'sandbox'. Received: null`)
+        expect(() => new Run({ sandbox: 0 })).to.throw(`Option 'sandbox' must be a boolean or RegExp. Received: 0`)
+        expect(() => new Run({ sandbox: {} })).to.throw(`Invalid option 'sandbox'. Received:`)
+        expect(() => new Run({ sandbox: () => {} })).to.throw(`Option 'sandbox' must be a boolean or RegExp. Received: `)
+      })
+    })
+
+    describe('app', () => {
+      it('should default to empty app string', () => {
+        expect(new Run().app).to.equal('')
+      })
+
+      it('should support custom app name', () => {
+        expect(new Run({ app: 'biz' }).app).to.equal('biz')
+      })
+
+      it('should throw if bad app name', () => {
+        expect(() => createRun({ app: 0 })).to.throw('Option \'app\' must be a string. Received: 0')
+        expect(() => createRun({ app: true })).to.throw('Option \'app\' must be a string. Received: true')
+        expect(() => createRun({ app: { name: 'biz' } })).to.throw('Option \'app\' must be a string. Received: [object Object]')
+      })
+    })
+
+    describe('state', () => {
+      it('should default to state cache', () => {
+        expect(new Run().state instanceof Run.StateCache).to.equal(true)
+      })
+
+      it('should support custom state', () => {
+        const state = new Run.StateCache()
+        expect(new Run({ state }).state ).to.equal(state)
+      })
+
+      it('should throw if invalid state', () => {
+        expect(() => new Run({ state: { get: () => {} }})).to.throw('State requires a set method')
+        expect(() => new Run({ state: { set: () => {} }})).to.throw('State requires a get method')
+        expect(() => new Run({ state: null })).to.throw(`Option 'state' must not be null`)
+        expect(() => new Run({ state: false })).to.throw(`Option 'state' must be an object. Received: false`)
+      })
+
+      it('should copy cache from previous state', () => {
+        const run1 = createRun()
+        const run2 = createRun()
+        expect(run2.state).to.equal(run1.state)
+      })
+    })
+
+    it('should set global bsv network', () => {
+      createRun()
+      expect(bsv.Networks.defaultNetwork).to.equal('testnet')
+      createRun({ network: 'main' })
+      expect(bsv.Networks.defaultNetwork).to.equal('mainnet')
+    })
+
+    // ---
+
+    it('should set basic properties', () => {
+      const run = createRun()
+      expect(Run.version).to.equal(packageInfo.version)
+      expect(run.owner.privkey).not.to.equal(run.purse.privkey)
+      expect(run.owner.bsvPrivateKey.publicKey.toString()).to.equal(run.owner.pubkey)
+      expect(run.owner.bsvPrivateKey.toAddress().toString()).to.equal(run.owner.address)
+      expect(run.purse.privkey.toAddress().toString()).to.equal(run.purse.address.toString())
+      expect(run.app).to.equal('')
+    })
+
+    it('should support null purse', () => {
+      expect(createRun({ purse: null }).purse).not.to.equal(null)
+    })
+
+    it('should support null owner', () => {
+      expect(createRun({ owner: null }).owner).not.to.equal(null)
     })
   })
 
@@ -7064,7 +7190,7 @@ describe('Run', () => {
       const d = new D()
       await run.sync()
       Run.code.flush()
-      if (run.state) run.state.clear()
+      run.state.clear()
       const p1 = run.load(d.location)
       const p2 = run.load(d.location)
       await Promise.all([p1, p2])

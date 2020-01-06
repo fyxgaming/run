@@ -14,7 +14,7 @@ const bsv = require('bsv')
 const packageInfo = require('../package.json')
 
 describe('Run', () => {
-  describe.only('constructor', () => {
+  describe('constructor', () => {
     describe('logger', () => {
       it('should create default logger', () => {
         expect(!!new Run().logger).to.equal(true)
@@ -103,6 +103,13 @@ describe('Run', () => {
           expect(createRun({ network }).blockchain.network).to.equal(network)
         })
       })
+
+      it('should copy cache from previous blockchain', () => {
+        const run1 = new Run()
+        const run2 = new Run()
+        expect(run1.blockchain).not.to.equal(run2.blockchain)
+        expect(run1.blockchain.cache).to.equal(run2.blockchain.cache)
+      })
     })
 
     describe('sandbox', () => {
@@ -154,6 +161,30 @@ describe('Run', () => {
       })
     })
 
+    describe('state', () => {
+      it('should default to state cache', () => {
+        expect(new Run().state instanceof Run.StateCache).to.equal(true)
+      })
+
+      it('should support custom state', () => {
+        const state = new Run.StateCache()
+        expect(new Run({ state }).state ).to.equal(state)
+      })
+
+      it('should throw if invalid state', () => {
+        expect(() => new Run({ state: { get: () => {} }})).to.throw('State requires a set method')
+        expect(() => new Run({ state: { set: () => {} }})).to.throw('State requires a get method')
+        expect(() => new Run({ state: null })).to.throw(`Option 'state' must not be null`)
+        expect(() => new Run({ state: false })).to.throw(`Option 'state' must be an object. Received: false`)
+      })
+
+      it('should copy cache from previous state', () => {
+        const run1 = createRun()
+        const run2 = createRun()
+        expect(run2.state).to.equal(run1.state)
+      })
+    })
+
     it('should set global bsv network', () => {
       createRun()
       expect(bsv.Networks.defaultNetwork).to.equal('testnet')
@@ -161,7 +192,7 @@ describe('Run', () => {
       expect(bsv.Networks.defaultNetwork).to.equal('mainnet')
     })
 
-    // TODO: Test null state
+    // ---
 
     it('should set basic properties', () => {
       const run = createRun()
@@ -256,7 +287,7 @@ describe('Run', () => {
       const d = new D()
       await run.sync()
       Run.code.flush()
-      if (run.state) run.state.clear()
+      run.state.clear()
       const p1 = run.load(d.location)
       const p2 = run.load(d.location)
       await Promise.all([p1, p2])

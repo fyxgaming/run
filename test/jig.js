@@ -349,7 +349,7 @@ describe('Jig', () => {
       }
       const dragon = new Dragon(null)
       await dragon.sync()
-      if (run.state) run.state.cache.clear()
+      run.state.cache.clear()
       const dragon2 = await run.load(dragon.location)
       expect(dragon).to.deep.equal(dragon2)
     })

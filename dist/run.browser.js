@@ -511,9 +511,9 @@ class Run {
    * @returns {Promise<string>} Location string in a promise
    */
   async deploy (type) {
-    this._checkActive();
-    Run.code.deploy(type);
-    await this.sync();
+    this._checkActive()
+    Run.code.deploy(type)
+    await this.sync()
     return type.location
   }
 
@@ -565,6 +565,10 @@ function parseBlockchain (blockchain, network, logger) {
   switch (typeof blockchain) {
     case 'object':
       if (!blockchain) throw new Error('Option \'blockchain\' must not be null')
+      if (typeof blockchain.broadcast !== 'function') throw new Error('Blockchain requires a broadcast method')
+      if (typeof blockchain.fetch !== 'function') throw new Error('Blockchain requires a fetch method')
+      if (typeof blockchain.utxos !== 'function') throw new Error('Blockchain requires a utxos method')
+      if (typeof blockchain.network !== 'string') throw new Error('Blockchain requires a network string')
       return blockchain
     case 'string':
     case 'undefined': {
@@ -602,6 +606,8 @@ function parseState (state) {
   switch (typeof state) {
     case 'object':
       if (!state) throw new Error('Option \'state\' must not be null')
+      if (typeof state.get !== 'function') throw new Error('State requires a get method')
+      if (typeof state.set !== 'function') throw new Error('State requires a set method')
       return state
     case 'undefined':
       return Run.instance && Run.instance.state ? Run.instance.state : new StateCache()
@@ -1066,8 +1072,13 @@ function sameJig (a, b) {
  * ownerTestnet, etc. The argument is the network set when creating Run.
  */
 function networkSuffix (network) {
-  return network === 'main' ? 'Mainnet' : network === 'test'
-    ? 'Testnet' : network === 'stn' ? 'Stn' : 'Mocknet'
+  switch (network) {
+    case 'main': return 'Mainnet'
+    case 'test': return 'Testnet'
+    case 'stn': return 'Stn'
+    case 'mock': return 'Mocknet'
+    default: throw new Error(`Unknown network: ${network}`)
+  }
 }
 
 /**
@@ -3646,7 +3657,7 @@ class ProtoTransaction {
       if (type.startsWith(tx.hash)) type = type.slice(64)
 
       const cachedState = { type, state: packedState }
-      if (run.state) await run.state.set(jigLocation, cachedState)
+      await run.state.set(jigLocation, cachedState)
     }
 
     // clear the code, and load it directly from the transaction
@@ -4114,7 +4125,7 @@ class Transaction {
     if (location[65] !== 'o' || isNaN(vout)) throw new Error(`Bad location: ${location}`)
 
     // check the state cache so we only have to load each jig once
-    const cachedState = this.state ? await this.state.get(location) : null
+    const cachedState = await this.state.get(location)
     if (cachedState) {
       // Make sure the cached state is valid
       if (typeof cachedState.type !== 'string' || typeof cachedState.state !== 'object') {
@@ -5921,7 +5932,7 @@ owner: ${spentJigs[i].owner}`)
       if (type.startsWith(tx.hash)) type = type.slice(64)
 
       const cachedState = { type, state: packedState }
-      if (this.state) await this.state.set(stateAfter.json.location, cachedState)
+      await this.state.set(stateAfter.json.location, cachedState)
     }
 
     // notify the owner
@@ -6587,17 +6598,15 @@ function parseTimeout (timeout) {
 
 function parseApi (api) {
   switch (typeof api) {
-    case 'string':
-      switch (api) {
-        case 'bitindex': return bitIndexApi
-        case 'whatsonchain': return whatsOnChainApi
-        case 'star': return starApi
-        default: throw new Error(`Unknown blockchain API: ${api}`)
-      }
+    case 'string': {
+      const apiData = apis.find(apiData => apiData.name === api)
+      if (!apiData) throw new Error(`Unknown blockchain API: ${api}`)
+      return apiData
+    }
     case 'object':
       if (!api) throw new Error(`Invalid blockchain API: ${api}`)
       return api
-    case 'undefined': return starApi
+    case 'undefined': return apis[0]
     default: throw new Error(`Invalid blockchain API: ${api}`)
   }
 }
@@ -6733,34 +6742,38 @@ function jsonToTx (json) {
 // ------------------------------------------------------------------------------------------------
 
 const starApiHost = 'https://api.star.store'
-const starApi = {
-  broadcastUrl: network => `${starApiHost}/v1/${network}/tx`,
-  broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
-  fetchUrl: (network, txid) => `${starApiHost}/v1/${network}/tx/${txid}`,
-  fetchResp: data => jsonToTx(data),
-  utxosUrl: (network, address) => `${starApiHost}/v1/${network}/utxos/${address.toString()}`,
-  utxosResp: (data, address) => data
-}
 
-const bitIndexApi = {
-  broadcastUrl: network => `https://api.bitindex.network/api/v3/${network}/tx/send`,
-  broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
-  fetchUrl: (network, txid) => `https://api.bitindex.network/api/v3/${network}/tx/${txid}`,
-  fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
-  utxosUrl: (network, address) => `https://api.bitindex.network/api/v3/${network}/addr/${address.toString()}/utxo`,
-  utxosResp: (data, address) => data.map(o => { return { ...o, script: new Script(o.scriptPubKey) } })
-}
-
-const whatsOnChainApi = {
-  broadcastUrl: network => `https://api.whatsonchain.com/v1/bsv/${network}/tx/raw`,
-  broadcastData: tx => { return { txhex: tx.toBuffer().toString('hex') } },
-  fetchUrl: (network, txid) => `https://api.whatsonchain.com/v1/bsv/${network}/tx/hash/${txid}`,
-  fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
-  utxosUrl: (network, address) => `https://api.whatsonchain.com/v1/bsv/${network}/address/${address.toString()}/unspent`,
-  utxosResp: (data, address) => data.map(o => {
-    return { txid: o.tx_hash, vout: o.tx_pos, satoshis: o.value, script: Script.fromAddress(address) }
-  })
-}
+const apis = [
+  {
+    name: 'star',
+    broadcastUrl: network => `${starApiHost}/v1/${network}/tx`,
+    broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
+    fetchUrl: (network, txid) => `${starApiHost}/v1/${network}/tx/${txid}`,
+    fetchResp: data => jsonToTx(data),
+    utxosUrl: (network, address) => `${starApiHost}/v1/${network}/utxos/${address.toString()}`,
+    utxosResp: (data, address) => data
+  },
+  {
+    name: 'bitindex',
+    broadcastUrl: network => `https://api.bitindex.network/api/v3/${network}/tx/send`,
+    broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
+    fetchUrl: (network, txid) => `https://api.bitindex.network/api/v3/${network}/tx/${txid}`,
+    fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
+    utxosUrl: (network, address) => `https://api.bitindex.network/api/v3/${network}/addr/${address.toString()}/utxo`,
+    utxosResp: (data, address) => data.map(o => { return { ...o, script: new Script(o.scriptPubKey) } })
+  },
+  {
+    name: 'whatsonchain',
+    broadcastUrl: network => `https://api.whatsonchain.com/v1/bsv/${network}/tx/raw`,
+    broadcastData: tx => { return { txhex: tx.toBuffer().toString('hex') } },
+    fetchUrl: (network, txid) => `https://api.whatsonchain.com/v1/bsv/${network}/tx/hash/${txid}`,
+    fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
+    utxosUrl: (network, address) => `https://api.whatsonchain.com/v1/bsv/${network}/address/${address.toString()}/unspent`,
+    utxosResp: (data, address) => data.map(o => {
+      return { txid: o.tx_hash, vout: o.tx_pos, satoshis: o.value, script: Script.fromAddress(address) }
+    })
+  }
+]
 
 // ------------------------------------------------------------------------------------------------
 
