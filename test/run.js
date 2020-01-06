@@ -138,6 +138,22 @@ describe('Run', () => {
       })
     })
 
+    describe('app', () => {
+      it('should default to empty app string', () => {
+        expect(new Run().app).to.equal('')
+      })
+
+      it('should support custom app name', () => {
+        expect(new Run({ app: 'biz' }).app).to.equal('biz')
+      })
+
+      it('should throw if bad app name', () => {
+        expect(() => createRun({ app: 0 })).to.throw('Option \'app\' must be a string. Received: 0')
+        expect(() => createRun({ app: true })).to.throw('Option \'app\' must be a string. Received: true')
+        expect(() => createRun({ app: { name: 'biz' } })).to.throw('Option \'app\' must be a string. Received: [object Object]')
+      })
+    })
+
     it('should set global bsv network', () => {
       createRun()
       expect(bsv.Networks.defaultNetwork).to.equal('testnet')
@@ -163,16 +179,6 @@ describe('Run', () => {
 
     it('should support null owner', () => {
       expect(createRun({ owner: null }).owner).not.to.equal(null)
-    })
-
-    it('should support custom app name', () => {
-      expect(createRun({ app: 'biz' }).app).to.equal('biz')
-    })
-
-    it('should throw if bad app name', () => {
-      expect(() => createRun({ app: 0 })).to.throw('Option \'app\' must be a string. Received: 0')
-      expect(() => createRun({ app: true })).to.throw('Option \'app\' must be a string. Received: true')
-      expect(() => createRun({ app: { name: 'biz' } })).to.throw('Option \'app\' must be a string. Received: [object Object]')
     })
   })
 
