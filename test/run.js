@@ -93,7 +93,7 @@ describe('Run', () => {
       class A { }
       await run.deploy(A)
       createRun()
-      await expect(run.load(A.location)).to.be.rejectedWith('run instance is not active. call run.activate() first.')
+      await expect(run.load(A.location)).to.be.rejectedWith('This Run instance is not active')
     })
 
     it('should throw for invalid arg', async () => {
@@ -109,7 +109,7 @@ describe('Run', () => {
       class A { }
       const run = createRun()
       createRun()
-      await expect(run.deploy(A)).to.be.rejectedWith('run instance is not active. call run.activate() first.')
+      await expect(run.deploy(A)).to.be.rejectedWith('This Run instance is not active')
     })
 
     it('should support batch deploy', async () => {

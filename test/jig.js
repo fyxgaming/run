@@ -1477,11 +1477,11 @@ describe('Jig', () => {
       }
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
-      const oldSign = run._sign
-      run._sign = async (tx) => { return tx }
+      const oldSign = run.owner.sign
+      run.owner.sign = async (tx) => { return tx }
       a.f()
       await expect(a.sync()).to.be.rejectedWith('Signature missing for A')
-      run._sign = oldSign
+      run.owner.sign = oldSign
     })
 
     it('should pass reads and writes in correct order', async () => {

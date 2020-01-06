@@ -488,12 +488,13 @@ class Run {
     if (this.blockchain instanceof Mockchain) this.blockchain.fund(this.purse.address, 100000000)
   }
 
-  async sync () { return this.owner.sync() }
-
-  async deploy (type) { this.checkActive(); Run.code.deploy(type); await this.sync(); return type.location }
-
+  /**
+   * Loads jigs or code from the blockchain
+   * @param {string} location Location string
+   * @returns {Promise<Object|Function|Class>} Class or function in a promise
+   */
   async load (location, options = {}) {
-    this.checkActive()
+    this._checkActive()
 
     // Loads that are from other loads just get passed through
     if (options.childLoad) {
@@ -504,8 +505,28 @@ class Run {
     return this.loadQueue.enqueue(() => this.transaction.load(location, options))
   }
 
-  checkActive () { if (Run.instance !== this) throw new Error('run instance is not active. call run.activate() first.') }
+  /**
+   * Deploys code to the blockchain
+   * @param {Function|Class} type Class or function to deploy
+   * @returns {Promise<string>} Location string in a promise
+   */
+  async deploy (type) {
+    this._checkActive();
+    Run.code.deploy(type);
+    await this.sync();
+    return type.location
+  }
 
+  /**
+   * Syncs pending transactions and requeries the owner's tokens
+   */
+  async sync () {
+    return this.owner.sync()
+  }
+
+  /**
+   * Activates this Run instance so its owner, blockchain, transaction queue and more are used.
+   */
   activate () {
     Run.instance = this
     bsv.Networks.defaultNetwork = util.bsvNetwork(this.blockchain.network)
@@ -513,9 +534,11 @@ class Run {
     return this
   }
 
-  async _sign (tx) {
-    if (this.owner.bsvPrivateKey) { tx.sign(this.owner.bsvPrivateKey) }
-    return tx
+  _checkActive () {
+    if (Run.instance !== this) {
+      const hint = 'Hint: Call run.activate() on this instance first'
+      throw new Error(`This Run instance is not active\n\n${hint}`)
+    }
   }
 }
 
@@ -3806,7 +3829,7 @@ class ProtoTransaction {
 
   async sign (run) {
     if (!this.cachedTx) this.buildBsvTransaction(run)
-    return run._sign(this.cachedTx.tx)
+    return run.owner.sign(this.cachedTx.tx)
   }
 
   buildBsvTransaction (run) {
@@ -5759,7 +5782,7 @@ module.exports = class Syncer {
     this.code = run.constructor.code
     this.state = run.state
     this.pay = (...args) => { return run.purse.pay(...args) }
-    this.sign = (...args) => { return run._sign(...args) }
+    this.sign = (...args) => { return run.owner.sign(...args) }
     this.queued = [] // queued proto-transactions to send
     this.syncListeners = [] // callbacks for when sync completes (Array<{resolve,reject}>)
     this.lastPosted = new Map() // The last onchain location for queued jigs (Origin->Location)
@@ -6255,6 +6278,11 @@ class Owner {
       }
     }
     toRemove.forEach(key => this.refs.delete(key))
+  }
+
+  async sign (tx) {
+    if (this.bsvPrivateKey) tx.sign(this.bsvPrivateKey)
+    return tx
   }
 
   async sync () {

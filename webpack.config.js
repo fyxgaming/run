@@ -22,8 +22,7 @@ if (!fs.existsSync('./dist/bsv.browser.min.js')) {
 
 const methodsToObfuscate = [
   // index.js
-  '_sign',
-  'checkActive',
+  '_checkActive',
 
   // util.js
   'checkOwner',
