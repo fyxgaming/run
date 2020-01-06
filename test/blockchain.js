@@ -266,7 +266,7 @@ describe('BlockchainServer', () => {
     })
 
     it('should default to star api', () => {
-      expect(unobfuscate(new BlockchainServer()).api.broadcastUrl('main').startsWith('https://api.star.store')).to.equal(true)
+      expect(unobfuscate(new BlockchainServer()).api.name).to.equal('star')
     })
 
     it('should throw for bad api', () => {

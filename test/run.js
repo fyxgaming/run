@@ -15,23 +15,87 @@ const packageInfo = require('../package.json')
 
 describe('Run', () => {
   describe('constructor', () => {
-    it('should create default logger', () => {
-      expect(!!new Run().logger).to.equal(true)
+    describe('logger', () => {
+      it('should create default logger', () => {
+        expect(!!new Run().logger).to.equal(true)
+      })
+
+      it('should accept custom logger', () => {
+        const logger = { error: e => console.error(e) }
+        expect(new Run({ logger }).logger.error).to.equal(logger.error)
+      })
+
+      it('should accept null logger', () => {
+        expect(() => new Run({ logger: null })).not.to.throw()
+      })
+
+      it('should throw for invalid logger', () => {
+        expect(() => new Run({ logger: 1 })).to.throw('Option \'logger\' must be an object. Received: 1')
+        expect(() => new Run({ logger: false })).to.throw('Option \'logger\' must be an object. Received: false')
+        expect(() => new Run({ logger: () => {} })).to.throw('Option \'logger\' must be an object. Received: ')
+      })
+
+      it('should complete methods for custom logger', () => {
+        let infoMessage = ''; let errorMessage = ''; let errorData = null
+        const run = createRun({
+          logger: {
+            info: message => { infoMessage = message },
+            error: (message, data) => { errorMessage = message; errorData = data }
+          }
+        })
+        run.logger.info('info')
+        run.logger.debug('debug')
+        run.logger.warn('warn')
+        run.logger.error('error', 1)
+        expect(infoMessage).to.equal('info')
+        expect(errorMessage).to.equal('error')
+        expect(errorData).to.equal(1)
+      })
     })
 
-    it('should accept custom logger', () => {
-      const logger = { error: e => console.error(e) }
-      expect(new Run({ logger }).logger.error).to.equal(logger.error)
-    })
+    describe('blockchain', () => {
+      it('should create default blockchain', () => {
+        const run = new Run()
+        expect(run.blockchain instanceof Run.BlockchainServer).to.equal(true)
+        expect(run.blockchain.network).to.equal('main')
+        expect(run.blockchain.api.name).to.equal('star')
+      })
 
-    it('should accept null logger', () => {
-      new Run({ logger: null })
-    })
+      it('should support creating mockchain', () => {
+        const run = new Run({ network: 'mock' })
+        expect(run.blockchain instanceof Run.Mockchain).to.equal(true)
+        expect(run.blockchain.network).to.equal('mock')
+      })
 
-    it('should throw for invalid logger', () => {
-      expect(() => new Run({ logger: 1 })).to.throw(`Option 'logger' must be an object. Received: 1`)
-      expect(() => new Run({ logger: false })).to.throw(`Option 'logger' must be an object. Received: false`)
-      expect(() => new Run({ logger: () => {} })).to.throw(`Option 'logger' must be an object. Received: `)
+      it('should support creating blockchain service', () => {
+        const run = new Run({ blockchain: 'whatsonchain', network: 'test' })
+        expect(run.blockchain instanceof Run.BlockchainServer).to.equal(true)
+        expect(run.blockchain.api.name).to.equal('whatsonchain')
+        expect(run.blockchain.network).to.equal('test')
+      })
+
+      it('should accept custom blockchain', () => {
+        const blockchain = { broadcast: async () => {}, fetch: async () => {}, utxos: async () => {}, network: 'main' }
+        expect(new Run({ blockchain }).blockchain).to.equal(blockchain)
+      })
+
+      it('should throw for invalid custom blockchain', () => {
+        const blockchain = { broadcast: async () => {}, fetch: async () => {}, utxos: async () => {}, network: 'main' }
+        expect(() => new Run({ blockchain: {...blockchain, broadcast: null} })).to.throw('Blockchain requires a broadcast method')
+        expect(() => new Run({ blockchain: {...blockchain, fetch: null} })).to.throw('Blockchain requires a fetch method')
+        expect(() => new Run({ blockchain: {...blockchain, utxos: null} })).to.throw('Blockchain requires a utxos method')
+        expect(() => new Run({ blockchain: {...blockchain, network: null} })).to.throw('Blockchain requires a network string')
+      })
+
+      it('should throw for null blockchain', () => {
+        expect(() => new Run({ blockchain: null })).to.throw(`Option 'blockchain' must not be null`)
+      })
+
+      it('should throw for invalid blockchain', () => {
+        expect(() => new Run({ blockchain: 123 })).to.throw(`Option 'blockchain' must be an object or string. Received: 123`)
+        expect(() => new Run({ blockchain: false })).to.throw(`Option 'blockchain' must be an object or string. Received: false`)
+        expect(() => new Run({ blockchain: () => {} })).to.throw(`Option 'blockchain' must be an object or string. Received: `)
+      })
     })
 
     // TODO: Test sandbox
@@ -78,31 +142,6 @@ describe('Run', () => {
       expect(() => createRun({ app: 0 })).to.throw('Option \'app\' must be a string. Received: 0')
       expect(() => createRun({ app: true })).to.throw('Option \'app\' must be a string. Received: true')
       expect(() => createRun({ app: { name: 'biz' } })).to.throw('Option \'app\' must be a string. Received: [object Object]')
-    })
-
-    describe('logger', () => {
-      it('should support custom logger', () => {
-        let infoMessage = ''; let errorMessage = ''; let errorData = null
-        const run = createRun({
-          logger: {
-            info: message => { infoMessage = message },
-            error: (message, data) => { errorMessage = message; errorData = data }
-          }
-        })
-        run.logger.info('info')
-        run.logger.debug('debug')
-        run.logger.warn('warn')
-        run.logger.error('error', 1)
-        expect(infoMessage).to.equal('info')
-        expect(errorMessage).to.equal('error')
-        expect(errorData).to.equal(1)
-      })
-
-      it('should throw if bad logger', () => {
-        expect(() => createRun({ logger: 1 })).to.throw('Option \'logger\' must be an object. Received: 1')
-        expect(() => createRun({ logger: false })).to.throw('Option \'logger\' must be an object. Received: false')
-        expect(() => createRun({ logger: function log (message) {} })).to.throw('Option \'logger\' must be an object. Received:')
-      })
     })
   })
 
