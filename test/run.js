@@ -14,7 +14,7 @@ const bsv = require('bsv')
 const packageInfo = require('../package.json')
 
 describe('Run', () => {
-  describe('constructor', () => {
+  describe.only('constructor', () => {
     describe('logger', () => {
       it('should create default logger', () => {
         expect(!!new Run().logger).to.equal(true)
@@ -96,9 +96,55 @@ describe('Run', () => {
         expect(() => new Run({ blockchain: false })).to.throw(`Option 'blockchain' must be an object or string. Received: false`)
         expect(() => new Run({ blockchain: () => {} })).to.throw(`Option 'blockchain' must be an object or string. Received: `)
       })
+
+      it('should support all networks', () => {
+        const networks = ['main', 'test', 'stn', 'mock']
+        networks.forEach(network => {
+          expect(createRun({ network }).blockchain.network).to.equal(network)
+        })
+      })
     })
 
-    // TODO: Test sandbox
+    describe('sandbox', () => {
+      it('should default to sandbox enabled', () => {
+        expect(new Run({ network: 'mock' }).sandbox).to.equal(true)
+        class A extends Jig { init() { this.version = Run.version } }
+        expect(() => new A()).to.throw()
+      })
+
+      it('should support enabling sandbox', () => {
+        expect(new Run({ sandbox: true }).sandbox).to.equal(true)
+      })
+
+      it('should support disabling sandbox', () => {
+        expect(new Run({ network: 'mock', sandbox: false }).sandbox).to.equal(false)
+        class A extends Jig { init() { this.version = Run.version } }
+        expect(() => new A()).not.to.throw()
+      })
+
+      it('should support RegExp sandbox', () => {
+        expect(new Run({ network: 'mock', sandbox: /A/ }).sandbox instanceof RegExp).to.equal(true)
+        class A extends Jig { init() { this.version = Run.version } }
+        class B extends Jig { init() { this.version = Run.version } }
+        expect(() => new A()).to.throw()
+        expect(() => new B()).not.to.throw()
+      })
+
+      it('should throw for bad sandbox', () => {
+        expect(() => new Run({ sandbox: null })).to.throw(`Invalid option 'sandbox'. Received: null`)
+        expect(() => new Run({ sandbox: 0 })).to.throw(`Option 'sandbox' must be a boolean or RegExp. Received: 0`)
+        expect(() => new Run({ sandbox: {} })).to.throw(`Invalid option 'sandbox'. Received:`)
+        expect(() => new Run({ sandbox: () => {} })).to.throw(`Option 'sandbox' must be a boolean or RegExp. Received: `)
+      })
+    })
+
+    it('should set global bsv network', () => {
+      createRun()
+      expect(bsv.Networks.defaultNetwork).to.equal('testnet')
+      createRun({ network: 'main' })
+      expect(bsv.Networks.defaultNetwork).to.equal('mainnet')
+    })
+
     // TODO: Test null state
 
     it('should set basic properties', () => {
@@ -109,21 +155,6 @@ describe('Run', () => {
       expect(run.owner.bsvPrivateKey.toAddress().toString()).to.equal(run.owner.address)
       expect(run.purse.privkey.toAddress().toString()).to.equal(run.purse.address.toString())
       expect(run.app).to.equal('')
-    })
-
-    it('should set global bsv network', () => {
-      createRun()
-      expect(bsv.Networks.defaultNetwork).to.equal('testnet')
-      createRun({ network: 'main' })
-      expect(bsv.Networks.defaultNetwork).to.equal('mainnet')
-    })
-
-    it('should support all networks', () => {
-      // TODO: re-enable stn
-      const networks = ['main', 'test', 'mock']
-      networks.forEach(network => {
-        expect(createRun({ network }).blockchain.network).to.equal(network)
-      })
     })
 
     it('should support null purse', () => {
