@@ -300,7 +300,7 @@ async function payFor (tx, privateKey, blockchain) {
 
   let total = 0
   utxos.forEach(utxo => { total += utxo.satoshis })
-  const averageSatoshisPerSplit = total / numSplits
+  const averageSatoshisPerSplit = Math.floor(total / numSplits)
 
   // Walk through each UTXO, adding it to the transaction, and checking if we can stop
   let addedChange = false
@@ -3370,7 +3370,7 @@ module.exports = Run;
 /* 12 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"_sign\":\"aab\",\"_setupBsv\":\"aac\",\"checkActive\":\"aad\",\"checkOwner\":\"aae\",\"checkSatoshis\":\"aaf\",\"checkRunTransaction\":\"aag\",\"extractRunData\":\"aah\",\"outputType\":\"aai\",\"getNormalizedSourceCode\":\"aaj\",\"deployable\":\"aak\",\"encryptRunData\":\"aal\",\"decryptRunData\":\"aam\",\"richObjectToJson\":\"aan\",\"jsonToRichObject\":\"aao\",\"extractJigsAndCodeToArray\":\"aap\",\"injectJigsAndCodeFromArray\":\"aaq\",\"deepTraverse\":\"aar\",\"activeRunInstance\":\"aas\",\"sameJig\":\"aat\",\"networkSuffix\":\"aau\",\"broadcastUrl\":\"aav\",\"broadcastData\":\"aaw\",\"fetchUrl\":\"aax\",\"fetchResp\":\"aay\",\"utxosUrl\":\"aaz\",\"utxosResp\":\"aaab\",\"_dedupUtxos\":\"aabb\",\"correctForServerUtxoIndexingDelay\":\"aacb\",\"fetched\":\"aadb\",\"broadcasted\":\"aaeb\",\"banNondeterministicGlobals\":\"aafb\",\"isSandbox\":\"aagb\",\"getInstalled\":\"aahb\",\"installFromTx\":\"aaib\",\"installJig\":\"aajb\",\"fastForward\":\"aakb\",\"finish\":\"aalb\",\"publishNext\":\"aamb\",\"publish\":\"aanb\",\"storeCode\":\"aaob\",\"storeAction\":\"aapb\",\"setProtoTxAndCreator\":\"aaqb\",\"buildBsvTransaction\":\"aarb\",\"_fromPrivateKey\":\"aasb\",\"_fromPublicKey\":\"aatb\",\"_fromAddress\":\"aaub\",\"_queryLatest\":\"aavb\",\"_removeErrorRefs\":\"aawb\",\"_update\":\"aaxb\",\"_estimateSize\":\"aayb\",\"_util\":\"aazb\",\"intrinsics\":\"aaac\",\"proxies\":\"aabc\",\"enforce\":\"aacc\",\"stack\":\"aadc\",\"reads\":\"aaec\",\"creates\":\"aafc\",\"saves\":\"aagc\",\"callers\":\"aahc\",\"locals\":\"aaic\",\"requests\":\"aajc\",\"broadcasts\":\"aakc\",\"expiration\":\"aalc\",\"indexingDelay\":\"aamc\",\"fetchedTime\":\"aanc\",\"unspentOutputs\":\"aaoc\",\"transactions\":\"aapc\",\"blockHeight\":\"aaqc\",\"installs\":\"aarc\",\"syncer\":\"aasc\",\"protoTx\":\"aatc\",\"beginCount\":\"aauc\",\"cachedTx\":\"aavc\",\"syncListeners\":\"aawc\",\"onBroadcastListeners\":\"aaxc\",\"lastPosted\":\"aayc\",\"queued\":\"aazc\",\"sizeBytes\":\"aaad\",\"maxSizeBytes\":\"aabd\",\"control\":\"aacd\",\"ProtoTransaction\":\"aadd\",\"PROTOCOL_VERSION\":\"aaed\",\"SerialTaskQueue\":\"aafd\",\"stringProps\":\"aagd\",\"extractProps\":\"aahd\",\"onReadyForPublish\":\"aaid\",\"spentJigs\":\"aajd\",\"spentLocations\":\"aakd\"}");
+module.exports = JSON.parse("{\"_sign\":\"aab\",\"checkActive\":\"aac\",\"checkOwner\":\"aad\",\"checkSatoshis\":\"aae\",\"checkRunTransaction\":\"aaf\",\"extractRunData\":\"aag\",\"outputType\":\"aah\",\"getNormalizedSourceCode\":\"aai\",\"deployable\":\"aaj\",\"encryptRunData\":\"aak\",\"decryptRunData\":\"aal\",\"richObjectToJson\":\"aam\",\"jsonToRichObject\":\"aan\",\"extractJigsAndCodeToArray\":\"aao\",\"injectJigsAndCodeFromArray\":\"aap\",\"deepTraverse\":\"aaq\",\"activeRunInstance\":\"aar\",\"sameJig\":\"aas\",\"networkSuffix\":\"aat\",\"broadcastUrl\":\"aau\",\"broadcastData\":\"aav\",\"fetchUrl\":\"aaw\",\"fetchResp\":\"aax\",\"utxosUrl\":\"aay\",\"utxosResp\":\"aaz\",\"_dedupUtxos\":\"aaab\",\"correctForServerUtxoIndexingDelay\":\"aabb\",\"fetched\":\"aacb\",\"broadcasted\":\"aadb\",\"banNondeterministicGlobals\":\"aaeb\",\"isSandbox\":\"aafb\",\"getInstalled\":\"aagb\",\"installFromTx\":\"aahb\",\"installJig\":\"aaib\",\"fastForward\":\"aajb\",\"finish\":\"aakb\",\"publishNext\":\"aalb\",\"publish\":\"aamb\",\"storeCode\":\"aanb\",\"storeAction\":\"aaob\",\"setProtoTxAndCreator\":\"aapb\",\"buildBsvTransaction\":\"aaqb\",\"_fromPrivateKey\":\"aarb\",\"_fromPublicKey\":\"aasb\",\"_fromAddress\":\"aatb\",\"_queryLatest\":\"aaub\",\"_removeErrorRefs\":\"aavb\",\"_update\":\"aawb\",\"_estimateSize\":\"aaxb\",\"_util\":\"aayb\",\"intrinsics\":\"aazb\",\"proxies\":\"aaac\",\"enforce\":\"aabc\",\"stack\":\"aacc\",\"reads\":\"aadc\",\"creates\":\"aaec\",\"saves\":\"aafc\",\"callers\":\"aagc\",\"locals\":\"aahc\",\"requests\":\"aaic\",\"broadcasts\":\"aajc\",\"expiration\":\"aakc\",\"indexingDelay\":\"aalc\",\"fetchedTime\":\"aamc\",\"unspentOutputs\":\"aanc\",\"transactions\":\"aaoc\",\"blockHeight\":\"aapc\",\"installs\":\"aaqc\",\"syncer\":\"aarc\",\"protoTx\":\"aasc\",\"beginCount\":\"aatc\",\"cachedTx\":\"aauc\",\"syncListeners\":\"aavc\",\"onBroadcastListeners\":\"aawc\",\"lastPosted\":\"aaxc\",\"queued\":\"aayc\",\"sizeBytes\":\"aazc\",\"maxSizeBytes\":\"aaad\",\"control\":\"aabd\",\"ProtoTransaction\":\"aacd\",\"PROTOCOL_VERSION\":\"aadd\",\"SerialTaskQueue\":\"aaed\",\"stringProps\":\"aafd\",\"extractProps\":\"aagd\",\"onReadyForPublish\":\"aahd\",\"spentJigs\":\"aaid\",\"spentLocations\":\"aajd\"}");
 
 /***/ }),
 /* 13 */
@@ -4526,7 +4526,7 @@ describe('Jig', () => {
       }
       const dragon = new Dragon(null)
       await dragon.sync()
-      run.state.cache.clear()
+      if (run.state) run.state.cache.clear()
       const dragon2 = await run.load(dragon.location)
       expect(dragon).to.deep.equal(dragon2)
     })
@@ -6919,6 +6919,7 @@ const packageInfo = __webpack_require__(20)
 describe('Run', () => {
   describe('constructor', () => {
     // TODO: Test sandbox
+    // TODO: Test null state
 
     it('should set basic properties', () => {
       const run = createRun()
@@ -7063,7 +7064,7 @@ describe('Run', () => {
       const d = new D()
       await run.sync()
       Run.code.flush()
-      run.state.clear()
+      if (run.state) run.state.clear()
       const p1 = run.load(d.location)
       const p2 = run.load(d.location)
       await Promise.all([p1, p2])

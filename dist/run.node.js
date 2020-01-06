@@ -433,7 +433,7 @@ module.exports = {
 /**
  * index.js
  *
- * The primary Run class we export that manager for all other components
+ * The exports for the Run library, including the main Run class
  */
 
 const bsv = __webpack_require__(2)
@@ -448,129 +448,38 @@ const Mockchain = __webpack_require__(58)
 const { StateCache } = __webpack_require__(59)
 const { PrivateKey } = bsv
 
+// ------------------------------------------------------------------------------------------------
+// Primary Run class
+// ------------------------------------------------------------------------------------------------
+
 /**
  * The main Run class that users create.
  */
 class Run {
   /**
-   * Creates Run and sets up all properties
+   * Creates Run and sets up all properties. Whenever possible, settings from the prior Run
+   * instance will be reused, including the blockchain, code, and state cache.
    * @param {object=} options Configuration settings
-   * @param {boolean=} options.sandbox Whether to put code in a secure sandbox. Default is true.
+   * @param {boolean|RegExp=} options.sandbox Whether to put code in a secure sandbox. Default is true.
    * @param {object=} options.logger Console-like logger object. Default will log warnings and errors.
    * @param {string=} options.app App string to differentiate transaction. Defaults to empty.
+   * @param {Blockchain|string=} options.blockchain Blockchain API or one of 'star', 'bitindex', or 'whatsonchain'
+   * @param {string=} options.network One of 'main', 'test', 'stn', or 'mock'
+   * @param {State=} options.state State provider, which may be null
+   * @param {string=} options.owner Private key or address string
    */
   constructor (options = {}) {
-    // ------------------------------------------------------------------------
-    // this.sandbox
-    // ------------------------------------------------------------------------
+    this.logger = parseLogger(options.logger)
+    this.blockchain = parseBlockchain(options.blockchain, options.network, this.logger)
+    setupBsvLibrary(this.blockchain.network)
+    this.sandbox = parseSandbox(options.sandbox)
+    this.app = parseApp(options.app)
+    this.state = parseState(options.state)
+    this.owner = parseOwner(options.owner, this.blockchain.network, this.logger, this)
 
-    switch (typeof options.sandbox) {
-      case 'boolean': this.sandbox = options.sandbox; break
-      case 'object':
-        if (options.sandbox && options.sandbox instanceof RegExp) {
-          this.sandbox = options.sandbox
-          break
-        }
-        throw new Error(`Invalid option 'sandbox'. Received: ${options.sandbox}`)
-      case 'undefined': this.sandbox = true; break
-      default: throw new Error(`Option 'sandbox' must be a boolean. Received: ${options.sandbox}`)
-    }
-
-    // ------------------------------------------------------------------------
-    // this.logger
-    // ------------------------------------------------------------------------
-
-    // When no logger is provided, we log warnings and errors by default
-    const defaultLogger = { warn: console.warn, error: console.error }
-
-    switch (typeof options.logger) {
-      case 'object': this.logger = options.logger === null ? {} : options.logger; break
-      case 'undefined': this.logger = defaultLogger; break
-      default: throw new Error(`Option 'logger' must be an object. Received: ${options.logger}`)
-    }
-
-    // Fill this.logger with all supported methods
-    const methods = ['info', 'debug', 'warn', 'error']
-    this.logger = { ...this.logger }
-    methods.forEach(method => { this.logger[method] = this.logger[method] || (() => {}) })
-
-    // ------------------------------------------------------------------------
-    // this.app
-    // ------------------------------------------------------------------------
-
-    switch (typeof options.app) {
-      case 'string': this.app = options.app; break
-      case 'undefined': this.app = ''; break
-      default: throw new Error(`Option 'app' must be a string. Received: ${options.app}`)
-    }
-
-    // ------------------------------------------------------------------------
-    // this.blockchain
-    // ------------------------------------------------------------------------
-
-    switch (typeof options.blockchain) {
-      case 'object':
-        if (!options.blockchain) throw new Error('Option \'blockchain\' must not be null')
-        this.blockchain = options.blockchain
-        break
-
-      case 'string':
-      case 'undefined': {
-        const network = options.network || 'main'
-        const cache = Run.instance ? Run.instance.blockchain.cache : null
-        const api = options.blockchain || 'star'
-
-        if (network === 'mock') {
-          this.blockchain = new Mockchain({ cache })
-        } else {
-          this.blockchain = new BlockchainServer({ network, cache, api, logger: this.logger })
-        }
-        break
-      }
-
-      default: throw new Error(`Option 'blockchain' must be an object or string. Received: ${options.blockchain}`)
-    }
-
-    // ------------------------------------------------------------------------
-    // this.state
-    // ------------------------------------------------------------------------
-
-    if (typeof options.state === 'object') {
-      this.state = options.state
-    } else if (Run.instance && Run.instance.blockchain.network === this.blockchain.network) {
-      this.state = Run.instance.state
-    } else {
-      if (Run.instance) {
-        const reason = `The previous run instance is configured for a different network (${Run.instance.blockchain.network}).`
-        this.logger.warn(`Performance may be slow because run cannot reuse the previous state cache.\n\n${reason}`)
-      }
-      this.state = new StateCache()
-    }
-
-    // ------------------------------------------------------------------------
-    // this.owner
-    // ------------------------------------------------------------------------
-
-    // ------------------------------------------------------------------------
-    // this.purse
-    // ------------------------------------------------------------------------
-
-    // ------------------------------------------------------------------------
-    // this.syncer
-    // ------------------------------------------------------------------------
-
-    // ------------------------------------------------------------------------
-    // this.transaction
-    // ------------------------------------------------------------------------
-
-    this._setupBsv()
     this.activate()
 
-    const bsvNetwork = util.bsvNetwork(this.blockchain.network)
-    const ownerParam = options.owner || new PrivateKey(bsvNetwork)
-    this.owner = new Owner(ownerParam, bsvNetwork, this.logger)
-
-    // setup the purse
+    // Setup the purse
     if (typeof options.purse === 'string' || typeof options.purse === 'undefined' ||
         options.purse instanceof PrivateKey || options.purse === null) {
       this.purse = new Purse({ privkey: options.purse, blockchain: this.blockchain, logger: this.logger })
@@ -579,8 +488,8 @@ class Run {
     this.syncer = new Syncer(this)
     this.transaction = new Transaction(this)
 
-    // if using the mockchain, automatically fund the purse with some money
-    if (this.blockchain.network === 'mock') this.blockchain.fund(this.purse.address, 100000000)
+    // If using the mockchain, automatically fund the purse with some money
+    if (this.blockchain instanceof Mockchain) this.blockchain.fund(this.purse.address, 100000000)
 
     // kick off sync. this won't finish here, but for tutorials they will be loaded shortly after
     // this.sync()
@@ -618,19 +527,107 @@ class Run {
     if (this.owner.bsvPrivateKey) { tx.sign(this.owner.bsvPrivateKey) }
     return tx
   }
+}
 
-  _setupBsv () {
-    bsv.Networks.defaultNetwork = util.bsvNetwork(this.blockchain.network)
-    const oldSign = bsv.Transaction.prototype.sign
-    bsv.Transaction.prototype.sign = function (...args) {
-      const oldIsValidSignature = bsv.Transaction.Input.prototype.isValidSignature
-      bsv.Transaction.Input.prototype.isValidSignature = () => true
-      const ret = oldSign.call(this, ...args)
-      bsv.Transaction.Input.prototype.isValidSignature = oldIsValidSignature
-      return ret
+// ------------------------------------------------------------------------------------------------
+// Parameter validations
+// ------------------------------------------------------------------------------------------------
+
+function parseLogger (logger) {
+  // When no logger is provided, we log warnings and errors by default
+  switch (typeof logger) {
+    case 'object': logger = (logger || {}); break
+    case 'undefined': logger = { warn: console.warn, error: console.error }; break
+    default: throw new Error(`Option 'logger' must be an object. Received: ${logger}`)
+  }
+
+  // Fill this.logger with all supported methods
+  const methods = ['info', 'debug', 'warn', 'error']
+  logger = { ...logger }
+  methods.forEach(method => { logger[method] = logger[method] || (() => {}) })
+  return logger
+}
+
+function parseBlockchain (blockchain, network, logger) {
+  switch (typeof blockchain) {
+    case 'object':
+      if (!blockchain) throw new Error('Option \'blockchain\' must not be null')
+      return blockchain
+    case 'string':
+    case 'undefined': {
+      const cache = Run.instance ? Run.instance.blockchain.cache : null
+      if (network === 'mock') {
+        return new Mockchain({ cache })
+      } else {
+        return new BlockchainServer({ network, cache, api: blockchain, logger })
+      }
     }
+    default: throw new Error(`Option 'blockchain' must be an object or string. Received: ${blockchain}`)
   }
 }
+
+function parseSandbox (sandbox) {
+  switch (typeof sandbox) {
+    case 'boolean': return sandbox
+    case 'object':
+      if (sandbox && sandbox instanceof RegExp) return sandbox
+      throw new Error(`Invalid option 'sandbox'. Received: ${sandbox}`)
+    case 'undefined': return true
+    default: throw new Error(`Option 'sandbox' must be a boolean or RegExp. Received: ${sandbox}`)
+  }
+}
+
+function parseApp (app) {
+  switch (typeof app) {
+    case 'string': return app
+    case 'undefined': return ''
+    default: throw new Error(`Option 'app' must be a string. Received: ${app}`)
+  }
+}
+
+function parseState (state) {
+  switch (typeof state) {
+    case 'object':
+      if (!state) throw new Error('Option \'state\' must not be null')
+      return state
+    case 'undefined':
+      return Run.instance && Run.instance.state ? Run.instance.state : new StateCache()
+    default: throw new Error(`Option 'state' must be an object. Received: ${state}`)
+  }
+}
+
+function parseOwner (owner, network, logger, run) {
+  switch (typeof owner) {
+    case 'string':
+    case 'object':
+    case 'undefined':
+      return new Owner(owner, { network, logger, run })
+    default: throw new Error(`Option 'owner' must be a valid key or address. Received: ${owner}`)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Helper methods
+// ------------------------------------------------------------------------------------------------
+
+function setupBsvLibrary (network) {
+  // Set the default bsv network
+  bsv.Networks.defaultNetwork = util.bsvNetwork(network)
+
+  // Hook sign to not run isValidSignature, which is slow and unnecessary
+  const oldSign = bsv.Transaction.prototype.sign
+  bsv.Transaction.prototype.sign = function (...args) {
+    const oldIsValidSignature = bsv.Transaction.Input.prototype.isValidSignature
+    bsv.Transaction.Input.prototype.isValidSignature = () => true
+    const ret = oldSign.call(this, ...args)
+    bsv.Transaction.Input.prototype.isValidSignature = oldIsValidSignature
+    return ret
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Run static properties
+// ------------------------------------------------------------------------------------------------
 
 Run.version =  false ? undefined : "0.3.12"
 Run.protocol = util.PROTOCOL_VERSION
@@ -639,8 +636,8 @@ Run.BlockchainServer = BlockchainServer
 Run.Mockchain = Mockchain
 Run.StateCache = StateCache
 
-// lazily install the code, Jig and Token
-// besides performance gain, this allows Run to be loaded in <HEAD> tags
+// Lazily install the code, Jig and Token
+// Besides performance gain, this allows Run to be loaded in <HEAD> tags
 let code = null
 Object.defineProperty(Run, 'code', {
   get () {
@@ -655,6 +652,8 @@ Object.defineProperty(Run, 'Token', { ...options, get () { return __webpack_requ
 Object.defineProperty(Run, 'expect', { ...options, get () { return __webpack_require__(20) } })
 Object.defineProperty(global, 'Jig', { ...options, get () { return Run.Jig } })
 Object.defineProperty(global, 'Token', { ...options, get () { return Run.Token } })
+
+// ------------------------------------------------------------------------------------------------
 
 module.exports = Run
 
@@ -1899,7 +1898,7 @@ class ProtoTransaction {
       if (type.startsWith(tx.hash)) type = type.slice(64)
 
       const cachedState = { type, state: packedState }
-      await run.state.set(jigLocation, cachedState)
+      if (run.state) await run.state.set(jigLocation, cachedState)
     }
 
     // clear the code, and load it directly from the transaction
@@ -2367,7 +2366,7 @@ class Transaction {
     if (location[65] !== 'o' || isNaN(vout)) throw new Error(`Bad location: ${location}`)
 
     // check the state cache so we only have to load each jig once
-    const cachedState = await this.state.get(location)
+    const cachedState = this.state ? await this.state.get(location) : null
     if (cachedState) {
       // Make sure the cached state is valid
       if (typeof cachedState.type !== 'string' || typeof cachedState.state !== 'object') {
@@ -4137,7 +4136,7 @@ owner: ${spentJigs[i].owner}`)
       if (type.startsWith(tx.hash)) type = type.slice(64)
 
       const cachedState = { type, state: packedState }
-      await this.state.set(stateAfter.json.location, cachedState)
+      if (this.state) await this.state.set(stateAfter.json.location, cachedState)
     }
 
     // notify the owner
@@ -4403,10 +4402,14 @@ module.exports = { Pay, Purse }
  */
 
 const bsv = __webpack_require__(2)
+const util = __webpack_require__(3)
 
 class Owner {
-  constructor (keyOrAddress, bsvNetwork, logger) {
-    this.logger = logger
+  constructor (keyOrAddress, options) {
+    const bsvNetwork = util.bsvNetwork(options.network)
+    this.logger = options.logger
+    this.run = options.run
+    keyOrAddress = keyOrAddress || new bsv.PrivateKey(bsvNetwork)
 
     // Try creating the private key on mainnet and testnet
     try {
@@ -4451,8 +4454,6 @@ class Owner {
     // Each ref should only be stored once. If we have an origin, prefer it
     this.refs = new Map() // origin|Jig|Class -> Jig|Class
 
-    const Run = __webpack_require__(1)
-    this.run = Run.instance
     return this
   }
 
@@ -4461,7 +4462,7 @@ class Owner {
       return Array.from(this.refs.values())
         .filter(ref => ref instanceof this.run.constructor.Jig)
     } catch (e) {
-      this.logger.error(`Bad token found in owner refs. Removing.\n\n${e}`)
+      if (this.logger) this.logger.error(`Bad token found in owner refs. Removing.\n\n${e}`)
       this._removeErrorRefs()
       return this.jigs
     }
@@ -4472,7 +4473,7 @@ class Owner {
       return Array.from(this.refs.values())
         .filter(ref => !(ref instanceof this.run.constructor.Jig))
     } catch (e) {
-      this.logger.error(`Bad token found in owner refs. Removing.\n\n${e}`)
+      if (this.logger) this.logger.error(`Bad token found in owner refs. Removing.\n\n${e}`)
       this._removeErrorRefs()
       return this.code
     }
@@ -4535,7 +4536,7 @@ class Owner {
         const ref = await this.run.load(location)
         newRefs.set(ref.origin, ref)
       } catch (e) {
-        this.logger.error(`Failed to load owner location ${location}\n\n${e.toString()}`)
+        if (this.logger) this.logger.error(`Failed to load owner location ${location}\n\n${e.toString()}`)
       }
     }
 

@@ -16,6 +16,7 @@ const packageInfo = require('../package.json')
 describe('Run', () => {
   describe('constructor', () => {
     // TODO: Test sandbox
+    // TODO: Test null state
 
     it('should set basic properties', () => {
       const run = createRun()
@@ -160,7 +161,7 @@ describe('Run', () => {
       const d = new D()
       await run.sync()
       Run.code.flush()
-      run.state.clear()
+      if (run.state) run.state.clear()
       const p1 = run.load(d.location)
       const p2 = run.load(d.location)
       await Promise.all([p1, p2])
