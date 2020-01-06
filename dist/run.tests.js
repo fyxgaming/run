@@ -1158,7 +1158,7 @@ networks.forEach(network => {
       const run = createRun({ network, blockchain: apis[api] })
       beforeEach(() => run.activate())
       this.timeout(30000)
-      runBlockchainTestSuite(run.blockchain, run.purse.privkey,
+      runBlockchainTestSuite(run.blockchain, run.purse.bsvPrivateKey,
         sampleTransactions[network], supportsSpentTxIdInBlocks[api],
         supportsSpentTxIdInMempool[api], 1000 /* indexingLatency */, errors)
     })
@@ -6517,7 +6517,7 @@ describe('Mockchain', () => {
   // generate a spending transaction so that we have spentTxId
   before(async () => {
     const utxos = await run.blockchain.utxos(run.purse.address)
-    const spentTx = new Transaction().from(utxos).change(run.purse.address).sign(run.purse.privkey)
+    const spentTx = new Transaction().from(utxos).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
     await run.blockchain.broadcast(spentTx)
     sampleTx.vout = [
       {
@@ -6533,7 +6533,7 @@ describe('Mockchain', () => {
     ]
   })
 
-  runBlockchainTestSuite(run.blockchain, run.purse.privkey, sampleTx,
+  runBlockchainTestSuite(run.blockchain, run.purse.bsvPrivateKey, sampleTx,
     true /* supportsSpentTxIdInBlocks */, true /* supportsSpentTxIdInMempool */,
     0 /* indexingLatency */, errors)
 
@@ -6542,7 +6542,7 @@ describe('Mockchain', () => {
       const txns = []
       for (let i = 0; i < 25; i++) {
         const utxo = (await run.blockchain.utxos(run.purse.address))[0]
-        const tx = new Transaction().from(utxo).change(run.purse.address).sign(run.purse.privkey)
+        const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
         await run.blockchain.broadcast(tx)
         txns.push(unobfuscate(tx))
       }
@@ -6561,11 +6561,11 @@ describe('Mockchain', () => {
     it('should respect 25 chain limit', async () => {
       for (let i = 0; i < 25; i++) {
         const utxo = (await run.blockchain.utxos(run.purse.address))[0]
-        const tx = new Transaction().from(utxo).change(run.purse.address).sign(run.purse.privkey)
+        const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
         await run.blockchain.broadcast(tx)
       }
       const utxo = (await run.blockchain.utxos(run.purse.address))[0]
-      const tx = new Transaction().from(utxo).change(run.purse.address).sign(run.purse.privkey)
+      const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith('too-long-mempool-chain')
       run.blockchain.block()
       await run.blockchain.broadcast(tx)
@@ -6576,7 +6576,7 @@ describe('Mockchain', () => {
     it('should support fast broadcsts', async () => {
       const utxo = (await run.blockchain.utxos(run.purse.address))[0]
       const start = new Date()
-      const tx = new Transaction().from(utxo).change(run.purse.address).sign(run.purse.privkey)
+      const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
       await run.blockchain.broadcast(tx)
       expect(new Date() - start < 200).to.equal(true)
     })
@@ -6586,7 +6586,7 @@ describe('Mockchain', () => {
       const earlyTxid = utxo.txid
       const measures = []
       for (let i = 0; i < 1000; i++) {
-        const tx = new Transaction().from(utxo).change(run.purse.address).sign(run.purse.privkey)
+        const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
         utxo = { txid: tx.hash, vout: 0, script: tx.outputs[0].script, satoshis: tx.outputs[0].satoshis }
         await run.blockchain.broadcast(tx)
         const before = new Date()
@@ -6829,17 +6829,19 @@ describe('Purse', () => {
 
   describe('constructor', () => {
     it('should generate random purse if unspecified', () => {
-      expect(run.purse.privkey.toString()).not.to.equal(createRun().purse.privkey.toString())
+      expect(run.purse.bsvPrivateKey.toString()).not.to.equal(createRun().purse.bsvPrivateKey.toString())
+      expect(run.purse.privkey).not.to.equal(createRun().purse.privkey)
     })
 
     it('should calculate address correctly from private key', () => {
-      expect(run.purse.privkey.toAddress().toString()).to.equal(run.purse.address.toString())
+      expect(run.purse.bsvPrivateKey.toAddress().toString()).to.equal(run.purse.address)
     })
 
     it('should support passing in private key', () => {
       const privkey = new bsv.PrivateKey()
       const run = createRun({ purse: privkey })
-      expect(run.purse.privkey.toString()).to.equal(privkey.toString())
+      expect(run.purse.privkey).to.equal(privkey.toString())
+      expect(run.purse.bsvPrivateKey).to.deep.equal(privkey)
     })
 
     it('should throw if private key is on wrong network', () => {
@@ -6874,9 +6876,9 @@ describe('Purse', () => {
   describe('balance', () => {
     it('should sum non-jig and non-class utxos', async () => {
       const address = new bsv.PrivateKey().toAddress()
-      const send = await payFor(new bsv.Transaction().to(address, 9999), run.purse.privkey, run.blockchain)
+      const send = await payFor(new bsv.Transaction().to(address, 9999), run.purse.bsvPrivateKey, run.blockchain)
       await run.blockchain.broadcast(send)
-      createRun({ owner: run.purse.privkey, blockchain: run.blockchain })
+      createRun({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain })
       class A extends Jig { init () { this.satoshis = 8888 } }
       await new A().sync()
       const utxos = await run.blockchain.utxos(run.purse.address)
@@ -6888,7 +6890,7 @@ describe('Purse', () => {
 
   describe('utxos', () => {
     it('should return non-jig and non-class utxos', async () => {
-      const run2 = createRun({ owner: run.purse.privkey, blockchain: run.blockchain })
+      const run2 = createRun({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain })
       class A extends Jig { init () { this.satoshis = 8888 } }
       await new A().sync()
       expect((await run2.purse.utxos()).length).to.equal(10)
@@ -6921,11 +6923,6 @@ describe('Run', () => {
     describe('logger', () => {
       it('should create default logger', () => {
         expect(!!new Run().logger).to.equal(true)
-      })
-
-      it('should accept custom logger', () => {
-        const logger = { error: e => console.error(e) }
-        expect(new Run({ logger }).logger.error).to.equal(logger.error)
       })
 
       it('should accept null logger', () => {
@@ -6978,8 +6975,11 @@ describe('Run', () => {
       })
 
       it('should accept custom blockchain', () => {
-        const blockchain = { broadcast: async () => {}, fetch: async () => {}, utxos: async () => {}, network: 'main' }
-        expect(new Run({ blockchain }).blockchain).to.equal(blockchain)
+        let fetched = false
+        const blockchain = { broadcast: async () => {}, fetch: async () => { fetched = true }, utxos: async () => {}, network: 'main' }
+        const run = new Run({ blockchain })
+        run.blockchain.fetch()
+        expect(fetched).to.equal(true)
       })
 
       it('should throw for invalid custom blockchain', () => {
@@ -7010,8 +7010,8 @@ describe('Run', () => {
       it('should copy cache from previous blockchain', () => {
         const run1 = new Run()
         const run2 = new Run()
-        expect(run1.blockchain).not.to.equal(run2.blockchain)
-        expect(run1.blockchain.cache).to.equal(run2.blockchain.cache)
+        expect(run1.blockchain).not.to.deep.equal(run2.blockchain)
+        expect(run1.blockchain.cache).to.deep.equal(run2.blockchain.cache)
       })
     })
 
@@ -7071,7 +7071,7 @@ describe('Run', () => {
 
       it('should support custom state', () => {
         const state = new Run.StateCache()
-        expect(new Run({ state }).state ).to.equal(state)
+        expect(new Run({ state }).state ).to.deep.equal(state)
       })
 
       it('should throw if invalid state', () => {
@@ -7084,7 +7084,42 @@ describe('Run', () => {
       it('should copy cache from previous state', () => {
         const run1 = createRun()
         const run2 = createRun()
-        expect(run2.state).to.equal(run1.state)
+        expect(run2.state).to.deep.equal(run1.state)
+      })
+    })
+
+    describe('owner', () => {
+      it('should default to random owner', () => {
+        const run = new Run()
+        expect(run.owner).not.to.equal(null)
+        expect(typeof run.owner.privkey).to.equal('string')
+      })
+
+      it('should support null owner', () => {
+        expect(new Run({ owner: null }).owner).not.to.equal(null)
+      })
+
+      it('should throw for invalid owner', () => {
+        expect(() => new Run({ owner: 123})).to.throw(`Option 'owner' must be a valid key or address. Received: 123`)
+        expect(() => new Run({ owner: false})).to.throw(`Option 'owner' must be a valid key or address. Received: false`)
+      })
+    })
+
+    describe('purse', () => {
+      it('should default to random purse', () => {
+        const run = new Run()
+        expect(run.purse).not.to.equal(null)
+        expect(typeof run.purse.privkey).to.equal('string')
+      })
+
+      it('should support null purse', () => {
+        expect(new Run({ purse: null }).purse).not.to.equal(null)
+      })
+
+      it('should throw for invalid purse', () => {
+        expect(() => new Run({ purse: {}})).to.throw(`Purse requires a pay method`)
+        expect(() => new Run({ purse: 123})).to.throw(`Option 'purse' must be a valid private key or Pay API. Received: 123`)
+        expect(() => new Run({ purse: true})).to.throw(`Option 'purse' must be a valid private key or Pay API. Received: true`)
       })
     })
 
@@ -7094,25 +7129,11 @@ describe('Run', () => {
       createRun({ network: 'main' })
       expect(bsv.Networks.defaultNetwork).to.equal('mainnet')
     })
+  })
 
-    // ---
-
-    it('should set basic properties', () => {
-      const run = createRun()
+  describe('static properties', () => {
+    it('version should match package.json', () => {
       expect(Run.version).to.equal(packageInfo.version)
-      expect(run.owner.privkey).not.to.equal(run.purse.privkey)
-      expect(run.owner.bsvPrivateKey.publicKey.toString()).to.equal(run.owner.pubkey)
-      expect(run.owner.bsvPrivateKey.toAddress().toString()).to.equal(run.owner.address)
-      expect(run.purse.privkey.toAddress().toString()).to.equal(run.purse.address.toString())
-      expect(run.app).to.equal('')
-    })
-
-    it('should support null purse', () => {
-      expect(createRun({ purse: null }).purse).not.to.equal(null)
-    })
-
-    it('should support null owner', () => {
-      expect(createRun({ owner: null }).owner).not.to.equal(null)
     })
   })
 
@@ -7234,7 +7255,7 @@ module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com
  */
 
 const bsv = __webpack_require__(3)
-const { describe, it, beforeEach, afterEach } = __webpack_require__(1)
+const { describe, it, after, beforeEach, afterEach } = __webpack_require__(1)
 const chai = __webpack_require__(0)
 const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
@@ -7275,6 +7296,9 @@ describe('StateCache', () => {
 
   const run = createRun({ state: new WrappedState() })
   beforeEach(() => run.activate())
+
+  // Clear the instance after the state tests so that we don't reuse the WrappedState
+  after(() => { Run.instance = null })
 
   describe('set', () => {
     it('should call set for each update after sync', async () => {
@@ -8165,7 +8189,7 @@ describe('Transaction', () => {
         const output = (await run.blockchain.fetch(txid)).outputs[vout]
         tx.from({ txid, vout, script: output.script, satoshis: output.satoshis })
       }
-      await payFor(tx, run.purse.privkey, run.blockchain)
+      await payFor(tx, run.purse.bsvPrivateKey, run.blockchain)
       tx.sign(run.owner.bsvPrivateKey)
       await run.blockchain.broadcast(tx)
       return tx.hash
@@ -8277,7 +8301,7 @@ describe('Transaction', () => {
 
     describe('errors', () => {
       it('should throw if no data', async () => {
-        const tx = await payFor(new bsv.Transaction(), run.purse.privkey, run.blockchain)
+        const tx = await payFor(new bsv.Transaction(), run.purse.bsvPrivateKey, run.blockchain)
         await run.blockchain.broadcast(tx)
         await expect(run.load(tx.hash + '_o0')).to.be.rejectedWith(`not a run tx: ${tx.hash}`)
         await expect(run.load(tx.hash + '_o1')).to.be.rejectedWith(`not a run tx: ${tx.hash}`)

@@ -18,17 +18,19 @@ describe('Purse', () => {
 
   describe('constructor', () => {
     it('should generate random purse if unspecified', () => {
-      expect(run.purse.privkey.toString()).not.to.equal(createRun().purse.privkey.toString())
+      expect(run.purse.bsvPrivateKey.toString()).not.to.equal(createRun().purse.bsvPrivateKey.toString())
+      expect(run.purse.privkey).not.to.equal(createRun().purse.privkey)
     })
 
     it('should calculate address correctly from private key', () => {
-      expect(run.purse.privkey.toAddress().toString()).to.equal(run.purse.address.toString())
+      expect(run.purse.bsvPrivateKey.toAddress().toString()).to.equal(run.purse.address)
     })
 
     it('should support passing in private key', () => {
       const privkey = new bsv.PrivateKey()
       const run = createRun({ purse: privkey })
-      expect(run.purse.privkey.toString()).to.equal(privkey.toString())
+      expect(run.purse.privkey).to.equal(privkey.toString())
+      expect(run.purse.bsvPrivateKey).to.deep.equal(privkey)
     })
 
     it('should throw if private key is on wrong network', () => {
@@ -63,9 +65,9 @@ describe('Purse', () => {
   describe('balance', () => {
     it('should sum non-jig and non-class utxos', async () => {
       const address = new bsv.PrivateKey().toAddress()
-      const send = await payFor(new bsv.Transaction().to(address, 9999), run.purse.privkey, run.blockchain)
+      const send = await payFor(new bsv.Transaction().to(address, 9999), run.purse.bsvPrivateKey, run.blockchain)
       await run.blockchain.broadcast(send)
-      createRun({ owner: run.purse.privkey, blockchain: run.blockchain })
+      createRun({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain })
       class A extends Jig { init () { this.satoshis = 8888 } }
       await new A().sync()
       const utxos = await run.blockchain.utxos(run.purse.address)
@@ -77,7 +79,7 @@ describe('Purse', () => {
 
   describe('utxos', () => {
     it('should return non-jig and non-class utxos', async () => {
-      const run2 = createRun({ owner: run.purse.privkey, blockchain: run.blockchain })
+      const run2 = createRun({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain })
       class A extends Jig { init () { this.satoshis = 8888 } }
       await new A().sync()
       expect((await run2.purse.utxos()).length).to.equal(10)

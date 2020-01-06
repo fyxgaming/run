@@ -20,11 +20,6 @@ describe('Run', () => {
         expect(!!new Run().logger).to.equal(true)
       })
 
-      it('should accept custom logger', () => {
-        const logger = { error: e => console.error(e) }
-        expect(new Run({ logger }).logger.error).to.equal(logger.error)
-      })
-
       it('should accept null logger', () => {
         expect(() => new Run({ logger: null })).not.to.throw()
       })
@@ -75,8 +70,11 @@ describe('Run', () => {
       })
 
       it('should accept custom blockchain', () => {
-        const blockchain = { broadcast: async () => {}, fetch: async () => {}, utxos: async () => {}, network: 'main' }
-        expect(new Run({ blockchain }).blockchain).to.equal(blockchain)
+        let fetched = false
+        const blockchain = { broadcast: async () => {}, fetch: async () => { fetched = true }, utxos: async () => {}, network: 'main' }
+        const run = new Run({ blockchain })
+        run.blockchain.fetch()
+        expect(fetched).to.equal(true)
       })
 
       it('should throw for invalid custom blockchain', () => {
@@ -107,8 +105,8 @@ describe('Run', () => {
       it('should copy cache from previous blockchain', () => {
         const run1 = new Run()
         const run2 = new Run()
-        expect(run1.blockchain).not.to.equal(run2.blockchain)
-        expect(run1.blockchain.cache).to.equal(run2.blockchain.cache)
+        expect(run1.blockchain).not.to.deep.equal(run2.blockchain)
+        expect(run1.blockchain.cache).to.deep.equal(run2.blockchain.cache)
       })
     })
 
@@ -168,7 +166,7 @@ describe('Run', () => {
 
       it('should support custom state', () => {
         const state = new Run.StateCache()
-        expect(new Run({ state }).state ).to.equal(state)
+        expect(new Run({ state }).state ).to.deep.equal(state)
       })
 
       it('should throw if invalid state', () => {
@@ -181,7 +179,42 @@ describe('Run', () => {
       it('should copy cache from previous state', () => {
         const run1 = createRun()
         const run2 = createRun()
-        expect(run2.state).to.equal(run1.state)
+        expect(run2.state).to.deep.equal(run1.state)
+      })
+    })
+
+    describe('owner', () => {
+      it('should default to random owner', () => {
+        const run = new Run()
+        expect(run.owner).not.to.equal(null)
+        expect(typeof run.owner.privkey).to.equal('string')
+      })
+
+      it('should support null owner', () => {
+        expect(new Run({ owner: null }).owner).not.to.equal(null)
+      })
+
+      it('should throw for invalid owner', () => {
+        expect(() => new Run({ owner: 123})).to.throw(`Option 'owner' must be a valid key or address. Received: 123`)
+        expect(() => new Run({ owner: false})).to.throw(`Option 'owner' must be a valid key or address. Received: false`)
+      })
+    })
+
+    describe('purse', () => {
+      it('should default to random purse', () => {
+        const run = new Run()
+        expect(run.purse).not.to.equal(null)
+        expect(typeof run.purse.privkey).to.equal('string')
+      })
+
+      it('should support null purse', () => {
+        expect(new Run({ purse: null }).purse).not.to.equal(null)
+      })
+
+      it('should throw for invalid purse', () => {
+        expect(() => new Run({ purse: {}})).to.throw(`Purse requires a pay method`)
+        expect(() => new Run({ purse: 123})).to.throw(`Option 'purse' must be a valid private key or Pay API. Received: 123`)
+        expect(() => new Run({ purse: true})).to.throw(`Option 'purse' must be a valid private key or Pay API. Received: true`)
       })
     })
 
@@ -191,25 +224,11 @@ describe('Run', () => {
       createRun({ network: 'main' })
       expect(bsv.Networks.defaultNetwork).to.equal('mainnet')
     })
+  })
 
-    // ---
-
-    it('should set basic properties', () => {
-      const run = createRun()
+  describe('static properties', () => {
+    it('version should match package.json', () => {
       expect(Run.version).to.equal(packageInfo.version)
-      expect(run.owner.privkey).not.to.equal(run.purse.privkey)
-      expect(run.owner.bsvPrivateKey.publicKey.toString()).to.equal(run.owner.pubkey)
-      expect(run.owner.bsvPrivateKey.toAddress().toString()).to.equal(run.owner.address)
-      expect(run.purse.privkey.toAddress().toString()).to.equal(run.purse.address.toString())
-      expect(run.app).to.equal('')
-    })
-
-    it('should support null purse', () => {
-      expect(createRun({ purse: null }).purse).not.to.equal(null)
-    })
-
-    it('should support null owner', () => {
-      expect(createRun({ owner: null }).owner).not.to.equal(null)
     })
   })
 

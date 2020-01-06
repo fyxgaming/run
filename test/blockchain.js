@@ -412,7 +412,7 @@ networks.forEach(network => {
       const run = createRun({ network, blockchain: apis[api] })
       beforeEach(() => run.activate())
       this.timeout(30000)
-      runBlockchainTestSuite(run.blockchain, run.purse.privkey,
+      runBlockchainTestSuite(run.blockchain, run.purse.bsvPrivateKey,
         sampleTransactions[network], supportsSpentTxIdInBlocks[api],
         supportsSpentTxIdInMempool[api], 1000 /* indexingLatency */, errors)
     })

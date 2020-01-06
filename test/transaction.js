@@ -499,7 +499,7 @@ describe('Transaction', () => {
         const output = (await run.blockchain.fetch(txid)).outputs[vout]
         tx.from({ txid, vout, script: output.script, satoshis: output.satoshis })
       }
-      await payFor(tx, run.purse.privkey, run.blockchain)
+      await payFor(tx, run.purse.bsvPrivateKey, run.blockchain)
       tx.sign(run.owner.bsvPrivateKey)
       await run.blockchain.broadcast(tx)
       return tx.hash
@@ -611,7 +611,7 @@ describe('Transaction', () => {
 
     describe('errors', () => {
       it('should throw if no data', async () => {
-        const tx = await payFor(new bsv.Transaction(), run.purse.privkey, run.blockchain)
+        const tx = await payFor(new bsv.Transaction(), run.purse.bsvPrivateKey, run.blockchain)
         await run.blockchain.broadcast(tx)
         await expect(run.load(tx.hash + '_o0')).to.be.rejectedWith(`not a run tx: ${tx.hash}`)
         await expect(run.load(tx.hash + '_o1')).to.be.rejectedWith(`not a run tx: ${tx.hash}`)

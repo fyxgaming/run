@@ -5,7 +5,7 @@
  */
 
 const bsv = require('bsv')
-const { describe, it, beforeEach, afterEach } = require('mocha')
+const { describe, it, after, beforeEach, afterEach } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
@@ -46,6 +46,9 @@ describe('StateCache', () => {
 
   const run = createRun({ state: new WrappedState() })
   beforeEach(() => run.activate())
+
+  // Clear the instance after the state tests so that we don't reuse the WrappedState
+  after(() => { Run.instance = null })
 
   describe('set', () => {
     it('should call set for each update after sync', async () => {

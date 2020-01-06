@@ -35,7 +35,7 @@ describe('Mockchain', () => {
   // generate a spending transaction so that we have spentTxId
   before(async () => {
     const utxos = await run.blockchain.utxos(run.purse.address)
-    const spentTx = new Transaction().from(utxos).change(run.purse.address).sign(run.purse.privkey)
+    const spentTx = new Transaction().from(utxos).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
     await run.blockchain.broadcast(spentTx)
     sampleTx.vout = [
       {
@@ -51,7 +51,7 @@ describe('Mockchain', () => {
     ]
   })
 
-  runBlockchainTestSuite(run.blockchain, run.purse.privkey, sampleTx,
+  runBlockchainTestSuite(run.blockchain, run.purse.bsvPrivateKey, sampleTx,
     true /* supportsSpentTxIdInBlocks */, true /* supportsSpentTxIdInMempool */,
     0 /* indexingLatency */, errors)
 
@@ -60,7 +60,7 @@ describe('Mockchain', () => {
       const txns = []
       for (let i = 0; i < 25; i++) {
         const utxo = (await run.blockchain.utxos(run.purse.address))[0]
-        const tx = new Transaction().from(utxo).change(run.purse.address).sign(run.purse.privkey)
+        const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
         await run.blockchain.broadcast(tx)
         txns.push(unobfuscate(tx))
       }
@@ -79,11 +79,11 @@ describe('Mockchain', () => {
     it('should respect 25 chain limit', async () => {
       for (let i = 0; i < 25; i++) {
         const utxo = (await run.blockchain.utxos(run.purse.address))[0]
-        const tx = new Transaction().from(utxo).change(run.purse.address).sign(run.purse.privkey)
+        const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
         await run.blockchain.broadcast(tx)
       }
       const utxo = (await run.blockchain.utxos(run.purse.address))[0]
-      const tx = new Transaction().from(utxo).change(run.purse.address).sign(run.purse.privkey)
+      const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith('too-long-mempool-chain')
       run.blockchain.block()
       await run.blockchain.broadcast(tx)
@@ -94,7 +94,7 @@ describe('Mockchain', () => {
     it('should support fast broadcsts', async () => {
       const utxo = (await run.blockchain.utxos(run.purse.address))[0]
       const start = new Date()
-      const tx = new Transaction().from(utxo).change(run.purse.address).sign(run.purse.privkey)
+      const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
       await run.blockchain.broadcast(tx)
       expect(new Date() - start < 200).to.equal(true)
     })
@@ -104,7 +104,7 @@ describe('Mockchain', () => {
       const earlyTxid = utxo.txid
       const measures = []
       for (let i = 0; i < 1000; i++) {
-        const tx = new Transaction().from(utxo).change(run.purse.address).sign(run.purse.privkey)
+        const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
         utxo = { txid: tx.hash, vout: 0, script: tx.outputs[0].script, satoshis: tx.outputs[0].satoshis }
         await run.blockchain.broadcast(tx)
         const before = new Date()

@@ -557,7 +557,7 @@ function parseLogger (logger) {
   // Fill this.logger with all supported methods
   const methods = ['info', 'debug', 'warn', 'error']
   logger = { ...logger }
-  methods.forEach(method => { logger[method] = logger[method] || (() => {}) })
+  methods.forEach(method => logger[method] = logger[method] || (() => {}))
   return logger
 }
 
@@ -632,7 +632,10 @@ function parsePurse (purse, blockchain, logger) {
     case 'object':
       if (!purse || purse instanceof PrivateKey) {
         return new Purse({ privkey: purse, blockchain, logger })
-      } else return purse
+      } else {
+        if (typeof purse.pay !== 'function') throw new Error('Purse requires a pay method')
+        return purse
+      }
     default: throw new Error(`Option 'purse' must be a valid private key or Pay API. Received: ${purse}`)
   }
 }
@@ -6077,8 +6080,6 @@ owner: ${spentJigs[i].owner}`)
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(3)
 
-// TODO: Shift to similar to owner, where address and bsvAddress
-
 /**
  * API to pay for transactions
  */
@@ -6101,8 +6102,10 @@ class Purse {
     if (typeof options.blockchain === 'undefined') throw new Error('purse blockchain option must be defined')
 
     const bsvNetwork = util.bsvNetwork(options.blockchain.network)
-    this.privkey = new bsv.PrivateKey(options.privkey, bsvNetwork)
-    this.address = this.privkey.toAddress()
+    this.bsvPrivateKey = new bsv.PrivateKey(options.privkey, bsvNetwork)
+    this.privkey = this.bsvPrivateKey.toString()
+    this.bsvAddress = this.bsvPrivateKey.toAddress()
+    this.address = this.bsvAddress.toString()
     this.blockchain = options.blockchain
     this.logger = options.logger
 
@@ -6114,7 +6117,7 @@ class Purse {
   }
 
   async pay (tx) {
-    let utxos = await this.blockchain.utxos(this.address.toString())
+    let utxos = await this.blockchain.utxos(this.address)
 
     if (!utxos.length) {
       const suggestion = `Hint: Have you funded the purse address ${this.address}?`
@@ -6129,12 +6132,12 @@ class Purse {
       const balance = utxos.reduce((sum, utxo) => sum + utxo.satoshis, 0)
       const tx = new bsv.Transaction().from(utxos)
       for (let i = 0; i < this.splits - 1; i++) {
-        tx.to(this.address, Math.floor(balance / this.splits))
+        tx.to(this.bsvAddress, Math.floor(balance / this.splits))
       }
-      tx.change(this.address)
-      tx.sign(this.privkey)
+      tx.change(this.bsvAddress)
+      tx.sign(this.bsvPrivateKey)
       await this.blockchain.broadcast(tx)
-      utxos = await this.blockchain.utxos(this.address.toString())
+      utxos = await this.blockchain.utxos(this.address)
     }
 
     // randomly order utxos for the purse
@@ -6167,8 +6170,8 @@ class Purse {
     if (tx._getInputAmount() < satoshisRequired()) throw new Error('not enough funds')
 
     // return change to the purse and sign
-    tx.change(this.address)
-    tx.sign(this.privkey)
+    tx.change(this.bsvAddress)
+    tx.sign(this.bsvPrivateKey)
 
     return tx
   }
@@ -6178,7 +6181,7 @@ class Purse {
   }
 
   async utxos () {
-    const utxos = await this.blockchain.utxos(this.address.toString())
+    const utxos = await this.blockchain.utxos(this.address)
     const txns = await Promise.all(utxos.map(o => this.blockchain.fetch(o.txid)))
     return utxos.filter((o, i) => util.outputType(txns[i], o.vout) === 'other')
   }
