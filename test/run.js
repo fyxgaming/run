@@ -15,6 +15,25 @@ const packageInfo = require('../package.json')
 
 describe('Run', () => {
   describe('constructor', () => {
+    it('should create default logger', () => {
+      expect(!!new Run().logger).to.equal(true)
+    })
+
+    it('should accept custom logger', () => {
+      const logger = { error: e => console.error(e) }
+      expect(new Run({ logger }).logger.error).to.equal(logger.error)
+    })
+
+    it('should accept null logger', () => {
+      new Run({ logger: null })
+    })
+
+    it('should throw for invalid logger', () => {
+      expect(() => new Run({ logger: 1 })).to.throw(`Option 'logger' must be an object. Received: 1`)
+      expect(() => new Run({ logger: false })).to.throw(`Option 'logger' must be an object. Received: false`)
+      expect(() => new Run({ logger: () => {} })).to.throw(`Option 'logger' must be an object. Received: `)
+    })
+
     // TODO: Test sandbox
     // TODO: Test null state
 
