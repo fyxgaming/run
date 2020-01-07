@@ -7120,7 +7120,7 @@ describe('Run', () => {
       })
     })
 
-    describe.only('code', () => {
+    describe('code', () => {
       it('should default to new code', () => {
         expect(new Run().code instanceof Run.Code).to.equal(true)
       })
@@ -7140,23 +7140,6 @@ describe('Run', () => {
         expect(() => new Run({ code: 123 })).to.throw('Option \'code\' must be an instance of Code')
         expect(() => new Run({ code: false })).to.throw('Option \'code\' must be an instance of Code')
       })
-      /*
-    function parseCode (code, sandbox) {
-      switch (typeof code) {
-        case 'object': if (code && code instanceof Code) return code; break
-        case 'undefined':
-          if (Run.instance) {
-            const sameSandbox = Run.instance.code.sandbox.toString() === sandbox.toString()
-            if (sameSandbox) return Run.instance.code
-          }
-          return new Code(sandbox)
-      }
-      throw new Error('Option \'code\' must be an instance of Code')
-    }
-  */
-
-      // Have a test that creates a different code, and then tries to cross use jigs
-      // Then update docs about this?
     })
 
     it('should set global bsv network', () => {
@@ -7270,6 +7253,17 @@ describe('Run', () => {
       expect(await timeLoad('main', mainLocation) > 1000).to.equal(true)
       expect(await timeLoad('main', mainLocation) > 1000).to.equal(false)
     }).timeout(30000)
+
+    it.skip('should fail if reuse jigs across code instances', () => {
+      // TODO: What should this behavior be?
+      class A extends Jig { set (x) { this.x = x } }
+      createRun({ code: new Run.Code() })
+      const a1 = new A()
+      createRun({ code: new Run.Code() })
+      const a2 = new A()
+      expect(a1.constructor).not.to.equal(a2.constructor)
+      expect(() => a2.set(a1)).to.throw('Different code instances')
+    })
   })
 })
 
@@ -7278,7 +7272,7 @@ describe('Run', () => {
 /* 20 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.3.12\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\",\"caller\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\",\"vm-browserify\":\"1.1.2\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
+module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.3.13\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\",\"caller\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\",\"vm-browserify\":\"1.1.2\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
 
 /***/ }),
 /* 21 */
