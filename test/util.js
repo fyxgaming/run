@@ -161,26 +161,33 @@ describe('util', () => {
   })
 
   describe('getNormalizedSourceCode', () => {
+    // Node 8 and Node 12 have slightly different spacing for getNormalizedSourceCode('function () { return 1 }')
+    // We don't need the normalized code to always be exactly the same, as long as it functions the same.
+    function expectNormalizedSourceCode (type, text) {
+      const removeWhitespace = str => str.replace(/\s+/g, '')
+      expect(removeWhitespace(getNormalizedSourceCode(type))).to.equal(removeWhitespace(text))
+    }
+
     it('should get code for basic class', () => {
       class A {}
-      expect(getNormalizedSourceCode(A)).to.equal('class A {}')
+      expectNormalizedSourceCode(A, 'class A {}')
     })
 
     it('should get code for basic function', () => {
       function f () { return 1 }
-      expect(getNormalizedSourceCode(f)).to.equal('function f () { return 1 }')
+      expectNormalizedSourceCode(f, 'function f () { return 1 }')
     })
 
     it('should get code for class that extends another class', () => {
       const SomeLibrary = { B: class B { } }
       class A extends SomeLibrary.B {}
-      expect(getNormalizedSourceCode(A)).to.equal('class A extends B {}')
+      expectNormalizedSourceCode(A, 'class A extends B {}')
     })
 
     it('should get code for single-line class', () => {
       class B { }
       class A extends B { f () {} }
-      expect(getNormalizedSourceCode(A)).to.equal('class A extends B { f () {} }')
+      expectNormalizedSourceCode(A, 'class A extends B { f () {} }')
     })
   })
 
