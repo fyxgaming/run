@@ -813,7 +813,7 @@ function outputType (tx, vout) {
  * the type is a class and it extends another class, we make sure the parent class name in the
  * extends expression is the actual name of the parent class name because a lot of times the code
  * will be "class X extends SomeLibrary.Y" and what is deployed should be "class X extends Y"
- * 
+ *
  * This may still return slightly different results. For example, node 8 and node 12 sometimes
  * have slightly different spacing. Howeve, functionally the code should be the same.
  */
@@ -1287,11 +1287,64 @@ function banNondeterministicGlobals (env) {
   list.forEach(x => { if (typeof env[x] === 'undefined') { env[x] = undefined } })
 }
 
+class VMEvaluator {
+  constructor () {
+    // create common intrinsics shared between realms
+    this.intrinsics = {}
+    // Our console intercepts console.log in sandboxed code and re-logs them outside
+    const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
+    this.intrinsics.console = vm.runInContext(consoleCode, vm.createContext({ c: console }))
+    this.intrinsics.Uint8Array = vm.runInContext('Uint8Array', vm.createContext({}))
+  }
+
+  evaluate (code, env = {}) {
+    if (typeof env.$globals !== 'undefined') throw new Error('$globals must not be defined')
+
+    env = { ...this.intrinsics, ...env, $globals: {} }
+
+    banNondeterministicGlobals(env)
+
+    const context = vm.createContext(env)
+
+    if (typeof window === 'undefined') { context.global = context }
+
+    // When a function is anonymous, it will be named the variable it is assigned. We give it
+    // a friendly anonymous name to distinguish it from named classes and functions.
+    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
+
+    // Execute the code in strict mode.
+    const script = `with ($globals) { const ${anon} = ${code}; ${anon} }`
+    const result = vm.runInContext(script, context)
+
+    return [result, env.$globals]
+  }
+}
+
+// if we're not sandboxing, then set our globals on the real global
+// dangerous, but necessary for testing code coverage
+class GlobalEvaluator {
+  evaluate (code, env = {}) {
+    // When a function is anonymous, it will be named the variable it is assigned. We give it
+    // a friendly anonymous name to distinguish it from named classes and functions.
+    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
+
+    Object.keys(env).forEach(key => {
+      // Use Object.defineProperty() because global.Jig is defined with an accessor
+      const options = { configurable: true, enumerable: true, writable: true }
+      Object.defineProperty(global, key, { value: env[key], ...options })
+    })
+
+    const result = eval(`const ${anon} = ${code}; ${anon}`) // eslint-disable-line
+
+    return [result, global]
+  }
+}
+
 const stringProps = ['origin', 'location', 'originMainnet', 'locationMainnet', 'originTestnet',
   'locationTestnet', 'originStn', 'locationStn', 'originMocknet', 'locationMocknet',
   'owner', 'ownerMainnet', 'ownerTestnet', 'ownerStn', 'ownerMocknet']
 
-module.exports = class Code {
+class Code {
   constructor (sandbox = true) {
     this.installs = new Map() // Type | Location | Sandbox -> Sandbox
     this.sandbox = sandbox
@@ -1301,17 +1354,17 @@ module.exports = class Code {
       window.document.body = document.createElement('body')
     }
 
-    // create common intrinsics shared between realms
-    this.intrinsics = {}
-    // safeConsole intercepts console.log in sandboxed code and re-logs them outside
-    const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
-    this.intrinsics.console = vm.runInContext(consoleCode, vm.createContext({ c: console }))
-    this.intrinsics.Uint8Array = vm.runInContext('Uint8Array', vm.createContext({}))
+    this.vmEvaluator = new VMEvaluator()
+    this.globalEvaluator = new GlobalEvaluator()
+    this.intrinsics = this.vmEvaluator.intrinsics
 
     this.installJig()
   }
 
-  isSandbox (type) { const sandbox = this.installs.get(type); return sandbox && type === sandbox }
+  isSandbox (type) {
+    const sandbox = this.installs.get(type)
+    return sandbox && type === sandbox
+  }
 
   getInstalled (typeOrLocation) {
     if (this.isSandbox(typeOrLocation)) return typeOrLocation
@@ -1618,42 +1671,23 @@ module.exports = class Code {
     // test if we need to sandbox or not
     sandbox = (sandbox instanceof RegExp ? sandbox.test(name) : sandbox)
 
-    // set the global we'll use to lazily inject dependencies
-    if (sandbox) env.deps = {}
+    const evaluator = sandbox ? this.vmEvaluator : this.globalEvaluator
 
-    // implement our special caller property if user hasn't overridden caller
-    const control = this.control
-    Object.defineProperty(sandbox ? env.deps : global, 'caller', {
+    const [result, globals] = evaluator.evaluate(code, env)
+
+    Object.defineProperty(globals, 'caller', {
       configurable: true,
       enumerable: true,
-      get () {
+      get: () => {
         // we must be inside a jig method called by another jig method to be non-null
-        if (control.stack.length < 2) return null
+        if (this.control.stack.length < 2) return null
 
         // return the proxy for the jig that called this jig
-        return control.proxies.get(control.stack[control.stack.length - 2])
+        return this.control.proxies.get(this.control.stack[this.control.stack.length - 2])
       }
     })
 
-    // if we're not sandboxing, then set our globals on the real global
-    // dangerous, but necessary for testing code coverage
-    if (!sandbox) {
-      type = type || eval(`${code};${name}`) // eslint-disable-line
-      Object.keys(env).forEach(key => {
-        // Use Object.defineProperty() because global.Jig is defined with an accessor
-        const options = { configurable: true, enumerable: true, writable: true }
-        Object.defineProperty(global, key, { value: env[key], ...options })
-      })
-
-      return [type, global]
-    }
-
-    // sandbox the original type
-    banNondeterministicGlobals(env)
-    const context = vm.createContext(env)
-    if (typeof window === 'undefined') { context.global = context }
-    const script = `with(deps){${code};${name}}`
-    return [vm.runInContext(script, context), env.deps]
+    return [!sandbox && type ? type : result, globals]
   }
 
   activate (network) {
@@ -1682,6 +1716,8 @@ module.exports = class Code {
     this.installs.set(this.Jig, this.Jig)
   }
 }
+
+module.exports = Code
 
 
 /***/ }),
@@ -2262,7 +2298,7 @@ const util = __webpack_require__(3)
 const Code = __webpack_require__(6)
 
 /**
- * Proto-transaction: A temporary structure `run` uses to build transactions. This structure
+ * Proto-transaction: A temporary structure Run uses to build transactions. This structure
  * has every action and definition that will go into the real transaction, but stored using
  * references to the actual objects instead of location strings. Run turns the proto-transaction
  * into a real transaction by converting all references into location strings. This is necessary
@@ -4042,7 +4078,7 @@ const { ProtoTransaction } = __webpack_require__(8)
 const util = __webpack_require__(3)
 
 /**
- * Proto-transaction: A temporary structure `run` uses to build transactions. This structure
+ * Proto-transaction: A temporary structure Run uses to build transactions. This structure
  * has every action and definition that will go into the real transaction, but stored using
  * actual references to the objects instead of location strings. Run turns the proto-transaction
  * into a real transaction by converting all references into location strings. This is necessary
