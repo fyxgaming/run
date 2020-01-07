@@ -268,7 +268,7 @@ async function deploy (Class) {
     delete Class[origin]
     delete Class[location]
     delete Class[owner]
-    Run.code.flush()
+    run.code.flush()
     run.deploy(Class)
     run.transaction.end()
     await run.sync()
@@ -3387,11 +3387,11 @@ const chai = __webpack_require__(0)
 const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Run, Jig, createRun, hookPay } = __webpack_require__(2)
+const { Jig, createRun, hookPay } = __webpack_require__(2)
 
 describe('Code', () => {
   const run = createRun()
-  beforeEach(() => { run.activate(); Run.code.flush() })
+  beforeEach(() => { run.activate(); run.code.flush() })
   beforeEach(() => run.blockchain.block())
 
   describe('deploy', () => {
@@ -3450,8 +3450,8 @@ describe('Code', () => {
       const child = new Child2()
       child.f()
       expect(child.n).to.equal(2)
-      expect(run.constructor.code.installs.has(Parent)).to.equal(true)
-      expect(run.constructor.code.installs.has(Grandparent)).to.equal(true)
+      expect(run.code.installs.has(Parent)).to.equal(true)
+      expect(run.code.installs.has(Grandparent)).to.equal(true)
       expect(Child2.deps).to.deep.equal({ Parent: await run.load(Parent.origin) })
     })
 
@@ -3722,7 +3722,7 @@ describe('Code', () => {
     it('should load from mockchain when uncached', async () => {
       class A { f () { return 1 } }
       const A2 = await run.load(await run.deploy(A))
-      Run.code.flush()
+      run.code.flush()
       const run2 = createRun({ blockchain: run.blockchain })
       const A3 = await run2.load(A.origin)
       expect(A2.owner).to.equal(run.owner.pubkey)
@@ -3763,13 +3763,13 @@ describe('Code', () => {
       class A { }
       await run.deploy(A)
       // clear the code, but A.location will be set
-      Run.code.flush()
+      run.code.flush()
       // deploy the same code again
       const run2 = createRun({ blockchain: run.blockchain })
       await run2.deploy(A)
       // find the sandbox directly, without using load, because we want to make sure deploy works correctly.
       // and using load, make sure the sandboxes are the same
-      expect(Run.code.installs.get(A)).to.equal(await run2.load(A.location))
+      expect(run2.code.installs.get(A)).to.equal(await run2.load(A.location))
     })
 
     it('should support dependencies in different transactions', async () => {
@@ -3782,7 +3782,7 @@ describe('Code', () => {
       run.deploy(B)
       run.deploy(C)
       await run.sync()
-      Run.code.flush()
+      run.code.flush()
       await run.load(C.location)
     })
   })
@@ -3794,7 +3794,7 @@ describe('Code', () => {
       A.B = B
       B.A = A
       await run.deploy(A)
-      Run.code.flush()
+      run.code.flush()
       const A2 = await run.load(A.location)
       const B2 = await run.load(B.location)
       expect(A2.B).to.equal(B2)
@@ -3852,7 +3852,7 @@ describe('Code', () => {
         expect(T.G).to.equal(G2)
       }
       await checkAllProperties(await run2.load(A.origin))
-      Run.code.flush()
+      run.code.flush()
       await checkAllProperties(await run2.load(A.origin))
     })
 
@@ -3939,11 +3939,6 @@ describe('Code', () => {
       expect(new A2()).not.to.be.instanceOf(A)
       expect(new A2()).to.be.instanceOf(A2)
     })
-
-    it('should throw if deploy without run', async () => {
-      Run.instance = null
-      expect(() => Run.code.deploy(class A { })).to.throw('Run not instantiated')
-    })
   })
 
   describe('activate', () => {
@@ -3967,7 +3962,7 @@ describe('Code', () => {
       expect(A.location.length).to.equal(67)
       expect(A.location).to.equal(A.locationMocknet)
       expect(A.owner).to.equal(A.ownerMocknet)
-      expect(Run.code.installs.size).to.equal( false ? undefined : 6)
+      expect(run.code.installs.size).to.equal( false ? undefined : 6)
     }).timeout(30000)
 
     it('should set correct owner for different networks', async () => {
@@ -3983,7 +3978,7 @@ describe('Code', () => {
         await run.sync()
         const b = new B()
         await b.sync()
-        Run.code.flush()
+        run.code.flush()
         await run.sync()
       }
     }).timeout(30000)
@@ -4193,7 +4188,7 @@ describe('Jig', () => {
   const run = hookStoreAction(createRun())
   beforeEach(() => run.blockchain.block())
   beforeEach(() => run.activate())
-  beforeEach(() => Run.code.flush())
+  beforeEach(() => run.code.flush())
 
   // Turn this on for easier debugging because the tests won't bleed into one another.
   // (We leave this off by default to enable state bleeding and more complexity in the tests)
@@ -4204,7 +4199,7 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(run.constructor.code.installs.has(A)).to.equal(true)
+      expect(run.code.installs.has(A)).to.equal(true)
       await run.sync()
       expect(A.origin.length).to.equal(67)
     })
@@ -4321,7 +4316,7 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       await run.sync()
-      Run.code.flush()
+      run.code.flush()
       const a2 = await run.load(a.location)
       expect(a2 instanceof A).to.equal(true)
     })
@@ -4694,7 +4689,7 @@ describe('Jig', () => {
       expect(b.x).to.equal(run.owner.pubkey)
       expect(a.test).to.equal(true)
       await run.sync()
-      Run.code.flush()
+      run.code.flush()
       await run.sync()
     })
   })
@@ -5016,7 +5011,7 @@ describe('Jig', () => {
         expect(buf[0]).to.equal(1)
         expect(buf[1]).to.equal(2)
         expect(buf[2]).to.equal(3)
-        expect(buf.constructor === Run.code.intrinsics.Uint8Array).to.equal(true)
+        expect(buf.constructor === run.code.intrinsics.Uint8Array).to.equal(true)
       }
       testBuf(a.buf)
       testBuf(a.buf2)
@@ -5474,7 +5469,7 @@ describe('Jig', () => {
       const run = createRun()
       const a = new A(privkey.publicKey.toString())
       await run.sync()
-      Run.code.flush()
+      run.code.flush()
       const run2 = createRun({ blockchain: run.blockchain, owner: privkey })
       await run2.load(a.location)
     })
@@ -6984,20 +6979,20 @@ describe('Run', () => {
 
       it('should throw for invalid custom blockchain', () => {
         const blockchain = { broadcast: async () => {}, fetch: async () => {}, utxos: async () => {}, network: 'main' }
-        expect(() => new Run({ blockchain: {...blockchain, broadcast: null} })).to.throw('Blockchain requires a broadcast method')
-        expect(() => new Run({ blockchain: {...blockchain, fetch: null} })).to.throw('Blockchain requires a fetch method')
-        expect(() => new Run({ blockchain: {...blockchain, utxos: null} })).to.throw('Blockchain requires a utxos method')
-        expect(() => new Run({ blockchain: {...blockchain, network: null} })).to.throw('Blockchain requires a network string')
+        expect(() => new Run({ blockchain: { ...blockchain, broadcast: null } })).to.throw('Blockchain requires a broadcast method')
+        expect(() => new Run({ blockchain: { ...blockchain, fetch: null } })).to.throw('Blockchain requires a fetch method')
+        expect(() => new Run({ blockchain: { ...blockchain, utxos: null } })).to.throw('Blockchain requires a utxos method')
+        expect(() => new Run({ blockchain: { ...blockchain, network: null } })).to.throw('Blockchain requires a network string')
       })
 
       it('should throw for null blockchain', () => {
-        expect(() => new Run({ blockchain: null })).to.throw(`Option 'blockchain' must not be null`)
+        expect(() => new Run({ blockchain: null })).to.throw('Option \'blockchain\' must not be null')
       })
 
       it('should throw for invalid blockchain', () => {
-        expect(() => new Run({ blockchain: 123 })).to.throw(`Option 'blockchain' must be an object or string. Received: 123`)
-        expect(() => new Run({ blockchain: false })).to.throw(`Option 'blockchain' must be an object or string. Received: false`)
-        expect(() => new Run({ blockchain: () => {} })).to.throw(`Option 'blockchain' must be an object or string. Received: `)
+        expect(() => new Run({ blockchain: 123 })).to.throw('Option \'blockchain\' must be an object or string. Received: 123')
+        expect(() => new Run({ blockchain: false })).to.throw('Option \'blockchain\' must be an object or string. Received: false')
+        expect(() => new Run({ blockchain: () => {} })).to.throw('Option \'blockchain\' must be an object or string. Received: ')
       })
 
       it('should support all networks', () => {
@@ -7017,34 +7012,36 @@ describe('Run', () => {
 
     describe('sandbox', () => {
       it('should default to sandbox enabled', () => {
-        expect(new Run({ network: 'mock' }).sandbox).to.equal(true)
-        class A extends Jig { init() { this.version = Run.version } }
+        expect(new Run({ network: 'mock' }).code.sandbox).to.equal(true)
+        class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()
       })
 
       it('should support enabling sandbox', () => {
-        expect(new Run({ sandbox: true }).sandbox).to.equal(true)
+        expect(new Run({ sandbox: true }).code.sandbox).to.equal(true)
       })
 
       it('should support disabling sandbox', () => {
-        expect(new Run({ network: 'mock', sandbox: false }).sandbox).to.equal(false)
-        class A extends Jig { init() { this.version = Run.version } }
+        const run = new Run({ network: 'mock', sandbox: false })
+        expect(run.code.sandbox).to.equal(false)
+        class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).not.to.throw()
       })
 
       it('should support RegExp sandbox', () => {
-        expect(new Run({ network: 'mock', sandbox: /A/ }).sandbox instanceof RegExp).to.equal(true)
-        class A extends Jig { init() { this.version = Run.version } }
-        class B extends Jig { init() { this.version = Run.version } }
+        const run = new Run({ network: 'mock', sandbox: /A/ })
+        expect(run.code.sandbox instanceof RegExp).to.equal(true)
+        class A extends Jig { init () { this.version = Run.version } }
+        class B extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()
         expect(() => new B()).not.to.throw()
       })
 
       it('should throw for bad sandbox', () => {
-        expect(() => new Run({ sandbox: null })).to.throw(`Invalid option 'sandbox'. Received: null`)
-        expect(() => new Run({ sandbox: 0 })).to.throw(`Option 'sandbox' must be a boolean or RegExp. Received: 0`)
-        expect(() => new Run({ sandbox: {} })).to.throw(`Invalid option 'sandbox'. Received:`)
-        expect(() => new Run({ sandbox: () => {} })).to.throw(`Option 'sandbox' must be a boolean or RegExp. Received: `)
+        expect(() => new Run({ sandbox: null })).to.throw('Invalid option \'sandbox\'. Received: null')
+        expect(() => new Run({ sandbox: 0 })).to.throw('Option \'sandbox\' must be a boolean or RegExp. Received: 0')
+        expect(() => new Run({ sandbox: {} })).to.throw('Invalid option \'sandbox\'. Received:')
+        expect(() => new Run({ sandbox: () => {} })).to.throw('Option \'sandbox\' must be a boolean or RegExp. Received: ')
       })
     })
 
@@ -7071,14 +7068,14 @@ describe('Run', () => {
 
       it('should support custom state', () => {
         const state = new Run.StateCache()
-        expect(new Run({ state }).state ).to.deep.equal(state)
+        expect(new Run({ state }).state).to.deep.equal(state)
       })
 
       it('should throw if invalid state', () => {
-        expect(() => new Run({ state: { get: () => {} }})).to.throw('State requires a set method')
-        expect(() => new Run({ state: { set: () => {} }})).to.throw('State requires a get method')
-        expect(() => new Run({ state: null })).to.throw(`Option 'state' must not be null`)
-        expect(() => new Run({ state: false })).to.throw(`Option 'state' must be an object. Received: false`)
+        expect(() => new Run({ state: { get: () => {} } })).to.throw('State requires a set method')
+        expect(() => new Run({ state: { set: () => {} } })).to.throw('State requires a get method')
+        expect(() => new Run({ state: null })).to.throw('Option \'state\' must not be null')
+        expect(() => new Run({ state: false })).to.throw('Option \'state\' must be an object. Received: false')
       })
 
       it('should copy cache from previous state', () => {
@@ -7100,8 +7097,8 @@ describe('Run', () => {
       })
 
       it('should throw for invalid owner', () => {
-        expect(() => new Run({ owner: 123})).to.throw(`Option 'owner' must be a valid key or address. Received: 123`)
-        expect(() => new Run({ owner: false})).to.throw(`Option 'owner' must be a valid key or address. Received: false`)
+        expect(() => new Run({ owner: 123 })).to.throw('Option \'owner\' must be a valid key or address. Received: 123')
+        expect(() => new Run({ owner: false })).to.throw('Option \'owner\' must be a valid key or address. Received: false')
       })
     })
 
@@ -7117,10 +7114,49 @@ describe('Run', () => {
       })
 
       it('should throw for invalid purse', () => {
-        expect(() => new Run({ purse: {}})).to.throw(`Purse requires a pay method`)
-        expect(() => new Run({ purse: 123})).to.throw(`Option 'purse' must be a valid private key or Pay API. Received: 123`)
-        expect(() => new Run({ purse: true})).to.throw(`Option 'purse' must be a valid private key or Pay API. Received: true`)
+        expect(() => new Run({ purse: {} })).to.throw('Purse requires a pay method')
+        expect(() => new Run({ purse: 123 })).to.throw('Option \'purse\' must be a valid private key or Pay API. Received: 123')
+        expect(() => new Run({ purse: true })).to.throw('Option \'purse\' must be a valid private key or Pay API. Received: true')
       })
+    })
+
+    describe.only('code', () => {
+      it('should default to new code', () => {
+        expect(new Run().code instanceof Run.Code).to.equal(true)
+      })
+
+      it('should support creating with new code', () => {
+        expect(() => new Run({ code: new Run.Code() })).not.to.throw()
+      })
+
+      it('should reuse code if possible', () => {
+        expect(new Map(new Run().code.installs)).to.deep.equal(new Map(new Run().code.installs))
+        expect(new Map(new Run({ sandbox: false }).code.installs))
+          .not.to.deep.equal(new Map(new Run({ sandbox: true }).code.installs))
+      })
+
+      it('should throw for invalid code', () => {
+        expect(() => new Run({ code: null })).to.throw('Option \'code\' must be an instance of Code')
+        expect(() => new Run({ code: 123 })).to.throw('Option \'code\' must be an instance of Code')
+        expect(() => new Run({ code: false })).to.throw('Option \'code\' must be an instance of Code')
+      })
+      /*
+    function parseCode (code, sandbox) {
+      switch (typeof code) {
+        case 'object': if (code && code instanceof Code) return code; break
+        case 'undefined':
+          if (Run.instance) {
+            const sameSandbox = Run.instance.code.sandbox.toString() === sandbox.toString()
+            if (sameSandbox) return Run.instance.code
+          }
+          return new Code(sandbox)
+      }
+      throw new Error('Option \'code\' must be an instance of Code')
+    }
+  */
+
+      // Have a test that creates a different code, and then tries to cross use jigs
+      // Then update docs about this?
     })
 
     it('should set global bsv network', () => {
@@ -7210,7 +7246,7 @@ describe('Run', () => {
       class D extends C { }
       const d = new D()
       await run.sync()
-      Run.code.flush()
+      run.code.flush()
       run.state.clear()
       const p1 = run.load(d.location)
       const p2 = run.load(d.location)
@@ -7508,7 +7544,6 @@ describe('Token', () => {
       await run.deploy(TestToken)
       createRun({ blockchain: run.blockchain })
       expect(() => new TestToken(100)).to.throw('Only TestToken\'s owner may mint')
-      run.activate()
     })
 
     it('should throw if class is not extended', () => {
@@ -7610,7 +7645,7 @@ describe('Token', () => {
       const b = new TestToken(70)
       const c = TestToken.combine(a, b)
       await run.sync()
-      Run.code.flush()
+      run.code.flush()
       const run2 = createRun({ blockchain: run.blockchain })
       const c2 = await run2.load(c.location)
       expect(c2.amount).to.equal(c.amount)
@@ -7854,7 +7889,7 @@ describe('Transaction', () => {
     })
 
     it('should support exporting then importing transaction', async () => {
-      const run = new Run({ network: 'mock' })
+      const run = createRun({ network: 'mock' })
       class Dragon extends Jig {}
       run.transaction.begin()
       new Dragon() // eslint-disable-line
@@ -8281,7 +8316,7 @@ describe('Transaction', () => {
     })
 
     it('should support setting static class property jig', async () => {
-      const run = new Run({ network: 'mock' })
+      const run = createRun({ network: 'mock' })
       class Store extends Jig {
         set (value) { this.value = value }
       }
@@ -8293,9 +8328,9 @@ describe('Transaction', () => {
       await run.sync()
 
       // Clear caches and load
-      Run.code.flush()
+      run.code.flush()
       const cache = new Run.StateCache()
-      const run2 = new Run({ network: 'mock', blockchain: run.blockchain, cache })
+      const run2 = createRun({ network: 'mock', blockchain: run.blockchain, cache })
       await run2.load(action.location)
     })
 
@@ -8855,7 +8890,7 @@ const {
   SerialTaskQueue
 } = Run._util
 
-createRun()
+const run = createRun()
 
 describe('util', () => {
   describe('checkSatoshis', () => {
@@ -9209,7 +9244,7 @@ describe('util', () => {
     })
 
     it('should convert uint8array', () => {
-      const Uint8Array = Run.code.intrinsics.Uint8Array
+      const Uint8Array = run.code.intrinsics.Uint8Array
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: '' })).to.deep.equal(new Uint8Array(0))
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: 'AA==' })).to.deep.equal(new Uint8Array(1))
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: 'AQID' })).to.deep.equal(new Uint8Array([1, 2, 3]))

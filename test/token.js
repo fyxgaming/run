@@ -32,7 +32,6 @@ describe('Token', () => {
       await run.deploy(TestToken)
       createRun({ blockchain: run.blockchain })
       expect(() => new TestToken(100)).to.throw('Only TestToken\'s owner may mint')
-      run.activate()
     })
 
     it('should throw if class is not extended', () => {
@@ -134,7 +133,7 @@ describe('Token', () => {
       const b = new TestToken(70)
       const c = TestToken.combine(a, b)
       await run.sync()
-      Run.code.flush()
+      run.code.flush()
       const run2 = createRun({ blockchain: run.blockchain })
       const c2 = await run2.load(c.location)
       expect(c2.amount).to.equal(c.amount)

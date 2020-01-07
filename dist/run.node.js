@@ -92,7 +92,7 @@ module.exports =
 "use strict";
 
 
-var bind = __webpack_require__(8);
+var bind = __webpack_require__(9);
 var isBuffer = __webpack_require__(30);
 
 /*global toString:true*/
@@ -439,7 +439,7 @@ module.exports = {
 const bsv = __webpack_require__(2)
 const Code = __webpack_require__(6)
 const Syncer = __webpack_require__(24)
-const { Transaction } = __webpack_require__(7)
+const { Transaction } = __webpack_require__(8)
 const util = __webpack_require__(3)
 const { Purse } = __webpack_require__(25)
 const Owner = __webpack_require__(26)
@@ -473,11 +473,11 @@ class Run {
     this.logger = parseLogger(options.logger)
     this.blockchain = parseBlockchain(options.blockchain, options.network, this.logger)
     setupBsvLibrary(this.blockchain.network)
-    this.sandbox = parseSandbox(options.sandbox)
     this.app = parseApp(options.app)
     this.state = parseState(options.state)
     this.owner = parseOwner(options.owner, this.blockchain.network, this.logger, this)
     this.purse = parsePurse(options.purse, this.blockchain, this.logger)
+    this.code = parseCode(options.code, parseSandbox(options.sandbox))
     this.syncer = new Syncer(this)
     this.transaction = new Transaction(this)
     this.loadQueue = new util.SerialTaskQueue()
@@ -512,7 +512,7 @@ class Run {
    */
   async deploy (type) {
     this._checkActive()
-    Run.code.deploy(type)
+    this.code.deploy(type)
     await this.sync()
     return type.location
   }
@@ -530,7 +530,7 @@ class Run {
   activate () {
     Run.instance = this
     bsv.Networks.defaultNetwork = util.bsvNetwork(this.blockchain.network)
-    Run.code.activate(this.blockchain.network)
+    this.code.activate(this.blockchain.network)
     return this
   }
 
@@ -557,7 +557,7 @@ function parseLogger (logger) {
   // Fill this.logger with all supported methods
   const methods = ['info', 'debug', 'warn', 'error']
   logger = { ...logger }
-  methods.forEach(method => logger[method] = logger[method] || (() => {}))
+  methods.forEach(method => { logger[method] = logger[method] || (() => {}) })
   return logger
 }
 
@@ -580,17 +580,6 @@ function parseBlockchain (blockchain, network, logger) {
       }
     }
     default: throw new Error(`Option 'blockchain' must be an object or string. Received: ${blockchain}`)
-  }
-}
-
-function parseSandbox (sandbox) {
-  switch (typeof sandbox) {
-    case 'boolean': return sandbox
-    case 'object':
-      if (sandbox && sandbox instanceof RegExp) return sandbox
-      throw new Error(`Invalid option 'sandbox'. Received: ${sandbox}`)
-    case 'undefined': return true
-    default: throw new Error(`Option 'sandbox' must be a boolean or RegExp. Received: ${sandbox}`)
   }
 }
 
@@ -640,6 +629,32 @@ function parsePurse (purse, blockchain, logger) {
   }
 }
 
+function parseSandbox (sandbox) {
+  switch (typeof sandbox) {
+    case 'boolean': return sandbox
+    case 'object':
+      if (sandbox && sandbox instanceof RegExp) return sandbox
+      throw new Error(`Invalid option 'sandbox'. Received: ${sandbox}`)
+    case 'undefined': return true
+    default: throw new Error(`Option 'sandbox' must be a boolean or RegExp. Received: ${sandbox}`)
+  }
+}
+
+function parseCode (code, sandbox) {
+  switch (typeof code) {
+    case 'object':
+      if (code && code instanceof Code) return code
+      break
+    case 'undefined':
+      if (Run.instance) {
+        const sameSandbox = Run.instance.code.sandbox.toString() === sandbox.toString()
+        if (sameSandbox) return Run.instance.code
+      }
+      return new Code(sandbox)
+  }
+  throw new Error('Option \'code\' must be an instance of Code')
+}
+
 // ------------------------------------------------------------------------------------------------
 // Helper methods
 // ------------------------------------------------------------------------------------------------
@@ -666,24 +681,16 @@ function setupBsvLibrary (network) {
 Run.version =  false ? undefined : "0.3.12"
 Run.protocol = util.PROTOCOL_VERSION
 Run._util = util
+
 Run.BlockchainServer = BlockchainServer
+Run.Code = Code
 Run.Mockchain = Mockchain
 Run.StateCache = StateCache
 
-// Lazily install the code, Jig and Token
-// Besides performance gain, this allows Run to be loaded in <HEAD> tags
-let code = null
-Object.defineProperty(Run, 'code', {
-  get () {
-    if (!code) code = new Code()
-    return code
-  }
-})
-
 const options = { configurable: true, enumerable: true }
-Object.defineProperty(Run, 'Jig', { ...options, get () { return Run.code.Jig } })
+Object.defineProperty(Run, 'Jig', { ...options, get () { return __webpack_require__(7) } })
 Object.defineProperty(Run, 'Token', { ...options, get () { return __webpack_require__(60) } })
-Object.defineProperty(Run, 'expect', { ...options, get () { return __webpack_require__(20) } })
+Object.defineProperty(Run, 'expect', { ...options, get () { return __webpack_require__(21) } })
 Object.defineProperty(global, 'Jig', { ...options, get () { return Run.Jig } })
 Object.defineProperty(global, 'Token', { ...options, get () { return Run.Token } })
 
@@ -927,7 +934,7 @@ function richObjectToJson (target, customReplacers = [], parent = null, name = n
   }
 
   // Replace Uint8Array
-  const CommonUint8Array = __webpack_require__(1).code.intrinsics.Uint8Array
+  const CommonUint8Array = activeRunInstance().code.intrinsics.Uint8Array
   if (target.constructor === CommonUint8Array || target.constructor === Uint8Array) {
     return { $class: 'Uint8Array', base64Data: Buffer.from(target).toString('base64') }
   }
@@ -967,7 +974,7 @@ function jsonToRichObject (target, customReplacers = [], parent = null, name = n
 
   // Replace Uint8Array
   if (target.$class === 'Uint8Array') {
-    const Uint8Array = __webpack_require__(1).code.intrinsics.Uint8Array
+    const Uint8Array = activeRunInstance().code.intrinsics.Uint8Array
     return new Uint8Array(Buffer.from(target.base64Data, 'base64'))
   }
 
@@ -1239,7 +1246,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 "use strict";
 
 
-var enhanceError = __webpack_require__(12);
+var enhanceError = __webpack_require__(13);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -1267,8 +1274,8 @@ module.exports = function createError(message, config, code, request, response) 
  * Code manager, sandboxer, installer, and deployer
  */
 
-const vm = typeof window === 'undefined' ? __webpack_require__(21) : __webpack_require__(22)
-const Jig = __webpack_require__(23)
+const vm = typeof window === 'undefined' ? __webpack_require__(22) : __webpack_require__(23)
+const Jig = __webpack_require__(7)
 const util = __webpack_require__(3)
 const bsv = __webpack_require__(2)
 
@@ -1282,8 +1289,9 @@ const stringProps = ['origin', 'location', 'originMainnet', 'locationMainnet', '
   'owner', 'ownerMainnet', 'ownerTestnet', 'ownerStn', 'ownerMocknet']
 
 module.exports = class Code {
-  constructor () {
+  constructor (sandbox = true) {
     this.installs = new Map() // Type | Location | Sandbox -> Sandbox
+    this.sandbox = sandbox
 
     // vm-browserify requires a body for sandboxing. if it doesn't exist, create one.
     if (typeof window !== 'undefined' && !window.document.body) {
@@ -1324,7 +1332,7 @@ module.exports = class Code {
 
   deploy (type) {
     // short-circut deployment at Jig because this class already deployed it
-    if (type === this.Jig) return type
+    if (type === this.Jig || type === Jig) return this.Jig
 
     // check that this code can be deployed
     if (!util.deployable(type)) throw new Error(`${type} is not deployable`)
@@ -1368,7 +1376,7 @@ module.exports = class Code {
             throw new Error(`unexpected parent dependency ${parentClass.name}`)
           }
         }
-        if (!(parentClass.name in realdeps) && parentClass !== this.installs.get(Jig)) {
+        if (!(parentClass.name in realdeps) && parentClass !== this.installs.get(Jig) && parentClass !== Jig) {
           realdeps[parentClass.name] = parentClass
         }
       }
@@ -1378,8 +1386,8 @@ module.exports = class Code {
       if (pre2 && Object.keys(pre2).includes(`origin${net}`) &&
         Object.keys(pre2).includes(`location${net}`)) return pre2
 
-      const [sandbox, sandboxGlobal] = this.sandbox(type, util.getNormalizedSourceCode(type),
-        type.name, env, run.sandbox)
+      const [sandbox, sandboxGlobal] = this.evaluate(type, util.getNormalizedSourceCode(type),
+        type.name, env, this.sandbox)
       this.installs.set(type, sandbox)
       this.installs.set(sandbox, sandbox)
 
@@ -1502,7 +1510,7 @@ module.exports = class Code {
       }
 
       const name = def.text.match(/^(class|function) (\w+)[( ]/)[2]
-      const [sandbox, sandboxGlobal] = this.sandbox(null, def.text, name, env, run.sandbox)
+      const [sandbox, sandboxGlobal] = this.evaluate(null, def.text, name, env, this.sandbox)
       sandbox.origin = sandbox.location = location
       sandbox.owner = def.owner
       const net = util.networkSuffix(run.blockchain.network)
@@ -1589,13 +1597,17 @@ module.exports = class Code {
       proxies: new Map(), // map connecting targets to proxies (Target->Proxy)
       locals: new WeakMap() // local secret state for each jig (Target->Object)
     }
-    const env = { ...this.intrinsics, control: this.control, code: this, util }
-    this.Jig = this.sandbox(Jig, Jig.toString(), 'Jig', env, "default" !== 'cover')[0]
+    const env = { ...this.intrinsics, control: this.control, util }
+    this.Jig = this.evaluate(Jig, Jig.toString(), 'Jig', env, this.shouldSandbox('Jig'))[0]
     this.installs.set(Jig, this.Jig)
     this.installs.set(this.Jig, this.Jig)
   }
 
-  sandbox (type, code, name, env, sandbox) {
+  shouldSandbox (name) {
+    return this.sandbox instanceof RegExp ? this.sandbox.test(name) : this.sandbox
+  }
+
+  evaluate (type, code, name, env, sandbox) {
     // if we've already installed this type, then return it
     const prev = this.installs.get(type)
     if (prev) return [prev, null]
@@ -1629,6 +1641,7 @@ module.exports = class Code {
         const options = { configurable: true, enumerable: true, writable: true }
         Object.defineProperty(global, key, { value: env[key], ...options })
       })
+
       return [type, global]
     }
 
@@ -1670,6 +1683,569 @@ module.exports = class Code {
 
 /***/ }),
 /* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * jig.js
+ *
+ * Jig class users extend from to create digital property
+ */
+
+/* global control */
+
+const util = __webpack_require__(3)
+
+module.exports = class Jig {
+  constructor (...args) {
+    const run = util.activeRunInstance()
+
+    if (!run.code.isSandbox(this.constructor)) {
+      run.transaction.begin()
+      try {
+        const T = run.code.deploy(this.constructor)
+        return new T(...args)
+      } finally { run.transaction.end() }
+    }
+
+    const childClasses = []
+    let type = this.constructor
+    while (type !== Jig) {
+      childClasses.push(type)
+      type = Object.getPrototypeOf(type)
+    }
+
+    if (childClasses.length === 0) { throw new Error('Jig must be extended') }
+
+    const constructorRegex = /\s+constructor\s*\(/
+    if (childClasses.some(type => constructorRegex.test(type.toString()))) {
+      throw new Error('Jig must use init() instead of constructor()')
+    }
+
+    const unoverridable = ['origin', 'location', 'owner', 'satoshis', 'sync']
+    childClasses.forEach(type => {
+      unoverridable.forEach(prop => {
+        if (Object.prototype.hasOwnProperty.call(childClasses[0].prototype, prop)) {
+          throw new Error(`must not override ${prop}`)
+        }
+      })
+    })
+
+    const methods = []
+    const classChain = [...childClasses, Jig]
+    classChain.forEach(type => {
+      Object.getOwnPropertyNames(type.prototype).forEach(prop => methods.push(prop))
+    })
+    const permanents = [...methods, 'owner', 'satoshis', 'origin', 'location']
+
+    function resetControl () {
+      control.stack = []
+      control.creates = new Set()
+      control.reads = new Set()
+      control.saves = new Map()
+      control.callers = new Map()
+      control.proxies = new Map()
+      control.enforce = true
+      control.error = null
+    }
+
+    const checkValid = () => {
+      if (control.enforce && this.origin && this.origin[0] === '!') {
+        throw new Error(`${this.origin.slice(1)}`)
+      }
+    }
+
+    const original = this
+    const handler = { parent: null, name: null }
+    const proxy = new Proxy(this, handler)
+
+    // Helper methods to determine where the proxy is being called from
+    const topOfStack = () => control.stack[control.stack.length - 1]
+    const fromWithin = () => control.stack.length && topOfStack() === original
+    const fromInstanceOfSameJigClass = () => control.stack.length && topOfStack().constructor === proxy.constructor
+    const fromInstanceOfDifferentJigClass = () => control.stack.length && topOfStack().constructor !== proxy.constructor
+
+    // internal variable that tracks whether init is called. if we are injecting a state, then init was called.
+    let calledInit = !!control.stateToInject
+
+    handler.getPrototypeOf = function (target) {
+      checkValid()
+
+      if (control.stack.length) control.proxies.set(original, proxy)
+
+      return Object.getPrototypeOf(target)
+    }
+
+    handler.setPrototypeOf = function (target, prototype) {
+      throw new Error('setPrototypeOf disallowed')
+    }
+
+    handler.isExtensible = function (target) {
+      return true
+    }
+
+    handler.preventExtensions = function (target) {
+      throw new Error('preventExtensions disallowed')
+    }
+
+    handler.getOwnPropertyDescriptor = function (target, prop) {
+      checkValid()
+
+      if (control.stack.length) control.proxies.set(original, proxy)
+
+      if (!this.has(target, prop)) return undefined
+
+      const descriptor = Object.getOwnPropertyDescriptor(target, prop)
+      if (!descriptor) return undefined
+      return { ...descriptor, value: this.get(target, prop) }
+    }
+
+    handler.defineProperty = function (target, prop, descriptor) {
+      throw new Error('defineProperty disallowed')
+    }
+
+    handler.has = function (target, prop) {
+      checkValid()
+
+      if (control.stack.length) control.proxies.set(original, proxy)
+
+      if (control.enforce && prop[0] === '_' && fromInstanceOfDifferentJigClass()) {
+        throw new Error(`cannot check ${prop} because it is private`)
+      }
+
+      const didRead = control.stack.length && (!(target instanceof Jig) || !permanents.includes(prop))
+
+      if (didRead) control.reads.add(original)
+
+      return prop in target
+    }
+
+    handler.get = function (target, prop, receiver) {
+      checkValid()
+
+      if (control.stack.length) control.proxies.set(original, proxy)
+
+      if (prop === '$object') return proxy
+
+      const targetIsAJig = target instanceof Jig
+
+      const syncRequired = ['origin', 'location']
+
+      if (control.enforce && targetIsAJig && syncRequired.includes(prop) && target[prop][0] === '_') {
+        throw new Error(`sync required before reading ${prop}`)
+      }
+
+      // These don't change, so they don't require a read
+      const noRead = ['origin', 'constructor']
+      if (targetIsAJig && noRead.includes(prop)) return target[prop]
+      const isJigMethod = targetIsAJig && typeof target[prop] === 'function'
+      if (control.stack.length && !isJigMethod) control.reads.add(original)
+
+      if (prop[0] === '_' && fromInstanceOfDifferentJigClass()) {
+        throw new Error(`cannot get ${prop} because it is private`)
+      }
+
+      // return basic types directly
+      const basicTypes = ['undefined', 'boolean', 'number', 'string', 'symbol']
+      if (basicTypes.includes(typeof target[prop])) return target[prop]
+
+      // If getting an iterator, return the iterator function bound to the original target
+      // instead of the proxy, because `new Uint8Array(new Proxy(new Uint8Array([1, 2]), {}))`
+      // would otherwise throw an error that "this is not a typed array". For a reference, see:
+      // https://stackoverflow.com/questions/45700439/new-proxynew-map-values
+      if (prop === Symbol.iterator) return target[prop].bind(target)
+
+      // return object types wrapped
+      if (typeof target[prop] === 'object') {
+        if (target[prop] === null) return null
+        if (target[prop] instanceof Jig) return target[prop]
+        if (!control.enforce) return target[prop]
+
+        // wrap existing objects for protection
+        return new Proxy(target[prop], { ...this, parent: target, name: prop })
+      }
+
+      // If we are returning any constructor, then we don't need to wrap it. Only
+      // Jig methods need to be wrapped. Constructors will get wrapped automatically
+      // in the Jig constructor.
+      if (prop === 'constructor') {
+        return target[prop]
+      }
+
+      if (typeof target[prop] === 'function') {
+        // we must check if method includes prop because the Safari browser thinks class
+        // methods are deployable. other browser do not
+        if (util.deployable(target[prop]) && (!targetIsAJig || !methods.includes(prop))) return target[prop]
+
+        // the property is a method on the object. wrap it up so that we can intercept its execution
+        // to publish an action on the blockchain.
+        return new Proxy(target[prop], { ...this, parent: target, name: prop })
+      }
+    }
+
+    handler.set = function (target, prop, value, receiver) {
+      checkValid()
+
+      if (control.stack.length) control.proxies.set(original, proxy)
+
+      if (control.enforce) {
+        if (!fromWithin()) {
+          throw new Error(`must not set ${prop} outside of a method`)
+        }
+
+        if (target instanceof Jig) {
+          const notSettable = ['origin', 'location', ...methods]
+
+          if (notSettable.includes(prop)) {
+            throw new Error(`must not set ${prop}`)
+          }
+        } else {
+          // Must not overwrite methods on internal objects
+          if (typeof target[prop] === 'function') {
+            throw new Error(`must not overwrite internal method ${prop}`)
+          }
+
+          // Must not set properties on internal property functions
+          if (typeof target === 'function') {
+            throw new Error(`must not set ${prop} on method ${target.name}`)
+          }
+        }
+      }
+
+      // Whether value is serializable is checked after the method is complete
+      target[prop] = value
+
+      return true
+    }
+
+    handler.deleteProperty = function (target, prop) {
+      checkValid()
+
+      if (control.stack.length) control.proxies.set(original, proxy)
+
+      if (control.enforce) {
+        if (!fromWithin()) {
+          throw new Error(`must not delete ${prop} outside of a method`)
+        }
+
+        if (target instanceof Jig) {
+          const notDeletable = ['origin', 'location', ...methods]
+
+          if (notDeletable.includes(prop)) {
+            throw new Error(`must not delete ${prop}`)
+          }
+        } else {
+          if (typeof target[prop] === 'function') {
+            throw new Error(`must not delete internal method ${prop}`)
+          }
+        }
+      }
+
+      delete target[prop]
+
+      return true
+    }
+
+    handler.ownKeys = function (target) {
+      checkValid()
+
+      if (control.stack.length) control.proxies.set(original, proxy)
+
+      if (control.stack.length) control.reads.add(original)
+
+      if (fromInstanceOfDifferentJigClass()) {
+        return Reflect.ownKeys(target).filter(key => key[0] !== '_')
+      } else {
+        return Reflect.ownKeys(target)
+      }
+    }
+
+    handler.apply = function (target, thisArg, args) {
+      const parentIsAJig = this.parent instanceof Jig
+
+      if (parentIsAJig && this.name[0] === '_' && !fromInstanceOfSameJigClass()) {
+        throw new Error(`cannot call ${this.name} because it is private`)
+      }
+
+      if (parentIsAJig && this.name === 'sync') {
+        if (control.stack.length) throw new Error('sync may only be called externally')
+        return target.call(proxy, ...args)
+      }
+
+      const run = util.activeRunInstance()
+      run.transaction.begin()
+
+      // If we are calling an internal method on the jig from outside of the jig, then
+      // this method is not allowed to change any state. However, we may be deep in a
+      // call stack from other jigs, so we cannot use the control.saves to determine if
+      // a change has occurred. We need a new call stack. Therefore, we'll save the current
+      // stack and control state before calling and reinstate it after.
+      let outerControl = null
+      if (!parentIsAJig && !fromWithin()) {
+        outerControl = { ...control }
+        resetControl()
+      }
+
+      // record all jigs that called this jig in order to be able to spend
+      // them if this method changes state. all jigs involved in the production
+      // of a change of state must be spent.
+      const callers = control.callers.get(original) || new Set()
+      control.stack.forEach(target => callers.add(target))
+      control.callers.set(original, callers)
+
+      // add ourselves to the stack because we're about to invoke a method
+      control.stack.push(original)
+
+      control.proxies.set(original, proxy)
+
+      try {
+        if (parentIsAJig && this.name === 'init') {
+          if (calledInit) throw new Error('init cannot be called twice')
+          calledInit = true
+          control.creates.add(original)
+        }
+
+        const reads = new Set(control.reads)
+        control.enforce = false
+
+        const savedArgRefs = []
+        const deployCode = target => { if (util.deployable(target)) run.code.deploy(target) }
+        const packers = [deployCode, util.extractJigsAndCodeToArray(savedArgRefs)]
+        // Internal methods do not need their args saved
+        const savedArgs = parentIsAJig ? util.richObjectToJson(args, packers) : null
+
+        if (!control.saves.has(original)) {
+          const save = { refs: [] }
+          const packers = [deployCode, util.extractJigsAndCodeToArray(save.refs)]
+          save.json = util.richObjectToJson({ ...original }, packers)
+          control.saves.set(original, save)
+        }
+        control.enforce = true
+        control.reads = reads
+
+        // make a copy of the args, which ensures that if the args are changed in the method,
+        // we still record to the blockchain what was passed in at the time it was called.
+        const callArgs = parentIsAJig ? util.jsonToRichObject(savedArgs,
+          [util.injectJigsAndCodeFromArray(savedArgRefs)]) : args
+
+        // Call the method
+        //
+        // The call target is the object we call the method on. When our target is a jig,
+        // we use the proxy because the method might try to change properties like origin
+        // which we want to prevent. If we passed target, we could not intercept these.
+        //
+        // When our target is an internal non-Jig object, we use the object itself without a
+        // proxy because these are native JavaScript objects and require that to work. This
+        // is safe because any attempts to change a Jig property like the origin or location
+        // must go through a Jig itself, which would be wrapped with a proxy.
+        const ret = target.call(parentIsAJig ? proxy : this.parent, ...callArgs)
+
+        if (parentIsAJig && this.name === 'init' && typeof ret !== 'undefined') {
+          throw new Error('init must not return')
+        }
+
+        if (parentIsAJig) {
+          util.checkOwner(original.owner)
+          util.checkSatoshis(original.satoshis)
+        }
+
+        // if there was an error in the call or a child call, and the exception
+        // was swallowed, rethrow the error anyway.
+        if (control.error) throw new Error(`internal errors must not be swallowed\n\n${control.error}`)
+
+        control.stack.pop()
+
+        // if we are at the bottom of the stack, we have to decide whether to create an
+        // action. To do this, we will compare jig states before and after and see if
+        // any jigs changed, and if so, figure out the inputs and outputs.
+        if (!control.stack.length) {
+          // disable enforcement as we are about to read locations on possible inner proxies
+          const reads = new Set(control.reads)
+          control.enforce = false
+
+          // detect references to properties of other jigs or code, and throw
+          const preventPropertiesOfOtherObjects = (target, parent, name) => {
+            if (typeof target.$object !== 'undefined' && target.$object !== proxy) {
+              const suggestion = `Hint: Consider saving a clone of ${name}'s value instead.`
+              throw new Error(`property ${name} is owned by a different jig\n\n${suggestion}`)
+            }
+          }
+
+          // calculate stateAfter. We already have stateBefore in control.saves
+          const stateAfter = new Map()
+
+          const objectsToSave = new Set(control.reads)
+          Array.from(control.saves.keys()).forEach(target => objectsToSave.add(target))
+
+          objectsToSave.forEach(target => { // TODO: Remove when remove weak reads
+            const refs = []
+            const replacers = [util.extractJigsAndCodeToArray(refs), preventPropertiesOfOtherObjects]
+            const json = util.richObjectToJson({ ...target }, replacers)
+            stateAfter.set(target, { json, refs })
+          })
+
+          // calculate the changed array
+          const changed = []
+          for (const [target, stateBefore] of control.saves) {
+            const after = stateAfter.get(target)
+            const refChanged = (ref, n) => ref !== after.refs[n]
+            if (JSON.stringify(stateBefore.json) !== JSON.stringify(after.json) ||
+                    stateBefore.refs.some(refChanged)) {
+              changed.push(target)
+            }
+          }
+
+          // re-enable enforcement and set back the old reads
+          control.enforce = true
+          control.reads = reads
+
+          // if anything was created or changed, then we have an action
+          if (control.creates.size || changed.length) {
+            if (!parentIsAJig) {
+              throw new Error(`internal method ${this.name} may not be called to change state`)
+            }
+
+            const inputs = new Set()
+            const outputs = new Set()
+            const reads = new Set(control.reads)
+
+            // helper function to add a jig to the inputs and outputs
+            const spend = target => {
+              outputs.add(target)
+              if (!control.creates.has(target)) inputs.add(target)
+            }
+
+            // for every jig changed, add all jigs involved in the production of
+            // its changes (its callers set) as outputs, and add them as inputs
+            // if they were not newly created.
+            changed.forEach(target => {
+              control.callers.get(target).forEach(caller => spend(caller))
+              spend(target)
+            })
+
+            // every jig created gets a new output, and the same applies to its callers
+            control.creates.forEach(target => {
+              control.callers.get(target).forEach(caller => spend(caller))
+              spend(target)
+            })
+
+            // record the action in the proto-transaction
+            run.transaction.storeAction(original, this.name, args, inputs, outputs,
+              reads, control.saves, stateAfter, control.proxies)
+          }
+
+          // If we are within an internal method, then add any changes of state back
+          // to the main control. Otherwise reset control.
+          if (outerControl) {
+            control.creates.forEach(target => outerControl.creates.add(target))
+            control.reads.forEach(target => outerControl.reads.add(target))
+            control.saves.forEach((save, target) => {
+              if (!control.saves.has(target)) outerControl.saves.set(target, save)
+            })
+            control.proxies.forEach((proxy, target) => {
+              if (!control.proxies.has(target)) outerControl.proxies.set(target, proxy)
+            })
+            control.callers.forEach((callers, target) => {
+              if (!control.callers.has(target)) {
+                outerControl.callers.set(target, callers)
+              } else {
+                callers.forEach(caller => outerControl.get(target).add(caller))
+              }
+            })
+            Object.assign(control, outerControl)
+          } else {
+            resetControl()
+          }
+        }
+
+        run.transaction.end()
+
+        // return the return value of the method to the user
+        return ret
+      } catch (e) {
+        // mark that there was an error so that if a parent jig attempts to
+        // wrap it, we will still be able to throw an exception at the end.
+        // only record the first...
+        if (!control.error) control.error = e
+
+        if (outerControl) Object.assign(control, outerControl)
+
+        control.stack.pop()
+
+        // if we are at the bottom of the stack, and there was an error, then
+        // reset all jigs involved back to their original state before throwing
+        // the error to the user.
+        if (!control.stack.length) {
+          control.saves.forEach((save, target) => {
+            Object.keys(target).forEach(key => delete target[key])
+            Object.assign(target, util.jsonToRichObject(save.json,
+              [util.injectJigsAndCodeFromArray(save.refs)]))
+          })
+
+          resetControl()
+        }
+
+        run.transaction.end()
+
+        const message = e.toString()
+        if (message === 'TypeError: Date is not a constructor') {
+          const hint = 'Hint: Date is disabled inside jigs because it is non-deterministic.'
+          const hint2 = 'Consider passing in the Date as a number instead.'
+          throw new Error(`${message}\n\n${hint}\n${hint2}`)
+        } else throw e
+      }
+    }
+
+    // if we are injecting a state directly from a cache, do that and just return
+    if (control.stateToInject) {
+      Object.assign(this, control.stateToInject)
+      return proxy
+    }
+
+    this.owner = control.stack.length ? control.stack[control.stack.length - 1].owner : run.transaction.owner
+    this.satoshis = 0
+    // origin and location will be set inside of storeAction
+    this.origin = '_'
+    this.location = '_'
+
+    proxy.init(...args)
+
+    return proxy
+  }
+
+  init () { }
+
+  toString () { return `[jig ${this.constructor.name}]` }
+
+  sync (options) { return util.activeRunInstance().syncer.sync({ ...options, target: this }) }
+
+  static [Symbol.hasInstance] (target) {
+    const run = util.activeRunInstance()
+
+    // check if the target has a location. this will be false for this.constructor.prototype.
+    if (typeof target !== 'object' || !('location' in target)) return false
+
+    // find the sandboxed version of this class because thats what instances will be
+    let T = run.code.getInstalled(this)
+    if (!T) {
+      const net = util.networkSuffix(run.blockchain.network)
+      T = run.code.getInstalled(this[`origin${net}`])
+      if (!T) return false
+    }
+
+    // check if this class's prototype is in the prototype chain of the target
+    let type = Object.getPrototypeOf(target)
+    while (type) {
+      if (type === T.prototype) return true
+      type = Object.getPrototypeOf(type)
+    }
+
+    return false
+  }
+}
+
+
+/***/ }),
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -1743,7 +2319,7 @@ class ProtoTransaction {
     let index = 1
     for (const def of data.code) {
       const location = `${tx.hash}_o${index++}`
-      await run.constructor.code.installFromTx(def, location, tx, run, bsvNetwork, cache)
+      await run.code.installFromTx(def, location, tx, run, bsvNetwork, cache)
     }
 
     if (vout && vout > 0 && vout < 1 + data.code.length) {
@@ -1808,7 +2384,7 @@ class ProtoTransaction {
     // ensuring that double-references refer to the same objects
     const { Jig } = __webpack_require__(1)
     const dedupInnerRefs = jig => {
-      run.constructor.code.control.enforce = false
+      run.code.control.enforce = false
       const dedupRef = (target, parent, name) => {
         if (target && target instanceof Jig) {
           if (!parent) return
@@ -1817,7 +2393,7 @@ class ProtoTransaction {
         }
       }
       util.deepTraverse(jig, dedupRef)
-      run.constructor.code.control.enforce = true
+      run.code.control.enforce = true
     }
 
     // update the refs themselves with themselves
@@ -1842,9 +2418,9 @@ class ProtoTransaction {
         }
       }
 
-      run.constructor.code.control.enforce = false
+      run.code.control.enforce = false
       const args = util.jsonToRichObject(action.args, [reviveArgRef])
-      run.constructor.code.control.enforce = true
+      run.code.control.enforce = true
 
       if (action.method === 'init') {
         if (action.target[0] === '_') {
@@ -1918,7 +2494,7 @@ class ProtoTransaction {
       const jigLocation = `${tx.hash.slice(0, 64)}_o${vout}`
 
       // pack the state of the jig into a reference form
-      run.constructor.code.control.enforce = false
+      run.code.control.enforce = false
       const packedState = util.richObjectToJson({ ...jigProxies[vout] }, [target => {
         if (target instanceof Jig || util.deployable(target)) {
           if (target.location.startsWith(tx.hash)) {
@@ -1928,7 +2504,7 @@ class ProtoTransaction {
           }
         }
       }])
-      run.constructor.code.control.enforce = true
+      run.code.control.enforce = true
 
       if (packedState.origin.startsWith(tx.hash)) delete packedState.origin
       if (packedState.location.startsWith(tx.hash)) delete packedState.location
@@ -1944,8 +2520,8 @@ class ProtoTransaction {
     this.code = []
     data.code.forEach((code, index) => {
       const location = `${tx.hash}_o${index + 1}`
-      const type = run.constructor.code.getInstalled(location)
-      this.storeCode(type, type, {}, Code.extractProps(type).props, () => {}, () => {}, code.owner, run.constructor.code, run)
+      const type = run.code.getInstalled(location)
+      this.storeCode(type, type, {}, Code.extractProps(type).props, () => {}, () => {}, code.owner, run.code, run)
     })
 
     const spentLocations = spentJigs.map(jig => this.locations.get(jig.origin) || jig.location)
@@ -2289,7 +2865,7 @@ class Transaction {
     this.blockchain = run.blockchain
     this.state = run.state
     this.owner = run.owner.pubkey ? run.owner.pubkey : null
-    this.code = run.constructor.code
+    this.code = run.code
     this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this)) // current proto-transaction
   }
 
@@ -2494,7 +3070,7 @@ module.exports = { ProtoTransaction, Transaction }
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2512,7 +3088,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2524,7 +3100,7 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2629,7 +3205,7 @@ module.exports = defaults;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2661,7 +3237,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2710,24 +3286,24 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports) {
 
 module.exports = require("http");
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports) {
 
 module.exports = require("https");
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var url = __webpack_require__(16);
-var http = __webpack_require__(13);
-var https = __webpack_require__(14);
+var url = __webpack_require__(17);
+var http = __webpack_require__(14);
+var https = __webpack_require__(15);
 var assert = __webpack_require__(37);
 var Writable = __webpack_require__(38).Writable;
 var debug = __webpack_require__(39)("follow-redirects");
@@ -3050,13 +3626,13 @@ module.exports.wrap = wrap;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports) {
 
 module.exports = require("url");
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
@@ -3287,7 +3863,7 @@ function coerce(val) {
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3345,7 +3921,7 @@ module.exports = function mergeConfig(config1, config2) {
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3371,7 +3947,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports) {
 
 /**
@@ -3438,575 +4014,16 @@ module.exports = expect
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports) {
 
 module.exports = require("vm");
 
 /***/ }),
-/* 22 */
-/***/ (function(module, exports) {
-
-module.exports = require("vm-browserify");
-
-/***/ }),
 /* 23 */
 /***/ (function(module, exports) {
 
-/**
- * jig.js
- *
- * Jig class users extend from to create digital property
- */
-
-/* global control, code, util */
-
-module.exports = class Jig {
-  constructor (...args) {
-    const run = util.activeRunInstance()
-    if (!code.isSandbox(this.constructor)) {
-      run.transaction.begin()
-      try {
-        const T = code.deploy(this.constructor)
-        return new T(...args)
-      } finally { run.transaction.end() }
-    }
-
-    const childClasses = []
-    let type = this.constructor
-    while (type !== Jig) {
-      childClasses.push(type)
-      type = Object.getPrototypeOf(type)
-    }
-
-    if (childClasses.length === 0) { throw new Error('Jig must be extended') }
-
-    const constructorRegex = /\s+constructor\s*\(/
-    if (childClasses.some(type => constructorRegex.test(type.toString()))) {
-      throw new Error('Jig must use init() instead of constructor()')
-    }
-
-    const unoverridable = ['origin', 'location', 'owner', 'satoshis', 'sync']
-    childClasses.forEach(type => {
-      unoverridable.forEach(prop => {
-        if (Object.prototype.hasOwnProperty.call(childClasses[0].prototype, prop)) {
-          throw new Error(`must not override ${prop}`)
-        }
-      })
-    })
-
-    const methods = []
-    const classChain = [...childClasses, Jig]
-    classChain.forEach(type => {
-      Object.getOwnPropertyNames(type.prototype).forEach(prop => methods.push(prop))
-    })
-    const permanents = [...methods, 'owner', 'satoshis', 'origin', 'location']
-
-    function resetControl () {
-      control.stack = []
-      control.creates = new Set()
-      control.reads = new Set()
-      control.saves = new Map()
-      control.callers = new Map()
-      control.proxies = new Map()
-      control.enforce = true
-      control.error = null
-    }
-
-    const checkValid = () => {
-      if (control.enforce && this.origin && this.origin[0] === '!') {
-        throw new Error(`${this.origin.slice(1)}`)
-      }
-    }
-
-    const original = this
-    const handler = { parent: null, name: null }
-    const proxy = new Proxy(this, handler)
-
-    // Helper methods to determine where the proxy is being called from
-    const topOfStack = () => control.stack[control.stack.length - 1]
-    const fromWithin = () => control.stack.length && topOfStack() === original
-    const fromInstanceOfSameJigClass = () => control.stack.length && topOfStack().constructor === proxy.constructor
-    const fromInstanceOfDifferentJigClass = () => control.stack.length && topOfStack().constructor !== proxy.constructor
-
-    // internal variable that tracks whether init is called. if we are injecting a state, then init was called.
-    let calledInit = !!control.stateToInject
-
-    handler.getPrototypeOf = function (target) {
-      checkValid()
-
-      if (control.stack.length) control.proxies.set(original, proxy)
-
-      return Object.getPrototypeOf(target)
-    }
-
-    handler.setPrototypeOf = function (target, prototype) {
-      throw new Error('setPrototypeOf disallowed')
-    }
-
-    handler.isExtensible = function (target) {
-      return true
-    }
-
-    handler.preventExtensions = function (target) {
-      throw new Error('preventExtensions disallowed')
-    }
-
-    handler.getOwnPropertyDescriptor = function (target, prop) {
-      checkValid()
-
-      if (control.stack.length) control.proxies.set(original, proxy)
-
-      if (!this.has(target, prop)) return undefined
-
-      const descriptor = Object.getOwnPropertyDescriptor(target, prop)
-      if (!descriptor) return undefined
-      return { ...descriptor, value: this.get(target, prop) }
-    }
-
-    handler.defineProperty = function (target, prop, descriptor) {
-      throw new Error('defineProperty disallowed')
-    }
-
-    handler.has = function (target, prop) {
-      checkValid()
-
-      if (control.stack.length) control.proxies.set(original, proxy)
-
-      if (control.enforce && prop[0] === '_' && fromInstanceOfDifferentJigClass()) {
-        throw new Error(`cannot check ${prop} because it is private`)
-      }
-
-      const didRead = control.stack.length && (!(target instanceof Jig) || !permanents.includes(prop))
-
-      if (didRead) control.reads.add(original)
-
-      return prop in target
-    }
-
-    handler.get = function (target, prop, receiver) {
-      checkValid()
-
-      if (control.stack.length) control.proxies.set(original, proxy)
-
-      if (prop === '$object') return proxy
-
-      const targetIsAJig = target instanceof Jig
-
-      const syncRequired = ['origin', 'location']
-
-      if (control.enforce && targetIsAJig && syncRequired.includes(prop) && target[prop][0] === '_') {
-        throw new Error(`sync required before reading ${prop}`)
-      }
-
-      // These don't change, so they don't require a read
-      const noRead = ['origin', 'constructor']
-      if (targetIsAJig && noRead.includes(prop)) return target[prop]
-      const isJigMethod = targetIsAJig && typeof target[prop] === 'function'
-      if (control.stack.length && !isJigMethod) control.reads.add(original)
-
-      if (prop[0] === '_' && fromInstanceOfDifferentJigClass()) {
-        throw new Error(`cannot get ${prop} because it is private`)
-      }
-
-      // return basic types directly
-      const basicTypes = ['undefined', 'boolean', 'number', 'string', 'symbol']
-      if (basicTypes.includes(typeof target[prop])) return target[prop]
-
-      // If getting an iterator, return the iterator function bound to the original target
-      // instead of the proxy, because `new Uint8Array(new Proxy(new Uint8Array([1, 2]), {}))`
-      // would otherwise throw an error that "this is not a typed array". For a reference, see:
-      // https://stackoverflow.com/questions/45700439/new-proxynew-map-values
-      if (prop === Symbol.iterator) return target[prop].bind(target)
-
-      // return object types wrapped
-      if (typeof target[prop] === 'object') {
-        if (target[prop] === null) return null
-        if (target[prop] instanceof Jig) return target[prop]
-        if (!control.enforce) return target[prop]
-
-        // wrap existing objects for protection
-        return new Proxy(target[prop], { ...this, parent: target, name: prop })
-      }
-
-      // If we are returning any constructor, then we don't need to wrap it. Only
-      // Jig methods need to be wrapped. Constructors will get wrapped automatically
-      // in the Jig constructor.
-      if (prop === 'constructor') {
-        return target[prop]
-      }
-
-      if (typeof target[prop] === 'function') {
-        // we must check if method includes prop because the Safari browser thinks class
-        // methods are deployable. other browser do not
-        if (util.deployable(target[prop]) && (!targetIsAJig || !methods.includes(prop))) return target[prop]
-
-        // the property is a method on the object. wrap it up so that we can intercept its execution
-        // to publish an action on the blockchain.
-        return new Proxy(target[prop], { ...this, parent: target, name: prop })
-      }
-    }
-
-    handler.set = function (target, prop, value, receiver) {
-      checkValid()
-
-      if (control.stack.length) control.proxies.set(original, proxy)
-
-      if (control.enforce) {
-        if (!fromWithin()) {
-          throw new Error(`must not set ${prop} outside of a method`)
-        }
-
-        if (target instanceof Jig) {
-          const notSettable = ['origin', 'location', ...methods]
-
-          if (notSettable.includes(prop)) {
-            throw new Error(`must not set ${prop}`)
-          }
-        } else {
-          // Must not overwrite methods on internal objects
-          if (typeof target[prop] === 'function') {
-            throw new Error(`must not overwrite internal method ${prop}`)
-          }
-
-          // Must not set properties on internal property functions
-          if (typeof target === 'function') {
-            throw new Error(`must not set ${prop} on method ${target.name}`)
-          }
-        }
-      }
-
-      // Whether value is serializable is checked after the method is complete
-      target[prop] = value
-
-      return true
-    }
-
-    handler.deleteProperty = function (target, prop) {
-      checkValid()
-
-      if (control.stack.length) control.proxies.set(original, proxy)
-
-      if (control.enforce) {
-        if (!fromWithin()) {
-          throw new Error(`must not delete ${prop} outside of a method`)
-        }
-
-        if (target instanceof Jig) {
-          const notDeletable = ['origin', 'location', ...methods]
-
-          if (notDeletable.includes(prop)) {
-            throw new Error(`must not delete ${prop}`)
-          }
-        } else {
-          if (typeof target[prop] === 'function') {
-            throw new Error(`must not delete internal method ${prop}`)
-          }
-        }
-      }
-
-      delete target[prop]
-
-      return true
-    }
-
-    handler.ownKeys = function (target) {
-      checkValid()
-
-      if (control.stack.length) control.proxies.set(original, proxy)
-
-      if (control.stack.length) control.reads.add(original)
-
-      if (fromInstanceOfDifferentJigClass()) {
-        return Reflect.ownKeys(target).filter(key => key[0] !== '_')
-      } else {
-        return Reflect.ownKeys(target)
-      }
-    }
-
-    handler.apply = function (target, thisArg, args) {
-      const parentIsAJig = this.parent instanceof Jig
-
-      if (parentIsAJig && this.name[0] === '_' && !fromInstanceOfSameJigClass()) {
-        throw new Error(`cannot call ${this.name} because it is private`)
-      }
-
-      if (parentIsAJig && this.name === 'sync') {
-        if (control.stack.length) throw new Error('sync may only be called externally')
-        return target.call(proxy, ...args)
-      }
-
-      const run = util.activeRunInstance()
-      run.transaction.begin()
-
-      // If we are calling an internal method on the jig from outside of the jig, then
-      // this method is not allowed to change any state. However, we may be deep in a
-      // call stack from other jigs, so we cannot use the control.saves to determine if
-      // a change has occurred. We need a new call stack. Therefore, we'll save the current
-      // stack and control state before calling and reinstate it after.
-      let outerControl = null
-      if (!parentIsAJig && !fromWithin()) {
-        outerControl = { ...control }
-        resetControl()
-      }
-
-      // record all jigs that called this jig in order to be able to spend
-      // them if this method changes state. all jigs involved in the production
-      // of a change of state must be spent.
-      const callers = control.callers.get(original) || new Set()
-      control.stack.forEach(target => callers.add(target))
-      control.callers.set(original, callers)
-
-      // add ourselves to the stack because we're about to invoke a method
-      control.stack.push(original)
-
-      control.proxies.set(original, proxy)
-
-      try {
-        if (parentIsAJig && this.name === 'init') {
-          if (calledInit) throw new Error('init cannot be called twice')
-          calledInit = true
-          control.creates.add(original)
-        }
-
-        const reads = new Set(control.reads)
-        control.enforce = false
-
-        const savedArgRefs = []
-        const deployCode = target => { if (util.deployable(target)) code.deploy(target) }
-        const packers = [deployCode, util.extractJigsAndCodeToArray(savedArgRefs)]
-        // Internal methods do not need their args saved
-        const savedArgs = parentIsAJig ? util.richObjectToJson(args, packers) : null
-
-        if (!control.saves.has(original)) {
-          const save = { refs: [] }
-          const packers = [deployCode, util.extractJigsAndCodeToArray(save.refs)]
-          save.json = util.richObjectToJson({ ...original }, packers)
-          control.saves.set(original, save)
-        }
-        control.enforce = true
-        control.reads = reads
-
-        // make a copy of the args, which ensures that if the args are changed in the method,
-        // we still record to the blockchain what was passed in at the time it was called.
-        const callArgs = parentIsAJig ? util.jsonToRichObject(savedArgs,
-          [util.injectJigsAndCodeFromArray(savedArgRefs)]) : args
-
-        // Call the method
-        //
-        // The call target is the object we call the method on. When our target is a jig,
-        // we use the proxy because the method might try to change properties like origin
-        // which we want to prevent. If we passed target, we could not intercept these.
-        //
-        // When our target is an internal non-Jig object, we use the object itself without a
-        // proxy because these are native JavaScript objects and require that to work. This
-        // is safe because any attempts to change a Jig property like the origin or location
-        // must go through a Jig itself, which would be wrapped with a proxy.
-        const ret = target.call(parentIsAJig ? proxy : this.parent, ...callArgs)
-
-        if (parentIsAJig && this.name === 'init' && typeof ret !== 'undefined') {
-          throw new Error('init must not return')
-        }
-
-        if (parentIsAJig) {
-          util.checkOwner(original.owner)
-          util.checkSatoshis(original.satoshis)
-        }
-
-        // if there was an error in the call or a child call, and the exception
-        // was swallowed, rethrow the error anyway.
-        if (control.error) throw new Error(`internal errors must not be swallowed\n\n${control.error}`)
-
-        control.stack.pop()
-
-        // if we are at the bottom of the stack, we have to decide whether to create an
-        // action. To do this, we will compare jig states before and after and see if
-        // any jigs changed, and if so, figure out the inputs and outputs.
-        if (!control.stack.length) {
-          // disable enforcement as we are about to read locations on possible inner proxies
-          const reads = new Set(control.reads)
-          control.enforce = false
-
-          // detect references to properties of other jigs or code, and throw
-          const preventPropertiesOfOtherObjects = (target, parent, name) => {
-            if (typeof target.$object !== 'undefined' && target.$object !== proxy) {
-              const suggestion = `Hint: Consider saving a clone of ${name}'s value instead.`
-              throw new Error(`property ${name} is owned by a different jig\n\n${suggestion}`)
-            }
-          }
-
-          // calculate stateAfter. We already have stateBefore in control.saves
-          const stateAfter = new Map()
-
-          const objectsToSave = new Set(control.reads)
-          Array.from(control.saves.keys()).forEach(target => objectsToSave.add(target))
-
-          objectsToSave.forEach(target => { // TODO: Remove when remove weak reads
-            const refs = []
-            const replacers = [util.extractJigsAndCodeToArray(refs), preventPropertiesOfOtherObjects]
-            const json = util.richObjectToJson({ ...target }, replacers)
-            stateAfter.set(target, { json, refs })
-          })
-
-          // calculate the changed array
-          const changed = []
-          for (const [target, stateBefore] of control.saves) {
-            const after = stateAfter.get(target)
-            const refChanged = (ref, n) => ref !== after.refs[n]
-            if (JSON.stringify(stateBefore.json) !== JSON.stringify(after.json) ||
-                    stateBefore.refs.some(refChanged)) {
-              changed.push(target)
-            }
-          }
-
-          // re-enable enforcement and set back the old reads
-          control.enforce = true
-          control.reads = reads
-
-          // if anything was created or changed, then we have an action
-          if (control.creates.size || changed.length) {
-            if (!parentIsAJig) {
-              throw new Error(`internal method ${this.name} may not be called to change state`)
-            }
-
-            const inputs = new Set()
-            const outputs = new Set()
-            const reads = new Set(control.reads)
-
-            // helper function to add a jig to the inputs and outputs
-            const spend = target => {
-              outputs.add(target)
-              if (!control.creates.has(target)) inputs.add(target)
-            }
-
-            // for every jig changed, add all jigs involved in the production of
-            // its changes (its callers set) as outputs, and add them as inputs
-            // if they were not newly created.
-            changed.forEach(target => {
-              control.callers.get(target).forEach(caller => spend(caller))
-              spend(target)
-            })
-
-            // every jig created gets a new output, and the same applies to its callers
-            control.creates.forEach(target => {
-              control.callers.get(target).forEach(caller => spend(caller))
-              spend(target)
-            })
-
-            // record the action in the proto-transaction
-            run.transaction.storeAction(original, this.name, args, inputs, outputs,
-              reads, control.saves, stateAfter, control.proxies)
-          }
-
-          // If we are within an internal method, then add any changes of state back
-          // to the main control. Otherwise reset control.
-          if (outerControl) {
-            control.creates.forEach(target => outerControl.creates.add(target))
-            control.reads.forEach(target => outerControl.reads.add(target))
-            control.saves.forEach((save, target) => {
-              if (!control.saves.has(target)) outerControl.saves.set(target, save)
-            })
-            control.proxies.forEach((proxy, target) => {
-              if (!control.proxies.has(target)) outerControl.proxies.set(target, proxy)
-            })
-            control.callers.forEach((callers, target) => {
-              if (!control.callers.has(target)) {
-                outerControl.callers.set(target, callers)
-              } else {
-                callers.forEach(caller => outerControl.get(target).add(caller))
-              }
-            })
-            Object.assign(control, outerControl)
-          } else {
-            resetControl()
-          }
-        }
-
-        run.transaction.end()
-
-        // return the return value of the method to the user
-        return ret
-      } catch (e) {
-        // mark that there was an error so that if a parent jig attempts to
-        // wrap it, we will still be able to throw an exception at the end.
-        // only record the first...
-        if (!control.error) control.error = e
-
-        if (outerControl) Object.assign(control, outerControl)
-
-        control.stack.pop()
-
-        // if we are at the bottom of the stack, and there was an error, then
-        // reset all jigs involved back to their original state before throwing
-        // the error to the user.
-        if (!control.stack.length) {
-          control.saves.forEach((save, target) => {
-            Object.keys(target).forEach(key => delete target[key])
-            Object.assign(target, util.jsonToRichObject(save.json,
-              [util.injectJigsAndCodeFromArray(save.refs)]))
-          })
-
-          resetControl()
-        }
-
-        run.transaction.end()
-
-        const message = e.toString()
-        if (message === 'TypeError: Date is not a constructor') {
-          const hint = 'Hint: Date is disabled inside jigs because it is non-deterministic.'
-          const hint2 = 'Consider passing in the Date as a number instead.'
-          throw new Error(`${message}\n\n${hint}\n${hint2}`)
-        } else throw e
-      }
-    }
-
-    // if we are injecting a state directly from a cache, do that and just return
-    if (control.stateToInject) {
-      Object.assign(this, control.stateToInject)
-      return proxy
-    }
-
-    this.owner = control.stack.length ? control.stack[control.stack.length - 1].owner : run.transaction.owner
-    this.satoshis = 0
-    // origin and location will be set inside of storeAction
-    this.origin = '_'
-    this.location = '_'
-
-    proxy.init(...args)
-
-    return proxy
-  }
-
-  init () { }
-
-  toString () { return `[jig ${this.constructor.name}]` }
-
-  sync (options) { return util.activeRunInstance().syncer.sync({ ...options, target: this }) }
-
-  static [Symbol.hasInstance] (target) {
-    // check if the target has a location. this will be false for this.constructor.prototype.
-    if (typeof target !== 'object' || !('location' in target)) return false
-
-    // find the sandboxed version of this class because thats what instances will be
-    let T = code.getInstalled(this)
-    if (!T) {
-      const run = util.activeRunInstance()
-      const net = util.networkSuffix(run.blockchain.network)
-      T = code.getInstalled(this[`origin${net}`])
-      if (!T) return false
-    }
-
-    // check if this class's prototype is in the prototype chain of the target
-    let type = Object.getPrototypeOf(target)
-    while (type) {
-      if (type === T.prototype) return true
-      type = Object.getPrototypeOf(type)
-    }
-
-    return false
-  }
-}
-
+module.exports = require("vm-browserify");
 
 /***/ }),
 /* 24 */
@@ -4018,7 +4035,7 @@ module.exports = class Jig {
  * Enqueues transactions and syncs jigs
  */
 
-const { ProtoTransaction } = __webpack_require__(7)
+const { ProtoTransaction } = __webpack_require__(8)
 const util = __webpack_require__(3)
 
 /**
@@ -4033,7 +4050,7 @@ module.exports = class Syncer {
   constructor (run) {
     this.run = run
     this.blockchain = run.blockchain
-    this.code = run.constructor.code
+    this.code = run.code
     this.state = run.state
     this.pay = (...args) => { return run.purse.pay(...args) }
     this.sign = (...args) => { return run.owner.sign(...args) }
@@ -5039,10 +5056,10 @@ module.exports = __webpack_require__(29);
 
 
 var utils = __webpack_require__(0);
-var bind = __webpack_require__(8);
+var bind = __webpack_require__(9);
 var Axios = __webpack_require__(31);
-var mergeConfig = __webpack_require__(18);
-var defaults = __webpack_require__(10);
+var mergeConfig = __webpack_require__(19);
+var defaults = __webpack_require__(11);
 
 /**
  * Create an instance of Axios
@@ -5075,9 +5092,9 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(19);
+axios.Cancel = __webpack_require__(20);
 axios.CancelToken = __webpack_require__(56);
-axios.isCancel = __webpack_require__(9);
+axios.isCancel = __webpack_require__(10);
 
 // Expose all/spread
 axios.all = function all(promises) {
@@ -5119,7 +5136,7 @@ var utils = __webpack_require__(0);
 var buildURL = __webpack_require__(4);
 var InterceptorManager = __webpack_require__(32);
 var dispatchRequest = __webpack_require__(33);
-var mergeConfig = __webpack_require__(18);
+var mergeConfig = __webpack_require__(19);
 
 /**
  * Create a new instance of Axios
@@ -5269,8 +5286,8 @@ module.exports = InterceptorManager;
 
 var utils = __webpack_require__(0);
 var transformData = __webpack_require__(34);
-var isCancel = __webpack_require__(9);
-var defaults = __webpack_require__(10);
+var isCancel = __webpack_require__(10);
+var defaults = __webpack_require__(11);
 var isAbsoluteURL = __webpack_require__(54);
 var combineURLs = __webpack_require__(55);
 
@@ -5407,17 +5424,17 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(11);
+var settle = __webpack_require__(12);
 var buildURL = __webpack_require__(4);
-var http = __webpack_require__(13);
-var https = __webpack_require__(14);
-var httpFollow = __webpack_require__(15).http;
-var httpsFollow = __webpack_require__(15).https;
-var url = __webpack_require__(16);
+var http = __webpack_require__(14);
+var https = __webpack_require__(15);
+var httpFollow = __webpack_require__(16).http;
+var httpsFollow = __webpack_require__(16).https;
+var url = __webpack_require__(17);
 var zlib = __webpack_require__(48);
 var pkg = __webpack_require__(49);
 var createError = __webpack_require__(5);
-var enhanceError = __webpack_require__(12);
+var enhanceError = __webpack_require__(13);
 
 var isHttps = /https:?/;
 
@@ -5719,7 +5736,7 @@ if (typeof process === 'undefined' || process.type === 'renderer') {
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __webpack_require__(17);
+exports = module.exports = __webpack_require__(18);
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
@@ -6085,7 +6102,7 @@ var util = __webpack_require__(44);
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __webpack_require__(17);
+exports = module.exports = __webpack_require__(18);
 exports.init = init;
 exports.log = log;
 exports.formatArgs = formatArgs;
@@ -6458,7 +6475,7 @@ module.exports = JSON.parse("{\"_from\":\"axios@0.19.0\",\"_id\":\"axios@0.19.0\
 
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(11);
+var settle = __webpack_require__(12);
 var buildURL = __webpack_require__(4);
 var parseHeaders = __webpack_require__(51);
 var isURLSameOrigin = __webpack_require__(52);
@@ -6875,7 +6892,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 "use strict";
 
 
-var Cancel = __webpack_require__(19);
+var Cancel = __webpack_require__(20);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -7205,7 +7222,7 @@ module.exports = { State, StateCache }
  */
 
 const { Jig } = __webpack_require__(1)
-const expect = __webpack_require__(20)
+const expect = __webpack_require__(21)
 
 class Token extends Jig {
   init (amount, _tokenToDecrease, _tokensToCombine) {

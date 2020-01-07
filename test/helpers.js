@@ -104,7 +104,7 @@ function createRun (options = { }) {
   const network = options.network || 'mock'
   const blockchain = network !== 'mock' ? 'star' : undefined
   const purse = network === 'mock' ? undefined : testPurses[network][0]
-  const sandbox = TEST_MODE === 'cover' ? /^((?!Jig|Token).)*$/ : true
+  const sandbox = TEST_MODE === 'cover' ? /^((?!Jig|Token|expect).)*$/ : true
   const run = new Run({ network, purse, sandbox, logger: null, blockchain, ...options })
   return run
 }
@@ -166,7 +166,7 @@ async function deploy (Class) {
     delete Class[origin]
     delete Class[location]
     delete Class[owner]
-    Run.code.flush()
+    run.code.flush()
     run.deploy(Class)
     run.transaction.end()
     await run.sync()

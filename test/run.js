@@ -79,20 +79,20 @@ describe('Run', () => {
 
       it('should throw for invalid custom blockchain', () => {
         const blockchain = { broadcast: async () => {}, fetch: async () => {}, utxos: async () => {}, network: 'main' }
-        expect(() => new Run({ blockchain: {...blockchain, broadcast: null} })).to.throw('Blockchain requires a broadcast method')
-        expect(() => new Run({ blockchain: {...blockchain, fetch: null} })).to.throw('Blockchain requires a fetch method')
-        expect(() => new Run({ blockchain: {...blockchain, utxos: null} })).to.throw('Blockchain requires a utxos method')
-        expect(() => new Run({ blockchain: {...blockchain, network: null} })).to.throw('Blockchain requires a network string')
+        expect(() => new Run({ blockchain: { ...blockchain, broadcast: null } })).to.throw('Blockchain requires a broadcast method')
+        expect(() => new Run({ blockchain: { ...blockchain, fetch: null } })).to.throw('Blockchain requires a fetch method')
+        expect(() => new Run({ blockchain: { ...blockchain, utxos: null } })).to.throw('Blockchain requires a utxos method')
+        expect(() => new Run({ blockchain: { ...blockchain, network: null } })).to.throw('Blockchain requires a network string')
       })
 
       it('should throw for null blockchain', () => {
-        expect(() => new Run({ blockchain: null })).to.throw(`Option 'blockchain' must not be null`)
+        expect(() => new Run({ blockchain: null })).to.throw('Option \'blockchain\' must not be null')
       })
 
       it('should throw for invalid blockchain', () => {
-        expect(() => new Run({ blockchain: 123 })).to.throw(`Option 'blockchain' must be an object or string. Received: 123`)
-        expect(() => new Run({ blockchain: false })).to.throw(`Option 'blockchain' must be an object or string. Received: false`)
-        expect(() => new Run({ blockchain: () => {} })).to.throw(`Option 'blockchain' must be an object or string. Received: `)
+        expect(() => new Run({ blockchain: 123 })).to.throw('Option \'blockchain\' must be an object or string. Received: 123')
+        expect(() => new Run({ blockchain: false })).to.throw('Option \'blockchain\' must be an object or string. Received: false')
+        expect(() => new Run({ blockchain: () => {} })).to.throw('Option \'blockchain\' must be an object or string. Received: ')
       })
 
       it('should support all networks', () => {
@@ -112,34 +112,36 @@ describe('Run', () => {
 
     describe('sandbox', () => {
       it('should default to sandbox enabled', () => {
-        expect(new Run({ network: 'mock' }).sandbox).to.equal(true)
-        class A extends Jig { init() { this.version = Run.version } }
+        expect(new Run({ network: 'mock' }).code.sandbox).to.equal(true)
+        class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()
       })
 
       it('should support enabling sandbox', () => {
-        expect(new Run({ sandbox: true }).sandbox).to.equal(true)
+        expect(new Run({ sandbox: true }).code.sandbox).to.equal(true)
       })
 
       it('should support disabling sandbox', () => {
-        expect(new Run({ network: 'mock', sandbox: false }).sandbox).to.equal(false)
-        class A extends Jig { init() { this.version = Run.version } }
+        const run = new Run({ network: 'mock', sandbox: false })
+        expect(run.code.sandbox).to.equal(false)
+        class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).not.to.throw()
       })
 
       it('should support RegExp sandbox', () => {
-        expect(new Run({ network: 'mock', sandbox: /A/ }).sandbox instanceof RegExp).to.equal(true)
-        class A extends Jig { init() { this.version = Run.version } }
-        class B extends Jig { init() { this.version = Run.version } }
+        const run = new Run({ network: 'mock', sandbox: /A/ })
+        expect(run.code.sandbox instanceof RegExp).to.equal(true)
+        class A extends Jig { init () { this.version = Run.version } }
+        class B extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()
         expect(() => new B()).not.to.throw()
       })
 
       it('should throw for bad sandbox', () => {
-        expect(() => new Run({ sandbox: null })).to.throw(`Invalid option 'sandbox'. Received: null`)
-        expect(() => new Run({ sandbox: 0 })).to.throw(`Option 'sandbox' must be a boolean or RegExp. Received: 0`)
-        expect(() => new Run({ sandbox: {} })).to.throw(`Invalid option 'sandbox'. Received:`)
-        expect(() => new Run({ sandbox: () => {} })).to.throw(`Option 'sandbox' must be a boolean or RegExp. Received: `)
+        expect(() => new Run({ sandbox: null })).to.throw('Invalid option \'sandbox\'. Received: null')
+        expect(() => new Run({ sandbox: 0 })).to.throw('Option \'sandbox\' must be a boolean or RegExp. Received: 0')
+        expect(() => new Run({ sandbox: {} })).to.throw('Invalid option \'sandbox\'. Received:')
+        expect(() => new Run({ sandbox: () => {} })).to.throw('Option \'sandbox\' must be a boolean or RegExp. Received: ')
       })
     })
 
@@ -166,14 +168,14 @@ describe('Run', () => {
 
       it('should support custom state', () => {
         const state = new Run.StateCache()
-        expect(new Run({ state }).state ).to.deep.equal(state)
+        expect(new Run({ state }).state).to.deep.equal(state)
       })
 
       it('should throw if invalid state', () => {
-        expect(() => new Run({ state: { get: () => {} }})).to.throw('State requires a set method')
-        expect(() => new Run({ state: { set: () => {} }})).to.throw('State requires a get method')
-        expect(() => new Run({ state: null })).to.throw(`Option 'state' must not be null`)
-        expect(() => new Run({ state: false })).to.throw(`Option 'state' must be an object. Received: false`)
+        expect(() => new Run({ state: { get: () => {} } })).to.throw('State requires a set method')
+        expect(() => new Run({ state: { set: () => {} } })).to.throw('State requires a get method')
+        expect(() => new Run({ state: null })).to.throw('Option \'state\' must not be null')
+        expect(() => new Run({ state: false })).to.throw('Option \'state\' must be an object. Received: false')
       })
 
       it('should copy cache from previous state', () => {
@@ -195,8 +197,8 @@ describe('Run', () => {
       })
 
       it('should throw for invalid owner', () => {
-        expect(() => new Run({ owner: 123})).to.throw(`Option 'owner' must be a valid key or address. Received: 123`)
-        expect(() => new Run({ owner: false})).to.throw(`Option 'owner' must be a valid key or address. Received: false`)
+        expect(() => new Run({ owner: 123 })).to.throw('Option \'owner\' must be a valid key or address. Received: 123')
+        expect(() => new Run({ owner: false })).to.throw('Option \'owner\' must be a valid key or address. Received: false')
       })
     })
 
@@ -212,9 +214,31 @@ describe('Run', () => {
       })
 
       it('should throw for invalid purse', () => {
-        expect(() => new Run({ purse: {}})).to.throw(`Purse requires a pay method`)
-        expect(() => new Run({ purse: 123})).to.throw(`Option 'purse' must be a valid private key or Pay API. Received: 123`)
-        expect(() => new Run({ purse: true})).to.throw(`Option 'purse' must be a valid private key or Pay API. Received: true`)
+        expect(() => new Run({ purse: {} })).to.throw('Purse requires a pay method')
+        expect(() => new Run({ purse: 123 })).to.throw('Option \'purse\' must be a valid private key or Pay API. Received: 123')
+        expect(() => new Run({ purse: true })).to.throw('Option \'purse\' must be a valid private key or Pay API. Received: true')
+      })
+    })
+
+    describe('code', () => {
+      it('should default to new code', () => {
+        expect(new Run().code instanceof Run.Code).to.equal(true)
+      })
+
+      it('should support creating with new code', () => {
+        expect(() => new Run({ code: new Run.Code() })).not.to.throw()
+      })
+
+      it('should reuse code if possible', () => {
+        expect(new Map(new Run().code.installs)).to.deep.equal(new Map(new Run().code.installs))
+        expect(new Map(new Run({ sandbox: false }).code.installs))
+          .not.to.deep.equal(new Map(new Run({ sandbox: true }).code.installs))
+      })
+
+      it('should throw for invalid code', () => {
+        expect(() => new Run({ code: null })).to.throw('Option \'code\' must be an instance of Code')
+        expect(() => new Run({ code: 123 })).to.throw('Option \'code\' must be an instance of Code')
+        expect(() => new Run({ code: false })).to.throw('Option \'code\' must be an instance of Code')
       })
     })
 
@@ -305,7 +329,7 @@ describe('Run', () => {
       class D extends C { }
       const d = new D()
       await run.sync()
-      Run.code.flush()
+      run.code.flush()
       run.state.clear()
       const p1 = run.load(d.location)
       const p2 = run.load(d.location)
@@ -329,5 +353,16 @@ describe('Run', () => {
       expect(await timeLoad('main', mainLocation) > 1000).to.equal(true)
       expect(await timeLoad('main', mainLocation) > 1000).to.equal(false)
     }).timeout(30000)
+
+    it.skip('should fail if reuse jigs across code instances', () => {
+      // TODO: What should this behavior be?
+      class A extends Jig { set (x) { this.x = x } }
+      createRun({ code: new Run.Code() })
+      const a1 = new A()
+      createRun({ code: new Run.Code() })
+      const a2 = new A()
+      expect(a1.constructor).not.to.equal(a2.constructor)
+      expect(() => a2.set(a1)).to.throw('Different code instances')
+    })
   })
 })

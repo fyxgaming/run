@@ -16,7 +16,7 @@ describe('Jig', () => {
   const run = hookStoreAction(createRun())
   beforeEach(() => run.blockchain.block())
   beforeEach(() => run.activate())
-  beforeEach(() => Run.code.flush())
+  beforeEach(() => run.code.flush())
 
   // Turn this on for easier debugging because the tests won't bleed into one another.
   // (We leave this off by default to enable state bleeding and more complexity in the tests)
@@ -27,7 +27,7 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(run.constructor.code.installs.has(A)).to.equal(true)
+      expect(run.code.installs.has(A)).to.equal(true)
       await run.sync()
       expect(A.origin.length).to.equal(67)
     })
@@ -144,7 +144,7 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       await run.sync()
-      Run.code.flush()
+      run.code.flush()
       const a2 = await run.load(a.location)
       expect(a2 instanceof A).to.equal(true)
     })
@@ -517,7 +517,7 @@ describe('Jig', () => {
       expect(b.x).to.equal(run.owner.pubkey)
       expect(a.test).to.equal(true)
       await run.sync()
-      Run.code.flush()
+      run.code.flush()
       await run.sync()
     })
   })
@@ -839,7 +839,7 @@ describe('Jig', () => {
         expect(buf[0]).to.equal(1)
         expect(buf[1]).to.equal(2)
         expect(buf[2]).to.equal(3)
-        expect(buf.constructor === Run.code.intrinsics.Uint8Array).to.equal(true)
+        expect(buf.constructor === run.code.intrinsics.Uint8Array).to.equal(true)
       }
       testBuf(a.buf)
       testBuf(a.buf2)
@@ -1297,7 +1297,7 @@ describe('Jig', () => {
       const run = createRun()
       const a = new A(privkey.publicKey.toString())
       await run.sync()
-      Run.code.flush()
+      run.code.flush()
       const run2 = createRun({ blockchain: run.blockchain, owner: privkey })
       await run2.load(a.location)
     })

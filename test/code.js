@@ -9,11 +9,11 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Run, Jig, createRun, hookPay } = require('./helpers')
+const { Jig, createRun, hookPay } = require('./helpers')
 
 describe('Code', () => {
   const run = createRun()
-  beforeEach(() => { run.activate(); Run.code.flush() })
+  beforeEach(() => { run.activate(); run.code.flush() })
   beforeEach(() => run.blockchain.block())
 
   describe('deploy', () => {
@@ -72,8 +72,8 @@ describe('Code', () => {
       const child = new Child2()
       child.f()
       expect(child.n).to.equal(2)
-      expect(run.constructor.code.installs.has(Parent)).to.equal(true)
-      expect(run.constructor.code.installs.has(Grandparent)).to.equal(true)
+      expect(run.code.installs.has(Parent)).to.equal(true)
+      expect(run.code.installs.has(Grandparent)).to.equal(true)
       expect(Child2.deps).to.deep.equal({ Parent: await run.load(Parent.origin) })
     })
 
@@ -344,7 +344,7 @@ describe('Code', () => {
     it('should load from mockchain when uncached', async () => {
       class A { f () { return 1 } }
       const A2 = await run.load(await run.deploy(A))
-      Run.code.flush()
+      run.code.flush()
       const run2 = createRun({ blockchain: run.blockchain })
       const A3 = await run2.load(A.origin)
       expect(A2.owner).to.equal(run.owner.pubkey)
@@ -385,13 +385,13 @@ describe('Code', () => {
       class A { }
       await run.deploy(A)
       // clear the code, but A.location will be set
-      Run.code.flush()
+      run.code.flush()
       // deploy the same code again
       const run2 = createRun({ blockchain: run.blockchain })
       await run2.deploy(A)
       // find the sandbox directly, without using load, because we want to make sure deploy works correctly.
       // and using load, make sure the sandboxes are the same
-      expect(Run.code.installs.get(A)).to.equal(await run2.load(A.location))
+      expect(run2.code.installs.get(A)).to.equal(await run2.load(A.location))
     })
 
     it('should support dependencies in different transactions', async () => {
@@ -404,7 +404,7 @@ describe('Code', () => {
       run.deploy(B)
       run.deploy(C)
       await run.sync()
-      Run.code.flush()
+      run.code.flush()
       await run.load(C.location)
     })
   })
@@ -416,7 +416,7 @@ describe('Code', () => {
       A.B = B
       B.A = A
       await run.deploy(A)
-      Run.code.flush()
+      run.code.flush()
       const A2 = await run.load(A.location)
       const B2 = await run.load(B.location)
       expect(A2.B).to.equal(B2)
@@ -474,7 +474,7 @@ describe('Code', () => {
         expect(T.G).to.equal(G2)
       }
       await checkAllProperties(await run2.load(A.origin))
-      Run.code.flush()
+      run.code.flush()
       await checkAllProperties(await run2.load(A.origin))
     })
 
@@ -561,11 +561,6 @@ describe('Code', () => {
       expect(new A2()).not.to.be.instanceOf(A)
       expect(new A2()).to.be.instanceOf(A2)
     })
-
-    it('should throw if deploy without run', async () => {
-      Run.instance = null
-      expect(() => Run.code.deploy(class A { })).to.throw('Run not instantiated')
-    })
   })
 
   describe('activate', () => {
@@ -589,7 +584,7 @@ describe('Code', () => {
       expect(A.location.length).to.equal(67)
       expect(A.location).to.equal(A.locationMocknet)
       expect(A.owner).to.equal(A.ownerMocknet)
-      expect(Run.code.installs.size).to.equal(TEST_MODE === 'cover' ? 5 : 6)
+      expect(run.code.installs.size).to.equal(TEST_MODE === 'cover' ? 5 : 6)
     }).timeout(30000)
 
     it('should set correct owner for different networks', async () => {
@@ -605,7 +600,7 @@ describe('Code', () => {
         await run.sync()
         const b = new B()
         await b.sync()
-        Run.code.flush()
+        run.code.flush()
         await run.sync()
       }
     }).timeout(30000)

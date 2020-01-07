@@ -164,7 +164,7 @@ describe('Transaction', () => {
     })
 
     it('should support exporting then importing transaction', async () => {
-      const run = new Run({ network: 'mock' })
+      const run = createRun({ network: 'mock' })
       class Dragon extends Jig {}
       run.transaction.begin()
       new Dragon() // eslint-disable-line
@@ -591,7 +591,7 @@ describe('Transaction', () => {
     })
 
     it('should support setting static class property jig', async () => {
-      const run = new Run({ network: 'mock' })
+      const run = createRun({ network: 'mock' })
       class Store extends Jig {
         set (value) { this.value = value }
       }
@@ -603,9 +603,9 @@ describe('Transaction', () => {
       await run.sync()
 
       // Clear caches and load
-      Run.code.flush()
+      run.code.flush()
       const cache = new Run.StateCache()
-      const run2 = new Run({ network: 'mock', blockchain: run.blockchain, cache })
+      const run2 = createRun({ network: 'mock', blockchain: run.blockchain, cache })
       await run2.load(action.location)
     })
 
