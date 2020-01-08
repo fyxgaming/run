@@ -2299,12 +2299,6 @@ class Code {
   deactivate () {
     this.globalEvaluator.deactivate()
   }
-
-  flush () {
-    this.installs = new Map()
-    this.installs.set(Jig, this.Jig)
-    this.installs.set(this.Jig, this.Jig)
-  }
 }
 
 module.exports = Code

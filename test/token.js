@@ -202,5 +202,5 @@ describe('Token', () => {
 
   it.skip('should deploy', async () => {
     await deploy(Token)
-  })
+  }).timeout(30000)
 })

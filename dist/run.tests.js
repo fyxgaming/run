@@ -264,18 +264,19 @@ async function deploy (Class) {
     const location = `location${suffix}`
     const owner = `owner${suffix}`
 
-    run.transaction.begin()
     delete Class[origin]
     delete Class[location]
     delete Class[owner]
-    run.code.flush()
+
     run.deploy(Class)
-    run.transaction.end()
+
     await run.sync()
 
     properties += `${Class.name}.${origin}= '${Class[origin]}'\n`
     properties += `${Class.name}.${location}= '${Class[location]}'\n`
     properties += `${Class.name}.${owner}= '${Class[owner]}'\n`
+
+    run.deactivate()
   }
 
   console.log(properties)
@@ -4166,7 +4167,7 @@ describe('expect', () => {
 
   it.skip('should deploy', async () => {
     await deploy(Run.expect)
-  })
+  }).timeout(30000)
 })
 
 
@@ -7711,7 +7712,7 @@ describe('Token', () => {
 
   it.skip('should deploy', async () => {
     await deploy(Token)
-  })
+  }).timeout(30000)
 })
 
 

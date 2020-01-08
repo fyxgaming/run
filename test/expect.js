@@ -169,5 +169,5 @@ describe('expect', () => {
 
   it.skip('should deploy', async () => {
     await deploy(Run.expect)
-  })
+  }).timeout(30000)
 })
