@@ -3998,9 +3998,57 @@ describe('Code', () => {
 // Evaluator test suite
 // ------------------------------------------------------------------------------------------------
 
-function runEvaluatorTestSuite(evaluator) {
-  it('placeholder test', () => {
-    console.log('placeholder test')
+function runEvaluatorTestSuite (evaluator) {
+  it('should evaluate named function', () => {
+    const [f] = evaluator.evaluate('function f() { return 1 }')
+    expect(typeof f).to.equal('function')
+    expect(f.name).to.equal('f')
+    expect(f()).to.equal(1)
+  })
+
+  it('should evaluate anonymous function', () => {
+    const [f] = evaluator.evaluate('function () { return "123" }')
+    expect(typeof f).to.equal('function')
+    expect(f.name).to.equal('anonymousFunction')
+    expect(f()).to.equal('123')
+
+    const [g] = evaluator.evaluate('() => { return [] }')
+    expect(typeof g).to.equal('function')
+    expect(g.name).to.equal('anonymousFunction')
+    expect(g()).to.deep.equal([])
+  })
+
+  it('should evaluate named class', () => {
+    const [T] = evaluator.evaluate('class A { }')
+    expect(typeof T).to.equal('function')
+    expect(T.name).to.equal('A')
+  })
+
+  it('should evaluate anonymous class', () => {
+    const [T] = evaluator.evaluate('class { }')
+    expect(typeof T).to.equal('function')
+    expect(T.name).to.equal('AnonymousClass')
+  })
+
+  it('should throw if code is not a string', () => {
+    expect(() => evaluator.evaluate()).to.throw('Code must be a string. Received: undefined')
+    expect(() => evaluator.evaluate(123)).to.throw('Code must be a string. Received: 123')
+    expect(() => evaluator.evaluate(function f() {})).to.throw('Code must be a string. Received: ')
+  })
+
+  it('should throw if env is not an object', () => {
+    expect(() => evaluator.evaluate('()=>{}', false)).to.throw('Environment must be an object. Received: false')
+    expect(() => evaluator.evaluate('()=>{}', 123)).to.throw('Environment must be an object. Received: 123')
+    expect(() => evaluator.evaluate('()=>{}', class A {})).to.throw('Environment must be an object. Received: ')
+  })
+
+  it('should throw if env contains $globals', () => {
+    expect(() => evaluator.evaluate('()=>{}', { $globals: {} })).to.throw('Environment must not contain $globals')
+  })
+
+  it('should throw if evaluated code throws', () => {
+    expect(() => evaluator.evaluate('throw new Error()')).to.throw()
+    expect(() => evaluator.evaluate('x.y = z')).to.throw()
   })
 }
 
@@ -4020,6 +4068,7 @@ describe('GlobalEvaluator', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
+
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),

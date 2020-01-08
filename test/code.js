@@ -650,18 +650,39 @@ function runEvaluatorTestSuite (evaluator) {
     expect(typeof T).to.equal('function')
     expect(T.name).to.equal('AnonymousClass')
   })
+
+  it('should throw if code is not a string', () => {
+    expect(() => evaluator.evaluate()).to.throw('Code must be a string. Received: undefined')
+    expect(() => evaluator.evaluate(123)).to.throw('Code must be a string. Received: 123')
+    expect(() => evaluator.evaluate(function f() {})).to.throw('Code must be a string. Received: ')
+  })
+
+  it('should throw if env is not an object', () => {
+    expect(() => evaluator.evaluate('()=>{}', false)).to.throw('Environment must be an object. Received: false')
+    expect(() => evaluator.evaluate('()=>{}', 123)).to.throw('Environment must be an object. Received: 123')
+    expect(() => evaluator.evaluate('()=>{}', class A {})).to.throw('Environment must be an object. Received: ')
+  })
+
+  it('should throw if env contains $globals', () => {
+    expect(() => evaluator.evaluate('()=>{}', { $globals: {} })).to.throw('Environment must not contain $globals')
+  })
+
+  it('should throw if evaluated code throws', () => {
+    expect(() => evaluator.evaluate('throw new Error()')).to.throw()
+    expect(() => evaluator.evaluate('x.y = z')).to.throw()
+  })
 }
 
 // ------------------------------------------------------------------------------------------------
 // Evaluator tests
 // ------------------------------------------------------------------------------------------------
 
-describe.only('VMEvaluator', () => {
+describe('VMEvaluator', () => {
   const evaluator = new Run.Code.VMEvaluator()
   runEvaluatorTestSuite(evaluator)
 })
 
-describe.only('GlobalEvaluator', () => {
+describe('GlobalEvaluator', () => {
   const evaluator = new Run.Code.GlobalEvaluator()
   runEvaluatorTestSuite(evaluator)
   evaluator.deactivate()

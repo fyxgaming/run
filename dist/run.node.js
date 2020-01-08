@@ -2262,7 +2262,9 @@ class VMEvaluator {
   }
 
   evaluate (code, env = {}) {
-    if (typeof env.$globals !== 'undefined') throw new Error('$globals must not be defined')
+    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
+    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
+    if ('$globals' in env) throw new Error('Environment must not contain $globals')
 
     env = { ...this.intrinsics, ...env, $globals: {} }
 
@@ -2302,6 +2304,10 @@ class GlobalEvaluator {
   }
 
   evaluate (code, env = {}) {
+    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
+    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
+    if ('$globals' in env) throw new Error('Environment must not contain $globals')
+
     // When a function is anonymous, it will be named the variable it is assigned. We give it
     // a friendly anonymous name to distinguish it from named classes and functions.
     const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
