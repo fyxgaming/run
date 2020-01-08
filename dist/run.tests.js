@@ -3387,11 +3387,11 @@ const chai = __webpack_require__(0)
 const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Jig, createRun, hookPay } = __webpack_require__(2)
+const { Run, Jig, createRun, hookPay } = __webpack_require__(2)
 
 describe('Code', () => {
   const run = createRun()
-  beforeEach(() => { run.activate(); run.code.flush() })
+  beforeEach(() => run.activate())
   beforeEach(() => run.blockchain.block())
 
   describe('deploy', () => {
@@ -3722,7 +3722,7 @@ describe('Code', () => {
     it('should load from mockchain when uncached', async () => {
       class A { f () { return 1 } }
       const A2 = await run.load(await run.deploy(A))
-      run.code.flush()
+      run.deactivate()
       const run2 = createRun({ blockchain: run.blockchain })
       const A3 = await run2.load(A.origin)
       expect(A2.owner).to.equal(run.owner.pubkey)
@@ -3762,8 +3762,9 @@ describe('Code', () => {
       // get a location
       class A { }
       await run.deploy(A)
-      // clear the code, but A.location will be set
-      run.code.flush()
+      // deactivating, which will leave A.location set
+      run.deactivate()
+      expect(typeof A.location).to.equal('string')
       // deploy the same code again
       const run2 = createRun({ blockchain: run.blockchain })
       await run2.deploy(A)
@@ -3782,8 +3783,9 @@ describe('Code', () => {
       run.deploy(B)
       run.deploy(C)
       await run.sync()
-      run.code.flush()
-      await run.load(C.location)
+      run.deactivate()
+      const run2 = createRun({ blockchain: run.blockchain })
+      await run2.load(C.location)
     })
   })
 
@@ -3794,9 +3796,10 @@ describe('Code', () => {
       A.B = B
       B.A = A
       await run.deploy(A)
-      run.code.flush()
-      const A2 = await run.load(A.location)
-      const B2 = await run.load(B.location)
+      run.deactivate()
+      const run2 = createRun({ blockchain: run.blockchain })
+      const A2 = await run2.load(A.location)
+      const B2 = await run2.load(B.location)
       expect(A2.B).to.equal(B2)
       expect(B2.A).to.equal(A2)
     })
@@ -3851,8 +3854,6 @@ describe('Code', () => {
         const G2 = await run2.load(A.G.origin)
         expect(T.G).to.equal(G2)
       }
-      await checkAllProperties(await run2.load(A.origin))
-      run.code.flush()
       await checkAllProperties(await run2.load(A.origin))
     })
 
@@ -3943,6 +3944,8 @@ describe('Code', () => {
 
   describe('activate', () => {
     it('should support activating different network', async () => {
+      if (Run.instance) Run.instance.deactivate()
+      const run = createRun() // Create a new run to have a new code cache
       class A { }
       await run.deploy(A)
       expect(A.location.length).to.equal(67)
@@ -3978,8 +3981,9 @@ describe('Code', () => {
         await run.sync()
         const b = new B()
         await b.sync()
-        run.code.flush()
-        await run.sync()
+        run.deactivate()
+        const run2 = createRun({ network, owner: run.owner.privkey })
+        await run2.sync()
       }
     }).timeout(30000)
   })
