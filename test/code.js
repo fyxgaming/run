@@ -620,56 +620,106 @@ describe('Code', () => {
 // ------------------------------------------------------------------------------------------------
 
 function runEvaluatorTestSuite (evaluator) {
-  it('should evaluate named function', () => {
-    const [f] = evaluator.evaluate('function f() { return 1 }')
-    expect(typeof f).to.equal('function')
-    expect(f.name).to.equal('f')
-    expect(f()).to.equal(1)
+  describe('evaluate parameters', () => {
+    it('should evaluate named function', () => {
+      const [f] = evaluator.evaluate('function f() { return 1 }')
+      expect(typeof f).to.equal('function')
+      expect(f.name).to.equal('f')
+      expect(f()).to.equal(1)
+    })
+
+    it('should evaluate anonymous function', () => {
+      const [f] = evaluator.evaluate('function () { return "123" }')
+      expect(typeof f).to.equal('function')
+      expect(f.name).to.equal('anonymousFunction')
+      expect(f()).to.equal('123')
+
+      const [g] = evaluator.evaluate('() => { return [] }')
+      expect(typeof g).to.equal('function')
+      expect(g.name).to.equal('anonymousFunction')
+      expect(g()).to.deep.equal([])
+    })
+
+    it('should evaluate named class', () => {
+      const [T] = evaluator.evaluate('class A { }')
+      expect(typeof T).to.equal('function')
+      expect(T.name).to.equal('A')
+    })
+
+    it('should evaluate anonymous class', () => {
+      const [T] = evaluator.evaluate('class { }')
+      expect(typeof T).to.equal('function')
+      expect(T.name).to.equal('AnonymousClass')
+    })
+
+    it('should throw if code is not a string', () => {
+      expect(() => evaluator.evaluate()).to.throw('Code must be a string. Received: undefined')
+      expect(() => evaluator.evaluate(123)).to.throw('Code must be a string. Received: 123')
+      expect(() => evaluator.evaluate(function f () {})).to.throw('Code must be a string. Received: ')
+    })
+
+    it('should throw if env is not an object', () => {
+      expect(() => evaluator.evaluate('()=>{}', false)).to.throw('Environment must be an object. Received: false')
+      expect(() => evaluator.evaluate('()=>{}', 123)).to.throw('Environment must be an object. Received: 123')
+      expect(() => evaluator.evaluate('()=>{}', class A {})).to.throw('Environment must be an object. Received: ')
+    })
+
+    it('should throw if env contains $globals', () => {
+      expect(() => evaluator.evaluate('()=>{}', { $globals: {} })).to.throw('Environment must not contain $globals')
+    })
+
+    it('should throw if evaluated code throws', () => {
+      expect(() => evaluator.evaluate('throw new Error()')).to.throw()
+      expect(() => evaluator.evaluate('x.y = z')).to.throw()
+    })
   })
 
-  it('should evaluate anonymous function', () => {
-    const [f] = evaluator.evaluate('function () { return "123" }')
-    expect(typeof f).to.equal('function')
-    expect(f.name).to.equal('anonymousFunction')
-    expect(f()).to.equal('123')
+  describe('environment', () => {
+    it('should place environment parent class in scope', () => {
+      // TODO
+    })
 
-    const [g] = evaluator.evaluate('() => { return [] }')
-    expect(typeof g).to.equal('function')
-    expect(g.name).to.equal('anonymousFunction')
-    expect(g()).to.deep.equal([])
+    it('should place environment constant in scope', () => {
+      // TODO
+    })
+
+    it('should place environment function in scope', () => {
+      // TODO
+    })
+
+    it('should place environment related class in scope', () => {
+      // TODO
+    })
+
+    it('should throw if parent class is not in environment', () => {
+      // TODO
+    })
+
+    it('should throw if called function is not in environment', () => {
+      // TODO
+    })
+
+    it('should share console between evaluations', () => {
+      // TODO
+    })
+
+    it('should share Uint8Array between evaluations', () => {
+      // TODO
+    })
   })
 
-  it('should evaluate named class', () => {
-    const [T] = evaluator.evaluate('class A { }')
-    expect(typeof T).to.equal('function')
-    expect(T.name).to.equal('A')
-  })
+  describe('globals', () => {
+    it('should support setting related classes', () => {
+      // TODO
+    })
 
-  it('should evaluate anonymous class', () => {
-    const [T] = evaluator.evaluate('class { }')
-    expect(typeof T).to.equal('function')
-    expect(T.name).to.equal('AnonymousClass')
-  })
+    it('should support setting related constants', () => {
+      // TODO
+    })
 
-  it('should throw if code is not a string', () => {
-    expect(() => evaluator.evaluate()).to.throw('Code must be a string. Received: undefined')
-    expect(() => evaluator.evaluate(123)).to.throw('Code must be a string. Received: 123')
-    expect(() => evaluator.evaluate(function f() {})).to.throw('Code must be a string. Received: ')
-  })
-
-  it('should throw if env is not an object', () => {
-    expect(() => evaluator.evaluate('()=>{}', false)).to.throw('Environment must be an object. Received: false')
-    expect(() => evaluator.evaluate('()=>{}', 123)).to.throw('Environment must be an object. Received: 123')
-    expect(() => evaluator.evaluate('()=>{}', class A {})).to.throw('Environment must be an object. Received: ')
-  })
-
-  it('should throw if env contains $globals', () => {
-    expect(() => evaluator.evaluate('()=>{}', { $globals: {} })).to.throw('Environment must not contain $globals')
-  })
-
-  it('should throw if evaluated code throws', () => {
-    expect(() => evaluator.evaluate('throw new Error()')).to.throw()
-    expect(() => evaluator.evaluate('x.y = z')).to.throw()
+    it('should support setting getters ', () => {
+      // TODO
+    })
   })
 }
 
@@ -680,12 +730,40 @@ function runEvaluatorTestSuite (evaluator) {
 describe('VMEvaluator', () => {
   const evaluator = new Run.Code.VMEvaluator()
   runEvaluatorTestSuite(evaluator)
+
+  it('should ban non-deterministic globals', () => {
+    // TODO
+  })
+
+  it('should standardize Uint8Array and console', () => {
+    // TODO
+  })
+
+  it('should disable non-standardized JavaScript types', () => {
+    // TODO: Map, Set, others
+  })
+
+  it('should prevent access to the global scope', () => {
+    // TODO
+  })
 })
 
 describe('GlobalEvaluator', () => {
   const evaluator = new Run.Code.GlobalEvaluator()
   runEvaluatorTestSuite(evaluator)
   evaluator.deactivate()
+
+  it('should detect setting the same global twice', () => {
+    // TODO: Basic set, and define property
+  })
+
+  it('should correctly deactivate globals', () => {
+    // TODO
+  })
+
+  it('should correctly reactivate globals', () => {
+    // TODO
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
