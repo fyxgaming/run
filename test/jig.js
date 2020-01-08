@@ -345,8 +345,9 @@ describe('Jig', () => {
       }
       const dragon = new Dragon(null)
       await dragon.sync()
-      run.state.cache.clear()
-      const dragon2 = await run.load(dragon.location)
+      run.deactivate()
+      const run2 = createRun({ blockchain: run.blockchain })
+      const dragon2 = await run2.load(dragon.location)
       expect(dragon).to.deep.equal(dragon2)
     })
 
