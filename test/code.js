@@ -11,6 +11,10 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run, Jig, createRun, hookPay } = require('./helpers')
 
+// ------------------------------------------------------------------------------------------------
+// Code tests
+// ------------------------------------------------------------------------------------------------
+
 describe('Code', () => {
   const run = createRun()
   beforeEach(() => run.activate())
@@ -610,3 +614,30 @@ describe('Code', () => {
     }).timeout(30000)
   })
 })
+
+// ------------------------------------------------------------------------------------------------
+// Evaluator test suite
+// ------------------------------------------------------------------------------------------------
+
+function runEvaluatorTestSuite(evaluator) {
+  it('placeholder test', () => {
+    console.log('placeholder test')
+  })
+}
+
+// ------------------------------------------------------------------------------------------------
+// Evaluator tests
+// ------------------------------------------------------------------------------------------------
+
+describe('VMEvaluator', () => {
+  const evaluator = new Run.Code.VMEvaluator()
+  runEvaluatorTestSuite(evaluator)
+})
+
+describe('GlobalEvaluator', () => {
+  const evaluator = new Run.Code.GlobalEvaluator()
+  runEvaluatorTestSuite(evaluator)
+  evaluator.deactivate()
+})
+
+// ------------------------------------------------------------------------------------------------
