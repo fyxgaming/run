@@ -82,7 +82,7 @@ module.exports =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -428,285 +428,12 @@ module.exports = {
 
 /***/ }),
 /* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * index.js
- *
- * The exports for the Run library, including the main Run class
- */
-
-const bsv = __webpack_require__(2)
-const Code = __webpack_require__(6)
-const Syncer = __webpack_require__(24)
-const { Transaction } = __webpack_require__(8)
-const util = __webpack_require__(3)
-const { Purse } = __webpack_require__(25)
-const Owner = __webpack_require__(26)
-const { BlockchainServer } = __webpack_require__(27)
-const Mockchain = __webpack_require__(58)
-const { StateCache } = __webpack_require__(59)
-const { PrivateKey } = bsv
-
-// ------------------------------------------------------------------------------------------------
-// Primary Run class
-// ------------------------------------------------------------------------------------------------
-
-/**
- * The main Run class that users create.
- */
-class Run {
-  /**
-   * Creates Run and sets up all properties. Whenever possible, settings from the prior Run
-   * instance will be reused, including the blockchain, code, and state cache.
-   * @param {object=} options Configuration settings
-   * @param {boolean|RegExp=} options.sandbox Whether to put code in a secure sandbox. Default is true.
-   * @param {object=} options.logger Console-like logger object. Default will log warnings and errors.
-   * @param {string=} options.app App string to differentiate transaction. Defaults to empty.
-   * @param {Blockchain|string=} options.blockchain Blockchain API or one of 'star', 'bitindex', or 'whatsonchain'
-   * @param {string=} options.network One of 'main', 'test', 'stn', or 'mock'
-   * @param {State=} options.state State provider, which may be null
-   * @param {string=} options.owner Private key or address string
-   * @param {string|PrivateKey|Pay=} options.purse Private key or Pay API
-   */
-  constructor (options = {}) {
-    this.logger = parseLogger(options.logger)
-    this.blockchain = parseBlockchain(options.blockchain, options.network, this.logger)
-    setupBsvLibrary(this.blockchain.network)
-    this.app = parseApp(options.app)
-    this.state = parseState(options.state)
-    this.owner = parseOwner(options.owner, this.blockchain.network, this.logger, this)
-    this.purse = parsePurse(options.purse, this.blockchain, this.logger)
-    this.code = parseCode(options.code, parseSandbox(options.sandbox))
-    this.syncer = new Syncer(this)
-    this.transaction = new Transaction(this)
-    this.loadQueue = new util.SerialTaskQueue()
-
-    this.activate()
-
-    // If using the mockchain, automatically fund the purse with some money
-    if (this.blockchain instanceof Mockchain) this.blockchain.fund(this.purse.address, 100000000)
-  }
-
-  /**
-   * Loads jigs or code from the blockchain
-   * @param {string} location Location string
-   * @returns {Promise<Object|Function|Class>} Class or function in a promise
-   */
-  async load (location, options = {}) {
-    this._checkActive()
-
-    // Loads that are from other loads just get passed through
-    if (options.childLoad) {
-      return this.transaction.load(location, options)
-    }
-
-    // Everything else gets serialized
-    return this.loadQueue.enqueue(() => this.transaction.load(location, options))
-  }
-
-  /**
-   * Deploys code to the blockchain
-   * @param {Function|Class} type Class or function to deploy
-   * @returns {Promise<string>} Location string in a promise
-   */
-  async deploy (type) {
-    this._checkActive()
-    this.code.deploy(type)
-    await this.sync()
-    return type.location
-  }
-
-  /**
-   * Syncs pending transactions and requeries the owner's tokens
-   */
-  async sync () {
-    return this.owner.sync()
-  }
-
-  /**
-   * Activates this Run instance so its owner, blockchain, transaction queue and more are used.
-   */
-  activate () {
-    Run.instance = this
-    bsv.Networks.defaultNetwork = util.bsvNetwork(this.blockchain.network)
-    this.code.activate(this.blockchain.network)
-    return this
-  }
-
-  _checkActive () {
-    if (Run.instance !== this) {
-      const hint = 'Hint: Call run.activate() on this instance first'
-      throw new Error(`This Run instance is not active\n\n${hint}`)
-    }
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Parameter validations
-// ------------------------------------------------------------------------------------------------
-
-function parseLogger (logger) {
-  // When no logger is provided, we log warnings and errors by default
-  switch (typeof logger) {
-    case 'object': logger = (logger || {}); break
-    case 'undefined': logger = { warn: console.warn, error: console.error }; break
-    default: throw new Error(`Option 'logger' must be an object. Received: ${logger}`)
-  }
-
-  // Fill this.logger with all supported methods
-  const methods = ['info', 'debug', 'warn', 'error']
-  logger = { ...logger }
-  methods.forEach(method => { logger[method] = logger[method] || (() => {}) })
-  return logger
-}
-
-function parseBlockchain (blockchain, network, logger) {
-  switch (typeof blockchain) {
-    case 'object':
-      if (!blockchain) throw new Error('Option \'blockchain\' must not be null')
-      if (typeof blockchain.broadcast !== 'function') throw new Error('Blockchain requires a broadcast method')
-      if (typeof blockchain.fetch !== 'function') throw new Error('Blockchain requires a fetch method')
-      if (typeof blockchain.utxos !== 'function') throw new Error('Blockchain requires a utxos method')
-      if (typeof blockchain.network !== 'string') throw new Error('Blockchain requires a network string')
-      return blockchain
-    case 'string':
-    case 'undefined': {
-      const cache = Run.instance ? Run.instance.blockchain.cache : null
-      if (network === 'mock') {
-        return new Mockchain({ cache })
-      } else {
-        return new BlockchainServer({ network, cache, api: blockchain, logger })
-      }
-    }
-    default: throw new Error(`Option 'blockchain' must be an object or string. Received: ${blockchain}`)
-  }
-}
-
-function parseApp (app) {
-  switch (typeof app) {
-    case 'string': return app
-    case 'undefined': return ''
-    default: throw new Error(`Option 'app' must be a string. Received: ${app}`)
-  }
-}
-
-function parseState (state) {
-  switch (typeof state) {
-    case 'object':
-      if (!state) throw new Error('Option \'state\' must not be null')
-      if (typeof state.get !== 'function') throw new Error('State requires a get method')
-      if (typeof state.set !== 'function') throw new Error('State requires a set method')
-      return state
-    case 'undefined':
-      return Run.instance && Run.instance.state ? Run.instance.state : new StateCache()
-    default: throw new Error(`Option 'state' must be an object. Received: ${state}`)
-  }
-}
-
-function parseOwner (owner, network, logger, run) {
-  switch (typeof owner) {
-    case 'string':
-    case 'object':
-    case 'undefined':
-      return new Owner(owner, { network, logger, run })
-    default: throw new Error(`Option 'owner' must be a valid key or address. Received: ${owner}`)
-  }
-}
-
-function parsePurse (purse, blockchain, logger) {
-  switch (typeof purse) {
-    case 'string': return new Purse({ privkey: purse, blockchain, logger })
-    case 'undefined': return new Purse({ blockchain, logger })
-    case 'object':
-      if (!purse || purse instanceof PrivateKey) {
-        return new Purse({ privkey: purse, blockchain, logger })
-      } else {
-        if (typeof purse.pay !== 'function') throw new Error('Purse requires a pay method')
-        return purse
-      }
-    default: throw new Error(`Option 'purse' must be a valid private key or Pay API. Received: ${purse}`)
-  }
-}
-
-function parseSandbox (sandbox) {
-  switch (typeof sandbox) {
-    case 'boolean': return sandbox
-    case 'object':
-      if (sandbox && sandbox instanceof RegExp) return sandbox
-      throw new Error(`Invalid option 'sandbox'. Received: ${sandbox}`)
-    case 'undefined': return true
-    default: throw new Error(`Option 'sandbox' must be a boolean or RegExp. Received: ${sandbox}`)
-  }
-}
-
-function parseCode (code, sandbox) {
-  switch (typeof code) {
-    case 'object':
-      if (code && code instanceof Code) return code
-      break
-    case 'undefined':
-      if (Run.instance) {
-        const sameSandbox = Run.instance.code.sandbox.toString() === sandbox.toString()
-        if (sameSandbox) return Run.instance.code
-      }
-      return new Code(sandbox)
-  }
-  throw new Error('Option \'code\' must be an instance of Code')
-}
-
-// ------------------------------------------------------------------------------------------------
-// Helper methods
-// ------------------------------------------------------------------------------------------------
-
-function setupBsvLibrary (network) {
-  // Set the default bsv network
-  bsv.Networks.defaultNetwork = util.bsvNetwork(network)
-
-  // Hook sign to not run isValidSignature, which is slow and unnecessary
-  const oldSign = bsv.Transaction.prototype.sign
-  bsv.Transaction.prototype.sign = function (...args) {
-    const oldIsValidSignature = bsv.Transaction.Input.prototype.isValidSignature
-    bsv.Transaction.Input.prototype.isValidSignature = () => true
-    const ret = oldSign.call(this, ...args)
-    bsv.Transaction.Input.prototype.isValidSignature = oldIsValidSignature
-    return ret
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Run static properties
-// ------------------------------------------------------------------------------------------------
-
-Run.version =  false ? undefined : "0.3.13"
-Run.protocol = util.PROTOCOL_VERSION
-Run._util = util
-
-Run.BlockchainServer = BlockchainServer
-Run.Code = Code
-Run.Mockchain = Mockchain
-Run.StateCache = StateCache
-
-const options = { configurable: true, enumerable: true }
-Object.defineProperty(Run, 'Jig', { ...options, get () { return __webpack_require__(7) } })
-Object.defineProperty(Run, 'Token', { ...options, get () { return __webpack_require__(60) } })
-Object.defineProperty(Run, 'expect', { ...options, get () { return __webpack_require__(21) } })
-Object.defineProperty(global, 'Jig', { ...options, get () { return Run.Jig } })
-Object.defineProperty(global, 'Token', { ...options, get () { return Run.Token } })
-
-// ------------------------------------------------------------------------------------------------
-
-module.exports = Run
-
-
-/***/ }),
-/* 2 */
 /***/ (function(module, exports) {
 
 module.exports = require("bsv");
 
 /***/ }),
-/* 3 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -715,7 +442,7 @@ module.exports = require("bsv");
  * Helpers used throughout the library
  */
 
-const bsv = __webpack_require__(2)
+const bsv = __webpack_require__(1)
 
 // ------------------------------------------------------------------------------------------------
 // JIG CHECKS
@@ -1013,7 +740,7 @@ function jsonToRichObject (target, customReplacers = [], parent = null, name = n
  * serialize state before objects have a location on the blockchain.
  */
 function extractJigsAndCodeToArray (arr) {
-  const { Jig } = __webpack_require__(1)
+  const { Jig } = __webpack_require__(3)
   return (target, parent, name) => {
     if (target instanceof Jig || deployable(target)) {
       arr.push(target)
@@ -1066,7 +793,7 @@ function deepTraverse (target, visit = [], parent = null, name = null, visited =
  * Returns the current run instance that is active
  */
 function activeRunInstance () {
-  const Run = __webpack_require__(1)
+  const Run = __webpack_require__(3)
   if (!Run.instance) throw new Error('Run not instantiated')
   return Run.instance
 }
@@ -1165,563 +892,298 @@ module.exports = {
 
 
 /***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * index.js
+ *
+ * The exports for the Run library, including the main Run class
+ */
+
+const bsv = __webpack_require__(1)
+const Code = __webpack_require__(7)
+const Syncer = __webpack_require__(24)
+const { Transaction } = __webpack_require__(8)
+const util = __webpack_require__(2)
+const { Purse } = __webpack_require__(25)
+const Owner = __webpack_require__(26)
+const { BlockchainServer } = __webpack_require__(27)
+const Mockchain = __webpack_require__(58)
+const { StateCache } = __webpack_require__(59)
+const { PrivateKey } = bsv
+const Jig = __webpack_require__(4)
+const Token = __webpack_require__(60)
+const expect = __webpack_require__(21)
+
+// ------------------------------------------------------------------------------------------------
+// Primary Run class
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * The main Run class that users create.
+ */
+class Run {
+  /**
+   * Creates Run and sets up all properties. Whenever possible, settings from the prior Run
+   * instance will be reused, including the blockchain, code, and state cache.
+   * @param {object=} options Configuration settings
+   * @param {boolean|RegExp=} options.sandbox Whether to put code in a secure sandbox. Default is true.
+   * @param {object=} options.logger Console-like logger object. Default will log warnings and errors.
+   * @param {string=} options.app App string to differentiate transaction. Defaults to empty.
+   * @param {Blockchain|string=} options.blockchain Blockchain API or one of 'star', 'bitindex', or 'whatsonchain'
+   * @param {string=} options.network One of 'main', 'test', 'stn', or 'mock'
+   * @param {State=} options.state State provider, which may be null
+   * @param {string=} options.owner Private key or address string
+   * @param {string|PrivateKey|Pay=} options.purse Private key or Pay API
+   */
+  constructor (options = {}) {
+    this.logger = parseLogger(options.logger)
+    this.blockchain = parseBlockchain(options.blockchain, options.network, this.logger)
+    setupBsvLibrary(this.blockchain.network)
+    this.app = parseApp(options.app)
+    this.state = parseState(options.state)
+    this.owner = parseOwner(options.owner, this.blockchain.network, this.logger, this)
+    this.purse = parsePurse(options.purse, this.blockchain, this.logger)
+    this.code = parseCode(options.code, parseSandbox(options.sandbox), this.logger)
+    this.syncer = new Syncer(this)
+    this.transaction = new Transaction(this)
+    this.loadQueue = new util.SerialTaskQueue()
+
+    this.activate()
+
+    // If using the mockchain, automatically fund the purse with some money
+    if (this.blockchain instanceof Mockchain) this.blockchain.fund(this.purse.address, 100000000)
+  }
+
+  /**
+   * Loads jigs or code from the blockchain
+   * @param {string} location Location string
+   * @returns {Promise<Object|Function|Class>} Class or function in a promise
+   */
+  async load (location, options = {}) {
+    this._checkActive()
+
+    // Loads that are from other loads just get passed through
+    if (options.childLoad) {
+      return this.transaction.load(location, options)
+    }
+
+    // Everything else gets serialized
+    return this.loadQueue.enqueue(() => this.transaction.load(location, options))
+  }
+
+  /**
+   * Deploys code to the blockchain
+   * @param {Function|Class} type Class or function to deploy
+   * @returns {Promise<string>} Location string in a promise
+   */
+  async deploy (type) {
+    this._checkActive()
+    this.code.deploy(type)
+    await this.sync()
+    return type.location
+  }
+
+  /**
+   * Syncs pending transactions and requeries the owner's tokens
+   */
+  async sync () {
+    return this.owner.sync()
+  }
+
+  /**
+   * Activates this Run instance so its owner, blockchain, transaction queue and more are used.
+   */
+  activate () {
+    if (Run.instance) Run.instance.deactivate()
+    Run.instance = this
+    bsv.Networks.defaultNetwork = util.bsvNetwork(this.blockchain.network)
+    this.code.activate(this.blockchain.network)
+    return this
+  }
+
+  /**
+   * Deactivates the current run instance, cleaning up anything in the process
+   */
+  deactivate () {
+    if (!Run.instance) return
+    Run.instance.code.deactivate()
+    Run.instance = null
+  }
+
+  _checkActive () {
+    if (Run.instance !== this) {
+      const hint = 'Hint: Call run.activate() on this instance first'
+      throw new Error(`This Run instance is not active\n\n${hint}`)
+    }
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Parameter validations
+// ------------------------------------------------------------------------------------------------
+
+function parseLogger (logger) {
+  // When no logger is provided, we log warnings and errors by default
+  switch (typeof logger) {
+    case 'object': logger = (logger || {}); break
+    case 'undefined': logger = { warn: console.warn, error: console.error }; break
+    default: throw new Error(`Option 'logger' must be an object. Received: ${logger}`)
+  }
+
+  // Fill this.logger with all supported methods
+  const methods = ['info', 'debug', 'warn', 'error']
+  logger = { ...logger }
+  methods.forEach(method => { logger[method] = logger[method] || (() => {}) })
+  return logger
+}
+
+function parseBlockchain (blockchain, network, logger) {
+  switch (typeof blockchain) {
+    case 'object':
+      if (!blockchain) throw new Error('Option \'blockchain\' must not be null')
+      if (typeof blockchain.broadcast !== 'function') throw new Error('Blockchain requires a broadcast method')
+      if (typeof blockchain.fetch !== 'function') throw new Error('Blockchain requires a fetch method')
+      if (typeof blockchain.utxos !== 'function') throw new Error('Blockchain requires a utxos method')
+      if (typeof blockchain.network !== 'string') throw new Error('Blockchain requires a network string')
+      return blockchain
+    case 'string':
+    case 'undefined': {
+      const cache = Run.instance ? Run.instance.blockchain.cache : null
+      if (network === 'mock') {
+        return new Mockchain({ cache })
+      } else {
+        return new BlockchainServer({ network, cache, api: blockchain, logger })
+      }
+    }
+    default: throw new Error(`Option 'blockchain' must be an object or string. Received: ${blockchain}`)
+  }
+}
+
+function parseApp (app) {
+  switch (typeof app) {
+    case 'string': return app
+    case 'undefined': return ''
+    default: throw new Error(`Option 'app' must be a string. Received: ${app}`)
+  }
+}
+
+function parseState (state) {
+  switch (typeof state) {
+    case 'object':
+      if (!state) throw new Error('Option \'state\' must not be null')
+      if (typeof state.get !== 'function') throw new Error('State requires a get method')
+      if (typeof state.set !== 'function') throw new Error('State requires a set method')
+      return state
+    case 'undefined':
+      return Run.instance && Run.instance.state ? Run.instance.state : new StateCache()
+    default: throw new Error(`Option 'state' must be an object. Received: ${state}`)
+  }
+}
+
+function parseOwner (owner, network, logger, run) {
+  switch (typeof owner) {
+    case 'string':
+    case 'object':
+    case 'undefined':
+      return new Owner(owner, { network, logger, run })
+    default: throw new Error(`Option 'owner' must be a valid key or address. Received: ${owner}`)
+  }
+}
+
+function parsePurse (purse, blockchain, logger) {
+  switch (typeof purse) {
+    case 'string': return new Purse({ privkey: purse, blockchain, logger })
+    case 'undefined': return new Purse({ blockchain, logger })
+    case 'object':
+      if (!purse || purse instanceof PrivateKey) {
+        return new Purse({ privkey: purse, blockchain, logger })
+      } else {
+        if (typeof purse.pay !== 'function') throw new Error('Purse requires a pay method')
+        return purse
+      }
+    default: throw new Error(`Option 'purse' must be a valid private key or Pay API. Received: ${purse}`)
+  }
+}
+
+function parseSandbox (sandbox) {
+  switch (typeof sandbox) {
+    case 'boolean': return sandbox
+    case 'object':
+      if (sandbox && sandbox instanceof RegExp) return sandbox
+      throw new Error(`Invalid option 'sandbox'. Received: ${sandbox}`)
+    case 'undefined': return true
+    default: throw new Error(`Option 'sandbox' must be a boolean or RegExp. Received: ${sandbox}`)
+  }
+}
+
+function parseCode (code, sandbox, logger) {
+  switch (typeof code) {
+    case 'object':
+      if (code && code instanceof Code) return code
+      break
+    case 'undefined':
+      if (Run.instance) {
+        const sameSandbox = Run.instance.code.sandbox.toString() === sandbox.toString()
+
+        if (sameSandbox) return Run.instance.code
+
+        // If we are creating new Code, then undo any global overrides from the last one,
+        // so that we start from a clean slate. This makes our unit tests more reliable.
+        Run.instance.code.deactivate()
+      }
+      return new Code({ sandbox, logger })
+  }
+  throw new Error('Option \'code\' must be an instance of Code')
+}
+
+// ------------------------------------------------------------------------------------------------
+// Helper methods
+// ------------------------------------------------------------------------------------------------
+
+function setupBsvLibrary (network) {
+  // Set the default bsv network
+  bsv.Networks.defaultNetwork = util.bsvNetwork(network)
+
+  // Hook sign to not run isValidSignature, which is slow and unnecessary
+  const oldSign = bsv.Transaction.prototype.sign
+  bsv.Transaction.prototype.sign = function (...args) {
+    const oldIsValidSignature = bsv.Transaction.Input.prototype.isValidSignature
+    bsv.Transaction.Input.prototype.isValidSignature = () => true
+    const ret = oldSign.call(this, ...args)
+    bsv.Transaction.Input.prototype.isValidSignature = oldIsValidSignature
+    return ret
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Run static properties
+// ------------------------------------------------------------------------------------------------
+
+Run.version =  false ? undefined : "0.3.13"
+Run.protocol = util.PROTOCOL_VERSION
+Run._util = util
+Run.instance = null
+
+Run.BlockchainServer = BlockchainServer
+Run.Code = Code
+Run.Mockchain = Mockchain
+Run.StateCache = StateCache
+
+Run.Jig = Jig
+Run.Token = Token
+Run.expect = expect
+global.Jig = Jig
+global.Token = Token
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = Run
+
+
+/***/ }),
 /* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(0);
-
-function encode(val) {
-  return encodeURIComponent(val).
-    replace(/%40/gi, '@').
-    replace(/%3A/gi, ':').
-    replace(/%24/g, '$').
-    replace(/%2C/gi, ',').
-    replace(/%20/g, '+').
-    replace(/%5B/gi, '[').
-    replace(/%5D/gi, ']');
-}
-
-/**
- * Build a URL by appending params to the end
- *
- * @param {string} url The base of the url (e.g., http://www.google.com)
- * @param {object} [params] The params to be appended
- * @returns {string} The formatted url
- */
-module.exports = function buildURL(url, params, paramsSerializer) {
-  /*eslint no-param-reassign:0*/
-  if (!params) {
-    return url;
-  }
-
-  var serializedParams;
-  if (paramsSerializer) {
-    serializedParams = paramsSerializer(params);
-  } else if (utils.isURLSearchParams(params)) {
-    serializedParams = params.toString();
-  } else {
-    var parts = [];
-
-    utils.forEach(params, function serialize(val, key) {
-      if (val === null || typeof val === 'undefined') {
-        return;
-      }
-
-      if (utils.isArray(val)) {
-        key = key + '[]';
-      } else {
-        val = [val];
-      }
-
-      utils.forEach(val, function parseValue(v) {
-        if (utils.isDate(v)) {
-          v = v.toISOString();
-        } else if (utils.isObject(v)) {
-          v = JSON.stringify(v);
-        }
-        parts.push(encode(key) + '=' + encode(v));
-      });
-    });
-
-    serializedParams = parts.join('&');
-  }
-
-  if (serializedParams) {
-    var hashmarkIndex = url.indexOf('#');
-    if (hashmarkIndex !== -1) {
-      url = url.slice(0, hashmarkIndex);
-    }
-
-    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
-  }
-
-  return url;
-};
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var enhanceError = __webpack_require__(13);
-
-/**
- * Create an Error with the specified message, config, error code, request and response.
- *
- * @param {string} message The error message.
- * @param {Object} config The config.
- * @param {string} [code] The error code (for example, 'ECONNABORTED').
- * @param {Object} [request] The request.
- * @param {Object} [response] The response.
- * @returns {Error} The created error.
- */
-module.exports = function createError(message, config, code, request, response) {
-  var error = new Error(message);
-  return enhanceError(error, config, code, request, response);
-};
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * code.js
- *
- * Code manager, sandboxer, installer, and deployer
- */
-
-const vm = typeof window === 'undefined' ? __webpack_require__(22) : __webpack_require__(23)
-const Jig = __webpack_require__(7)
-const util = __webpack_require__(3)
-const bsv = __webpack_require__(2)
-
-function banNondeterministicGlobals (env) {
-  const list = ['Date', 'Math', 'eval', 'XMLHttpRequest', 'FileReader', 'WebSocket', 'setTimeout', 'setInterval']
-  list.forEach(x => { if (typeof env[x] === 'undefined') { env[x] = undefined } })
-}
-
-class VMEvaluator {
-  constructor () {
-    // create common intrinsics shared between realms
-    this.intrinsics = {}
-    // Our console intercepts console.log in sandboxed code and re-logs them outside
-    const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
-    this.intrinsics.console = vm.runInContext(consoleCode, vm.createContext({ c: console }))
-    this.intrinsics.Uint8Array = vm.runInContext('Uint8Array', vm.createContext({}))
-  }
-
-  evaluate (code, env = {}) {
-    if (typeof env.$globals !== 'undefined') throw new Error('$globals must not be defined')
-
-    env = { ...this.intrinsics, ...env, $globals: {} }
-
-    banNondeterministicGlobals(env)
-
-    const context = vm.createContext(env)
-
-    if (typeof window === 'undefined') { context.global = context }
-
-    // When a function is anonymous, it will be named the variable it is assigned. We give it
-    // a friendly anonymous name to distinguish it from named classes and functions.
-    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
-
-    // Execute the code in strict mode.
-    const script = `with ($globals) { const ${anon} = ${code}; ${anon} }`
-    const result = vm.runInContext(script, context)
-
-    return [result, env.$globals]
-  }
-}
-
-// if we're not sandboxing, then set our globals on the real global
-// dangerous, but necessary for testing code coverage
-class GlobalEvaluator {
-  evaluate (code, env = {}) {
-    // When a function is anonymous, it will be named the variable it is assigned. We give it
-    // a friendly anonymous name to distinguish it from named classes and functions.
-    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
-
-    Object.keys(env).forEach(key => {
-      // Use Object.defineProperty() because global.Jig is defined with an accessor
-      const options = { configurable: true, enumerable: true, writable: true }
-      Object.defineProperty(global, key, { value: env[key], ...options })
-    })
-
-    const result = eval(`const ${anon} = ${code}; ${anon}`) // eslint-disable-line
-
-    return [result, global]
-  }
-}
-
-const stringProps = ['origin', 'location', 'originMainnet', 'locationMainnet', 'originTestnet',
-  'locationTestnet', 'originStn', 'locationStn', 'originMocknet', 'locationMocknet',
-  'owner', 'ownerMainnet', 'ownerTestnet', 'ownerStn', 'ownerMocknet']
-
-class Code {
-  constructor (sandbox = true) {
-    this.installs = new Map() // Type | Location | Sandbox -> Sandbox
-    this.sandbox = sandbox
-
-    // vm-browserify requires a body for sandboxing. if it doesn't exist, create one.
-    if (typeof window !== 'undefined' && !window.document.body) {
-      window.document.body = document.createElement('body')
-    }
-
-    this.vmEvaluator = new VMEvaluator()
-    this.globalEvaluator = new GlobalEvaluator()
-    this.intrinsics = this.vmEvaluator.intrinsics
-
-    this.installJig()
-  }
-
-  isSandbox (type) {
-    const sandbox = this.installs.get(type)
-    return sandbox && type === sandbox
-  }
-
-  getInstalled (typeOrLocation) {
-    if (this.isSandbox(typeOrLocation)) return typeOrLocation
-    return this.installs.get(typeOrLocation)
-  }
-
-  static extractProps (type) {
-    const props = { }
-    const skipProps = ['deps', ...stringProps]
-    const classProps = Object.keys(type)
-    const propNames = classProps.filter(key => !skipProps.includes(key))
-    const refs = []
-    propNames.forEach(name => {
-      // check if serializable, and also extract the code references
-      util.richObjectToJson(type[name], [util.extractJigsAndCodeToArray(refs)],
-        null, `${type.name}.${name}`)
-      props[name] = type[name]
-    })
-    return { props, refs }
-  }
-
-  deploy (type) {
-    // short-circut deployment at Jig because this class already deployed it
-    if (type === this.Jig || type === Jig) return this.Jig
-
-    // check that this code can be deployed
-    if (!util.deployable(type)) throw new Error(`${type} is not deployable`)
-
-    // if this type was already deployed on this network, don't deploy again
-    const pre = this.installs.get(type)
-    const run = util.activeRunInstance()
-    const net = util.networkSuffix(run.blockchain.network)
-    if (pre && Object.keys(pre).includes(`origin${net}`) &&
-      Object.keys(pre).includes(`location${net}`)) return pre
-
-    // TODO: Add test, and make sure this works
-    const classProps = Object.keys(type)
-    if (classProps.includes(`location${net}`)) {
-      const preByLoc = this.installs.get(type[`location${net}`])
-      if (preByLoc) return preByLoc
-    }
-
-    // check the class properties. classProps are props specifically on this code, not a parent
-    const isBasicObject = (o) => Object.getPrototypeOf(Object.getPrototypeOf(o)) === null
-    if (classProps.includes('deps') && !isBasicObject(type.deps)) throw new Error('deps must be an object')
-    const notAString = s => classProps.includes(s) && typeof type[s] !== 'string'
-    stringProps.forEach(s => { if (notAString(s)) throw new Error(`${s} must be a string: ${type[s]}`) })
-
-    run.transaction.begin()
-    try {
-      // create env, the globals in the sandbox
-      // this will just be the common intrinsics and a parent if it exists
-      // other dependencies will be loaded after to avoid circular references
-      const env = { ...this.intrinsics }
-
-      // make sure the parent does not conflict with whats set in deps
-      // realdeps is type.deps with its parent if not there
-      const parentClass = Object.getPrototypeOf(type)
-      const realdeps = classProps.includes('deps') ? { ...type.deps } : {}
-      if (parentClass !== Object.getPrototypeOf(Object)) {
-        env[parentClass.name] = this.deploy(parentClass)
-        if (realdeps[parentClass.name]) {
-          const currentSandbox = this.getInstalled(realdeps[parentClass.name])
-          if (currentSandbox !== env[parentClass.name]) {
-            throw new Error(`unexpected parent dependency ${parentClass.name}`)
-          }
-        }
-        if (!(parentClass.name in realdeps) && parentClass !== this.installs.get(Jig) && parentClass !== Jig) {
-          realdeps[parentClass.name] = parentClass
-        }
-      }
-
-      // If the parent the child, return its location and don't install anything
-      const pre2 = this.installs.get(type)
-      if (pre2 && Object.keys(pre2).includes(`origin${net}`) &&
-        Object.keys(pre2).includes(`location${net}`)) return pre2
-
-      const [sandbox, sandboxGlobal] = this.evaluate(type, util.getNormalizedSourceCode(type),
-        type.name, env, this.sandbox)
-      this.installs.set(type, sandbox)
-      this.installs.set(sandbox, sandbox)
-
-      const { props, refs } = Code.extractProps(type)
-      Object.keys(props).forEach(key => { sandbox[key] = props[key] })
-      const codeRefs = refs.filter(ref => util.deployable(ref))
-
-      // if location is already set for the network, assume correct and don't reupload
-      if (classProps.includes(`origin${net}`) || classProps.includes(`location${net}`)) {
-        if (classProps.includes(`origin${net}`)) {
-          sandbox[`origin${net}`] = sandbox.origin = type.origin = type[`origin${net}`]
-        }
-        sandbox[`location${net}`] = sandbox.location = type.location = type[`location${net}`] || type.origin
-        sandbox[`owner${net}`] = sandbox.owner = type.owner = type[`owner${net}`]
-
-        this.installs.set(sandbox[`location${net}`], sandbox)
-      } else {
-        // location is not set. use a temporary location and deploy
-
-        const currentNetwork = run.blockchain.network
-        const success = (location) => {
-          // if different network, primary origin and location will be set by that run instance
-          if (run.blockchain.network === currentNetwork) {
-            type.origin = type.location = sandbox.origin = sandbox.location = location
-            type.owner = sandbox.owner = type[`owner${net}`]
-          }
-          sandbox[`origin${net}`] = sandbox[`location${net}`] = location
-          type[`origin${net}`] = type[`location${net}`] = location
-          this.installs.set(location, sandbox)
-        }
-        const error = () => {
-          if (run.blockchain.network === currentNetwork) {
-            delete type.origin; delete type.location
-            delete sandbox.origin; delete sandbox.location
-            delete type.owner; delete sandbox.owner
-          }
-          delete type[`origin${net}`]; delete type[`location${net}`]
-          delete sandbox[`origin${net}`]; delete sandbox[`location${net}`]
-          delete type[`owner${net}`]; delete sandbox[`owner${net}`]
-        }
-
-        const tempLocation = run.transaction.storeCode(type, sandbox, realdeps, props, success, error)
-        type[`origin${net}`] = type[`location${net}`] = tempLocation
-        sandbox[`origin${net}`] = sandbox[`location${net}`] = tempLocation
-        type[`owner${net}`] = sandbox[`owner${net}`] = type.owner
-      }
-
-      // deploy deps and set to sandbox globals after origin is set, allowing circular dependencies
-      if (sandboxGlobal) {
-        Object.entries(realdeps).forEach(([name, dep]) => {
-          if (dep === parentClass || dep === env[parentClass.name]) return
-          // use Object.defineProperty in case the prop is 'caller' which cannot be overridden
-          const options = { configurable: true, enumerable: true }
-          Object.defineProperty(sandboxGlobal, name, { ...options, value: this.deploy(dep) })
-        })
-      }
-      codeRefs.forEach(ref => this.deploy(ref))
-
-      // replace all static props that are code with sandboxed code because sandboxes
-      // should only know about other sandboxed code and never application code.
-      Object.keys(props).forEach(prop => {
-        this.control.enforce = false
-        util.deepTraverse(sandbox[prop], (target, parent, name) => {
-          const installed = this.getInstalled(target)
-          if (installed && name) parent[name] = installed
-          if (installed && !name) sandbox[prop] = installed
-        })
-        this.control.enforce = true
-      })
-      if (Object.keys(realdeps).length) {
-        sandbox.deps = { }
-        Object.keys(realdeps).forEach(name => {
-          sandbox.deps[name] = this.deploy(realdeps[name])
-        })
-      }
-
-      return sandbox
-    } finally {
-      run.transaction.end()
-    }
-  }
-
-  async installFromTx (def, location, tx, run, bsvNetwork, partiallyInstalledCode = new Map()) {
-    // if we have this location already, return it
-    if (this.installs.has(location)) return this.installs.get(location)
-    if (partiallyInstalledCode.has(location)) return partiallyInstalledCode.get(location)
-
-    // parse the location
-    const txid = location.slice(0, 64)
-    const vout = parseInt(location.slice(66))
-
-    // make sure the owner matches the output's address
-    const addr1 = tx.outputs[vout].script.toAddress(bsvNetwork).toString()
-    const addr2 = new bsv.PublicKey(def.owner, bsvNetwork).toAddress().toString()
-    if (addr1 !== addr2) throw new Error(`bad def owner: ${location}`)
-
-    const env = { ...this.intrinsics }
-
-    // Create a promise so that other dependencies can refer to this load
-    // instead of loading themselves
-    let partialInstallResolve = null; let partialInstallReject = null
-    const partialInstall = new Promise((resolve, reject) => {
-      partialInstallResolve = resolve
-      partialInstallReject = reject
-    })
-    partiallyInstalledCode.set(location, partialInstall)
-
-    try {
-      const parentClassRegex = /^class \w* extends (\w*)[\s]*{/
-      let parentName = null
-      if (parentClassRegex.test(def.text)) {
-        parentName = def.text.match(parentClassRegex)[1]
-        let parentLocation = (def.deps || {})[parentName]
-        if (parentName === 'Jig' && typeof parentLocation === 'undefined') {
-          env.Jig = this.Jig
-        } else {
-          if (parentLocation.startsWith('_')) { parentLocation = tx.hash + parentLocation }
-          env[parentName] = await run.transaction.load(parentLocation, { partiallyInstalledCode })
-        }
-      }
-
-      const name = def.text.match(/^(class|function) (\w+)[( ]/)[2]
-      const [sandbox, sandboxGlobal] = this.evaluate(null, def.text, name, env, this.sandbox)
-      sandbox.origin = sandbox.location = location
-      sandbox.owner = def.owner
-      const net = util.networkSuffix(run.blockchain.network)
-      sandbox[`origin${net}`] = sandbox[`location${net}`] = location
-      sandbox[`owner${net}`] = def.owner
-      partialInstallResolve(sandbox)
-
-      if (sandboxGlobal) {
-        const promises = Object.entries(def.deps || {}).map(([name, dep]) => {
-          if (name === parentName) return
-          const location = dep.startsWith('_') ? tx.hash + dep : dep
-          return run.transaction.load(location, { partiallyInstalledCode }).then(T => {
-            // use Object.defineProperty in case the prop is 'caller' which cannot be overridden
-            const options = { configurable: true, enumerable: true }
-            Object.defineProperty(sandboxGlobal, name, { ...options, value: T })
-          })
-        })
-        await Promise.all(promises)
-      }
-
-      // set all of the dependencies to their sandboxed versions
-      if (def.deps) {
-        sandbox.deps = {}
-        Object.keys(def.deps).forEach(name => {
-          sandbox.deps[name] = sandboxGlobal[name] || env[name]
-        })
-      }
-
-      // ----------------------------------------------------
-      // HYDRATE CLASS PROPERTIES
-      // ----------------------------------------------------
-
-      // Convert def.props into a rich object, finding all refs to load in the process
-      const refsToLoad = []
-      const findRefsToLoad = (target, parent, name) => {
-        if (typeof target.$ref !== 'undefined') {
-          refsToLoad.push({ location: target.$ref, parent, name })
-          return {}
-        }
-      }
-      const classProps = util.jsonToRichObject(def.props || {}, [findRefsToLoad])
-
-      // Hydrate each reference and set it on classProps
-      const expandLocation = id => { return (id[1] === 'i' || id[1] === 'o') ? txid + id : id }
-      const loadPromises = refsToLoad.map(ref =>
-        run.transaction.load(expandLocation(ref.location), { partiallyInstalledCode }))
-      const loadedRefs = await Promise.all(loadPromises)
-      refsToLoad.forEach(({ location, parent, name }, index) => {
-        parent[name] = loadedRefs[index]
-      })
-
-      // Apply each rich class property to our sandbox
-      Object.assign(sandbox, classProps)
-
-      // ----------------------------------------------------
-
-      partiallyInstalledCode.delete(location)
-
-      // Safety check. We should be able to remove over time.
-      if (this.installs.has(location)) {
-        const hint = 'This is an internal Run bug. Please report it to the library developers.'
-        throw new Error(`Code installed twice for ${location}\n\n${hint}.`)
-      }
-
-      this.installs.set(location, sandbox)
-      this.installs.set(sandbox, sandbox)
-
-      return sandbox
-    } catch (e) {
-      partialInstallReject(e)
-      throw e
-    }
-  }
-
-  installJig () {
-    this.control = { // control state shared across all jigs, similar to a PCB
-      stack: [], // jig call stack for the current method (Array<Target>)
-      creates: new Set(), // jigs created in the current method (Set<Target>)
-      reads: new Set(), // jigs read during the current method (Set<Target>)
-      saves: new Map(), // saved original state of jigs before method (Target->Object)
-      callers: new Map(), // Callers on each jig method (Target->Set<Object>)
-      error: null, // if any errors occurred to prevent swallows
-      enforce: true, // enable safeguards for the user
-      proxies: new Map(), // map connecting targets to proxies (Target->Proxy)
-      locals: new WeakMap() // local secret state for each jig (Target->Object)
-    }
-    const env = { ...this.intrinsics, control: this.control, util }
-    this.Jig = this.evaluate(Jig, Jig.toString(), 'Jig', env, this.shouldSandbox('Jig'))[0]
-    this.installs.set(Jig, this.Jig)
-    this.installs.set(this.Jig, this.Jig)
-  }
-
-  shouldSandbox (name) {
-    return this.sandbox instanceof RegExp ? this.sandbox.test(name) : this.sandbox
-  }
-
-  evaluate (type, code, name, env, sandbox) {
-    // if we've already installed this type, then return it
-    const prev = this.installs.get(type)
-    if (prev) return [prev, null]
-
-    // test if we need to sandbox or not
-    sandbox = (sandbox instanceof RegExp ? sandbox.test(name) : sandbox)
-
-    const evaluator = sandbox ? this.vmEvaluator : this.globalEvaluator
-
-    const [result, globals] = evaluator.evaluate(code, env)
-
-    Object.defineProperty(globals, 'caller', {
-      configurable: true,
-      enumerable: true,
-      get: () => {
-        // we must be inside a jig method called by another jig method to be non-null
-        if (this.control.stack.length < 2) return null
-
-        // return the proxy for the jig that called this jig
-        return this.control.proxies.get(this.control.stack[this.control.stack.length - 2])
-      }
-    })
-
-    return [!sandbox && type ? type : result, globals]
-  }
-
-  activate (network) {
-    const net = util.networkSuffix(network)
-    this.installs.forEach((v, k) => {
-      if (typeof k === 'string') return // location
-      if (typeof k[`origin${net}`] !== 'undefined') {
-        k.origin = k[`origin${net}`]
-        v.origin = k[`origin${net}`]
-      } else { delete k.origin; delete v.origin }
-      if (typeof k[`location${net}`] !== 'undefined') {
-        k.location = k[`location${net}`]
-        v.location = k[`location${net}`]
-      } else { delete k.location; delete v.location }
-      if (typeof k[`owner${net}`] !== 'undefined') {
-        k.owner = k[`owner${net}`]
-        v.owner = k[`owner${net}`]
-      } else { delete k.owner; delete v.owner }
-    })
-    if (false) {}
-  }
-
-  flush () {
-    this.installs = new Map()
-    this.installs.set(Jig, this.Jig)
-    this.installs.set(this.Jig, this.Jig)
-  }
-}
-
-module.exports = Code
-
-
-/***/ }),
-/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -1732,7 +1194,7 @@ module.exports = Code
 
 /* global control */
 
-const util = __webpack_require__(3)
+const util = __webpack_require__(2)
 
 module.exports = class Jig {
   constructor (...args) {
@@ -2284,6 +1746,646 @@ module.exports = class Jig {
 
 
 /***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(0);
+
+function encode(val) {
+  return encodeURIComponent(val).
+    replace(/%40/gi, '@').
+    replace(/%3A/gi, ':').
+    replace(/%24/g, '$').
+    replace(/%2C/gi, ',').
+    replace(/%20/g, '+').
+    replace(/%5B/gi, '[').
+    replace(/%5D/gi, ']');
+}
+
+/**
+ * Build a URL by appending params to the end
+ *
+ * @param {string} url The base of the url (e.g., http://www.google.com)
+ * @param {object} [params] The params to be appended
+ * @returns {string} The formatted url
+ */
+module.exports = function buildURL(url, params, paramsSerializer) {
+  /*eslint no-param-reassign:0*/
+  if (!params) {
+    return url;
+  }
+
+  var serializedParams;
+  if (paramsSerializer) {
+    serializedParams = paramsSerializer(params);
+  } else if (utils.isURLSearchParams(params)) {
+    serializedParams = params.toString();
+  } else {
+    var parts = [];
+
+    utils.forEach(params, function serialize(val, key) {
+      if (val === null || typeof val === 'undefined') {
+        return;
+      }
+
+      if (utils.isArray(val)) {
+        key = key + '[]';
+      } else {
+        val = [val];
+      }
+
+      utils.forEach(val, function parseValue(v) {
+        if (utils.isDate(v)) {
+          v = v.toISOString();
+        } else if (utils.isObject(v)) {
+          v = JSON.stringify(v);
+        }
+        parts.push(encode(key) + '=' + encode(v));
+      });
+    });
+
+    serializedParams = parts.join('&');
+  }
+
+  if (serializedParams) {
+    var hashmarkIndex = url.indexOf('#');
+    if (hashmarkIndex !== -1) {
+      url = url.slice(0, hashmarkIndex);
+    }
+
+    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
+  }
+
+  return url;
+};
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var enhanceError = __webpack_require__(13);
+
+/**
+ * Create an Error with the specified message, config, error code, request and response.
+ *
+ * @param {string} message The error message.
+ * @param {Object} config The config.
+ * @param {string} [code] The error code (for example, 'ECONNABORTED').
+ * @param {Object} [request] The request.
+ * @param {Object} [response] The response.
+ * @returns {Error} The created error.
+ */
+module.exports = function createError(message, config, code, request, response) {
+  var error = new Error(message);
+  return enhanceError(error, config, code, request, response);
+};
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * code.js
+ *
+ * Code manager, sandboxer, installer, and deployer
+ */
+
+const vm = typeof window === 'undefined' ? __webpack_require__(22) : __webpack_require__(23)
+const Jig = __webpack_require__(4)
+const util = __webpack_require__(2)
+const bsv = __webpack_require__(1)
+
+function banNondeterministicGlobals (env) {
+  const list = ['Date', 'Math', 'eval', 'XMLHttpRequest', 'FileReader', 'WebSocket', 'setTimeout', 'setInterval']
+  list.forEach(x => { if (typeof env[x] === 'undefined') { env[x] = undefined } })
+}
+
+class VMEvaluator {
+  constructor () {
+    // create common intrinsics shared between realms
+    this.intrinsics = {}
+    // Our console intercepts console.log in sandboxed code and re-logs them outside
+    const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
+    this.intrinsics.console = vm.runInContext(consoleCode, vm.createContext({ c: console }))
+    this.intrinsics.Uint8Array = vm.runInContext('Uint8Array', vm.createContext({}))
+  }
+
+  evaluate (code, env = {}) {
+    if (typeof env.$globals !== 'undefined') throw new Error('$globals must not be defined')
+
+    env = { ...this.intrinsics, ...env, $globals: {} }
+
+    banNondeterministicGlobals(env)
+
+    const context = vm.createContext(env)
+
+    if (typeof window === 'undefined') { context.global = context }
+
+    // When a function is anonymous, it will be named the variable it is assigned. We give it
+    // a friendly anonymous name to distinguish it from named classes and functions.
+    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
+
+    // Execute the code in strict mode.
+    const script = `with ($globals) { const ${anon} = ${code}; ${anon} }`
+    const result = vm.runInContext(script, context)
+
+    return [result, env.$globals]
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// GlobalEvaluator
+// ------------------------------------------------------------------------------------------------
+
+function sameDescriptors(a, b) {
+  if (typeof a !== typeof b) return false
+  const aKeys = Array.from(Object.keys(a))
+  const bKeys = Array.from(Object.keys(b))
+  if (aKeys.length !== bKeys.length) return false
+  return !aKeys.some(key => aKeys[key] !== bKeys[key])
+}
+
+/**
+ * Evaluates code using dependences that are set as globals. This is quite dangerous, but we
+ * only use it when sandbox=false, which is intended for testing code coverage and debugging.
+ */
+class GlobalEvaluator {
+  constructor (options = {}) {
+    this.logger = options.logger
+    this.activated = true
+    // We will save the prior globals before overriding them so they can be reverted.
+    // This will also store our globals when we deactivate so we can re-activate them.
+    this.savedGlobalDescriptors = {}
+  }
+
+  evaluate (code, env = {}) {
+    // When a function is anonymous, it will be named the variable it is assigned. We give it
+    // a friendly anonymous name to distinguish it from named classes and functions.
+    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
+
+    // Set each env as a global
+    const options = { configurable: true, enumerable: true, writable: true }
+    Object.keys(env).forEach(key => this.setGlobalDescriptor(key, { ...options, value: env[key] }))
+
+    // Turn the code into an object
+    const result = eval(`const ${anon} = ${code}; ${anon}`) // eslint-disable-line
+
+    // Wrap global sets so that we update savedGlobalDescriptors
+    const wrappedGlobal = new Proxy(global, {
+      set: (target, prop, value) => {
+        this.setGlobalDescriptor(prop, { ...options, value })
+        return true
+      },
+      defineProperty: (target, prop, descriptor) => {
+        this.setGlobalDescriptor(prop, descriptor)
+        return true
+      }
+    })
+
+    return [result, wrappedGlobal]
+  }
+
+  setGlobalDescriptor (key, descriptor) {
+    // Save the previous global the first time we override it. Future overrides
+    // will throw a warning because now there are two values at the global scope.
+    const priorDescriptor = Object.getOwnPropertyDescriptor(global, key)
+
+    if (!(key in this.savedGlobalDescriptors)) {
+      this.savedGlobalDescriptors[key] = priorDescriptor
+    } else if (!sameDescriptors(descriptor, priorDescriptor)) {
+      if (this.logger) {
+        const warning = `There might be bugs with sandboxing disabled`
+        const reason = `Two different values were set at the global scope for ${key}`
+        this.logger.warn(`${warning}\n\n${reason}`)
+      }
+    }
+
+    Object.defineProperty(global, key, descriptor)
+  }
+
+  activate () {
+    if (this.activated) return
+    this.swapSavedGlobals()
+    this.activated = true
+  }
+
+  deactivate () {
+    if (!this.activated) return
+    this.swapSavedGlobals()
+    this.activated = false
+  }
+
+  swapSavedGlobals () {
+    const swappedGlobalDescriptors = {}
+
+    Object.keys(this.savedGlobalDescriptors).forEach(key => {
+      swappedGlobalDescriptors[key] = Object.getOwnPropertyDescriptor(global, key)
+
+      if (typeof this.savedGlobalDescriptors[key] === 'undefined') {
+        delete global[key]
+      } else {
+        Object.defineProperty(global, key, this.savedGlobalDescriptors[key])
+      }
+    })
+
+    this.savedGlobalDescriptors = swappedGlobalDescriptors
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+const stringProps = ['origin', 'location', 'originMainnet', 'locationMainnet', 'originTestnet',
+  'locationTestnet', 'originStn', 'locationStn', 'originMocknet', 'locationMocknet',
+  'owner', 'ownerMainnet', 'ownerTestnet', 'ownerStn', 'ownerMocknet']
+
+class Code {
+  constructor (options = {}) {
+    this.installs = new Map() // Type | Location | Sandbox -> Sandbox
+    this.sandbox = typeof options.sandbox !== 'undefined' ? options.sandbox : true
+    this.logger = typeof options.logger !== 'undefined' ? options.logger : null
+
+    // vm-browserify requires a body for sandboxing. if it doesn't exist, create one.
+    if (typeof window !== 'undefined' && !window.document.body) {
+      window.document.body = document.createElement('body')
+    }
+
+    this.vmEvaluator = new VMEvaluator()
+    this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
+    this.intrinsics = this.vmEvaluator.intrinsics
+
+    this.installJig()
+  }
+
+  isSandbox (type) {
+    const sandbox = this.installs.get(type)
+    return sandbox && type === sandbox
+  }
+
+  getInstalled (typeOrLocation) {
+    if (this.isSandbox(typeOrLocation)) return typeOrLocation
+    return this.installs.get(typeOrLocation)
+  }
+
+  static extractProps (type) {
+    const props = { }
+    const skipProps = ['deps', ...stringProps]
+    const classProps = Object.keys(type)
+    const propNames = classProps.filter(key => !skipProps.includes(key))
+    const refs = []
+    propNames.forEach(name => {
+      // check if serializable, and also extract the code references
+      util.richObjectToJson(type[name], [util.extractJigsAndCodeToArray(refs)],
+        null, `${type.name}.${name}`)
+      props[name] = type[name]
+    })
+    return { props, refs }
+  }
+
+  deploy (type) {
+    // short-circut deployment at Jig because this class already deployed it
+    if (type === this.Jig || type === Jig) return this.Jig
+
+    // check that this code can be deployed
+    if (!util.deployable(type)) throw new Error(`${type} is not deployable`)
+
+    // if this type was already deployed on this network, don't deploy again
+    const pre = this.installs.get(type)
+    const run = util.activeRunInstance()
+    const net = util.networkSuffix(run.blockchain.network)
+    if (pre && Object.keys(pre).includes(`origin${net}`) &&
+      Object.keys(pre).includes(`location${net}`)) return pre
+
+    // TODO: Add test, and make sure this works
+    const classProps = Object.keys(type)
+    if (classProps.includes(`location${net}`)) {
+      const preByLoc = this.installs.get(type[`location${net}`])
+      if (preByLoc) return preByLoc
+    }
+
+    // check the class properties. classProps are props specifically on this code, not a parent
+    const isBasicObject = (o) => Object.getPrototypeOf(Object.getPrototypeOf(o)) === null
+    if (classProps.includes('deps') && !isBasicObject(type.deps)) throw new Error('deps must be an object')
+    const notAString = s => classProps.includes(s) && typeof type[s] !== 'string'
+    stringProps.forEach(s => { if (notAString(s)) throw new Error(`${s} must be a string: ${type[s]}`) })
+
+    run.transaction.begin()
+    try {
+      // create env, the globals in the sandbox. this will just be the parent.
+      const env = {}
+
+      // make sure the parent does not conflict with whats set in deps
+      // realdeps is type.deps with its parent if not there
+      const parentClass = Object.getPrototypeOf(type)
+      const realdeps = classProps.includes('deps') ? { ...type.deps } : {}
+      if (parentClass !== Object.getPrototypeOf(Object)) {
+        env[parentClass.name] = this.deploy(parentClass)
+        if (realdeps[parentClass.name]) {
+          const currentSandbox = this.getInstalled(realdeps[parentClass.name])
+          if (currentSandbox !== env[parentClass.name]) {
+            throw new Error(`unexpected parent dependency ${parentClass.name}`)
+          }
+        }
+        if (!(parentClass.name in realdeps) && parentClass !== this.installs.get(Jig) && parentClass !== Jig) {
+          realdeps[parentClass.name] = parentClass
+        }
+      }
+
+      // If the parent the child, return its location and don't install anything
+      const pre2 = this.installs.get(type)
+      if (pre2 && Object.keys(pre2).includes(`origin${net}`) &&
+        Object.keys(pre2).includes(`location${net}`)) return pre2
+
+      const [sandbox, sandboxGlobal] = this.evaluate(type, util.getNormalizedSourceCode(type),
+        type.name, env, this.sandbox)
+      this.installs.set(type, sandbox)
+      this.installs.set(sandbox, sandbox)
+
+      const { props, refs } = Code.extractProps(type)
+      Object.keys(props).forEach(key => { sandbox[key] = props[key] })
+      const codeRefs = refs.filter(ref => util.deployable(ref))
+
+      // if location is already set for the network, assume correct and don't reupload
+      if (classProps.includes(`origin${net}`) || classProps.includes(`location${net}`)) {
+        if (classProps.includes(`origin${net}`)) {
+          sandbox[`origin${net}`] = sandbox.origin = type.origin = type[`origin${net}`]
+        }
+        sandbox[`location${net}`] = sandbox.location = type.location = type[`location${net}`] || type.origin
+        sandbox[`owner${net}`] = sandbox.owner = type.owner = type[`owner${net}`]
+
+        this.installs.set(sandbox[`location${net}`], sandbox)
+      } else {
+        // location is not set. use a temporary location and deploy
+
+        const currentNetwork = run.blockchain.network
+        const success = (location) => {
+          // if different network, primary origin and location will be set by that run instance
+          if (run.blockchain.network === currentNetwork) {
+            type.origin = type.location = sandbox.origin = sandbox.location = location
+            type.owner = sandbox.owner = type[`owner${net}`]
+          }
+          sandbox[`origin${net}`] = sandbox[`location${net}`] = location
+          type[`origin${net}`] = type[`location${net}`] = location
+          this.installs.set(location, sandbox)
+        }
+        const error = () => {
+          if (run.blockchain.network === currentNetwork) {
+            delete type.origin; delete type.location
+            delete sandbox.origin; delete sandbox.location
+            delete type.owner; delete sandbox.owner
+          }
+          delete type[`origin${net}`]; delete type[`location${net}`]
+          delete sandbox[`origin${net}`]; delete sandbox[`location${net}`]
+          delete type[`owner${net}`]; delete sandbox[`owner${net}`]
+        }
+
+        const tempLocation = run.transaction.storeCode(type, sandbox, realdeps, props, success, error)
+        type[`origin${net}`] = type[`location${net}`] = tempLocation
+        sandbox[`origin${net}`] = sandbox[`location${net}`] = tempLocation
+        type[`owner${net}`] = sandbox[`owner${net}`] = type.owner
+      }
+
+      // deploy deps and set to sandbox globals after origin is set, allowing circular dependencies
+      if (sandboxGlobal) {
+        Object.entries(realdeps).forEach(([name, dep]) => {
+          if (dep === parentClass || dep === env[parentClass.name]) return
+          sandboxGlobal[name] = this.deploy(dep)
+        })
+      }
+      codeRefs.forEach(ref => this.deploy(ref))
+
+      // replace all static props that are code with sandboxed code because sandboxes
+      // should only know about other sandboxed code and never application code.
+      Object.keys(props).forEach(prop => {
+        this.control.enforce = false
+        util.deepTraverse(sandbox[prop], (target, parent, name) => {
+          const installed = this.getInstalled(target)
+          if (installed && name) parent[name] = installed
+          if (installed && !name) sandbox[prop] = installed
+        })
+        this.control.enforce = true
+      })
+      if (Object.keys(realdeps).length) {
+        sandbox.deps = { }
+        Object.keys(realdeps).forEach(name => {
+          sandbox.deps[name] = this.deploy(realdeps[name])
+        })
+      }
+
+      return sandbox
+    } finally {
+      run.transaction.end()
+    }
+  }
+
+  async installFromTx (def, location, tx, run, bsvNetwork, partiallyInstalledCode = new Map()) {
+    // if we have this location already, return it
+    if (this.installs.has(location)) return this.installs.get(location)
+    if (partiallyInstalledCode.has(location)) return partiallyInstalledCode.get(location)
+
+    // parse the location
+    const txid = location.slice(0, 64)
+    const vout = parseInt(location.slice(66))
+
+    // make sure the owner matches the output's address
+    const addr1 = tx.outputs[vout].script.toAddress(bsvNetwork).toString()
+    const addr2 = new bsv.PublicKey(def.owner, bsvNetwork).toAddress().toString()
+    if (addr1 !== addr2) throw new Error(`bad def owner: ${location}`)
+
+    const env = { }
+
+    // Create a promise so that other dependencies can refer to this load
+    // instead of loading themselves
+    let partialInstallResolve = null; let partialInstallReject = null
+    const partialInstall = new Promise((resolve, reject) => {
+      partialInstallResolve = resolve
+      partialInstallReject = reject
+    })
+    partiallyInstalledCode.set(location, partialInstall)
+
+    try {
+      const parentClassRegex = /^class \w* extends (\w*)[\s]*{/
+      let parentName = null
+      if (parentClassRegex.test(def.text)) {
+        parentName = def.text.match(parentClassRegex)[1]
+        let parentLocation = (def.deps || {})[parentName]
+        if (parentName === 'Jig' && typeof parentLocation === 'undefined') {
+          env.Jig = this.Jig
+        } else {
+          if (parentLocation.startsWith('_')) { parentLocation = tx.hash + parentLocation }
+          env[parentName] = await run.transaction.load(parentLocation, { partiallyInstalledCode })
+        }
+      }
+
+      const name = def.text.match(/^(class|function) (\w+)[( ]/)[2]
+      const [sandbox, sandboxGlobal] = this.evaluate(null, def.text, name, env, this.sandbox)
+      sandbox.origin = sandbox.location = location
+      sandbox.owner = def.owner
+      const net = util.networkSuffix(run.blockchain.network)
+      sandbox[`origin${net}`] = sandbox[`location${net}`] = location
+      sandbox[`owner${net}`] = def.owner
+      partialInstallResolve(sandbox)
+
+      if (sandboxGlobal) {
+        const promises = Object.entries(def.deps || {}).map(([name, dep]) => {
+          if (name === parentName) return
+          const location = dep.startsWith('_') ? tx.hash + dep : dep
+          return run.transaction.load(location, { partiallyInstalledCode }).then(T => {
+            sandboxGlobal[name] = T
+          })
+        })
+        await Promise.all(promises)
+      }
+
+      // set all of the dependencies to their sandboxed versions
+      if (def.deps) {
+        sandbox.deps = {}
+        Object.keys(def.deps).forEach(name => {
+          sandbox.deps[name] = sandboxGlobal[name] || env[name]
+        })
+      }
+
+      // ----------------------------------------------------
+      // HYDRATE CLASS PROPERTIES
+      // ----------------------------------------------------
+
+      // Convert def.props into a rich object, finding all refs to load in the process
+      const refsToLoad = []
+      const findRefsToLoad = (target, parent, name) => {
+        if (typeof target.$ref !== 'undefined') {
+          refsToLoad.push({ location: target.$ref, parent, name })
+          return {}
+        }
+      }
+      const classProps = util.jsonToRichObject(def.props || {}, [findRefsToLoad])
+
+      // Hydrate each reference and set it on classProps
+      const expandLocation = id => { return (id[1] === 'i' || id[1] === 'o') ? txid + id : id }
+      const loadPromises = refsToLoad.map(ref =>
+        run.transaction.load(expandLocation(ref.location), { partiallyInstalledCode }))
+      const loadedRefs = await Promise.all(loadPromises)
+      refsToLoad.forEach(({ location, parent, name }, index) => {
+        parent[name] = loadedRefs[index]
+      })
+
+      // Apply each rich class property to our sandbox
+      Object.assign(sandbox, classProps)
+
+      // ----------------------------------------------------
+
+      partiallyInstalledCode.delete(location)
+
+      // Safety check. We should be able to remove over time.
+      if (this.installs.has(location)) {
+        const hint = 'This is an internal Run bug. Please report it to the library developers.'
+        throw new Error(`Code installed twice for ${location}\n\n${hint}.`)
+      }
+
+      this.installs.set(location, sandbox)
+      this.installs.set(sandbox, sandbox)
+
+      return sandbox
+    } catch (e) {
+      partialInstallReject(e)
+      throw e
+    }
+  }
+
+  installJig () {
+    this.control = { // control state shared across all jigs, similar to a PCB
+      stack: [], // jig call stack for the current method (Array<Target>)
+      creates: new Set(), // jigs created in the current method (Set<Target>)
+      reads: new Set(), // jigs read during the current method (Set<Target>)
+      saves: new Map(), // saved original state of jigs before method (Target->Object)
+      callers: new Map(), // Callers on each jig method (Target->Set<Object>)
+      error: null, // if any errors occurred to prevent swallows
+      enforce: true, // enable safeguards for the user
+      proxies: new Map(), // map connecting targets to proxies (Target->Proxy)
+      locals: new WeakMap() // local secret state for each jig (Target->Object)
+    }
+    const env = { control: this.control, util }
+    this.Jig = this.evaluate(Jig, Jig.toString(), 'Jig', env, this.shouldSandbox('Jig'))[0]
+    this.installs.set(Jig, this.Jig)
+    this.installs.set(this.Jig, this.Jig)
+  }
+
+  shouldSandbox (name) {
+    return this.sandbox instanceof RegExp ? this.sandbox.test(name) : this.sandbox
+  }
+
+  evaluate (type, code, name, env, sandbox) {
+    // if we've already installed this type, then return it
+    const prev = this.installs.get(type)
+    if (prev) return [prev, null]
+
+    // test if we need to sandbox or not
+    sandbox = (sandbox instanceof RegExp ? sandbox.test(name) : sandbox)
+
+    const evaluator = sandbox ? this.vmEvaluator : this.globalEvaluator
+
+    const [result, globals] = evaluator.evaluate(code, env)
+
+    if (typeof env.caller === 'undefined') {
+      Object.defineProperty(globals, 'caller', {
+        configurable: true,
+        enumerable: true,
+        get: () => {
+          // we must be inside a jig method called by another jig method to be non-null
+          if (this.control.stack.length < 2) return null
+
+          // return the proxy for the jig that called this jig
+          return this.control.proxies.get(this.control.stack[this.control.stack.length - 2])
+        }
+      })
+    }
+
+    return [!sandbox && type ? type : result, globals]
+  }
+
+  activate (network) {
+    const net = util.networkSuffix(network)
+
+    this.installs.forEach((v, k) => {
+      if (typeof k === 'string') return // location
+      if (typeof k[`origin${net}`] !== 'undefined') {
+        k.origin = k[`origin${net}`]
+        v.origin = k[`origin${net}`]
+      } else { delete k.origin; delete v.origin }
+      if (typeof k[`location${net}`] !== 'undefined') {
+        k.location = k[`location${net}`]
+        v.location = k[`location${net}`]
+      } else { delete k.location; delete v.location }
+      if (typeof k[`owner${net}`] !== 'undefined') {
+        k.owner = k[`owner${net}`]
+        v.owner = k[`owner${net}`]
+      } else { delete k.owner; delete v.owner }
+    })
+
+    this.globalEvaluator.activate()
+  }
+
+  deactivate () {
+    this.globalEvaluator.deactivate()
+  }
+
+  flush () {
+    this.installs = new Map()
+    this.installs.set(Jig, this.Jig)
+    this.installs.set(this.Jig, this.Jig)
+  }
+}
+
+module.exports = Code
+
+
+/***/ }),
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2293,9 +2395,9 @@ module.exports = class Jig {
  * Transaction API for inspecting and building bitcoin transactions
  */
 
-const bsv = __webpack_require__(2)
-const util = __webpack_require__(3)
-const Code = __webpack_require__(6)
+const bsv = __webpack_require__(1)
+const util = __webpack_require__(2)
+const Code = __webpack_require__(7)
 
 /**
  * Proto-transaction: A temporary structure Run uses to build transactions. This structure
@@ -2421,7 +2523,7 @@ class ProtoTransaction {
 
     // dedupInnerRefs puts any internal objects in their referenced states using known references
     // ensuring that double-references refer to the same objects
-    const { Jig } = __webpack_require__(1)
+    const { Jig } = __webpack_require__(3)
     const dedupInnerRefs = jig => {
       run.code.control.enforce = false
       const dedupRef = (target, parent, name) => {
@@ -2762,7 +2864,7 @@ class ProtoTransaction {
     const refs = Array.from(readRefs.values())
 
     // jig arguments and class props need to be turned into references
-    const { Jig } = __webpack_require__(1)
+    const { Jig } = __webpack_require__(3)
     const jigToRef = target => {
       if (target instanceof Jig) {
         // find the jig if it is a proxy. it may not be a proxy if it wasn't used, but then
@@ -3250,7 +3352,7 @@ module.exports = defaults;
 "use strict";
 
 
-var createError = __webpack_require__(5);
+var createError = __webpack_require__(6);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -4075,7 +4177,7 @@ module.exports = require("vm-browserify");
  */
 
 const { ProtoTransaction } = __webpack_require__(8)
-const util = __webpack_require__(3)
+const util = __webpack_require__(2)
 
 /**
  * Proto-transaction: A temporary structure Run uses to build transactions. This structure
@@ -4215,7 +4317,7 @@ owner: ${spentJigs[i].owner}`)
       const richState = util.jsonToRichObject(stateAfter.json,
         [util.injectJigsAndCodeFromArray(stateAfter.refs)])
 
-      const { Jig } = __webpack_require__(1)
+      const { Jig } = __webpack_require__(3)
       const packedState = util.richObjectToJson(richState, [target => {
         if (util.deployable(target) || target instanceof Jig) {
           const location = this.lastPosted.get(target.origin) || target.location
@@ -4347,7 +4449,7 @@ owner: ${spentJigs[i].owner}`)
 
     // update each jig referenced by this jig
     const innerJigs = new Set()
-    const { Jig } = __webpack_require__(1)
+    const { Jig } = __webpack_require__(3)
     const findInners = (target, parent, name) => {
       if (target && target instanceof Jig && name) {
         innerJigs.add(target)
@@ -4373,8 +4475,8 @@ owner: ${spentJigs[i].owner}`)
  * Generic Pay API and default Purse implementation to pay for transactions
  */
 
-const bsv = __webpack_require__(2)
-const util = __webpack_require__(3)
+const bsv = __webpack_require__(1)
+const util = __webpack_require__(2)
 
 /**
  * API to pay for transactions
@@ -4496,8 +4598,8 @@ module.exports = { Pay, Purse }
  * Owner API that manages jigs and signs transactions
  */
 
-const bsv = __webpack_require__(2)
-const util = __webpack_require__(3)
+const bsv = __webpack_require__(1)
+const util = __webpack_require__(2)
 
 class Owner {
   constructor (keyOrAddress, options) {
@@ -4672,9 +4774,9 @@ module.exports = Owner
  * Blockchain API and its default REST implementation
  */
 
-const { Address, Script, Transaction } = __webpack_require__(2)
+const { Address, Script, Transaction } = __webpack_require__(1)
 const axios = __webpack_require__(28)
-const util = __webpack_require__(3)
+const util = __webpack_require__(2)
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain API
@@ -5172,7 +5274,7 @@ module.exports = function isBuffer (obj) {
 
 
 var utils = __webpack_require__(0);
-var buildURL = __webpack_require__(4);
+var buildURL = __webpack_require__(5);
 var InterceptorManager = __webpack_require__(32);
 var dispatchRequest = __webpack_require__(33);
 var mergeConfig = __webpack_require__(19);
@@ -5464,7 +5566,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 var utils = __webpack_require__(0);
 var settle = __webpack_require__(12);
-var buildURL = __webpack_require__(4);
+var buildURL = __webpack_require__(5);
 var http = __webpack_require__(14);
 var https = __webpack_require__(15);
 var httpFollow = __webpack_require__(16).http;
@@ -5472,7 +5574,7 @@ var httpsFollow = __webpack_require__(16).https;
 var url = __webpack_require__(17);
 var zlib = __webpack_require__(48);
 var pkg = __webpack_require__(49);
-var createError = __webpack_require__(5);
+var createError = __webpack_require__(6);
 var enhanceError = __webpack_require__(13);
 
 var isHttps = /https:?/;
@@ -6515,10 +6617,10 @@ module.exports = JSON.parse("{\"_args\":[[\"axios@0.19.0\",\"/home/brenton/code/
 
 var utils = __webpack_require__(0);
 var settle = __webpack_require__(12);
-var buildURL = __webpack_require__(4);
+var buildURL = __webpack_require__(5);
 var parseHeaders = __webpack_require__(51);
 var isURLSameOrigin = __webpack_require__(52);
-var createError = __webpack_require__(5);
+var createError = __webpack_require__(6);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -7032,7 +7134,7 @@ module.exports = function spread(callback) {
  * In-memory Blockchain implementation
  */
 
-const { Address, Transaction } = __webpack_require__(2)
+const { Address, Transaction } = __webpack_require__(1)
 
 module.exports = class Mockchain {
   constructor () {
@@ -7260,7 +7362,7 @@ module.exports = { State, StateCache }
  * Token jig that provides ERC-20 like support
  */
 
-const { Jig } = __webpack_require__(1)
+const Jig = __webpack_require__(4)
 const expect = __webpack_require__(21)
 
 class Token extends Jig {

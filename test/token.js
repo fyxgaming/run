@@ -133,11 +133,10 @@ describe('Token', () => {
       const b = new TestToken(70)
       const c = TestToken.combine(a, b)
       await run.sync()
-      run.code.flush()
-      const run2 = createRun({ blockchain: run.blockchain })
+      run.deactivate()
+      const run2 = createRun({ blockchain: run.blockchain, code: run.code })
       const c2 = await run2.load(c.location)
       expect(c2.amount).to.equal(c.amount)
-      run.activate()
     })
 
     it('should throw if combine different owners without signatures', async () => {
