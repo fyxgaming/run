@@ -7218,10 +7218,10 @@ describe('Run', () => {
       await a.set('a').sync()
     })
 
-    it('should support multiple simultaneous loads', async () => {
+    it.only('should support multiple simultaneous loads', async () => {
       // This tests a tricky timing issue where class dependencies need to be fully
       // loaded before load() returns. There used to be a case where that was possible.
-      const run = createRun({ network: 'mock' })
+      const run = createRun()
       class A extends Jig { }
       class B extends A { }
       await run.deploy(B)
@@ -7231,10 +7231,10 @@ describe('Run', () => {
       class D extends C { }
       const d = new D()
       await run.sync()
-      run.code.flush()
-      run.state.clear()
-      const p1 = run.load(d.location)
-      const p2 = run.load(d.location)
+      run.deactivate()
+      const run2 = createRun({ blockchain: run.blockchain })
+      const p1 = run2.load(d.location)
+      const p2 = run2.load(d.location)
       await Promise.all([p1, p2])
     })
 
@@ -8310,7 +8310,7 @@ describe('Transaction', () => {
       expect(b2.n).to.equal(1)
     })
 
-    it.only('should support setting static class property jig', async () => {
+    it('should support setting static class property jig', async () => {
       const run = createRun()
       class Store extends Jig {
         set (value) { this.value = value }
