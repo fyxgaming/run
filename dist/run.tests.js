@@ -4188,11 +4188,6 @@ describe('Jig', () => {
   const run = hookStoreAction(createRun())
   beforeEach(() => run.blockchain.block())
   beforeEach(() => run.activate())
-  beforeEach(() => run.code.flush())
-
-  // Turn this on for easier debugging because the tests won't bleed into one another.
-  // (We leave this off by default to enable state bleeding and more complexity in the tests)
-  // afterEach(() => run.sync())
 
   describe('constructor', () => {
     it('should create basic jig', async () => {
@@ -4316,8 +4311,9 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       await run.sync()
-      run.code.flush()
-      const a2 = await run.load(a.location)
+      run.deactivate()
+      const run2 = createRun({ blockchain: run.blockchain })
+      const a2 = await run2.load(a.location)
       expect(a2 instanceof A).to.equal(true)
     })
 
@@ -4689,8 +4685,9 @@ describe('Jig', () => {
       expect(b.x).to.equal(run.owner.pubkey)
       expect(a.test).to.equal(true)
       await run.sync()
-      run.code.flush()
-      await run.sync()
+      run.deactivate()
+      const run2 = createRun({ owner: run.owner.privkey, blockchain: run.blockchain })
+      await run2.sync()
     })
   })
 
@@ -5469,7 +5466,7 @@ describe('Jig', () => {
       const run = createRun()
       const a = new A(privkey.publicKey.toString())
       await run.sync()
-      run.code.flush()
+      run.deactivate()
       const run2 = createRun({ blockchain: run.blockchain, owner: privkey })
       await run2.load(a.location)
     })
@@ -7218,7 +7215,7 @@ describe('Run', () => {
       await a.set('a').sync()
     })
 
-    it.only('should support multiple simultaneous loads', async () => {
+    it('should support multiple simultaneous loads', async () => {
       // This tests a tricky timing issue where class dependencies need to be fully
       // loaded before load() returns. There used to be a case where that was possible.
       const run = createRun()

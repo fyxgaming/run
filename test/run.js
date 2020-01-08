@@ -316,7 +316,7 @@ describe('Run', () => {
       await a.set('a').sync()
     })
 
-    it.only('should support multiple simultaneous loads', async () => {
+    it('should support multiple simultaneous loads', async () => {
       // This tests a tricky timing issue where class dependencies need to be fully
       // loaded before load() returns. There used to be a case where that was possible.
       const run = createRun()
