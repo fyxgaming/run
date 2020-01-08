@@ -3371,7 +3371,7 @@ module.exports = Run;
 /* 12 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"richObjectToJson\":\"aal\",\"jsonToRichObject\":\"aam\",\"extractJigsAndCodeToArray\":\"aan\",\"injectJigsAndCodeFromArray\":\"aao\",\"deepTraverse\":\"aap\",\"activeRunInstance\":\"aaq\",\"sameJig\":\"aar\",\"networkSuffix\":\"aas\",\"broadcastUrl\":\"aat\",\"broadcastData\":\"aau\",\"fetchUrl\":\"aav\",\"fetchResp\":\"aaw\",\"utxosUrl\":\"aax\",\"utxosResp\":\"aay\",\"_dedupUtxos\":\"aaz\",\"correctForServerUtxoIndexingDelay\":\"aaab\",\"fetched\":\"aabb\",\"broadcasted\":\"aacb\",\"banNondeterministicGlobals\":\"aadb\",\"isSandbox\":\"aaeb\",\"getInstalled\":\"aafb\",\"installFromTx\":\"aagb\",\"installJig\":\"aahb\",\"fastForward\":\"aaib\",\"finish\":\"aajb\",\"publishNext\":\"aakb\",\"publish\":\"aalb\",\"storeCode\":\"aamb\",\"storeAction\":\"aanb\",\"setProtoTxAndCreator\":\"aaob\",\"buildBsvTransaction\":\"aapb\",\"_fromPrivateKey\":\"aaqb\",\"_fromPublicKey\":\"aarb\",\"_fromAddress\":\"aasb\",\"_queryLatest\":\"aatb\",\"_removeErrorRefs\":\"aaub\",\"_update\":\"aavb\",\"_estimateSize\":\"aawb\",\"_util\":\"aaxb\",\"intrinsics\":\"aayb\",\"proxies\":\"aazb\",\"enforce\":\"aaac\",\"stack\":\"aabc\",\"reads\":\"aacc\",\"creates\":\"aadc\",\"saves\":\"aaec\",\"callers\":\"aafc\",\"locals\":\"aagc\",\"requests\":\"aahc\",\"broadcasts\":\"aaic\",\"expiration\":\"aajc\",\"indexingDelay\":\"aakc\",\"fetchedTime\":\"aalc\",\"unspentOutputs\":\"aamc\",\"transactions\":\"aanc\",\"blockHeight\":\"aaoc\",\"installs\":\"aapc\",\"syncer\":\"aaqc\",\"protoTx\":\"aarc\",\"beginCount\":\"aasc\",\"cachedTx\":\"aatc\",\"syncListeners\":\"aauc\",\"onBroadcastListeners\":\"aavc\",\"lastPosted\":\"aawc\",\"queued\":\"aaxc\",\"sizeBytes\":\"aayc\",\"maxSizeBytes\":\"aazc\",\"control\":\"aaad\",\"ProtoTransaction\":\"aabd\",\"PROTOCOL_VERSION\":\"aacd\",\"SerialTaskQueue\":\"aadd\",\"stringProps\":\"aaed\",\"extractProps\":\"aafd\",\"onReadyForPublish\":\"aagd\",\"spentJigs\":\"aahd\",\"spentLocations\":\"aaid\"}");
+module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"richObjectToJson\":\"aal\",\"jsonToRichObject\":\"aam\",\"extractJigsAndCodeToArray\":\"aan\",\"injectJigsAndCodeFromArray\":\"aao\",\"deepTraverse\":\"aap\",\"activeRunInstance\":\"aaq\",\"sameJig\":\"aar\",\"networkSuffix\":\"aas\",\"broadcastUrl\":\"aat\",\"broadcastData\":\"aau\",\"fetchUrl\":\"aav\",\"fetchResp\":\"aaw\",\"utxosUrl\":\"aax\",\"utxosResp\":\"aay\",\"_dedupUtxos\":\"aaz\",\"correctForServerUtxoIndexingDelay\":\"aaab\",\"fetched\":\"aabb\",\"broadcasted\":\"aacb\",\"isSandbox\":\"aadb\",\"getInstalled\":\"aaeb\",\"installFromTx\":\"aafb\",\"installJig\":\"aagb\",\"fastForward\":\"aahb\",\"finish\":\"aaib\",\"publishNext\":\"aajb\",\"publish\":\"aakb\",\"storeCode\":\"aalb\",\"storeAction\":\"aamb\",\"setProtoTxAndCreator\":\"aanb\",\"buildBsvTransaction\":\"aaob\",\"_fromPrivateKey\":\"aapb\",\"_fromPublicKey\":\"aaqb\",\"_fromAddress\":\"aarb\",\"_queryLatest\":\"aasb\",\"_removeErrorRefs\":\"aatb\",\"_update\":\"aaub\",\"_estimateSize\":\"aavb\",\"_util\":\"aawb\",\"intrinsics\":\"aaxb\",\"proxies\":\"aayb\",\"enforce\":\"aazb\",\"stack\":\"aaac\",\"reads\":\"aabc\",\"creates\":\"aacc\",\"saves\":\"aadc\",\"callers\":\"aaec\",\"locals\":\"aafc\",\"requests\":\"aagc\",\"broadcasts\":\"aahc\",\"expiration\":\"aaic\",\"indexingDelay\":\"aajc\",\"fetchedTime\":\"aakc\",\"unspentOutputs\":\"aalc\",\"transactions\":\"aamc\",\"blockHeight\":\"aanc\",\"installs\":\"aaoc\",\"syncer\":\"aapc\",\"protoTx\":\"aaqc\",\"beginCount\":\"aarc\",\"cachedTx\":\"aasc\",\"syncListeners\":\"aatc\",\"onBroadcastListeners\":\"aauc\",\"lastPosted\":\"aavc\",\"queued\":\"aawc\",\"sizeBytes\":\"aaxc\",\"maxSizeBytes\":\"aayc\",\"control\":\"aazc\",\"ProtoTransaction\":\"aaad\",\"PROTOCOL_VERSION\":\"aabd\",\"SerialTaskQueue\":\"aacd\",\"stringProps\":\"aadd\",\"extractProps\":\"aaed\",\"onReadyForPublish\":\"aafd\",\"spentJigs\":\"aagd\",\"spentLocations\":\"aahd\"}");
 
 /***/ }),
 /* 13 */
@@ -3383,7 +3383,7 @@ module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"
  * Tests for ../lib/code.js
  */
 
-const { describe, it, beforeEach, after } = __webpack_require__(1)
+const { describe, it, beforeEach } = __webpack_require__(1)
 const chai = __webpack_require__(0)
 const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
@@ -4137,7 +4137,7 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
     it('should support setting related functions', () => {
       const evaluator = createEvaluator()
       const [f, globals] = evaluator.evaluate('function f () { return g() }')
-      globals.g = function g() { return 3 }
+      globals.g = function g () { return 3 }
       expect(f()).to.equal(3)
       destroyEvaluator(evaluator)
     })
@@ -4170,19 +4170,16 @@ describe.only('VMEvaluator', () => {
   runEvaluatorTestSuite(createEvaluator, destroyEvaluator)
 
   it('should ban non-deterministic globals', () => {
-    // TODO
-  })
-
-  it('should standardize Uint8Array and console', () => {
-    // TODO
-  })
-
-  it('should disable non-standardized JavaScript types', () => {
-    // TODO: Map, Set, others
+    const evaluator = createEvaluator()
+    Run.Code.nonDeterministicGlobals.forEach(key => {
+      expect(!!evaluator.evaluate(key)[0]).to.equal(false)
+    })
   })
 
   it('should prevent access to the global scope', () => {
-    // TODO
+    const evaluator = createEvaluator()
+    evaluator.evaluate('(typeof window !== "undefined" ? window : global).someGlobal = 1')
+    expect(typeof someGlobal === 'undefined').to.equal(true)
   })
 })
 

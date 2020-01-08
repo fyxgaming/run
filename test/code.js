@@ -791,19 +791,16 @@ describe.only('VMEvaluator', () => {
   runEvaluatorTestSuite(createEvaluator, destroyEvaluator)
 
   it('should ban non-deterministic globals', () => {
-    // TODO
-  })
-
-  it('should standardize Uint8Array and console', () => {
-    // TODO
-  })
-
-  it('should disable non-standardized JavaScript types', () => {
-    // TODO: Map, Set, others
+    const evaluator = createEvaluator()
+    Run.Code.nonDeterministicGlobals.forEach(key => {
+      expect(!!evaluator.evaluate(key)[0]).to.equal(false)
+    })
   })
 
   it('should prevent access to the global scope', () => {
-    // TODO
+    const evaluator = createEvaluator()
+    evaluator.evaluate('(typeof window !== "undefined" ? window : global).someGlobal = 1')
+    expect(typeof someGlobal === 'undefined').to.equal(true)
   })
 })
 
