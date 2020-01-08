@@ -591,7 +591,7 @@ describe('Transaction', () => {
     })
 
     it('should support setting static class property jig', async () => {
-      const run = createRun({ network: 'mock' })
+      const run = createRun()
       class Store extends Jig {
         set (value) { this.value = value }
       }
@@ -603,9 +603,8 @@ describe('Transaction', () => {
       await run.sync()
 
       // Clear caches and load
-      run.code.flush()
-      const cache = new Run.StateCache()
-      const run2 = createRun({ network: 'mock', blockchain: run.blockchain, cache })
+      run.deactivate()
+      const run2 = createRun({ blockchain: run.blockchain })
       await run2.load(action.location)
     })
 
