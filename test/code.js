@@ -676,35 +676,41 @@ function runEvaluatorTestSuite (evaluator) {
 
   describe('environment', () => {
     it('should place environment parent class in scope', () => {
-      // TODO
+      const [A] = evaluator.evaluate('class A {}')
+      evaluator.evaluate('class B extends A {}', { A })
     })
 
     it('should place environment constant in scope', () => {
-      // TODO
+      const [f] = evaluator.evaluate('function f() { return CONSTANT }', { CONSTANT: 5 })
+      expect(f()).to.equal(5)
     })
 
     it('should place environment function in scope', () => {
-      // TODO
+      const [f] = evaluator.evaluate('function f() { return 1 }')
+      const [g] = evaluator.evaluate('function g() { return f() + 1 }', { f })
+      expect(g()).to.equal(2)
     })
 
     it('should place environment related class in scope', () => {
-      // TODO
+      const [Z] = evaluator.evaluate('class Z {}')
+      evaluator.evaluate('class Y { constructor() { this.a = new Z() } }', { Z })
     })
 
     it('should throw if parent class is not in environment', () => {
-      // TODO
+      expect(() => evaluator.evaluate('class B extends MissingClass {}')).to.throw('MissingClass is not defined')
     })
 
     it('should throw if called function is not in environment', () => {
-      // TODO
+      const [f] = evaluator.evaluate('function f() { return missingFunction() }')
+      expect(() => f()).to.throw('missingFunction is not defined')
     })
 
-    it('should share console between evaluations', () => {
-      // TODO
-    })
-
-    it('should share Uint8Array between evaluations', () => {
-      // TODO
+    it('should share intrinsics between evaluations', () => {
+      Run.Code.intrinsicDataTypes.forEach(intrinsic => {
+        const intrinsic1 = evaluator.evaluate(`function f() { return ${intrinsic} }`)[0]()
+        const intrinsic2 = evaluator.evaluate(`function f() { return ${intrinsic} }`)[0]()
+        expect(intrinsic1).to.equal(intrinsic2)
+      })
     })
   })
 
@@ -727,7 +733,7 @@ function runEvaluatorTestSuite (evaluator) {
 // Evaluator tests
 // ------------------------------------------------------------------------------------------------
 
-describe('VMEvaluator', () => {
+describe.only('VMEvaluator', () => {
   const evaluator = new Run.Code.VMEvaluator()
   runEvaluatorTestSuite(evaluator)
 
@@ -748,7 +754,7 @@ describe('VMEvaluator', () => {
   })
 })
 
-describe('GlobalEvaluator', () => {
+describe.only('GlobalEvaluator', () => {
   const evaluator = new Run.Code.GlobalEvaluator()
   runEvaluatorTestSuite(evaluator)
   evaluator.deactivate()
