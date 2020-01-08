@@ -3383,7 +3383,7 @@ module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"
  * Tests for ../lib/code.js
  */
 
-const { describe, it, beforeEach } = __webpack_require__(1)
+const { describe, it, beforeEach, after } = __webpack_require__(1)
 const chai = __webpack_require__(0)
 const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
@@ -3998,16 +3998,20 @@ describe('Code', () => {
 // Evaluator test suite
 // ------------------------------------------------------------------------------------------------
 
-function runEvaluatorTestSuite (evaluator) {
+function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
   describe('evaluate parameters', () => {
     it('should evaluate named function', () => {
+      const evaluator = createEvaluator()
       const [f] = evaluator.evaluate('function f() { return 1 }')
       expect(typeof f).to.equal('function')
       expect(f.name).to.equal('f')
       expect(f()).to.equal(1)
+      destroyEvaluator(evaluator)
     })
 
     it('should evaluate anonymous function', () => {
+      const evaluator = createEvaluator()
+
       const [f] = evaluator.evaluate('function () { return "123" }')
       expect(typeof f).to.equal('function')
       expect(f.name).to.equal('anonymousFunction')
@@ -4017,87 +4021,141 @@ function runEvaluatorTestSuite (evaluator) {
       expect(typeof g).to.equal('function')
       expect(g.name).to.equal('anonymousFunction')
       expect(g()).to.deep.equal([])
+
+      destroyEvaluator(evaluator)
     })
 
     it('should evaluate named class', () => {
+      const evaluator = createEvaluator()
       const [T] = evaluator.evaluate('class A { }')
       expect(typeof T).to.equal('function')
       expect(T.name).to.equal('A')
+      destroyEvaluator(evaluator)
     })
 
     it('should evaluate anonymous class', () => {
+      const evaluator = createEvaluator()
       const [T] = evaluator.evaluate('class { }')
       expect(typeof T).to.equal('function')
       expect(T.name).to.equal('AnonymousClass')
+      destroyEvaluator(evaluator)
     })
 
     it('should throw if code is not a string', () => {
+      const evaluator = createEvaluator()
       expect(() => evaluator.evaluate()).to.throw('Code must be a string. Received: undefined')
       expect(() => evaluator.evaluate(123)).to.throw('Code must be a string. Received: 123')
       expect(() => evaluator.evaluate(function f () {})).to.throw('Code must be a string. Received: ')
+      destroyEvaluator(evaluator)
     })
 
     it('should throw if env is not an object', () => {
+      const evaluator = createEvaluator()
       expect(() => evaluator.evaluate('()=>{}', false)).to.throw('Environment must be an object. Received: false')
       expect(() => evaluator.evaluate('()=>{}', 123)).to.throw('Environment must be an object. Received: 123')
       expect(() => evaluator.evaluate('()=>{}', class A {})).to.throw('Environment must be an object. Received: ')
+      destroyEvaluator(evaluator)
     })
 
     it('should throw if env contains $globals', () => {
+      const evaluator = createEvaluator()
       expect(() => evaluator.evaluate('()=>{}', { $globals: {} })).to.throw('Environment must not contain $globals')
+      destroyEvaluator(evaluator)
     })
 
     it('should throw if evaluated code throws', () => {
+      const evaluator = createEvaluator()
       expect(() => evaluator.evaluate('throw new Error()')).to.throw()
       expect(() => evaluator.evaluate('x.y = z')).to.throw()
+      destroyEvaluator(evaluator)
     })
   })
 
   describe('environment', () => {
     it('should place environment parent class in scope', () => {
-      // TODO
+      const evaluator = createEvaluator()
+      const [A] = evaluator.evaluate('class A {}')
+      evaluator.evaluate('class B extends A {}', { A })
+      destroyEvaluator(evaluator)
     })
 
     it('should place environment constant in scope', () => {
-      // TODO
+      const evaluator = createEvaluator()
+      const [f] = evaluator.evaluate('function f() { return CONSTANT }', { CONSTANT: 5 })
+      expect(f()).to.equal(5)
+      destroyEvaluator(evaluator)
     })
 
     it('should place environment function in scope', () => {
-      // TODO
+      const evaluator = createEvaluator()
+      const [f] = evaluator.evaluate('function f() { return 1 }')
+      const [g] = evaluator.evaluate('function g() { return f() + 1 }', { f })
+      expect(g()).to.equal(2)
+      destroyEvaluator(evaluator)
     })
 
     it('should place environment related class in scope', () => {
-      // TODO
+      const evaluator = createEvaluator()
+      const [Z] = evaluator.evaluate('class Z {}')
+      evaluator.evaluate('class Y { constructor() { this.a = new Z() } }', { Z })
+      destroyEvaluator(evaluator)
     })
 
     it('should throw if parent class is not in environment', () => {
-      // TODO
+      const evaluator = createEvaluator()
+      expect(() => evaluator.evaluate('class B extends MissingClass {}')).to.throw('MissingClass is not defined')
+      destroyEvaluator(evaluator)
     })
 
     it('should throw if called function is not in environment', () => {
-      // TODO
+      const evaluator = createEvaluator()
+      const [f] = evaluator.evaluate('function f() { return missingFunction() }')
+      expect(() => f()).to.throw('missingFunction is not defined')
+      destroyEvaluator(evaluator)
     })
 
-    it('should share console between evaluations', () => {
-      // TODO
-    })
-
-    it('should share Uint8Array between evaluations', () => {
-      // TODO
+    it('should share intrinsics between evaluations', () => {
+      const evaluator = createEvaluator()
+      Run.Code.intrinsicDataTypes.forEach(intrinsic => {
+        const intrinsic1 = evaluator.evaluate(`function f() { return ${intrinsic} }`)[0]()
+        const intrinsic2 = evaluator.evaluate(`function f() { return ${intrinsic} }`)[0]()
+        expect(intrinsic1).to.equal(intrinsic2)
+      })
+      destroyEvaluator(evaluator)
     })
   })
 
   describe('globals', () => {
     it('should support setting related classes', () => {
-      // TODO
+      const evaluator = createEvaluator()
+      const [A, globals] = evaluator.evaluate('class A { createB() { return new B() } }')
+      globals.B = class B { }
+      expect(() => new A().createB()).not.to.throw()
+      destroyEvaluator(evaluator)
+    })
+
+    it('should support setting related functions', () => {
+      const evaluator = createEvaluator()
+      const [f, globals] = evaluator.evaluate('function f () { return g() }')
+      globals.g = function g() { return 3 }
+      expect(f()).to.equal(3)
+      destroyEvaluator(evaluator)
     })
 
     it('should support setting related constants', () => {
-      // TODO
+      const evaluator = createEvaluator()
+      const [f, globals] = evaluator.evaluate('function f () { return NUM }')
+      globals.NUM = 42
+      expect(f()).to.equal(42)
+      destroyEvaluator(evaluator)
     })
 
     it('should support setting getters ', () => {
-      // TODO
+      const evaluator = createEvaluator()
+      const [f, globals] = evaluator.evaluate('function f () { return someValue }')
+      Object.defineProperty(globals, 'someValue', { configurable: true, get: () => 4 })
+      expect(f()).to.equal(4)
+      destroyEvaluator(evaluator)
     })
   })
 }
@@ -4106,9 +4164,10 @@ function runEvaluatorTestSuite (evaluator) {
 // Evaluator tests
 // ------------------------------------------------------------------------------------------------
 
-describe('VMEvaluator', () => {
-  const evaluator = new Run.Code.VMEvaluator()
-  runEvaluatorTestSuite(evaluator)
+describe.only('VMEvaluator', () => {
+  const createEvaluator = () => new Run.Code.VMEvaluator()
+  const destroyEvaluator = () => {}
+  runEvaluatorTestSuite(createEvaluator, destroyEvaluator)
 
   it('should ban non-deterministic globals', () => {
     // TODO
@@ -4127,19 +4186,21 @@ describe('VMEvaluator', () => {
   })
 })
 
-describe('GlobalEvaluator', () => {
-  const evaluator = new Run.Code.GlobalEvaluator()
-  runEvaluatorTestSuite(evaluator)
-  evaluator.deactivate()
+describe.only('GlobalEvaluator', () => {
+  const createEvaluator = () => new Run.Code.GlobalEvaluator()
+  const destroyEvaluator = evaluator => evaluator.deactivate()
+  runEvaluatorTestSuite(createEvaluator, destroyEvaluator)
 
   it('should detect setting the same global twice', () => {
     // TODO: Basic set, and define property
   })
 
   it('should correctly deactivate globals', () => {
+    // TODO
   })
 
   it('should correctly reactivate globals', () => {
+    // TODO
   })
 })
 
