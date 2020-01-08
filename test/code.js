@@ -4,7 +4,7 @@
  * Tests for ../lib/code.js
  */
 
-const { describe, it, beforeEach, after } = require('mocha')
+const { describe, it, beforeEach } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
@@ -758,7 +758,7 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
     it('should support setting related functions', () => {
       const evaluator = createEvaluator()
       const [f, globals] = evaluator.evaluate('function f () { return g() }')
-      globals.g = function g() { return 3 }
+      globals.g = function g () { return 3 }
       expect(f()).to.equal(3)
       destroyEvaluator(evaluator)
     })

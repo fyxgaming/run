@@ -56,7 +56,6 @@ const methodsToObfuscate = [
   'broadcasted',
 
   // code.js
-  'banNondeterministicGlobals',
   'isSandbox',
   'getInstalled',
   'installFromTx',

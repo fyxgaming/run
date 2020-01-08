@@ -2193,6 +2193,18 @@ const intrinsicDataTypes = [
   'WeakSet'
 ]
 
+// Non-deterministic globals will be banned
+const nonDeterministicGlobals = [
+  'Date',
+  'Math',
+  'eval',
+  'XMLHttpRequest',
+  'FileReader',
+  'WebSocket',
+  'setTimeout',
+  'setInterval'
+]
+
 /**
  * Secure sandboxer for arbitrary code
  */
@@ -2215,7 +2227,7 @@ class VMEvaluator {
 
     env = { ...this.intrinsics, ...env, $globals: {} }
 
-    banNondeterministicGlobals(env)
+    nonDeterministicGlobals.forEach(key => { if (!(key in env)) env[key] = undefined })
 
     const context = vm.createContext(env)
 
@@ -2332,11 +2344,6 @@ class GlobalEvaluator {
 // Helper methods
 // ------------------------------------------------------------------------------------------------
 
-function banNondeterministicGlobals (env) {
-  const list = ['Date', 'Math', 'eval', 'XMLHttpRequest', 'FileReader', 'WebSocket', 'setTimeout', 'setInterval']
-  list.forEach(x => { if (typeof env[x] === 'undefined') { env[x] = undefined } })
-}
-
 function sameDescriptors (a, b) {
   if (typeof a !== typeof b) return false
   const aKeys = Array.from(Object.keys(a))
@@ -2350,6 +2357,7 @@ function sameDescriptors (a, b) {
 Code.VMEvaluator = VMEvaluator
 Code.GlobalEvaluator = GlobalEvaluator
 Code.intrinsicDataTypes = intrinsicDataTypes
+Code.nonDeterministicGlobals = nonDeterministicGlobals
 
 module.exports = Code
 
