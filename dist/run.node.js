@@ -2423,7 +2423,7 @@ function sameDescriptors (a, b) {
   const aKeys = Array.from(Object.keys(a))
   const bKeys = Array.from(Object.keys(b))
   if (aKeys.length !== bKeys.length) return false
-  return !aKeys.some(key => aKeys[key] !== bKeys[key])
+  return !aKeys.some(key => a[key] !== b[key])
 }
 
 // ------------------------------------------------------------------------------------------------

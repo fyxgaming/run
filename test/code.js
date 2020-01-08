@@ -785,7 +785,7 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
 // Evaluator tests
 // ------------------------------------------------------------------------------------------------
 
-describe.only('VMEvaluator', () => {
+describe('VMEvaluator', () => {
   const createEvaluator = () => new Run.Code.VMEvaluator()
   const destroyEvaluator = () => {}
   runEvaluatorTestSuite(createEvaluator, destroyEvaluator)
@@ -804,21 +804,53 @@ describe.only('VMEvaluator', () => {
   })
 })
 
-describe.only('GlobalEvaluator', () => {
-  const createEvaluator = () => new Run.Code.GlobalEvaluator()
+describe('GlobalEvaluator', () => {
+  const createEvaluator = options => new Run.Code.GlobalEvaluator(options)
   const destroyEvaluator = evaluator => evaluator.deactivate()
   runEvaluatorTestSuite(createEvaluator, destroyEvaluator)
 
-  it('should detect setting the same global twice', () => {
-    // TODO: Basic set, and define property
+  it('should detect setting the same global twice in environment', () => {
+    let warned = false
+    const logger = { warn: () => { warned = true } }
+    const evaluator = createEvaluator({ logger })
+    evaluator.evaluate('globalToSetTwice', { globalToSetTwice: 1 })
+    evaluator.evaluate('globalToSetTwice', { globalToSetTwice: 2 })
+    expect(warned).to.equal(true)
+    destroyEvaluator(evaluator)
+  })
+
+  it('should detect setting the same global twice in globals', () => {
+    let warned = false
+    const logger = { warn: () => { warned = true } }
+    const evaluator = createEvaluator({ logger })
+    const globals1 = evaluator.evaluate('function f() { }')[1]
+    const globals2 = evaluator.evaluate('function f() { }')[1]
+    Object.defineProperty(globals1, 'globalToSetTwice', { configurable: true, value: 1 })
+    Object.defineProperty(globals2, 'globalToSetTwice', { configurable: true, value: 2 })
+    expect(warned).to.equal(true)
+    destroyEvaluator(evaluator)
   })
 
   it('should correctly deactivate globals', () => {
-    // TODO
+    const evaluator = createEvaluator()
+    const globals = evaluator.evaluate('1', { x: 1 })[1]
+    globals.y = 2
+    expect(x).to.equal(1) // eslint-disable-line
+    expect(y).to.equal(2) // eslint-disable-line
+    destroyEvaluator(evaluator)
+    expect(typeof x).to.equal('undefined')
+    expect(typeof y).to.equal('undefined')
   })
 
   it('should correctly reactivate globals', () => {
-    // TODO
+    const evaluator = createEvaluator()
+    evaluator.evaluate('1', { x: 1 })[1]
+    expect(x).to.equal(1) // eslint-disable-line
+    evaluator.deactivate()
+    expect(typeof x).to.equal('undefined')
+    evaluator.activate()
+    expect(x).to.equal(1) // eslint-disable-line
+    destroyEvaluator(evaluator)
   })
 })
 
