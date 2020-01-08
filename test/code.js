@@ -619,9 +619,36 @@ describe('Code', () => {
 // Evaluator test suite
 // ------------------------------------------------------------------------------------------------
 
-function runEvaluatorTestSuite(evaluator) {
-  it('placeholder test', () => {
-    console.log('placeholder test')
+function runEvaluatorTestSuite (evaluator) {
+  it('should evaluate named function', () => {
+    const [f] = evaluator.evaluate('function f() { return 1 }')
+    expect(typeof f).to.equal('function')
+    expect(f.name).to.equal('f')
+    expect(f()).to.equal(1)
+  })
+
+  it('should evaluate anonymous function', () => {
+    const [f] = evaluator.evaluate('function () { return "123" }')
+    expect(typeof f).to.equal('function')
+    expect(f.name).to.equal('anonymousFunction')
+    expect(f()).to.equal('123')
+
+    const [g] = evaluator.evaluate('() => { return [] }')
+    expect(typeof g).to.equal('function')
+    expect(g.name).to.equal('anonymousFunction')
+    expect(g()).to.deep.equal([])
+  })
+
+  it('should evaluate named class', () => {
+    const [T] = evaluator.evaluate('class A { }')
+    expect(typeof T).to.equal('function')
+    expect(T.name).to.equal('A')
+  })
+
+  it('should evaluate anonymous class', () => {
+    const [T] = evaluator.evaluate('class { }')
+    expect(typeof T).to.equal('function')
+    expect(T.name).to.equal('AnonymousClass')
   })
 }
 
@@ -629,12 +656,12 @@ function runEvaluatorTestSuite(evaluator) {
 // Evaluator tests
 // ------------------------------------------------------------------------------------------------
 
-describe('VMEvaluator', () => {
+describe.only('VMEvaluator', () => {
   const evaluator = new Run.Code.VMEvaluator()
   runEvaluatorTestSuite(evaluator)
 })
 
-describe('GlobalEvaluator', () => {
+describe.only('GlobalEvaluator', () => {
   const evaluator = new Run.Code.GlobalEvaluator()
   runEvaluatorTestSuite(evaluator)
   evaluator.deactivate()
