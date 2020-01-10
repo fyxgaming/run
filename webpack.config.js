@@ -253,7 +253,7 @@ const browser = {
 const node = {
   ...browser,
   target: 'node',
-  resolve: { mainFields: ["main", "module"] },
+  resolve: { mainFields: ['main', 'module'] },
   output: {
     filename: 'run.node.min.js',
     path: path.join(__dirname, './dist/'),

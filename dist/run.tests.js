@@ -7102,18 +7102,19 @@ describe('Purse', () => {
       const tx = new bsv.Transaction().to(address, 100)
       const tx2 = await run.purse.pay(tx)
       expect(tx2.inputs.length).to.equal(1)
-      expect(tx2.outputs.length).to.equal(2)
+      expect(tx2.outputs.length).to.equal(11)
     })
 
     it('should throw if not enough funds', async () => {
       const address = new bsv.PrivateKey().toAddress()
       const tx = new bsv.Transaction().to(address, Number.MAX_SAFE_INTEGER)
-      await expect(run.purse.pay(tx)).to.be.rejectedWith('not enough funds')
+      await expect(run.purse.pay(tx)).to.be.rejectedWith('Not enough funds')
     })
 
     it('should automatically split utxos', async () => {
       const address = new bsv.PrivateKey().toAddress()
-      await run.purse.pay(new bsv.Transaction().to(address, 100))
+      const tx = await run.purse.pay(new bsv.Transaction().to(address, 100))
+      await run.blockchain.broadcast(tx)
       const utxos = await run.blockchain.utxos(run.purse.address)
       expect(utxos.length).to.equal(10)
     })
