@@ -68,7 +68,7 @@ describe('Purse', () => {
         expect(new Purse({ blockchain: run.blockchain, splits: Number.MAX_SAFE_INTEGER }).splits).to.equal(Number.MAX_SAFE_INTEGER)
       })
 
-      it('should default to 10 if not defined', () => {
+      it('should default to 10 if not specified', () => {
         expect(new Purse({ blockchain: run.blockchain }).splits).to.equal(10)
       })
       
@@ -82,10 +82,40 @@ describe('Purse', () => {
         expect(() => new Purse({ blockchain: run.blockchain, splits: null })).to.throw('Invalid splits option: null')
       })
     })
+
+    describe('feePerKb', () => {
+      it('should support passing in valid feePerKb', () => {
+
+      })
+
+      it('should throw if pass in invalid feePerKb', () => {
+
+      })
+
+      it('should default to 1000 if not specified', () => {
+
+      })
+    })
+
+    describe('blockchain', () => {
+      it('should support passing in valid blockchain', () => {
+        // Mockchain
+        // BlockchainServer
+      })
+
+      it('should throw if pass in invalid blockchain', () => {
+
+      })
+
+      it('should require passing in blockchain', () => {
+
+      })
+    })
   })
 
   describe('pay', () => {
     // TODO: Custom splits
+    // TODO: Custom fee-per-kb
 
     it('should adds inputs and outputs', async () => {
       const address = new bsv.PrivateKey().toAddress()
