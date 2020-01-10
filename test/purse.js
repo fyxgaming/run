@@ -10,7 +10,8 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Jig, createRun, payFor } = require('./helpers')
+const { Run, Jig, createRun, payFor } = require('./helpers')
+const { Purse } = Run
 
 describe('Purse', () => {
   const run = createRun()
@@ -54,12 +55,38 @@ describe('Purse', () => {
       await expect(run.purse.pay(tx)).to.be.rejectedWith('Not enough funds')
     })
 
+    it('should throw if no utxos', async () => {
+      const address = new bsv.PrivateKey().toAddress()
+      const tx = new bsv.Transaction().to(address, 100)
+      let didLogWarning = false
+      const logger = { warn: () => { didLogWarning = true } }
+      const purse = new Purse({ blockchain: run.blockchain, logger })
+      await expect(purse.pay(tx)).to.be.rejectedWith('Not enough funds')
+      expect(didLogWarning).to.equal(true)
+      const purseWithNoLogger = new Purse({ blockchain: run.blockchain, logger: null })
+      await expect(purseWithNoLogger.pay(tx)).to.be.rejectedWith('Not enough funds')
+    })
+
     it('should automatically split utxos', async () => {
       const address = new bsv.PrivateKey().toAddress()
       const tx = await run.purse.pay(new bsv.Transaction().to(address, 100))
       await run.blockchain.broadcast(tx)
       const utxos = await run.blockchain.utxos(run.purse.address)
       expect(utxos.length).to.equal(10)
+    })
+
+    it('should shuffle UTXOs', async () => {
+      const address = new bsv.PrivateKey().toAddress()
+      const tx = await run.purse.pay(new bsv.Transaction().to(address, 100))
+      await run.blockchain.broadcast(tx)
+      const txBase = await run.purse.pay(new bsv.Transaction().to(address, 100))
+      for (let i = 0; i < 100; i++) {
+        const tx2 = await run.purse.pay(new bsv.Transaction().to(address, 100))
+        const sameTxId = tx2.inputs[0].prevTxId.toString() === txBase.inputs[0].prevTxId.toString()
+        const sameIndex = tx2.inputs[0].outputIndex === txBase.inputs[0].outputIndex
+        if (!sameTxId || !sameIndex) return
+      }
+      throw new Error('Did not shuffle UTXOs')
     })
   })
 
