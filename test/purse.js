@@ -106,16 +106,19 @@ describe('Purse', () => {
 
     describe('blockchain', () => {
       it('should support passing in valid blockchain', () => {
-        // Mockchain
-        // BlockchainServer
+        const mockchain = new Run.Mockchain()
+        expect(new Purse({ blockchain: mockchain}).blockchain).to.equal(mockchain)
+        const blockchainServer = new Run.BlockchainServer()
+        expect(new Purse({ blockchain: blockchainServer }).blockchain).to.equal(blockchainServer)
       })
 
       it('should throw if pass in invalid blockchain', () => {
-
+        expect(() => new Purse({ blockchain: {} })).to.throw('Invalid blockchain option')
+        expect(() => new Purse({ blockchain: false })).to.throw('Invalid blockchain option: false')
       })
 
       it('should require passing in blockchain', () => {
-
+        expect(() => new Purse()).to.throw('Option blockchain is required')
       })
     })
   })
