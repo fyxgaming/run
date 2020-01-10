@@ -38,6 +38,29 @@ describe('Purse', () => {
       const purse = new bsv.PrivateKey('mainnet').toString()
       expect(() => createRun({ purse, network: 'test' })).to.throw('Private key network mismatch')
     })
+
+    describ('logger', () => {
+      it('should support passing in valid logger', () => {
+        const purse = new Purse({ blockchain: run.blockchain, logger: console })
+        expect(purse.logger).to.equal(console)
+      })
+
+      it('should support passing in null logger', () => {
+        const purse = new Purse({ blockchain: run.blockchain, logger: null })
+        expect(purse.logger).to.equal(null)
+      })
+
+      it('should support not passing in a logger', () => {
+        const purse = new Purse({ blockchain: run.blockchain })
+        expect(purse.logger).to.equal(null)
+      })
+
+      it('should throw if pass in an invalid logger', () => {
+        expect(() => new Purse({ blockchain: run.blockchain, logger: 123 })).to.throw('Invalid logger option: 123')
+        expect(() => new Purse({ blockchain: run.blockchain, logger: () => {} })).to.throw('Invalid logger option: ')
+        expect(() => new Purse({ blockchain: run.blockchain, logger: false })).to.throw('Invalid logger option: false')
+      })
+    })
   })
 
   describe('pay', () => {
