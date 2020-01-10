@@ -541,8 +541,9 @@ describe('Code', () => {
     it('should sandbox methods from globals', async () => {
       class A {
         isUndefined (x) {
-          const globalObj = typeof window !== 'undefined' ? window : global
-          return !globalObj || typeof globalObj[x] === 'undefined'
+          if (typeof window !== 'undefined') return typeof window[x] === 'undefined'
+          if (typeof global !== 'undefined') return typeof global[x] === 'undefined'
+          return true
         }
       }
       const A1 = await run.load(await run.deploy(A))
@@ -785,8 +786,8 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
 // Evaluator tests
 // ------------------------------------------------------------------------------------------------
 
-describe('VMEvaluator', () => {
-  const createEvaluator = () => new Run.Code.VMEvaluator()
+describe('SESEvaluator', () => {
+  const createEvaluator = () => new Run.Code.SESEvaluator()
   const destroyEvaluator = () => {}
   runEvaluatorTestSuite(createEvaluator, destroyEvaluator)
 
@@ -799,8 +800,7 @@ describe('VMEvaluator', () => {
 
   it('should prevent access to the global scope', () => {
     const evaluator = createEvaluator()
-    evaluator.evaluate('(typeof window !== "undefined" ? window : global).someGlobal = 1')
-    expect(typeof someGlobal === 'undefined').to.equal(true)
+    expect(evaluator.evaluate('typeof window === "undefined" && typeof global === "undefined"')[0]).to.equal(true)
   })
 })
 
@@ -844,7 +844,7 @@ describe('GlobalEvaluator', () => {
 
   it('should correctly reactivate globals', () => {
     const evaluator = createEvaluator()
-    evaluator.evaluate('1', { x: 1 })[1]
+    evaluator.evaluate('1', { x: 1 })
     expect(x).to.equal(1) // eslint-disable-line
     evaluator.deactivate()
     expect(typeof x).to.equal('undefined')

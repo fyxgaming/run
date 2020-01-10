@@ -26,10 +26,10 @@
     "dependencies": {
         "axios": "0.19.0",
         "bsv": "1.2.0",
+        "ses": "github:runonbitcoin/SES",
         "terser-webpack-plugin": "2.3.1",
         "webpack": "4.41.5",
-        "webpack-cli": "3.3.10",
-        "vm-browserify": "1.1.2"
+        "webpack-cli": "3.3.10"
     },
     "devDependencies": {
         "chai": "^4.2.0",

@@ -3920,8 +3920,9 @@ describe('Code', () => {
     it('should sandbox methods from globals', async () => {
       class A {
         isUndefined (x) {
-          const globalObj = typeof window !== 'undefined' ? window : global
-          return !globalObj || typeof globalObj[x] === 'undefined'
+          if (typeof window !== 'undefined') return typeof window[x] === 'undefined'
+          if (typeof global !== 'undefined') return typeof global[x] === 'undefined'
+          return true
         }
       }
       const A1 = await run.load(await run.deploy(A))
@@ -4164,8 +4165,8 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
 // Evaluator tests
 // ------------------------------------------------------------------------------------------------
 
-describe('VMEvaluator', () => {
-  const createEvaluator = () => new Run.Code.VMEvaluator()
+describe('SESEvaluator', () => {
+  const createEvaluator = () => new Run.Code.SESEvaluator()
   const destroyEvaluator = () => {}
   runEvaluatorTestSuite(createEvaluator, destroyEvaluator)
 
@@ -4178,8 +4179,7 @@ describe('VMEvaluator', () => {
 
   it('should prevent access to the global scope', () => {
     const evaluator = createEvaluator()
-    evaluator.evaluate('(typeof window !== "undefined" ? window : global).someGlobal = 1')
-    expect(typeof someGlobal === 'undefined').to.equal(true)
+    expect(evaluator.evaluate('typeof window === "undefined" && typeof global === "undefined"')[0]).to.equal(true)
   })
 })
 
@@ -4223,7 +4223,7 @@ describe('GlobalEvaluator', () => {
 
   it('should correctly reactivate globals', () => {
     const evaluator = createEvaluator()
-    evaluator.evaluate('1', { x: 1 })[1]
+    evaluator.evaluate('1', { x: 1 })
     expect(x).to.equal(1) // eslint-disable-line
     evaluator.deactivate()
     expect(typeof x).to.equal('undefined')
@@ -4504,8 +4504,9 @@ describe('Jig', () => {
     it('should throw if access globals', () => {
       class A extends Jig {
         isUndefined (x) {
-          const globalObj = typeof window !== 'undefined' ? window : global
-          return !globalObj || typeof globalObj[x] === 'undefined'
+          if (typeof window !== 'undefined') return typeof window[x] === 'undefined'
+          if (typeof global !== 'undefined') return typeof global[x] === 'undefined'
+          return true
         }
       }
       const a = new A()
@@ -7522,7 +7523,7 @@ describe('Run', () => {
 /* 20 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.3.13\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\",\"caller\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\",\"vm-browserify\":\"1.1.2\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
+module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.3.13\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\",\"caller\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"ses\":\"github:runonbitcoin/SES\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
 
 /***/ }),
 /* 21 */

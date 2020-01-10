@@ -238,8 +238,7 @@ const browser = {
     ]
   },
   externals: {
-    bsv: 'bsv',
-    vm: 'vm'
+    bsv: 'bsv'
   },
   plugins: [
     new webpack.DefinePlugin({
@@ -254,14 +253,14 @@ const browser = {
 const node = {
   ...browser,
   target: 'node',
+  resolve: { mainFields: ["main", "module"] },
   output: {
     filename: 'run.node.min.js',
     path: path.join(__dirname, './dist/'),
     libraryTarget: 'commonjs2'
   },
   externals: {
-    bsv: 'bsv',
-    'vm-browserify': 'vm-browserify'
+    bsv: 'bsv'
   }
 }
 
