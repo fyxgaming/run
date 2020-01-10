@@ -18,41 +18,40 @@ describe('Purse', () => {
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
-    it('should generate random purse if unspecified', () => {
-      expect(run.purse.bsvPrivateKey.toString()).not.to.equal(createRun().purse.bsvPrivateKey.toString())
-      expect(run.purse.privkey).not.to.equal(createRun().purse.privkey)
+    describe('key', () => {
+      it('should generate random purse if unspecified', () => {
+        expect(run.purse.bsvPrivateKey.toString()).not.to.equal(createRun().purse.bsvPrivateKey.toString())
+        expect(run.purse.privkey).not.to.equal(createRun().purse.privkey)
+      })
+
+      it('should calculate address correctly from private key', () => {
+        expect(run.purse.bsvPrivateKey.toAddress().toString()).to.equal(run.purse.address)
+      })
+
+      it('should support passing in private key', () => {
+        const privkey = new bsv.PrivateKey()
+        const run = createRun({ purse: privkey })
+        expect(run.purse.privkey).to.equal(privkey.toString())
+        expect(run.purse.bsvPrivateKey).to.deep.equal(privkey)
+      })
+
+      it('should throw if private key is on wrong network', () => {
+        const purse = new bsv.PrivateKey('mainnet').toString()
+        expect(() => createRun({ purse, network: 'test' })).to.throw('Private key network mismatch')
+      })
     })
 
-    it('should calculate address correctly from private key', () => {
-      expect(run.purse.bsvPrivateKey.toAddress().toString()).to.equal(run.purse.address)
-    })
-
-    it('should support passing in private key', () => {
-      const privkey = new bsv.PrivateKey()
-      const run = createRun({ purse: privkey })
-      expect(run.purse.privkey).to.equal(privkey.toString())
-      expect(run.purse.bsvPrivateKey).to.deep.equal(privkey)
-    })
-
-    it('should throw if private key is on wrong network', () => {
-      const purse = new bsv.PrivateKey('mainnet').toString()
-      expect(() => createRun({ purse, network: 'test' })).to.throw('Private key network mismatch')
-    })
-
-    describ('logger', () => {
+    describe('logger', () => {
       it('should support passing in valid logger', () => {
-        const purse = new Purse({ blockchain: run.blockchain, logger: console })
-        expect(purse.logger).to.equal(console)
+        expect(new Purse({ blockchain: run.blockchain, logger: console }).logger).to.equal(console)
       })
 
       it('should support passing in null logger', () => {
-        const purse = new Purse({ blockchain: run.blockchain, logger: null })
-        expect(purse.logger).to.equal(null)
+        expect(new Purse({ blockchain: run.blockchain, logger: null }).logger).to.equal(null)
       })
 
       it('should support not passing in a logger', () => {
-        const purse = new Purse({ blockchain: run.blockchain })
-        expect(purse.logger).to.equal(null)
+        expect(new Purse({ blockchain: run.blockchain }).logger).to.equal(null)
       })
 
       it('should throw if pass in an invalid logger', () => {
@@ -61,9 +60,33 @@ describe('Purse', () => {
         expect(() => new Purse({ blockchain: run.blockchain, logger: false })).to.throw('Invalid logger option: false')
       })
     })
+
+    describe('splits', () => {
+      it('should support passing in valid splits', () => {
+        expect(new Purse({ blockchain: run.blockchain, splits: 1 }).splits).to.equal(1)
+        expect(new Purse({ blockchain: run.blockchain, splits: 5 }).splits).to.equal(5)
+        expect(new Purse({ blockchain: run.blockchain, splits: Number.MAX_SAFE_INTEGER }).splits).to.equal(Number.MAX_SAFE_INTEGER)
+      })
+
+      it('should default to 10 if not defined', () => {
+        expect(new Purse({ blockchain: run.blockchain }).splits).to.equal(10)
+      })
+      
+      it('should throw if pass in invalid splits', () => {
+        expect(() => new Purse({ blockchain: run.blockchain, splits: 0 })).to.throw('Option splits must be at least 1: 0')
+        expect(() => new Purse({ blockchain: run.blockchain, splits: -1 })).to.throw('Option splits must be at least 1: -1')
+        expect(() => new Purse({ blockchain: run.blockchain, splits: 1.5 })).to.throw('Option splits must be an integer: 1.5')
+        expect(() => new Purse({ blockchain: run.blockchain, splits: NaN })).to.throw('Option splits must be an integer: NaN')
+        expect(() => new Purse({ blockchain: run.blockchain, splits: Number.POSITIVE_INFINITY })).to.throw('Option splits must be an integer: Infinity')
+        expect(() => new Purse({ blockchain: run.blockchain, splits: false })).to.throw('Invalid splits option: false')
+        expect(() => new Purse({ blockchain: run.blockchain, splits: null })).to.throw('Invalid splits option: null')
+      })
+    })
   })
 
   describe('pay', () => {
+    // TODO: Custom splits
+
     it('should adds inputs and outputs', async () => {
       const address = new bsv.PrivateKey().toAddress()
       const tx = new bsv.Transaction().to(address, 100)
