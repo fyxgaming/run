@@ -13,6 +13,21 @@ const { expect } = chai
 const { Run, Jig, createRun, payFor } = require('./helpers')
 const { Purse } = Run
 
+// ------------------------------------------------------------------------------------------------
+// Pay API tests
+// ------------------------------------------------------------------------------------------------
+
+describe('Pay', () => {
+  it('should throw not implemented for methods', async () => {
+    const pay = new Run.Pay()
+    await expect(pay.pay(new bsv.Transaction())).to.be.rejectedWith('Not implemented')
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// Purse tests
+// ------------------------------------------------------------------------------------------------
+
 describe('Purse', () => {
   const run = createRun()
   beforeEach(() => run.activate())
@@ -71,7 +86,7 @@ describe('Purse', () => {
       it('should default to 10 if not specified', () => {
         expect(new Purse({ blockchain: run.blockchain }).splits).to.equal(10)
       })
-      
+
       it('should throw if pass in invalid splits', () => {
         expect(() => new Purse({ blockchain: run.blockchain, splits: 0 })).to.throw('Option splits must be at least 1: 0')
         expect(() => new Purse({ blockchain: run.blockchain, splits: -1 })).to.throw('Option splits must be at least 1: -1')
@@ -107,7 +122,7 @@ describe('Purse', () => {
     describe('blockchain', () => {
       it('should support passing in valid blockchain', () => {
         const mockchain = new Run.Mockchain()
-        expect(new Purse({ blockchain: mockchain}).blockchain).to.equal(mockchain)
+        expect(new Purse({ blockchain: mockchain }).blockchain).to.equal(mockchain)
         const blockchainServer = new Run.BlockchainServer()
         expect(new Purse({ blockchain: blockchainServer }).blockchain).to.equal(blockchainServer)
       })
@@ -187,7 +202,16 @@ describe('Purse', () => {
       expect(diffFees2 < 10).to.equal(true)
     })
 
-    // TODO: Custom splits
+    it('should respect custom splits', async () => {
+      const address = new bsv.PrivateKey().toAddress()
+      const run = createRun()
+      run.purse.splits = 1
+      const tx = await run.purse.pay(new bsv.Transaction().to(address, 100))
+      expect(tx.outputs.length).to.equal(2)
+      run.purse.splits = 20
+      const tx2 = await run.purse.pay(new bsv.Transaction().to(address, 100))
+      expect(tx2.outputs.length).to.equal(21)
+    })
   })
 
   describe('balance', () => {

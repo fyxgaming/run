@@ -92,8 +92,8 @@ module.exports =
 "use strict";
 
 
-var bind = __webpack_require__(9);
-var isBuffer = __webpack_require__(31);
+var bind = __webpack_require__(10);
+var isBuffer = __webpack_require__(30);
 
 /*global toString:true*/
 
@@ -903,18 +903,18 @@ module.exports = {
 
 const bsv = __webpack_require__(1)
 const Code = __webpack_require__(7)
-const Syncer = __webpack_require__(25)
+const Syncer = __webpack_require__(26)
 const { Transaction } = __webpack_require__(8)
 const util = __webpack_require__(2)
-const { Purse } = __webpack_require__(26)
-const Owner = __webpack_require__(27)
-const { BlockchainServer } = __webpack_require__(28)
+const { Pay, Purse } = __webpack_require__(27)
+const Owner = __webpack_require__(58)
+const { Blockchain, BlockchainServer } = __webpack_require__(9)
 const Mockchain = __webpack_require__(59)
 const { StateCache } = __webpack_require__(60)
 const { PrivateKey } = bsv
 const Jig = __webpack_require__(4)
 const Token = __webpack_require__(61)
-const expect = __webpack_require__(21)
+const expect = __webpack_require__(22)
 
 // ------------------------------------------------------------------------------------------------
 // Primary Run class
@@ -1021,7 +1021,7 @@ class Run {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Parameter validations
+// Parameter validation
 // ------------------------------------------------------------------------------------------------
 
 function parseLogger (logger) {
@@ -1042,11 +1042,7 @@ function parseLogger (logger) {
 function parseBlockchain (blockchain, network, logger) {
   switch (typeof blockchain) {
     case 'object':
-      if (!blockchain) throw new Error('Option \'blockchain\' must not be null')
-      if (typeof blockchain.broadcast !== 'function') throw new Error('Blockchain requires a broadcast method')
-      if (typeof blockchain.fetch !== 'function') throw new Error('Blockchain requires a fetch method')
-      if (typeof blockchain.utxos !== 'function') throw new Error('Blockchain requires a utxos method')
-      if (typeof blockchain.network !== 'string') throw new Error('Blockchain requires a network string')
+      if (!Blockchain.isBlockchain(blockchain)) throw new Error('Invalid \'blockchain\'')
       return blockchain
     case 'string':
     case 'undefined': {
@@ -1169,6 +1165,8 @@ Run.instance = null
 Run.BlockchainServer = BlockchainServer
 Run.Code = Code
 Run.Mockchain = Mockchain
+Run.Pay = Pay
+Run.Purse = Purse
 Run.StateCache = StateCache
 
 Run.Jig = Jig
@@ -1830,7 +1828,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 "use strict";
 
 
-var enhanceError = __webpack_require__(13);
+var enhanceError = __webpack_require__(14);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -1861,7 +1859,7 @@ module.exports = function createError(message, config, code, request, response) 
 const Jig = __webpack_require__(4)
 const util = __webpack_require__(2)
 const bsv = __webpack_require__(1)
-const ses = __webpack_require__(22)
+const ses = __webpack_require__(23)
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -3270,6 +3268,434 @@ module.exports = { ProtoTransaction, Transaction }
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
+/**
+ * blockchain.js
+ *
+ * Blockchain API and its default REST implementation
+ */
+
+const { Address, Script, Transaction } = __webpack_require__(1)
+const axios = __webpack_require__(28)
+const util = __webpack_require__(2)
+
+// ------------------------------------------------------------------------------------------------
+// Blockchain API
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Generic Blockchain API that Run uses to interface with the blockchain
+ */
+class Blockchain {
+  /**
+   * @returns {string} Network string, one of 'main', 'test', 'stn', or 'mock'
+   */
+  get network () { throw new Error('Not implemented') }
+
+  /**
+   * Submits a transaction to the network
+   * @param {bsv.Transaction} tx Transaction to broadcast
+   */
+  async broadcast (tx) { throw new Error('not implemented') }
+
+  /**
+   * Queries the network for a transaction
+   * @param {string} txid Transaction id hex string
+   * @param {boolean} force Whether to force-refresh the transaction, and never use the cache
+   * @returns {bsv.Transaction} Transaction with additional metadata including:
+   * - `time` {number} Time in milliseconds for acceptance into a block or mempool
+   * - `confirmations` {number} Number of confirmations, 0 for mempool
+   * - `blockhash` {string} Hash of block this tx was included in
+   * - `blockheight` {string} Height of block this tx was included in
+   * - `blocktime` {number} Time in milliseconds the block was published
+   * - `vout` {Array<{spentTxId, spentIndex, spentHeight}>} Output spend information`
+   */
+  async fetch (txid, force) { throw new Error('not implemented') }
+
+  /**
+   * Queries the utxos for an address
+   * @param {string} address Address string
+   * @returns {Array<{txid, vout, script, satoshis}>}
+   */
+  async utxos (address) { throw new Error('not implemented') }
+}
+
+Blockchain.isBlockchain = blockchain => {
+  if (typeof blockchain !== 'object' || !blockchain) return false
+  if (typeof blockchain.broadcast !== 'function') return false
+  if (typeof blockchain.fetch !== 'function') return false
+  if (typeof blockchain.utxos !== 'function') return false
+  if (typeof blockchain.network !== 'string') return false
+  return true
+}
+
+// ------------------------------------------------------------------------------------------------
+// BlockchainServer
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Implements the Blockchain API using a network service
+ */
+class BlockchainServer {
+  constructor (options = {}) {
+    this.network = parseNetwork(options.network)
+    this.logger = parseLogger(options.logger)
+    this.api = parseApi(options.api)
+    this.cache = parseCache(options.cache)
+    this.axios = axios.create({ timeout: parseTimeout(options.timeout) })
+    this.bsvNetwork = util.bsvNetwork(this.network)
+    this.requests = new Map() // txid|address -> Array<Function>
+  }
+
+  async broadcast (tx) {
+    // Verify the tx locally. It is faster to find problems here than to wait for a server response.
+    if (tx.inputs.length === 0) throw new Error('tx has no inputs')
+    if (tx.outputs.length === 0) throw new Error('tx has no outputs')
+    if (tx.getFee() < tx.toBuffer().length) throw new Error('tx fee too low')
+    if (tx.verify() !== true) throw new Error(tx.verify())
+    if (tx.isFullySigned() !== true) throw new Error('tx not fully signed')
+
+    // Set properties on the tx that run expects
+    tx.time = Date.now()
+    tx.confirmations = 0
+    tx.outputs.forEach(o => { o.spentTxId = null; o.spentIndex = null; o.spentHeight = null })
+
+    // Broadcast the transaction
+    await this._post(this.api.broadcastUrl(this.network), this.api.broadcastData(tx))
+
+    // Cache the transaction for later fetches and also put in our sent list so that
+    // we can correct UTXOs returned for the server.
+    this.cache.broadcasted(tx)
+  }
+
+  async fetch (txid, force = false) {
+    // Check the cache for this transaction if we are not force-refreshing the transaction
+    const cached = this.cache.get(txid)
+    if (!force && cached) return cached
+
+    // If we already are fetching this transaction, then piggy-back on the response
+    const prior = this.requests.get(txid)
+    if (prior) return new Promise((resolve, reject) => prior.push({ resolve, reject }))
+
+    // Otherwise, create a new promise list for this request
+    this.requests.set(txid, [])
+
+    try {
+      // Fetch the transaction by its txid
+      const data = (await this._get(this.api.fetchUrl(this.network, txid))).data
+      const tx = this.api.fetchResp(data)
+
+      // If we have a local cached copy, make sure the spent data is up-to-date
+      if (cached) {
+        for (let vout = 0; vout < tx.outputs.length; vout++) {
+          tx.outputs[vout].spentTxId = tx.outputs[vout].spentTxId || cached.outputs[vout].spentTxId
+          tx.outputs[vout].spentIndex = tx.outputs[vout].spentIndex || cached.outputs[vout].spentIndex
+          tx.outputs[vout].spentHeight = tx.outputs[vout].spentHeight || cached.outputs[vout].spentHeight
+        }
+      }
+
+      // Cache it
+      this.cache.fetched(tx)
+
+      // If there is other code waiting for this result, resolve their promises now
+      this.requests.get(txid).forEach(promise => promise.resolve(tx))
+
+      return tx
+    } catch (e) {
+      // If the request fails, notify all other code that is waiting for this request
+      this.requests.get(txid).forEach(promise => promise.reject(e))
+
+      throw e
+    } finally {
+      // Whether fetch succeeds or fails, remove all callbacks for this request
+      this.requests.delete(txid)
+    }
+  }
+
+  async utxos (address) {
+    // Whether we are passed a bsv.Address or a string, convert it to a string
+    address = new Address(address, this.bsvNetwork).toString()
+
+    // If we are already querying the utxos for this address, piggy-back on that request
+    const prior = this.requests.get(address)
+    if (prior) return new Promise((resolve, reject) => prior.push({ resolve, reject }))
+
+    // Create a new promise list for other code to piggy-back on
+    this.requests.set(address, [])
+
+    try {
+      // Query the utxos
+      const data = (await this._get(this.api.utxosUrl(this.network, address))).data
+      const utxos = this.api.utxosResp(data, address)
+
+      // In case the utxos from the server have any duplicates, dedup them
+      const dedupedUtxos = this._dedupUtxos(utxos)
+
+      // The server may not index utxos right away. update the utxos with our own broadcasted txns
+      const correctedUtxos = this.cache.correctForServerUtxoIndexingDelay(dedupedUtxos, address)
+
+      // Notify all other code that was also waiting for this request
+      this.requests.get(address).forEach(o => o.resolve(correctedUtxos))
+
+      return correctedUtxos
+    } catch (e) {
+      // Notify all other code that this request failed
+      this.requests.get(address).forEach(o => o.reject(e))
+
+      throw e
+    } finally {
+      // Whether we succeeded or failed, remove the promises for this request
+      this.requests.delete(address)
+    }
+  }
+
+  _dedupUtxos (utxos) {
+    // In case the server has a bug, run must be able to handle duplicate utxos returned. If we
+    // don't dedup, then later we will create a transaction with more than one of the same input.
+    const locations = new Set()
+    return utxos.filter(utxo => {
+      const location = `${utxo.txid}_o${utxo.vout}`
+      if (!locations.has(location)) {
+        locations.add(location)
+        return true
+      } else {
+        if (this.logger) this.logger.warn(`Duplicate utxo returned from server: ${location}`)
+        return false
+      }
+    })
+  }
+
+  async _post (url, data) {
+    if (this.logger) this.logger.info(`POST ${url}`)
+    return call(this.axios.post(url, data))
+  }
+
+  async _get (url) {
+    if (this.logger) this.logger.info(`GET ${url}`)
+    return call(this.axios.get(url))
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Parameter validation
+// ------------------------------------------------------------------------------------------------
+
+function parseNetwork (network) {
+  if (network === 'main' || network === 'test' || network === 'stn') return network
+  switch (typeof network) {
+    case 'string': throw new Error(`Unknown network: ${network}`)
+    case 'undefined': return 'main'
+    default: throw new Error(`Invalid network: ${network}`)
+  }
+}
+
+function parseLogger (logger) {
+  switch (typeof logger) {
+    case 'object': return logger
+    case 'undefined': return null
+    default: throw new Error(`Invalid logger: ${logger}`)
+  }
+}
+
+function parseTimeout (timeout) {
+  switch (typeof timeout) {
+    case 'number':
+      if (Number.isNaN(timeout) || timeout < 0) throw new Error(`Invalid timeout: ${timeout}`)
+      return timeout
+    case 'undefined': return 10000
+    default: throw new Error(`Invalid timeout: ${timeout}`)
+  }
+}
+
+function parseApi (api) {
+  switch (typeof api) {
+    case 'string': {
+      const apiData = apis.find(apiData => apiData.name === api)
+      if (!apiData) throw new Error(`Unknown blockchain API: ${api}`)
+      return apiData
+    }
+    case 'object':
+      if (!api) throw new Error(`Invalid blockchain API: ${api}`)
+      return api
+    case 'undefined': return apis[0]
+    default: throw new Error(`Invalid blockchain API: ${api}`)
+  }
+}
+
+function parseCache (cache) {
+  return cache && cache instanceof BlockchainServerCache ? cache : new BlockchainServerCache()
+}
+
+// ------------------------------------------------------------------------------------------------
+// BlockchainServerCache
+// ------------------------------------------------------------------------------------------------
+
+class BlockchainServerCache {
+  constructor () {
+    this.transactions = new Map() // txid -> tx
+    this.broadcasts = [] // Array<Transaction>
+    this.size = 10000
+    this.expiration = 10 * 60 * 1000
+    this.indexingDelay = 10 * 1000
+  }
+
+  get (txid) {
+    const tx = this.transactions.get(txid)
+    if (!tx) return
+
+    // If the transaction is expired, remove it
+    const expired = Date.now() - tx.fetchedTime > this.expiration
+    if (expired) {
+      this.transactions.delete(txid)
+      return
+    }
+
+    // Bump the transaction to the top and return it
+    this.transactions.delete(txid)
+    this.transactions.set(txid, tx)
+    return tx
+  }
+
+  fetched (tx) {
+    tx.fetchedTime = Date.now()
+
+    this.transactions.set(tx.hash, tx)
+
+    // If the cache is full, remove the oldest transaction
+    if (this.transactions.size > this.size) {
+      const oldest = this.transactions.keys().next().value
+      this.transactions.delete(oldest)
+    }
+  }
+
+  broadcasted (tx) {
+    this.fetched(tx)
+
+    // Remove all transactions from our broadcast past the indexing delay
+    const now = Date.now()
+    this.broadcasts = this.broadcasts.filter(tx => now - tx.time < this.indexingDelay)
+
+    this.broadcasts.push(tx)
+
+    // Update our known transactions with spent info
+    tx.inputs.forEach((input, vin) => {
+      const spent = this.transactions.get(input.prevTxId.toString('hex'))
+      if (spent) {
+        spent.outputs[input.outputIndex].spentTxId = tx.hash
+        spent.outputs[input.outputIndex].spentIndex = vin
+        spent.outputs[input.outputIndex].spentHeight = -1
+      }
+    })
+  }
+
+  correctForServerUtxoIndexingDelay (utxos, address) {
+    // First remove all expired txns from our broadcast cache
+    const now = Date.now()
+    this.broadcasts = this.broadcasts.filter(tx => now - tx.time < this.indexingDelay)
+
+    // Add all utxos from our broadcast cache for this address that aren't already there
+    this.broadcasts.forEach(tx => {
+      tx.outputs.forEach((output, vout) => {
+        if (output.script.toAddress(this.bsvNetwork).toString() === address &&
+              !utxos.some(utxo => utxo.txid === tx.hash && utxo.vout === vout)) {
+          utxos.push({ txid: tx.hash, vout, script: output.script, satoshis: output.satoshis })
+        }
+      })
+    })
+
+    // Remove all utxos that we know are spent because they are in our broadcast cache
+    this.broadcasts.forEach(tx => {
+      const inputSpendsUtxo = (input, utxo) =>
+        input.prevTxId.toString('hex') === utxo.txid &&
+        input.outputIndex === utxo.vout
+
+      utxos = utxos.filter(utxo => !tx.inputs.some(input => inputSpendsUtxo(input, utxo)))
+    })
+
+    return utxos
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Helper methods
+// ------------------------------------------------------------------------------------------------
+
+async function call (promise) {
+  try { return await promise } catch (e) {
+    const { config: c, response: r } = e
+    if (c && c.url && r && r.data) {
+      const message = r.data.message ? (r.data.message.message || r.data.message) : r.data
+      const reason = r.data.name && message ? `${r.data.name}: ${message}` : r.data.name || message
+      throw new Error(`${reason}\n\n${c.method.toUpperCase()} ${c.url}`)
+    } else { throw e }
+  }
+}
+
+function jsonToTx (json) {
+  const tx = new Transaction(json.hex || json.rawtx)
+  tx.time = json.time * 1000 || Date.now()
+  if (json.blockhash && json.blockhash.length) tx.blockhash = json.blockhash
+  if (json.blocktime) tx.blocktime = json.blocktime
+  if (json.blockheight) tx.blockheight = json.blockheight
+  if (typeof json.confirmations !== 'undefined') tx.confirmations = json.confirmations
+  if (json.vout) {
+    json.vout.forEach((output, n) => {
+      if (typeof output.spentTxId !== 'undefined') tx.outputs[n].spentTxId = output.spentTxId
+      if (typeof output.spentIndex !== 'undefined') tx.outputs[n].spentIndex = output.spentIndex
+      if (typeof output.spentHeight !== 'undefined') tx.outputs[n].spentHeight = output.spentHeight
+    })
+  }
+  return tx
+}
+
+// ------------------------------------------------------------------------------------------------
+// REST APIs
+// ------------------------------------------------------------------------------------------------
+
+const starApiHost = 'https://api.star.store'
+
+const apis = [
+  {
+    name: 'star',
+    broadcastUrl: network => `${starApiHost}/v1/${network}/tx`,
+    broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
+    fetchUrl: (network, txid) => `${starApiHost}/v1/${network}/tx/${txid}`,
+    fetchResp: data => jsonToTx(data),
+    utxosUrl: (network, address) => `${starApiHost}/v1/${network}/utxos/${address.toString()}`,
+    utxosResp: (data, address) => data
+  },
+  {
+    name: 'bitindex',
+    broadcastUrl: network => `https://api.bitindex.network/api/v3/${network}/tx/send`,
+    broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
+    fetchUrl: (network, txid) => `https://api.bitindex.network/api/v3/${network}/tx/${txid}`,
+    fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
+    utxosUrl: (network, address) => `https://api.bitindex.network/api/v3/${network}/addr/${address.toString()}/utxo`,
+    utxosResp: (data, address) => data.map(o => { return { ...o, script: new Script(o.scriptPubKey) } })
+  },
+  {
+    name: 'whatsonchain',
+    broadcastUrl: network => `https://api.whatsonchain.com/v1/bsv/${network}/tx/raw`,
+    broadcastData: tx => { return { txhex: tx.toBuffer().toString('hex') } },
+    fetchUrl: (network, txid) => `https://api.whatsonchain.com/v1/bsv/${network}/tx/hash/${txid}`,
+    fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
+    utxosUrl: (network, address) => `https://api.whatsonchain.com/v1/bsv/${network}/address/${address.toString()}/unspent`,
+    utxosResp: (data, address) => data.map(o => {
+      return { txid: o.tx_hash, vout: o.tx_pos, satoshis: o.value, script: Script.fromAddress(address) }
+    })
+  }
+]
+
+// ------------------------------------------------------------------------------------------------
+
+BlockchainServer.Cache = BlockchainServerCache
+
+module.exports = { Blockchain, BlockchainServer }
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
 "use strict";
 
 
@@ -3285,7 +3711,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3297,14 +3723,14 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var normalizeHeaderName = __webpack_require__(36);
+var normalizeHeaderName = __webpack_require__(35);
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -3321,10 +3747,10 @@ function getDefaultAdapter() {
   // Only Node.JS has a process variable that is of [[Class]] process
   if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(37);
+    adapter = __webpack_require__(36);
   } else if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(51);
+    adapter = __webpack_require__(50);
   }
   return adapter;
 }
@@ -3402,7 +3828,7 @@ module.exports = defaults;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3434,7 +3860,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3483,27 +3909,27 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports) {
 
 module.exports = require("http");
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports) {
 
 module.exports = require("https");
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var url = __webpack_require__(17);
-var http = __webpack_require__(14);
-var https = __webpack_require__(15);
-var assert = __webpack_require__(38);
-var Writable = __webpack_require__(39).Writable;
-var debug = __webpack_require__(40)("follow-redirects");
+var url = __webpack_require__(18);
+var http = __webpack_require__(15);
+var https = __webpack_require__(16);
+var assert = __webpack_require__(37);
+var Writable = __webpack_require__(38).Writable;
+var debug = __webpack_require__(39)("follow-redirects");
 
 // RFC7231§4.2.1: Of the request methods defined by this specification,
 // the GET, HEAD, OPTIONS, and TRACE methods are defined to be safe.
@@ -3823,13 +4249,13 @@ module.exports.wrap = wrap;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports) {
 
 module.exports = require("url");
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
@@ -3845,7 +4271,7 @@ exports.coerce = coerce;
 exports.disable = disable;
 exports.enable = enable;
 exports.enabled = enabled;
-exports.humanize = __webpack_require__(42);
+exports.humanize = __webpack_require__(41);
 
 /**
  * Active `debug` instances.
@@ -4060,7 +4486,7 @@ function coerce(val) {
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4118,7 +4544,7 @@ module.exports = function mergeConfig(config1, config2) {
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4144,7 +4570,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports) {
 
 /**
@@ -4211,7 +4637,7 @@ module.exports = expect
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4219,7 +4645,7 @@ module.exports = expect
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var makeHardener = _interopDefault(__webpack_require__(23));
+var makeHardener = _interopDefault(__webpack_require__(24));
 
 // we'd like to abandon, but we can't, so just scream and break a lot of
 // stuff. However, since we aren't really aborting the process, be careful to
@@ -4886,7 +5312,7 @@ function createNewUnsafeGlobalForNode() {
   }
 
   // eslint-disable-next-line global-require
-  const vm = __webpack_require__(24);
+  const vm = __webpack_require__(25);
 
   // Use unsafeGlobalEvalSrc to ensure we get the right 'this'.
   const unsafeGlobal = vm.runInNewContext(unsafeGlobalEvalSrc);
@@ -7968,7 +8394,7 @@ module.exports = SES;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8170,13 +8596,13 @@ module.exports = makeHardener;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports) {
 
 module.exports = require("vm");
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -8475,7 +8901,7 @@ owner: ${spentJigs[i].owner}`)
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -8486,6 +8912,11 @@ owner: ${spentJigs[i].owner}`)
 
 const bsv = __webpack_require__(1)
 const util = __webpack_require__(2)
+const { Blockchain } = __webpack_require__(9)
+
+// ------------------------------------------------------------------------------------------------
+// Pay API
+// ------------------------------------------------------------------------------------------------
 
 /**
  * API to pay for transactions
@@ -8497,44 +8928,43 @@ class Pay {
    * @returns {bsv.Transaction} Paid transaction
    */
   async pay (tx) {
-    throw new Error('not implemented')
+    throw new Error('Not implemented')
   }
 }
+
+// ------------------------------------------------------------------------------------------------
+// Local Purse
+// ------------------------------------------------------------------------------------------------
 
 /**
  * Local wallet that implements the Pay API
  */
 class Purse {
   constructor (options = {}) {
-    if (typeof options.blockchain === 'undefined') throw new Error('purse blockchain option must be defined')
+    this.logger = parseLogger(options.logger)
+    this.splits = parseSplits(options.splits)
+    this.feePerKb = parseFeePerKb(options.feePerKb)
+    this.blockchain = parseBlockchain(options.blockchain)
 
-    const bsvNetwork = util.bsvNetwork(options.blockchain.network)
+    const bsvNetwork = util.bsvNetwork(this.blockchain.network)
     this.bsvPrivateKey = new bsv.PrivateKey(options.privkey, bsvNetwork)
     this.privkey = this.bsvPrivateKey.toString()
     this.bsvAddress = this.bsvPrivateKey.toAddress()
     this.address = this.bsvAddress.toString()
-    this.blockchain = options.blockchain
-    this.logger = options.logger
-
-    // splits defaults to 10 because with the mempool chain limit being 25,
-    // and 10 splits to choose from, this creates a binomial distribution
-    // where we would expect not to hit this limit 98.7% of the time after 120
-    // transaction. This would support one transaction every 5 seconds on average.
-    this.splits = typeof options.splits === 'undefined' ? 10 : options.splits
-
-    // Current fees are 1 sat per byte, but miners are lowering to 0.5 sat/byte.
-    // We should consider lowering this to 0.5 sat/byte soon.
-    this.feePerKb = 1000
   }
 
   async pay (tx) {
     let utxos = await this.blockchain.utxos(this.address)
 
     if (!utxos.length) {
+      // This isn't an error, because sometimes a transaction can be paid for
+      // using BSV in backed jigs, and no purse outputs are needed.
       const suggestion = `Hint: Have you funded the purse address ${this.address}?`
       if (this.logger) this.logger.warn(`No purse utxos\n\n${suggestion}`)
-      return tx
     }
+
+    // Shuffle the UTXOs so that when we start to add them, we don't always start in
+    // the same order. This often reduces mempool chain limit errors.
 
     function shuffle (a) {
       for (let i = a.length - 1; i > 0; i--) {
@@ -8543,28 +8973,32 @@ class Purse {
       }
       return a
     }
+
     utxos = shuffle(utxos)
 
     // We're going to calculate how many inputs and outputs we need. This is tricky, because
     // every additional input and output affects the fees required. We also want to split our
     // UTXOs, and calculating the amount to split is tricky. To do this, we're going to start
     // with a base satoshi amount we need to add inputs for, the baseSatoshisRequired. If adding
-    // inputs and outputs didn't change the fees, this is what we would pay. But from there, we're
-    // going to walk through our UTXOS. For each one, first we'll fill out how many new UTXOS we
-    // need, and then we'll add the necessary inputs. We are just planning at this point. After
-    // we figure out how many inputs to add, we can calculate how big the outputs need to be, and
-    // then add them all for real.
+    // inputs and outputs didn't change the fees, this is what we would pay. From there, we're
+    // going to walk through our UTXOS. For each one, first we'll record out how many new outputs we
+    // need, and then we'll add the necessary inputs. After we figure out how many inputs to add,
+    // and how many outputs we'll have, we can calculate how big the outputs need to be, and
+    // then add the outputs for real to the transaction.
+
     const baseSatoshisRequired = Math.max(1000, tx._estimateFee() + tx._getOutputAmount())
 
     let satoshisRequired = baseSatoshisRequired
-    let satoshisSpentUtxos = 0
+    let satoshisAddedInUtxos = 0
     let satoshisSpentTotal = tx._getInputAmount()
     let numUtxosSpent = 0
     let numOutputsToCreate = 0
 
+    tx.feePerKb(this.feePerKb)
+
     for (const utxo of utxos) {
       tx.from(utxo)
-      satoshisSpentUtxos += utxo.satoshis
+      satoshisAddedInUtxos += utxo.satoshis
       satoshisSpentTotal += utxo.satoshis
       numUtxosSpent += 1
       satoshisRequired += 150 // 150 bytes per P2PKH input seems to be average
@@ -8584,7 +9018,7 @@ class Purse {
 
     // Add all the outputs
     const satoshisRequiredForFees = satoshisRequired - numOutputsToCreate * 546
-    const satoshisPerOutput = Math.floor((satoshisSpentUtxos - satoshisRequiredForFees) / numOutputsToCreate)
+    const satoshisPerOutput = Math.floor((satoshisAddedInUtxos - satoshisRequiredForFees) / numOutputsToCreate)
     for (let i = 0; i < numOutputsToCreate; i++) {
       if (i === numOutputsToCreate - 1) {
         tx.change(this.bsvAddress)
@@ -8609,622 +9043,81 @@ class Purse {
   }
 }
 
-module.exports = { Pay, Purse }
+// ------------------------------------------------------------------------------------------------
+// Parameter validation
+// ------------------------------------------------------------------------------------------------
 
-
-/***/ }),
-/* 27 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * owner.js
- *
- * Owner API that manages jigs and signs transactions
- */
-
-const bsv = __webpack_require__(1)
-const util = __webpack_require__(2)
-
-class Owner {
-  constructor (keyOrAddress, options) {
-    const bsvNetwork = util.bsvNetwork(options.network)
-    this.logger = options.logger
-    this.run = options.run
-    keyOrAddress = keyOrAddress || new bsv.PrivateKey(bsvNetwork)
-
-    // Try creating the private key on mainnet and testnet
-    try {
-      const bsvPrivateKey = new bsv.PrivateKey(keyOrAddress, bsvNetwork)
-      if (bsvPrivateKey.toString() !== keyOrAddress.toString()) throw new Error()
-      return this._fromPrivateKey(bsvPrivateKey)
-    } catch (e) {
-      if (e.message === 'Private key network mismatch') throw e
-    }
-
-    // Try creating from a public key
-    try {
-      return this._fromPublicKey(new bsv.PublicKey(keyOrAddress, { network: bsvNetwork }))
-    } catch (e) { }
-
-    // Try creating from an address
-    try {
-      return this._fromAddress(new bsv.Address(keyOrAddress, bsvNetwork))
-    } catch (e) {
-      if (e.message === 'Address has mismatched network type.') throw e
-    }
-
-    throw new Error(`bad owner key or address: ${keyOrAddress}`)
-  }
-
-  _fromPrivateKey (bsvPrivateKey) {
-    this.bsvPrivateKey = bsvPrivateKey
-    this.privkey = bsvPrivateKey.toString()
-    return this._fromPublicKey(bsvPrivateKey.publicKey)
-  }
-
-  _fromPublicKey (bsvPublicKey) {
-    this.bsvPublicKey = bsvPublicKey
-    this.pubkey = bsvPublicKey.toString()
-    return this._fromAddress(bsvPublicKey.toAddress())
-  }
-
-  _fromAddress (bsvAddress) {
-    this.bsvAddress = bsvAddress
-    this.address = bsvAddress.toString()
-
-    // Each ref should only be stored once. If we have an origin, prefer it
-    this.refs = new Map() // origin|Jig|Class -> Jig|Class
-
-    return this
-  }
-
-  get jigs () {
-    try {
-      return Array.from(this.refs.values())
-        .filter(ref => ref instanceof this.run.constructor.Jig)
-    } catch (e) {
-      if (this.logger) this.logger.error(`Bad token found in owner refs. Removing.\n\n${e}`)
-      this._removeErrorRefs()
-      return this.jigs
-    }
-  }
-
-  get code () {
-    try {
-      return Array.from(this.refs.values())
-        .filter(ref => !(ref instanceof this.run.constructor.Jig))
-    } catch (e) {
-      if (this.logger) this.logger.error(`Bad token found in owner refs. Removing.\n\n${e}`)
-      this._removeErrorRefs()
-      return this.code
-    }
-  }
-
-  _removeErrorRefs () {
-    let uselessVar = true
-    const toRemove = []
-    for (const [key, ref] of this.refs) {
-      try {
-        // If a ref failed to deploy, then it will have ! in its origin and throw here
-        const isJig = ref instanceof this.run.constructor.Jig
-        // We need to do something with the result to keep it from being minified away.
-        uselessVar = uselessVar ? !isJig : isJig
-      } catch (e) {
-        toRemove.push(key)
-      }
-    }
-    toRemove.forEach(key => this.refs.delete(key))
-  }
-
-  async sign (tx) {
-    if (this.bsvPrivateKey) tx.sign(this.bsvPrivateKey)
-    return tx
-  }
-
-  async sync () {
-    // post any pending transactions
-    await this.run.syncer.sync()
-
-    // query the latest jigs and code, but only do once at a time
-    if (!this._query) {
-      this._query = new Promise((resolve, reject) => {
-        this._queryLatest()
-          .then(() => { this._query = null; resolve() })
-          .catch(e => { this._query = null; reject(e) })
-      })
-    }
-    return this._query
-  }
-
-  async _queryLatest () {
-    const newUtxos = await this.run.blockchain.utxos(this.address)
-
-    // create a new ref set initially comprised of all pending refs, since they won't
-    // be in the utxos, and also a map of our non-pending jigs to their present
-    // locations so we don't reload them.
-    const newRefs = new Map()
-    const locationMap = new Map()
-    for (const [key, ref] of this.refs) {
-      if (typeof key !== 'string') newRefs.set(key, ref)
-      try { locationMap.set(ref.location, ref) } catch (e) { }
-    }
-
-    // load each new utxo, and if we come across a jig we already know, re-use it
-    for (const utxo of newUtxos) {
-      const location = `${utxo.txid}_o${utxo.vout}`
-      const prevRef = locationMap.get(location)
-      if (prevRef) {
-        newRefs.delete(prevRef)
-        newRefs.set(location, prevRef)
-        continue
-      }
-      try {
-        const ref = await this.run.load(location)
-        newRefs.set(ref.origin, ref)
-      } catch (e) {
-        if (this.logger) this.logger.error(`Failed to load owner location ${location}\n\n${e.toString()}`)
-      }
-    }
-
-    this.refs = newRefs
-  }
-
-  _update (ref) {
-    this.refs.delete(ref)
-    try {
-      if (ref.owner === this.pubkey) {
-        try {
-          if (typeof ref.origin === 'undefined') throw new Error()
-          if (ref.origin.startsWith('_')) throw new Error()
-          this.refs.set(ref.origin, ref)
-        } catch (e) { this.refs.set(ref, ref) }
-      } else {
-        try { this.refs.delete(ref.origin) } catch (e) { }
-      }
-    } catch (e) { }
+function parseLogger (logger) {
+  switch (typeof logger) {
+    case 'object': return logger
+    case 'undefined': return null
+    default: throw new Error(`Invalid logger option: ${logger}`)
   }
 }
 
-module.exports = Owner
+function parseSplits (splits) {
+  switch (typeof splits) {
+    case 'number':
+      if (!Number.isInteger(splits)) throw new Error(`Option splits must be an integer: ${splits}`)
+      if (splits <= 0) throw new Error(`Option splits must be at least 1: ${splits}`)
+      return splits
+    case 'undefined':
+      // The defaults to 10 because with the mempool chain limit being 25,
+      // and 10 splits to choose from, this creates a binomial distribution
+      // where we would expect not to hit this limit 98.7% of the time after 120
+      // transaction. This would support one transaction every 5 seconds on average.
+      return 10
+    default: throw new Error(`Invalid splits option: ${splits}`)
+  }
+}
+
+function parseFeePerKb (feePerKb) {
+  switch (typeof feePerKb) {
+    case 'number':
+      if (!Number.isFinite(feePerKb)) throw new Error(`Option feePerKb must be finite: ${feePerKb}`)
+      if (feePerKb <= 0) throw new Error(`Option feePerKb must be at least 1: ${feePerKb}`)
+      return feePerKb
+    case 'undefined':
+      // Current fees are 1 sat per byte, but miners are lowering to 0.5 sat/byte.
+      // We should consider lowering this to 0.5 sat/byte soon.
+      return 1000
+    default: throw new Error(`Invalid feePerKb option: ${feePerKb}`)
+  }
+}
+
+function parseBlockchain (blockchain) {
+  switch (typeof blockchain) {
+    case 'object':
+      if (!Blockchain.isBlockchain(blockchain)) throw new Error('Invalid blockchain option')
+      return blockchain
+    case 'undefined': throw new Error('Option blockchain is required')
+    default: throw new Error(`Invalid blockchain option: ${blockchain}`)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { Pay, Purse }
 
 
 /***/ }),
 /* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/**
- * blockchain.js
- *
- * Blockchain API and its default REST implementation
- */
-
-const { Address, Script, Transaction } = __webpack_require__(1)
-const axios = __webpack_require__(29)
-const util = __webpack_require__(2)
-
-// ------------------------------------------------------------------------------------------------
-// Blockchain API
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Generic Blockchain API that Run uses to interface with the blockchain
- */
-class Blockchain {
-  /**
-   * @returns {string} Network string, one of 'main', 'test', 'stn', or 'mock'
-   */
-  get network () { throw new Error('Not implemented') }
-
-  /**
-   * Submits a transaction to the network
-   * @param {bsv.Transaction} tx Transaction to broadcast
-   */
-  async broadcast (tx) { throw new Error('not implemented') }
-
-  /**
-   * Queries the network for a transaction
-   * @param {string} txid Transaction id hex string
-   * @param {boolean} force Whether to force-refresh the transaction, and never use the cache
-   * @returns {bsv.Transaction} Transaction with additional metadata including:
-   * - `time` {number} Time in milliseconds for acceptance into a block or mempool
-   * - `confirmations` {number} Number of confirmations, 0 for mempool
-   * - `blockhash` {string} Hash of block this tx was included in
-   * - `blockheight` {string} Height of block this tx was included in
-   * - `blocktime` {number} Time in milliseconds the block was published
-   * - `vout` {Array<{spentTxId, spentIndex, spentHeight}>} Output spend information`
-   */
-  async fetch (txid, force) { throw new Error('not implemented') }
-
-  /**
-   * Queries the utxos for an address
-   * @param {string} address Address string
-   * @returns {Array<{txid, vout, script, satoshis}>}
-   */
-  async utxos (address) { throw new Error('not implemented') }
-}
-
-// ------------------------------------------------------------------------------------------------
-// BlockchainServer
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Implements the Blockchain API using a network service
- */
-class BlockchainServer {
-  constructor (options = {}) {
-    this.network = parseNetwork(options.network)
-    this.logger = parseLogger(options.logger)
-    this.api = parseApi(options.api)
-    this.cache = parseCache(options.cache)
-    this.axios = axios.create({ timeout: parseTimeout(options.timeout) })
-    this.bsvNetwork = util.bsvNetwork(this.network)
-    this.requests = new Map() // txid|address -> Array<Function>
-  }
-
-  async broadcast (tx) {
-    // Verify the tx locally. It is faster to find problems here than to wait for a server response.
-    if (tx.inputs.length === 0) throw new Error('tx has no inputs')
-    if (tx.outputs.length === 0) throw new Error('tx has no outputs')
-    if (tx.getFee() < tx.toBuffer().length) throw new Error('tx fee too low')
-    if (tx.verify() !== true) throw new Error(tx.verify())
-    if (tx.isFullySigned() !== true) throw new Error('tx not fully signed')
-
-    // Set properties on the tx that run expects
-    tx.time = Date.now()
-    tx.confirmations = 0
-    tx.outputs.forEach(o => { o.spentTxId = null; o.spentIndex = null; o.spentHeight = null })
-
-    // Broadcast the transaction
-    await this._post(this.api.broadcastUrl(this.network), this.api.broadcastData(tx))
-
-    // Cache the transaction for later fetches and also put in our sent list so that
-    // we can correct UTXOs returned for the server.
-    this.cache.broadcasted(tx)
-  }
-
-  async fetch (txid, force = false) {
-    // Check the cache for this transaction if we are not force-refreshing the transaction
-    const cached = this.cache.get(txid)
-    if (!force && cached) return cached
-
-    // If we already are fetching this transaction, then piggy-back on the response
-    const prior = this.requests.get(txid)
-    if (prior) return new Promise((resolve, reject) => prior.push({ resolve, reject }))
-
-    // Otherwise, create a new promise list for this request
-    this.requests.set(txid, [])
-
-    try {
-      // Fetch the transaction by its txid
-      const data = (await this._get(this.api.fetchUrl(this.network, txid))).data
-      const tx = this.api.fetchResp(data)
-
-      // If we have a local cached copy, make sure the spent data is up-to-date
-      if (cached) {
-        for (let vout = 0; vout < tx.outputs.length; vout++) {
-          tx.outputs[vout].spentTxId = tx.outputs[vout].spentTxId || cached.outputs[vout].spentTxId
-          tx.outputs[vout].spentIndex = tx.outputs[vout].spentIndex || cached.outputs[vout].spentIndex
-          tx.outputs[vout].spentHeight = tx.outputs[vout].spentHeight || cached.outputs[vout].spentHeight
-        }
-      }
-
-      // Cache it
-      this.cache.fetched(tx)
-
-      // If there is other code waiting for this result, resolve their promises now
-      this.requests.get(txid).forEach(promise => promise.resolve(tx))
-
-      return tx
-    } catch (e) {
-      // If the request fails, notify all other code that is waiting for this request
-      this.requests.get(txid).forEach(promise => promise.reject(e))
-
-      throw e
-    } finally {
-      // Whether fetch succeeds or fails, remove all callbacks for this request
-      this.requests.delete(txid)
-    }
-  }
-
-  async utxos (address) {
-    // Whether we are passed a bsv.Address or a string, convert it to a string
-    address = new Address(address, this.bsvNetwork).toString()
-
-    // If we are already querying the utxos for this address, piggy-back on that request
-    const prior = this.requests.get(address)
-    if (prior) return new Promise((resolve, reject) => prior.push({ resolve, reject }))
-
-    // Create a new promise list for other code to piggy-back on
-    this.requests.set(address, [])
-
-    try {
-      // Query the utxos
-      const data = (await this._get(this.api.utxosUrl(this.network, address))).data
-      const utxos = this.api.utxosResp(data, address)
-
-      // In case the utxos from the server have any duplicates, dedup them
-      const dedupedUtxos = this._dedupUtxos(utxos)
-
-      // The server may not index utxos right away. update the utxos with our own broadcasted txns
-      const correctedUtxos = this.cache.correctForServerUtxoIndexingDelay(dedupedUtxos, address)
-
-      // Notify all other code that was also waiting for this request
-      this.requests.get(address).forEach(o => o.resolve(correctedUtxos))
-
-      return correctedUtxos
-    } catch (e) {
-      // Notify all other code that this request failed
-      this.requests.get(address).forEach(o => o.reject(e))
-
-      throw e
-    } finally {
-      // Whether we succeeded or failed, remove the promises for this request
-      this.requests.delete(address)
-    }
-  }
-
-  _dedupUtxos (utxos) {
-    // In case the server has a bug, run must be able to handle duplicate utxos returned. If we
-    // don't dedup, then later we will create a transaction with more than one of the same input.
-    const locations = new Set()
-    return utxos.filter(utxo => {
-      const location = `${utxo.txid}_o${utxo.vout}`
-      if (!locations.has(location)) {
-        locations.add(location)
-        return true
-      } else {
-        if (this.logger) this.logger.warn(`Duplicate utxo returned from server: ${location}`)
-        return false
-      }
-    })
-  }
-
-  async _post (url, data) {
-    if (this.logger) this.logger.info(`POST ${url}`)
-    return call(this.axios.post(url, data))
-  }
-
-  async _get (url) {
-    if (this.logger) this.logger.info(`GET ${url}`)
-    return call(this.axios.get(url))
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Parameter validation
-// ------------------------------------------------------------------------------------------------
-
-function parseNetwork (network) {
-  if (network === 'main' || network === 'test' || network === 'stn') return network
-  switch (typeof network) {
-    case 'string': throw new Error(`Unknown network: ${network}`)
-    case 'undefined': return 'main'
-    default: throw new Error(`Invalid network: ${network}`)
-  }
-}
-
-function parseLogger (logger) {
-  switch (typeof logger) {
-    case 'object': return logger
-    case 'undefined': return null
-    default: throw new Error(`Invalid logger: ${logger}`)
-  }
-}
-
-function parseTimeout (timeout) {
-  switch (typeof timeout) {
-    case 'number':
-      if (Number.isNaN(timeout) || timeout < 0) throw new Error(`Invalid timeout: ${timeout}`)
-      return timeout
-    case 'undefined': return 10000
-    default: throw new Error(`Invalid timeout: ${timeout}`)
-  }
-}
-
-function parseApi (api) {
-  switch (typeof api) {
-    case 'string': {
-      const apiData = apis.find(apiData => apiData.name === api)
-      if (!apiData) throw new Error(`Unknown blockchain API: ${api}`)
-      return apiData
-    }
-    case 'object':
-      if (!api) throw new Error(`Invalid blockchain API: ${api}`)
-      return api
-    case 'undefined': return apis[0]
-    default: throw new Error(`Invalid blockchain API: ${api}`)
-  }
-}
-
-function parseCache (cache) {
-  return cache && cache instanceof BlockchainServerCache ? cache : new BlockchainServerCache()
-}
-
-// ------------------------------------------------------------------------------------------------
-// BlockchainServerCache
-// ------------------------------------------------------------------------------------------------
-
-class BlockchainServerCache {
-  constructor () {
-    this.transactions = new Map() // txid -> tx
-    this.broadcasts = [] // Array<Transaction>
-    this.size = 10000
-    this.expiration = 10 * 60 * 1000
-    this.indexingDelay = 10 * 1000
-  }
-
-  get (txid) {
-    const tx = this.transactions.get(txid)
-    if (!tx) return
-
-    // If the transaction is expired, remove it
-    const expired = Date.now() - tx.fetchedTime > this.expiration
-    if (expired) {
-      this.transactions.delete(txid)
-      return
-    }
-
-    // Bump the transaction to the top and return it
-    this.transactions.delete(txid)
-    this.transactions.set(txid, tx)
-    return tx
-  }
-
-  fetched (tx) {
-    tx.fetchedTime = Date.now()
-
-    this.transactions.set(tx.hash, tx)
-
-    // If the cache is full, remove the oldest transaction
-    if (this.transactions.size > this.size) {
-      const oldest = this.transactions.keys().next().value
-      this.transactions.delete(oldest)
-    }
-  }
-
-  broadcasted (tx) {
-    this.fetched(tx)
-
-    // Remove all transactions from our broadcast past the indexing delay
-    const now = Date.now()
-    this.broadcasts = this.broadcasts.filter(tx => now - tx.time < this.indexingDelay)
-
-    this.broadcasts.push(tx)
-
-    // Update our known transactions with spent info
-    tx.inputs.forEach((input, vin) => {
-      const spent = this.transactions.get(input.prevTxId.toString('hex'))
-      if (spent) {
-        spent.outputs[input.outputIndex].spentTxId = tx.hash
-        spent.outputs[input.outputIndex].spentIndex = vin
-        spent.outputs[input.outputIndex].spentHeight = -1
-      }
-    })
-  }
-
-  correctForServerUtxoIndexingDelay (utxos, address) {
-    // First remove all expired txns from our broadcast cache
-    const now = Date.now()
-    this.broadcasts = this.broadcasts.filter(tx => now - tx.time < this.indexingDelay)
-
-    // Add all utxos from our broadcast cache for this address that aren't already there
-    this.broadcasts.forEach(tx => {
-      tx.outputs.forEach((output, vout) => {
-        if (output.script.toAddress(this.bsvNetwork).toString() === address &&
-              !utxos.some(utxo => utxo.txid === tx.hash && utxo.vout === vout)) {
-          utxos.push({ txid: tx.hash, vout, script: output.script, satoshis: output.satoshis })
-        }
-      })
-    })
-
-    // Remove all utxos that we know are spent because they are in our broadcast cache
-    this.broadcasts.forEach(tx => {
-      const inputSpendsUtxo = (input, utxo) =>
-        input.prevTxId.toString('hex') === utxo.txid &&
-        input.outputIndex === utxo.vout
-
-      utxos = utxos.filter(utxo => !tx.inputs.some(input => inputSpendsUtxo(input, utxo)))
-    })
-
-    return utxos
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Helper methods
-// ------------------------------------------------------------------------------------------------
-
-async function call (promise) {
-  try { return await promise } catch (e) {
-    const { config: c, response: r } = e
-    if (c && c.url && r && r.data) {
-      const message = r.data.message ? (r.data.message.message || r.data.message) : r.data
-      const reason = r.data.name && message ? `${r.data.name}: ${message}` : r.data.name || message
-      throw new Error(`${reason}\n\n${c.method.toUpperCase()} ${c.url}`)
-    } else { throw e }
-  }
-}
-
-function jsonToTx (json) {
-  const tx = new Transaction(json.hex || json.rawtx)
-  tx.time = json.time * 1000 || Date.now()
-  if (json.blockhash && json.blockhash.length) tx.blockhash = json.blockhash
-  if (json.blocktime) tx.blocktime = json.blocktime
-  if (json.blockheight) tx.blockheight = json.blockheight
-  if (typeof json.confirmations !== 'undefined') tx.confirmations = json.confirmations
-  if (json.vout) {
-    json.vout.forEach((output, n) => {
-      if (typeof output.spentTxId !== 'undefined') tx.outputs[n].spentTxId = output.spentTxId
-      if (typeof output.spentIndex !== 'undefined') tx.outputs[n].spentIndex = output.spentIndex
-      if (typeof output.spentHeight !== 'undefined') tx.outputs[n].spentHeight = output.spentHeight
-    })
-  }
-  return tx
-}
-
-// ------------------------------------------------------------------------------------------------
-// REST APIs
-// ------------------------------------------------------------------------------------------------
-
-const starApiHost = 'https://api.star.store'
-
-const apis = [
-  {
-    name: 'star',
-    broadcastUrl: network => `${starApiHost}/v1/${network}/tx`,
-    broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
-    fetchUrl: (network, txid) => `${starApiHost}/v1/${network}/tx/${txid}`,
-    fetchResp: data => jsonToTx(data),
-    utxosUrl: (network, address) => `${starApiHost}/v1/${network}/utxos/${address.toString()}`,
-    utxosResp: (data, address) => data
-  },
-  {
-    name: 'bitindex',
-    broadcastUrl: network => `https://api.bitindex.network/api/v3/${network}/tx/send`,
-    broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
-    fetchUrl: (network, txid) => `https://api.bitindex.network/api/v3/${network}/tx/${txid}`,
-    fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
-    utxosUrl: (network, address) => `https://api.bitindex.network/api/v3/${network}/addr/${address.toString()}/utxo`,
-    utxosResp: (data, address) => data.map(o => { return { ...o, script: new Script(o.scriptPubKey) } })
-  },
-  {
-    name: 'whatsonchain',
-    broadcastUrl: network => `https://api.whatsonchain.com/v1/bsv/${network}/tx/raw`,
-    broadcastData: tx => { return { txhex: tx.toBuffer().toString('hex') } },
-    fetchUrl: (network, txid) => `https://api.whatsonchain.com/v1/bsv/${network}/tx/hash/${txid}`,
-    fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
-    utxosUrl: (network, address) => `https://api.whatsonchain.com/v1/bsv/${network}/address/${address.toString()}/unspent`,
-    utxosResp: (data, address) => data.map(o => {
-      return { txid: o.tx_hash, vout: o.tx_pos, satoshis: o.value, script: Script.fromAddress(address) }
-    })
-  }
-]
-
-// ------------------------------------------------------------------------------------------------
-
-BlockchainServer.Cache = BlockchainServerCache
-
-module.exports = { Blockchain, BlockchainServer }
-
+module.exports = __webpack_require__(29);
 
 /***/ }),
 /* 29 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(30);
-
-/***/ }),
-/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var bind = __webpack_require__(9);
-var Axios = __webpack_require__(32);
-var mergeConfig = __webpack_require__(19);
-var defaults = __webpack_require__(11);
+var bind = __webpack_require__(10);
+var Axios = __webpack_require__(31);
+var mergeConfig = __webpack_require__(20);
+var defaults = __webpack_require__(12);
 
 /**
  * Create an instance of Axios
@@ -9257,15 +9150,15 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(20);
-axios.CancelToken = __webpack_require__(57);
-axios.isCancel = __webpack_require__(10);
+axios.Cancel = __webpack_require__(21);
+axios.CancelToken = __webpack_require__(56);
+axios.isCancel = __webpack_require__(11);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(58);
+axios.spread = __webpack_require__(57);
 
 module.exports = axios;
 
@@ -9274,7 +9167,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ (function(module, exports) {
 
 /*!
@@ -9291,7 +9184,7 @@ module.exports = function isBuffer (obj) {
 
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9299,9 +9192,9 @@ module.exports = function isBuffer (obj) {
 
 var utils = __webpack_require__(0);
 var buildURL = __webpack_require__(5);
-var InterceptorManager = __webpack_require__(33);
-var dispatchRequest = __webpack_require__(34);
-var mergeConfig = __webpack_require__(19);
+var InterceptorManager = __webpack_require__(32);
+var dispatchRequest = __webpack_require__(33);
+var mergeConfig = __webpack_require__(20);
 
 /**
  * Create a new instance of Axios
@@ -9384,7 +9277,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9443,18 +9336,18 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 34 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var transformData = __webpack_require__(35);
-var isCancel = __webpack_require__(10);
-var defaults = __webpack_require__(11);
-var isAbsoluteURL = __webpack_require__(55);
-var combineURLs = __webpack_require__(56);
+var transformData = __webpack_require__(34);
+var isCancel = __webpack_require__(11);
+var defaults = __webpack_require__(12);
+var isAbsoluteURL = __webpack_require__(54);
+var combineURLs = __webpack_require__(55);
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -9536,7 +9429,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 35 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9563,7 +9456,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 36 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9582,24 +9475,24 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 37 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(12);
+var settle = __webpack_require__(13);
 var buildURL = __webpack_require__(5);
-var http = __webpack_require__(14);
-var https = __webpack_require__(15);
-var httpFollow = __webpack_require__(16).http;
-var httpsFollow = __webpack_require__(16).https;
-var url = __webpack_require__(17);
-var zlib = __webpack_require__(49);
-var pkg = __webpack_require__(50);
+var http = __webpack_require__(15);
+var https = __webpack_require__(16);
+var httpFollow = __webpack_require__(17).http;
+var httpsFollow = __webpack_require__(17).https;
+var url = __webpack_require__(18);
+var zlib = __webpack_require__(48);
+var pkg = __webpack_require__(49);
 var createError = __webpack_require__(6);
-var enhanceError = __webpack_require__(13);
+var enhanceError = __webpack_require__(14);
 
 var isHttps = /https:?/;
 
@@ -9864,19 +9757,19 @@ module.exports = function httpAdapter(config) {
 
 
 /***/ }),
-/* 38 */
+/* 37 */
 /***/ (function(module, exports) {
 
 module.exports = require("assert");
 
 /***/ }),
-/* 39 */
+/* 38 */
 /***/ (function(module, exports) {
 
 module.exports = require("stream");
 
 /***/ }),
-/* 40 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -9885,14 +9778,14 @@ module.exports = require("stream");
  */
 
 if (typeof process === 'undefined' || process.type === 'renderer') {
-  module.exports = __webpack_require__(41);
+  module.exports = __webpack_require__(40);
 } else {
-  module.exports = __webpack_require__(43);
+  module.exports = __webpack_require__(42);
 }
 
 
 /***/ }),
-/* 41 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -9901,7 +9794,7 @@ if (typeof process === 'undefined' || process.type === 'renderer') {
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __webpack_require__(18);
+exports = module.exports = __webpack_require__(19);
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
@@ -10093,7 +9986,7 @@ function localstorage() {
 
 
 /***/ }),
-/* 42 */
+/* 41 */
 /***/ (function(module, exports) {
 
 /**
@@ -10251,15 +10144,15 @@ function plural(ms, n, name) {
 
 
 /***/ }),
-/* 43 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
  * Module dependencies.
  */
 
-var tty = __webpack_require__(44);
-var util = __webpack_require__(45);
+var tty = __webpack_require__(43);
+var util = __webpack_require__(44);
 
 /**
  * This is the Node.js implementation of `debug()`.
@@ -10267,7 +10160,7 @@ var util = __webpack_require__(45);
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __webpack_require__(18);
+exports = module.exports = __webpack_require__(19);
 exports.init = init;
 exports.log = log;
 exports.formatArgs = formatArgs;
@@ -10282,7 +10175,7 @@ exports.useColors = useColors;
 exports.colors = [ 6, 2, 3, 4, 5, 1 ];
 
 try {
-  var supportsColor = __webpack_require__(46);
+  var supportsColor = __webpack_require__(45);
   if (supportsColor && supportsColor.level >= 2) {
     exports.colors = [
       20, 21, 26, 27, 32, 33, 38, 39, 40, 41, 42, 43, 44, 45, 56, 57, 62, 63, 68,
@@ -10443,25 +10336,25 @@ exports.enable(load());
 
 
 /***/ }),
-/* 44 */
+/* 43 */
 /***/ (function(module, exports) {
 
 module.exports = require("tty");
 
 /***/ }),
-/* 45 */
+/* 44 */
 /***/ (function(module, exports) {
 
 module.exports = require("util");
 
 /***/ }),
-/* 46 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-const os = __webpack_require__(47);
-const hasFlag = __webpack_require__(48);
+const os = __webpack_require__(46);
+const hasFlag = __webpack_require__(47);
 
 const {env} = process;
 
@@ -10600,13 +10493,13 @@ module.exports = {
 
 
 /***/ }),
-/* 47 */
+/* 46 */
 /***/ (function(module, exports) {
 
 module.exports = require("os");
 
 /***/ }),
-/* 48 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10621,29 +10514,29 @@ module.exports = (flag, argv) => {
 
 
 /***/ }),
-/* 49 */
+/* 48 */
 /***/ (function(module, exports) {
 
 module.exports = require("zlib");
 
 /***/ }),
-/* 50 */
+/* 49 */
 /***/ (function(module) {
 
 module.exports = JSON.parse("{\"_from\":\"axios@0.19.0\",\"_id\":\"axios@0.19.0\",\"_inBundle\":false,\"_integrity\":\"sha512-1uvKqKQta3KBxIz14F2v06AEHZ/dIoeKfbTRkK1E5oqjDnuEerLmYTgJB5AiQZHJcljpg1TuRzdjDR06qNk0DQ==\",\"_location\":\"/axios\",\"_phantomChildren\":{},\"_requested\":{\"type\":\"version\",\"registry\":true,\"raw\":\"axios@0.19.0\",\"name\":\"axios\",\"escapedName\":\"axios\",\"rawSpec\":\"0.19.0\",\"saveSpec\":null,\"fetchSpec\":\"0.19.0\"},\"_requiredBy\":[\"/\"],\"_resolved\":\"https://registry.npmjs.org/axios/-/axios-0.19.0.tgz\",\"_shasum\":\"8e09bff3d9122e133f7b8101c8fbdd00ed3d2ab8\",\"_spec\":\"axios@0.19.0\",\"_where\":\"/home/brenton/code/runonbitcoin/run\",\"author\":{\"name\":\"Matt Zabriskie\"},\"browser\":{\"./lib/adapters/http.js\":\"./lib/adapters/xhr.js\"},\"bugs\":{\"url\":\"https://github.com/axios/axios/issues\"},\"bundleDependencies\":false,\"bundlesize\":[{\"path\":\"./dist/axios.min.js\",\"threshold\":\"5kB\"}],\"dependencies\":{\"follow-redirects\":\"1.5.10\",\"is-buffer\":\"^2.0.2\"},\"deprecated\":false,\"description\":\"Promise based HTTP client for the browser and node.js\",\"devDependencies\":{\"bundlesize\":\"^0.17.0\",\"coveralls\":\"^3.0.0\",\"es6-promise\":\"^4.2.4\",\"grunt\":\"^1.0.2\",\"grunt-banner\":\"^0.6.0\",\"grunt-cli\":\"^1.2.0\",\"grunt-contrib-clean\":\"^1.1.0\",\"grunt-contrib-watch\":\"^1.0.0\",\"grunt-eslint\":\"^20.1.0\",\"grunt-karma\":\"^2.0.0\",\"grunt-mocha-test\":\"^0.13.3\",\"grunt-ts\":\"^6.0.0-beta.19\",\"grunt-webpack\":\"^1.0.18\",\"istanbul-instrumenter-loader\":\"^1.0.0\",\"jasmine-core\":\"^2.4.1\",\"karma\":\"^1.3.0\",\"karma-chrome-launcher\":\"^2.2.0\",\"karma-coverage\":\"^1.1.1\",\"karma-firefox-launcher\":\"^1.1.0\",\"karma-jasmine\":\"^1.1.1\",\"karma-jasmine-ajax\":\"^0.1.13\",\"karma-opera-launcher\":\"^1.0.0\",\"karma-safari-launcher\":\"^1.0.0\",\"karma-sauce-launcher\":\"^1.2.0\",\"karma-sinon\":\"^1.0.5\",\"karma-sourcemap-loader\":\"^0.3.7\",\"karma-webpack\":\"^1.7.0\",\"load-grunt-tasks\":\"^3.5.2\",\"minimist\":\"^1.2.0\",\"mocha\":\"^5.2.0\",\"sinon\":\"^4.5.0\",\"typescript\":\"^2.8.1\",\"url-search-params\":\"^0.10.0\",\"webpack\":\"^1.13.1\",\"webpack-dev-server\":\"^1.14.1\"},\"homepage\":\"https://github.com/axios/axios\",\"keywords\":[\"xhr\",\"http\",\"ajax\",\"promise\",\"node\"],\"license\":\"MIT\",\"main\":\"index.js\",\"name\":\"axios\",\"repository\":{\"type\":\"git\",\"url\":\"git+https://github.com/axios/axios.git\"},\"scripts\":{\"build\":\"NODE_ENV=production grunt build\",\"coveralls\":\"cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js\",\"examples\":\"node ./examples/server.js\",\"fix\":\"eslint --fix lib/**/*.js\",\"postversion\":\"git push && git push --tags\",\"preversion\":\"npm test\",\"start\":\"node ./sandbox/server.js\",\"test\":\"grunt test && bundlesize\",\"version\":\"npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json\"},\"typings\":\"./index.d.ts\",\"version\":\"0.19.0\"}");
 
 /***/ }),
-/* 51 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(12);
+var settle = __webpack_require__(13);
 var buildURL = __webpack_require__(5);
-var parseHeaders = __webpack_require__(52);
-var isURLSameOrigin = __webpack_require__(53);
+var parseHeaders = __webpack_require__(51);
+var isURLSameOrigin = __webpack_require__(52);
 var createError = __webpack_require__(6);
 
 module.exports = function xhrAdapter(config) {
@@ -10736,7 +10629,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(54);
+      var cookies = __webpack_require__(53);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -10814,7 +10707,7 @@ module.exports = function xhrAdapter(config) {
 
 
 /***/ }),
-/* 52 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10874,7 +10767,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 53 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10949,7 +10842,7 @@ module.exports = (
 
 
 /***/ }),
-/* 54 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11009,7 +10902,7 @@ module.exports = (
 
 
 /***/ }),
-/* 55 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11030,7 +10923,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 56 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11051,13 +10944,13 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 57 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Cancel = __webpack_require__(20);
+var Cancel = __webpack_require__(21);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -11115,7 +11008,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 58 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11146,6 +11039,182 @@ module.exports = function spread(callback) {
     return callback.apply(null, arr);
   };
 };
+
+
+/***/ }),
+/* 58 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * owner.js
+ *
+ * Owner API that manages jigs and signs transactions
+ */
+
+const bsv = __webpack_require__(1)
+const util = __webpack_require__(2)
+
+class Owner {
+  constructor (keyOrAddress, options) {
+    const bsvNetwork = util.bsvNetwork(options.network)
+    this.logger = options.logger
+    this.run = options.run
+    keyOrAddress = keyOrAddress || new bsv.PrivateKey(bsvNetwork)
+
+    // Try creating the private key on mainnet and testnet
+    try {
+      const bsvPrivateKey = new bsv.PrivateKey(keyOrAddress, bsvNetwork)
+      if (bsvPrivateKey.toString() !== keyOrAddress.toString()) throw new Error()
+      return this._fromPrivateKey(bsvPrivateKey)
+    } catch (e) {
+      if (e.message === 'Private key network mismatch') throw e
+    }
+
+    // Try creating from a public key
+    try {
+      return this._fromPublicKey(new bsv.PublicKey(keyOrAddress, { network: bsvNetwork }))
+    } catch (e) { }
+
+    // Try creating from an address
+    try {
+      return this._fromAddress(new bsv.Address(keyOrAddress, bsvNetwork))
+    } catch (e) {
+      if (e.message === 'Address has mismatched network type.') throw e
+    }
+
+    throw new Error(`bad owner key or address: ${keyOrAddress}`)
+  }
+
+  _fromPrivateKey (bsvPrivateKey) {
+    this.bsvPrivateKey = bsvPrivateKey
+    this.privkey = bsvPrivateKey.toString()
+    return this._fromPublicKey(bsvPrivateKey.publicKey)
+  }
+
+  _fromPublicKey (bsvPublicKey) {
+    this.bsvPublicKey = bsvPublicKey
+    this.pubkey = bsvPublicKey.toString()
+    return this._fromAddress(bsvPublicKey.toAddress())
+  }
+
+  _fromAddress (bsvAddress) {
+    this.bsvAddress = bsvAddress
+    this.address = bsvAddress.toString()
+
+    // Each ref should only be stored once. If we have an origin, prefer it
+    this.refs = new Map() // origin|Jig|Class -> Jig|Class
+
+    return this
+  }
+
+  get jigs () {
+    try {
+      return Array.from(this.refs.values())
+        .filter(ref => ref instanceof this.run.constructor.Jig)
+    } catch (e) {
+      if (this.logger) this.logger.error(`Bad token found in owner refs. Removing.\n\n${e}`)
+      this._removeErrorRefs()
+      return this.jigs
+    }
+  }
+
+  get code () {
+    try {
+      return Array.from(this.refs.values())
+        .filter(ref => !(ref instanceof this.run.constructor.Jig))
+    } catch (e) {
+      if (this.logger) this.logger.error(`Bad token found in owner refs. Removing.\n\n${e}`)
+      this._removeErrorRefs()
+      return this.code
+    }
+  }
+
+  _removeErrorRefs () {
+    let uselessVar = true
+    const toRemove = []
+    for (const [key, ref] of this.refs) {
+      try {
+        // If a ref failed to deploy, then it will have ! in its origin and throw here
+        const isJig = ref instanceof this.run.constructor.Jig
+        // We need to do something with the result to keep it from being minified away.
+        uselessVar = uselessVar ? !isJig : isJig
+      } catch (e) {
+        toRemove.push(key)
+      }
+    }
+    toRemove.forEach(key => this.refs.delete(key))
+  }
+
+  async sign (tx) {
+    if (this.bsvPrivateKey) tx.sign(this.bsvPrivateKey)
+    return tx
+  }
+
+  async sync () {
+    // post any pending transactions
+    await this.run.syncer.sync()
+
+    // query the latest jigs and code, but only do once at a time
+    if (!this._query) {
+      this._query = new Promise((resolve, reject) => {
+        this._queryLatest()
+          .then(() => { this._query = null; resolve() })
+          .catch(e => { this._query = null; reject(e) })
+      })
+    }
+    return this._query
+  }
+
+  async _queryLatest () {
+    const newUtxos = await this.run.blockchain.utxos(this.address)
+
+    // create a new ref set initially comprised of all pending refs, since they won't
+    // be in the utxos, and also a map of our non-pending jigs to their present
+    // locations so we don't reload them.
+    const newRefs = new Map()
+    const locationMap = new Map()
+    for (const [key, ref] of this.refs) {
+      if (typeof key !== 'string') newRefs.set(key, ref)
+      try { locationMap.set(ref.location, ref) } catch (e) { }
+    }
+
+    // load each new utxo, and if we come across a jig we already know, re-use it
+    for (const utxo of newUtxos) {
+      const location = `${utxo.txid}_o${utxo.vout}`
+      const prevRef = locationMap.get(location)
+      if (prevRef) {
+        newRefs.delete(prevRef)
+        newRefs.set(location, prevRef)
+        continue
+      }
+      try {
+        const ref = await this.run.load(location)
+        newRefs.set(ref.origin, ref)
+      } catch (e) {
+        if (this.logger) this.logger.error(`Failed to load owner location ${location}\n\n${e.toString()}`)
+      }
+    }
+
+    this.refs = newRefs
+  }
+
+  _update (ref) {
+    this.refs.delete(ref)
+    try {
+      if (ref.owner === this.pubkey) {
+        try {
+          if (typeof ref.origin === 'undefined') throw new Error()
+          if (ref.origin.startsWith('_')) throw new Error()
+          this.refs.set(ref.origin, ref)
+        } catch (e) { this.refs.set(ref, ref) }
+      } else {
+        try { this.refs.delete(ref.origin) } catch (e) { }
+      }
+    } catch (e) { }
+  }
+}
+
+module.exports = Owner
 
 
 /***/ }),
@@ -11382,7 +11451,7 @@ module.exports = { State, StateCache }
  */
 
 const Jig = __webpack_require__(4)
-const expect = __webpack_require__(21)
+const expect = __webpack_require__(22)
 
 class Token extends Jig {
   init (amount, _tokenToDecrease, _tokensToCombine) {
