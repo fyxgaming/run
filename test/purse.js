@@ -85,14 +85,14 @@ describe('Purse', () => {
 
     describe('feePerKb', () => {
       it('should support passing in valid feePerKb', () => {
-        expect(new Purse({ blockchain: run.blockchain, feePerKb: 0 }).feePerKb).to.equal(0)
         expect(new Purse({ blockchain: run.blockchain, feePerKb: 1.5 }).feePerKb).to.equal(1.5)
         expect(new Purse({ blockchain: run.blockchain, feePerKb: 1000 }).feePerKb).to.equal(1000)
         expect(new Purse({ blockchain: run.blockchain, feePerKb: Number.MAX_SAFE_INTEGER }).feePerKb).to.equal(Number.MAX_SAFE_INTEGER)
       })
 
       it('should throw if pass in invalid feePerKb', () => {
-        expect(() => new Purse({ blockchain: run.blockchain, feePerKb: -1 })).to.throw('Option feePerKb must be non-negative: -1')
+        expect(() => new Purse({ blockchain: run.blockchain, feePerKb: 0 }).feePerKb).to.throw('Option feePerKb must be at least 1: 0')
+        expect(() => new Purse({ blockchain: run.blockchain, feePerKb: -1 })).to.throw('Option feePerKb must be at least 1: -1')
         expect(() => new Purse({ blockchain: run.blockchain, feePerKb: NaN })).to.throw('Option feePerKb must be finite: NaN')
         expect(() => new Purse({ blockchain: run.blockchain, feePerKb: Number.POSITIVE_INFINITY })).to.throw('Option feePerKb must be finite: Infinity')
         expect(() => new Purse({ blockchain: run.blockchain, feePerKb: false })).to.throw('Invalid feePerKb option: false')
@@ -124,9 +124,6 @@ describe('Purse', () => {
   })
 
   describe('pay', () => {
-    // TODO: Custom splits
-    // TODO: Custom fee-per-kb
-
     it('should adds inputs and outputs', async () => {
       const address = new bsv.PrivateKey().toAddress()
       const tx = new bsv.Transaction().to(address, 100)
@@ -174,6 +171,23 @@ describe('Purse', () => {
       }
       throw new Error('Did not shuffle UTXOs')
     })
+
+    it('should respect custom feePerKb', async () => {
+      const address = new bsv.PrivateKey().toAddress()
+      const run = createRun()
+      run.purse.feePerKb = 1
+      const tx = await run.purse.pay(new bsv.Transaction().to(address, 100))
+      const feePerKb = tx.getFee() / tx.toBuffer().length * 1000
+      const diffFees = Math.abs(feePerKb - 1)
+      expect(diffFees < 10).to.equal(true)
+      run.purse.feePerKb = 2000
+      const tx2 = await run.purse.pay(new bsv.Transaction().to(address, 100))
+      const feePerKb2 = tx2.getFee() / tx2.toBuffer().length * 1000
+      const diffFees2 = Math.abs(feePerKb2 - 2000)
+      expect(diffFees2 < 10).to.equal(true)
+    })
+
+    // TODO: Custom splits
   })
 
   describe('balance', () => {
