@@ -237,4 +237,16 @@ describe('Purse', () => {
       expect((await run2.purse.utxos()).length).to.equal(10)
     })
   })
+
+  describe('splits', () => {
+    it('should throw if set invalid value', () => {
+      expect(() => { run.purse.splits = -1 }).to.throw('Option splits must be at least 1: -1')
+    })
+  })
+
+  describe('feePerKb', () => {
+    it('should throw if set invalid value', () => {
+      expect(() => { run.purse.feePerKb = -1 }).to.throw('Option feePerKb must be at least 1: -1')
+    })
+  })
 })
