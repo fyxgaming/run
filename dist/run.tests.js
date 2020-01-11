@@ -758,15 +758,37 @@ const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run, createRun, payFor, unobfuscate } = __webpack_require__(2)
-const { Blockchain, BlockchainServer } = Run
+const { BlockchainServer } = Run
+const Blockchain = unobfuscate(Run.Blockchain)
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain API tests
 // ------------------------------------------------------------------------------------------------
 
 describe('Blockchain', () => {
-  it('should throw not implemented', () => {
+  it('should throw not implemented', async () => {
     const blockchain = new Blockchain()
+    expect(() => blockchain.network).to.throw('Not implemented')
+    await expect(blockchain.broadcast()).to.be.rejectedWith('Not implemented')
+    await expect(blockchain.fetch()).to.be.rejectedWith('Not implemented')
+    await expect(blockchain.utxos()).to.be.rejectedWith('Not implemented')
+  })
+
+  describe('isBlockchain', () => {
+    it('should return true for valid blockchain', () => {
+      const mockchain = new Run.Mockchain()
+      expect(Blockchain.isBlockchain(mockchain)).to.equal(true)
+      const blockchainServer = new Run.BlockchainServer()
+      expect(Blockchain.isBlockchain(blockchainServer)).to.equal(true)
+    })
+
+    it('should return false for invalid blockchain', () => {
+      expect(Blockchain.isBlockchain()).to.equal(false)
+      expect(Blockchain.isBlockchain({})).to.equal(false)
+      expect(Blockchain.isBlockchain(false)).to.equal(false)
+      expect(Blockchain.isBlockchain(null)).to.equal(false)
+      expect(Blockchain.isBlockchain(() => {})).to.equal(false)
+    })
   })
 })
 
@@ -3381,7 +3403,7 @@ module.exports = Run;
 /* 12 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"richObjectToJson\":\"aal\",\"jsonToRichObject\":\"aam\",\"extractJigsAndCodeToArray\":\"aan\",\"injectJigsAndCodeFromArray\":\"aao\",\"deepTraverse\":\"aap\",\"activeRunInstance\":\"aaq\",\"sameJig\":\"aar\",\"networkSuffix\":\"aas\",\"broadcastUrl\":\"aat\",\"broadcastData\":\"aau\",\"fetchUrl\":\"aav\",\"fetchResp\":\"aaw\",\"utxosUrl\":\"aax\",\"utxosResp\":\"aay\",\"_dedupUtxos\":\"aaz\",\"correctForServerUtxoIndexingDelay\":\"aaab\",\"fetched\":\"aabb\",\"broadcasted\":\"aacb\",\"isSandbox\":\"aadb\",\"getInstalled\":\"aaeb\",\"installFromTx\":\"aafb\",\"installJig\":\"aagb\",\"fastForward\":\"aahb\",\"finish\":\"aaib\",\"publishNext\":\"aajb\",\"publish\":\"aakb\",\"storeCode\":\"aalb\",\"storeAction\":\"aamb\",\"setProtoTxAndCreator\":\"aanb\",\"buildBsvTransaction\":\"aaob\",\"_fromPrivateKey\":\"aapb\",\"_fromPublicKey\":\"aaqb\",\"_fromAddress\":\"aarb\",\"_queryLatest\":\"aasb\",\"_removeErrorRefs\":\"aatb\",\"_update\":\"aaub\",\"_estimateSize\":\"aavb\",\"_util\":\"aawb\",\"intrinsics\":\"aaxb\",\"proxies\":\"aayb\",\"enforce\":\"aazb\",\"stack\":\"aaac\",\"reads\":\"aabc\",\"creates\":\"aacc\",\"saves\":\"aadc\",\"callers\":\"aaec\",\"locals\":\"aafc\",\"requests\":\"aagc\",\"broadcasts\":\"aahc\",\"expiration\":\"aaic\",\"indexingDelay\":\"aajc\",\"fetchedTime\":\"aakc\",\"unspentOutputs\":\"aalc\",\"transactions\":\"aamc\",\"blockHeight\":\"aanc\",\"installs\":\"aaoc\",\"syncer\":\"aapc\",\"protoTx\":\"aaqc\",\"beginCount\":\"aarc\",\"cachedTx\":\"aasc\",\"syncListeners\":\"aatc\",\"onBroadcastListeners\":\"aauc\",\"lastPosted\":\"aavc\",\"queued\":\"aawc\",\"sizeBytes\":\"aaxc\",\"maxSizeBytes\":\"aayc\",\"control\":\"aazc\",\"ProtoTransaction\":\"aaad\",\"PROTOCOL_VERSION\":\"aabd\",\"SerialTaskQueue\":\"aacd\",\"stringProps\":\"aadd\",\"extractProps\":\"aaed\",\"onReadyForPublish\":\"aafd\",\"spentJigs\":\"aagd\",\"spentLocations\":\"aahd\"}");
+module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"richObjectToJson\":\"aal\",\"jsonToRichObject\":\"aam\",\"extractJigsAndCodeToArray\":\"aan\",\"injectJigsAndCodeFromArray\":\"aao\",\"deepTraverse\":\"aap\",\"activeRunInstance\":\"aaq\",\"sameJig\":\"aar\",\"networkSuffix\":\"aas\",\"isBlockchain\":\"aahc\",\"broadcastUrl\":\"aau\",\"broadcastData\":\"aav\",\"fetchUrl\":\"aaw\",\"fetchResp\":\"aax\",\"utxosUrl\":\"aay\",\"utxosResp\":\"aaz\",\"_dedupUtxos\":\"aaab\",\"correctForServerUtxoIndexingDelay\":\"aabb\",\"fetched\":\"aacb\",\"broadcasted\":\"aadb\",\"isSandbox\":\"aaeb\",\"getInstalled\":\"aafb\",\"installFromTx\":\"aagb\",\"installJig\":\"aahb\",\"fastForward\":\"aaib\",\"finish\":\"aajb\",\"publishNext\":\"aakb\",\"publish\":\"aalb\",\"storeCode\":\"aamb\",\"storeAction\":\"aanb\",\"setProtoTxAndCreator\":\"aaob\",\"buildBsvTransaction\":\"aapb\",\"_fromPrivateKey\":\"aaqb\",\"_fromPublicKey\":\"aarb\",\"_fromAddress\":\"aasb\",\"_queryLatest\":\"aatb\",\"_removeErrorRefs\":\"aaub\",\"_update\":\"aavb\",\"_estimateSize\":\"aawb\",\"_util\":\"aaxb\",\"intrinsics\":\"aayb\",\"proxies\":\"aazb\",\"enforce\":\"aaac\",\"stack\":\"aabc\",\"reads\":\"aacc\",\"creates\":\"aadc\",\"saves\":\"aaec\",\"callers\":\"aafc\",\"locals\":\"aagc\",\"requests\":\"aaic\",\"broadcasts\":\"aajc\",\"expiration\":\"aakc\",\"indexingDelay\":\"aalc\",\"fetchedTime\":\"aamc\",\"unspentOutputs\":\"aanc\",\"transactions\":\"aaoc\",\"blockHeight\":\"aapc\",\"installs\":\"aaqc\",\"syncer\":\"aarc\",\"protoTx\":\"aasc\",\"beginCount\":\"aatc\",\"cachedTx\":\"aauc\",\"syncListeners\":\"aavc\",\"onBroadcastListeners\":\"aawc\",\"lastPosted\":\"aaxc\",\"queued\":\"aayc\",\"sizeBytes\":\"aazc\",\"maxSizeBytes\":\"aaad\",\"control\":\"aabd\",\"ProtoTransaction\":\"aacd\",\"PROTOCOL_VERSION\":\"aadd\",\"SerialTaskQueue\":\"aaed\",\"stringProps\":\"aafd\",\"extractProps\":\"aagd\",\"onReadyForPublish\":\"aahd\",\"spentJigs\":\"aaid\",\"spentLocations\":\"aajd\"}");
 
 /***/ }),
 /* 13 */
@@ -7404,14 +7426,14 @@ describe('Run', () => {
 
       it('should throw for invalid custom blockchain', () => {
         const blockchain = { broadcast: async () => {}, fetch: async () => {}, utxos: async () => {}, network: 'main' }
-        expect(() => createRun({ blockchain: { ...blockchain, broadcast: null } })).to.throw('Blockchain requires a broadcast method')
-        expect(() => createRun({ blockchain: { ...blockchain, fetch: null } })).to.throw('Blockchain requires a fetch method')
-        expect(() => createRun({ blockchain: { ...blockchain, utxos: null } })).to.throw('Blockchain requires a utxos method')
-        expect(() => createRun({ blockchain: { ...blockchain, network: null } })).to.throw('Blockchain requires a network string')
+        expect(() => createRun({ blockchain: { ...blockchain, broadcast: null } })).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun({ blockchain: { ...blockchain, fetch: null } })).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun({ blockchain: { ...blockchain, utxos: null } })).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun({ blockchain: { ...blockchain, network: null } })).to.throw('Invalid \'blockchain\'')
       })
 
       it('should throw for null blockchain', () => {
-        expect(() => createRun({ blockchain: null })).to.throw('Option \'blockchain\' must not be null')
+        expect(() => createRun({ blockchain: null })).to.throw('Invalid \'blockchain\'')
       })
 
       it('should throw for invalid blockchain', () => {

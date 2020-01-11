@@ -44,6 +44,7 @@ const methodsToObfuscate = [
   'networkSuffix',
 
   // blockchain.js
+  'isBlockchain',
   'broadcastUrl',
   'broadcastData',
   'fetchUrl',
@@ -107,6 +108,7 @@ const propertiesToObfuscate = [
   // 'error', - interfers with console.error
 
   // blockchain.js
+  'isBlockchain',
   'requests',
   'broadcasts',
   'expiration',

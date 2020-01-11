@@ -79,14 +79,14 @@ describe('Run', () => {
 
       it('should throw for invalid custom blockchain', () => {
         const blockchain = { broadcast: async () => {}, fetch: async () => {}, utxos: async () => {}, network: 'main' }
-        expect(() => createRun({ blockchain: { ...blockchain, broadcast: null } })).to.throw('Blockchain requires a broadcast method')
-        expect(() => createRun({ blockchain: { ...blockchain, fetch: null } })).to.throw('Blockchain requires a fetch method')
-        expect(() => createRun({ blockchain: { ...blockchain, utxos: null } })).to.throw('Blockchain requires a utxos method')
-        expect(() => createRun({ blockchain: { ...blockchain, network: null } })).to.throw('Blockchain requires a network string')
+        expect(() => createRun({ blockchain: { ...blockchain, broadcast: null } })).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun({ blockchain: { ...blockchain, fetch: null } })).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun({ blockchain: { ...blockchain, utxos: null } })).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun({ blockchain: { ...blockchain, network: null } })).to.throw('Invalid \'blockchain\'')
       })
 
       it('should throw for null blockchain', () => {
-        expect(() => createRun({ blockchain: null })).to.throw('Option \'blockchain\' must not be null')
+        expect(() => createRun({ blockchain: null })).to.throw('Invalid \'blockchain\'')
       })
 
       it('should throw for invalid blockchain', () => {

@@ -11,7 +11,8 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run, createRun, payFor, unobfuscate } = require('./helpers')
-const { Blockchain, BlockchainServer } = Run
+const { BlockchainServer } = Run
+const Blockchain = unobfuscate(Run.Blockchain)
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain API tests
