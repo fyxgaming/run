@@ -25,6 +25,23 @@ describe('Blockchain', () => {
     await expect(blockchain.fetch()).to.be.rejectedWith('Not implemented')
     await expect(blockchain.utxos()).to.be.rejectedWith('Not implemented')
   })
+
+  describe('isBlockchain', () => {
+    it('should return true for valid blockchain', () => {
+      const mockchain = new Run.Mockchain()
+      expect(Blockchain.isBlockchain(mockchain)).to.equal(true)
+      const blockchainServer = new Run.BlockchainServer()
+      expect(Blockchain.isBlockchain(blockchainServer)).to.equal(true)
+    })
+
+    it('should return false for invalid blockchain', () => {
+      expect(Blockchain.isBlockchain()).to.equal(false)
+      expect(Blockchain.isBlockchain({})).to.equal(false)
+      expect(Blockchain.isBlockchain(false)).to.equal(false)
+      expect(Blockchain.isBlockchain(null)).to.equal(false)
+      expect(Blockchain.isBlockchain(() => {})).to.equal(false)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
