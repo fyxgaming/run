@@ -758,7 +758,17 @@ const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run, createRun, payFor, unobfuscate } = __webpack_require__(2)
-const { BlockchainServer } = Run
+const { Blockchain, BlockchainServer } = Run
+
+// ------------------------------------------------------------------------------------------------
+// Blockchain API tests
+// ------------------------------------------------------------------------------------------------
+
+describe('Blockchain', () => {
+  it('should throw not implemented', () => {
+    const blockchain = new Blockchain()
+  })
+})
 
 // ------------------------------------------------------------------------------------------------
 // Universal blockchain API test suite
@@ -7192,6 +7202,18 @@ describe('Purse', () => {
       it('should require passing in blockchain', () => {
         expect(() => new Purse()).to.throw('Option blockchain is required')
       })
+    })
+  })
+
+  describe('splits', () => {
+    it('should throw if set invalid value', () => {
+      expect(() => { run.purse.splits = -1 }).to.throw('Option splits must be at least 1: -1')
+    })
+  })
+
+  describe('feePerKb', () => {
+    it('should throw if set invalid value', () => {
+      expect(() => { run.purse.feePerKb = -1 }).to.throw('Option feePerKb must be at least 1: -1')
     })
   })
 

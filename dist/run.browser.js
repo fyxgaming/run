@@ -1163,6 +1163,7 @@ Run.protocol = util.PROTOCOL_VERSION
 Run._util = util
 Run.instance = null
 
+Run.Blockchain = Blockchain
 Run.BlockchainServer = BlockchainServer
 Run.Code = Code
 Run.Mockchain = Mockchain
@@ -5019,7 +5020,7 @@ class Blockchain {
    * Submits a transaction to the network
    * @param {bsv.Transaction} tx Transaction to broadcast
    */
-  async broadcast (tx) { throw new Error('not implemented') }
+  async broadcast (tx) { throw new Error('Not implemented') }
 
   /**
    * Queries the network for a transaction
@@ -5033,14 +5034,14 @@ class Blockchain {
    * - `blocktime` {number} Time in milliseconds the block was published
    * - `vout` {Array<{spentTxId, spentIndex, spentHeight}>} Output spend information`
    */
-  async fetch (txid, force) { throw new Error('not implemented') }
+  async fetch (txid, force) { throw new Error('Not implemented') }
 
   /**
    * Queries the utxos for an address
    * @param {string} address Address string
    * @returns {Array<{txid, vout, script, satoshis}>}
    */
-  async utxos (address) { throw new Error('not implemented') }
+  async utxos (address) { throw new Error('Not implemented') }
 }
 
 Blockchain.isBlockchain = blockchain => {
@@ -10692,9 +10693,9 @@ class Pay {
 class Purse {
   constructor (options = {}) {
     this.logger = parseLogger(options.logger)
-    this.splits = parseSplits(options.splits)
-    this.feePerKb = parseFeePerKb(options.feePerKb)
     this.blockchain = parseBlockchain(options.blockchain)
+    this._splits = parseSplits(options.splits)
+    this._feePerKb = parseFeePerKb(options.feePerKb)
 
     const bsvNetwork = util.bsvNetwork(this.blockchain.network)
     this.bsvPrivateKey = new bsv.PrivateKey(options.privkey, bsvNetwork)
@@ -10702,6 +10703,12 @@ class Purse {
     this.bsvAddress = this.bsvPrivateKey.toAddress()
     this.address = this.bsvAddress.toString()
   }
+
+  get splits () { return this._splits }
+  set splits (value) { this._splits = parseSplits(value) }
+
+  get feePerKb () { return this._feePerKb }
+  set feePerKb (value) { this._feePerKb = parseFeePerKb(value) }
 
   async pay (tx) {
     let utxos = await this.blockchain.utxos(this.address)
@@ -10744,7 +10751,7 @@ class Purse {
     let numUtxosSpent = 0
     let numOutputsToCreate = 0
 
-    tx.feePerKb(this.feePerKb)
+    tx.feePerKb(this._feePerKb)
 
     for (const utxo of utxos) {
       tx.from(utxo)
@@ -10753,7 +10760,7 @@ class Purse {
       numUtxosSpent += 1
       satoshisRequired += 150 // 150 bytes per P2PKH input seems to be average
 
-      const numOutputsToAdd = this.splits - utxos.length + numUtxosSpent - numOutputsToCreate
+      const numOutputsToAdd = this._splits - utxos.length + numUtxosSpent - numOutputsToCreate
       for (let i = 0; i < numOutputsToAdd; i++) {
         satoshisRequired += 40 // 40 bytes per P2PKH output seems to be average
         satoshisRequired += 546 // We also have to add the dust amounts

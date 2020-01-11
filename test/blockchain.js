@@ -11,7 +11,21 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run, createRun, payFor, unobfuscate } = require('./helpers')
-const { BlockchainServer } = Run
+const { Blockchain, BlockchainServer } = Run
+
+// ------------------------------------------------------------------------------------------------
+// Blockchain API tests
+// ------------------------------------------------------------------------------------------------
+
+describe('Blockchain', () => {
+  it('should throw not implemented', async () => {
+    const blockchain = new Blockchain()
+    expect(() => blockchain.network).to.throw('Not implemented')
+    await expect(blockchain.broadcast()).to.be.rejectedWith('Not implemented')
+    await expect(blockchain.fetch()).to.be.rejectedWith('Not implemented')
+    await expect(blockchain.utxos()).to.be.rejectedWith('Not implemented')
+  })
+})
 
 // ------------------------------------------------------------------------------------------------
 // Universal blockchain API test suite
