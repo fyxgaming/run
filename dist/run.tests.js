@@ -1024,54 +1024,74 @@ describe('Blockchain', () => {
 
 describe('BlockchainServer', () => {
   describe('constructor', () => {
-    it('should default network to main', () => {
-      expect(new BlockchainServer().network).to.equal('main')
+    describe('network', () => {
+      it('should default network to main', () => {
+        expect(new BlockchainServer().network).to.equal('main')
+      })
+
+      it('should throw for bad network', () => {
+        expect(() => new BlockchainServer({ network: 'bad' })).to.throw('Unknown network: bad')
+        expect(() => new BlockchainServer({ network: 0 })).to.throw('Invalid network: 0')
+        expect(() => new BlockchainServer({ network: {} })).to.throw('Invalid network: [object Object]')
+        expect(() => new BlockchainServer({ network: null })).to.throw('Invalid network: null')
+      })
     })
 
-    it('should throw for bad network', () => {
-      expect(() => new BlockchainServer({ network: 'bad' })).to.throw('Unknown network: bad')
-      expect(() => new BlockchainServer({ network: 0 })).to.throw('Invalid network: 0')
-      expect(() => new BlockchainServer({ network: {} })).to.throw('Invalid network: [object Object]')
-      expect(() => new BlockchainServer({ network: null })).to.throw('Invalid network: null')
+    describe('logger', () => {
+      it('should support null loggers', () => {
+        expect(new BlockchainServer({ logger: null }).logger).to.equal(null)
+      })
+
+      it('should throw for bad logger', () => {
+        expect(() => new BlockchainServer({ logger: 'bad' })).to.throw('Invalid logger: bad')
+        expect(() => new BlockchainServer({ logger: false })).to.throw('Invalid logger: false')
+      })
     })
 
-    it('should support null loggers', () => {
-      expect(new BlockchainServer({ logger: null }).logger).to.equal(null)
+    describe('api', () => {
+      it('should default to star api', () => {
+        expect(unobfuscate(new BlockchainServer()).api.name).to.equal('star')
+      })
+
+      it('should throw for bad api', () => {
+        expect(() => new BlockchainServer({ api: 'bad' })).to.throw('Unknown blockchain API: bad')
+        expect(() => new BlockchainServer({ api: null })).to.throw('Invalid blockchain API: null')
+        expect(() => new BlockchainServer({ api: 123 })).to.throw('Invalid blockchain API: 123')
+      })
     })
 
-    it('should throw for bad logger', () => {
-      expect(() => new BlockchainServer({ logger: 'bad' })).to.throw('Invalid logger: bad')
-      expect(() => new BlockchainServer({ logger: false })).to.throw('Invalid logger: false')
+    describe('lastBlockchain', () => {
+      it('should support passing different last blockchain', () => {
+        const lastBlockchain = { cache: {} }
+        expect(new BlockchainServer({ lastBlockchain }).cache).not.to.equal(lastBlockchain.cache)
+      })
+
+      it('should only copy cache if same network', async () => {
+        const testnet1 = new BlockchainServer({ network: 'test' })
+        // Fill the cache with one transaction
+        await testnet1.fetch('d89f6bfb9f4373212ed18b9da5f45426d50a4676a4a684c002a4e838618cf3ee')
+        const testnet2 = new BlockchainServer({ network: 'test', lastBlockchain: testnet1 })
+        const mainnet = new BlockchainServer({ network: 'main', lastBlockchain: testnet2 })
+        expect(testnet2.cache).to.deep.equal(testnet1.cache)
+        expect(mainnet.cache).not.to.equal(testnet2.cache)
+      })
     })
 
-    it('should default to star api', () => {
-      expect(unobfuscate(new BlockchainServer()).api.name).to.equal('star')
-    })
+    describe('timeout', () => {
+      it('should support custom timeouts', () => {
+        expect(new BlockchainServer({ timeout: 3333 }).axios.defaults.timeout).to.equal(3333)
+      })
 
-    it('should throw for bad api', () => {
-      expect(() => new BlockchainServer({ api: 'bad' })).to.throw('Unknown blockchain API: bad')
-      expect(() => new BlockchainServer({ api: null })).to.throw('Invalid blockchain API: null')
-      expect(() => new BlockchainServer({ api: 123 })).to.throw('Invalid blockchain API: 123')
-    })
+      it('should default timeout to 10000', () => {
+        expect(new BlockchainServer().axios.defaults.timeout).to.equal(10000)
+      })
 
-    it('should support passing invalid caches', () => {
-      const cache = {}
-      expect(new BlockchainServer({ cache })).not.to.equal(cache)
-    })
-
-    it('should support custom timeouts', () => {
-      expect(new BlockchainServer({ timeout: 3333 }).axios.defaults.timeout).to.equal(3333)
-    })
-
-    it('should default timeout to 10000', () => {
-      expect(new BlockchainServer().axios.defaults.timeout).to.equal(10000)
-    })
-
-    it('should throw for bad timeout', () => {
-      expect(() => new BlockchainServer({ timeout: 'bad' })).to.throw('Invalid timeout: bad')
-      expect(() => new BlockchainServer({ timeout: null })).to.throw('Invalid timeout: null')
-      expect(() => new BlockchainServer({ timeout: -1 })).to.throw('Invalid timeout: -1')
-      expect(() => new BlockchainServer({ timeout: NaN })).to.throw('Invalid timeout: NaN')
+      it('should throw for bad timeout', () => {
+        expect(() => new BlockchainServer({ timeout: 'bad' })).to.throw('Invalid timeout: bad')
+        expect(() => new BlockchainServer({ timeout: null })).to.throw('Invalid timeout: null')
+        expect(() => new BlockchainServer({ timeout: -1 })).to.throw('Invalid timeout: -1')
+        expect(() => new BlockchainServer({ timeout: NaN })).to.throw('Invalid timeout: NaN')
+      })
     })
   })
 
@@ -3403,7 +3423,7 @@ module.exports = Run;
 /* 12 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"richObjectToJson\":\"aal\",\"jsonToRichObject\":\"aam\",\"extractJigsAndCodeToArray\":\"aan\",\"injectJigsAndCodeFromArray\":\"aao\",\"deepTraverse\":\"aap\",\"activeRunInstance\":\"aaq\",\"sameJig\":\"aar\",\"networkSuffix\":\"aas\",\"isBlockchain\":\"aahc\",\"broadcastUrl\":\"aau\",\"broadcastData\":\"aav\",\"fetchUrl\":\"aaw\",\"fetchResp\":\"aax\",\"utxosUrl\":\"aay\",\"utxosResp\":\"aaz\",\"_dedupUtxos\":\"aaab\",\"correctForServerUtxoIndexingDelay\":\"aabb\",\"fetched\":\"aacb\",\"broadcasted\":\"aadb\",\"isSandbox\":\"aaeb\",\"getInstalled\":\"aafb\",\"installFromTx\":\"aagb\",\"installJig\":\"aahb\",\"fastForward\":\"aaib\",\"finish\":\"aajb\",\"publishNext\":\"aakb\",\"publish\":\"aalb\",\"storeCode\":\"aamb\",\"storeAction\":\"aanb\",\"setProtoTxAndCreator\":\"aaob\",\"buildBsvTransaction\":\"aapb\",\"_fromPrivateKey\":\"aaqb\",\"_fromPublicKey\":\"aarb\",\"_fromAddress\":\"aasb\",\"_queryLatest\":\"aatb\",\"_removeErrorRefs\":\"aaub\",\"_update\":\"aavb\",\"_estimateSize\":\"aawb\",\"_util\":\"aaxb\",\"intrinsics\":\"aayb\",\"proxies\":\"aazb\",\"enforce\":\"aaac\",\"stack\":\"aabc\",\"reads\":\"aacc\",\"creates\":\"aadc\",\"saves\":\"aaec\",\"callers\":\"aafc\",\"locals\":\"aagc\",\"requests\":\"aaic\",\"broadcasts\":\"aajc\",\"expiration\":\"aakc\",\"indexingDelay\":\"aalc\",\"fetchedTime\":\"aamc\",\"unspentOutputs\":\"aanc\",\"transactions\":\"aaoc\",\"blockHeight\":\"aapc\",\"installs\":\"aaqc\",\"syncer\":\"aarc\",\"protoTx\":\"aasc\",\"beginCount\":\"aatc\",\"cachedTx\":\"aauc\",\"syncListeners\":\"aavc\",\"onBroadcastListeners\":\"aawc\",\"lastPosted\":\"aaxc\",\"queued\":\"aayc\",\"sizeBytes\":\"aazc\",\"maxSizeBytes\":\"aaad\",\"control\":\"aabd\",\"ProtoTransaction\":\"aacd\",\"PROTOCOL_VERSION\":\"aadd\",\"SerialTaskQueue\":\"aaed\",\"stringProps\":\"aafd\",\"extractProps\":\"aagd\",\"onReadyForPublish\":\"aahd\",\"spentJigs\":\"aaid\",\"spentLocations\":\"aajd\"}");
+module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"richObjectToJson\":\"aal\",\"jsonToRichObject\":\"aam\",\"extractJigsAndCodeToArray\":\"aan\",\"injectJigsAndCodeFromArray\":\"aao\",\"deepTraverse\":\"aap\",\"activeRunInstance\":\"aaq\",\"sameJig\":\"aar\",\"networkSuffix\":\"aas\",\"isBlockchain\":\"aahc\",\"broadcastUrl\":\"aau\",\"broadcastData\":\"aav\",\"fetchUrl\":\"aaw\",\"fetchResp\":\"aax\",\"utxosUrl\":\"aay\",\"utxosResp\":\"aaz\",\"_dedupUtxos\":\"aaab\",\"correctForServerUtxoIndexingDelay\":\"aabb\",\"fetched\":\"aacb\",\"broadcasted\":\"aadb\",\"isSandbox\":\"aaeb\",\"getInstalled\":\"aafb\",\"installFromTx\":\"aagb\",\"installJig\":\"aahb\",\"fastForward\":\"aaib\",\"finish\":\"aajb\",\"publishNext\":\"aakb\",\"publish\":\"aalb\",\"storeCode\":\"aamb\",\"storeAction\":\"aanb\",\"setProtoTxAndCreator\":\"aaob\",\"buildBsvTransaction\":\"aapb\",\"_fromPrivateKey\":\"aaqb\",\"_fromPublicKey\":\"aarb\",\"_fromAddress\":\"aasb\",\"_queryLatest\":\"aatb\",\"_removeErrorRefs\":\"aaub\",\"_update\":\"aavb\",\"_estimateSize\":\"aawb\",\"_util\":\"aaxb\",\"intrinsics\":\"aayb\",\"proxies\":\"aazb\",\"enforce\":\"aaac\",\"stack\":\"aabc\",\"reads\":\"aacc\",\"creates\":\"aadc\",\"saves\":\"aaec\",\"callers\":\"aafc\",\"locals\":\"aagc\",\"requests\":\"aaic\",\"broadcasts\":\"aajc\",\"expiration\":\"aakc\",\"indexingDelay\":\"aalc\",\"fetchedTime\":\"aamc\",\"transactions\":\"aanc\",\"utxosByLocation\":\"aaoc\",\"utxosByAddress\":\"aapc\",\"blockHeight\":\"aaqc\",\"installs\":\"aarc\",\"syncer\":\"aasc\",\"protoTx\":\"aatc\",\"beginCount\":\"aauc\",\"cachedTx\":\"aavc\",\"syncListeners\":\"aawc\",\"onBroadcastListeners\":\"aaxc\",\"lastPosted\":\"aayc\",\"queued\":\"aazc\",\"sizeBytes\":\"aaad\",\"maxSizeBytes\":\"aabd\",\"control\":\"aacd\",\"ProtoTransaction\":\"aadd\",\"PROTOCOL_VERSION\":\"aaed\",\"SerialTaskQueue\":\"aafd\",\"stringProps\":\"aagd\",\"extractProps\":\"aahd\",\"onReadyForPublish\":\"aaid\",\"spentJigs\":\"aajd\",\"spentLocations\":\"aakd\"}");
 
 /***/ }),
 /* 13 */
@@ -6770,11 +6790,11 @@ const chai = __webpack_require__(0)
 const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { unobfuscate, createRun } = __webpack_require__(2)
+const { Run, unobfuscate, createRun } = __webpack_require__(2)
 const runBlockchainTestSuite = __webpack_require__(6)
 
 describe('Mockchain', () => {
-  const run = createRun({ network: 'mock' })
+  const run = createRun({ blockchain: new Run.Mockchain() })
   const tx = run.blockchain.transactions.values().next().value
   beforeEach(() => run.blockchain.block())
 
@@ -6877,13 +6897,16 @@ describe('Mockchain', () => {
       const end = measures.slice(measures.length - 3).reduce((a, b) => a + b, 0) / 3
       expect(start < 10).to.equal(true)
       expect(end < 10).to.equal(true)
-    }).timeout(10000)
+    }).timeout(30000)
 
     it('should support fast utxo queries', async () => {
+      // Generate 10 private keys and fund their addresses
       const privateKeys = []; const addresses = []
       for (let i = 0; i < 10; i++) { privateKeys.push(new PrivateKey()) }
       privateKeys.forEach(privateKey => addresses.push(privateKey.toAddress()))
       addresses.forEach(address => run.blockchain.fund(address, 100000))
+
+      // Send from each address to the next, 1000 times
       const measures = []
       for (let i = 0; i < 1000; i++) {
         const before = new Date()
@@ -6894,11 +6917,13 @@ describe('Mockchain', () => {
         await run.blockchain.broadcast(tx)
         run.blockchain.block()
       }
+
+      // Get an average time to query utxos() at the start and end, and check it didn't change much
       const start = measures.slice(0, 3).reduce((a, b) => a + b, 0) / 3
       const end = measures.slice(measures.length - 3).reduce((a, b) => a + b, 0) / 3
       expect(start < 10).to.equal(true)
       expect(end < 10).to.equal(true)
-    }).timeout(10000)
+    }).timeout(30000)
   })
 })
 
@@ -7449,9 +7474,16 @@ describe('Run', () => {
         })
       })
 
-      it('should copy cache from previous blockchain', () => {
+      it('should copy mockchain from previous blockchain', () => {
         const run1 = createRun()
         const run2 = createRun()
+        expect(run1.blockchain).to.deep.equal(run2.blockchain)
+      })
+
+      it('should copy blockchain cache from previous blockchain', async () => {
+        const run1 = createRun({ network: 'test' })
+        await run1.blockchain.fetch('d89f6bfb9f4373212ed18b9da5f45426d50a4676a4a684c002a4e838618cf3ee')
+        const run2 = createRun({ network: 'test' })
         expect(run1.blockchain).not.to.deep.equal(run2.blockchain)
         expect(run1.blockchain.cache).to.deep.equal(run2.blockchain.cache)
       })
@@ -7525,7 +7557,7 @@ describe('Run', () => {
         expect(() => createRun({ state: false })).to.throw('Option \'state\' must be an object. Received: false')
       })
 
-      it('should copy cache from previous state', () => {
+      it('should copy previous state', () => {
         const run1 = createRun()
         const run2 = createRun()
         expect(run2.state).to.deep.equal(run1.state)
@@ -8412,7 +8444,7 @@ describe('Transaction', () => {
   })
 
   describe('publish', () => {
-    const run = createRun({ app: 'biz' })
+    const run = createRun({ app: 'biz', blockchain: new Run.Mockchain() })
     const owner = run.owner.pubkey
     let tx = null; let data = null
     const origBroadcast = run.blockchain.broadcast.bind(run.blockchain)

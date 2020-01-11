@@ -116,8 +116,9 @@ const propertiesToObfuscate = [
   'fetchedTime',
 
   // mockchain.js
-  'unspentOutputs',
   'transactions',
+  'utxosByLocation',
+  'utxosByAddress',
   'blockHeight',
   'installs',
 

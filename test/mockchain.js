@@ -10,11 +10,11 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { unobfuscate, createRun } = require('./helpers')
+const { Run, unobfuscate, createRun } = require('./helpers')
 const runBlockchainTestSuite = require('./blockchain')
 
 describe('Mockchain', () => {
-  const run = createRun({ network: 'mock' })
+  const run = createRun({ blockchain: new Run.Mockchain() })
   const tx = run.blockchain.transactions.values().next().value
   beforeEach(() => run.blockchain.block())
 
@@ -117,13 +117,16 @@ describe('Mockchain', () => {
       const end = measures.slice(measures.length - 3).reduce((a, b) => a + b, 0) / 3
       expect(start < 10).to.equal(true)
       expect(end < 10).to.equal(true)
-    }).timeout(10000)
+    }).timeout(30000)
 
     it('should support fast utxo queries', async () => {
+      // Generate 10 private keys and fund their addresses
       const privateKeys = []; const addresses = []
       for (let i = 0; i < 10; i++) { privateKeys.push(new PrivateKey()) }
       privateKeys.forEach(privateKey => addresses.push(privateKey.toAddress()))
       addresses.forEach(address => run.blockchain.fund(address, 100000))
+
+      // Send from each address to the next, 1000 times
       const measures = []
       for (let i = 0; i < 1000; i++) {
         const before = new Date()
@@ -134,10 +137,12 @@ describe('Mockchain', () => {
         await run.blockchain.broadcast(tx)
         run.blockchain.block()
       }
+
+      // Get an average time to query utxos() at the start and end, and check it didn't change much
       const start = measures.slice(0, 3).reduce((a, b) => a + b, 0) / 3
       const end = measures.slice(measures.length - 3).reduce((a, b) => a + b, 0) / 3
       expect(start < 10).to.equal(true)
       expect(end < 10).to.equal(true)
-    }).timeout(10000)
+    }).timeout(30000)
   })
 })

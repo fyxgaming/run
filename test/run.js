@@ -102,9 +102,16 @@ describe('Run', () => {
         })
       })
 
-      it('should copy cache from previous blockchain', () => {
+      it('should copy mockchain from previous blockchain', () => {
         const run1 = createRun()
         const run2 = createRun()
+        expect(run1.blockchain).to.deep.equal(run2.blockchain)
+      })
+
+      it('should copy blockchain cache from previous blockchain', async () => {
+        const run1 = createRun({ network: 'test' })
+        await run1.blockchain.fetch('d89f6bfb9f4373212ed18b9da5f45426d50a4676a4a684c002a4e838618cf3ee')
+        const run2 = createRun({ network: 'test' })
         expect(run1.blockchain).not.to.deep.equal(run2.blockchain)
         expect(run1.blockchain.cache).to.deep.equal(run2.blockchain.cache)
       })
@@ -178,7 +185,7 @@ describe('Run', () => {
         expect(() => createRun({ state: false })).to.throw('Option \'state\' must be an object. Received: false')
       })
 
-      it('should copy cache from previous state', () => {
+      it('should copy previous state', () => {
         const run1 = createRun()
         const run2 = createRun()
         expect(run2.state).to.deep.equal(run1.state)

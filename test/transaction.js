@@ -234,7 +234,7 @@ describe('Transaction', () => {
   })
 
   describe('publish', () => {
-    const run = createRun({ app: 'biz' })
+    const run = createRun({ app: 'biz', blockchain: new Run.Mockchain() })
     const owner = run.owner.pubkey
     let tx = null; let data = null
     const origBroadcast = run.blockchain.broadcast.bind(run.blockchain)

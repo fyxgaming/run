@@ -277,54 +277,74 @@ describe('Blockchain', () => {
 
 describe('BlockchainServer', () => {
   describe('constructor', () => {
-    it('should default network to main', () => {
-      expect(new BlockchainServer().network).to.equal('main')
+    describe('network', () => {
+      it('should default network to main', () => {
+        expect(new BlockchainServer().network).to.equal('main')
+      })
+
+      it('should throw for bad network', () => {
+        expect(() => new BlockchainServer({ network: 'bad' })).to.throw('Unknown network: bad')
+        expect(() => new BlockchainServer({ network: 0 })).to.throw('Invalid network: 0')
+        expect(() => new BlockchainServer({ network: {} })).to.throw('Invalid network: [object Object]')
+        expect(() => new BlockchainServer({ network: null })).to.throw('Invalid network: null')
+      })
     })
 
-    it('should throw for bad network', () => {
-      expect(() => new BlockchainServer({ network: 'bad' })).to.throw('Unknown network: bad')
-      expect(() => new BlockchainServer({ network: 0 })).to.throw('Invalid network: 0')
-      expect(() => new BlockchainServer({ network: {} })).to.throw('Invalid network: [object Object]')
-      expect(() => new BlockchainServer({ network: null })).to.throw('Invalid network: null')
+    describe('logger', () => {
+      it('should support null loggers', () => {
+        expect(new BlockchainServer({ logger: null }).logger).to.equal(null)
+      })
+
+      it('should throw for bad logger', () => {
+        expect(() => new BlockchainServer({ logger: 'bad' })).to.throw('Invalid logger: bad')
+        expect(() => new BlockchainServer({ logger: false })).to.throw('Invalid logger: false')
+      })
     })
 
-    it('should support null loggers', () => {
-      expect(new BlockchainServer({ logger: null }).logger).to.equal(null)
+    describe('api', () => {
+      it('should default to star api', () => {
+        expect(unobfuscate(new BlockchainServer()).api.name).to.equal('star')
+      })
+
+      it('should throw for bad api', () => {
+        expect(() => new BlockchainServer({ api: 'bad' })).to.throw('Unknown blockchain API: bad')
+        expect(() => new BlockchainServer({ api: null })).to.throw('Invalid blockchain API: null')
+        expect(() => new BlockchainServer({ api: 123 })).to.throw('Invalid blockchain API: 123')
+      })
     })
 
-    it('should throw for bad logger', () => {
-      expect(() => new BlockchainServer({ logger: 'bad' })).to.throw('Invalid logger: bad')
-      expect(() => new BlockchainServer({ logger: false })).to.throw('Invalid logger: false')
+    describe('lastBlockchain', () => {
+      it('should support passing different last blockchain', () => {
+        const lastBlockchain = { cache: {} }
+        expect(new BlockchainServer({ lastBlockchain }).cache).not.to.equal(lastBlockchain.cache)
+      })
+
+      it('should only copy cache if same network', async () => {
+        const testnet1 = new BlockchainServer({ network: 'test' })
+        // Fill the cache with one transaction
+        await testnet1.fetch('d89f6bfb9f4373212ed18b9da5f45426d50a4676a4a684c002a4e838618cf3ee')
+        const testnet2 = new BlockchainServer({ network: 'test', lastBlockchain: testnet1 })
+        const mainnet = new BlockchainServer({ network: 'main', lastBlockchain: testnet2 })
+        expect(testnet2.cache).to.deep.equal(testnet1.cache)
+        expect(mainnet.cache).not.to.equal(testnet2.cache)
+      })
     })
 
-    it('should default to star api', () => {
-      expect(unobfuscate(new BlockchainServer()).api.name).to.equal('star')
-    })
+    describe('timeout', () => {
+      it('should support custom timeouts', () => {
+        expect(new BlockchainServer({ timeout: 3333 }).axios.defaults.timeout).to.equal(3333)
+      })
 
-    it('should throw for bad api', () => {
-      expect(() => new BlockchainServer({ api: 'bad' })).to.throw('Unknown blockchain API: bad')
-      expect(() => new BlockchainServer({ api: null })).to.throw('Invalid blockchain API: null')
-      expect(() => new BlockchainServer({ api: 123 })).to.throw('Invalid blockchain API: 123')
-    })
+      it('should default timeout to 10000', () => {
+        expect(new BlockchainServer().axios.defaults.timeout).to.equal(10000)
+      })
 
-    it('should support passing invalid caches', () => {
-      const cache = {}
-      expect(new BlockchainServer({ cache })).not.to.equal(cache)
-    })
-
-    it('should support custom timeouts', () => {
-      expect(new BlockchainServer({ timeout: 3333 }).axios.defaults.timeout).to.equal(3333)
-    })
-
-    it('should default timeout to 10000', () => {
-      expect(new BlockchainServer().axios.defaults.timeout).to.equal(10000)
-    })
-
-    it('should throw for bad timeout', () => {
-      expect(() => new BlockchainServer({ timeout: 'bad' })).to.throw('Invalid timeout: bad')
-      expect(() => new BlockchainServer({ timeout: null })).to.throw('Invalid timeout: null')
-      expect(() => new BlockchainServer({ timeout: -1 })).to.throw('Invalid timeout: -1')
-      expect(() => new BlockchainServer({ timeout: NaN })).to.throw('Invalid timeout: NaN')
+      it('should throw for bad timeout', () => {
+        expect(() => new BlockchainServer({ timeout: 'bad' })).to.throw('Invalid timeout: bad')
+        expect(() => new BlockchainServer({ timeout: null })).to.throw('Invalid timeout: null')
+        expect(() => new BlockchainServer({ timeout: -1 })).to.throw('Invalid timeout: -1')
+        expect(() => new BlockchainServer({ timeout: NaN })).to.throw('Invalid timeout: NaN')
+      })
     })
   })
 
