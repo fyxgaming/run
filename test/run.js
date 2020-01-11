@@ -250,6 +250,19 @@ describe('Run', () => {
     })
   })
 
+  describe('purse', () => {
+    it('throw accept setting valid purse', () => {
+      const run = createRun()
+      run.purse = new bsv.PrivateKey()
+      expect(run.purse instanceof Run.Purse).to.equal(true)
+    })
+
+    it('throw throw if set invalid purse', () => {
+      const run = createRun()
+      expect(() => { run.purse = 123 }).to.throw('Option \'purse\' must be a valid private key or Pay API')
+    })
+  })
+
   describe('static properties', () => {
     it('version should match package.json', () => {
       expect(Run.version).to.equal(packageInfo.version)

@@ -945,7 +945,7 @@ class Run {
     this.app = parseApp(options.app)
     this.state = parseState(options.state)
     this.owner = parseOwner(options.owner, this.blockchain.network, this.logger, this)
-    this.purse = parsePurse(options.purse, this.blockchain, this.logger)
+    this._purse = parsePurse(options.purse, this.blockchain, this.logger)
     this.code = parseCode(options.code, parseSandbox(options.sandbox), this.logger)
     this.syncer = new Syncer(this)
     this.transaction = new Transaction(this)
@@ -956,6 +956,9 @@ class Run {
     // If using the mockchain, automatically fund the purse with some money
     if (this.blockchain instanceof Mockchain) this.blockchain.fund(this.purse.address, 100000000)
   }
+
+  get purse () { return this._purse }
+  set purse (value) { this._purse = parsePurse(value, this.blockchain, this.logger) }
 
   /**
    * Loads jigs or code from the blockchain
@@ -10751,7 +10754,7 @@ class Purse {
     let numUtxosSpent = 0
     let numOutputsToCreate = 0
 
-    tx.feePerKb(this._feePerKb)
+    tx.feePerKb(this.feePerKb)
 
     for (const utxo of utxos) {
       tx.from(utxo)
@@ -10760,7 +10763,7 @@ class Purse {
       numUtxosSpent += 1
       satoshisRequired += 150 // 150 bytes per P2PKH input seems to be average
 
-      const numOutputsToAdd = this._splits - utxos.length + numUtxosSpent - numOutputsToCreate
+      const numOutputsToAdd = this.splits - utxos.length + numUtxosSpent - numOutputsToCreate
       for (let i = 0; i < numOutputsToAdd; i++) {
         satoshisRequired += 40 // 40 bytes per P2PKH output seems to be average
         satoshisRequired += 546 // We also have to add the dust amounts
