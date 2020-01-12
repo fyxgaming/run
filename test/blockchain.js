@@ -61,7 +61,7 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
 
     it('should throw if missing input', async () => {
       const utxos = await blockchain.utxos(address)
-      const utxo = { ...utxos[0], vout: 999 }
+      const utxo = Object.assign({}, utxos[0], { vout: 999 })
       const tx = new bsv.Transaction().from(utxo).change(address).fee(250).sign(privateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.missingInput)
     })

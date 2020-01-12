@@ -2271,7 +2271,7 @@ describe('Jig', () => {
         }
       }
       class B extends Jig {
-        f (a) { this.x = { ...a.obj } }
+        f (a) { this.x = Object.assign({}, a.obj) }
 
         g (a) { this.y = [...a.arr] }
 

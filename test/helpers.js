@@ -105,7 +105,7 @@ function createRun (options = { }) {
   const blockchain = network !== 'mock' ? 'star' : undefined
   const purse = network === 'mock' ? undefined : testPurses[network][0]
   const sandbox = 'sandbox' in options ? options.sandbox : TEST_MODE === 'cover' ? /^((?!Jig|Token|expect).)*$/ : true
-  const run = new Run({ network, purse, sandbox, logger: null, blockchain, ...options })
+  const run = new Run(Object.assign({ network, purse, sandbox, logger: null, blockchain }, options))
   return run
 }
 

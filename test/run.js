@@ -79,10 +79,10 @@ describe('Run', () => {
 
       it('should throw for invalid custom blockchain', () => {
         const blockchain = { broadcast: async () => {}, fetch: async () => {}, utxos: async () => {}, network: 'main' }
-        expect(() => createRun({ blockchain: { ...blockchain, broadcast: null } })).to.throw('Invalid \'blockchain\'')
-        expect(() => createRun({ blockchain: { ...blockchain, fetch: null } })).to.throw('Invalid \'blockchain\'')
-        expect(() => createRun({ blockchain: { ...blockchain, utxos: null } })).to.throw('Invalid \'blockchain\'')
-        expect(() => createRun({ blockchain: { ...blockchain, network: null } })).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun(Object.assign({}, blockchain, { broadcast: null }))).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun(Object.assign({}, blockchain, { fetch: null }))).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun(Object.assign({}, blockchain, { utxos: null }))).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun(Object.assign({}, blockchain, { network: null }))).to.throw('Invalid \'blockchain\'')
       })
 
       it('should throw for null blockchain', () => {
