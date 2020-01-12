@@ -1161,7 +1161,7 @@ function setupBsvLibrary (network) {
 // Run static properties
 // ------------------------------------------------------------------------------------------------
 
-Run.version =  false ? undefined : "0.3.13"
+Run.version =  false ? undefined : "0.4.0"
 Run.protocol = util.PROTOCOL_VERSION
 Run._util = util
 Run.instance = null

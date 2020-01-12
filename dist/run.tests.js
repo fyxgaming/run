@@ -7451,10 +7451,10 @@ describe('Run', () => {
 
       it('should throw for invalid custom blockchain', () => {
         const blockchain = { broadcast: async () => {}, fetch: async () => {}, utxos: async () => {}, network: 'main' }
-        expect(() => createRun(Object.assign({}, blockchain, { broadcast: null }))).to.throw('Invalid \'blockchain\'')
-        expect(() => createRun(Object.assign({}, blockchain, { fetch: null }))).to.throw('Invalid \'blockchain\'')
-        expect(() => createRun(Object.assign({}, blockchain, { utxos: null }))).to.throw('Invalid \'blockchain\'')
-        expect(() => createRun(Object.assign({}, blockchain, { network: null }))).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun({ blockchain: Object.assign({}, blockchain, { broadcast: null }) })).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun({ blockchain: Object.assign({}, blockchain, { fetch: null }) })).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun({ blockchain: Object.assign({}, blockchain, { utxos: null }) })).to.throw('Invalid \'blockchain\'')
+        expect(() => createRun({ blockchain: Object.assign({}, blockchain, { network: null }) })).to.throw('Invalid \'blockchain\'')
       })
 
       it('should throw for null blockchain', () => {
@@ -7505,6 +7505,7 @@ describe('Run', () => {
         expect(run.code.sandbox).to.equal(false)
         class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).not.to.throw()
+        run.deactivate()
       })
 
       it('should support RegExp sandbox', () => {
@@ -7514,6 +7515,7 @@ describe('Run', () => {
         class B extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()
         expect(() => new B()).not.to.throw()
+        run.deactivate()
       })
 
       it('should throw for bad sandbox', () => {
@@ -7764,7 +7766,7 @@ describe('Run', () => {
 /* 20 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.3.13\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\",\"caller\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"ses\":\"github:runonbitcoin/ses\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
+module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.4.0\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\",\"caller\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"ses\":\"github:runonbitcoin/ses\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
 
 /***/ }),
 /* 21 */
