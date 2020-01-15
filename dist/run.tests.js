@@ -4809,6 +4809,22 @@ describe('Jig', () => {
       tx.outputs[2].spentTxId = b.location.slice(0, 64)
       await expect(a.sync()).to.be.rejectedWith('jig not found')
     })
+
+    it('should not throw if sync jig updated by another', async () => {
+      class A extends Jig {
+        set (x) { this.x = x }
+      }
+      class B extends Jig {
+        init (a) { this.a = a }
+        setA (x) { this.a.set(x) }
+      }
+      const a = new A()
+      const b = new B(a)
+      b.setA(1)
+      await run.sync()
+      const a2 = await run.load(a.origin)
+      await expect(a2.sync()).not.to.be.rejected
+    })
   })
 
   describe('method', () => {

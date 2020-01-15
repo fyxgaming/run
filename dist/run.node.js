@@ -2579,6 +2579,26 @@ class ProtoTransaction {
       }
     }
 
+    if (preexistingJig) {
+      refs.set(preexistingJig.location, preexistingJig)
+    }
+
+    /*
+    // Also load all inputs to spend (do we need to do this? These dedups?
+    for (let vin = 0; vin < tx.inputs.length; vin++) {
+      const input = tx.inputs[vin]
+      try {
+        const location = `${input.prevTxId.toString('hex')}_o${input.outputIndex}`
+        if (preexistingJig && location === preexistingJig.location) {
+          refs.set()
+        }
+        const refId = `_i${vin}`
+        const jig = await run.load(location, { childLoad: true })
+        refs.set(refId, jig)
+      } catch (e) { }
+    }
+    */
+
     // dedupInnerRefs puts any internal objects in their referenced states using known references
     // ensuring that double-references refer to the same objects
     const { Jig } = __webpack_require__(3)
@@ -11441,11 +11461,20 @@ class StateCache {
   }
 
   async set (location, state) {
+    function deepEqual (a, b) {
+      if (typeof a !== typeof b) return false
+      if (typeof a !== 'object' || !a || !b) return a === b
+      const aKeys = Array.from(Object.keys(a))
+      const bKeys = Array.from(Object.keys(b))
+      if (aKeys.length !== bKeys.length) return false
+      return !aKeys.some(key => !deepEqual(a[key], b[key]))
+    }
+
     const previous = this.cache.get(location)
 
     // If we are overwriting a previous value, check that the states are the same.
     if (previous) {
-      if (JSON.stringify(state) !== JSON.stringify(previous)) {
+      if (!deepEqual(state, previous)) {
         const hint = 'This is an internal Run bug. Please report it to the library developers.'
         throw new Error(`Attempt to set different states for the same location: ${location}\n\n${hint}`)
       }
