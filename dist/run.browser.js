@@ -968,11 +968,6 @@ class Run {
   async load (location, options = {}) {
     this._checkActive()
 
-    // Loads that are from other loads just get passed through
-    if (options.childLoad) {
-      return this.transaction.load(location, options)
-    }
-
     // Everything else gets serialized
     return this.loadQueue.enqueue(() => this.transaction.load(location, options))
   }
@@ -1161,7 +1156,7 @@ function setupBsvLibrary (network) {
 // Run static properties
 // ------------------------------------------------------------------------------------------------
 
-Run.version =  false ? undefined : "0.4.0"
+Run.version =  false ? undefined : "0.4.1"
 Run.protocol = util.PROTOCOL_VERSION
 Run._util = util
 Run.instance = null
@@ -4294,7 +4289,7 @@ class ProtoTransaction {
         refs.set(refId, preexistingJig)
       } else {
         try {
-          refs.set(refId, await run.load(refLocation, { childLoad: true }))
+          refs.set(refId, await run.transaction.load(refLocation))
         } catch (e) {
           run.logger.error(e)
           throw new Error(`Error loading ref ${refId} at ${refLocation}\n\n${e}`)
@@ -4316,7 +4311,7 @@ class ProtoTransaction {
           refs.set()
         }
         const refId = `_i${vin}`
-        const jig = await run.load(location, { childLoad: true })
+        const jig = await run.transaction.load(location)
         refs.set(refId, jig)
       } catch (e) { }
     }
@@ -4371,7 +4366,7 @@ class ProtoTransaction {
         }
 
         const loc = action.target[0] === '_' ? tx.hash + action.target : action.target
-        const T = await run.load(loc, { childLoad: true })
+        const T = await run.transaction.load(loc)
 
         const oldSettings = run.transaction.setProtoTxAndCreator(this, action.creator)
 
