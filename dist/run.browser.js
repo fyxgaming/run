@@ -965,11 +965,11 @@ class Run {
    * @param {string} location Location string
    * @returns {Promise<Object|Function|Class>} Class or function in a promise
    */
-  async load (location, options = {}) {
+  async load (location) {
     this._checkActive()
 
     // Everything else gets serialized
-    return this.loadQueue.enqueue(() => this.transaction.load(location, options))
+    return this.loadQueue.enqueue(() => this.transaction.load(location))
   }
 
   /**
