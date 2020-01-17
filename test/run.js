@@ -119,18 +119,18 @@ describe('Run', () => {
 
     describe('sandbox', () => {
       it('should default to sandbox enabled', () => {
-        expect(new Run({ network: 'mock' }).code.sandbox).to.equal(true)
+        expect(new Run({ network: 'mock' }).code.evaluator.sandbox).to.equal(true)
         class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()
       })
 
       it('should support enabling sandbox', () => {
-        expect(createRun({ sandbox: true }).code.sandbox).to.equal(true)
+        expect(createRun({ sandbox: true }).code.evaluator.sandbox).to.equal(true)
       })
 
       it('should support disabling sandbox', () => {
         const run = createRun({ network: 'mock', sandbox: false })
-        expect(run.code.sandbox).to.equal(false)
+        expect(run.code.evaluator.sandbox).to.equal(false)
         class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).not.to.throw()
         run.deactivate()
@@ -138,7 +138,7 @@ describe('Run', () => {
 
       it('should support RegExp sandbox', () => {
         const run = createRun({ network: 'mock', sandbox: /A/ })
-        expect(run.code.sandbox instanceof RegExp).to.equal(true)
+        expect(run.code.evaluator.sandbox instanceof RegExp).to.equal(true)
         class A extends Jig { init () { this.version = Run.version } }
         class B extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()

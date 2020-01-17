@@ -6,6 +6,7 @@
 
 require('./blockchain')
 require('./code')
+require('./evaluator')
 require('./expect')
 require('./jig')
 require('./mockchain')

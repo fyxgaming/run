@@ -854,7 +854,7 @@ describe('Jig', () => {
         expect(buf[0]).to.equal(1)
         expect(buf[1]).to.equal(2)
         expect(buf[2]).to.equal(3)
-        expect(buf.constructor === run.code.intrinsics.Uint8Array).to.equal(true)
+        expect(buf.constructor === run.code.evaluator.intrinsics.Uint8Array).to.equal(true)
       }
       testBuf(a.buf)
       testBuf(a.buf2)

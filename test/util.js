@@ -387,7 +387,7 @@ describe('util', () => {
     })
 
     it('should convert uint8array', () => {
-      const Uint8Array = run.code.intrinsics.Uint8Array
+      const Uint8Array = run.code.evaluator.intrinsics.Uint8Array
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: '' })).to.deep.equal(new Uint8Array(0))
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: 'AA==' })).to.deep.equal(new Uint8Array(1))
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: 'AQID' })).to.deep.equal(new Uint8Array([1, 2, 3]))
