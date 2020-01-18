@@ -92,8 +92,8 @@ var Run =
 "use strict";
 
 
-var bind = __webpack_require__(10);
-var isBuffer = __webpack_require__(28);
+var bind = __webpack_require__(11);
+var isBuffer = __webpack_require__(29);
 
 /*global toString:true*/
 
@@ -664,7 +664,7 @@ function richObjectToJson (target, customReplacers = [], parent = null, name = n
   }
 
   // Replace Uint8Array
-  const CommonUint8Array = activeRunInstance().code.intrinsics.Uint8Array
+  const CommonUint8Array = activeRunInstance().code.evaluator.intrinsics.Uint8Array
   if (target.constructor === CommonUint8Array || target.constructor === Uint8Array) {
     return { $class: 'Uint8Array', base64Data: Buffer.from(target).toString('base64') }
   }
@@ -704,7 +704,7 @@ function jsonToRichObject (target, customReplacers = [], parent = null, name = n
 
   // Replace Uint8Array
   if (target.$class === 'Uint8Array') {
-    const Uint8Array = activeRunInstance().code.intrinsics.Uint8Array
+    const Uint8Array = activeRunInstance().code.evaluator.intrinsics.Uint8Array
     return new Uint8Array(Buffer.from(target.base64Data, 'base64'))
   }
 
@@ -904,18 +904,19 @@ module.exports = {
 
 const bsv = __webpack_require__(1)
 const Code = __webpack_require__(6)
-const Syncer = __webpack_require__(24)
-const { Transaction } = __webpack_require__(8)
+const Evaluator = __webpack_require__(8)
+const Syncer = __webpack_require__(25)
+const { Transaction } = __webpack_require__(9)
 const util = __webpack_require__(2)
-const { Pay, Purse } = __webpack_require__(25)
-const Owner = __webpack_require__(44)
-const { Blockchain, BlockchainServer } = __webpack_require__(9)
-const Mockchain = __webpack_require__(45)
-const { StateCache } = __webpack_require__(46)
+const { Pay, Purse } = __webpack_require__(26)
+const Owner = __webpack_require__(45)
+const { Blockchain, BlockchainServer } = __webpack_require__(10)
+const Mockchain = __webpack_require__(46)
+const { StateCache } = __webpack_require__(47)
 const { PrivateKey } = bsv
 const Jig = __webpack_require__(5)
-const Token = __webpack_require__(47)
-const expect = __webpack_require__(18)
+const Token = __webpack_require__(48)
+const expect = __webpack_require__(19)
 
 // ------------------------------------------------------------------------------------------------
 // Primary Run class
@@ -1120,7 +1121,7 @@ function parseCode (code, sandbox, logger) {
       break
     case 'undefined':
       if (Run.instance) {
-        const sameSandbox = Run.instance.code.sandbox.toString() === sandbox.toString()
+        const sameSandbox = Run.instance.code.evaluator.sandbox.toString() === sandbox.toString()
 
         if (sameSandbox) return Run.instance.code
 
@@ -1164,6 +1165,7 @@ Run.instance = null
 Run.Blockchain = Blockchain
 Run.BlockchainServer = BlockchainServer
 Run.Code = Code
+Run.Evaluator = Evaluator
 Run.Mockchain = Mockchain
 Run.Pay = Pay
 Run.Purse = Purse
@@ -1221,7 +1223,7 @@ module.exports = g;
 
 const util = __webpack_require__(2)
 
-module.exports = class Jig {
+class Jig {
   constructor (...args) {
     const run = util.activeRunInstance()
 
@@ -1769,21 +1771,23 @@ module.exports = class Jig {
   }
 }
 
+module.exports = Jig
+
 
 /***/ }),
 /* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {/**
+/**
  * code.js
  *
  * Functionality related to loading, deploying, and running arbitrary code.
  */
 
+const bsv = __webpack_require__(1)
 const Jig = __webpack_require__(5)
 const util = __webpack_require__(2)
-const bsv = __webpack_require__(1)
-const ses = __webpack_require__(22)
+const Evaluator = __webpack_require__(8)
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -1799,18 +1803,7 @@ const stringProps = ['origin', 'location', 'originMainnet', 'locationMainnet', '
 class Code {
   constructor (options = {}) {
     this.installs = new Map() // Type | Location | Sandbox -> Sandbox
-    this.sandbox = typeof options.sandbox !== 'undefined' ? options.sandbox : true
-    this.logger = typeof options.logger !== 'undefined' ? options.logger : null
-
-    // The realms-shim requires a body for sandboxing. If it doesn't exist, create one.
-    if (typeof window !== 'undefined' && !window.document.body) {
-      window.document.body = document.createElement('body')
-    }
-
-    this.sandboxEvaluator = new SESEvaluator()
-    this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
-    this.intrinsics = this.sandboxEvaluator.intrinsics
-
+    this.evaluator = new Evaluator({ logger: options.logger, sandbox: options.sandbox })
     this.installJig()
   }
 
@@ -1894,7 +1887,7 @@ class Code {
         Object.keys(pre2).includes(`location${net}`)) return pre2
 
       const [sandbox, sandboxGlobal] = this.evaluate(type, util.getNormalizedSourceCode(type),
-        type.name, env, this.sandbox)
+        type.name, env)
       this.installs.set(type, sandbox)
       this.installs.set(sandbox, sandbox)
 
@@ -2015,7 +2008,7 @@ class Code {
       }
 
       const name = def.text.match(/^(class|function) (\w+)[( ]/)[2]
-      const [sandbox, sandboxGlobal] = this.evaluate(null, def.text, name, env, this.sandbox)
+      const [sandbox, sandboxGlobal] = this.evaluate(null, def.text, name, env)
       sandbox.origin = sandbox.location = location
       sandbox.owner = def.owner
       const net = util.networkSuffix(run.blockchain.network)
@@ -2101,26 +2094,19 @@ class Code {
       locals: new WeakMap() // local secret state for each jig (Target->Object)
     }
     const env = { control: this.control, util }
-    this.Jig = this.evaluate(Jig, Jig.toString(), 'Jig', env, this.shouldSandbox('Jig'))[0]
+    this.Jig = this.evaluate(Jig, Jig.toString(), 'Jig', env)[0]
     this.installs.set(Jig, this.Jig)
     this.installs.set(this.Jig, this.Jig)
   }
 
-  shouldSandbox (name) {
-    return this.sandbox instanceof RegExp ? this.sandbox.test(name) : this.sandbox
-  }
-
-  evaluate (type, code, name, env, sandbox) {
+  evaluate (type, code, name, env) {
     // if we've already installed this type, then return it
     const prev = this.installs.get(type)
     if (prev) return [prev, null]
 
-    // test if we need to sandbox or not
-    sandbox = (sandbox instanceof RegExp ? sandbox.test(name) : sandbox)
+    const willSandbox = this.evaluator.willSandbox(code)
 
-    const evaluator = sandbox ? this.sandboxEvaluator : this.globalEvaluator
-
-    const [result, globals] = evaluator.evaluate(code, env)
+    const [result, globals] = this.evaluator.evaluate(code, env)
 
     if (typeof env.caller === 'undefined') {
       Object.defineProperty(globals, 'caller', {
@@ -2136,7 +2122,7 @@ class Code {
       })
     }
 
-    return [!sandbox && type ? type : result, globals]
+    return [!willSandbox && type ? type : result, globals]
   }
 
   activate (network) {
@@ -2158,211 +2144,18 @@ class Code {
       } else { delete k.owner; delete v.owner }
     })
 
-    this.globalEvaluator.activate()
+    this.evaluator.activate()
   }
 
   deactivate () {
-    this.globalEvaluator.deactivate()
+    this.evaluator.deactivate()
   }
 }
 
 // ------------------------------------------------------------------------------------------------
-// SESEvaluator
-// ------------------------------------------------------------------------------------------------
-
-// Supported intrisic data types that should be the same across evaluations
-const intrinsicDataTypes = [
-  'RegExp',
-  'Array',
-  'Int8Array',
-  'Uint8Array',
-  'Uint8ClampedArray',
-  'Int16Array',
-  'Uint16Array',
-  'Int32Array',
-  'Uint32Array',
-  'Float32Array',
-  'Float64Array',
-  'Map',
-  'Set',
-  'WeakMap',
-  'WeakSet'
-]
-
-// Non-deterministic globals will be banned
-const nonDeterministicGlobals = [
-  'Date',
-  'Math',
-  'eval',
-  'XMLHttpRequest',
-  'FileReader',
-  'WebSocket',
-  'setTimeout',
-  'setInterval'
-]
-
-/**
- * Secure sandboxer for arbitrary code
- */
-class SESEvaluator {
-  constructor () {
-    this.realm = ses.makeSESRootRealm()
-
-    // Keep track of common intrinsics shared between realms. The SES realm creates
-    // these, and we just evaluate a list of them and store them here.
-    this.intrinsics = {}
-    intrinsicDataTypes.forEach(type => {
-      this.intrinsics[type] = this.realm.evaluate(type, {})
-    })
-
-    // We also overwrite console so that console.log in sandboxed code is relogged outside
-    const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
-    this.intrinsics.console = this.realm.evaluate(consoleCode, { c: console })
-  }
-
-  evaluate (code, env = {}) {
-    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
-    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
-    if ('$globals' in env) throw new Error('Environment must not contain $globals')
-
-    // Create the globals object in the SES realm so it doesn't expose ours
-    const $globals = this.realm.evaluate('({})')
-
-    env = Object.assign({}, this.intrinsics, env, { $globals })
-
-    nonDeterministicGlobals.forEach(key => {
-      if (!(key in env)) env[key] = undefined
-    })
-
-    // When a function is anonymous, it will be named the variable it is assigned. We give it
-    // a friendly anonymous name to distinguish it from named classes and functions.
-    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
-
-    // Execute the code in strict mode.
-    const script = `with($globals){'use strict';const ${anon}=${code};${anon}}`
-    const result = this.realm.evaluate(script, env)
-
-    return [result, $globals]
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// GlobalEvaluator
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Evaluates code using dependences that are set as globals. This is quite dangerous, but we
- * only use it when sandbox=false, which is intended for testing code coverage and debugging.
- */
-class GlobalEvaluator {
-  constructor (options = {}) {
-    this.logger = options.logger
-    this.activated = true
-    // We will save the prior globals before overriding them so they can be reverted.
-    // This will also store our globals when we deactivate so we can re-activate them.
-    this.savedGlobalDescriptors = {}
-  }
-
-  evaluate (code, env = {}) {
-    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
-    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
-    if ('$globals' in env) throw new Error('Environment must not contain $globals')
-
-    // When a function is anonymous, it will be named the variable it is assigned. We give it
-    // a friendly anonymous name to distinguish it from named classes and functions.
-    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
-
-    // Set each env as a global
-    const options = { configurable: true, enumerable: true, writable: true }
-    Object.keys(env).forEach(key => this.setGlobalDescriptor(key, Object.assign({}, options, { value: env[key] })))
-
-    // Turn the code into an object
-    const result = eval(`const ${anon} = ${code}; ${anon}`) // eslint-disable-line
-
-    // Wrap global sets so that we update savedGlobalDescriptors
-    const wrappedGlobal = new Proxy(global, {
-      set: (target, prop, value) => {
-        this.setGlobalDescriptor(prop, Object.assign({}, options, { value }))
-        return true
-      },
-      defineProperty: (target, prop, descriptor) => {
-        this.setGlobalDescriptor(prop, descriptor)
-        return true
-      }
-    })
-
-    return [result, wrappedGlobal]
-  }
-
-  setGlobalDescriptor (key, descriptor) {
-    // Save the previous global the first time we override it. Future overrides
-    // will throw a warning because now there are two values at the global scope.
-    const priorDescriptor = Object.getOwnPropertyDescriptor(global, key)
-
-    if (!(key in this.savedGlobalDescriptors)) {
-      this.savedGlobalDescriptors[key] = priorDescriptor
-    } else if (!sameDescriptors(descriptor, priorDescriptor)) {
-      if (this.logger) {
-        const warning = 'There might be bugs with sandboxing disabled'
-        const reason = `Two different values were set at the global scope for ${key}`
-        this.logger.warn(`${warning}\n\n${reason}`)
-      }
-    }
-
-    Object.defineProperty(global, key, descriptor)
-  }
-
-  activate () {
-    if (this.activated) return
-    this.swapSavedGlobals()
-    this.activated = true
-  }
-
-  deactivate () {
-    if (!this.activated) return
-    this.swapSavedGlobals()
-    this.activated = false
-  }
-
-  swapSavedGlobals () {
-    const swappedGlobalDescriptors = {}
-
-    Object.keys(this.savedGlobalDescriptors).forEach(key => {
-      swappedGlobalDescriptors[key] = Object.getOwnPropertyDescriptor(global, key)
-
-      if (typeof this.savedGlobalDescriptors[key] === 'undefined') {
-        delete global[key]
-      } else {
-        Object.defineProperty(global, key, this.savedGlobalDescriptors[key])
-      }
-    })
-
-    this.savedGlobalDescriptors = swappedGlobalDescriptors
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Helper methods
-// ------------------------------------------------------------------------------------------------
-
-function sameDescriptors (a, b) {
-  if (typeof a !== typeof b) return false
-  const aKeys = Array.from(Object.keys(a))
-  const bKeys = Array.from(Object.keys(b))
-  if (aKeys.length !== bKeys.length) return false
-  return !aKeys.some(key => a[key] !== b[key])
-}
-
-// ------------------------------------------------------------------------------------------------
-
-Code.SESEvaluator = SESEvaluator
-Code.GlobalEvaluator = GlobalEvaluator
-Code.intrinsicDataTypes = intrinsicDataTypes
-Code.nonDeterministicGlobals = nonDeterministicGlobals
 
 module.exports = Code
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(4)))
 
 /***/ }),
 /* 7 */
@@ -2379,9 +2172,9 @@ module.exports = Code
 
 
 
-var base64 = __webpack_require__(19)
-var ieee754 = __webpack_require__(20)
-var isArray = __webpack_require__(21)
+var base64 = __webpack_require__(20)
+var ieee754 = __webpack_require__(21)
+var isArray = __webpack_require__(22)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -4165,6 +3958,252 @@ function isnan (val) {
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
+/* WEBPACK VAR INJECTION */(function(global) {/**
+ * evaluator.js
+ *
+ * The evaluator runs arbitrary code in a secure sandbox
+ */
+
+const ses = __webpack_require__(23)
+
+// ------------------------------------------------------------------------------------------------
+// Evaluator
+// ------------------------------------------------------------------------------------------------
+
+class Evaluator {
+  constructor (options = {}) {
+    this.sandbox = typeof options.sandbox !== 'undefined' ? options.sandbox : true
+    this.logger = typeof options.logger !== 'undefined' ? options.logger : null
+
+    // The realms-shim requires a body for sandboxing. If it doesn't exist, create one.
+    if (typeof window !== 'undefined' && !window.document.body) {
+      window.document.body = document.createElement('body')
+    }
+
+    this.sandboxEvaluator = new SESEvaluator()
+    this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
+    this.intrinsics = this.sandboxEvaluator.intrinsics
+  }
+
+  evaluate (code, env) {
+    if (this.logger) this.logger.info(`Evaluating code starting with: "${code.slice(0, 20)}"`)
+    const evaluator = this.willSandbox(code) ? this.sandboxEvaluator : this.globalEvaluator
+    return evaluator.evaluate(code, env)
+  }
+
+  willSandbox (code) {
+    if (typeof this.sandbox === 'boolean') return this.sandbox
+    const nameRegex = /^(function|class)\s+([a-zA-Z0-9_$]+)/
+    const match = code.match(nameRegex)
+    return match ? this.sandbox.test(match[2]) : false
+  }
+
+  activate () { this.globalEvaluator.activate() }
+  deactivate () { this.globalEvaluator.deactivate() }
+}
+
+// ------------------------------------------------------------------------------------------------
+// SESEvaluator
+// ------------------------------------------------------------------------------------------------
+
+// Supported intrisic data types that should be the same across evaluations
+const intrinsicDataTypes = [
+  'RegExp',
+  'Array',
+  'Int8Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Int16Array',
+  'Uint16Array',
+  'Int32Array',
+  'Uint32Array',
+  'Float32Array',
+  'Float64Array',
+  'Map',
+  'Set',
+  'WeakMap',
+  'WeakSet'
+]
+
+// Non-deterministic globals will be banned
+const nonDeterministicGlobals = [
+  'Date',
+  'Math',
+  'eval',
+  'XMLHttpRequest',
+  'FileReader',
+  'WebSocket',
+  'setTimeout',
+  'setInterval'
+]
+
+/**
+ * Secure sandboxer for arbitrary code
+ */
+class SESEvaluator {
+  constructor () {
+    this.realm = ses.makeSESRootRealm()
+
+    // Keep track of common intrinsics shared between realms. The SES realm creates
+    // these, and we just evaluate a list of them and store them here.
+    this.intrinsics = {}
+    intrinsicDataTypes.forEach(type => {
+      this.intrinsics[type] = this.realm.evaluate(type, {})
+    })
+
+    // We also overwrite console so that console.log in sandboxed code is relogged outside
+    const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
+    this.intrinsics.console = this.realm.evaluate(consoleCode, { c: console })
+  }
+
+  evaluate (code, env = {}) {
+    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
+    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
+    if ('$globals' in env) throw new Error('Environment must not contain $globals')
+
+    // Create the globals object in the SES realm so it doesn't expose ours
+    const $globals = this.realm.evaluate('({})')
+
+    env = Object.assign({}, this.intrinsics, env, { $globals })
+
+    nonDeterministicGlobals.forEach(key => {
+      if (!(key in env)) env[key] = undefined
+    })
+
+    // When a function is anonymous, it will be named the variable it is assigned. We give it
+    // a friendly anonymous name to distinguish it from named classes and functions.
+    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
+
+    // Execute the code in strict mode.
+    const script = `with($globals){'use strict';const ${anon}=${code};${anon}}`
+    const result = this.realm.evaluate(script, env)
+
+    return [result, $globals]
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// GlobalEvaluator
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Evaluates code using dependences that are set as globals. This is quite dangerous, but we
+ * only use it when sandbox=false, which is intended for testing code coverage and debugging.
+ */
+class GlobalEvaluator {
+  constructor (options = {}) {
+    this.logger = options.logger
+    this.activated = true
+    // We will save the prior globals before overriding them so they can be reverted.
+    // This will also store our globals when we deactivate so we can re-activate them.
+    this.savedGlobalDescriptors = {}
+  }
+
+  evaluate (code, env = {}) {
+    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
+    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
+    if ('$globals' in env) throw new Error('Environment must not contain $globals')
+
+    // When a function is anonymous, it will be named the variable it is assigned. We give it
+    // a friendly anonymous name to distinguish it from named classes and functions.
+    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
+
+    // Set each env as a global
+    const options = { configurable: true, enumerable: true, writable: true }
+    Object.keys(env).forEach(key => this.setGlobalDescriptor(key, Object.assign({}, options, { value: env[key] })))
+
+    // Turn the code into an object
+    const result = eval(`const ${anon} = ${code}; ${anon}`) // eslint-disable-line
+
+    // Wrap global sets so that we update savedGlobalDescriptors
+    const wrappedGlobal = new Proxy(global, {
+      set: (target, prop, value) => {
+        this.setGlobalDescriptor(prop, Object.assign({}, options, { value }))
+        return true
+      },
+      defineProperty: (target, prop, descriptor) => {
+        this.setGlobalDescriptor(prop, descriptor)
+        return true
+      }
+    })
+
+    return [result, wrappedGlobal]
+  }
+
+  setGlobalDescriptor (key, descriptor) {
+    // Save the previous global the first time we override it. Future overrides
+    // will throw a warning because now there are two values at the global scope.
+    const priorDescriptor = Object.getOwnPropertyDescriptor(global, key)
+
+    if (!(key in this.savedGlobalDescriptors)) {
+      this.savedGlobalDescriptors[key] = priorDescriptor
+    } else if (!sameDescriptors(descriptor, priorDescriptor)) {
+      if (this.logger) {
+        const warning = 'There might be bugs with sandboxing disabled'
+        const reason = `Two different values were set at the global scope for ${key}`
+        this.logger.warn(`${warning}\n\n${reason}`)
+      }
+    }
+
+    Object.defineProperty(global, key, descriptor)
+  }
+
+  activate () {
+    if (this.activated) return
+    this.swapSavedGlobals()
+    this.activated = true
+  }
+
+  deactivate () {
+    if (!this.activated) return
+    this.swapSavedGlobals()
+    this.activated = false
+  }
+
+  swapSavedGlobals () {
+    const swappedGlobalDescriptors = {}
+
+    Object.keys(this.savedGlobalDescriptors).forEach(key => {
+      swappedGlobalDescriptors[key] = Object.getOwnPropertyDescriptor(global, key)
+
+      if (typeof this.savedGlobalDescriptors[key] === 'undefined') {
+        delete global[key]
+      } else {
+        Object.defineProperty(global, key, this.savedGlobalDescriptors[key])
+      }
+    })
+
+    this.savedGlobalDescriptors = swappedGlobalDescriptors
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Helper methods
+// ------------------------------------------------------------------------------------------------
+
+function sameDescriptors (a, b) {
+  if (typeof a !== typeof b) return false
+  const aKeys = Array.from(Object.keys(a))
+  const bKeys = Array.from(Object.keys(b))
+  if (aKeys.length !== bKeys.length) return false
+  return !aKeys.some(key => a[key] !== b[key])
+}
+
+// ------------------------------------------------------------------------------------------------
+
+Evaluator.SESEvaluator = SESEvaluator
+Evaluator.GlobalEvaluator = GlobalEvaluator
+Evaluator.intrinsicDataTypes = intrinsicDataTypes
+Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
+
+module.exports = Evaluator
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(4)))
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
  * transaction.js
  *
@@ -5008,7 +5047,7 @@ module.exports = { ProtoTransaction, Transaction }
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7).Buffer))
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -5018,7 +5057,7 @@ module.exports = { ProtoTransaction, Transaction }
  */
 
 const { Address, Script, Transaction } = __webpack_require__(1)
-const axios = __webpack_require__(26)
+const axios = __webpack_require__(27)
 const util = __webpack_require__(2)
 
 // ------------------------------------------------------------------------------------------------
@@ -5441,7 +5480,7 @@ module.exports = { Blockchain, BlockchainServer }
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5459,7 +5498,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5537,7 +5576,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5549,14 +5588,14 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(0);
-var normalizeHeaderName = __webpack_require__(34);
+var normalizeHeaderName = __webpack_require__(35);
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -5573,10 +5612,10 @@ function getDefaultAdapter() {
   // Only Node.JS has a process variable that is of [[Class]] process
   if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(14);
+    adapter = __webpack_require__(15);
   } else if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(14);
+    adapter = __webpack_require__(15);
   }
   return adapter;
 }
@@ -5652,21 +5691,21 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = defaults;
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(33)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(34)))
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(35);
-var buildURL = __webpack_require__(11);
-var parseHeaders = __webpack_require__(37);
-var isURLSameOrigin = __webpack_require__(38);
-var createError = __webpack_require__(15);
+var settle = __webpack_require__(36);
+var buildURL = __webpack_require__(12);
+var parseHeaders = __webpack_require__(38);
+var isURLSameOrigin = __webpack_require__(39);
+var createError = __webpack_require__(16);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -5758,7 +5797,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(39);
+      var cookies = __webpack_require__(40);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -5836,13 +5875,13 @@ module.exports = function xhrAdapter(config) {
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var enhanceError = __webpack_require__(36);
+var enhanceError = __webpack_require__(37);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -5861,7 +5900,7 @@ module.exports = function createError(message, config, code, request, response) 
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5919,7 +5958,7 @@ module.exports = function mergeConfig(config1, config2) {
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5945,7 +5984,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports) {
 
 /**
@@ -6012,7 +6051,7 @@ module.exports = expect
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6171,7 +6210,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -6261,7 +6300,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -6272,7 +6311,7 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (global, factory) {
@@ -6945,7 +6984,7 @@ module.exports = Array.isArray || function (arr) {
     }
 
     // eslint-disable-next-line global-require
-    const vm = __webpack_require__(23);
+    const vm = __webpack_require__(24);
 
     // Use unsafeGlobalEvalSrc to ensure we get the right 'this'.
     const unsafeGlobal = vm.runInNewContext(unsafeGlobalEvalSrc);
@@ -10228,7 +10267,7 @@ You probably want a Compartment instead, like:
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports) {
 
 var indexOf = function (xs, item) {
@@ -10383,7 +10422,7 @@ exports.createContext = Script.createContext = function (context) {
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -10392,7 +10431,7 @@ exports.createContext = Script.createContext = function (context) {
  * Enqueues transactions and syncs jigs
  */
 
-const { ProtoTransaction } = __webpack_require__(8)
+const { ProtoTransaction } = __webpack_require__(9)
 const util = __webpack_require__(2)
 
 /**
@@ -10682,7 +10721,7 @@ owner: ${spentJigs[i].owner}`)
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -10693,7 +10732,7 @@ owner: ${spentJigs[i].owner}`)
 
 const bsv = __webpack_require__(1)
 const util = __webpack_require__(2)
-const { Blockchain } = __webpack_require__(9)
+const { Blockchain } = __webpack_require__(10)
 
 // ------------------------------------------------------------------------------------------------
 // Pay API
@@ -10888,23 +10927,23 @@ module.exports = { Pay, Purse }
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(27);
+module.exports = __webpack_require__(28);
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var bind = __webpack_require__(10);
-var Axios = __webpack_require__(29);
-var mergeConfig = __webpack_require__(16);
-var defaults = __webpack_require__(13);
+var bind = __webpack_require__(11);
+var Axios = __webpack_require__(30);
+var mergeConfig = __webpack_require__(17);
+var defaults = __webpack_require__(14);
 
 /**
  * Create an instance of Axios
@@ -10937,15 +10976,15 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(17);
-axios.CancelToken = __webpack_require__(42);
-axios.isCancel = __webpack_require__(12);
+axios.Cancel = __webpack_require__(18);
+axios.CancelToken = __webpack_require__(43);
+axios.isCancel = __webpack_require__(13);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(43);
+axios.spread = __webpack_require__(44);
 
 module.exports = axios;
 
@@ -10954,7 +10993,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports) {
 
 /*!
@@ -10971,17 +11010,17 @@ module.exports = function isBuffer (obj) {
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var buildURL = __webpack_require__(11);
-var InterceptorManager = __webpack_require__(30);
-var dispatchRequest = __webpack_require__(31);
-var mergeConfig = __webpack_require__(16);
+var buildURL = __webpack_require__(12);
+var InterceptorManager = __webpack_require__(31);
+var dispatchRequest = __webpack_require__(32);
+var mergeConfig = __webpack_require__(17);
 
 /**
  * Create a new instance of Axios
@@ -11064,7 +11103,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11123,18 +11162,18 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var transformData = __webpack_require__(32);
-var isCancel = __webpack_require__(12);
-var defaults = __webpack_require__(13);
-var isAbsoluteURL = __webpack_require__(40);
-var combineURLs = __webpack_require__(41);
+var transformData = __webpack_require__(33);
+var isCancel = __webpack_require__(13);
+var defaults = __webpack_require__(14);
+var isAbsoluteURL = __webpack_require__(41);
+var combineURLs = __webpack_require__(42);
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -11216,7 +11255,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11243,7 +11282,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -11433,7 +11472,7 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11452,13 +11491,13 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var createError = __webpack_require__(15);
+var createError = __webpack_require__(16);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -11484,7 +11523,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11533,7 +11572,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11593,7 +11632,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11668,7 +11707,7 @@ module.exports = (
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11728,7 +11767,7 @@ module.exports = (
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11749,7 +11788,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11770,13 +11809,13 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Cancel = __webpack_require__(17);
+var Cancel = __webpack_require__(18);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -11834,7 +11873,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11868,7 +11907,7 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -12044,7 +12083,7 @@ module.exports = Owner
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -12185,7 +12224,7 @@ module.exports = class Mockchain {
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports) {
 
 /**
@@ -12309,7 +12348,7 @@ module.exports = { State, StateCache }
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -12319,7 +12358,7 @@ module.exports = { State, StateCache }
  */
 
 const Jig = __webpack_require__(5)
-const expect = __webpack_require__(18)
+const expect = __webpack_require__(19)
 
 class Token extends Jig {
   init (amount, _tokenToDecrease, _tokensToCombine) {

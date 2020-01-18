@@ -92,8 +92,8 @@ module.exports =
 "use strict";
 
 
-var bind = __webpack_require__(10);
-var isBuffer = __webpack_require__(30);
+var bind = __webpack_require__(11);
+var isBuffer = __webpack_require__(31);
 
 /*global toString:true*/
 
@@ -664,7 +664,7 @@ function richObjectToJson (target, customReplacers = [], parent = null, name = n
   }
 
   // Replace Uint8Array
-  const CommonUint8Array = activeRunInstance().code.intrinsics.Uint8Array
+  const CommonUint8Array = activeRunInstance().code.evaluator.intrinsics.Uint8Array
   if (target.constructor === CommonUint8Array || target.constructor === Uint8Array) {
     return { $class: 'Uint8Array', base64Data: Buffer.from(target).toString('base64') }
   }
@@ -704,7 +704,7 @@ function jsonToRichObject (target, customReplacers = [], parent = null, name = n
 
   // Replace Uint8Array
   if (target.$class === 'Uint8Array') {
-    const Uint8Array = activeRunInstance().code.intrinsics.Uint8Array
+    const Uint8Array = activeRunInstance().code.evaluator.intrinsics.Uint8Array
     return new Uint8Array(Buffer.from(target.base64Data, 'base64'))
   }
 
@@ -903,18 +903,19 @@ module.exports = {
 
 const bsv = __webpack_require__(1)
 const Code = __webpack_require__(7)
-const Syncer = __webpack_require__(26)
-const { Transaction } = __webpack_require__(8)
+const Evaluator = __webpack_require__(8)
+const Syncer = __webpack_require__(27)
+const { Transaction } = __webpack_require__(9)
 const util = __webpack_require__(2)
-const { Pay, Purse } = __webpack_require__(27)
-const Owner = __webpack_require__(58)
-const { Blockchain, BlockchainServer } = __webpack_require__(9)
-const Mockchain = __webpack_require__(59)
-const { StateCache } = __webpack_require__(60)
+const { Pay, Purse } = __webpack_require__(28)
+const Owner = __webpack_require__(59)
+const { Blockchain, BlockchainServer } = __webpack_require__(10)
+const Mockchain = __webpack_require__(60)
+const { StateCache } = __webpack_require__(61)
 const { PrivateKey } = bsv
 const Jig = __webpack_require__(4)
-const Token = __webpack_require__(61)
-const expect = __webpack_require__(22)
+const Token = __webpack_require__(62)
+const expect = __webpack_require__(23)
 
 // ------------------------------------------------------------------------------------------------
 // Primary Run class
@@ -1119,7 +1120,7 @@ function parseCode (code, sandbox, logger) {
       break
     case 'undefined':
       if (Run.instance) {
-        const sameSandbox = Run.instance.code.sandbox.toString() === sandbox.toString()
+        const sameSandbox = Run.instance.code.evaluator.sandbox.toString() === sandbox.toString()
 
         if (sameSandbox) return Run.instance.code
 
@@ -1163,6 +1164,7 @@ Run.instance = null
 Run.Blockchain = Blockchain
 Run.BlockchainServer = BlockchainServer
 Run.Code = Code
+Run.Evaluator = Evaluator
 Run.Mockchain = Mockchain
 Run.Pay = Pay
 Run.Purse = Purse
@@ -1193,7 +1195,7 @@ module.exports = Run
 
 const util = __webpack_require__(2)
 
-module.exports = class Jig {
+class Jig {
   constructor (...args) {
     const run = util.activeRunInstance()
 
@@ -1741,6 +1743,8 @@ module.exports = class Jig {
   }
 }
 
+module.exports = Jig
+
 
 /***/ }),
 /* 5 */
@@ -1827,7 +1831,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 "use strict";
 
 
-var enhanceError = __webpack_require__(14);
+var enhanceError = __webpack_require__(15);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -1855,10 +1859,10 @@ module.exports = function createError(message, config, code, request, response) 
  * Functionality related to loading, deploying, and running arbitrary code.
  */
 
+const bsv = __webpack_require__(1)
 const Jig = __webpack_require__(4)
 const util = __webpack_require__(2)
-const bsv = __webpack_require__(1)
-const ses = __webpack_require__(23)
+const Evaluator = __webpack_require__(8)
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -1874,18 +1878,7 @@ const stringProps = ['origin', 'location', 'originMainnet', 'locationMainnet', '
 class Code {
   constructor (options = {}) {
     this.installs = new Map() // Type | Location | Sandbox -> Sandbox
-    this.sandbox = typeof options.sandbox !== 'undefined' ? options.sandbox : true
-    this.logger = typeof options.logger !== 'undefined' ? options.logger : null
-
-    // The realms-shim requires a body for sandboxing. If it doesn't exist, create one.
-    if (typeof window !== 'undefined' && !window.document.body) {
-      window.document.body = document.createElement('body')
-    }
-
-    this.sandboxEvaluator = new SESEvaluator()
-    this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
-    this.intrinsics = this.sandboxEvaluator.intrinsics
-
+    this.evaluator = new Evaluator({ logger: options.logger, sandbox: options.sandbox })
     this.installJig()
   }
 
@@ -1969,7 +1962,7 @@ class Code {
         Object.keys(pre2).includes(`location${net}`)) return pre2
 
       const [sandbox, sandboxGlobal] = this.evaluate(type, util.getNormalizedSourceCode(type),
-        type.name, env, this.sandbox)
+        type.name, env)
       this.installs.set(type, sandbox)
       this.installs.set(sandbox, sandbox)
 
@@ -2090,7 +2083,7 @@ class Code {
       }
 
       const name = def.text.match(/^(class|function) (\w+)[( ]/)[2]
-      const [sandbox, sandboxGlobal] = this.evaluate(null, def.text, name, env, this.sandbox)
+      const [sandbox, sandboxGlobal] = this.evaluate(null, def.text, name, env)
       sandbox.origin = sandbox.location = location
       sandbox.owner = def.owner
       const net = util.networkSuffix(run.blockchain.network)
@@ -2176,26 +2169,19 @@ class Code {
       locals: new WeakMap() // local secret state for each jig (Target->Object)
     }
     const env = { control: this.control, util }
-    this.Jig = this.evaluate(Jig, Jig.toString(), 'Jig', env, this.shouldSandbox('Jig'))[0]
+    this.Jig = this.evaluate(Jig, Jig.toString(), 'Jig', env)[0]
     this.installs.set(Jig, this.Jig)
     this.installs.set(this.Jig, this.Jig)
   }
 
-  shouldSandbox (name) {
-    return this.sandbox instanceof RegExp ? this.sandbox.test(name) : this.sandbox
-  }
-
-  evaluate (type, code, name, env, sandbox) {
+  evaluate (type, code, name, env) {
     // if we've already installed this type, then return it
     const prev = this.installs.get(type)
     if (prev) return [prev, null]
 
-    // test if we need to sandbox or not
-    sandbox = (sandbox instanceof RegExp ? sandbox.test(name) : sandbox)
+    const willSandbox = this.evaluator.willSandbox(code)
 
-    const evaluator = sandbox ? this.sandboxEvaluator : this.globalEvaluator
-
-    const [result, globals] = evaluator.evaluate(code, env)
+    const [result, globals] = this.evaluator.evaluate(code, env)
 
     if (typeof env.caller === 'undefined') {
       Object.defineProperty(globals, 'caller', {
@@ -2211,7 +2197,7 @@ class Code {
       })
     }
 
-    return [!sandbox && type ? type : result, globals]
+    return [!willSandbox && type ? type : result, globals]
   }
 
   activate (network) {
@@ -2233,12 +2219,65 @@ class Code {
       } else { delete k.owner; delete v.owner }
     })
 
-    this.globalEvaluator.activate()
+    this.evaluator.activate()
   }
 
   deactivate () {
-    this.globalEvaluator.deactivate()
+    this.evaluator.deactivate()
   }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = Code
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * evaluator.js
+ *
+ * The evaluator runs arbitrary code in a secure sandbox
+ */
+
+const ses = __webpack_require__(24)
+
+// ------------------------------------------------------------------------------------------------
+// Evaluator
+// ------------------------------------------------------------------------------------------------
+
+class Evaluator {
+  constructor (options = {}) {
+    this.sandbox = typeof options.sandbox !== 'undefined' ? options.sandbox : true
+    this.logger = typeof options.logger !== 'undefined' ? options.logger : null
+
+    // The realms-shim requires a body for sandboxing. If it doesn't exist, create one.
+    if (typeof window !== 'undefined' && !window.document.body) {
+      window.document.body = document.createElement('body')
+    }
+
+    this.sandboxEvaluator = new SESEvaluator()
+    this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
+    this.intrinsics = this.sandboxEvaluator.intrinsics
+  }
+
+  evaluate (code, env) {
+    if (this.logger) this.logger.info(`Evaluating code starting with: "${code.slice(0, 20)}"`)
+    const evaluator = this.willSandbox(code) ? this.sandboxEvaluator : this.globalEvaluator
+    return evaluator.evaluate(code, env)
+  }
+
+  willSandbox (code) {
+    if (typeof this.sandbox === 'boolean') return this.sandbox
+    const nameRegex = /^(function|class)\s+([a-zA-Z0-9_$]+)/
+    const match = code.match(nameRegex)
+    return match ? this.sandbox.test(match[2]) : false
+  }
+
+  activate () { this.globalEvaluator.activate() }
+  deactivate () { this.globalEvaluator.deactivate() }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -2430,16 +2469,16 @@ function sameDescriptors (a, b) {
 
 // ------------------------------------------------------------------------------------------------
 
-Code.SESEvaluator = SESEvaluator
-Code.GlobalEvaluator = GlobalEvaluator
-Code.intrinsicDataTypes = intrinsicDataTypes
-Code.nonDeterministicGlobals = nonDeterministicGlobals
+Evaluator.SESEvaluator = SESEvaluator
+Evaluator.GlobalEvaluator = GlobalEvaluator
+Evaluator.intrinsicDataTypes = intrinsicDataTypes
+Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
 
-module.exports = Code
+module.exports = Evaluator
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -3284,7 +3323,7 @@ module.exports = { ProtoTransaction, Transaction }
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -3294,7 +3333,7 @@ module.exports = { ProtoTransaction, Transaction }
  */
 
 const { Address, Script, Transaction } = __webpack_require__(1)
-const axios = __webpack_require__(28)
+const axios = __webpack_require__(29)
 const util = __webpack_require__(2)
 
 // ------------------------------------------------------------------------------------------------
@@ -3717,7 +3756,7 @@ module.exports = { Blockchain, BlockchainServer }
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3735,7 +3774,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3747,14 +3786,14 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var normalizeHeaderName = __webpack_require__(35);
+var normalizeHeaderName = __webpack_require__(36);
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -3771,10 +3810,10 @@ function getDefaultAdapter() {
   // Only Node.JS has a process variable that is of [[Class]] process
   if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(36);
+    adapter = __webpack_require__(37);
   } else if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(50);
+    adapter = __webpack_require__(51);
   }
   return adapter;
 }
@@ -3852,7 +3891,7 @@ module.exports = defaults;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3884,7 +3923,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3933,27 +3972,27 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports) {
 
 module.exports = require("http");
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports) {
 
 module.exports = require("https");
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var url = __webpack_require__(18);
-var http = __webpack_require__(15);
-var https = __webpack_require__(16);
-var assert = __webpack_require__(37);
-var Writable = __webpack_require__(38).Writable;
-var debug = __webpack_require__(39)("follow-redirects");
+var url = __webpack_require__(19);
+var http = __webpack_require__(16);
+var https = __webpack_require__(17);
+var assert = __webpack_require__(38);
+var Writable = __webpack_require__(39).Writable;
+var debug = __webpack_require__(40)("follow-redirects");
 
 // RFC7231§4.2.1: Of the request methods defined by this specification,
 // the GET, HEAD, OPTIONS, and TRACE methods are defined to be safe.
@@ -4273,13 +4312,13 @@ module.exports.wrap = wrap;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports) {
 
 module.exports = require("url");
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
@@ -4295,7 +4334,7 @@ exports.coerce = coerce;
 exports.disable = disable;
 exports.enable = enable;
 exports.enabled = enabled;
-exports.humanize = __webpack_require__(41);
+exports.humanize = __webpack_require__(42);
 
 /**
  * Active `debug` instances.
@@ -4510,7 +4549,7 @@ function coerce(val) {
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4568,7 +4607,7 @@ module.exports = function mergeConfig(config1, config2) {
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4594,7 +4633,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports) {
 
 /**
@@ -4661,7 +4700,7 @@ module.exports = expect
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4669,7 +4708,7 @@ module.exports = expect
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var makeHardener = _interopDefault(__webpack_require__(24));
+var makeHardener = _interopDefault(__webpack_require__(25));
 
 // we'd like to abandon, but we can't, so just scream and break a lot of
 // stuff. However, since we aren't really aborting the process, be careful to
@@ -5336,7 +5375,7 @@ function createNewUnsafeGlobalForNode() {
   }
 
   // eslint-disable-next-line global-require
-  const vm = __webpack_require__(25);
+  const vm = __webpack_require__(26);
 
   // Use unsafeGlobalEvalSrc to ensure we get the right 'this'.
   const unsafeGlobal = vm.runInNewContext(unsafeGlobalEvalSrc);
@@ -8425,7 +8464,7 @@ module.exports = SES;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8627,13 +8666,13 @@ module.exports = makeHardener;
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports) {
 
 module.exports = require("vm");
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -8642,7 +8681,7 @@ module.exports = require("vm");
  * Enqueues transactions and syncs jigs
  */
 
-const { ProtoTransaction } = __webpack_require__(8)
+const { ProtoTransaction } = __webpack_require__(9)
 const util = __webpack_require__(2)
 
 /**
@@ -8932,7 +8971,7 @@ owner: ${spentJigs[i].owner}`)
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -8943,7 +8982,7 @@ owner: ${spentJigs[i].owner}`)
 
 const bsv = __webpack_require__(1)
 const util = __webpack_require__(2)
-const { Blockchain } = __webpack_require__(9)
+const { Blockchain } = __webpack_require__(10)
 
 // ------------------------------------------------------------------------------------------------
 // Pay API
@@ -9138,23 +9177,23 @@ module.exports = { Pay, Purse }
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(29);
+module.exports = __webpack_require__(30);
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var bind = __webpack_require__(10);
-var Axios = __webpack_require__(31);
-var mergeConfig = __webpack_require__(20);
-var defaults = __webpack_require__(12);
+var bind = __webpack_require__(11);
+var Axios = __webpack_require__(32);
+var mergeConfig = __webpack_require__(21);
+var defaults = __webpack_require__(13);
 
 /**
  * Create an instance of Axios
@@ -9187,15 +9226,15 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(21);
-axios.CancelToken = __webpack_require__(56);
-axios.isCancel = __webpack_require__(11);
+axios.Cancel = __webpack_require__(22);
+axios.CancelToken = __webpack_require__(57);
+axios.isCancel = __webpack_require__(12);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(57);
+axios.spread = __webpack_require__(58);
 
 module.exports = axios;
 
@@ -9204,7 +9243,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports) {
 
 /*!
@@ -9221,7 +9260,7 @@ module.exports = function isBuffer (obj) {
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9229,9 +9268,9 @@ module.exports = function isBuffer (obj) {
 
 var utils = __webpack_require__(0);
 var buildURL = __webpack_require__(5);
-var InterceptorManager = __webpack_require__(32);
-var dispatchRequest = __webpack_require__(33);
-var mergeConfig = __webpack_require__(20);
+var InterceptorManager = __webpack_require__(33);
+var dispatchRequest = __webpack_require__(34);
+var mergeConfig = __webpack_require__(21);
 
 /**
  * Create a new instance of Axios
@@ -9314,7 +9353,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9373,18 +9412,18 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var transformData = __webpack_require__(34);
-var isCancel = __webpack_require__(11);
-var defaults = __webpack_require__(12);
-var isAbsoluteURL = __webpack_require__(54);
-var combineURLs = __webpack_require__(55);
+var transformData = __webpack_require__(35);
+var isCancel = __webpack_require__(12);
+var defaults = __webpack_require__(13);
+var isAbsoluteURL = __webpack_require__(55);
+var combineURLs = __webpack_require__(56);
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -9466,7 +9505,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9493,7 +9532,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9512,24 +9551,24 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(13);
+var settle = __webpack_require__(14);
 var buildURL = __webpack_require__(5);
-var http = __webpack_require__(15);
-var https = __webpack_require__(16);
-var httpFollow = __webpack_require__(17).http;
-var httpsFollow = __webpack_require__(17).https;
-var url = __webpack_require__(18);
-var zlib = __webpack_require__(48);
-var pkg = __webpack_require__(49);
+var http = __webpack_require__(16);
+var https = __webpack_require__(17);
+var httpFollow = __webpack_require__(18).http;
+var httpsFollow = __webpack_require__(18).https;
+var url = __webpack_require__(19);
+var zlib = __webpack_require__(49);
+var pkg = __webpack_require__(50);
 var createError = __webpack_require__(6);
-var enhanceError = __webpack_require__(14);
+var enhanceError = __webpack_require__(15);
 
 var isHttps = /https:?/;
 
@@ -9794,19 +9833,19 @@ module.exports = function httpAdapter(config) {
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports) {
 
 module.exports = require("assert");
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports) {
 
 module.exports = require("stream");
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -9815,14 +9854,14 @@ module.exports = require("stream");
  */
 
 if (typeof process === 'undefined' || process.type === 'renderer') {
-  module.exports = __webpack_require__(40);
+  module.exports = __webpack_require__(41);
 } else {
-  module.exports = __webpack_require__(42);
+  module.exports = __webpack_require__(43);
 }
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -9831,7 +9870,7 @@ if (typeof process === 'undefined' || process.type === 'renderer') {
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __webpack_require__(19);
+exports = module.exports = __webpack_require__(20);
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
@@ -10023,7 +10062,7 @@ function localstorage() {
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports) {
 
 /**
@@ -10181,15 +10220,15 @@ function plural(ms, n, name) {
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
  * Module dependencies.
  */
 
-var tty = __webpack_require__(43);
-var util = __webpack_require__(44);
+var tty = __webpack_require__(44);
+var util = __webpack_require__(45);
 
 /**
  * This is the Node.js implementation of `debug()`.
@@ -10197,7 +10236,7 @@ var util = __webpack_require__(44);
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __webpack_require__(19);
+exports = module.exports = __webpack_require__(20);
 exports.init = init;
 exports.log = log;
 exports.formatArgs = formatArgs;
@@ -10212,7 +10251,7 @@ exports.useColors = useColors;
 exports.colors = [ 6, 2, 3, 4, 5, 1 ];
 
 try {
-  var supportsColor = __webpack_require__(45);
+  var supportsColor = __webpack_require__(46);
   if (supportsColor && supportsColor.level >= 2) {
     exports.colors = [
       20, 21, 26, 27, 32, 33, 38, 39, 40, 41, 42, 43, 44, 45, 56, 57, 62, 63, 68,
@@ -10373,25 +10412,25 @@ exports.enable(load());
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports) {
 
 module.exports = require("tty");
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports) {
 
 module.exports = require("util");
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-const os = __webpack_require__(46);
-const hasFlag = __webpack_require__(47);
+const os = __webpack_require__(47);
+const hasFlag = __webpack_require__(48);
 
 const {env} = process;
 
@@ -10530,13 +10569,13 @@ module.exports = {
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports) {
 
 module.exports = require("os");
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10551,29 +10590,29 @@ module.exports = (flag, argv) => {
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports) {
 
 module.exports = require("zlib");
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module) {
 
 module.exports = JSON.parse("{\"_from\":\"axios@0.19.0\",\"_id\":\"axios@0.19.0\",\"_inBundle\":false,\"_integrity\":\"sha512-1uvKqKQta3KBxIz14F2v06AEHZ/dIoeKfbTRkK1E5oqjDnuEerLmYTgJB5AiQZHJcljpg1TuRzdjDR06qNk0DQ==\",\"_location\":\"/axios\",\"_phantomChildren\":{},\"_requested\":{\"type\":\"version\",\"registry\":true,\"raw\":\"axios@0.19.0\",\"name\":\"axios\",\"escapedName\":\"axios\",\"rawSpec\":\"0.19.0\",\"saveSpec\":null,\"fetchSpec\":\"0.19.0\"},\"_requiredBy\":[\"/\"],\"_resolved\":\"https://registry.npmjs.org/axios/-/axios-0.19.0.tgz\",\"_shasum\":\"8e09bff3d9122e133f7b8101c8fbdd00ed3d2ab8\",\"_spec\":\"axios@0.19.0\",\"_where\":\"/home/brenton/code/runonbitcoin/run\",\"author\":{\"name\":\"Matt Zabriskie\"},\"browser\":{\"./lib/adapters/http.js\":\"./lib/adapters/xhr.js\"},\"bugs\":{\"url\":\"https://github.com/axios/axios/issues\"},\"bundleDependencies\":false,\"bundlesize\":[{\"path\":\"./dist/axios.min.js\",\"threshold\":\"5kB\"}],\"dependencies\":{\"follow-redirects\":\"1.5.10\",\"is-buffer\":\"^2.0.2\"},\"deprecated\":false,\"description\":\"Promise based HTTP client for the browser and node.js\",\"devDependencies\":{\"bundlesize\":\"^0.17.0\",\"coveralls\":\"^3.0.0\",\"es6-promise\":\"^4.2.4\",\"grunt\":\"^1.0.2\",\"grunt-banner\":\"^0.6.0\",\"grunt-cli\":\"^1.2.0\",\"grunt-contrib-clean\":\"^1.1.0\",\"grunt-contrib-watch\":\"^1.0.0\",\"grunt-eslint\":\"^20.1.0\",\"grunt-karma\":\"^2.0.0\",\"grunt-mocha-test\":\"^0.13.3\",\"grunt-ts\":\"^6.0.0-beta.19\",\"grunt-webpack\":\"^1.0.18\",\"istanbul-instrumenter-loader\":\"^1.0.0\",\"jasmine-core\":\"^2.4.1\",\"karma\":\"^1.3.0\",\"karma-chrome-launcher\":\"^2.2.0\",\"karma-coverage\":\"^1.1.1\",\"karma-firefox-launcher\":\"^1.1.0\",\"karma-jasmine\":\"^1.1.1\",\"karma-jasmine-ajax\":\"^0.1.13\",\"karma-opera-launcher\":\"^1.0.0\",\"karma-safari-launcher\":\"^1.0.0\",\"karma-sauce-launcher\":\"^1.2.0\",\"karma-sinon\":\"^1.0.5\",\"karma-sourcemap-loader\":\"^0.3.7\",\"karma-webpack\":\"^1.7.0\",\"load-grunt-tasks\":\"^3.5.2\",\"minimist\":\"^1.2.0\",\"mocha\":\"^5.2.0\",\"sinon\":\"^4.5.0\",\"typescript\":\"^2.8.1\",\"url-search-params\":\"^0.10.0\",\"webpack\":\"^1.13.1\",\"webpack-dev-server\":\"^1.14.1\"},\"homepage\":\"https://github.com/axios/axios\",\"keywords\":[\"xhr\",\"http\",\"ajax\",\"promise\",\"node\"],\"license\":\"MIT\",\"main\":\"index.js\",\"name\":\"axios\",\"repository\":{\"type\":\"git\",\"url\":\"git+https://github.com/axios/axios.git\"},\"scripts\":{\"build\":\"NODE_ENV=production grunt build\",\"coveralls\":\"cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js\",\"examples\":\"node ./examples/server.js\",\"fix\":\"eslint --fix lib/**/*.js\",\"postversion\":\"git push && git push --tags\",\"preversion\":\"npm test\",\"start\":\"node ./sandbox/server.js\",\"test\":\"grunt test && bundlesize\",\"version\":\"npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json\"},\"typings\":\"./index.d.ts\",\"version\":\"0.19.0\"}");
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(13);
+var settle = __webpack_require__(14);
 var buildURL = __webpack_require__(5);
-var parseHeaders = __webpack_require__(51);
-var isURLSameOrigin = __webpack_require__(52);
+var parseHeaders = __webpack_require__(52);
+var isURLSameOrigin = __webpack_require__(53);
 var createError = __webpack_require__(6);
 
 module.exports = function xhrAdapter(config) {
@@ -10666,7 +10705,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(53);
+      var cookies = __webpack_require__(54);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -10744,7 +10783,7 @@ module.exports = function xhrAdapter(config) {
 
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10804,7 +10843,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10879,7 +10918,7 @@ module.exports = (
 
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10939,7 +10978,7 @@ module.exports = (
 
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10960,7 +10999,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 55 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10981,13 +11020,13 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 56 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Cancel = __webpack_require__(21);
+var Cancel = __webpack_require__(22);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -11045,7 +11084,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 57 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11079,7 +11118,7 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -11255,7 +11294,7 @@ module.exports = Owner
 
 
 /***/ }),
-/* 59 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -11396,7 +11435,7 @@ module.exports = class Mockchain {
 
 
 /***/ }),
-/* 60 */
+/* 61 */
 /***/ (function(module, exports) {
 
 /**
@@ -11520,7 +11559,7 @@ module.exports = { State, StateCache }
 
 
 /***/ }),
-/* 61 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -11530,7 +11569,7 @@ module.exports = { State, StateCache }
  */
 
 const Jig = __webpack_require__(4)
-const expect = __webpack_require__(22)
+const expect = __webpack_require__(23)
 
 class Token extends Jig {
   init (amount, _tokenToDecrease, _tokensToCombine) {

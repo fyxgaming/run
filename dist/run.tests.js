@@ -1238,9 +1238,9 @@ module.exports = runBlockchainTestSuite
 
 
 
-var base64 = __webpack_require__(24)
-var ieee754 = __webpack_require__(25)
-var isArray = __webpack_require__(26)
+var base64 = __webpack_require__(25)
+var ieee754 = __webpack_require__(26)
+var isArray = __webpack_require__(27)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -3038,10 +3038,11 @@ __webpack_require__(16)
 __webpack_require__(17)
 __webpack_require__(18)
 __webpack_require__(19)
-__webpack_require__(21)
+__webpack_require__(20)
 __webpack_require__(22)
 __webpack_require__(23)
-__webpack_require__(27)
+__webpack_require__(24)
+__webpack_require__(28)
 
 
 /***/ }),
@@ -3423,7 +3424,7 @@ module.exports = Run;
 /* 12 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"richObjectToJson\":\"aal\",\"jsonToRichObject\":\"aam\",\"extractJigsAndCodeToArray\":\"aan\",\"injectJigsAndCodeFromArray\":\"aao\",\"deepTraverse\":\"aap\",\"activeRunInstance\":\"aaq\",\"sameJig\":\"aar\",\"networkSuffix\":\"aas\",\"isBlockchain\":\"aahc\",\"broadcastUrl\":\"aau\",\"broadcastData\":\"aav\",\"fetchUrl\":\"aaw\",\"fetchResp\":\"aax\",\"utxosUrl\":\"aay\",\"utxosResp\":\"aaz\",\"_dedupUtxos\":\"aaab\",\"correctForServerUtxoIndexingDelay\":\"aabb\",\"fetched\":\"aacb\",\"broadcasted\":\"aadb\",\"isSandbox\":\"aaeb\",\"getInstalled\":\"aafb\",\"installFromTx\":\"aagb\",\"installJig\":\"aahb\",\"fastForward\":\"aaib\",\"finish\":\"aajb\",\"publishNext\":\"aakb\",\"publish\":\"aalb\",\"storeCode\":\"aamb\",\"storeAction\":\"aanb\",\"setProtoTxAndCreator\":\"aaob\",\"buildBsvTransaction\":\"aapb\",\"_fromPrivateKey\":\"aaqb\",\"_fromPublicKey\":\"aarb\",\"_fromAddress\":\"aasb\",\"_queryLatest\":\"aatb\",\"_removeErrorRefs\":\"aaub\",\"_update\":\"aavb\",\"_estimateSize\":\"aawb\",\"_util\":\"aaxb\",\"intrinsics\":\"aayb\",\"proxies\":\"aazb\",\"enforce\":\"aaac\",\"stack\":\"aabc\",\"reads\":\"aacc\",\"creates\":\"aadc\",\"saves\":\"aaec\",\"callers\":\"aafc\",\"locals\":\"aagc\",\"requests\":\"aaic\",\"broadcasts\":\"aajc\",\"expiration\":\"aakc\",\"indexingDelay\":\"aalc\",\"fetchedTime\":\"aamc\",\"transactions\":\"aanc\",\"utxosByLocation\":\"aaoc\",\"utxosByAddress\":\"aapc\",\"blockHeight\":\"aaqc\",\"installs\":\"aarc\",\"syncer\":\"aasc\",\"protoTx\":\"aatc\",\"beginCount\":\"aauc\",\"cachedTx\":\"aavc\",\"syncListeners\":\"aawc\",\"onBroadcastListeners\":\"aaxc\",\"lastPosted\":\"aayc\",\"queued\":\"aazc\",\"sizeBytes\":\"aaad\",\"maxSizeBytes\":\"aabd\",\"control\":\"aacd\",\"ProtoTransaction\":\"aadd\",\"PROTOCOL_VERSION\":\"aaed\",\"SerialTaskQueue\":\"aafd\",\"stringProps\":\"aagd\",\"extractProps\":\"aahd\",\"onReadyForPublish\":\"aaid\",\"spentJigs\":\"aajd\",\"spentLocations\":\"aakd\"}");
+module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"richObjectToJson\":\"aal\",\"jsonToRichObject\":\"aam\",\"extractJigsAndCodeToArray\":\"aan\",\"injectJigsAndCodeFromArray\":\"aao\",\"deepTraverse\":\"aap\",\"activeRunInstance\":\"aaq\",\"sameJig\":\"aar\",\"networkSuffix\":\"aas\",\"isBlockchain\":\"aahc\",\"broadcastUrl\":\"aau\",\"broadcastData\":\"aav\",\"fetchUrl\":\"aaw\",\"fetchResp\":\"aax\",\"utxosUrl\":\"aay\",\"utxosResp\":\"aaz\",\"_dedupUtxos\":\"aaab\",\"correctForServerUtxoIndexingDelay\":\"aabb\",\"fetched\":\"aacb\",\"broadcasted\":\"aadb\",\"isSandbox\":\"aaeb\",\"getInstalled\":\"aafb\",\"installFromTx\":\"aagb\",\"installJig\":\"aahb\",\"fastForward\":\"aaib\",\"finish\":\"aajb\",\"publishNext\":\"aakb\",\"publish\":\"aalb\",\"storeCode\":\"aamb\",\"storeAction\":\"aanb\",\"setProtoTxAndCreator\":\"aaob\",\"buildBsvTransaction\":\"aapb\",\"_fromPrivateKey\":\"aaqb\",\"_fromPublicKey\":\"aarb\",\"_fromAddress\":\"aasb\",\"_queryLatest\":\"aatb\",\"_removeErrorRefs\":\"aaub\",\"_update\":\"aavb\",\"_estimateSize\":\"aawb\",\"_util\":\"aaxb\",\"intrinsics\":\"aayb\",\"proxies\":\"aazb\",\"enforce\":\"aaac\",\"stack\":\"aabc\",\"reads\":\"aacc\",\"creates\":\"aadc\",\"saves\":\"aaec\",\"callers\":\"aafc\",\"locals\":\"aagc\",\"requests\":\"aaic\",\"broadcasts\":\"aajc\",\"expiration\":\"aakc\",\"indexingDelay\":\"aalc\",\"fetchedTime\":\"aamc\",\"transactions\":\"aanc\",\"utxosByLocation\":\"aaoc\",\"utxosByAddress\":\"aapc\",\"blockHeight\":\"aaqc\",\"installs\":\"aarc\",\"syncer\":\"aasc\",\"protoTx\":\"aatc\",\"beginCount\":\"aauc\",\"cachedTx\":\"aavc\",\"syncListeners\":\"aawc\",\"onBroadcastListeners\":\"aaxc\",\"lastPosted\":\"aayc\",\"queued\":\"aazc\",\"sizeBytes\":\"aaad\",\"maxSizeBytes\":\"aabd\",\"control\":\"aacd\",\"ProtoTransaction\":\"aadd\",\"PROTOCOL_VERSION\":\"aaed\",\"SerialTaskQueue\":\"aafd\",\"extractProps\":\"aagd\",\"onReadyForPublish\":\"aahd\",\"spentJigs\":\"aaid\",\"spentLocations\":\"aajd\"}");
 
 /***/ }),
 /* 13 */
@@ -4048,6 +4049,24 @@ describe('Code', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * evaluator.js
+ *
+ * Tests for ../lib/evaluator.js
+ */
+
+const { describe, it } = __webpack_require__(1)
+const { expect } = __webpack_require__(0)
+const { Run } = __webpack_require__(2)
+
+// ------------------------------------------------------------------------------------------------
 // Evaluator test suite
 // ------------------------------------------------------------------------------------------------
 
@@ -4169,7 +4188,7 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
 
     it('should share intrinsics between evaluations', () => {
       const evaluator = createEvaluator()
-      Run.Code.intrinsicDataTypes.forEach(intrinsic => {
+      Run.Evaluator.intrinsicDataTypes.forEach(intrinsic => {
         const intrinsic1 = evaluator.evaluate(`function f() { return ${intrinsic} }`)[0]()
         const intrinsic2 = evaluator.evaluate(`function f() { return ${intrinsic} }`)[0]()
         expect(intrinsic1).to.equal(intrinsic2)
@@ -4217,14 +4236,53 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
 // Evaluator tests
 // ------------------------------------------------------------------------------------------------
 
+describe('Evaluator', () => {
+  const createEvaluator = () => new Run.Evaluator()
+  const destroyEvaluator = evaluator => evaluator.deactivate()
+  runEvaluatorTestSuite(createEvaluator, destroyEvaluator)
+
+  describe('willSandbox', () => {
+      it('should return whether name matches when regex', () => {
+          const fCode = (function f() { }).toString()
+          const ACode = (class A {}).toString()
+          const BCode = (class B {}).toString()
+          const AnonClassCode = (class {}).toString()
+          const AnonFunctionCode = (() => {}).toString()
+          const evaluator = new Run.Evaluator({ sandbox: /(f|B)/ })
+          expect(evaluator.willSandbox(fCode)).to.equal(true)
+          expect(evaluator.willSandbox(ACode)).to.equal(false)
+          expect(evaluator.willSandbox(BCode)).to.equal(true)
+          expect(evaluator.willSandbox(AnonClassCode)).to.equal(false)
+          expect(evaluator.willSandbox(AnonFunctionCode)).to.equal(false)
+      })
+
+      it('should return sandbox option when boolean', () => {
+          const code = (function f() { }).toString()
+          expect(new Run.Evaluator({ sandbox: true }).willSandbox(code)).to.equal(true)
+          expect(new Run.Evaluator({ sandbox: false }).willSandbox(code)).to.equal(false)
+      })
+  })
+
+  it('should support deactivate and activate', () => {
+      function f() { return g }
+      const evaluator = new Run.Evaluator({ sandbox: false })
+      const f2 = evaluator.evaluate(f.toString(), { g: 2 })[0]
+      expect(f2()).to.equal(2)
+      evaluator.deactivate()
+      expect(() => f2()).to.throw()
+      evaluator.activate()
+      expect(f2()).to.equal(2)
+  })
+})
+
 describe('SESEvaluator', () => {
-  const createEvaluator = () => new Run.Code.SESEvaluator()
+  const createEvaluator = () => new Run.Evaluator.SESEvaluator()
   const destroyEvaluator = () => {}
   runEvaluatorTestSuite(createEvaluator, destroyEvaluator)
 
   it('should ban non-deterministic globals', () => {
     const evaluator = createEvaluator()
-    Run.Code.nonDeterministicGlobals.forEach(key => {
+    Run.Evaluator.nonDeterministicGlobals.forEach(key => {
       expect(!!evaluator.evaluate(key)[0]).to.equal(false)
     })
   })
@@ -4236,7 +4294,7 @@ describe('SESEvaluator', () => {
 })
 
 describe('GlobalEvaluator', () => {
-  const createEvaluator = options => new Run.Code.GlobalEvaluator(options)
+  const createEvaluator = options => new Run.Evaluator.GlobalEvaluator(options)
   const destroyEvaluator = evaluator => evaluator.deactivate()
   runEvaluatorTestSuite(createEvaluator, destroyEvaluator)
 
@@ -4287,10 +4345,9 @@ describe('GlobalEvaluator', () => {
 
 // ------------------------------------------------------------------------------------------------
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -4469,7 +4526,7 @@ describe('expect', () => {
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -5328,7 +5385,7 @@ describe('Jig', () => {
         expect(buf[0]).to.equal(1)
         expect(buf[1]).to.equal(2)
         expect(buf[2]).to.equal(3)
-        expect(buf.constructor === run.code.intrinsics.Uint8Array).to.equal(true)
+        expect(buf.constructor === run.code.evaluator.intrinsics.Uint8Array).to.equal(true)
       }
       testBuf(a.buf)
       testBuf(a.buf2)
@@ -6791,7 +6848,7 @@ describe('Jig', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -6945,7 +7002,7 @@ describe('Mockchain', () => {
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -7125,7 +7182,7 @@ describe('Owner', () => {
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -7383,7 +7440,7 @@ describe('Purse', () => {
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -7399,7 +7456,7 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 const { Jig, Run, createRun } = __webpack_require__(2)
 const bsv = __webpack_require__(3)
-const packageInfo = __webpack_require__(20)
+const packageInfo = __webpack_require__(21)
 
 describe('Run', () => {
   describe('constructor', () => {
@@ -7507,18 +7564,18 @@ describe('Run', () => {
 
     describe('sandbox', () => {
       it('should default to sandbox enabled', () => {
-        expect(new Run({ network: 'mock' }).code.sandbox).to.equal(true)
+        expect(new Run({ network: 'mock' }).code.evaluator.sandbox).to.equal(true)
         class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()
       })
 
       it('should support enabling sandbox', () => {
-        expect(createRun({ sandbox: true }).code.sandbox).to.equal(true)
+        expect(createRun({ sandbox: true }).code.evaluator.sandbox).to.equal(true)
       })
 
       it('should support disabling sandbox', () => {
         const run = createRun({ network: 'mock', sandbox: false })
-        expect(run.code.sandbox).to.equal(false)
+        expect(run.code.evaluator.sandbox).to.equal(false)
         class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).not.to.throw()
         run.deactivate()
@@ -7526,7 +7583,7 @@ describe('Run', () => {
 
       it('should support RegExp sandbox', () => {
         const run = createRun({ network: 'mock', sandbox: /A/ })
-        expect(run.code.sandbox instanceof RegExp).to.equal(true)
+        expect(run.code.evaluator.sandbox instanceof RegExp).to.equal(true)
         class A extends Jig { init () { this.version = Run.version } }
         class B extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()
@@ -7779,13 +7836,13 @@ describe('Run', () => {
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module) {
 
 module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.4.1\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\",\"caller\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"ses\":\"github:runonbitcoin/ses\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -8011,7 +8068,7 @@ describe('StateCache', () => {
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -8223,7 +8280,7 @@ describe('Token', () => {
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -9101,7 +9158,7 @@ describe('Transaction', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7).Buffer))
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9260,7 +9317,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -9350,7 +9407,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -9361,7 +9418,7 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -9753,7 +9810,7 @@ describe('util', () => {
     })
 
     it('should convert uint8array', () => {
-      const Uint8Array = run.code.intrinsics.Uint8Array
+      const Uint8Array = run.code.evaluator.intrinsics.Uint8Array
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: '' })).to.deep.equal(new Uint8Array(0))
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: 'AA==' })).to.deep.equal(new Uint8Array(1))
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: 'AQID' })).to.deep.equal(new Uint8Array([1, 2, 3]))

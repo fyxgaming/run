@@ -147,7 +147,6 @@ const globalsToObfuscate = [
   'SerialTaskQueue',
 
   // code.js
-  'stringProps',
   'extractProps',
 
   // transaction.js
