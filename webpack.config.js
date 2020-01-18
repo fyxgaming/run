@@ -104,7 +104,7 @@ const propertiesToObfuscate = [
   'creates',
   'saves',
   'callers',
-  'locals',
+  'stateToInject',
   // 'error', - interfers with console.error
 
   // blockchain.js

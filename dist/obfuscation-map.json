@@ -56,7 +56,7 @@
   "creates": "aadc",
   "saves": "aaec",
   "callers": "aafc",
-  "locals": "aagc",
+  "stateToInject": "aagc",
   "requests": "aaic",
   "broadcasts": "aajc",
   "expiration": "aakc",
