@@ -1979,8 +1979,7 @@ class Code {
       if (pre2 && Object.keys(pre2).includes(`origin${net}`) &&
         Object.keys(pre2).includes(`location${net}`)) return pre2
 
-      const [sandbox, sandboxGlobal] = this.evaluate(type, util.getNormalizedSourceCode(type),
-        type.name, env)
+      const [sandbox, sandboxGlobal] = this.sandboxType(type, env)
       this.installs.set(type, sandbox)
       this.installs.set(sandbox, sandbox)
 
@@ -2100,8 +2099,7 @@ class Code {
         }
       }
 
-      const name = def.text.match(/^(class|function) (\w+)[( ]/)[2]
-      const [sandbox, sandboxGlobal] = this.evaluate(null, def.text, name, env)
+      const [sandbox, sandboxGlobal] = this.evaluator.evaluate(def.text, env)
       sandbox.origin = sandbox.location = location
       sandbox.owner = def.owner
       const net = util.networkSuffix(run.blockchain.network)
@@ -2176,14 +2174,15 @@ class Code {
 
   installJig () {
     const env = { JigControl, util }
-    this.Jig = this.evaluate(Jig, Jig.toString(), 'Jig', env)[0]
+    this.Jig = this.sandboxType(Jig, env)[0]
     this.installs.set(Jig, this.Jig)
     this.installs.set(this.Jig, this.Jig)
   }
 
-  evaluate (type, code, name, env) {
+  sandboxType (type, env) {
     const prev = this.installs.get(type)
     if (prev) return [prev, null]
+    const code = util.getNormalizedSourceCode(type)
     const willSandbox = this.evaluator.willSandbox(code)
     const [result, globals] = this.evaluator.evaluate(code, env)
     return [!willSandbox && type ? type : result, globals]
