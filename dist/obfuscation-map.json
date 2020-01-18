@@ -77,7 +77,7 @@
   "queued": "aazc",
   "sizeBytes": "aaad",
   "maxSizeBytes": "aabd",
-  "control": "aacd",
+  "JigControl": "aacd",
   "ProtoTransaction": "aadd",
   "PROTOCOL_VERSION": "aaed",
   "SerialTaskQueue": "aafd",

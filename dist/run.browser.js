@@ -1221,7 +1221,7 @@ module.exports = g;
 
 const util = __webpack_require__(2)
 
-const control = { // control state shared across all jigs, similar to a PCB
+const JigControl = { // control state shared across all jigs, similar to a PCB
   stack: [], // jig call stack for the current method (Array<Target>)
   creates: new Set(), // jigs created in the current method (Set<Target>)
   reads: new Set(), // jigs read during the current method (Set<Target>)
@@ -1276,19 +1276,19 @@ class Jig {
     })
     const permanents = [...methods, 'owner', 'satoshis', 'origin', 'location']
 
-    function resetControl () {
-      control.stack = []
-      control.creates = new Set()
-      control.reads = new Set()
-      control.saves = new Map()
-      control.callers = new Map()
-      control.proxies = new Map()
-      control.enforce = true
-      control.error = null
+    function resetJigControl () {
+      JigControl.stack = []
+      JigControl.creates = new Set()
+      JigControl.reads = new Set()
+      JigControl.saves = new Map()
+      JigControl.callers = new Map()
+      JigControl.proxies = new Map()
+      JigControl.enforce = true
+      JigControl.error = null
     }
 
     const checkValid = () => {
-      if (control.enforce && this.origin && this.origin[0] === '!') {
+      if (JigControl.enforce && this.origin && this.origin[0] === '!') {
         throw new Error(`${this.origin.slice(1)}`)
       }
     }
@@ -1298,18 +1298,18 @@ class Jig {
     const proxy = new Proxy(this, handler)
 
     // Helper methods to determine where the proxy is being called from
-    const topOfStack = () => control.stack[control.stack.length - 1]
-    const fromWithin = () => control.stack.length && topOfStack() === original
-    const fromInstanceOfSameJigClass = () => control.stack.length && topOfStack().constructor === proxy.constructor
-    const fromInstanceOfDifferentJigClass = () => control.stack.length && topOfStack().constructor !== proxy.constructor
+    const topOfStack = () => JigControl.stack[JigControl.stack.length - 1]
+    const fromWithin = () => JigControl.stack.length && topOfStack() === original
+    const fromInstanceOfSameJigClass = () => JigControl.stack.length && topOfStack().constructor === proxy.constructor
+    const fromInstanceOfDifferentJigClass = () => JigControl.stack.length && topOfStack().constructor !== proxy.constructor
 
     // internal variable that tracks whether init is called. if we are injecting a state, then init was called.
-    let calledInit = !!control.stateToInject
+    let calledInit = !!JigControl.stateToInject
 
     handler.getPrototypeOf = function (target) {
       checkValid()
 
-      if (control.stack.length) control.proxies.set(original, proxy)
+      if (JigControl.stack.length) JigControl.proxies.set(original, proxy)
 
       return Object.getPrototypeOf(target)
     }
@@ -1329,7 +1329,7 @@ class Jig {
     handler.getOwnPropertyDescriptor = function (target, prop) {
       checkValid()
 
-      if (control.stack.length) control.proxies.set(original, proxy)
+      if (JigControl.stack.length) JigControl.proxies.set(original, proxy)
 
       if (!this.has(target, prop)) return undefined
 
@@ -1345,15 +1345,15 @@ class Jig {
     handler.has = function (target, prop) {
       checkValid()
 
-      if (control.stack.length) control.proxies.set(original, proxy)
+      if (JigControl.stack.length) JigControl.proxies.set(original, proxy)
 
-      if (control.enforce && prop[0] === '_' && fromInstanceOfDifferentJigClass()) {
+      if (JigControl.enforce && prop[0] === '_' && fromInstanceOfDifferentJigClass()) {
         throw new Error(`cannot check ${prop} because it is private`)
       }
 
-      const didRead = control.stack.length && (!(target instanceof Jig) || !permanents.includes(prop))
+      const didRead = JigControl.stack.length && (!(target instanceof Jig) || !permanents.includes(prop))
 
-      if (didRead) control.reads.add(original)
+      if (didRead) JigControl.reads.add(original)
 
       return prop in target
     }
@@ -1361,7 +1361,7 @@ class Jig {
     handler.get = function (target, prop, receiver) {
       checkValid()
 
-      if (control.stack.length) control.proxies.set(original, proxy)
+      if (JigControl.stack.length) JigControl.proxies.set(original, proxy)
 
       if (prop === '$object') return proxy
 
@@ -1369,7 +1369,7 @@ class Jig {
 
       const syncRequired = ['origin', 'location']
 
-      if (control.enforce && targetIsAJig && syncRequired.includes(prop) && target[prop][0] === '_') {
+      if (JigControl.enforce && targetIsAJig && syncRequired.includes(prop) && target[prop][0] === '_') {
         throw new Error(`sync required before reading ${prop}`)
       }
 
@@ -1377,7 +1377,7 @@ class Jig {
       const noRead = ['origin', 'constructor']
       if (targetIsAJig && noRead.includes(prop)) return target[prop]
       const isJigMethod = targetIsAJig && typeof target[prop] === 'function'
-      if (control.stack.length && !isJigMethod) control.reads.add(original)
+      if (JigControl.stack.length && !isJigMethod) JigControl.reads.add(original)
 
       if (prop[0] === '_' && fromInstanceOfDifferentJigClass()) {
         throw new Error(`cannot get ${prop} because it is private`)
@@ -1397,7 +1397,7 @@ class Jig {
       if (typeof target[prop] === 'object') {
         if (target[prop] === null) return null
         if (target[prop] instanceof Jig) return target[prop]
-        if (!control.enforce) return target[prop]
+        if (!JigControl.enforce) return target[prop]
 
         // wrap existing objects for protection
         return new Proxy(target[prop], Object.assign({}, this, { parent: target, name: prop }))
@@ -1424,9 +1424,9 @@ class Jig {
     handler.set = function (target, prop, value, receiver) {
       checkValid()
 
-      if (control.stack.length) control.proxies.set(original, proxy)
+      if (JigControl.stack.length) JigControl.proxies.set(original, proxy)
 
-      if (control.enforce) {
+      if (JigControl.enforce) {
         if (!fromWithin()) {
           throw new Error(`must not set ${prop} outside of a method`)
         }
@@ -1459,9 +1459,9 @@ class Jig {
     handler.deleteProperty = function (target, prop) {
       checkValid()
 
-      if (control.stack.length) control.proxies.set(original, proxy)
+      if (JigControl.stack.length) JigControl.proxies.set(original, proxy)
 
-      if (control.enforce) {
+      if (JigControl.enforce) {
         if (!fromWithin()) {
           throw new Error(`must not delete ${prop} outside of a method`)
         }
@@ -1487,9 +1487,9 @@ class Jig {
     handler.ownKeys = function (target) {
       checkValid()
 
-      if (control.stack.length) control.proxies.set(original, proxy)
+      if (JigControl.stack.length) JigControl.proxies.set(original, proxy)
 
-      if (control.stack.length) control.reads.add(original)
+      if (JigControl.stack.length) JigControl.reads.add(original)
 
       if (fromInstanceOfDifferentJigClass()) {
         return Reflect.ownKeys(target).filter(key => key[0] !== '_')
@@ -1506,7 +1506,7 @@ class Jig {
       }
 
       if (parentIsAJig && this.name === 'sync') {
-        if (control.stack.length) throw new Error('sync may only be called externally')
+        if (JigControl.stack.length) throw new Error('sync may only be called externally')
         return target.call(proxy, ...args)
       }
 
@@ -1515,36 +1515,36 @@ class Jig {
 
       // If we are calling an internal method on the jig from outside of the jig, then
       // this method is not allowed to change any state. However, we may be deep in a
-      // call stack from other jigs, so we cannot use the control.saves to determine if
+      // call stack from other jigs, so we cannot use the JigControl.saves to determine if
       // a change has occurred. We need a new call stack. Therefore, we'll save the current
-      // stack and control state before calling and reinstate it after.
-      let outerControl = null
+      // stack and JigControl state before calling and reinstate it after.
+      let outerJigControl = null
       if (!parentIsAJig && !fromWithin()) {
-        outerControl = Object.assign({}, control)
-        resetControl()
+        outerJigControl = Object.assign({}, JigControl)
+        resetJigControl()
       }
 
       // record all jigs that called this jig in order to be able to spend
       // them if this method changes state. all jigs involved in the production
       // of a change of state must be spent.
-      const callers = control.callers.get(original) || new Set()
-      control.stack.forEach(target => callers.add(target))
-      control.callers.set(original, callers)
+      const callers = JigControl.callers.get(original) || new Set()
+      JigControl.stack.forEach(target => callers.add(target))
+      JigControl.callers.set(original, callers)
 
       // add ourselves to the stack because we're about to invoke a method
-      control.stack.push(original)
+      JigControl.stack.push(original)
 
-      control.proxies.set(original, proxy)
+      JigControl.proxies.set(original, proxy)
 
       try {
         if (parentIsAJig && this.name === 'init') {
           if (calledInit) throw new Error('init cannot be called twice')
           calledInit = true
-          control.creates.add(original)
+          JigControl.creates.add(original)
         }
 
-        const reads = new Set(control.reads)
-        control.enforce = false
+        const reads = new Set(JigControl.reads)
+        JigControl.enforce = false
 
         const savedArgRefs = []
         const deployCode = target => { if (util.deployable(target)) run.code.deploy(target) }
@@ -1552,14 +1552,14 @@ class Jig {
         // Internal methods do not need their args saved
         const savedArgs = parentIsAJig ? util.richObjectToJson(args, packers) : null
 
-        if (!control.saves.has(original)) {
+        if (!JigControl.saves.has(original)) {
           const save = { refs: [] }
           const packers = [deployCode, util.extractJigsAndCodeToArray(save.refs)]
           save.json = util.richObjectToJson(Object.assign({}, original), packers)
-          control.saves.set(original, save)
+          JigControl.saves.set(original, save)
         }
-        control.enforce = true
-        control.reads = reads
+        JigControl.enforce = true
+        JigControl.reads = reads
 
         // make a copy of the args, which ensures that if the args are changed in the method,
         // we still record to the blockchain what was passed in at the time it was called.
@@ -1589,17 +1589,17 @@ class Jig {
 
         // if there was an error in the call or a child call, and the exception
         // was swallowed, rethrow the error anyway.
-        if (control.error) throw new Error(`internal errors must not be swallowed\n\n${control.error}`)
+        if (JigControl.error) throw new Error(`internal errors must not be swallowed\n\n${JigControl.error}`)
 
-        control.stack.pop()
+        JigControl.stack.pop()
 
         // if we are at the bottom of the stack, we have to decide whether to create an
         // action. To do this, we will compare jig states before and after and see if
         // any jigs changed, and if so, figure out the inputs and outputs.
-        if (!control.stack.length) {
+        if (!JigControl.stack.length) {
           // disable enforcement as we are about to read locations on possible inner proxies
-          const reads = new Set(control.reads)
-          control.enforce = false
+          const reads = new Set(JigControl.reads)
+          JigControl.enforce = false
 
           // detect references to properties of other jigs or code, and throw
           const preventPropertiesOfOtherObjects = (target, parent, name) => {
@@ -1609,11 +1609,11 @@ class Jig {
             }
           }
 
-          // calculate stateAfter. We already have stateBefore in control.saves
+          // calculate stateAfter. We already have stateBefore in JigControl.saves
           const stateAfter = new Map()
 
-          const objectsToSave = new Set(control.reads)
-          Array.from(control.saves.keys()).forEach(target => objectsToSave.add(target))
+          const objectsToSave = new Set(JigControl.reads)
+          Array.from(JigControl.saves.keys()).forEach(target => objectsToSave.add(target))
 
           objectsToSave.forEach(target => { // TODO: Remove when remove weak reads
             const refs = []
@@ -1624,7 +1624,7 @@ class Jig {
 
           // calculate the changed array
           const changed = []
-          for (const [target, stateBefore] of control.saves) {
+          for (const [target, stateBefore] of JigControl.saves) {
             const after = stateAfter.get(target)
             const refChanged = (ref, n) => ref !== after.refs[n]
             if (JSON.stringify(stateBefore.json) !== JSON.stringify(after.json) ||
@@ -1634,65 +1634,65 @@ class Jig {
           }
 
           // re-enable enforcement and set back the old reads
-          control.enforce = true
-          control.reads = reads
+          JigControl.enforce = true
+          JigControl.reads = reads
 
           // if anything was created or changed, then we have an action
-          if (control.creates.size || changed.length) {
+          if (JigControl.creates.size || changed.length) {
             if (!parentIsAJig) {
               throw new Error(`internal method ${this.name} may not be called to change state`)
             }
 
             const inputs = new Set()
             const outputs = new Set()
-            const reads = new Set(control.reads)
+            const reads = new Set(JigControl.reads)
 
             // helper function to add a jig to the inputs and outputs
             const spend = target => {
               outputs.add(target)
-              if (!control.creates.has(target)) inputs.add(target)
+              if (!JigControl.creates.has(target)) inputs.add(target)
             }
 
             // for every jig changed, add all jigs involved in the production of
             // its changes (its callers set) as outputs, and add them as inputs
             // if they were not newly created.
             changed.forEach(target => {
-              control.callers.get(target).forEach(caller => spend(caller))
+              JigControl.callers.get(target).forEach(caller => spend(caller))
               spend(target)
             })
 
             // every jig created gets a new output, and the same applies to its callers
-            control.creates.forEach(target => {
-              control.callers.get(target).forEach(caller => spend(caller))
+            JigControl.creates.forEach(target => {
+              JigControl.callers.get(target).forEach(caller => spend(caller))
               spend(target)
             })
 
             // record the action in the proto-transaction
             run.transaction.storeAction(original, this.name, args, inputs, outputs,
-              reads, control.saves, stateAfter, control.proxies)
+              reads, JigControl.saves, stateAfter, JigControl.proxies)
           }
 
           // If we are within an internal method, then add any changes of state back
-          // to the main control. Otherwise reset control.
-          if (outerControl) {
-            control.creates.forEach(target => outerControl.creates.add(target))
-            control.reads.forEach(target => outerControl.reads.add(target))
-            control.saves.forEach((save, target) => {
-              if (!control.saves.has(target)) outerControl.saves.set(target, save)
+          // to the main JigControl. Otherwise reset JigControl.
+          if (outerJigControl) {
+            JigControl.creates.forEach(target => outerJigControl.creates.add(target))
+            JigControl.reads.forEach(target => outerJigControl.reads.add(target))
+            JigControl.saves.forEach((save, target) => {
+              if (!JigControl.saves.has(target)) outerJigControl.saves.set(target, save)
             })
-            control.proxies.forEach((proxy, target) => {
-              if (!control.proxies.has(target)) outerControl.proxies.set(target, proxy)
+            JigControl.proxies.forEach((proxy, target) => {
+              if (!JigControl.proxies.has(target)) outerJigControl.proxies.set(target, proxy)
             })
-            control.callers.forEach((callers, target) => {
-              if (!control.callers.has(target)) {
-                outerControl.callers.set(target, callers)
+            JigControl.callers.forEach((callers, target) => {
+              if (!JigControl.callers.has(target)) {
+                outerJigControl.callers.set(target, callers)
               } else {
-                callers.forEach(caller => outerControl.get(target).add(caller))
+                callers.forEach(caller => outerJigControl.get(target).add(caller))
               }
             })
-            Object.assign(control, outerControl)
+            Object.assign(JigControl, outerJigControl)
           } else {
-            resetControl()
+            resetJigControl()
           }
         }
 
@@ -1704,23 +1704,23 @@ class Jig {
         // mark that there was an error so that if a parent jig attempts to
         // wrap it, we will still be able to throw an exception at the end.
         // only record the first...
-        if (!control.error) control.error = e
+        if (!JigControl.error) JigControl.error = e
 
-        if (outerControl) Object.assign(control, outerControl)
+        if (outerJigControl) Object.assign(JigControl, outerJigControl)
 
-        control.stack.pop()
+        JigControl.stack.pop()
 
         // if we are at the bottom of the stack, and there was an error, then
         // reset all jigs involved back to their original state before throwing
         // the error to the user.
-        if (!control.stack.length) {
-          control.saves.forEach((save, target) => {
+        if (!JigControl.stack.length) {
+          JigControl.saves.forEach((save, target) => {
             Object.keys(target).forEach(key => delete target[key])
             Object.assign(target, util.jsonToRichObject(save.json,
               [util.injectJigsAndCodeFromArray(save.refs)]))
           })
 
-          resetControl()
+          resetJigControl()
         }
 
         run.transaction.end()
@@ -1735,12 +1735,12 @@ class Jig {
     }
 
     // if we are injecting a state directly from a cache, do that and just return
-    if (control.stateToInject) {
-      Object.assign(this, control.stateToInject)
+    if (JigControl.stateToInject) {
+      Object.assign(this, JigControl.stateToInject)
       return proxy
     }
 
-    this.owner = control.stack.length ? control.stack[control.stack.length - 1].owner : run.transaction.owner
+    this.owner = JigControl.stack.length ? JigControl.stack[JigControl.stack.length - 1].owner : run.transaction.owner
     this.satoshis = 0
     // origin and location will be set inside of storeAction
     this.origin = '_'
@@ -1782,7 +1782,7 @@ class Jig {
   }
 }
 
-module.exports = { Jig, control }
+module.exports = { Jig, JigControl }
 
 
 /***/ }),
@@ -1796,7 +1796,7 @@ module.exports = { Jig, control }
  */
 
 const bsv = __webpack_require__(1)
-const { Jig, control } = __webpack_require__(5)
+const { Jig, JigControl } = __webpack_require__(5)
 const util = __webpack_require__(2)
 const Evaluator = __webpack_require__(8)
 
@@ -1958,13 +1958,13 @@ class Code {
       // replace all static props that are code with sandboxed code because sandboxes
       // should only know about other sandboxed code and never application code.
       Object.keys(props).forEach(prop => {
-        this.control.enforce = false
+        this.JigControl.enforce = false
         util.deepTraverse(sandbox[prop], (target, parent, name) => {
           const installed = this.getInstalled(target)
           if (installed && name) parent[name] = installed
           if (installed && !name) sandbox[prop] = installed
         })
-        this.control.enforce = true
+        this.JigControl.enforce = true
       })
       if (Object.keys(realdeps).length) {
         sandbox.deps = { }
@@ -2093,8 +2093,8 @@ class Code {
   }
 
   installJig () {
-    this.control = control
-    const env = { control: this.control, util }
+    this.JigControl = JigControl
+    const env = { JigControl, util }
     this.Jig = this.evaluate(Jig, Jig.toString(), 'Jig', env)[0]
     this.installs.set(Jig, this.Jig)
     this.installs.set(this.Jig, this.Jig)
@@ -2115,10 +2115,10 @@ class Code {
         enumerable: true,
         get: () => {
           // we must be inside a jig method called by another jig method to be non-null
-          if (this.control.stack.length < 2) return null
+          if (this.JigControl.stack.length < 2) return null
 
           // return the proxy for the jig that called this jig
-          return this.control.proxies.get(this.control.stack[this.control.stack.length - 2])
+          return this.JigControl.proxies.get(this.JigControl.stack[this.JigControl.stack.length - 2])
         }
       })
     }
@@ -4361,7 +4361,7 @@ class ProtoTransaction {
     // ensuring that double-references refer to the same objects
     const { Jig } = __webpack_require__(3)
     const dedupInnerRefs = jig => {
-      run.code.control.enforce = false
+      run.code.JigControl.enforce = false
       const dedupRef = (target, parent, name) => {
         if (target && target instanceof Jig) {
           if (!parent) return
@@ -4370,7 +4370,7 @@ class ProtoTransaction {
         }
       }
       util.deepTraverse(jig, dedupRef)
-      run.code.control.enforce = true
+      run.code.JigControl.enforce = true
     }
 
     // update the refs themselves with themselves
@@ -4395,9 +4395,9 @@ class ProtoTransaction {
         }
       }
 
-      run.code.control.enforce = false
+      run.code.JigControl.enforce = false
       const args = util.jsonToRichObject(action.args, [reviveArgRef])
-      run.code.control.enforce = true
+      run.code.JigControl.enforce = true
 
       if (action.method === 'init') {
         if (action.target[0] === '_') {
@@ -4471,7 +4471,7 @@ class ProtoTransaction {
       const jigLocation = `${tx.hash.slice(0, 64)}_o${vout}`
 
       // pack the state of the jig into a reference form
-      run.code.control.enforce = false
+      run.code.JigControl.enforce = false
       const packedState = util.richObjectToJson(Object.assign({}, jigProxies[vout]), [target => {
         if (target instanceof Jig || util.deployable(target)) {
           if (target.location.startsWith(tx.hash)) {
@@ -4481,7 +4481,7 @@ class ProtoTransaction {
           }
         }
       }])
-      run.code.control.enforce = true
+      run.code.JigControl.enforce = true
 
       if (packedState.origin.startsWith(tx.hash)) delete packedState.origin
       if (packedState.location.startsWith(tx.hash)) delete packedState.location
@@ -4971,11 +4971,11 @@ class Transaction {
       const typeLocation = cachedState.type.startsWith('_') ? location.slice(0, 64) + cachedState.type : cachedState.type
       const T = await this.load(typeLocation)
       const keepRefsIntact = target => { if (typeof target.$ref !== 'undefined') return target }
-      this.code.control.stateToInject = util.jsonToRichObject(cachedState.state, [keepRefsIntact])
-      this.code.control.stateToInject.origin = this.code.control.stateToInject.origin || location
-      this.code.control.stateToInject.location = this.code.control.stateToInject.location || location
+      this.code.JigControl.stateToInject = util.jsonToRichObject(cachedState.state, [keepRefsIntact])
+      this.code.JigControl.stateToInject.origin = this.code.JigControl.stateToInject.origin || location
+      this.code.JigControl.stateToInject.location = this.code.JigControl.stateToInject.location || location
       const instance = new T()
-      this.code.control.stateToInject = null
+      this.code.JigControl.stateToInject = null
 
       // set ourselves in the cached refs
       cachedRefs.set(location, instance)
@@ -5004,11 +5004,11 @@ class Transaction {
       }
 
       // set the inner references that were loaded
-      this.code.control.enforce = false
+      this.code.JigControl.enforce = false
       util.deepTraverse(instance, (target, parent, name) => {
         if (target && target.$ref) parent[name] = cachedRefs.get(fullLocation(target.$ref))
       })
-      this.code.control.enforce = true
+      this.code.JigControl.enforce = true
 
       return instance
     }
@@ -10662,9 +10662,9 @@ owner: ${spentJigs[i].owner}`)
     // if we have already fast-forwarded this jig, copy its state and return
     const cached = seen.get(jig.origin)
     if (cached) {
-      this.code.control.enforce = false
+      this.code.JigControl.enforce = false
       Object.assign(jig, cached)
-      this.code.control.enforce = true
+      this.code.JigControl.enforce = true
       return jig
     }
 
@@ -10711,9 +10711,9 @@ owner: ${spentJigs[i].owner}`)
         innerJigs.add(target)
       }
     }
-    this.code.control.enforce = false
+    this.code.JigControl.enforce = false
     util.deepTraverse(jig, findInners)
-    this.code.control.enforce = true
+    this.code.JigControl.enforce = true
     for (const innerJig of innerJigs) {
       await this.fastForward(innerJig, dontRefresh, seen)
     }

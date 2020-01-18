@@ -141,7 +141,7 @@ const propertiesToObfuscate = [
 
 const globalsToObfuscate = [
   // util.js,
-  'control',
+  'JigControl',
   'ProtoTransaction',
   'PROTOCOL_VERSION',
   'SerialTaskQueue',
@@ -233,7 +233,7 @@ const browser = {
       new TerserPlugin({
         terserOptions: {
           mangle: {
-            reserved: ['Jig', 'control', 'util', 'Token', 'expect']
+            reserved: ['Jig', 'JigControl', 'util', 'Token', 'expect']
           }
         }
       })
