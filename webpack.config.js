@@ -233,7 +233,7 @@ const browser = {
       new TerserPlugin({
         terserOptions: {
           mangle: {
-            reserved: ['Jig', 'util', 'Token', 'expect']
+            reserved: ['Jig', 'control', 'util', 'Token', 'expect']
           }
         }
       })

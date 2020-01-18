@@ -913,7 +913,7 @@ const { Blockchain, BlockchainServer } = __webpack_require__(10)
 const Mockchain = __webpack_require__(60)
 const { StateCache } = __webpack_require__(61)
 const { PrivateKey } = bsv
-const Jig = __webpack_require__(4)
+const { Jig } = __webpack_require__(4)
 const Token = __webpack_require__(62)
 const expect = __webpack_require__(23)
 
@@ -1191,9 +1191,20 @@ module.exports = Run
  * Jig class users extend from to create digital property
  */
 
-/* global control */
-
 const util = __webpack_require__(2)
+
+const control = { // control state shared across all jigs, similar to a PCB
+  stack: [], // jig call stack for the current method (Array<Target>)
+  creates: new Set(), // jigs created in the current method (Set<Target>)
+  reads: new Set(), // jigs read during the current method (Set<Target>)
+  saves: new Map(), // saved original state of jigs before method (Target->Object)
+  callers: new Map(), // Callers on each jig method (Target->Set<Object>)
+  error: null, // if any errors occurred to prevent swallows
+  enforce: true, // enable safeguards for the user
+  proxies: new Map(), // map connecting targets to proxies (Target->Proxy)
+  locals: new WeakMap(), // local secret state for each jig (Target->Object)
+  stateToInject: undefined
+}
 
 class Jig {
   constructor (...args) {
@@ -1743,7 +1754,7 @@ class Jig {
   }
 }
 
-module.exports = Jig
+module.exports = { Jig, control }
 
 
 /***/ }),
@@ -1860,7 +1871,7 @@ module.exports = function createError(message, config, code, request, response) 
  */
 
 const bsv = __webpack_require__(1)
-const Jig = __webpack_require__(4)
+const { Jig, control } = __webpack_require__(4)
 const util = __webpack_require__(2)
 const Evaluator = __webpack_require__(8)
 
@@ -2157,17 +2168,7 @@ class Code {
   }
 
   installJig () {
-    this.control = { // control state shared across all jigs, similar to a PCB
-      stack: [], // jig call stack for the current method (Array<Target>)
-      creates: new Set(), // jigs created in the current method (Set<Target>)
-      reads: new Set(), // jigs read during the current method (Set<Target>)
-      saves: new Map(), // saved original state of jigs before method (Target->Object)
-      callers: new Map(), // Callers on each jig method (Target->Set<Object>)
-      error: null, // if any errors occurred to prevent swallows
-      enforce: true, // enable safeguards for the user
-      proxies: new Map(), // map connecting targets to proxies (Target->Proxy)
-      locals: new WeakMap() // local secret state for each jig (Target->Object)
-    }
+    this.control = control
     const env = { control: this.control, util }
     this.Jig = this.evaluate(Jig, Jig.toString(), 'Jig', env)[0]
     this.installs.set(Jig, this.Jig)
@@ -11568,7 +11569,7 @@ module.exports = { State, StateCache }
  * Token jig that provides ERC-20 like support
  */
 
-const Jig = __webpack_require__(4)
+const { Jig } = __webpack_require__(4)
 const expect = __webpack_require__(23)
 
 class Token extends Jig {
