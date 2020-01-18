@@ -1730,6 +1730,14 @@ class Jig {
 
   sync (options) { return util.activeRunInstance().syncer.sync(Object.assign({}, options, { target: this })) }
 
+  static get caller () {
+    // we must be inside a jig method called by another jig method to be non-null
+    if (JigControl.stack.length < 2) return null
+
+    // return the proxy for the jig that called this jig
+    return JigControl.proxies.get(JigControl.stack[JigControl.stack.length - 2])
+  }
+
   static [Symbol.hasInstance] (target) {
     const run = util.activeRunInstance()
 
@@ -1795,9 +1803,9 @@ module.exports = g;
  */
 
 const bsv = __webpack_require__(1)
-const { Jig, JigControl } = __webpack_require__(4)
 const util = __webpack_require__(2)
 const Evaluator = __webpack_require__(8)
+const { Jig, JigControl } = __webpack_require__(4)
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -2099,28 +2107,10 @@ class Code {
   }
 
   evaluate (type, code, name, env) {
-    // if we've already installed this type, then return it
     const prev = this.installs.get(type)
     if (prev) return [prev, null]
-
     const willSandbox = this.evaluator.willSandbox(code)
-
     const [result, globals] = this.evaluator.evaluate(code, env)
-
-    if (typeof env.caller === 'undefined') {
-      Object.defineProperty(globals, 'caller', {
-        configurable: true,
-        enumerable: true,
-        get: () => {
-          // we must be inside a jig method called by another jig method to be non-null
-          if (JigControl.stack.length < 2) return null
-
-          // return the proxy for the jig that called this jig
-          return JigControl.proxies.get(JigControl.stack[JigControl.stack.length - 2])
-        }
-      })
-    }
-
     return [!willSandbox && type ? type : result, globals]
   }
 
@@ -12395,7 +12385,7 @@ class Token extends Jig {
     this._checkAmount(amount)
     expect(this.owner).toBe(this.constructor.owner, `Only ${this.constructor.name}'s owner may mint`)
     this.amount = amount
-    this._onMint(amount, caller)
+    this._onMint(amount, Token.caller)
   }
 
   send (to, amount) {

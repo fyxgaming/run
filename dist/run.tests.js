@@ -6607,10 +6607,11 @@ describe('Jig', () => {
     it('should set caller to null if external', async () => {
       class A extends Jig {
         init () {
-          if (caller !== null) throw new Error()
+          if (Jig.caller !== null) throw new Error()
+          if (A.caller !== null) throw new Error()
         }
 
-        f () { this.caller = caller }
+        f () { this.caller = Jig.caller }
       }
       const a = new A()
       a.f()
@@ -6628,11 +6629,11 @@ describe('Jig', () => {
       }
       class Child extends Jig {
         init (parentOrigin) {
-          if (caller.origin !== parentOrigin) throw new Error()
-          if (caller.constructor !== Parent) throw new Error()
+          if (Jig.caller.origin !== parentOrigin) throw new Error()
+          if (Jig.caller.constructor !== Parent) throw new Error()
         }
 
-        f () { this.caller = caller }
+        f () { this.caller = Jig.caller }
       }
       Parent.deps = { Child }
       Child.deps = { Parent }
@@ -6652,7 +6653,7 @@ describe('Jig', () => {
       class A extends Jig {
         init () { this.f() }
 
-        f () { this.caller = caller }
+        f () { this.caller = Jig.caller }
       }
       const a = await new A().sync()
       expect(a.caller).to.equal(a)
@@ -6666,7 +6667,7 @@ describe('Jig', () => {
 
         apply (b) { b.apply() }
       }
-      class B extends Jig { apply () { caller.set(1) } }
+      class B extends Jig { apply () { Jig.caller.set(1) } }
       const a = new A()
       const b = new B()
       a.apply(b)
@@ -6697,7 +6698,7 @@ describe('Jig', () => {
     })
 
     it('should throw if set caller', () => {
-      class A extends Jig { init () { caller = 1 } } // eslint-disable-line
+      class A extends Jig { init () { Jig.caller = 1 } } // eslint-disable-line
       expect(() => new A()).to.throw()
     })
   })
@@ -7839,7 +7840,7 @@ describe('Run', () => {
 /* 21 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.4.1\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\",\"caller\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"ses\":\"github:runonbitcoin/ses\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
+module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.4.1\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"ses\":\"github:runonbitcoin/ses\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
 
 /***/ }),
 /* 22 */

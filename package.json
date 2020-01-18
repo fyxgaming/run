@@ -15,8 +15,7 @@
     "standard": {
         "globals": [
             "RUN_VERSION",
-            "TEST_MODE",
-            "caller"
+            "TEST_MODE"
         ],
         "ignore": [
             "dist/**",
