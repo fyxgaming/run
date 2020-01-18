@@ -914,7 +914,7 @@ const { Blockchain, BlockchainServer } = __webpack_require__(10)
 const Mockchain = __webpack_require__(46)
 const { StateCache } = __webpack_require__(47)
 const { PrivateKey } = bsv
-const { Jig } = __webpack_require__(5)
+const { Jig } = __webpack_require__(4)
 const Token = __webpack_require__(48)
 const expect = __webpack_require__(19)
 
@@ -1181,36 +1181,10 @@ global.Token = Token
 
 module.exports = Run
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(4)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),
 /* 4 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || new Function("return this")();
-} catch (e) {
-	// This works if the window reference is available
-	if (typeof window === "object") g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -1786,6 +1760,32 @@ module.exports = { Jig, JigControl }
 
 
 /***/ }),
+/* 5 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || new Function("return this")();
+} catch (e) {
+	// This works if the window reference is available
+	if (typeof window === "object") g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
 /* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1796,7 +1796,7 @@ module.exports = { Jig, JigControl }
  */
 
 const bsv = __webpack_require__(1)
-const { Jig, JigControl } = __webpack_require__(5)
+const { Jig, JigControl } = __webpack_require__(4)
 const util = __webpack_require__(2)
 const Evaluator = __webpack_require__(8)
 
@@ -1958,13 +1958,13 @@ class Code {
       // replace all static props that are code with sandboxed code because sandboxes
       // should only know about other sandboxed code and never application code.
       Object.keys(props).forEach(prop => {
-        this.JigControl.enforce = false
+        JigControl.enforce = false
         util.deepTraverse(sandbox[prop], (target, parent, name) => {
           const installed = this.getInstalled(target)
           if (installed && name) parent[name] = installed
           if (installed && !name) sandbox[prop] = installed
         })
-        this.JigControl.enforce = true
+        JigControl.enforce = true
       })
       if (Object.keys(realdeps).length) {
         sandbox.deps = { }
@@ -2093,7 +2093,6 @@ class Code {
   }
 
   installJig () {
-    this.JigControl = JigControl
     const env = { JigControl, util }
     this.Jig = this.evaluate(Jig, Jig.toString(), 'Jig', env)[0]
     this.installs.set(Jig, this.Jig)
@@ -2115,10 +2114,10 @@ class Code {
         enumerable: true,
         get: () => {
           // we must be inside a jig method called by another jig method to be non-null
-          if (this.JigControl.stack.length < 2) return null
+          if (JigControl.stack.length < 2) return null
 
           // return the proxy for the jig that called this jig
-          return this.JigControl.proxies.get(this.JigControl.stack[this.JigControl.stack.length - 2])
+          return JigControl.proxies.get(JigControl.stack[JigControl.stack.length - 2])
         }
       })
     }
@@ -3953,7 +3952,7 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(4)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),
 /* 8 */
@@ -4199,7 +4198,7 @@ Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
 
 module.exports = Evaluator
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(4)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),
 /* 9 */
@@ -4214,6 +4213,7 @@ module.exports = Evaluator
 const bsv = __webpack_require__(1)
 const util = __webpack_require__(2)
 const Code = __webpack_require__(6)
+const { JigControl } = __webpack_require__(4)
 
 /**
  * Proto-transaction: A temporary structure Run uses to build transactions. This structure
@@ -4361,7 +4361,7 @@ class ProtoTransaction {
     // ensuring that double-references refer to the same objects
     const { Jig } = __webpack_require__(3)
     const dedupInnerRefs = jig => {
-      run.code.JigControl.enforce = false
+      JigControl.enforce = false
       const dedupRef = (target, parent, name) => {
         if (target && target instanceof Jig) {
           if (!parent) return
@@ -4370,7 +4370,7 @@ class ProtoTransaction {
         }
       }
       util.deepTraverse(jig, dedupRef)
-      run.code.JigControl.enforce = true
+      JigControl.enforce = true
     }
 
     // update the refs themselves with themselves
@@ -4395,9 +4395,9 @@ class ProtoTransaction {
         }
       }
 
-      run.code.JigControl.enforce = false
+      JigControl.enforce = false
       const args = util.jsonToRichObject(action.args, [reviveArgRef])
-      run.code.JigControl.enforce = true
+      JigControl.enforce = true
 
       if (action.method === 'init') {
         if (action.target[0] === '_') {
@@ -4471,7 +4471,7 @@ class ProtoTransaction {
       const jigLocation = `${tx.hash.slice(0, 64)}_o${vout}`
 
       // pack the state of the jig into a reference form
-      run.code.JigControl.enforce = false
+      JigControl.enforce = false
       const packedState = util.richObjectToJson(Object.assign({}, jigProxies[vout]), [target => {
         if (target instanceof Jig || util.deployable(target)) {
           if (target.location.startsWith(tx.hash)) {
@@ -4481,7 +4481,7 @@ class ProtoTransaction {
           }
         }
       }])
-      run.code.JigControl.enforce = true
+      JigControl.enforce = true
 
       if (packedState.origin.startsWith(tx.hash)) delete packedState.origin
       if (packedState.location.startsWith(tx.hash)) delete packedState.location
@@ -4971,11 +4971,11 @@ class Transaction {
       const typeLocation = cachedState.type.startsWith('_') ? location.slice(0, 64) + cachedState.type : cachedState.type
       const T = await this.load(typeLocation)
       const keepRefsIntact = target => { if (typeof target.$ref !== 'undefined') return target }
-      this.code.JigControl.stateToInject = util.jsonToRichObject(cachedState.state, [keepRefsIntact])
-      this.code.JigControl.stateToInject.origin = this.code.JigControl.stateToInject.origin || location
-      this.code.JigControl.stateToInject.location = this.code.JigControl.stateToInject.location || location
+      JigControl.stateToInject = util.jsonToRichObject(cachedState.state, [keepRefsIntact])
+      JigControl.stateToInject.origin = JigControl.stateToInject.origin || location
+      JigControl.stateToInject.location = JigControl.stateToInject.location || location
       const instance = new T()
-      this.code.JigControl.stateToInject = null
+      JigControl.stateToInject = null
 
       // set ourselves in the cached refs
       cachedRefs.set(location, instance)
@@ -5004,11 +5004,11 @@ class Transaction {
       }
 
       // set the inner references that were loaded
-      this.code.JigControl.enforce = false
+      JigControl.enforce = false
       util.deepTraverse(instance, (target, parent, name) => {
         if (target && target.$ref) parent[name] = cachedRefs.get(fullLocation(target.$ref))
       })
-      this.code.JigControl.enforce = true
+      JigControl.enforce = true
 
       return instance
     }
@@ -10433,6 +10433,7 @@ exports.createContext = Script.createContext = function (context) {
  */
 
 const { ProtoTransaction } = __webpack_require__(9)
+const { JigControl } = __webpack_require__(4)
 const util = __webpack_require__(2)
 
 /**
@@ -10662,9 +10663,9 @@ owner: ${spentJigs[i].owner}`)
     // if we have already fast-forwarded this jig, copy its state and return
     const cached = seen.get(jig.origin)
     if (cached) {
-      this.code.JigControl.enforce = false
+      JigControl.enforce = false
       Object.assign(jig, cached)
-      this.code.JigControl.enforce = true
+      JigControl.enforce = true
       return jig
     }
 
@@ -10711,9 +10712,9 @@ owner: ${spentJigs[i].owner}`)
         innerJigs.add(target)
       }
     }
-    this.code.JigControl.enforce = false
+    JigControl.enforce = false
     util.deepTraverse(jig, findInners)
-    this.code.JigControl.enforce = true
+    JigControl.enforce = true
     for (const innerJig of innerJigs) {
       await this.fastForward(innerJig, dontRefresh, seen)
     }
@@ -12358,7 +12359,7 @@ module.exports = { State, StateCache }
  * Token jig that provides ERC-20 like support
  */
 
-const { Jig } = __webpack_require__(5)
+const { Jig } = __webpack_require__(4)
 const expect = __webpack_require__(19)
 
 class Token extends Jig {

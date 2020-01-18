@@ -4242,36 +4242,36 @@ describe('Evaluator', () => {
   runEvaluatorTestSuite(createEvaluator, destroyEvaluator)
 
   describe('willSandbox', () => {
-      it('should return whether name matches when regex', () => {
-          const fCode = (function f() { }).toString()
-          const ACode = (class A {}).toString()
-          const BCode = (class B {}).toString()
-          const AnonClassCode = (class {}).toString()
-          const AnonFunctionCode = (() => {}).toString()
-          const evaluator = new Run.Evaluator({ sandbox: /(f|B)/ })
-          expect(evaluator.willSandbox(fCode)).to.equal(true)
-          expect(evaluator.willSandbox(ACode)).to.equal(false)
-          expect(evaluator.willSandbox(BCode)).to.equal(true)
-          expect(evaluator.willSandbox(AnonClassCode)).to.equal(false)
-          expect(evaluator.willSandbox(AnonFunctionCode)).to.equal(false)
-      })
+    it('should return whether name matches when regex', () => {
+      const fCode = function f () { }.toString()
+      const ACode = (class A {}).toString()
+      const BCode = (class B {}).toString()
+      const AnonClassCode = (class {}).toString()
+      const AnonFunctionCode = (() => {}).toString()
+      const evaluator = new Run.Evaluator({ sandbox: /(f|B)/ })
+      expect(evaluator.willSandbox(fCode)).to.equal(true)
+      expect(evaluator.willSandbox(ACode)).to.equal(false)
+      expect(evaluator.willSandbox(BCode)).to.equal(true)
+      expect(evaluator.willSandbox(AnonClassCode)).to.equal(false)
+      expect(evaluator.willSandbox(AnonFunctionCode)).to.equal(false)
+    })
 
-      it('should return sandbox option when boolean', () => {
-          const code = (function f() { }).toString()
-          expect(new Run.Evaluator({ sandbox: true }).willSandbox(code)).to.equal(true)
-          expect(new Run.Evaluator({ sandbox: false }).willSandbox(code)).to.equal(false)
-      })
+    it('should return sandbox option when boolean', () => {
+      const code = function f () { }.toString()
+      expect(new Run.Evaluator({ sandbox: true }).willSandbox(code)).to.equal(true)
+      expect(new Run.Evaluator({ sandbox: false }).willSandbox(code)).to.equal(false)
+    })
   })
 
   it('should support deactivate and activate', () => {
-      function f() { return g }
-      const evaluator = new Run.Evaluator({ sandbox: false })
-      const f2 = evaluator.evaluate(f.toString(), { g: 2 })[0]
-      expect(f2()).to.equal(2)
-      evaluator.deactivate()
-      expect(() => f2()).to.throw()
-      evaluator.activate()
-      expect(f2()).to.equal(2)
+    function f () { return g } // eslint-disable-line
+    const evaluator = new Run.Evaluator({ sandbox: false })
+    const f2 = evaluator.evaluate(f.toString(), { g: 2 })[0]
+    expect(f2()).to.equal(2)
+    evaluator.deactivate()
+    expect(() => f2()).to.throw()
+    evaluator.activate()
+    expect(f2()).to.equal(2)
   })
 })
 
