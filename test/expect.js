@@ -6,7 +6,7 @@
 
 const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
-const { Run, createRun, deploy } = require('./helpers')
+const { Run, Jig, createRun, deploy } = require('./helpers')
 
 describe('expect', () => {
   const run = createRun()
@@ -21,6 +21,10 @@ describe('expect', () => {
     expect(() => Run.expect(1).not.toBe(2)).not.to.throw()
     expect(() => Run.expect({}).not.toBe({})).not.to.throw()
     expect(() => Run.expect(null).not.toBe(null)).to.throw('expected value not to be null but was null')
+    class A extends Jig { }
+    const a = new A() // an un-synced jig
+    expect(() => Run.expect(a).toBe(a)).not.to.throw()
+    expect(() => Run.expect(a).toBe(null)).to.throw()
   })
 
   it('should support toEqual', () => {

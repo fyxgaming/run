@@ -1736,6 +1736,8 @@ class Jig {
     return JigControl.proxies.get(JigControl.stack[JigControl.stack.length - 2])
   }
 
+  static set caller (value) { throw new Error('Must not set caller on Jig') }
+
   static [Symbol.hasInstance] (target) {
     const run = util.activeRunInstance()
 
@@ -4634,7 +4636,10 @@ module.exports = Cancel;
 function expect (subject) {
   let negated = false
 
-  const stringify = x => typeof x === 'object' ? JSON.stringify(x) : x
+  const stringify = x => {
+    if (typeof x !== 'object' || !x) return x
+    try { return JSON.stringify(x) } catch (e) { return x.toString() }
+  }
 
   function check (condition, conditionString, message) {
     if (negated ? condition : !condition) {
