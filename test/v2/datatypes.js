@@ -66,6 +66,28 @@ describe('RunSet', () => {
     })
   })
 
+  describe('clear', () => {
+    it('should not throw on empty set', () => {
+      expect(() => new RunSet().clear()).not.to.throw()
+    })
+
+    it('should empty contents', () => {
+      const set = new RunSet()
+      set.add(1)
+      set.clear()
+      expect(set.size).to.equal(0)
+    })
+
+    it('should clear token states', () => {
+      const set = new RunSet()
+      const token = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
+      set.add(token)
+      set.clear()
+      expect(set.size).to.equal(0)
+      set.add({ protocol: Protocol.RunProtocol, location: 'def', origin: '123' })
+    })
+  })
+
   describe('has', () => {
     it('should return true for basic types and objects in set', () => {
 
