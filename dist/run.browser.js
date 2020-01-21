@@ -1207,6 +1207,16 @@ const JigControl = { // control state shared across all jigs, similar to a PCB
   stateToInject: undefined
 }
 
+JigControl.disableProxy = func => {
+  const lastEnforce = JigControl.enforce
+  try {
+    JigControl.enforce = false
+    return func()
+  } finally {
+    JigControl.enforce = lastEnforce
+  }
+}
+
 class Jig {
   constructor (...args) {
     const run = util.activeRunInstance()
