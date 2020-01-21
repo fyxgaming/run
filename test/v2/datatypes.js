@@ -88,12 +88,35 @@ describe('RunSet', () => {
     })
   })
 
+  describe('delete', () => {
+    it('should return false if item is not present', () => {
+      expect(new RunSet().delete(1)).to.equal(false)
+    })
+
+    it('should delete item and return true if item is present', () => {
+      expect(new RunSet([1]).delete(1)).to.equal(true)
+    })
+
+    it('should clear token states', () => {
+      const set = new RunSet()
+      const token = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
+      set.add(token)
+      set.delete(token)
+      expect(set.size).to.equal(0)
+      set.add({ protocol: Protocol.RunProtocol, location: 'def', origin: '123' })
+    })
+  })
+
   describe('has', () => {
     it('should return true for basic types and objects in set', () => {
 
     })
 
     it('should return false for basic types and objects not in set', () => {
+
+    })
+
+    it('should return false after object is deleted', () => {
 
     })
 
