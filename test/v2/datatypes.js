@@ -107,6 +107,14 @@ describe('RunSet', () => {
     })
   })
 
+  describe('entries', () => {
+    // TODO
+  })
+
+  describe('forEach', () => {
+    // TODO
+  })
+
   describe('has', () => {
     it('should return true for basic types and objects in set', () => {
 
@@ -133,8 +141,16 @@ describe('RunSet', () => {
     })
   })
 
+  describe('values', () => {
+    // TODO
+  })
+
   describe('misc', () => {
-    it('should return RunSet for species', () => {
+    it('should return RunSet for Symbol.species', () => {
+      expect(new RunSet()[Symbol.species]).to.equal(RunSet)
+    })
+
+    it('should return iterator for Symbol.iterator', () => {
       expect(new RunSet()[Symbol.species]).to.equal(RunSet)
     })
   })
