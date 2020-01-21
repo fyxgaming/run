@@ -1191,6 +1191,10 @@ module.exports = Run
  * Jig class users extend from to create digital property
  */
 
+// TODO
+// Sets and maps respect tokens in jigs ... these are overrides for Jigs
+//    How? TokenSet, TokenMap
+
 const util = __webpack_require__(2)
 
 const JigControl = { // control state shared across all jigs, similar to a PCB

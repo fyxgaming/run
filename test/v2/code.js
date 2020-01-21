@@ -22,12 +22,11 @@ describe('Code', () => {
 
     // A.func = () => {}
 
-    A.f = {}
-    A.g = { f2: A.f }
-    A.f.g2 = A.g
+    // A.f = {}
+    // A.g = { f2: A.f }
+    // A.f.g2 = A.g
 
-
-    class B {}
+    class B { constructor () { this.n = 1 }}
     A.b = new B()
 
     // A.a = [1, 2, 3]
