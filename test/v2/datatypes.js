@@ -91,6 +91,7 @@ describe('RunSet', () => {
   describe('delete', () => {
     it('should return false if item is not present', () => {
       expect(new RunSet().delete(1)).to.equal(false)
+      expect(new RunSet().delete({ $protocol: Protocol.BcatProtocol, location: 'abc' })).to.equal(false)
     })
 
     it('should delete item and return true if item is present', () => {
