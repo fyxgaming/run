@@ -127,7 +127,16 @@ describe('RunSet', () => {
   })
 
   describe('forEach', () => {
-    // TODO
+    it('should execute function for each entry', () => {
+      const set = new RunSet([1, 2, 3])
+      class A {
+        constructor() { this.arr = [] }
+        push(x) { this.arr.push(x) }
+      }
+      const a = new A()
+      set.forEach(a.push, a)
+      expect(a.arr).to.deep.equal([1, 2, 3])
+    })
   })
 
   describe('has', () => {
