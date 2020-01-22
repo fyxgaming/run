@@ -152,6 +152,10 @@ describe('RunSet', () => {
       expect(set.has(token2)).to.equal(true)
     })
 
+    it ('should return true for missing tokens', () => {
+      expect(new RunSet().has({ $protocol: Protocol.RunProtocol, location: 'abc'})).to.equal(false)
+    })
+
     it('should throw for same tokens at different states', () => {
       const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
       const set = new RunSet([token1])
