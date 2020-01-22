@@ -212,6 +212,28 @@ describe('RunSet', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('RunMap', () => {
+  describe('constructor', () => {
+    it('should create empty map', () => {
+      expect(new RunMap().size).to.equal(0)
+    })
+
+    it('should create map from array', () => {
+      const arr = [[1, 2], ['a', 'b']]
+      const map = new RunMap(arr)
+      expect(map.size).to.equal(arr.length)
+      arr.forEach(x => expect(map.has(x[0])).to.equal(true))
+    })
+
+    it('should create map from map', () => {
+      const arr = [[1, 2], ['a', 'b']]
+      const map = new RunMap(arr)
+      const map2 = new RunMap(map)
+      expect(map2.size).to.equal(arr.length)
+      arr.forEach(([x]) => expect(map2.has(x)).to.equal(true))
+      arr.forEach(([x, y]) => expect(map2.get(x)).to.equal(y))
+    })
+  })
+
   describe('clear', () => {
     it('should not throw on empty map', () => {
       expect(() => new RunMap().clear()).not.to.throw()
