@@ -306,6 +306,54 @@ describe('RunMap', () => {
     })
   })
 
+  describe('get', () => {
+    it('should return values for basic types and objects in set', () => {
+      const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
+      const map = new RunMap(entries)
+      entries.forEach(entry => expect(map.get(entry[0])).to.equal(entry[1]))
+    })
+
+    it('should return undefined for basic types and objects not in set', () => {
+      const entries = [1, 'a', false, {}, []]
+      const map = new RunMap()
+      entries.forEach(entry => expect(map.get(entry)).to.equal(undefined))
+    })
+
+    it('should return undefined after object is deleted', () => {
+      const obj = {}
+      const map = new RunMap([[obj, 1]])
+      expect(map.get(obj)).to.equal(1)
+      map.delete(obj)
+      expect(map.get(obj)).to.equal(undefined)
+    })
+
+    it('should return value for tokens in map', () => {
+      const token1 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
+      const map = new RunMap([[token1, 'abc']])
+      expect(map.get(token1)).to.equal('abc')
+      const token2 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
+      expect(map.get(token2)).to.equal('abc')
+    })
+
+    it('should return undefined for missing tokens', () => {
+      expect(new RunMap().get({ $protocol: Protocol.RunProtocol, location: 'abc' })).to.equal(undefined)
+    })
+
+    it('should throw for same tokens at different states', () => {
+      const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
+      const map = new RunMap([[token1, 1]])
+      expect(map.get(token1)).to.equal(1)
+      const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
+      expect(() => map.get(token2)).to.throw('Detected two of the same token with different location')
+    })
+
+    it('should throw for tokens of unknown protocol', () => {
+      const map = new RunMap()
+      const token = { $protocol: {}, location: 'abc' }
+      expect(() => map.get(token)).to.throw('Unknown token protocol')
+    })
+  })
+
   describe('has', () => {
     it('should return true for basic types and objects in set', () => {
       const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
@@ -350,7 +398,7 @@ describe('RunMap', () => {
     it('should throw for tokens of unknown protocol', () => {
       const map = new RunMap()
       const token = { $protocol: {}, location: 'abc' }
-      expect(() => map.delete(token)).to.throw('Unknown token protocol')
+      expect(() => map.has(token)).to.throw('Unknown token protocol')
     })
   })
 
