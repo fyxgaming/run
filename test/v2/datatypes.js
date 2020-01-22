@@ -212,6 +212,27 @@ describe('RunSet', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('RunMap', () => {
+  describe('clear', () => {
+    it('should not throw on empty map', () => {
+      expect(() => new RunMap().clear()).not.to.throw()
+    })
+
+    it('should empty contents', () => {
+      const map = new RunMap()
+      map.set(1, 2)
+      map.clear()
+      expect(map.size).to.equal(0)
+    })
+
+    it('should clear token states', () => {
+      const token = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
+      const map = new RunMap([[token, token]])
+      map.clear()
+      expect(map.size).to.equal(0)
+      map.set({ protocol: Protocol.RunProtocol, location: 'def', origin: '123' }, 1)
+    })
+  })
+
   describe('delete', () => {
     it('should return false if item is not present', () => {
       expect(new RunMap().delete(1)).to.equal(false)
