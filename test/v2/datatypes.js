@@ -116,7 +116,14 @@ describe('RunSet', () => {
   })
 
   describe('entries', () => {
-    // TODO
+    it('should iterate across entries', () => {
+      const arr = [1, 2, 3]
+      const set = new RunSet(arr)
+      for (const entry of set.entries()) {
+        const next = arr.shift()
+        expect(entry).to.deep.equal([next, next])
+      }
+    })
   })
 
   describe('forEach', () => {
@@ -152,7 +159,7 @@ describe('RunSet', () => {
       expect(set.has(token2)).to.equal(true)
     })
 
-    it ('should return true for missing tokens', () => {
+    it ('should return false for missing tokens', () => {
       expect(new RunSet().has({ $protocol: Protocol.RunProtocol, location: 'abc'})).to.equal(false)
     })
 
