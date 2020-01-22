@@ -62,7 +62,7 @@ describe('RunSet', () => {
       const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
       const set = new RunSet()
       set.add(token1)
-      expect(() => set.add(token2)).to.throw('Detected two of the same tokens with different locations')
+      expect(() => set.add(token2)).to.throw('Detected two of the same token with different locations')
     })
   })
 
@@ -106,6 +106,13 @@ describe('RunSet', () => {
       expect(set.size).to.equal(0)
       set.add({ protocol: Protocol.RunProtocol, location: 'def', origin: '123' })
     })
+
+    it('should throw for same tokens at different states', () => {
+      const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
+      const set = new RunSet([token1])
+      const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
+      expect(() => set.delete(token2)).to.throw('Detected two of the same token with different locations')
+    })
   })
 
   describe('entries', () => {
@@ -118,27 +125,45 @@ describe('RunSet', () => {
 
   describe('has', () => {
     it('should return true for basic types and objects in set', () => {
-
+      const entries = [1, 'a', false, {}, []]
+      const set = new RunSet(entries)
+      entries.forEach(entry => expect(set.has(entry)).to.equal(true))
     })
 
     it('should return false for basic types and objects not in set', () => {
-
+      const entries = [1, 'a', false, {}, []]
+      const set = new RunSet()
+      entries.forEach(entry => expect(set.has(entry)).to.equal(false))
     })
 
     it('should return false after object is deleted', () => {
-
+      const obj = {}
+      const set = new RunSet([obj])
+      expect(set.has(obj)).to.equal(true)
+      set.delete(obj)
+      expect(set.has(obj)).to.equal(false)
     })
 
     it('should return true for tokens in set', () => {
-
+      const token1 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
+      const set = new RunSet([token1])
+      expect(set.has(token1)).to.equal(true)
+      const token2 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
+      expect(set.has(token2)).to.equal(true)
     })
 
     it('should throw for same tokens at different states', () => {
-
+      const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
+      const set = new RunSet([token1])
+      expect(set.has(token1)).to.equal(true)
+      const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
+      expect(() => set.has(token2)).to.throw('Detected two of the same token with different location')
     })
 
     it('should throw for tokens of unknown protocol', () => {
-
+      const set = new RunSet()
+      const token = { $protocol: {}, location: 'abc' }
+      expect(() => set.delete(token)).to.throw('Unknown token protocol')
     })
   })
 
