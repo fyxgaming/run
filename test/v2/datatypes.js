@@ -354,6 +354,44 @@ describe('RunMap', () => {
     })
   })
 
+  describe('set', () => {
+    it('should return map regardless', () => {
+      const map = new RunMap()
+      expect(map.set(1, 1)).to.equal(map)
+      expect(map.set(1, 1)).to.equal(map)
+    })
+
+    it('should set basic types and objects as keys once', () => {
+      const map = new RunMap()
+      const entries = [[1, 2], ['abc', 'def'], [true, false], [{}, []]]
+      entries.forEach(([x, y]) => map.set(x, y))
+      entries.forEach(([x, y]) => map.set(x, y))
+      expect(map.size).to.equal(entries.length)
+    })
+
+    it('should set tokens once', () => {
+      const token1 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
+      const token2 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
+      const map = new RunMap()
+      map.set(token1, 0)
+      map.set(token2, 1)
+      expect(map.size).to.equal(1)
+      expect(map.get(token1)).to.equal(1)
+    })
+
+    it('should throw if set token with unknown protocol', () => {
+      expect(() => new RunMap().set({ $protocol: {} }, 0)).to.throw('Unknown token protocol')
+    })
+
+    it('should throw if add two of the same tokens at different states', () => {
+      const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
+      const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
+      const map = new RunMap()
+      map.set(token1, token1)
+      expect(() => map.set(token2, {})).to.throw('Detected two of the same token with different locations')
+    })
+  })
+
   describe('values', () => {
     it('should return values iterator', () => {
       const entries = [[1, 2], [3, 4]]
