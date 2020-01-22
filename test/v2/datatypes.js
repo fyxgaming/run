@@ -212,6 +212,32 @@ describe('RunSet', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('RunMap', () => {
+  describe('delete', () => {
+    it('should return false if item is not present', () => {
+      expect(new RunMap().delete(1)).to.equal(false)
+      expect(new RunMap().delete({ $protocol: Protocol.BcatProtocol, location: 'abc' })).to.equal(false)
+    })
+
+    it('should delete item and return true if item is present', () => {
+      expect(new RunMap([[1, 1]]).delete(1)).to.equal(true)
+    })
+
+    it('should clear token states', () => {
+      const token = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
+      const map = new RunMap([[token, 1]])
+      map.delete(token)
+      expect(map.size).to.equal(0)
+      map.set({ protocol: Protocol.RunProtocol, location: 'def', origin: '123' }, 1)
+    })
+
+    it('should throw for same tokens at different states', () => {
+      const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
+      const map = new RunMap([[token1, token1]])
+      const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
+      expect(() => map.delete(token2)).to.throw('Detected two of the same token with different locations')
+    })
+  })
+
   describe('entries', () => {
     it('should iterate across entries', () => {
       const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
@@ -258,7 +284,7 @@ describe('RunMap', () => {
       expect(map.has(obj)).to.equal(false)
     })
 
-    it('should return true for tokens in set', () => {
+    it('should return true for tokens in map', () => {
       const token1 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
       const map = new RunMap([[token1, {}]])
       expect(map.has(token1)).to.equal(true)
