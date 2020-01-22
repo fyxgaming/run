@@ -130,8 +130,8 @@ describe('RunSet', () => {
     it('should execute function for each entry', () => {
       const set = new RunSet([1, 2, 3])
       class A {
-        constructor() { this.arr = [] }
-        push(x) { this.arr.push(x) }
+        constructor () { this.arr = [] }
+        push (x) { this.arr.push(x) }
       }
       const a = new A()
       set.forEach(a.push, a)
@@ -168,8 +168,8 @@ describe('RunSet', () => {
       expect(set.has(token2)).to.equal(true)
     })
 
-    it ('should return false for missing tokens', () => {
-      expect(new RunSet().has({ $protocol: Protocol.RunProtocol, location: 'abc'})).to.equal(false)
+    it('should return false for missing tokens', () => {
+      expect(new RunSet().has({ $protocol: Protocol.RunProtocol, location: 'abc' })).to.equal(false)
     })
 
     it('should throw for same tokens at different states', () => {
