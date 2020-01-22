@@ -212,11 +212,35 @@ describe('RunSet', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('RunMap', () => {
+  describe('entries', () => {
+    it('should iterate across entries', () => {
+      const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
+      const map = new RunMap(entries)
+      for (const entry of map.entries()) {
+        const next = entries.shift()
+        expect(entry).to.deep.equal(next)
+      }
+    })
+  })
+
+  describe('forEach', () => {
+    it('should execute function for each entry', () => {
+      const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
+      const map = new RunMap(entries)
+      class A {
+        constructor () { this.arr = [] }
+        push (x, y) { this.arr.push([x, y]) }
+      }
+      const a = new A()
+      map.forEach(a.push, a)
+      expect(a.arr).to.deep.equal([[2, 1], ['b', 'a'], [true, false], [[], {}]])
+    })
+  })
+
   describe('has', () => {
     it('should return true for basic types and objects in set', () => {
       const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
-      const map = new RunMap()
-      entries.forEach(entry => map.set(entry[0], entry[1]))
+      const map = new RunMap(entries)
       entries.forEach(entry => expect(map.has(entry[0])).to.equal(true))
     })
 
@@ -228,8 +252,7 @@ describe('RunMap', () => {
 
     it('should return false after object is deleted', () => {
       const obj = {}
-      const map = new RunMap()
-      map.set(obj, 1)
+      const map = new RunMap([[obj, 1]])
       expect(map.has(obj)).to.equal(true)
       map.delete(obj)
       expect(map.has(obj)).to.equal(false)
@@ -237,8 +260,7 @@ describe('RunMap', () => {
 
     it('should return true for tokens in set', () => {
       const token1 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
-      const map = new RunMap()
-      map.set(token1, {})
+      const map = new RunMap([[token1, {}]])
       expect(map.has(token1)).to.equal(true)
       const token2 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
       expect(map.has(token2)).to.equal(true)
@@ -250,8 +272,7 @@ describe('RunMap', () => {
 
     it('should throw for same tokens at different states', () => {
       const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
-      const map = new RunMap()
-      map.set(token1, [])
+      const map = new RunMap([[token1, []]])
       expect(map.has(token1)).to.equal(true)
       const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
       expect(() => map.has(token2)).to.throw('Detected two of the same token with different location')
@@ -267,9 +288,8 @@ describe('RunMap', () => {
   describe('values', () => {
     it('should return values iterator', () => {
       const entries = [[1, 2], [3, 4]]
-      const map = new RunMap()
+      const map = new RunMap(entries)
       const arr = []
-      entries.forEach(entry => map.set(entry[0], entry[1]))
       for (const val of map.values()) { arr.push(val) }
       expect(arr).to.deep.equal([2, 4])
     })
