@@ -212,8 +212,77 @@ describe('RunSet', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('RunMap', () => {
-  it('test', () => {
-    console.log(new RunMap())
+  describe('has', () => {
+    it('should return true for basic types and objects in set', () => {
+      const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
+      const map = new RunMap()
+      entries.forEach(entry => map.set(entry[0], entry[1]))
+      entries.forEach(entry => expect(map.has(entry[0])).to.equal(true))
+    })
+
+    it('should return false for basic types and objects not in set', () => {
+      const entries = [1, 'a', false, {}, []]
+      const map = new RunMap()
+      entries.forEach(entry => expect(map.has(entry)).to.equal(false))
+    })
+
+    it('should return false after object is deleted', () => {
+      const obj = {}
+      const map = new RunMap()
+      map.set(obj, 1)
+      expect(map.has(obj)).to.equal(true)
+      map.delete(obj)
+      expect(map.has(obj)).to.equal(false)
+    })
+
+    it('should return true for tokens in set', () => {
+      const token1 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
+      const map = new RunMap()
+      map.set(token1, {})
+      expect(map.has(token1)).to.equal(true)
+      const token2 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
+      expect(map.has(token2)).to.equal(true)
+    })
+
+    it('should return false for missing tokens', () => {
+      expect(new RunMap().has({ $protocol: Protocol.RunProtocol, location: 'abc' })).to.equal(false)
+    })
+
+    it('should throw for same tokens at different states', () => {
+      const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
+      const map = new RunMap()
+      map.set(token1, [])
+      expect(map.has(token1)).to.equal(true)
+      const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
+      expect(() => map.has(token2)).to.throw('Detected two of the same token with different location')
+    })
+
+    it('should throw for tokens of unknown protocol', () => {
+      const map = new RunMap()
+      const token = { $protocol: {}, location: 'abc' }
+      expect(() => map.delete(token)).to.throw('Unknown token protocol')
+    })
+  })
+
+  describe('values', () => {
+    it('should return values iterator', () => {
+      const entries = [[1, 2], [3, 4]]
+      const map = new RunMap()
+      const arr = []
+      entries.forEach(entry => map.set(entry[0], entry[1]))
+      for (const val of map.values()) { arr.push(val) }
+      expect(arr).to.deep.equal([2, 4])
+    })
+  })
+
+  describe('misc', () => {
+    it('should return RunMap for Symbol.species', () => {
+      expect(new RunMap()[Symbol.species]).to.equal(RunMap)
+    })
+
+    it('should return iterator for Symbol.iterator', () => {
+      expect(new RunMap()[Symbol.species]).to.equal(RunMap)
+    })
   })
 })
 
