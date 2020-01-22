@@ -188,7 +188,12 @@ describe('RunSet', () => {
   })
 
   describe('values', () => {
-    // TODO
+    it('should return values iterator', () => {
+      const arr = []
+      const set = new RunSet([1, 2, 3])
+      for (const val of set.values()) { arr.push(val) }
+      expect(arr).to.deep.equal([1, 2, 3])
+    })
   })
 
   describe('misc', () => {
