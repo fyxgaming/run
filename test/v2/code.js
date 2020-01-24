@@ -41,6 +41,7 @@ describe('Code', () => {
 
     const p = new Package(A)
     console.log(p)
+    console.log(p.deployables)
     // console.log(JSON.stringify(p, null, 2))
     // console.log(JSON.stringify(p))
   })
