@@ -130,9 +130,10 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
 
     it('should share intrinsics between evaluations', () => {
       const evaluator = createEvaluator()
-      Run.Evaluator.intrinsicDataTypes.forEach(intrinsic => {
-        const intrinsic1 = evaluator.evaluate(`function f() { return ${intrinsic} }`)[0]()
-        const intrinsic2 = evaluator.evaluate(`function f() { return ${intrinsic} }`)[0]()
+      Run.Evaluator.intrinsicNames.forEach(name => {
+        if (typeof global[name] === 'undefined') return
+        const intrinsic1 = evaluator.evaluate(`function f() { return ${name} }`)[0]()
+        const intrinsic2 = evaluator.evaluate(`function f() { return ${name} }`)[0]()
         expect(intrinsic1).to.equal(intrinsic2)
       })
       destroyEvaluator(evaluator)

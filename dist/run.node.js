@@ -2288,25 +2288,6 @@ class Evaluator {
 // SESEvaluator
 // ------------------------------------------------------------------------------------------------
 
-// Supported intrisic data types that should be the same across evaluations
-const intrinsicDataTypes = [
-  'RegExp',
-  'Array',
-  'Int8Array',
-  'Uint8Array',
-  'Uint8ClampedArray',
-  'Int16Array',
-  'Uint16Array',
-  'Int32Array',
-  'Uint32Array',
-  'Float32Array',
-  'Float64Array',
-  'Map',
-  'Set',
-  'WeakMap',
-  'WeakSet'
-]
-
 // Non-deterministic globals will be banned
 const nonDeterministicGlobals = [
   'Date',
@@ -2328,10 +2309,7 @@ class SESEvaluator {
 
     // Keep track of common intrinsics shared between realms. The SES realm creates
     // these, and we just evaluate a list of them and store them here.
-    this.intrinsics = {}
-    intrinsicDataTypes.forEach(type => {
-      this.intrinsics[type] = this.realm.evaluate(type, {})
-    })
+    this.intrinsics = this.realm.evaluate(`(${getIntrinsics.toString()})()`, { intrinsicNames })
 
     // We also overwrite console so that console.log in sandboxed code is relogged outside
     const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
@@ -2346,11 +2324,14 @@ class SESEvaluator {
     // Create the globals object in the SES realm so it doesn't expose ours
     const $globals = this.realm.evaluate('({})')
 
-    env = Object.assign({}, this.intrinsics, env, { $globals })
-
+    // Disable each non-deterministic global
+    env = Object.assign({}, env)
     nonDeterministicGlobals.forEach(key => {
       if (!(key in env)) env[key] = undefined
     })
+
+    // Create the real env we'll use
+    env = Object.assign({}, this.intrinsics, env, { $globals })
 
     // When a function is anonymous, it will be named the variable it is assigned. We give it
     // a friendly anonymous name to distinguish it from named classes and functions.
@@ -2471,11 +2452,100 @@ function sameDescriptors (a, b) {
   return !aKeys.some(key => a[key] !== b[key])
 }
 
+// See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
+const intrinsicNames = [
+  // Global functions
+  'console',
+  'eval',
+  'isFinite',
+  'isNaN',
+  'parseFloat',
+  'parseInt',
+  'decodeURI',
+  'decodeURIComponent',
+  'encodeURI',
+  'encodeURIComponent',
+  'escape',
+
+  // Fundamental objects
+  'Object',
+  'Function',
+  'Boolean',
+  'Symbol',
+  'Error',
+  'EvalError',
+  'RangeError',
+  'ReferenceError',
+  'SyntaxError',
+  'TypeError',
+  'URIError',
+
+  // Numbers and dates
+  'Number',
+  'BigInt',
+  'Math',
+  'Date',
+
+  // Text processing
+  'String',
+  'RegExp',
+
+  // Indexed collections
+  'Array',
+  'Int8Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Int16Array',
+  'Uint16Array',
+  'Int32Array',
+  'Uint32Array',
+  'Float32Array',
+  'Float64Array',
+  'BigInt64Array',
+  'BigUint64Array',
+
+  // Keyed collections
+  'Map',
+  'Set',
+  'WeakMap',
+  'WeakSet',
+
+  // Structured data
+  'ArrayBuffer',
+  'DataView',
+  'JSON',
+
+  // Control abstraction objects
+  'Promise',
+  'Generator',
+  'GeneratorFunction',
+  'AsyncFunction',
+
+  // Reflection
+  'Reflect',
+  'Proxy',
+
+  // Internationalization
+  'Intl',
+
+  // WebAssembly
+  'WebAssembly'
+]
+
+// Returns an object with the built-in intrinsics in this environment
+const getIntrinsics = () => {
+  let code = 'const x = {};'
+  intrinsicNames.forEach(name => { code += `x.${name}=typeof ${name}!=='undefined'?${name}:undefined;` })
+  code += 'return x'
+  return new Function(code)() // eslint-disable-line
+}
+
 // ------------------------------------------------------------------------------------------------
 
 Evaluator.SESEvaluator = SESEvaluator
 Evaluator.GlobalEvaluator = GlobalEvaluator
-Evaluator.intrinsicDataTypes = intrinsicDataTypes
+Evaluator.intrinsicNames = intrinsicNames
+Evaluator.getIntrinsics = getIntrinsics
 Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
 
 module.exports = Evaluator
