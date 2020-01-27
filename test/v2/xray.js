@@ -24,11 +24,6 @@ describe('Xray', () => {
       expect(xray.cloneable(null)).to.equal(true)
     })
 
-    it.only('test', () => {
-      const xray = new Xray.Builder().build()
-      expect(xray.cloneable(Math)).to.equal(false)
-    })
-
     it('should return false for non-cloneables', () => {
       const xray = new Xray.Builder().build()
       expect(xray.cloneable(new Date())).to.equal(false)
