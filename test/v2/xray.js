@@ -12,12 +12,14 @@ class TestVector {
     this.scannable = true
     this.cloneable = true
     this.serializable = true
+    this.deserializable = true
     this.serializedX = x
   }
 
   unscannable () { this.scannable = false; return this }
   uncloneable () { this.cloneable = false; return this }
   unserializable () { this.serializable = false; return this }
+  undeserializable () { this.deserializable = false; return this }
   serialized (value) { this.serializedX = value; return this }
 
   testScan () {
@@ -39,6 +41,12 @@ class TestVector {
     const xray = new Xray()
     expect(xray.serializable(this.x)).to.equal(this.serializable)
     expect(xray.caches.serializable.get(this.x)).to.equal(this.serializable)
+  }
+
+  testDeserializable () {
+    const xray = new Xray()
+    expect(xray.deserializable(this.serializedX)).to.equal(this.deserializable)
+    expect(xray.caches.deserializable.get(this.serializedX)).to.equal(this.deserializable)
   }
 
   testClone () {
@@ -70,6 +78,10 @@ class TestVector {
     expect(xray.serialize(this.x)).to.deep.equal(this.serializedX)
     expect(xray.caches.serialize.get(this.x)).to.deep.equal(this.serializedX)
   }
+
+  testDeserialize() {
+    // TODO
+  }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -99,9 +111,9 @@ addTestVector(Number.MIN_VALUE)
 addTestVector(0.5)
 addTestVector(-1.5)
 addTestVector(0.1234567890987654321)
-addTestVector(NaN).unserializable()
-addTestVector(Infinity).unserializable()
-addTestVector(-Infinity).unserializable()
+addTestVector(NaN).unserializable().undeserializable()
+addTestVector(Infinity).unserializable().undeserializable()
+addTestVector(-Infinity).unserializable().undeserializable()
 
 // Strings
 addTestVector('')
@@ -136,7 +148,7 @@ arr.x = 2
 addTestVector(arr)
 addTestVector([undefined, null]).serialized([{ $class: 'undefined' }, null])
 class CustomArray extends Array {}
-addTestVector(CustomArray.from([])).unscannable().uncloneable().unserializable()
+addTestVector(CustomArray.from([])).unscannable().uncloneable().unserializable().undeserializable()
 
 /*
 // Circular references
@@ -252,6 +264,12 @@ describe('Xray', () => {
     })
   })
 
+  describe('deserializable', () => {
+    it('should pass test vectors', () => {
+      vectors.forEach(vector => vector.testDeserializable())
+    })
+  })
+
   describe('clone', () => {
     it('should pass test vectors', () => {
       vectors.forEach(vector => vector.testClone())
@@ -261,6 +279,12 @@ describe('Xray', () => {
   describe('serialize', () => {
     it('should pass test vectors', () => {
       vectors.forEach(vector => vector.testSerialize())
+    })
+  })
+
+  describe('deserialize', () => {
+    it('should pass test vectors', () => {
+      vectors.forEach(vector => vector.testDeserialize())
     })
   })
 })
