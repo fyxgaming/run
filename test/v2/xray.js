@@ -134,7 +134,7 @@ addTestVector(z)
 const arr = [1]
 arr.x = 2
 addTestVector(arr)
-addTestVector([undefined]).serialized([{ $class: 'undefined' }])
+addTestVector([undefined, null]).serialized([{ $class: 'undefined' }, null])
 class CustomArray extends Array {}
 addTestVector(CustomArray.from([])).unscannable().uncloneable().unserializable()
 
