@@ -172,16 +172,18 @@ Object.assign(setWithProps, { a: 'a', b: [], c: new Set() })
 addTestVector(setWithProps).serialized({ $class: 'Set', entries: [0], props: { a: 'a', b: [], c: { $class: 'Set' } } })
 
 // Circular and duplicate references
-const circObj = {}
-circObj.c = circObj
-addTestVector(circObj)
-const circArr = []
-circArr.push(circArr)
-addTestVector(circArr)
-const circSet = new Set()
-circSet.add(circSet)
+// const circObj = {}
+// circObj.c = circObj
+// addTestVector(circObj).serialized({ $dedup: { $dup: 0 }, dups: [{ c: { $dup: 0 } }] })
+// const circArr = []
+// circArr.push(circArr)
+// addTestVector(circArr)
+// const circSet = new Set()
+// circSet.add(circSet)
 // circSet.c = circSet
-addTestVector(circSet).serialized({ $class: 'Set', entries: [] })
+// const dups = [{ $class: 'Set', entries: { $class: 'dup', n: 0 } }]
+// addTestVector(circSet).serialized({ $class: 'dedup', value: { $class: 'dup', n: 0 }, dups })
+
 // const circMap = new Map()
 // circMap.set(circMap, 1)
 // circMap.set(1, circMap)
