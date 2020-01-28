@@ -119,6 +119,17 @@ addTestVector({ $ref: '123' }).unserializable()
 addTestVector({ $n: '0' }).unserializable()
 addTestVector({ undef: undefined }).serialized({ undef: { $class: 'undefined' } })
 
+// Array
+addTestVector([])
+addTestVector([1, 'a', true])
+addTestVector([[[]]])
+const z = [[1], [2], [3]]
+addTestVector(z)
+const arr = [1]
+arr.x = 2
+addTestVector(arr)
+addTestVector([undefined]).serialized([{ $class: 'undefined' }])
+
 /*
 // Circular references
 // const circ = {}
@@ -129,7 +140,7 @@ addTestVector({ undef: undefined }).serialized({ undef: { $class: 'undefined' } 
 // const dup = {}
 */
 
-// Array
+// Circular array
 
 // Uint8Array
 
