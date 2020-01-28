@@ -80,7 +80,7 @@ class TestVector {
     expect(xray.caches.serialize.get(this.x)).to.deep.equal(this.serializedX)
   }
 
-  testDeserialize() {
+  testDeserialize () {
     const xray = new Xray()
 
     if (!this.deserializable) {
@@ -162,6 +162,11 @@ addTestVector([undefined, null]).serialized([{ $class: 'undefined' }, null])
 class CustomArray extends Array {}
 addTestVector(CustomArray.from([])).unscannable().uncloneable().unserializable().undeserializable()
 
+// Sets
+addTestVector(new Set()).serialized({ $class: 'Set', entries: [], props: {} })
+// addTestVector(new Set([1, 2, 3]))
+// addTestVector(new Set([new Set(['a', 'b', 'c']), {}]))
+
 // Circular and duplicate references
 const circObj = {}
 circObj.c = circObj
@@ -198,13 +203,6 @@ addTestVector(circArr)
   'Float64Array',
   'BigInt64Array',
   'BigUint64Array',
-  */
-
-// Sets
-/*
-  new Set(),
-  new Set([1, 2, 3]),
-  new Set([new Set(['a', 'b', 'c']), {}])
   */
 
 // Deployable
