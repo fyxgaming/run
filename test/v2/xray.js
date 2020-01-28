@@ -178,9 +178,10 @@ addTestVector(circObj)
 const circArr = []
 circArr.push(circArr)
 addTestVector(circArr)
-// const circSet = new Set()
-// circSet.add(circSet)
-// addTestVector(circSet)
+const circSet = new Set()
+circSet.add(circSet)
+// circSet.c = circSet
+addTestVector(circSet).serialized({ $class: 'Set', entries: [] })
 // const circMap = new Map()
 // circMap.set(circMap, 1)
 // circMap.set(1, circMap)
