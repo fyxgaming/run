@@ -162,15 +162,24 @@ addTestVector([undefined, null]).serialized([{ $class: 'undefined' }, null])
 class CustomArray extends Array {}
 addTestVector(CustomArray.from([])).unscannable().uncloneable().unserializable().undeserializable()
 
-/*
-// Circular references
-// const circ = {}
-// circ.circ = circ
-// addTestVector(circ)
+// Circular and duplicate references
+const circObj = {}
+circObj.c = circObj
+addTestVector(circObj)
+const circArr = []
+circArr.push(circArr)
+addTestVector(circArr)
+// const circSet = new Set()
+// circSet.add(circSet)
+// addTestVector(circSet)
+// const circMap = new Map()
+// circMap.set(circMap, 1)
+// circMap.set(1, circMap)
+// addTestVector(circMap)
+// TODO circular arb obj
 
 // Duplicate references
 // const dup = {}
-*/
 
 // Circular array
 
