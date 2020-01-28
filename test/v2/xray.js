@@ -96,7 +96,10 @@ describe('Xray', () => {
     })
 
     it('should cache repeated calls', () => {
-
+      const xray = new Xray()
+      const obj = {}
+      xray.cloneable(obj)
+      expect(xray.caches.cloneable.get(obj)).to.equal(true)
     })
   })
 })
