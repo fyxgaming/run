@@ -1,6 +1,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Xray = require('../../lib/v2/xray')
+const { display } = require('../../lib/util')
 
 // ------------------------------------------------------------------------------------------------
 // Test vector class
@@ -27,7 +28,7 @@ class TestVector {
     if (this.scannable) {
       expect(() => xray.scan(this.x)).not.to.throw()
     } else {
-      expect(() => xray.scan(this.x)).to.throw(`${this.x} cannot be scanned`)
+      expect(() => xray.scan(this.x)).to.throw(`${display(this.x)} cannot be scanned`)
     }
   }
 
@@ -53,7 +54,7 @@ class TestVector {
     const xray = new Xray()
 
     if (!this.cloneable) {
-      expect(() => xray.clone(this.x)).to.throw(`${this.x} cannot be cloned`)
+      expect(() => xray.clone(this.x)).to.throw(`${display(this.x)} cannot be cloned`)
       return
     }
 
@@ -68,7 +69,7 @@ class TestVector {
     const xray = new Xray()
 
     if (!this.serializable) {
-      expect(() => xray.serialize(this.x)).to.throw(`${this.x} cannot be serialized`)
+      expect(() => xray.serialize(this.x)).to.throw(`${display(this.x)} cannot be serialized`)
       return
     }
 
@@ -83,7 +84,7 @@ class TestVector {
     const xray = new Xray()
 
     if (!this.deserializable) {
-      expect(() => xray.deserialize(this.serializedX)).to.throw(`${this.serializedX} cannot be deserialized`)
+      expect(() => xray.deserialize(this.serializedX)).to.throw(`${display(this.serializedX)} cannot be deserialized`)
       return
     }
 
@@ -219,13 +220,15 @@ addTestVector(isFinite, { deployable: false })
 addTestVector(parseInt, { deployable: false })
 addTestVector(escape, { deployable: false })
 addTestVector(eval, { deployable: false })
+*/
 
 // Symbols
-addTestVector(Symbol.hasInstance, { cloneable: false, serializable: false })
-addTestVector(Symbol.iterator, { cloneable: false, serializable: false })
-addTestVector(Symbol.species, { cloneable: false, serializable: false })
-addTestVector(Symbol.unscopables, { cloneable: false, serializable: false })
+addTestVector(Symbol.hasInstance).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Symbol.iterator).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Symbol.species).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Symbol.unscopables).unscannable().uncloneable().unserializable().undeserializable()
 
+/*
 // Intrinsic objects
 addTestVector(console, { cloneable: false, serializable: false })
 addTestVector(Object, { cloneable: false, serializable: false })
