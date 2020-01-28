@@ -6,6 +6,39 @@ const Xray = require('../../lib/v2/xray')
 // Test vectors
 // ------------------------------------------------------------------------------------------------
 
+const cloneables = [
+  true,
+  false,
+  0,
+  -1,
+  Number.MAX_SAFE_INTEGER,
+  Number.MIN_SAFE_INTEGER,
+  Number.MAX_VALUE,
+  Number.MIN_VALUE,
+  0.5,
+  -1.5,
+  NaN,
+  Infinity,
+  -Infinity,
+  '',
+  'abc',
+  '🐉',
+  undefined,
+  null
+]
+
+const nonCloneables = [
+  new Date(),
+  new WeakSet(),
+  new WeakMap(),
+  class {},
+  function f() {},
+  Math,
+  Buffer,
+  Symbol.iterator,
+  Symbol.species
+]
+
 const deployables = [
   class { },
   class A { },
@@ -34,55 +67,32 @@ describe('Xray', () => {
   describe('cloneable', () => {
     it('should return true for cloneables', () => {
       const xray = new Xray()
-      expect(xray.cloneable(true)).to.equal(true)
-      expect(xray.cloneable(false)).to.equal(true)
-      expect(xray.cloneable(0)).to.equal(true)
-      expect(xray.cloneable(-1)).to.equal(true)
-      expect(xray.cloneable(Number.MAX_SAFE_INTEGER)).to.equal(true)
-      expect(xray.cloneable(Number.MIN_SAFE_INTEGER)).to.equal(true)
-      expect(xray.cloneable(Number.MAX_VALUE)).to.equal(true)
-      expect(xray.cloneable(Number.MIN_VALUE)).to.equal(true)
-      expect(xray.cloneable(0.5)).to.equal(true)
-      expect(xray.cloneable(NaN)).to.equal(true)
-      expect(xray.cloneable(Infinity)).to.equal(true)
-      expect(xray.cloneable('')).to.equal(true)
-      expect(xray.cloneable('abc')).to.equal(true)
-      expect(xray.cloneable('🐉')).to.equal(true)
-      expect(xray.cloneable(undefined)).to.equal(true)
-      expect(xray.cloneable(null)).to.equal(true)
+      cloneables.forEach(x => expect(xray.cloneable(x)).to.equal(true))
     })
 
     it('should return false for non-cloneables', () => {
       const xray = new Xray()
-      expect(xray.cloneable(new Date())).to.equal(false)
-      expect(xray.cloneable(new WeakSet())).to.equal(false)
-      expect(xray.cloneable(new WeakMap())).to.equal(false)
-      expect(xray.cloneable(class {})).to.equal(false)
-      expect(xray.cloneable(function f () {})).to.equal(false)
-      expect(xray.cloneable(Math)).to.equal(false)
-      expect(xray.cloneable(Buffer)).to.equal(false)
-      expect(xray.cloneable(Symbol.iterator)).to.equal(false)
-      expect(xray.cloneable(Symbol.species)).to.equal(false)
+      nonCloneables.forEach(x => expect(xray.cloneable(x)).to.equal(false))
     })
 
     it('should return true for deployables when deployables are allowed', () => {
       const xray = new Xray().allowDeployables()
-      deployables.forEach(deployable => expect(xray.cloneable(deployable)).to.equal(true))
+      deployables.forEach(x => expect(xray.cloneable(x)).to.equal(true))
     })
 
     it('should return false for deployables when deployables are disallowed', () => {
       const xray = new Xray()
-      deployables.forEach(deployable => expect(xray.cloneable(deployable)).to.equal(false))
+      deployables.forEach(x => expect(xray.cloneable(x)).to.equal(false))
     })
 
     it('should return false for nondeployables when deployables are allowed', () => {
       const xray = new Xray().allowDeployables()
-      nonDeployables.forEach(nonDeployable => expect(xray.cloneable(nonDeployable)).to.equal(false))
+      nonDeployables.forEach(x => expect(xray.cloneable(x)).to.equal(false))
     })
 
     it('should return false for nondeployables when deployables are disallowed', () => {
       const xray = new Xray()
-      nonDeployables.forEach(nonDeployable => expect(xray.cloneable(nonDeployable)).to.equal(false))
+      nonDeployables.forEach(x => expect(xray.cloneable(x)).to.equal(false))
     })
 
     it('should cache repeated calls', () => {
