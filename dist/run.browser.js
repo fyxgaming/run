@@ -1924,6 +1924,14 @@ class Code {
       this.installs.set(type, sandbox)
       this.installs.set(sandbox, sandbox)
 
+      /*
+      const { tokens, deployables } = new Xray()
+        .allowTokens()
+        .allowDeployables()
+        .useIntrinsics(sandboxIntrinsics)
+        .scan(Object.assign({}, type))
+      */
+
       const { props, refs } = Code.extractProps(type)
       Object.keys(props).forEach(key => { sandbox[key] = props[key] })
       const codeRefs = refs.filter(ref => util.deployable(ref))
@@ -1976,6 +1984,17 @@ class Code {
         })
       }
       codeRefs.forEach(ref => this.deploy(ref))
+
+      /*
+      const xray = new Xray.Builder()
+        .allowTokens()
+        .useIntrinsics(sandboxIntrinsics)
+        .build()
+
+      Object.keys(props).forEach(prop => {
+        sandbox[prop] = xray.clone(prop)
+      })
+      */
 
       // replace all static props that are code with sandboxed code because sandboxes
       // should only know about other sandboxed code and never application code.

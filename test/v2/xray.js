@@ -2,10 +2,38 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Xray = require('../../lib/v2/xray')
 
+// ------------------------------------------------------------------------------------------------
+// Test vectors
+// ------------------------------------------------------------------------------------------------
+
+const deployables = [
+  class { },
+  class A { },
+  class { method () { return null }},
+  class A { constructor () { } },
+  function f () {},
+  function add (a, b) { return a + b },
+  function () { return '123' },
+  () => {},
+  x => x
+]
+
+const nonDeployables = [
+  Math.random,
+  Array.prototype.indexOf,
+  WeakSet.prototype.has,
+  isNaN,
+  eval
+]
+
+// ------------------------------------------------------------------------------------------------
+// Tests
+// ------------------------------------------------------------------------------------------------
+
 describe('Xray', () => {
   describe('cloneable', () => {
     it('should return true for cloneables', () => {
-      const xray = new Xray.Builder().build()
+      const xray = new Xray()
       expect(xray.cloneable(true)).to.equal(true)
       expect(xray.cloneable(false)).to.equal(true)
       expect(xray.cloneable(0)).to.equal(true)
@@ -25,7 +53,7 @@ describe('Xray', () => {
     })
 
     it('should return false for non-cloneables', () => {
-      const xray = new Xray.Builder().build()
+      const xray = new Xray()
       expect(xray.cloneable(new Date())).to.equal(false)
       expect(xray.cloneable(new WeakSet())).to.equal(false)
       expect(xray.cloneable(new WeakMap())).to.equal(false)
@@ -37,20 +65,24 @@ describe('Xray', () => {
       expect(xray.cloneable(Symbol.species)).to.equal(false)
     })
 
-    it('should return true for deployables when allowed', () => {
-      const xray = new Xray.Builder().allowDeployables().build()
-      expect(xray.cloneable(class {})).to.equal(true)
-      expect(xray.cloneable(function f () { })).to.equal(true)
+    it('should return true for deployables when deployables are allowed', () => {
+      const xray = new Xray().allowDeployables()
+      deployables.forEach(deployable => expect(xray.cloneable(deployable)).to.equal(true))
     })
 
-    it('should return false for deployables when allowed', () => {
-      const xray = new Xray.Builder().build()
-      expect(xray.cloneable(class {})).to.equal(false)
-      expect(xray.cloneable(function f () { })).to.equal(false)
+    it('should return false for deployables when deployables are disallowed', () => {
+      const xray = new Xray()
+      deployables.forEach(deployable => expect(xray.cloneable(deployable)).to.equal(false))
     })
 
-    it('should return false for undeployables', () => {
+    it('should return false for nondeployables when deployables are allowed', () => {
+      const xray = new Xray().allowDeployables()
+      nonDeployables.forEach(nonDeployable => expect(xray.cloneable(nonDeployable)).to.equal(false))
+    })
 
+    it('should return false for nondeployables when deployables are disallowed', () => {
+      const xray = new Xray()
+      nonDeployables.forEach(nonDeployable => expect(xray.cloneable(nonDeployable)).to.equal(false))
     })
 
     it('should cache repeated calls', () => {
@@ -66,3 +98,5 @@ describe('Xray', () => {
 // Caches
 // TODO: if (key.startsWith('$')) throw new Error('$ properties must not be defined')
 // Port existing classes over
+
+// ------------------------------------------------------------------------------------------------
