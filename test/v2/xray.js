@@ -18,6 +18,11 @@ class TestVector {
   unserializable () { this.serializable = false; return this }
   serialized (value) { this.serializedX = value; return this }
 
+  testScan () {
+    const xray = new Xray()
+    expect(() => xray.scan(this.x)).not.to.throw()
+  }
+
   testCloneable () {
     const xray = new Xray()
     expect(xray.cloneable(this.x)).to.equal(this.cloneable)
@@ -210,6 +215,12 @@ addTestVector(new Proxy({}, {}), { cloneable: false, serializable: false })
 // ------------------------------------------------------------------------------------------------
 
 describe('Xray', () => {
+  describe('scan', () => {
+    it('should pass test vectors', () => {
+      vectors.forEach(vector => vector.testScan())
+    })
+  })
+
   describe('cloneable', () => {
     it('should pass test vectors', () => {
       vectors.forEach(vector => vector.testCloneable())
