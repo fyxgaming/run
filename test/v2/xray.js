@@ -172,9 +172,9 @@ Object.assign(setWithProps, { a: 'a', b: [], c: new Set() })
 addTestVector(setWithProps).serialized({ $class: 'Set', entries: [0], props: { a: 'a', b: [], c: { $class: 'Set' } } })
 
 // Circular and duplicate references
-// const circObj = {}
-// circObj.c = circObj
-// addTestVector(circObj).serialized({ $dedup: { $dup: 0 }, dups: [{ c: { $dup: 0 } }] })
+const circObj = {}
+circObj.c = circObj
+addTestVector(circObj).serialized({ $dedup: { $dup: 0 }, dups: [{ c: { $dup: 0 } }] })
 // const circArr = []
 // circArr.push(circArr)
 // addTestVector(circArr)
@@ -323,6 +323,9 @@ describe('Xray', () => {
 // Duplicates
 // Caches
 // TODO: if (key.startsWith('$')) throw new Error('$ properties must not be defined')
+    //-On Set properties
+// Dups are actually not dups afterward
 // Port existing classes over
+
 
 // ------------------------------------------------------------------------------------------------
