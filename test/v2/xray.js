@@ -171,10 +171,12 @@ const setWithProps = new Set([0])
 Object.assign(setWithProps, { a: 'a', b: [], c: new Set() })
 addTestVector(setWithProps).serialized({ $class: 'Set', entries: [0], props: { a: 'a', b: [], c: { $class: 'Set' } } })
 
+/*
 // Circular and duplicate references
 const circObj = {}
 circObj.c = circObj
 addTestVector(circObj).serialized({ $dedup: { $dup: 0 }, dups: [{ c: { $dup: 0 } }] })
+*/
 // const circArr = []
 // circArr.push(circArr)
 // addTestVector(circArr)
@@ -262,6 +264,8 @@ addTestVector(new WeakSet, { cloneable: false, serializable: false })
 addTestVector(new WeakMap, { cloneable: false, serializable: false })
 addTestVector(new Proxy({}, {}), { cloneable: false, serializable: false })
 */
+
+// Maps
 
 // Regexp
 
