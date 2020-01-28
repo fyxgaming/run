@@ -80,7 +80,18 @@ class TestVector {
   }
 
   testDeserialize() {
-    // TODO
+    const xray = new Xray()
+
+    if (!this.deserializable) {
+      expect(() => xray.deserialize(this.serializedX)).to.throw(`${this.serializedX} cannot be deserialized`)
+      return
+    }
+
+    if (typeof this.x === 'object' && this.x) {
+      expect(xray.deserialize(this.serializedX)).not.to.equal(this.x)
+    }
+    expect(xray.deserialize(this.serializedX)).to.deep.equal(this.x)
+    expect(xray.caches.deserialize.get(this.serializedX)).to.deep.equal(this.x)
   }
 }
 
@@ -132,9 +143,9 @@ addTestVector({})
 addTestVector({ n: 1 })
 addTestVector({ o1: { o2: { o3: {} } } })
 addTestVector({ s: 't', a: [1], b: true, n: 0, o: { n2: 2 }, z: null })
-addTestVector({ $class: 'undefined' }).unserializable()
-addTestVector({ $ref: '123' }).unserializable()
-addTestVector({ $n: '0' }).unserializable()
+addTestVector({ $class: 'undefined' }).serialized(undefined).unserializable().undeserializable()
+addTestVector({ $ref: '123' }).unserializable().undeserializable()
+addTestVector({ $n: '0' }).unserializable().undeserializable()
 addTestVector({ undef: undefined }).serialized({ undef: { $class: 'undefined' } })
 
 // Array
