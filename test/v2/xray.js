@@ -9,18 +9,24 @@ const Xray = require('../../lib/v2/xray')
 class TestVector {
   constructor (x) {
     this.x = x
+    this.scannable = true
     this.cloneable = true
     this.serializable = true
     this.serializedX = x
   }
 
+  unscannable () { this.scannable = false; return this }
   uncloneable () { this.cloneable = false; return this }
   unserializable () { this.serializable = false; return this }
   serialized (value) { this.serializedX = value; return this }
 
   testScan () {
     const xray = new Xray()
-    expect(() => xray.scan(this.x)).not.to.throw()
+    if (this.scannable) {
+      expect(() => xray.scan(this.x)).not.to.throw()
+    } else {
+      expect(() => xray.scan(this.x)).to.throw(`${this.x} cannot be scanned`)
+    }
   }
 
   testCloneable () {
@@ -129,6 +135,8 @@ const arr = [1]
 arr.x = 2
 addTestVector(arr)
 addTestVector([undefined]).serialized([{ $class: 'undefined' }])
+class CustomArray extends Array {}
+addTestVector(CustomArray.from([])).unscannable().uncloneable().unserializable()
 
 /*
 // Circular references
