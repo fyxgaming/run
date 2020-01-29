@@ -172,18 +172,21 @@ Object.assign(setWithProps, { a: 'a', b: [], c: new Set() })
 addTestVector(setWithProps).serialized({ $class: 'Set', entries: [0], props: { a: 'a', b: [], c: { $class: 'Set' } } })
 
 // Circular and duplicate references
+
 const circObj = {}
 circObj.c = circObj
 addTestVector(circObj).serialized({
   $dedup: { $dup: 0 },
   dups: [{ c: { $dup: 0 } }]
 })
+
 const circArr = []
 circArr.push(circArr)
 addTestVector(circArr).serialized({
   $dedup: { $dup: 0 },
   dups: [[{ $dup: 0 }]]
 })
+
 const circSet = new Set()
 circSet.add(circSet)
 circSet.c = circSet
@@ -192,13 +195,23 @@ addTestVector(circSet).serialized({
   dups: [{ $class: 'Set', entries: [{ $dup: 0 }], props: { c: { $dup: 0 } } }]
 })
 
-// Multiple dups
+/*
+const circMap = new Map()
+circMap.set(circMap, 1)
+circMap.set(1, circMap)
+circMap.m = circMap
+addTestVector(circMap).serialized({
+  $dedup: { $dup: 0 },
+  dups: [{
+    $class: 'Map',
+    entries: [[{ $dup: 0 }, 1], [1, { $dup: 0 }]],
+    props: { m: { $dup: 0 } }
+  }]
+})
+*/
 
-// const circMap = new Map()
-// circMap.set(circMap, 1)
-// circMap.set(1, circMap)
-// addTestVector(circMap)
-// TODO circular arb obj
+// TODO: Circular arb object
+// TODO: Multiple dups
 
 // Duplicate references
 // const dup = {}
