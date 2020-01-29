@@ -329,4 +329,6 @@ describe('Xray', () => {
 // Dups are actually not dups afterward
 // Port existing classes over
 
+// Bad serialized state
+
 // ------------------------------------------------------------------------------------------------
