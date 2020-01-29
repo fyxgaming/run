@@ -136,7 +136,7 @@ for (let i = 0; i < 10000; i++) longString += 'abcdefghijklmnopqrstuvwxyz'
 addTestVector(longString)
 
 // Undefined
-addTestVector(undefined).serialized({ $class: 'undefined' })
+addTestVector(undefined).serialized({ $undef: 1 })
 
 // Objects
 addTestVector(null)
@@ -144,10 +144,10 @@ addTestVector({})
 addTestVector({ n: 1 })
 addTestVector({ o1: { o2: { o3: {} } } })
 addTestVector({ s: 't', a: [1], b: true, n: 0, o: { n2: 2 }, z: null })
-addTestVector({ $class: 'undefined' }).serialized(undefined).unserializable().undeserializable()
+addTestVector({ $undef: 1 }).serialized(undefined).unserializable().undeserializable()
 addTestVector({ $ref: '123' }).unserializable().undeserializable()
 addTestVector({ $n: '0' }).unserializable().undeserializable()
-addTestVector({ undef: undefined }).serialized({ undef: { $class: 'undefined' } })
+addTestVector({ undef: undefined }).serialized({ undef: { $undef: 1 } })
 
 // Array
 addTestVector([])
@@ -158,7 +158,7 @@ addTestVector(z)
 const arr = [1]
 arr.x = 2
 addTestVector(arr)
-addTestVector([undefined, null]).serialized([{ $class: 'undefined' }, null])
+addTestVector([undefined, null]).serialized([{ $undef: 1 }, null])
 class CustomArray extends Array {}
 addTestVector(CustomArray.from([])).unscannable().uncloneable().unserializable().undeserializable()
 
