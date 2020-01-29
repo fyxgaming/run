@@ -163,13 +163,16 @@ class CustomArray extends Array {}
 addTestVector(CustomArray.from([])).unscannable().uncloneable().unserializable().undeserializable()
 
 // Sets
-addTestVector(new Set()).serialized({ $class: 'Set' })
-addTestVector(new Set([1, 2, 3])).serialized({ $class: 'Set', entries: [1, 2, 3] })
+addTestVector(new Set()).serialized({ $set: [] })
+addTestVector(new Set([1, 2, 3])).serialized({ $set: [1, 2, 3] })
 addTestVector(new Set([new Set(['a', false, null]), {}, []]))
-  .serialized({ $class: 'Set', entries: [{ $class: 'Set', entries: ['a', false, null] }, {}, []] })
+  .serialized({ $set: [{ $set: ['a', false, null] }, {}, []] })
 const setWithProps = new Set([0])
 Object.assign(setWithProps, { a: 'a', b: [], c: new Set() })
-addTestVector(setWithProps).serialized({ $class: 'Set', entries: [0], props: { a: 'a', b: [], c: { $class: 'Set' } } })
+addTestVector(setWithProps).serialized({ $set: [0], props: { a: 'a', b: [], c: { $set: [] } } })
+
+// Maps
+// addTestVector(new Map()).serialized({ $class: 'Map' })
 
 // Circular and duplicate references
 
@@ -192,7 +195,7 @@ circSet.add(circSet)
 circSet.c = circSet
 addTestVector(circSet).serialized({
   $dedup: { $dup: 0 },
-  dups: [{ $class: 'Set', entries: [{ $dup: 0 }], props: { c: { $dup: 0 } } }]
+  dups: [{ $set: [{ $dup: 0 }], props: { c: { $dup: 0 } } }]
 })
 
 /*
