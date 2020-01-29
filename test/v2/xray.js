@@ -176,6 +176,9 @@ addTestVector(new Map()).serialized({ $map: [] })
 addTestVector(new Map([[1, 2]])).serialized({ $map: [[1, 2]] })
 addTestVector(new Map([['a', true], ['b', false]])).serialized({ $map: [['a', true], ['b', false]] })
 addTestVector(new Map([[0, new Map()]])).serialized({ $map: [[0, { $map: [] }]] })
+const mapWithProps = new Map([[0, 1]])
+Object.assign(mapWithProps, { x: new Set() })
+addTestVector(mapWithProps).serialized({ $map: [[0, 1]], props: { x: { $set: [] } } })
 
 // Circular and duplicate references
 
