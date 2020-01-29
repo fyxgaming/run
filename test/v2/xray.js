@@ -356,20 +356,21 @@ addTestVector(Symbol.iterator).unscannable().uncloneable().unserializable().unde
 addTestVector(Symbol.species).unscannable().uncloneable().unserializable().undeserializable()
 addTestVector(Symbol.unscopables).unscannable().uncloneable().unserializable().undeserializable()
 
-/*
 // Intrinsic objects
-addTestVector(console, { cloneable: false, serializable: false })
-addTestVector(Object, { cloneable: false, serializable: false })
-addTestVector(Function, { cloneable: false, serializable: false })
-addTestVector(Error, { cloneable: false, serializable: false })
-addTestVector(Math, { cloneable: false, serializable: false })
-addTestVector(Buffer, { cloneable: false, serializable: false })
-addTestVector(String, { cloneable: false, serializable: false })
-addTestVector(JSON, { cloneable: false, serializable: false })
-addTestVector(Promise, { cloneable: false, serializable: false })
-addTestVector(Proxy, { cloneable: false, serializable: false })
-addTestVector(WebAssembly, { cloneable: false, serializable: false })
+addTestVector(console).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Object).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Function).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Error).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Math).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Buffer).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(String).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Date).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(JSON).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Promise).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Proxy).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(WebAssembly).unscannable().uncloneable().unserializable().undeserializable()
 
+/*
 // Unsupported objects
 addTestVector(new Date(), { cloneable: false, serializable: false })
 addTestVector(new WeakSet, { cloneable: false, serializable: false })
@@ -382,8 +383,6 @@ addTestVector(new Proxy({}, {}), { cloneable: false, serializable: false })
 // Tokens
 
 // Non-standard intrinsics
-
-// Test that circulars really are circular
 
 // ------------------------------------------------------------------------------------------------
 // Tests
