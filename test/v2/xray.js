@@ -172,7 +172,7 @@ Object.assign(setWithProps, { a: 'a', b: [], c: new Set() })
 addTestVector(setWithProps).serialized({ $set: [0], props: { a: 'a', b: [], c: { $set: [] } } })
 
 // Maps
-// addTestVector(new Map()).serialized({ $class: 'Map' })
+addTestVector(new Map()).serialized({ $map: [] })
 
 // Circular and duplicate references
 
