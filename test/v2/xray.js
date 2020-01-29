@@ -181,21 +181,18 @@ Object.assign(mapWithProps, { x: new Set() })
 addTestVector(mapWithProps).serialized({ $map: [[0, 1]], props: { x: { $set: [] } } })
 
 // Circular and duplicate references
-
 const circObj = {}
 circObj.c = circObj
 addTestVector(circObj).serialized({
   $dedup: { $dup: 0 },
   dups: [{ c: { $dup: 0 } }]
 })
-
 const circArr = []
 circArr.push(circArr)
 addTestVector(circArr).serialized({
   $dedup: { $dup: 0 },
   dups: [[{ $dup: 0 }]]
 })
-
 const circSet = new Set()
 circSet.add(circSet)
 circSet.c = circSet
@@ -203,7 +200,6 @@ addTestVector(circSet).serialized({
   $dedup: { $dup: 0 },
   dups: [{ $set: [{ $dup: 0 }], props: { c: { $dup: 0 } } }]
 })
-
 const circMap = new Map()
 circMap.set(circMap, 1)
 circMap.set(1, circMap)
@@ -294,13 +290,13 @@ addTestVector(new WeakMap, { cloneable: false, serializable: false })
 addTestVector(new Proxy({}, {}), { cloneable: false, serializable: false })
 */
 
-// Maps
-
 // Regexp
 
 // Tokens
 
 // Non-standard intrinsics
+
+// Test that circulars really are circular
 
 // ------------------------------------------------------------------------------------------------
 // Tests
