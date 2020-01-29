@@ -119,9 +119,9 @@ intrinsics.use(evaluator.intrinsics)
 // TODO
 // Test with default intrinsics
 // Test with custom intrinsics
-  // Clone
-  // Serialize
-  // Deserialize
+// Clone
+// Serialize
+// Deserialize
 // Separate test for unknown intrinsics
 
 function addTestVector (x) {
@@ -131,6 +131,7 @@ function addTestVector (x) {
   return vector
 }
 
+// TODO Remove
 addTestVector(new Uint8Array()).serialized({ $ui8a: '' })
 addTestVector(new intrinsics.default.Uint8Array()).serialized({ $ui8a: '' })
 
