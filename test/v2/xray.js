@@ -232,6 +232,23 @@ addTestVector(dupMap)
   .checkDeserialized(x => expect(x.has(1)).to.equal(true))
   .checkDeserialized(x => expect(x.get(0)).to.equal(x.get(1)))
 
+// Multiple dups in a tree
+const multipleDups = { arr: [] }
+multipleDups.a = []
+multipleDups.arr.push(multipleDups.a)
+multipleDups.b = new Uint8Array()
+multipleDups.arr.push(multipleDups.b)
+multipleDups.c = new Set()
+multipleDups.arr.push(multipleDups.c)
+addTestVector(multipleDups)
+  .serialized({
+    $dedup: { a: { $dup: 0 }, b: { $dup: 1 }, c: { $dup: 2 }, arr: [{ $dup: 0 }, { $dup: 1 }, { $dup: 2 }] },
+    dups: [[], { $ui8a: '' }, { $set: [] }]
+  })
+  .checkDeserialized(x => expect(x.a).to.equal(x.arr[0]))
+  .checkDeserialized(x => expect(x.b).to.equal(x.arr[1]))
+  .checkDeserialized(x => expect(x.c).to.equal(x.arr[2]))
+
 // Circular references
 const circObj = {}
 circObj.c = circObj
@@ -273,7 +290,7 @@ addTestVector(circMap)
   .checkDeserialized(x => expect(x.m).to.equal(x.get(1)))
   .checkDeserialized(x => expect(x.get(x.m)).to.equal(1))
 
-// Complex combination
+// Complex circular dups
 const complexMap = new Map()
 const complexObj = {}
 const complexArr = []
@@ -289,23 +306,6 @@ addTestVector(complexArr)
   .checkDeserialized(x => expect(x).to.equal(x[0].get('a').b))
   .checkDeserialized(x => expect(x[0]).to.equal(x[0].get('a').b[0]))
   .checkDeserialized(x => expect(x[0].get('a')).to.equal(x[0].get('a').b[0].get('a')))
-
-// Multiple dups
-const multipleDups = { arr: [] }
-multipleDups.a = []
-multipleDups.arr.push(multipleDups.a)
-multipleDups.b = new Uint8Array()
-multipleDups.arr.push(multipleDups.b)
-multipleDups.c = new Set()
-multipleDups.arr.push(multipleDups.c)
-addTestVector(multipleDups)
-  .serialized({
-    $dedup: { a: { $dup: 0 }, b: { $dup: 1 }, c: { $dup: 2 }, arr: [{ $dup: 0 }, { $dup: 1 }, { $dup: 2 }] },
-    dups: [[], { $ui8a: '' }, { $set: [] }]
-  })
-  .checkDeserialized(x => expect(x.a).to.equal(x.arr[0]))
-  .checkDeserialized(x => expect(x.b).to.equal(x.arr[1]))
-  .checkDeserialized(x => expect(x.c).to.equal(x.arr[2]))
 
 // TODO: Circular arb object
 
