@@ -17,6 +17,8 @@ class TestVector {
     this.serializable = true
     this.deserializable = true
     this.serializedX = x
+    this.cloneChecks = []
+    this.serializedChecks = []
     this.deserializedChecks = []
     this.intrinsics = Xray.Intrinsics.defaultIntrinsics
   }
@@ -26,7 +28,11 @@ class TestVector {
   unserializable () { this.serializable = false; return this }
   undeserializable () { this.deserializable = false; return this }
   serialized (value) { this.serializedX = value; return this }
+
+  checkClone (f) { this.cloneChecks.push(f); return this }
+  checkSerialized (f) { this.serializedChecks.push(f); return this }
   checkDeserialized (f) { this.deserializedChecks.push(f); return this }
+
   useIntrinsics (intrinsics) { this.intrinsics = intrinsics; return this }
 
   testScan () {
@@ -64,11 +70,15 @@ class TestVector {
       return
     }
 
+    const cloned = xray.clone(this.x)
+
     if (typeof this.x === 'object' && this.x) {
-      expect(xray.clone(this.x)).not.to.equal(this.x)
+      expect(cloned).not.to.equal(this.x)
     }
-    expect(xray.clone(this.x)).to.deep.equal(this.x)
+    expect(cloned).to.deep.equal(this.x)
     expect(xray.caches.clone.get(this.x)).to.deep.equal(this.x)
+
+    this.cloneChecks.forEach(f => f(cloned))
   }
 
   testSerialize () {
@@ -79,11 +89,15 @@ class TestVector {
       return
     }
 
+    const serialized = xray.serialize(this.x)
+
     if (typeof this.x === 'object' && this.x) {
-      expect(xray.serialize(this.x)).not.to.equal(this.serializedX)
+      expect(serialized).not.to.equal(this.serializedX)
     }
-    expect(xray.serialize(this.x)).to.deep.equal(this.serializedX)
+    expect(serialized).to.deep.equal(this.serializedX)
     expect(xray.caches.serialize.get(this.x)).to.deep.equal(this.serializedX)
+
+    this.serializedChecks.forEach(f => f(serialized))
   }
 
   testDeserialize () {
@@ -118,11 +132,13 @@ const vectors = []
 // Deserialize
 // Separate test for unknown intrinsics ...
 
-function addTestVectors(intrinsics, testIntrinsics) {
-  const { Object, Array, Set, Map, Uint8Array, Proxy, Int8Array,
+function addTestVectors (intrinsics, testIntrinsics) {
+  const {
+    Object, Array, Set, Map, Uint8Array, Proxy, Int8Array,
     Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array,
     Float32Array, Float64Array, console, Function, Error, Math, WebAssembly,
-    String, Date, JSON, Promise, WeakSet, WeakMap, RegExp } = testIntrinsics
+    String, Date, JSON, Promise, WeakSet, WeakMap, RegExp
+  } = testIntrinsics
 
   function addTestVector (x) {
     const vector = new TestVector(x).useIntrinsics(intrinsics)
@@ -163,6 +179,9 @@ function addTestVectors(intrinsics, testIntrinsics) {
   // Objects
   addTestVector(null)
   addTestVector({})
+    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Object))
+    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
+    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
   addTestVector({ n: 1 })
   addTestVector({ o1: { o2: { o3: {} } } })
   addTestVector({ s: 't', a: [1], b: true, n: 0, o: { n2: 2 }, z: null })
@@ -175,6 +194,9 @@ function addTestVectors(intrinsics, testIntrinsics) {
 
   // Array
   addTestVector([])
+    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Array))
+    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Array))
+    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Array))
   addTestVector([1, 'a', true])
   addTestVector([[[]]])
   const z = [[1], [2], [3]]
@@ -189,6 +211,9 @@ function addTestVectors(intrinsics, testIntrinsics) {
 
   // Sets
   addTestVector(new Set()).serialized({ $set: [] })
+    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Set))
+    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
+    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Set))
   addTestVector(new Set([1, 2, 3])).serialized({ $set: [1, 2, 3] })
   addTestVector(new Set([new Set(['a', false, null]), {}, []]))
     .serialized({ $set: [{ $set: ['a', false, null] }, {}, []] })
@@ -202,6 +227,9 @@ function addTestVectors(intrinsics, testIntrinsics) {
 
   // Maps
   addTestVector(new Map()).serialized({ $map: [] })
+    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Map))
+    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
+    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Map))
   addTestVector(new Map([[1, 2]])).serialized({ $map: [[1, 2]] })
   addTestVector(new Map([['a', true], ['b', false]])).serialized({ $map: [['a', true], ['b', false]] })
   addTestVector(new Map([[0, new Map()]])).serialized({ $map: [[0, { $map: [] }]] })
@@ -215,6 +243,9 @@ function addTestVectors(intrinsics, testIntrinsics) {
 
   // Uint8Array
   addTestVector(new Uint8Array()).serialized({ $ui8a: '' })
+    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Uint8Array))
+    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
+    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Uint8Array))
   addTestVector(new Uint8Array([0x00, 0x01])).serialized({ $ui8a: 'AAE=' })
   const hellobuf = Buffer.from('hello', 'utf8')
   addTestVector(new Uint8Array(hellobuf)).serialized({ $ui8a: hellobuf.toString('base64') })
@@ -278,6 +309,9 @@ function addTestVectors(intrinsics, testIntrinsics) {
     .checkDeserialized(x => expect(x.a).to.equal(x.arr[0]))
     .checkDeserialized(x => expect(x.b).to.equal(x.arr[1]))
     .checkDeserialized(x => expect(x.c).to.equal(x.arr[2]))
+    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Object))
+    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
+    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
 
   // Circular references
   const circObj = {}
@@ -319,6 +353,9 @@ function addTestVectors(intrinsics, testIntrinsics) {
     })
     .checkDeserialized(x => expect(x.m).to.equal(x.get(1)))
     .checkDeserialized(x => expect(x.get(x.m)).to.equal(1))
+    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Map))
+    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
+    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Map))
 
   // Complex circular dups
   const complexMap = new Map()
@@ -336,6 +373,9 @@ function addTestVectors(intrinsics, testIntrinsics) {
     .checkDeserialized(x => expect(x).to.equal(x[0].get('a').b))
     .checkDeserialized(x => expect(x[0]).to.equal(x[0].get('a').b[0]))
     .checkDeserialized(x => expect(x[0].get('a')).to.equal(x[0].get('a').b[0].get('a')))
+    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Array))
+    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
+    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Array))
 
   // Bad dedup serialization
   addTestVector({ $dedup: {} }).unserializable().undeserializable()
