@@ -199,6 +199,10 @@ const bufWithProps = new Uint8Array()
 bufWithProps.x = 1
 addTestVector(bufWithProps).serialized({ $ui8a: '' }).unscannable().uncloneable().unserializable()
 addTestVector(Buffer.alloc(0)).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector({ $ui8a: [] }).unserializable().undeserializable()
+addTestVector({ $ui8a: {} }).unserializable().undeserializable()
+addTestVector({ $ui8a: '🐉' }).unserializable().undeserializable()
+addTestVector({ $ui8a: new Uint8Array() }).unserializable().undeserializable()
 
 // Duplicate references
 const objDup = { n: null }
