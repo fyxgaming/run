@@ -307,27 +307,24 @@ addTestVector(complexArr)
   .checkDeserialized(x => expect(x[0]).to.equal(x[0].get('a').b[0]))
   .checkDeserialized(x => expect(x[0].get('a')).to.equal(x[0].get('a').b[0].get('a')))
 
+// Unsupported TypedArrays
+addTestVector(new Int8Array()).serialized({ $i8a: '' }).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new Uint8ClampedArray()).serialized({ $ui8ca: '' }).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new Int16Array()).serialized({ $i16a: '' }).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new Uint16Array()).serialized({ $u16a: '' }).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new Int32Array()).serialized({ $i32a: '' }).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new Uint32Array()).serialized({ $ui32a: '' }).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new Float32Array()).serialized({ $f32a: '' }).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new Float64Array()).serialized({ $f64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new BigInt64Array()).serialized({ $bi64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new BigUint64Array()).serialized({ $bui64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
+
 // TODO: Circular arb object
 
 // Things that are cloneable, but not serializable/deser
 // Unserializables/un-everything in every category
 
 // Combinations of unserializable in serializable, etc.
-
-// TypedArray
-/*
-  'Int8Array',
-  'Uint8Array',
-  'Uint8ClampedArray',
-  'Int16Array',
-  'Uint16Array',
-  'Int32Array',
-  'Uint32Array',
-  'Float32Array',
-  'Float64Array',
-  'BigInt64Array',
-  'BigUint64Array',
-  */
 
 // Deployable
 /*
