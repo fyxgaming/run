@@ -216,9 +216,9 @@ addTestVector(dupBuf)
   .serialized({ $dedup: [{ $dup: 0 }, { $dup: 0 }], dups: [{ $ui8a: '' }] })
   .checkDeserialized(x => expect(x[0]).to.equal(x[1]))
 const setDup = new Set()
-const dupSet = new Set([{ a: setDup} , { b: setDup }])
+const dupSet = new Set([{ a: setDup }, { b: setDup }])
 addTestVector(dupSet)
-  .serialized({ $dedup: { $set: [{ a: { $dup: 0 }}, { b: { $dup: 0 }}]}, dups: [{ $set: []}] })
+  .serialized({ $dedup: { $set: [{ a: { $dup: 0 } }, { b: { $dup: 0 } }] }, dups: [{ $set: [] }] })
   .checkDeserialized(x => {
     const keys = Array.from(x.keys())
     expect(keys[0].a).to.equal(keys[1].b)
@@ -273,18 +273,46 @@ addTestVector(circMap)
   .checkDeserialized(x => expect(x.m).to.equal(x.get(1)))
   .checkDeserialized(x => expect(x.get(x.m)).to.equal(1))
 
+// Complex combination
+const complexMap = new Map()
+const complexObj = {}
+const complexArr = []
+complexArr.push(complexMap)
+complexArr.push(complexObj)
+complexMap.set('a', complexObj)
+complexObj.b = complexArr
+addTestVector(complexArr)
+  .serialized({
+    $dedup: { $dup: 0 },
+    dups: [[{ $map: [['a', { $dup: 1 }]] }, { $dup: 1 }], { b: { $dup: 0 } }]
+  })
+  .checkDeserialized(x => expect(x).to.equal(x[0].get('a').b))
+  .checkDeserialized(x => expect(x[0]).to.equal(x[0].get('a').b[0]))
+  .checkDeserialized(x => expect(x[0].get('a')).to.equal(x[0].get('a').b[0].get('a')))
+
+// Multiple dups
+const multipleDups = { arr: [] }
+multipleDups.a = []
+multipleDups.arr.push(multipleDups.a)
+multipleDups.b = new Uint8Array()
+multipleDups.arr.push(multipleDups.b)
+multipleDups.c = new Set()
+multipleDups.arr.push(multipleDups.c)
+addTestVector(multipleDups)
+  .serialized({
+    $dedup: { a: { $dup: 0 }, b: { $dup: 1 }, c: { $dup: 2 }, arr: [{ $dup: 0 }, { $dup: 1 }, { $dup: 2 }] },
+    dups: [[], { $ui8a: '' }, { $set: [] }]
+  })
+  .checkDeserialized(x => expect(x.a).to.equal(x.arr[0]))
+  .checkDeserialized(x => expect(x.b).to.equal(x.arr[1]))
+  .checkDeserialized(x => expect(x.c).to.equal(x.arr[2]))
+
 // TODO: Circular arb object
-// TODO: Multiple dups
 
 // Things that are cloneable, but not serializable/deser
 // Unserializables/un-everything in every category
 
 // Combinations of unserializable in serializable, etc.
-
-// Duplicate references
-// const dup = {}
-
-// Circular array
 
 // TypedArray
 /*
