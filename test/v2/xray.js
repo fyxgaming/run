@@ -24,7 +24,7 @@ class TestVector {
   unserializable () { this.serializable = false; return this }
   undeserializable () { this.deserializable = false; return this }
   serialized (value) { this.serializedX = value; return this }
-  checkDeserialized(f) { this.deserializedChecks.push(f); return this } 
+  checkDeserialized (f) { this.deserializedChecks.push(f); return this }
 
   testScan () {
     const xray = new Xray()
@@ -199,6 +199,23 @@ bufWithProps.x = 1
 addTestVector(bufWithProps).serialized({ $ui8a: '' }).unscannable().uncloneable().unserializable()
 addTestVector(Buffer.alloc(0)).unscannable().uncloneable().unserializable().undeserializable()
 
+// Duplicate references
+const objDup = { n: null }
+const dupObj = { a: objDup, b: objDup }
+addTestVector(dupObj)
+  .serialized({ $dedup: { a: { $dup: 0 }, b: { $dup: 0 } }, dups: [{ n: null }] })
+  .checkDeserialized(x => expect(x.a).to.equal(x.b))
+const arrDup = [undefined]
+const dupArr = [arrDup, arrDup]
+addTestVector(dupArr)
+  .serialized({ $dedup: [{ $dup: 0 }, { $dup: 0 }], dups: [[{ $undef: 1 }]] })
+  .checkDeserialized(x => expect(x[0]).to.equal(x[1]))
+const bufDup = new Uint8Array()
+const dupBuf = [bufDup, bufDup]
+addTestVector(dupBuf)
+  .serialized({ $dedup: [{ $dup: 0 }, { $dup: 0 }], dups: [{ $ui8a: '' }] })
+  .checkDeserialized(x => expect(x[0]).to.equal(x[1]))
+
 // Circular references
 const circObj = {}
 circObj.c = circObj
@@ -239,13 +256,6 @@ addTestVector(circMap)
   })
   .checkDeserialized(x => expect(x.m).to.equal(x.get(1)))
   .checkDeserialized(x => expect(x.get(x.m)).to.equal(1))
-
-// Duplicate references
-const buf = new Uint8Array()
-const dupBuf = [buf, buf]
-addTestVector(dupBuf)
-  .serialized({ $dedup: [{ $dup: 0 }, { $dup: 0 }], dups: [{ $ui8a: '' }] })
-  .checkDeserialized(x => expect(x[0]).to.equal(x[1]))
 
 // TODO: Circular arb object
 // TODO: Multiple dups
