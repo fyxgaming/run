@@ -155,6 +155,7 @@ addTestVector({ $undef: 1 }).serialized(undefined).unserializable().undeserializ
 addTestVector({ $ref: '123' }).unserializable().undeserializable()
 addTestVector({ $n: '0' }).unserializable().undeserializable()
 addTestVector({ undef: undefined }).serialized({ undef: { $undef: 1 } })
+addTestVector(new Proxy({}, {}))
 
 // Array
 addTestVector([])
@@ -319,6 +320,33 @@ addTestVector(new Float64Array()).serialized({ $f64a: '' }).unscannable().unclon
 addTestVector(new BigInt64Array()).serialized({ $bi64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
 addTestVector(new BigUint64Array()).serialized({ $bui64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
 
+// Symbols
+addTestVector(Symbol.hasInstance).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Symbol.iterator).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Symbol.species).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Symbol.unscopables).unscannable().uncloneable().unserializable().undeserializable()
+
+// Intrinsic objects
+addTestVector(console).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Object).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Function).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Error).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Math).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Buffer).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(String).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Date).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(JSON).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Promise).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(Proxy).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(WebAssembly).unscannable().uncloneable().unserializable().undeserializable()
+
+// Unsupported objects
+addTestVector(new Date()).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new WeakSet()).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new WeakMap()).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new RegExp()).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(/^abc/).unscannable().uncloneable().unserializable().undeserializable()
+
 // TODO: Circular arb object
 
 // Things that are cloneable, but not serializable/deser
@@ -350,37 +378,15 @@ addTestVector(escape, { deployable: false })
 addTestVector(eval, { deployable: false })
 */
 
-// Symbols
-addTestVector(Symbol.hasInstance).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(Symbol.iterator).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(Symbol.species).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(Symbol.unscopables).unscannable().uncloneable().unserializable().undeserializable()
-
-// Intrinsic objects
-addTestVector(console).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(Object).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(Function).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(Error).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(Math).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(Buffer).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(String).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(Date).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(JSON).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(Promise).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(Proxy).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(WebAssembly).unscannable().uncloneable().unserializable().undeserializable()
-
-// Unsupported objects
-addTestVector(new Date()).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(new WeakSet()).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(new WeakMap()).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(new RegExp()).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(/^abc/).unscannable().uncloneable().unserializable().undeserializable()
-// addTestVector(new Proxy({}, {})).unscannable().uncloneable().unserializable().undeserializable()
-
 // Tokens
 
 // Non-standard intrinsics
+
+// TODO: if (key.startsWith('$')) throw new Error('$ properties must not be defined')
+// -On Set properties
+// Port existing classes over
+
+// Bad serialized state
 
 // ------------------------------------------------------------------------------------------------
 // Tests
@@ -429,17 +435,5 @@ describe('Xray', () => {
     })
   })
 })
-
-// Serializable, and more
-// Each scanner
-// Tests: Circular
-// Duplicates
-// Caches
-// TODO: if (key.startsWith('$')) throw new Error('$ properties must not be defined')
-// -On Set properties
-// Dups are actually not dups afterward
-// Port existing classes over
-
-// Bad serialized state
 
 // ------------------------------------------------------------------------------------------------
