@@ -180,7 +180,10 @@ const mapWithProps = new Map([[0, 1]])
 Object.assign(mapWithProps, { x: new Set() })
 addTestVector(mapWithProps).serialized({ $map: [[0, 1]], props: { x: { $set: [] } } })
 
-// Circular and duplicate references
+// Uint8Array
+addTestVector(new Uint8Array()).serialized({ $ui8a: '' })
+
+// Circular references
 const circObj = {}
 circObj.c = circObj
 addTestVector(circObj).serialized({
@@ -211,6 +214,8 @@ addTestVector(circMap).serialized({
     props: { m: { $dup: 0 } }
   }]
 })
+
+// Duplicate references
 
 // TODO: Circular arb object
 // TODO: Multiple dups
