@@ -1,3 +1,4 @@
+const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Xray = require('../../lib/v2/xray')
@@ -182,6 +183,11 @@ addTestVector(mapWithProps).serialized({ $map: [[0, 1]], props: { x: { $set: [] 
 
 // Uint8Array
 addTestVector(new Uint8Array()).serialized({ $ui8a: '' })
+addTestVector(new Uint8Array([0x00, 0x01])).serialized({ $ui8a: 'AAE=' })
+const hellobuf = Buffer.from('hello', 'utf8')
+addTestVector(new Uint8Array(hellobuf)).serialized({ $ui8a: hellobuf.toString('base64') })
+const randombuf = bsv.crypto.Random.getRandomBuffer(1024)
+addTestVector(new Uint8Array(randombuf)).serialized({ $ui8a: randombuf.toString('base64') })
 
 // Circular references
 const circObj = {}
@@ -220,14 +226,15 @@ addTestVector(circMap).serialized({
 // TODO: Circular arb object
 // TODO: Multiple dups
 
+// Things that are cloneable, but not serializable/deser
+// Unserializables/un-everything in every category
+
 // Combinations of unserializable in serializable, etc.
 
 // Duplicate references
 // const dup = {}
 
 // Circular array
-
-// Uint8Array
 
 // TypedArray
 /*
