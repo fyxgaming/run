@@ -126,12 +126,6 @@ class TestVector {
 
 const vectors = []
 
-// TODO
-// Clone
-// Serialize
-// Deserialize
-// Separate test for unknown intrinsics ...
-
 function addTestVectors (intrinsics, testIntrinsics) {
   const {
     Object, Array, Set, Map, Uint8Array, Proxy, Int8Array,
@@ -430,6 +424,12 @@ function addTestVectors (intrinsics, testIntrinsics) {
   addTestVector(new WeakMap()).unscannable().uncloneable().unserializable().undeserializable()
   addTestVector(new RegExp()).unscannable().uncloneable().unserializable().undeserializable()
   addTestVector(/^abc/).unscannable().uncloneable().unserializable().undeserializable()
+
+  // Unknown intrinsics
+  const { intrinsics: unknown } = new Evaluator()
+  addTestVector(new unknown.Uint8Array()).unscannable().uncloneable().unserializable().undeserializable()
+  addTestVector(new unknown.Set()).unscannable().uncloneable().unserializable().undeserializable()
+  addTestVector(new unknown.Map()).unscannable().uncloneable().unserializable().undeserializable()
 
   // TODO: Circular arb object
 
