@@ -151,11 +151,12 @@ addTestVector({})
 addTestVector({ n: 1 })
 addTestVector({ o1: { o2: { o3: {} } } })
 addTestVector({ s: 't', a: [1], b: true, n: 0, o: { n2: 2 }, z: null })
+addTestVector(new Proxy({}, {}))
 addTestVector({ $undef: 1 }).serialized(undefined).unserializable().undeserializable()
 addTestVector({ $ref: '123' }).unserializable().undeserializable()
 addTestVector({ $n: '0' }).unserializable().undeserializable()
+addTestVector({ $invalid: 1 }).unserializable().undeserializable()
 addTestVector({ undef: undefined }).serialized({ undef: { $undef: 1 } })
-addTestVector(new Proxy({}, {}))
 
 // Array
 addTestVector([])
@@ -169,6 +170,7 @@ addTestVector(arr)
 addTestVector([undefined, null]).serialized([{ $undef: 1 }, null])
 class CustomArray extends Array {}
 addTestVector(CustomArray.from([])).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector([{ $invalid: 1 }]).unserializable().undeserializable()
 
 // Sets
 addTestVector(new Set()).serialized({ $set: [] })
@@ -178,6 +180,10 @@ addTestVector(new Set([new Set(['a', false, null]), {}, []]))
 const setWithProps = new Set([0])
 Object.assign(setWithProps, { a: 'a', b: [], c: new Set() })
 addTestVector(setWithProps).serialized({ $set: [0], props: { a: 'a', b: [], c: { $set: [] } } })
+addTestVector({ $set: null }).unserializable().undeserializable()
+addTestVector({ $set: {} }).unserializable().undeserializable()
+addTestVector({ $set: [{ $invalid: 1 }] }).unserializable().undeserializable()
+addTestVector({ $set: new Uint8Array() }).unserializable().undeserializable()
 
 // Maps
 addTestVector(new Map()).serialized({ $map: [] })
@@ -187,6 +193,10 @@ addTestVector(new Map([[0, new Map()]])).serialized({ $map: [[0, { $map: [] }]] 
 const mapWithProps = new Map([[0, 1]])
 Object.assign(mapWithProps, { x: new Set() })
 addTestVector(mapWithProps).serialized({ $map: [[0, 1]], props: { x: { $set: [] } } })
+addTestVector({ $map: null }).unserializable().undeserializable()
+addTestVector({ $map: {} }).unserializable().undeserializable()
+addTestVector({ $map: [{}] }).unserializable().undeserializable()
+addTestVector({ $map: [[1, 2, 3]] }).unserializable().undeserializable()
 
 // Uint8Array
 addTestVector(new Uint8Array()).serialized({ $ui8a: '' })
@@ -316,7 +326,7 @@ addTestVector(complexArr)
 addTestVector({ $dedup: {} }).unserializable().undeserializable()
 addTestVector({ $dedup: {}, dups: {} }).unserializable().undeserializable()
 addTestVector({ $dedup: { $dup: 0 }, dups: [] }).unserializable().undeserializable()
-addTestVector({ $dedup: { $dup: 0 }, dups: [ { $dup: 1 }] }).unserializable().undeserializable()
+addTestVector({ $dedup: { $dup: 0 }, dups: [{ $dup: 1 }] }).unserializable().undeserializable()
 
 // Unsupported TypedArrays
 addTestVector(new Int8Array()).serialized({ $i8a: '' }).unscannable().uncloneable().unserializable().undeserializable()
@@ -327,8 +337,14 @@ addTestVector(new Int32Array()).serialized({ $i32a: '' }).unscannable().unclonea
 addTestVector(new Uint32Array()).serialized({ $ui32a: '' }).unscannable().uncloneable().unserializable().undeserializable()
 addTestVector(new Float32Array()).serialized({ $f32a: '' }).unscannable().uncloneable().unserializable().undeserializable()
 addTestVector(new Float64Array()).serialized({ $f64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(new BigInt64Array()).serialized({ $bi64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(new BigUint64Array()).serialized({ $bui64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
+if (typeof BigInt64Array !== 'undefined') {
+  // eslint-disable-next-line
+  addTestVector(new BigInt64Array()).serialized({ $bi64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
+}
+if (typeof BigUint64Array !== 'undefined') {
+  // eslint-disable-next-line
+  addTestVector(new BigUint64Array()).serialized({ $bui64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
+}
 
 // Symbols
 addTestVector(Symbol.hasInstance).unscannable().uncloneable().unserializable().undeserializable()
@@ -348,7 +364,10 @@ addTestVector(Date).unscannable().uncloneable().unserializable().undeserializabl
 addTestVector(JSON).unscannable().uncloneable().unserializable().undeserializable()
 addTestVector(Promise).unscannable().uncloneable().unserializable().undeserializable()
 addTestVector(Proxy).unscannable().uncloneable().unserializable().undeserializable()
-addTestVector(WebAssembly).unscannable().uncloneable().unserializable().undeserializable()
+if (typeof WebAssembly !== 'undefined') {
+  // eslint-disable-next-line
+  addTestVector(WebAssembly).unscannable().uncloneable().unserializable().undeserializable()
+}
 
 // Unsupported objects
 addTestVector(new Date()).unscannable().uncloneable().unserializable().undeserializable()
@@ -360,7 +379,6 @@ addTestVector(/^abc/).unscannable().uncloneable().unserializable().undeserializa
 // TODO: Circular arb object
 
 // Things that are cloneable, but not serializable/deser
-// Unserializables/un-everything in every category
 
 // Combinations of unserializable in serializable, etc.
 
