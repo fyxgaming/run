@@ -459,8 +459,6 @@ function addTestVectors (intrinsics, testIntrinsics) {
 
   // Tokens
 
-  // Non-standard intrinsics
-
   // TODO: if (key.startsWith('$')) throw new Error('$ properties must not be defined')
   // -On Set properties
   // Port existing classes over
