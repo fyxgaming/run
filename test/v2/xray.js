@@ -16,6 +16,7 @@ class TestVector {
     this.serializable = true
     this.deserializable = true
     this.serializedX = x
+    this.deserializedChecks = []
   }
 
   unscannable () { this.scannable = false; return this }
@@ -23,6 +24,7 @@ class TestVector {
   unserializable () { this.serializable = false; return this }
   undeserializable () { this.deserializable = false; return this }
   serialized (value) { this.serializedX = value; return this }
+  checkDeserialized(f) { this.deserializedChecks.push(f); return this } 
 
   testScan () {
     const xray = new Xray()
@@ -89,11 +91,15 @@ class TestVector {
       return
     }
 
+    const deserialized = xray.deserialize(this.serializedX)
+
     if (typeof this.x === 'object' && this.x) {
-      expect(xray.deserialize(this.serializedX)).not.to.equal(this.x)
+      expect(deserialized).not.to.equal(this.x)
     }
-    expect(xray.deserialize(this.serializedX)).to.deep.equal(this.x)
+    expect(deserialized).to.deep.equal(this.x)
     expect(xray.caches.deserialize.get(this.serializedX)).to.deep.equal(this.x)
+
+    this.deserializedChecks.forEach(f => f(deserialized))
   }
 }
 
@@ -196,36 +202,50 @@ addTestVector(Buffer.alloc(0)).unscannable().uncloneable().unserializable().unde
 // Circular references
 const circObj = {}
 circObj.c = circObj
-addTestVector(circObj).serialized({
-  $dedup: { $dup: 0 },
-  dups: [{ c: { $dup: 0 } }]
-})
+addTestVector(circObj)
+  .serialized({
+    $dedup: { $dup: 0 },
+    dups: [{ c: { $dup: 0 } }]
+  })
+  .checkDeserialized(x => expect(x.c).to.equal(x))
 const circArr = []
 circArr.push(circArr)
-addTestVector(circArr).serialized({
-  $dedup: { $dup: 0 },
-  dups: [[{ $dup: 0 }]]
-})
+addTestVector(circArr)
+  .serialized({
+    $dedup: { $dup: 0 },
+    dups: [[{ $dup: 0 }]]
+  })
+  .checkDeserialized(x => expect(x[0]).to.equal(x))
 const circSet = new Set()
 circSet.add(circSet)
 circSet.c = circSet
-addTestVector(circSet).serialized({
-  $dedup: { $dup: 0 },
-  dups: [{ $set: [{ $dup: 0 }], props: { c: { $dup: 0 } } }]
-})
+addTestVector(circSet)
+  .serialized({
+    $dedup: { $dup: 0 },
+    dups: [{ $set: [{ $dup: 0 }], props: { c: { $dup: 0 } } }]
+  })
+  .checkDeserialized(x => expect(x.c).to.equal(x.keys().next().value))
 const circMap = new Map()
 circMap.set(circMap, 1)
 circMap.set(1, circMap)
 circMap.m = circMap
-addTestVector(circMap).serialized({
-  $dedup: { $dup: 0 },
-  dups: [{
-    $map: [[{ $dup: 0 }, 1], [1, { $dup: 0 }]],
-    props: { m: { $dup: 0 } }
-  }]
-})
+addTestVector(circMap)
+  .serialized({
+    $dedup: { $dup: 0 },
+    dups: [{
+      $map: [[{ $dup: 0 }, 1], [1, { $dup: 0 }]],
+      props: { m: { $dup: 0 } }
+    }]
+  })
+  .checkDeserialized(x => expect(x.m).to.equal(x.get(1)))
+  .checkDeserialized(x => expect(x.get(x.m)).to.equal(1))
 
 // Duplicate references
+const buf = new Uint8Array()
+const dupBuf = [buf, buf]
+addTestVector(dupBuf)
+  .serialized({ $dedup: [{ $dup: 0 }, { $dup: 0 }], dups: [{ $ui8a: '' }] })
+  .checkDeserialized(x => expect(x[0]).to.equal(x[1]))
 
 // TODO: Circular arb object
 // TODO: Multiple dups
