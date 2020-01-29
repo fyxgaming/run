@@ -3,8 +3,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Xray = require('../../lib/v2/xray')
 const { display } = require('../../lib/util')
-
-// const evaluator = new Evaluator()
+const Evaluator = require('../../lib/evaluator')
 
 // ------------------------------------------------------------------------------------------------
 // Test vector class
@@ -113,11 +112,27 @@ class TestVector {
 
 const vectors = []
 
+const evaluator = new Evaluator()
+const intrinsics = new Xray.Intrinsics()
+intrinsics.use(evaluator.intrinsics)
+
+// TODO
+// Test with default intrinsics
+// Test with custom intrinsics
+  // Clone
+  // Serialize
+  // Deserialize
+// Separate test for unknown intrinsics
+
 function addTestVector (x) {
-  const vector = new TestVector(x)
+  const vector = new TestVector(x).useIntrinsics(intrinsics)
+  // const vector = new TestVector(x)
   vectors.push(vector)
   return vector
 }
+
+addTestVector(new Uint8Array()).serialized({ $ui8a: '' })
+addTestVector(new intrinsics.default.Uint8Array()).serialized({ $ui8a: '' })
 
 // Booleans
 addTestVector(true)
