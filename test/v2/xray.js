@@ -4,6 +4,8 @@ const { expect } = require('chai')
 const Xray = require('../../lib/v2/xray')
 const { display } = require('../../lib/util')
 
+// const evaluator = new Evaluator()
+
 // ------------------------------------------------------------------------------------------------
 // Test vector class
 // ------------------------------------------------------------------------------------------------
@@ -17,6 +19,7 @@ class TestVector {
     this.deserializable = true
     this.serializedX = x
     this.deserializedChecks = []
+    this.intrinsics = Xray.Intrinsics.defaultIntrinsics
   }
 
   unscannable () { this.scannable = false; return this }
@@ -25,9 +28,10 @@ class TestVector {
   undeserializable () { this.deserializable = false; return this }
   serialized (value) { this.serializedX = value; return this }
   checkDeserialized (f) { this.deserializedChecks.push(f); return this }
+  useIntrinsics (intrinsics) { this.intrinsics = intrinsics; return this }
 
   testScan () {
-    const xray = new Xray()
+    const xray = new Xray().useIntrinsics(this.intrinsics)
     if (this.scannable) {
       expect(() => xray.scan(this.x)).not.to.throw()
     } else {
@@ -36,25 +40,25 @@ class TestVector {
   }
 
   testCloneable () {
-    const xray = new Xray()
+    const xray = new Xray().useIntrinsics(this.intrinsics)
     expect(xray.cloneable(this.x)).to.equal(this.cloneable)
     expect(xray.caches.cloneable.get(this.x)).to.equal(this.cloneable)
   }
 
   testSerializable () {
-    const xray = new Xray()
+    const xray = new Xray().useIntrinsics(this.intrinsics)
     expect(xray.serializable(this.x)).to.equal(this.serializable)
     expect(xray.caches.serializable.get(this.x)).to.equal(this.serializable)
   }
 
   testDeserializable () {
-    const xray = new Xray()
+    const xray = new Xray().useIntrinsics(this.intrinsics)
     expect(xray.deserializable(this.serializedX)).to.equal(this.deserializable)
     expect(xray.caches.deserializable.get(this.serializedX)).to.equal(this.deserializable)
   }
 
   testClone () {
-    const xray = new Xray()
+    const xray = new Xray().useIntrinsics(this.intrinsics)
 
     if (!this.cloneable) {
       expect(() => xray.clone(this.x)).to.throw(`${display(this.x)} cannot be cloned`)
@@ -69,7 +73,7 @@ class TestVector {
   }
 
   testSerialize () {
-    const xray = new Xray()
+    const xray = new Xray().useIntrinsics(this.intrinsics)
 
     if (!this.serializable) {
       expect(() => xray.serialize(this.x)).to.throw(`${display(this.x)} cannot be serialized`)
@@ -84,7 +88,7 @@ class TestVector {
   }
 
   testDeserialize () {
-    const xray = new Xray()
+    const xray = new Xray().useIntrinsics(this.intrinsics)
 
     if (!this.deserializable) {
       expect(() => xray.deserialize(this.serializedX)).to.throw(`${display(this.serializedX)} cannot be deserialized`)
@@ -415,6 +419,12 @@ addTestVector(eval, { deployable: false })
 // ------------------------------------------------------------------------------------------------
 
 describe('Xray', () => {
+  describe('constructor', () => {
+    it('should use default intrinsics', () => {
+      expect(new Xray().intrinsics).to.equal(Xray.Intrinsics.defaultIntrinsics)
+    })
+  })
+
   describe('scan', () => {
     it('should pass test vectors', () => {
       vectors.forEach(vector => vector.testScan())

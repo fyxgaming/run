@@ -7,6 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('./helpers')
+const { intrinsicNames } = require('../lib/intrinsics')
 
 // ------------------------------------------------------------------------------------------------
 // Evaluator test suite
@@ -130,7 +131,7 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
 
     it('should share intrinsics between evaluations', () => {
       const evaluator = createEvaluator()
-      Run.Evaluator.intrinsicNames.forEach(name => {
+      intrinsicNames.forEach(name => {
         if (typeof global[name] === 'undefined') return
         const intrinsic1 = evaluator.evaluate(`function f() { return ${name} }`)[0]()
         const intrinsic2 = evaluator.evaluate(`function f() { return ${name} }`)[0]()
