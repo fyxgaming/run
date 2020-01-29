@@ -178,11 +178,15 @@ addTestVector(circObj).serialized({ $dedup: { $dup: 0 }, dups: [{ c: { $dup: 0 }
 const circArr = []
 circArr.push(circArr)
 addTestVector(circArr).serialized({ $dedup: { $dup: 0 }, dups: [[{ $dup: 0 }]] })
-// const circSet = new Set()
-// circSet.add(circSet)
-// circSet.c = circSet
-// const dups = [{ $class: 'Set', entries: { $class: 'dup', n: 0 } }]
-// addTestVector(circSet).serialized({ $class: 'dedup', value: { $class: 'dup', n: 0 }, dups })
+const circSet = new Set()
+circSet.add(circSet)
+circSet.c = circSet
+addTestVector(circSet).serialized({
+  $dedup: { $dup: 0 },
+  dups: [{ $class: 'Set', entries: [{ $dup: 0 }], props: { c: { $dup: 0 } } }]
+})
+
+// Multiple dups
 
 // const circMap = new Map()
 // circMap.set(circMap, 1)
