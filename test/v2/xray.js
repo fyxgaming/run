@@ -308,6 +308,12 @@ addTestVector(complexArr)
   .checkDeserialized(x => expect(x[0]).to.equal(x[0].get('a').b[0]))
   .checkDeserialized(x => expect(x[0].get('a')).to.equal(x[0].get('a').b[0].get('a')))
 
+// Bad dedup serialization
+addTestVector({ $dedup: {} }).unserializable().undeserializable()
+addTestVector({ $dedup: {}, dups: {} }).unserializable().undeserializable()
+addTestVector({ $dedup: { $dup: 0 }, dups: [] }).unserializable().undeserializable()
+addTestVector({ $dedup: { $dup: 0 }, dups: [ { $dup: 1 }] }).unserializable().undeserializable()
+
 // Unsupported TypedArrays
 addTestVector(new Int8Array()).serialized({ $i8a: '' }).unscannable().uncloneable().unserializable().undeserializable()
 addTestVector(new Uint8ClampedArray()).serialized({ $ui8ca: '' }).unscannable().uncloneable().unserializable().undeserializable()
