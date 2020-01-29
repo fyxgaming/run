@@ -378,10 +378,6 @@ addTestVector(/^abc/).unscannable().uncloneable().unserializable().undeserializa
 
 // TODO: Circular arb object
 
-// Things that are cloneable, but not serializable/deser
-
-// Combinations of unserializable in serializable, etc.
-
 // Deployable
 /*
 addTestVector(class { }, { deployable: true })
@@ -413,8 +409,6 @@ addTestVector(eval, { deployable: false })
 // TODO: if (key.startsWith('$')) throw new Error('$ properties must not be defined')
 // -On Set properties
 // Port existing classes over
-
-// Bad serialized state
 
 // ------------------------------------------------------------------------------------------------
 // Tests
