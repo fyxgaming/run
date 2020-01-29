@@ -204,7 +204,6 @@ addTestVector(circSet).serialized({
   dups: [{ $set: [{ $dup: 0 }], props: { c: { $dup: 0 } } }]
 })
 
-/*
 const circMap = new Map()
 circMap.set(circMap, 1)
 circMap.set(1, circMap)
@@ -212,12 +211,10 @@ circMap.m = circMap
 addTestVector(circMap).serialized({
   $dedup: { $dup: 0 },
   dups: [{
-    $class: 'Map',
-    entries: [[{ $dup: 0 }, 1], [1, { $dup: 0 }]],
+    $map: [[{ $dup: 0 }, 1], [1, { $dup: 0 }]],
     props: { m: { $dup: 0 } }
   }]
 })
-*/
 
 // TODO: Circular arb object
 // TODO: Multiple dups
