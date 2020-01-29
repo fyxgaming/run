@@ -188,6 +188,10 @@ const hellobuf = Buffer.from('hello', 'utf8')
 addTestVector(new Uint8Array(hellobuf)).serialized({ $ui8a: hellobuf.toString('base64') })
 const randombuf = bsv.crypto.Random.getRandomBuffer(1024)
 addTestVector(new Uint8Array(randombuf)).serialized({ $ui8a: randombuf.toString('base64') })
+const bufWithProps = new Uint8Array()
+bufWithProps.x = 1
+addTestVector(bufWithProps).serialized({ $ui8a: '' }).unscannable().uncloneable().unserializable()
+addTestVector(Buffer.alloc(0)).unscannable().uncloneable().unserializable().undeserializable()
 
 // Circular references
 const circObj = {}
