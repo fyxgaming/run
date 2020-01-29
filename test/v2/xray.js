@@ -431,7 +431,18 @@ function addTestVectors (intrinsics, testIntrinsics) {
   addTestVector(new unknown.Set()).unscannable().uncloneable().unserializable().undeserializable()
   addTestVector(new unknown.Map()).unscannable().uncloneable().unserializable().undeserializable()
 
+  // Deployable
+  // finish implementing serializable, etc.
+  // register test as needing deployable, and which deployables they are
+  // check deployables after scan, etc.
+  // test xray with and without support
+
+  // allow deployables in other tests, even when don't support it
+
+  // TODO: Wrap errors for tests to print what test it is
+
   // TODO: Circular arb object
+
 
   // Deployable
   /*
