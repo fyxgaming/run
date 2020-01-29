@@ -210,6 +210,11 @@ const dupArr = [arrDup, arrDup]
 addTestVector(dupArr)
   .serialized({ $dedup: [{ $dup: 0 }, { $dup: 0 }], dups: [[{ $undef: 1 }]] })
   .checkDeserialized(x => expect(x[0]).to.equal(x[1]))
+const bufDup = new Uint8Array()
+const dupBuf = [bufDup, bufDup]
+addTestVector(dupBuf)
+  .serialized({ $dedup: [{ $dup: 0 }, { $dup: 0 }], dups: [{ $ui8a: '' }] })
+  .checkDeserialized(x => expect(x[0]).to.equal(x[1]))
 const setDup = new Set()
 const dupSet = new Set([{ a: setDup} , { b: setDup }])
 addTestVector(dupSet)
@@ -219,11 +224,13 @@ addTestVector(dupSet)
     expect(keys[0].a).to.equal(keys[1].b)
     expect(keys[0].a).not.to.equal(undefined)
   })
-const bufDup = new Uint8Array()
-const dupBuf = [bufDup, bufDup]
-addTestVector(dupBuf)
-  .serialized({ $dedup: [{ $dup: 0 }, { $dup: 0 }], dups: [{ $ui8a: '' }] })
-  .checkDeserialized(x => expect(x[0]).to.equal(x[1]))
+const mapDup = new Map()
+const dupMap = new Map([[0, mapDup], [1, mapDup]])
+addTestVector(dupMap)
+  .serialized({ $dedup: { $map: [[0, { $dup: 0 }], [1, { $dup: 0 }]] }, dups: [{ $map: [] }] })
+  .checkDeserialized(x => expect(x.has(0)).to.equal(true))
+  .checkDeserialized(x => expect(x.has(1)).to.equal(true))
+  .checkDeserialized(x => expect(x.get(0)).to.equal(x.get(1)))
 
 // Circular references
 const circObj = {}
