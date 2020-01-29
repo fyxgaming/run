@@ -370,15 +370,13 @@ addTestVector(Promise).unscannable().uncloneable().unserializable().undeserializ
 addTestVector(Proxy).unscannable().uncloneable().unserializable().undeserializable()
 addTestVector(WebAssembly).unscannable().uncloneable().unserializable().undeserializable()
 
-/*
 // Unsupported objects
-addTestVector(new Date(), { cloneable: false, serializable: false })
-addTestVector(new WeakSet, { cloneable: false, serializable: false })
-addTestVector(new WeakMap, { cloneable: false, serializable: false })
-addTestVector(new Proxy({}, {}), { cloneable: false, serializable: false })
-*/
-
-// Regexp
+addTestVector(new Date()).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new WeakSet()).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new WeakMap()).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(new RegExp()).unscannable().uncloneable().unserializable().undeserializable()
+addTestVector(/^abc/).unscannable().uncloneable().unserializable().undeserializable()
+// addTestVector(new Proxy({}, {})).unscannable().uncloneable().unserializable().undeserializable()
 
 // Tokens
 
