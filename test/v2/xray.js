@@ -175,9 +175,9 @@ addTestVector(setWithProps).serialized({ $class: 'Set', entries: [0], props: { a
 const circObj = {}
 circObj.c = circObj
 addTestVector(circObj).serialized({ $dedup: { $dup: 0 }, dups: [{ c: { $dup: 0 } }] })
-// const circArr = []
-// circArr.push(circArr)
-// addTestVector(circArr)
+const circArr = []
+circArr.push(circArr)
+addTestVector(circArr).serialized({ $dedup: { $dup: 0 }, dups: [[{ $dup: 0 }]] })
 // const circSet = new Set()
 // circSet.add(circSet)
 // circSet.c = circSet
