@@ -216,6 +216,8 @@ addTestVector(circMap).serialized({
 // TODO: Circular arb object
 // TODO: Multiple dups
 
+// Combinations of unserializable in serializable, etc.
+
 // Duplicate references
 // const dup = {}
 
