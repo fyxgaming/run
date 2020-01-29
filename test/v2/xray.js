@@ -210,6 +210,15 @@ const dupArr = [arrDup, arrDup]
 addTestVector(dupArr)
   .serialized({ $dedup: [{ $dup: 0 }, { $dup: 0 }], dups: [[{ $undef: 1 }]] })
   .checkDeserialized(x => expect(x[0]).to.equal(x[1]))
+const setDup = new Set()
+const dupSet = new Set([{ a: setDup} , { b: setDup }])
+addTestVector(dupSet)
+  .serialized({ $dedup: { $set: [{ a: { $dup: 0 }}, { b: { $dup: 0 }}]}, dups: [{ $set: []}] })
+  .checkDeserialized(x => {
+    const keys = Array.from(x.keys())
+    expect(keys[0].a).to.equal(keys[1].b)
+    expect(keys[0].a).not.to.equal(undefined)
+  })
 const bufDup = new Uint8Array()
 const dupBuf = [bufDup, bufDup]
 addTestVector(dupBuf)
