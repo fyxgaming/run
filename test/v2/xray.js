@@ -443,7 +443,6 @@ function addTestVectors (intrinsics, testIntrinsics) {
 
   // TODO: Circular arb object
 
-
   // Deployable
   /*
   addTestVector(class { }, { deployable: true })
