@@ -432,59 +432,62 @@ describe('Code', () => {
       expect(B2.A).to.equal(A2)
     })
 
-    it.only('should correctly deploy then load static properties', async () => {
-      // TODO: Arbitrary code, support, maps, sets
-      // Test: Circular
-      // Anonymous clsas
-
+    it('should correctly deploy then load static properties', async () => {
+      // TODO: Arbitrary code, support, maps, sets, circular, anonymous class
       class B { }
       class A extends B { }
       class J extends Jig {}
-      // class K extends Jig {}
-      // class C { }
-      // A.deps = { C }
-      // A.n = 1
-      // A.s = 'a'
-      // A.a = [1, 2, 3]
-      // A.b = true
-      // A.x = null
-      // A.o = { m: 1, n: '2' }
+      class K extends Jig {}
+      class C { }
+      A.deps = { C }
+      A.n = 1
+      A.s = 'a'
+      A.a = [1, 2, 3]
+      A.b = true
+      A.x = null
+      A.o = { m: 1, n: '2' }
       A.j = new J()
-      // A.k = [new K()]
-      // class D { }
-      // A.D = D
-      // A.E = class E { }
-      // A.F = { R: class R { } }
-      // A.Self = A
-      // A.G = function g () { return 1 }
+      A.k = [new K()]
+      class D { }
+      A.D = D
+      A.E = class E { }
+      A.F = { R: class R { } }
+      A.Self = A
+      A.G = function g () { return 1 }
+      // A.anonymousClass = class {}
+      // A.anonymousFunction = function () {}
+      // A.anonymousLambda = () => {}
       await run.deploy(A)
-      // expect(D.origin.length > 66 && D.location.length > 66).to.equal(true)
-      // expect(A.E.origin.length > 66 && A.E.location.length > 66).to.equal(true)
-      // expect(A.F.R.origin.length > 66 && A.F.R.location.length > 66).to.equal(true)
+      expect(D.origin.length > 66 && D.location.length > 66).to.equal(true)
+      expect(A.E.origin.length > 66 && A.E.location.length > 66).to.equal(true)
+      expect(A.F.R.origin.length > 66 && A.F.R.location.length > 66).to.equal(true)
       const run2 = createRun({ blockchain: run.blockchain })
       const checkAllProperties = async T => {
-        // expect(T.n).to.equal(A.n)
-        // expect(T.s).to.equal(A.s)
-        // expect(T.a).to.deep.equal(A.a)
-        // expect(T.b).to.equal(A.b)
-        // expect(T.x).to.equal(A.x)
-        // expect(T.o).to.deep.equal(A.o)
-        // expect(T.j.origin).to.equal(A.j.origin)
-        // expect(T.j.location).to.equal(A.j.location)
-        // expect(T.k[0].origin).to.equal(A.k[0].origin)
-        // expect(T.k[0].location).to.equal(A.k[0].location)
-        // const D2 = await run2.load(A.D.origin)
-        // expect(T.D).to.equal(D2)
-        // const E2 = await run2.load(A.E.origin)
-        // expect(T.E).to.equal(E2)
-        // const R2 = await run2.load(A.F.R.origin)
-        // expect(T.F.R).to.equal(R2)
-        // const B2 = await run2.load(B.origin)
-        // const C2 = await run2.load(C.origin)
-        // expect(T.deps).to.deep.equal({ B: B2, C: C2 })
-        // expect(T.Self).to.equal(T)
-        // const G2 = await run2.load(A.G.origin)
-        // expect(T.G).to.equal(G2)
+        expect(T.n).to.equal(A.n)
+        expect(T.s).to.equal(A.s)
+        expect(T.a).to.deep.equal(A.a)
+        expect(T.b).to.equal(A.b)
+        expect(T.x).to.equal(A.x)
+        expect(T.o).to.deep.equal(A.o)
+        expect(T.j.origin).to.equal(A.j.origin)
+        expect(T.j.location).to.equal(A.j.location)
+        expect(T.k[0].origin).to.equal(A.k[0].origin)
+        expect(T.k[0].location).to.equal(A.k[0].location)
+        const D2 = await run2.load(A.D.origin)
+        expect(T.D).to.equal(D2)
+        const E2 = await run2.load(A.E.origin)
+        expect(T.E).to.equal(E2)
+        const R2 = await run2.load(A.F.R.origin)
+        expect(T.F.R).to.equal(R2)
+        const B2 = await run2.load(B.origin)
+        const C2 = await run2.load(C.origin)
+        expect(T.deps).to.deep.equal({ B: B2, C: C2 })
+        expect(T.Self).to.equal(T)
+        const G2 = await run2.load(A.G.origin)
+        expect(T.G).to.equal(G2)
+        // expect(T.anonymousClass).to.equal(await run2.load(A.anonymousClass.origin))
+        // expect(T.anonymousFunction).to.equal(await run2.load(A.anonymousFunction.origin))
+        // expect(T.anonymousLambda).to.equal(await run2.load(A.anonymousLambda.origin))
       }
       await checkAllProperties(await run2.load(A.origin))
     })
@@ -514,13 +517,13 @@ describe('Code', () => {
     it('should throw if unpackable', async () => {
       class A { }
       A.date = new Date()
-      await expect(run.deploy(A)).to.be.rejectedWith('A property is not serializable')
+      await expect(run.deploy(A)).to.be.rejectedWith('A static property of A is not supported')
       class B { }
       B.Math = Math
-      await expect(run.deploy(B)).to.be.rejectedWith('A property is not serializable')
+      await expect(run.deploy(B)).to.be.rejectedWith('A static property of B is not supported')
       class C { }
       C.weakSet = new WeakSet()
-      await expect(run.deploy(C)).to.be.rejectedWith('A property is not serializable')
+      await expect(run.deploy(C)).to.be.rejectedWith('A static property of C is not supported')
     })
   })
 
