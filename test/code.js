@@ -441,14 +441,14 @@ describe('Code', () => {
       class A extends B { }
       class J extends Jig {}
       // class K extends Jig {}
-      class C { }
-      A.deps = { C }
-      A.n = 1
-      A.s = 'a'
-      A.a = [1, 2, 3]
-      A.b = true
-      A.x = null
-      A.o = { m: 1, n: '2' }
+      // class C { }
+      // A.deps = { C }
+      // A.n = 1
+      // A.s = 'a'
+      // A.a = [1, 2, 3]
+      // A.b = true
+      // A.x = null
+      // A.o = { m: 1, n: '2' }
       A.j = new J()
       // A.k = [new K()]
       // class D { }

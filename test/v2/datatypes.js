@@ -1,4 +1,4 @@
-const { describe, it } = require('mocha')
+const { describe, it, before, after } = require('mocha')
 const { expect } = require('chai')
 const { RunSet, RunMap } = require('../../lib/v2/datatypes')
 const Protocol = require('../../lib/v2/protocol')
@@ -18,7 +18,7 @@ class MockJiglet extends Jiglet {
   }
 }
 
-class MockLoader extends Protocol {
+class MockLoader extends Loader {
   static async load (location, blockchain) {
     return new MockJiglet(location)
   }
