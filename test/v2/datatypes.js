@@ -2,12 +2,38 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { RunSet, RunMap } = require('../../lib/v2/datatypes')
 const Protocol = require('../../lib/v2/protocol')
+const { createRun } = require('../helpers')
+const { Jiglet } = require('../../lib/v2/jiglet')
+const { Loader } = Protocol
+
+createRun()
+
+// ------------------------------------------------------------------------------------------------
+// Mock Jiglets
+// ------------------------------------------------------------------------------------------------
+
+class MockJiglet extends Jiglet {
+  init (location) {
+    this.location = location
+  }
+}
+
+class MockLoader extends Protocol {
+  static async load (location, blockchain) {
+    return new MockJiglet(location)
+  }
+}
+
+MockJiglet.loader = MockLoader
 
 // ------------------------------------------------------------------------------------------------
 // RunSet
 // ------------------------------------------------------------------------------------------------
 
 describe('RunSet', () => {
+  before(() => Protocol.install(MockLoader))
+  after(() => Protocol.uninstall(MockLoader))
+
   describe('constructor', () => {
     it('should create empty set', () => {
       expect(new RunSet().size).to.equal(0)
@@ -29,7 +55,7 @@ describe('RunSet', () => {
     })
   })
 
-  describe('add', () => {
+  describe.only('add', () => {
     it('should return set regardless', () => {
       const set = new RunSet()
       expect(set.add(1)).to.equal(set)
@@ -44,9 +70,9 @@ describe('RunSet', () => {
       expect(set.size).to.equal(entries.length)
     })
 
-    it('should add tokens once', () => {
-      const token1 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
-      const token2 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
+    it('should add tokens once', async () => {
+      const token1 = await Protocol.loadJiglet('abc')
+      const token2 = await Protocol.loadJiglet('abc')
       const set = new RunSet()
       set.add(token1)
       set.add(token2)
