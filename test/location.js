@@ -1,6 +1,6 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const Location = require('../../lib/v2/location')
+const Location = require('../lib/location')
 
 const txid = '98244c0b51c1af3c541d901ce4bfcc05041dc8e4e80747ac5f0084e81bda339b'
 const badHexTxid = '98244c0b51c1af3c541d901ce4bfcc05???dc8e4e80747ac5f0084e81bda339b'
