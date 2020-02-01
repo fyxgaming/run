@@ -9,6 +9,9 @@ const tempTxid = '????????????????????????????????????????????????5f0084e81bda33
 describe('Location', () => {
   describe('parse', () => {
     it('should parse valid locations', () => {
+      expect(Location.parse(`_o0`)).to.deep.equal({ vout: 0 })
+      expect(Location.parse(`_i1`)).to.deep.equal({ vin: 1 })
+      expect(Location.parse(`_r2`)).to.deep.equal({ vref: 2 })
       expect(Location.parse(`${txid}_o0`)).to.deep.equal({ txid, vout: 0 })
       expect(Location.parse(`${txid}_i1`)).to.deep.equal({ txid, vin: 1 })
       expect(Location.parse(`${txid}_r6000000000`)).to.deep.equal({ txid, vref: 6000000000 })
