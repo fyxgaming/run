@@ -9,14 +9,14 @@ const tempTxid = '????????????????????????????????????????????????5f0084e81bda33
 describe('Location', () => {
   describe('parse', () => {
     it('should parse valid locations', () => {
-      expect(Location.parse(`_o0`)).to.deep.equal({ vout: 0 })
-      expect(Location.parse(`_i1`)).to.deep.equal({ vin: 1 })
-      expect(Location.parse(`_r2`)).to.deep.equal({ vref: 2 })
+      expect(Location.parse('_o0')).to.deep.equal({ vout: 0 })
+      expect(Location.parse('_i1')).to.deep.equal({ vin: 1 })
+      expect(Location.parse('_r2')).to.deep.equal({ vref: 2 })
       expect(Location.parse(`${txid}_o0`)).to.deep.equal({ txid, vout: 0 })
       expect(Location.parse(`${txid}_i1`)).to.deep.equal({ txid, vin: 1 })
       expect(Location.parse(`${txid}_r6000000000`)).to.deep.equal({ txid, vref: 6000000000 })
       expect(Location.parse(`${tempTxid}_o1`)).to.deep.equal({ tempTxid, vout: 1 })
-      expect(Location.parse(`${txid}_o1://${txid}_o2`)).to.deep.equal({ txid, vout: 2, proto: { txid, vout: 1 }})
+      expect(Location.parse(`${txid}_o1://${txid}_o2`)).to.deep.equal({ txid, vout: 2, proto: { txid, vout: 1 } })
     })
 
     it('should throw for invalid locations', () => {
@@ -41,27 +41,27 @@ describe('Location', () => {
 
   describe('build', () => {
     it('should parse valid options', () => {
-      expect(Location.build({ vout: 0 })).to.equal(`_o0`)
-      expect(Location.build({ vin: 1 })).to.equal(`_i1`)
-      expect(Location.build({ vref: 2 })).to.equal(`_r2`)
+      expect(Location.build({ vout: 0 })).to.equal('_o0')
+      expect(Location.build({ vin: 1 })).to.equal('_i1')
+      expect(Location.build({ vref: 2 })).to.equal('_r2')
       expect(Location.build({ txid, vout: 0 })).to.equal(`${txid}_o0`)
       expect(Location.build({ txid, vref: 1, proto: { txid, vin: 2 } })).to.equal(`${txid}_i2://${txid}_r1`)
       expect(Location.build({ tempTxid, vout: 3 })).to.equal(`${tempTxid}_o3`)
     })
 
     it('should throw for invalid options', () => {
-        expect(() => Location.build()).to.throw('Location object is invalid')
-        expect(() => Location.build(null)).to.throw('Location object is invalid')
-        expect(() => Location.build(`${txid}_o1`)).to.throw('Location object is invalid')
-        expect(() => Location.build({})).to.throw('Location index unspecified')
-        expect(() => Location.build({ vout: '123' })).to.throw('Location index unspecified')
-        expect(() => Location.build({ vin: null })).to.throw('Location index unspecified')
-        expect(() => Location.build({ vref: {} })).to.throw('Location index unspecified')
-        expect(() => Location.build({ vout: 123.4 })).to.throw('Location index must be a non-negative integer')
-        expect(() => Location.build({ vin: -1 })).to.throw('Location index must be a non-negative integer')
-        expect(() => Location.build({ vref: Infinity })).to.throw('Location index must be a non-negative integer')
-        expect(() => Location.build({ vout: NaN })).to.throw('Location index must be a non-negative integer')
-        expect(() => Location.build({ txid, vout: 0, proto: { txid, vout: 0, proto: {} } })).to.throw('Location must only have one protocol')
+      expect(() => Location.build()).to.throw('Location object is invalid')
+      expect(() => Location.build(null)).to.throw('Location object is invalid')
+      expect(() => Location.build(`${txid}_o1`)).to.throw('Location object is invalid')
+      expect(() => Location.build({})).to.throw('Location index unspecified')
+      expect(() => Location.build({ vout: '123' })).to.throw('Location index unspecified')
+      expect(() => Location.build({ vin: null })).to.throw('Location index unspecified')
+      expect(() => Location.build({ vref: {} })).to.throw('Location index unspecified')
+      expect(() => Location.build({ vout: 123.4 })).to.throw('Location index must be a non-negative integer')
+      expect(() => Location.build({ vin: -1 })).to.throw('Location index must be a non-negative integer')
+      expect(() => Location.build({ vref: Infinity })).to.throw('Location index must be a non-negative integer')
+      expect(() => Location.build({ vout: NaN })).to.throw('Location index must be a non-negative integer')
+      expect(() => Location.build({ txid, vout: 0, proto: { txid, vout: 0, proto: {} } })).to.throw('Location must only have one protocol')
     })
   })
 })
