@@ -1,30 +1,36 @@
 const { describe, it, before, after } = require('mocha')
 const { expect } = require('chai')
+const bsv = require('bsv')
 const { UniqueSet, UniqueMap } = require('../../lib/v2/unique')
 const Protocol = require('../../lib/v2/protocol')
 const { createRun } = require('../helpers')
 const { Jiglet } = require('../../lib/v2/jiglet')
+const Location = require('../../lib/location')
 const { Loader } = Protocol
 
 createRun()
 
 // ------------------------------------------------------------------------------------------------
-// Mock Jiglets
+// A temporary token used for testing
 // ------------------------------------------------------------------------------------------------
 
-class MockJiglet extends Jiglet {
-  init (location) {
-    this.location = location
+const randomLocation = () => `${bsv.crypto.Random.getRandomBuffer(32).toString('hex')}_o0`
+const randomTempLocation = () => `${bsv.crypto.Random.getRandomBuffer(32).toString('hex')}_o0`
+const testToken = (origin, location) => {
+  const token = () => {}
+  token.owner = 'someone'
+  token.origin = origin
+  token.location = location
+  token.deploy = () => { token.location = token.origin = randomTempLocation(); return token }
+  token.update = () => { token.location = randomTempLocation(); return token }
+  token.publish = () => {
+    if (!token.origin || !Location.parse(token.origin).txid) token.origin = randomLocation()
+    if (!token.location || !Location.parse(token.location).txid) token.location = randomLocation()
+    return token
   }
+  token.duplicate = () => { return testToken(token.origin, token.location) }
+  return token
 }
-
-class MockLoader extends Loader {
-  static async load (location, blockchain) {
-    return new MockJiglet(location)
-  }
-}
-
-MockJiglet.loader = MockLoader
 
 // ------------------------------------------------------------------------------------------------
 // UniqueMap
@@ -66,11 +72,16 @@ describe('UniqueMap', () => {
     })
 
     it('should clear token states', () => {
-      const token = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
-      const map = new UniqueMap([[token, token]])
+      const a = testToken()
+      const b = testToken().deploy().publish()
+      const map = new UniqueMap([[a, 1], [b, 2]])
       map.clear()
       expect(map.size).to.equal(0)
-      map.set({ protocol: Protocol.RunProtocol, location: 'def', origin: '123' }, 1)
+      a.publish()
+      const a2 = a.duplicate().update()
+      const b2 = b.duplicate().update()
+      map.set(a2, 1)
+      map.set(b2, 2)
     })
   })
 
