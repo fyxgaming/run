@@ -306,9 +306,6 @@ describe('UniqueMap', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('UniqueSet', () => {
-  before(() => Protocol.install(MockLoader))
-  after(() => Protocol.uninstall(MockLoader))
-
   describe('constructor', () => {
     it('should create empty set', () => {
       expect(new UniqueSet().size).to.equal(0)
@@ -346,24 +343,25 @@ describe('UniqueSet', () => {
     })
 
     it('should add tokens once', async () => {
-      const token1 = await Protocol.loadJiglet('abc')
-      const token2 = await Protocol.loadJiglet('abc')
+      const a = testToken()
+      const b = testToken().deploy().publish()
       const set = new UniqueSet()
-      set.add(token1)
-      set.add(token2)
-      expect(set.size).to.equal(1)
-    })
-
-    it('should throw if add token with unknown protocol', () => {
-      expect(() => new UniqueSet().add({ $protocol: {} })).to.throw('Unknown token protocol')
+      set.add(a)
+      set.add(b)
+      set.add(b.duplicate())
+      expect(set.size).to.equal(2)
     })
 
     it('should throw if add two of the same tokens at different states', () => {
-      const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
-      const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
+      const a = testToken()
+      const b = testToken().deploy().publish()
       const set = new UniqueSet()
-      set.add(token1)
-      expect(() => set.add(token2)).to.throw('Detected two of the same token with different locations')
+      set.add(a)
+      set.add(b)
+      const a2 = a.deploy().publish().duplicate().update()
+      const b2 = a.duplicate().update().publish()
+      expect(() => set.add(a2)).to.throw('Inconsistent worldview')
+      expect(() => set.add(b2)).to.throw('Inconsistent worldview')
     })
   })
 
@@ -381,18 +379,23 @@ describe('UniqueSet', () => {
 
     it('should clear token states', () => {
       const set = new UniqueSet()
-      const token = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
-      set.add(token)
+      const a = testToken().deploy()
+      const b = testToken().deploy().publish()
+      set.add(a)
+      set.add(b)
       set.clear()
       expect(set.size).to.equal(0)
-      set.add({ protocol: Protocol.RunProtocol, location: 'def', origin: '123' })
+      set.add(a.publish().duplicate())
+      set.add(b.duplicate().update())
+      expect(set.size).to.equal(2)
     })
   })
 
   describe('delete', () => {
     it('should return false if item is not present', () => {
       expect(new UniqueSet().delete(1)).to.equal(false)
-      expect(new UniqueSet().delete({ $protocol: Protocol.BcatProtocol, location: 'abc' })).to.equal(false)
+      expect(new UniqueSet().delete(testToken())).to.equal(false)
+      expect(new UniqueSet().delete(testToken().deploy().publish())).to.equal(false)
     })
 
     it('should delete item and return true if item is present', () => {
@@ -409,10 +412,11 @@ describe('UniqueSet', () => {
     })
 
     it('should throw for same tokens at different states', () => {
-      const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
-      const set = new UniqueSet([token1])
-      const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
-      expect(() => set.delete(token2)).to.throw('Detected two of the same token with different locations')
+      const a = testToken()
+      const b = testToken().deploy().publish()
+      const set = new UniqueSet([a, b])
+      expect(() => set.delete(a.deploy().publish().duplicate().update())).to.throw('Inconsistent worldview')
+      expect(() => set.delete(b.duplicate().update().publish())).to.throw('Inconsistent worldview')
     })
   })
 
@@ -462,29 +466,26 @@ describe('UniqueSet', () => {
     })
 
     it('should return true for tokens in set', () => {
-      const token1 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
-      const set = new UniqueSet([token1])
-      expect(set.has(token1)).to.equal(true)
-      const token2 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
-      expect(set.has(token2)).to.equal(true)
+      const a = testToken().deploy().publish()
+      const set = new UniqueSet([a])
+      expect(set.has(a)).to.equal(true)
+      expect(set.has(a.duplicate())).to.equal(true)
     })
 
     it('should return false for missing tokens', () => {
-      expect(new UniqueSet().has({ $protocol: Protocol.RunProtocol, location: 'abc' })).to.equal(false)
+      expect(new UniqueSet().has(testToken())).to.equal(false)
+      expect(new UniqueSet().has(testToken().deploy())).to.equal(false)
+      expect(new UniqueSet().has(testToken().deploy().publish())).to.equal(false)
     })
 
     it('should throw for same tokens at different states', () => {
-      const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
-      const set = new UniqueSet([token1])
-      expect(set.has(token1)).to.equal(true)
-      const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
-      expect(() => set.has(token2)).to.throw('Detected two of the same token with different location')
-    })
-
-    it('should throw for tokens of unknown protocol', () => {
-      const set = new UniqueSet()
-      const token = { $protocol: {}, location: 'abc' }
-      expect(() => set.delete(token)).to.throw('Unknown token protocol')
+      const a = testToken().deploy()
+      const b = testToken().deploy().publish().update()
+      const set = new UniqueSet([a, b])
+      expect(set.has(a)).to.equal(true)
+      expect(set.has(b)).to.equal(true)
+      expect(() => set.has(a.publish().duplicate().update())).to.throw('Inconsistent worldview')
+      expect(() => set.has(b.duplicate().publish())).to.throw('Inconsistent worldview')
     })
   })
 
