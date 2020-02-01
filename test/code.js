@@ -80,7 +80,6 @@ describe('Code', () => {
       expect(child.n).to.equal(2)
       expect(run.code.installs.has(Parent)).to.equal(true)
       expect(run.code.installs.has(Grandparent)).to.equal(true)
-      expect(Child2.deps).to.deep.equal({ Parent: await run.load(Parent.origin) })
     })
 
     it('should deploy dependencies', async () => {
@@ -479,9 +478,8 @@ describe('Code', () => {
         expect(T.E).to.equal(E2)
         const R2 = await run2.load(A.F.R.origin)
         expect(T.F.R).to.equal(R2)
-        const B2 = await run2.load(B.origin)
         const C2 = await run2.load(C.origin)
-        expect(T.deps).to.deep.equal({ B: B2, C: C2 })
+        expect(T.deps).to.deep.equal({ C: C2 })
         expect(T.Self).to.equal(T)
         const G2 = await run2.load(A.G.origin)
         expect(T.G).to.equal(G2)
