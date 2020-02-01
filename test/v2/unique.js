@@ -15,7 +15,7 @@ createRun()
 // ------------------------------------------------------------------------------------------------
 
 const randomLocation = () => `${bsv.crypto.Random.getRandomBuffer(32).toString('hex')}_o0`
-const randomTempLocation = () => `${bsv.crypto.Random.getRandomBuffer(32).toString('hex')}_o0`
+const randomTempLocation = () => `??${bsv.crypto.Random.getRandomBuffer(31).toString('hex')}_o0`
 const testToken = (origin, location) => {
   const token = () => {}
   token.owner = 'someone'
@@ -59,7 +59,7 @@ describe('UniqueMap', () => {
     })
   })
 
-  describe.only('clear', () => {
+  describe('clear', () => {
     it('should not throw on empty map', () => {
       expect(() => new UniqueMap().clear()).not.to.throw()
     })
@@ -88,7 +88,9 @@ describe('UniqueMap', () => {
   describe('delete', () => {
     it('should return false if item is not present', () => {
       expect(new UniqueMap().delete(1)).to.equal(false)
-      expect(new UniqueMap().delete({ $protocol: Protocol.BcatProtocol, location: 'abc' })).to.equal(false)
+      expect(new UniqueMap().delete(testToken())).to.equal(false)
+      expect(new UniqueMap().delete(testToken().deploy())).to.equal(false)
+      expect(new UniqueMap().delete(testToken().deploy().publish())).to.equal(false)
     })
 
     it('should delete item and return true if item is present', () => {
@@ -96,18 +98,23 @@ describe('UniqueMap', () => {
     })
 
     it('should clear token states', () => {
-      const token = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
-      const map = new UniqueMap([[token, 1]])
-      map.delete(token)
+      const a = testToken()
+      const b = testToken().deploy()
+      const map = new UniqueMap([[a, 1], [b, 1]])
+      map.delete(a)
+      map.delete(b)
       expect(map.size).to.equal(0)
-      map.set({ protocol: Protocol.RunProtocol, location: 'def', origin: '123' }, 1)
+      const a2 = a.deploy().publish().duplicate().update()
+      const b2 = b.publish().duplicate().update()
+      map.set(a2, 1)
+      map.set(b2, 1)
     })
 
     it('should throw for same tokens at different states', () => {
-      const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
-      const map = new UniqueMap([[token1, token1]])
-      const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
-      expect(() => map.delete(token2)).to.throw('Detected two of the same token with different locations')
+      const a = testToken().deploy().publish()
+      const map = new UniqueMap([[a, a]])
+      const a2 = a.duplicate().update()
+      expect(() => map.delete(a2)).to.throw('Inconsistent worldview')
     })
   })
 
@@ -158,29 +165,39 @@ describe('UniqueMap', () => {
     })
 
     it('should return value for tokens in map', () => {
-      const token1 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
-      const map = new UniqueMap([[token1, 'abc']])
-      expect(map.get(token1)).to.equal('abc')
-      const token2 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
-      expect(map.get(token2)).to.equal('abc')
+      const a = testToken()
+      const b = testToken().deploy()
+      const c = testToken().deploy().publish()
+      const map = new UniqueMap([[a, 'abc'], [b, 'def'], [c, 'ghi']])
+      expect(map.get(a)).to.equal('abc')
+      expect(map.get(b)).to.equal('def')
+      expect(map.get(c)).to.equal('ghi')
+      const a2 = a.deploy().publish().duplicate()
+      const b2 = b.publish().duplicate()
+      const c2 = c.duplicate()
+      expect(map.get(a2)).to.equal('abc')
+      expect(map.get(b2)).to.equal('def')
+      expect(map.get(c2)).to.equal('ghi')
     })
 
     it('should return undefined for missing tokens', () => {
-      expect(new UniqueMap().get({ $protocol: Protocol.RunProtocol, location: 'abc' })).to.equal(undefined)
+      expect(new UniqueMap().get(testToken().deploy())).to.equal(undefined)
     })
 
     it('should throw for same tokens at different states', () => {
-      const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
-      const map = new UniqueMap([[token1, 1]])
-      expect(map.get(token1)).to.equal(1)
-      const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
-      expect(() => map.get(token2)).to.throw('Detected two of the same token with different location')
-    })
-
-    it('should throw for tokens of unknown protocol', () => {
-      const map = new UniqueMap()
-      const token = { $protocol: {}, location: 'abc' }
-      expect(() => map.get(token)).to.throw('Unknown token protocol')
+      const a = testToken()
+      const b = testToken().deploy()
+      const c = testToken().deploy().publish()
+      const map = new UniqueMap([[a, 1], [b, 2], [c, 3]])
+      expect(map.get(a)).to.equal(1)
+      expect(map.get(b)).to.equal(2)
+      expect(map.get(c)).to.equal(3)
+      const a2 = a.deploy().publish().duplicate().update()
+      const b2 = b.publish().duplicate().update()
+      const c2 = c.duplicate().update().publish()
+      expect(() => map.get(a2)).to.throw('Inconsistent worldview')
+      expect(() => map.get(b2)).to.throw('Inconsistent worldview')
+      expect(() => map.get(c2)).to.throw('Inconsistent worldview')
     })
   })
 
@@ -206,29 +223,26 @@ describe('UniqueMap', () => {
     })
 
     it('should return true for tokens in map', () => {
-      const token1 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
-      const map = new UniqueMap([[token1, {}]])
-      expect(map.has(token1)).to.equal(true)
-      const token2 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
-      expect(map.has(token2)).to.equal(true)
+      const a = testToken()
+      const b = testToken().deploy().publish().update()
+      const map = new UniqueMap([[a, {}], [b, {}]])
+      expect(map.has(a)).to.equal(true)
+      expect(map.has(b)).to.equal(true)
+      expect(map.has(b.duplicate())).to.equal(true)
     })
 
     it('should return false for missing tokens', () => {
-      expect(new UniqueMap().has({ $protocol: Protocol.RunProtocol, location: 'abc' })).to.equal(false)
+      expect(new UniqueMap().has(testToken())).to.equal(false)
+      expect(new UniqueMap().has(testToken().deploy())).to.equal(false)
+      expect(new UniqueMap().has(testToken().deploy().publish())).to.equal(false)
+      expect(new UniqueMap().has(testToken().deploy().publish().update())).to.equal(false)
     })
 
     it('should throw for same tokens at different states', () => {
-      const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
-      const map = new UniqueMap([[token1, []]])
-      expect(map.has(token1)).to.equal(true)
-      const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
-      expect(() => map.has(token2)).to.throw('Detected two of the same token with different location')
-    })
-
-    it('should throw for tokens of unknown protocol', () => {
-      const map = new UniqueMap()
-      const token = { $protocol: {}, location: 'abc' }
-      expect(() => map.has(token)).to.throw('Unknown token protocol')
+      const a = testToken().deploy().publish().update().publish()
+      const map = new UniqueMap([[a, []]])
+      expect(map.has(a)).to.equal(true)
+      expect(() => map.has(a.duplicate().update())).to.throw('Inconsistent worldview')
     })
   })
 
@@ -248,25 +262,21 @@ describe('UniqueMap', () => {
     })
 
     it('should set tokens once', () => {
-      const token1 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
-      const token2 = { $protocol: Protocol.BcatProtocol, location: 'abc' }
+      const a = testToken().deploy().publish()
       const map = new UniqueMap()
-      map.set(token1, 0)
-      map.set(token2, 1)
+      map.set(a, 0)
+      const a2 = a.duplicate()
+      map.set(a2, 1)
       expect(map.size).to.equal(1)
-      expect(map.get(token1)).to.equal(1)
-    })
-
-    it('should throw if set token with unknown protocol', () => {
-      expect(() => new UniqueMap().set({ $protocol: {} }, 0)).to.throw('Unknown token protocol')
+      expect(map.get(a2)).to.equal(1)
     })
 
     it('should throw if add two of the same tokens at different states', () => {
-      const token1 = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
-      const token2 = { $protocol: Protocol.RunProtocol, location: 'def', origin: '123' }
+      const a = testToken().deploy().publish()
+      const a2 = a.duplicate().update()
       const map = new UniqueMap()
-      map.set(token1, token1)
-      expect(() => map.set(token2, {})).to.throw('Detected two of the same token with different locations')
+      map.set(a2, a2)
+      expect(() => map.set(a, {})).to.throw('Inconsistent worldview')
     })
   })
 
