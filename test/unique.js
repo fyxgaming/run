@@ -1,11 +1,11 @@
 const { describe, it, before, after } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
-const { UniqueSet, UniqueMap } = require('../../lib/v2/unique')
-const Protocol = require('../../lib/v2/protocol')
-const { createRun } = require('../helpers')
-const { Jiglet } = require('../../lib/v2/jiglet')
-const Location = require('../../lib/location')
+const { UniqueSet, UniqueMap } = require('../lib/unique')
+const Protocol = require('../lib/v2/protocol')
+const { createRun } = require('./helpers')
+const { Jiglet } = require('../lib/v2/jiglet')
+const Location = require('../lib/location')
 const { Loader } = Protocol
 
 createRun()
