@@ -4872,7 +4872,7 @@ describe('Jig', () => {
       expect(a.x).to.equal(2)
     })
 
-    it.only('should forward sync inner jigs', async () => {
+    it('should forward sync inner jigs', async () => {
       class A extends Jig { set (x, y) { this[x] = y } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -4891,17 +4891,18 @@ describe('Jig', () => {
     })
 
     it('should forward sync circularly referenced jigs', async () => {
-      class A extends Jig { set (x, y) { this[x] = y } }
+      class A extends Jig { setB (b) { this.b = b } }
+      class B extends Jig { setA (a) { this.a = a } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      const b = new A()
+      const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      a.set('b', b)
+      a.setB(b)
       await run.sync()
       const run2 = createRun({ blockchain: run.blockchain, owner: run.owner.privkey })
       const a2 = await run2.load(a.location)
       const b2 = await run2.load(b.location)
-      b2.set('a', a2)
+      b2.setA(a2)
       await b2.sync()
       run.activate()
       expect(a.b.a).to.equal(undefined)
@@ -4936,7 +4937,7 @@ describe('Jig', () => {
         tx.outputs.forEach(output => delete output.spentHeight)
         return tx
       }
-      await expect(a.sync()).to.be.rejectedWith('Blockchain API does not support forward syncing.')
+      await expect(a.sync()).to.be.rejectedWith('Failed to forward sync jig')
       run.blockchain.fetch = oldFetch
     })
 
@@ -4961,6 +4962,7 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const tx = await run.blockchain.fetch(a.location.slice(0, 64))
       tx.outputs[2].spentTxId = '123'
+      tx.outputs[2].spentIndex = 0
       await expect(a.sync()).to.be.rejectedWith('tx not found')
     })
 
@@ -4973,7 +4975,8 @@ describe('Jig', () => {
       await run.sync()
       const tx = await run.blockchain.fetch(a.location.slice(0, 64))
       tx.outputs[2].spentTxId = b.location.slice(0, 64)
-      await expect(a.sync()).to.be.rejectedWith('jig not found')
+      tx.outputs[2].spentIndex = 0
+      await expect(a.sync()).to.be.rejectedWith('Blockchain API returned an incorrect spentTxId')
     })
 
     it('should not throw if sync jig updated by another', async () => {

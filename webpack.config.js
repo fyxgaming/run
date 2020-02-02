@@ -221,6 +221,9 @@ const obfuscatePlugin = {
   }
 }
 
+// Don't obfuscate these objects because they need to be preserved
+const dontObfuscate = ['Jig', 'JigControl', 'util', 'Token', 'expect', 'intrinsicNames']
+
 const browser = {
   entry: path.join(__dirname, './lib'),
   output: {
@@ -233,7 +236,7 @@ const browser = {
       new TerserPlugin({
         terserOptions: {
           mangle: {
-            reserved: ['Jig', 'JigControl', 'util', 'Token', 'expect']
+            reserved: dontObfuscate
           }
         }
       })

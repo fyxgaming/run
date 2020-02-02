@@ -92,7 +92,7 @@ module.exports =
 "use strict";
 
 
-var bind = __webpack_require__(12);
+var bind = __webpack_require__(13);
 var isBuffer = __webpack_require__(36);
 
 /*global toString:true*/
@@ -913,20 +913,20 @@ module.exports = require("bsv");
  */
 
 const bsv = __webpack_require__(2)
-const Code = __webpack_require__(25)
+const Code = __webpack_require__(26)
 const Evaluator = __webpack_require__(7)
 const Syncer = __webpack_require__(32)
-const { Transaction } = __webpack_require__(10)
+const { Transaction } = __webpack_require__(11)
 const util = __webpack_require__(1)
 const { Pay, Purse } = __webpack_require__(33)
 const Owner = __webpack_require__(64)
-const { Blockchain, BlockchainServer } = __webpack_require__(11)
+const { Blockchain, BlockchainServer } = __webpack_require__(12)
 const Mockchain = __webpack_require__(65)
 const { StateCache } = __webpack_require__(66)
 const { PrivateKey } = bsv
 const { Jig } = __webpack_require__(4)
 const Token = __webpack_require__(67)
-const expect = __webpack_require__(24)
+const expect = __webpack_require__(25)
 
 // ------------------------------------------------------------------------------------------------
 // Primary Run class
@@ -1221,12 +1221,12 @@ const JigControl = { // control state shared across all jigs, similar to a PCB
 }
 
 JigControl.disableProxy = f => {
-  const lastEnforce = JigControl.enforce
+  const prevEnforce = JigControl.enforce
   try {
     JigControl.enforce = false
     return f()
   } finally {
-    JigControl.enforce = lastEnforce
+    JigControl.enforce = prevEnforce
   }
 }
 
@@ -1880,7 +1880,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 "use strict";
 
 
-var enhanceError = __webpack_require__(16);
+var enhanceError = __webpack_require__(17);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -1908,7 +1908,7 @@ module.exports = function createError(message, config, code, request, response) 
  * The evaluator runs arbitrary code in a secure sandbox
  */
 
-const ses = __webpack_require__(26)
+const ses = __webpack_require__(27)
 const { getIntrinsics, intrinsicNames } = __webpack_require__(8)
 
 // ------------------------------------------------------------------------------------------------
@@ -2247,9 +2247,10 @@ module.exports = { getIntrinsics, intrinsicNames }
 // So Objects and arrays are acceptible from without.
 // Document scanner API
 
-const Protocol = __webpack_require__(29)
+const Protocol = __webpack_require__(30)
 const { display } = __webpack_require__(1)
 const { getIntrinsics } = __webpack_require__(8)
+const { JigControl } = __webpack_require__(4)
 
 // ------------------------------------------------------------------------------------------------
 // Xray
@@ -2322,6 +2323,7 @@ class Xray {
   useTokenLoader (loadToken) { this.loadToken = loadToken; return this }
   useCodeCloner (cloneCode) { this.cloneCode = cloneCode; return this }
   useIntrinsics (intrinsics) { this.intrinsics = intrinsics; return this }
+  deeplyScanTokens () { this.deeplyScanTokens = true; return this }
 
   scan (x) {
     if (this.caches.scanned.has(x)) return this
@@ -3125,6 +3127,10 @@ class DeployableScanner {
   scan (x, xray) {
     if (deployable(x, xray)) {
       xray.deployables.add(x)
+      if (xray.deeplyScanTokens) {
+        xray.caches.scanned.add(x)
+        Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
+      }
       return true
     }
   }
@@ -3170,6 +3176,12 @@ class TokenScanner {
   scan (x, xray) {
     if (Protocol.isToken(x)) {
       xray.tokens.add(x)
+      if (xray.deeplyScanTokens) {
+        xray.caches.scanned.add(x)
+        JigControl.disableProxy(() => {
+          Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
+        })
+      }
       return true
     }
   }
@@ -3281,6 +3293,155 @@ module.exports = Xray
 
 /***/ }),
 /* 10 */
+/***/ (function(module, exports) {
+
+/**
+ * location.js
+ *
+ * Parses and builds location strings that point to tokens on the blockchain
+ */
+
+/**
+ * Helper class to create and parse location strings
+ *
+ * Every token in Run is stored at a location on the blockchain. Both the "origin"
+ * property and "location" property on jigs and code are location strings. Jiglets
+ * have a location but not an origin. To the user, these come in the form:
+ *
+ *  <txid>_o<vout>
+ *
+ * Where txid is a transaction id in hex, and vout is the output index as an integer.
+ * Locations are usually outputs. But they need not always be outputs. There are other
+ * kinds of locations. If the location ends with _i<vin>, then the location refers
+ * to an input of a transaction. If the location ends in _r<vref>, then the location
+ * refers to another "ref" location within the OP_RETURN JSON. Sometimes within the
+ * OP_RETURN JSON you will see locations without txids, and these refer to relative
+ * locations. They look like _o1, _i0, etc.
+ *
+ * While a transaction is being built, a jig may have a temporary location. This is
+ * identified by a random temporary txid that starts with '?'. This will get turned
+ * into a real location when the token's transaction is known and published. The
+ * convention is for temporary txids to have 48 ?'s followed by 16 random hex chars
+ * to uniquely identify the temporary txid, but this is not strictly required.
+ *
+ * Finally, it is important that tokens be deterministically loadable. Most tokens
+ * are jigs and code and are parsed by the Run protocol. However with Jiglets, a
+ * token may be parsed by another protocol. Two locations may even be parsed differently
+ * by two different protocols, so it's important when identifying the location of a
+ * jiglet to attach its protocol to its location. So, we add a protocol prefix:
+ *
+ *      <protocol_location>://<token_location>
+ *
+ * This class helps store and read all of this, but within Run's code, it is important
+ * to consider all of the above cases when looking at a location.
+ */
+class Location {
+  /**
+     * Parses a location string
+     * @param {string} location Location to parse
+     * @return {object} out
+     * @return {string=} out.txid Transaction ID
+     * @return {number=} out.vout Output index
+     * @return {number=} out.vin Input index
+     * @return {number=} out.vref Reference index
+     * @return {string=} out.tempTxid Temporary transaction ID
+     * @return {object=} out.proto Protocol location object
+     */
+  static parse (location) {
+    const error = s => { throw new Error(`${s}: ${location}`) }
+
+    if (typeof location !== 'string') error('Location must be a string')
+    if (!location.length) error('Location must not be empty')
+
+    // Check if we are dealing with a protocol
+    const protoParts = location.split('://')
+    if (protoParts.length > 2) error('Location must only have one protocol')
+    if (protoParts.length === 2) {
+      return Object.assign({}, Location.parse(protoParts[1]),
+        { proto: Location.parse(protoParts[0]) })
+    }
+
+    // Split the txid and index parts
+    const parts = location.split('_')
+    if (parts.length > 2) error('Location has an unexpected _ separator')
+    if (parts.length < 2) error('Location requires a _ separator')
+
+    const output = {}
+
+    // Validate the txid
+    if (parts[0].length !== 0 && parts[0].length !== 64) error('Location has an invalid txid length')
+    if (parts[0][0] === '?') {
+      output.tempTxid = parts[0]
+    } else if (parts[0].length) {
+      if (!/^[a-fA-F0-9]*$/.test(parts[0])) error('Location has invalid hex in its txid')
+      output.txid = parts[0]
+    }
+
+    // Validate the index number
+    const indexString = parts[1].slice(1)
+    const index = parseInt(indexString, 10)
+    if (isNaN(index) || !/^[0-9]*$/.test(indexString)) error('Location has an invalid index number')
+
+    // Validate the index category
+    switch (parts[1][0]) {
+      case 'o': { output.vout = index; break }
+      case 'i': { output.vin = index; break }
+      case 'r': { output.vref = index; break }
+      default: error('Location has an invalid index category')
+    }
+
+    return output
+  }
+
+  /**
+     * Creates a location string from options
+     * @param {object} options
+     * @param {string=} options.txid Transaction ID
+     * @param {number=} options.vout Output index
+     * @param {number=} options.outputIndex Output index
+     * @param {number=} options.vin Input index
+     * @param {number=} options.vref Reference index
+     * @param {string=} options.tempTxid Temporary transaction ID
+     * @param {object=} options.proto Protocol location object
+     * @return {string} The built location string
+     */
+  static build (options) {
+    const error = s => { throw new Error(`${s}: ${JSON.stringify(options)}`) }
+
+    if (typeof options !== 'object' || !options) error('Location object is invalid')
+    if (options.proto && options.proto.proto) error('Location must only have one protocol')
+
+    // If we have a protocol, build that first.
+    const prefix = options.proto ? `${Location.build(options.proto)}://` : ''
+
+    // Get the txid
+    const txid = `${options.txid || options.tempTxid || ''}`
+
+    // Get the index
+    let category = null; let index = null
+    if (typeof options.vout === 'number') {
+      category = 'o'
+      index = options.vout
+    } else if (typeof options.vin === 'number') {
+      category = 'i'
+      index = options.vin
+    } else if (typeof options.vref === 'number') {
+      category = 'r'
+      index = options.vref
+    } else error('Location index unspecified')
+
+    const badIndex = isNaN(index) || !isFinite(index) || !Number.isInteger(index) || index < 0
+    if (badIndex) error('Location index must be a non-negative integer')
+
+    return `${prefix}${txid}_${category}${index}`
+  }
+}
+
+module.exports = Location
+
+
+/***/ }),
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -4213,7 +4374,7 @@ module.exports = { ProtoTransaction, Transaction }
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -4646,7 +4807,7 @@ module.exports = { Blockchain, BlockchainServer }
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4664,7 +4825,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4676,7 +4837,7 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4781,7 +4942,7 @@ module.exports = defaults;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4813,7 +4974,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4862,24 +5023,24 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports) {
 
 module.exports = require("http");
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports) {
 
 module.exports = require("https");
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var url = __webpack_require__(20);
-var http = __webpack_require__(17);
-var https = __webpack_require__(18);
+var url = __webpack_require__(21);
+var http = __webpack_require__(18);
+var https = __webpack_require__(19);
 var assert = __webpack_require__(43);
 var Writable = __webpack_require__(44).Writable;
 var debug = __webpack_require__(45)("follow-redirects");
@@ -5202,13 +5363,13 @@ module.exports.wrap = wrap;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports) {
 
 module.exports = require("url");
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
@@ -5439,7 +5600,7 @@ function coerce(val) {
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5497,7 +5658,7 @@ module.exports = function mergeConfig(config1, config2) {
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5523,7 +5684,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports) {
 
 /**
@@ -5593,7 +5754,7 @@ module.exports = expect
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -5981,7 +6142,7 @@ module.exports = Code
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5989,7 +6150,7 @@ module.exports = Code
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var makeHardener = _interopDefault(__webpack_require__(27));
+var makeHardener = _interopDefault(__webpack_require__(28));
 
 // we'd like to abandon, but we can't, so just scream and break a lot of
 // stuff. However, since we aren't really aborting the process, be careful to
@@ -6656,7 +6817,7 @@ function createNewUnsafeGlobalForNode() {
   }
 
   // eslint-disable-next-line global-require
-  const vm = __webpack_require__(28);
+  const vm = __webpack_require__(29);
 
   // Use unsafeGlobalEvalSrc to ensure we get the right 'this'.
   const unsafeGlobal = vm.runInNewContext(unsafeGlobalEvalSrc);
@@ -9745,7 +9906,7 @@ module.exports = SES;
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9947,13 +10108,13 @@ module.exports = makeHardener;
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports) {
 
 module.exports = require("vm");
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -9963,8 +10124,8 @@ module.exports = require("vm");
  */
 
 const { Jig, JigControl } = __webpack_require__(4)
-const { Jiglet, JigletControl } = __webpack_require__(30)
-const Location = __webpack_require__(31)
+const { Jiglet, JigletControl } = __webpack_require__(31)
+const Location = __webpack_require__(10)
 
 // ------------------------------------------------------------------------------------------------
 // Protocol manager
@@ -10047,7 +10208,7 @@ module.exports = Protocol
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports) {
 
 const JigletControl = {
@@ -10091,155 +10252,6 @@ module.exports = { Jiglet, JigletControl }
 
 
 /***/ }),
-/* 31 */
-/***/ (function(module, exports) {
-
-/**
- * location.js
- *
- * Parses and builds location strings that point to tokens on the blockchain
- */
-
-/**
- * Helper class to create and parse location strings
- *
- * Every token in Run is stored at a location on the blockchain. Both the "origin"
- * property and "location" property on jigs and code are location strings. Jiglets
- * have a location but not an origin. To the user, these come in the form:
- *
- *  <txid>_o<vout>
- *
- * Where txid is a transaction id in hex, and vout is the output index as an integer.
- * Locations are usually outputs. But they need not always be outputs. There are other
- * kinds of locations. If the location ends with _i<vin>, then the location refers
- * to an input of a transaction. If the location ends in _r<vref>, then the location
- * refers to another "ref" location within the OP_RETURN JSON. Sometimes within the
- * OP_RETURN JSON you will see locations without txids, and these refer to relative
- * locations. They look like _o1, _i0, etc.
- *
- * While a transaction is being built, a jig may have a temporary location. This is
- * identified by a random temporary txid that starts with '?'. This will get turned
- * into a real location when the token's transaction is known and published. The
- * convention is for temporary txids to have 48 ?'s followed by 16 random hex chars
- * to uniquely identify the temporary txid, but this is not strictly required.
- *
- * Finally, it is important that tokens be deterministically loadable. Most tokens
- * are jigs and code and are parsed by the Run protocol. However with Jiglets, a
- * token may be parsed by another protocol. Two locations may even be parsed differently
- * by two different protocols, so it's important when identifying the location of a
- * jiglet to attach its protocol to its location. So, we add a protocol prefix:
- *
- *      <protocol_location>://<token_location>
- *
- * This class helps store and read all of this, but within Run's code, it is important
- * to consider all of the above cases when looking at a location.
- */
-class Location {
-  /**
-     * Parses a location string
-     * @param {string} location Location to parse
-     * @return {object} out
-     * @return {string=} out.txid Transaction ID
-     * @return {number=} out.vout Output index
-     * @return {number=} out.vin Input index
-     * @return {number=} out.vref Reference index
-     * @return {string=} out.tempTxid Temporary transaction ID
-     * @return {object=} out.proto Protocol location object
-     */
-  static parse (location) {
-    const error = s => { throw new Error(`${s}: ${location}`) }
-
-    if (typeof location !== 'string') error('Location must be a string')
-    if (!location.length) error('Location must not be empty')
-
-    // Check if we are dealing with a protocol
-    const protoParts = location.split('://')
-    if (protoParts.length > 2) error('Location must only have one protocol')
-    if (protoParts.length === 2) {
-      return Object.assign({}, Location.parse(protoParts[1]),
-        { proto: Location.parse(protoParts[0]) })
-    }
-
-    // Split the txid and index parts
-    const parts = location.split('_')
-    if (parts.length > 2) error('Location has an unexpected _ separator')
-    if (parts.length < 2) error('Location requires a _ separator')
-
-    const output = {}
-
-    // Validate the txid
-    if (parts[0].length !== 0 && parts[0].length !== 64) error('Location has an invalid txid length')
-    if (parts[0][0] === '?') {
-      output.tempTxid = parts[0]
-    } else if (parts[0].length) {
-      if (!/^[a-fA-F0-9]*$/.test(parts[0])) error('Location has invalid hex in its txid')
-      output.txid = parts[0]
-    }
-
-    // Validate the index number
-    const indexString = parts[1].slice(1)
-    const index = parseInt(indexString, 10)
-    if (isNaN(index) || !/^[0-9]*$/.test(indexString)) error('Location has an invalid index number')
-
-    // Validate the index category
-    switch (parts[1][0]) {
-      case 'o': { output.vout = index; break }
-      case 'i': { output.vin = index; break }
-      case 'r': { output.vref = index; break }
-      default: error('Location has an invalid index category')
-    }
-
-    return output
-  }
-
-  /**
-     * Creates a location string from options
-     * @param {object} options
-     * @param {string=} options.txid Transaction ID
-     * @param {number=} options.vout Output index
-     * @param {number=} options.outputIndex Output index
-     * @param {number=} options.vin Input index
-     * @param {number=} options.vref Reference index
-     * @param {string=} options.tempTxid Temporary transaction ID
-     * @param {object=} options.proto Protocol location object
-     * @return {string} The built location string
-     */
-  static build (options) {
-    const error = s => { throw new Error(`${s}: ${JSON.stringify(options)}`) }
-
-    if (typeof options !== 'object' || !options) error('Location object is invalid')
-    if (options.proto && options.proto.proto) error('Location must only have one protocol')
-
-    // If we have a protocol, build that first.
-    const prefix = options.proto ? `${Location.build(options.proto)}://` : ''
-
-    // Get the txid
-    const txid = `${options.txid || options.tempTxid || ''}`
-
-    // Get the index
-    let category = null; let index = null
-    if (typeof options.vout === 'number') {
-      category = 'o'
-      index = options.vout
-    } else if (typeof options.vin === 'number') {
-      category = 'i'
-      index = options.vin
-    } else if (typeof options.vref === 'number') {
-      category = 'r'
-      index = options.vref
-    } else error('Location index unspecified')
-
-    const badIndex = isNaN(index) || !isFinite(index) || !Number.isInteger(index) || index < 0
-    if (badIndex) error('Location index must be a non-negative integer')
-
-    return `${prefix}${txid}_${category}${index}`
-  }
-}
-
-module.exports = Location
-
-
-/***/ }),
 /* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -10249,10 +10261,11 @@ module.exports = Location
  * Enqueues transactions and syncs jigs
  */
 
-const { ProtoTransaction } = __webpack_require__(10)
+const { ProtoTransaction } = __webpack_require__(11)
 const { JigControl } = __webpack_require__(4)
 const Xray = __webpack_require__(9)
 const util = __webpack_require__(1)
+const Location = __webpack_require__(10)
 
 /**
  * Proto-transaction: A temporary structure Run uses to build transactions. This structure
@@ -10449,11 +10462,15 @@ owner: ${spentJigs[i].owner}`)
     const onBroadcast = tx => recentlyPublishedTxids.add(tx.hash)
     this.onBroadcastListeners.add(onBroadcast)
 
-    // helper method to forward sync if enabled and we have a jig to update, and then return that jig
+    // Helper method to forward sync if enabled and we have a jig to update. Returns the jig
     const forwardSync = async () => {
-      if (options.target && (typeof options.forward === 'undefined' || options.forward)) {
-        return this.fastForward(options.target, recentlyPublishedTxids).then(() => options.target)
-      } else return options.target
+      const shouldForwardSync = typeof options.forward === 'undefined' || options.forward
+
+      if (shouldForwardSync && options.target) {
+        return this.fastForward(options.target, recentlyPublishedTxids)
+      } else {
+        return options.target
+      }
     }
 
     // if there are no pending transactions being published, then immediately forward sync
@@ -10477,58 +10494,83 @@ owner: ${spentJigs[i].owner}`)
   /**
    * Fast-forwards a jig and all jigs it references to their latest state
    * @param {Jig} jig jig to update
-   * @param {Set<txid: string>} dontRefresh Transaction IDs that were force-refreshed already
-   * @param {Map<origin: string, latestState: Jig>} seen jigs already updated
+   * @param {Set<txid: string>} alreadyForceFetched Transaction IDs that were force-refreshed already
+   * @param {Map<origin: string, latestState: Jig>} synced jigs already updated
    */
-  async fastForward (jig, dontRefresh = new Set(), seen = new Map()) {
-    // if we have already fast-forwarded this jig, copy its state and return
-    const cached = seen.get(jig.origin)
-    if (cached) {
-      JigControl.enforce = false
-      Object.assign(jig, cached)
-      JigControl.enforce = true
-      return jig
-    }
+  async fastForward (jig, alreadyForceFetched = new Set(), synced = new Map()) {
+    // If we have already fast-forwarded this jig, copy its state and return
+    const cached = synced.get(jig.origin)
+    if (cached) return JigControl.disableProxy(() => Object.assign(jig, cached))
 
-    // load the transaction this jig is in to see if it's spent
-    let txid = jig.location.slice(0, 64)
-    let vout = parseInt(jig.location.slice(66))
-    let tx = await this.blockchain.fetch(txid, !dontRefresh.has(txid))
-    dontRefresh.add(txid)
+    // Load the transaction this jig is in to see if it's spent
+    let loc = Location.parse(jig.location)
+    let tx = await this.blockchain.fetch(loc.txid, !alreadyForceFetched.has(loc.txid))
+    alreadyForceFetched.add(loc.txid)
 
-    // update this jig transaction by transaction until there are no more updates left
-    while (true) {
-      const output = tx.outputs[vout]
-
-      // if we don't know if this output is spent, then we throw an error, because we don't want
-      // users to think they are in the latest state when they are not.
-      if (typeof output.spentTxId === 'undefined') {
-        const errorMessage = 'Blockchain API does not support forward syncing.'
-        const possibleFix = 'To just publish pending transactions, use `jig.sync({ forward: false })`.'
-        throw new Error(`${errorMessage}\n\n${possibleFix}`)
-      }
-
-      // if this jig's output is not spent, then there is nothing left to update
-      if (output.spentTxId === null) break
-
-      // update the jig with this next transaction
-      tx = await this.blockchain.fetch(output.spentTxId, !dontRefresh.has(txid))
-      const protoTx = new ProtoTransaction()
-      await protoTx.import(tx, this.run, jig, true)
-      dontRefresh.add(output.spentTxId)
-      const jigProxies = Array.from(protoTx.proxies.values())
-      if (!jigProxies.some(proxy => proxy === jig)) throw new Error('jig not found')
-      txid = jig.location.slice(0, 64)
-      vout = parseInt(jig.location.slice(66))
+    // Update this jig transaction by transaction until there are no more updates left
+    while (tx.outputs[loc.vout].spentTxId !== null) {
+      tx = await this.fetchNextTransaction(tx, loc.vout, alreadyForceFetched)
+      await this.updateJigWithNextTransaction(jig, tx)
+      loc = Location.parse(jig.location)
     }
 
     // Mark this jig as updated so it isn't updated again by a circular reference
-    seen.set(jig.origin, jig)
+    synced.set(jig.origin, jig)
 
-    this.fastForwardInnerTokens(jig, dontRefresh, seen)
+    // Fast forward all jigs inside of this one so the whole thing is up to date
+    await this.fastForwardInnerTokens(jig, alreadyForceFetched, synced)
+
+    return jig
   }
 
-  async fastForwardInnerTokens (x, dontRefresh, seen) {
+  async fetchNextTransaction (tx, vout, alreadyForceFetched) {
+    const output = tx.outputs[vout]
+
+    // If we don't know if this output is spent, then we throw an error, because we don't want
+    // users to think they are in the latest state when they are not.
+    if (typeof output.spentTxId === 'undefined') {
+      const message = 'Failed to forward sync jig'
+      const reason = 'The blockchain API does not support the spentTxId field.'
+      const hint = 'Hint: To just publish updates without forward sync, use `jig.sync({ forward: false })`.'
+      throw new Error(`${message}\n\n${reason}\n\n${hint}`)
+    }
+
+    // Fetch the next transaction this jig is in
+    const nextTx = await this.blockchain.fetch(output.spentTxId, !alreadyForceFetched.has(output.spentTxId))
+    alreadyForceFetched.add(output.spentTxId)
+
+    const input = nextTx.inputs[output.spentIndex]
+    if (!input) {
+      const message = 'Blockchain API returned an incorrect spentIndex'
+      const data = `Txid: ${tx.hash}\nSpent Index: ${output.spentIndex}`
+      const hint = 'Hint: Check that the blockchain API is working correctly'
+      throw new Error(`${message}\n\n${data}\n\n${hint}`)
+    }
+
+    if (input.prevTxId.toString('hex') !== tx.hash || input.outputIndex !== vout) {
+      const message = 'Blockchain API returned an incorrect spentTxId'
+      const data = `Txid: ${tx.hash}\nSpent Txid: ${output.spentTxId}`
+      const hint = 'Hint: Check that the blockchain API is working correctly'
+      throw new Error(`${message}\n\n${data}\n\n${hint}`)
+    }
+
+    return nextTx
+  }
+
+  async updateJigWithNextTransaction (jig, tx) {
+    // Import the tx and update our jig, then make sure it was updated
+    const protoTx = new ProtoTransaction()
+    await protoTx.import(tx, this.run, jig, true)
+    const jigProxies = Array.from(protoTx.proxies.values())
+    if (!jigProxies.some(proxy => proxy === jig)) {
+      const message = 'Expected but did not find a jig in its spent transaction'
+      const data = `Jig origin: ${jig.origin}\nTxid: ${tx.hash}`
+      const hint = 'This is an internal Run bug. Please report it to the library developers.'
+      throw new Error(`${message}\n\n${data}\n\n${hint}`)
+    }
+  }
+
+  async fastForwardInnerTokens (x, alreadyForceFetched, synced) {
     const intrinsics = new Xray.Intrinsics()
       .use(this.code.evaluator.intrinsics)
 
@@ -10537,13 +10579,13 @@ owner: ${spentJigs[i].owner}`)
       .deeplyScanTokens()
       .useIntrinsics(intrinsics)
 
-    JigControl.disableProxy(() => xray.scan(x))
+    xray.scan(x)
 
     const { Jig } = __webpack_require__(3)
 
     for (const token of xray.tokens) {
       if (token !== x && token instanceof Jig) {
-        await this.fastForward(token, dontRefresh, seen)
+        await this.fastForward(token, alreadyForceFetched, synced)
       }
     }
   }
@@ -10562,7 +10604,7 @@ owner: ${spentJigs[i].owner}`)
 
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(1)
-const { Blockchain } = __webpack_require__(11)
+const { Blockchain } = __webpack_require__(12)
 
 // ------------------------------------------------------------------------------------------------
 // Pay API
@@ -10770,10 +10812,10 @@ module.exports = __webpack_require__(35);
 
 
 var utils = __webpack_require__(0);
-var bind = __webpack_require__(12);
+var bind = __webpack_require__(13);
 var Axios = __webpack_require__(37);
-var mergeConfig = __webpack_require__(22);
-var defaults = __webpack_require__(14);
+var mergeConfig = __webpack_require__(23);
+var defaults = __webpack_require__(15);
 
 /**
  * Create an instance of Axios
@@ -10806,9 +10848,9 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(23);
+axios.Cancel = __webpack_require__(24);
 axios.CancelToken = __webpack_require__(62);
-axios.isCancel = __webpack_require__(13);
+axios.isCancel = __webpack_require__(14);
 
 // Expose all/spread
 axios.all = function all(promises) {
@@ -10850,7 +10892,7 @@ var utils = __webpack_require__(0);
 var buildURL = __webpack_require__(5);
 var InterceptorManager = __webpack_require__(38);
 var dispatchRequest = __webpack_require__(39);
-var mergeConfig = __webpack_require__(22);
+var mergeConfig = __webpack_require__(23);
 
 /**
  * Create a new instance of Axios
@@ -11000,8 +11042,8 @@ module.exports = InterceptorManager;
 
 var utils = __webpack_require__(0);
 var transformData = __webpack_require__(40);
-var isCancel = __webpack_require__(13);
-var defaults = __webpack_require__(14);
+var isCancel = __webpack_require__(14);
+var defaults = __webpack_require__(15);
 var isAbsoluteURL = __webpack_require__(60);
 var combineURLs = __webpack_require__(61);
 
@@ -11138,17 +11180,17 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(15);
+var settle = __webpack_require__(16);
 var buildURL = __webpack_require__(5);
-var http = __webpack_require__(17);
-var https = __webpack_require__(18);
-var httpFollow = __webpack_require__(19).http;
-var httpsFollow = __webpack_require__(19).https;
-var url = __webpack_require__(20);
+var http = __webpack_require__(18);
+var https = __webpack_require__(19);
+var httpFollow = __webpack_require__(20).http;
+var httpsFollow = __webpack_require__(20).https;
+var url = __webpack_require__(21);
 var zlib = __webpack_require__(54);
 var pkg = __webpack_require__(55);
 var createError = __webpack_require__(6);
-var enhanceError = __webpack_require__(16);
+var enhanceError = __webpack_require__(17);
 
 var isHttps = /https:?/;
 
@@ -11450,7 +11492,7 @@ if (typeof process === 'undefined' || process.type === 'renderer') {
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __webpack_require__(21);
+exports = module.exports = __webpack_require__(22);
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
@@ -11816,7 +11858,7 @@ var util = __webpack_require__(50);
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __webpack_require__(21);
+exports = module.exports = __webpack_require__(22);
 exports.init = init;
 exports.log = log;
 exports.formatArgs = formatArgs;
@@ -12189,7 +12231,7 @@ module.exports = JSON.parse("{\"_from\":\"axios@0.19.0\",\"_id\":\"axios@0.19.0\
 
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(15);
+var settle = __webpack_require__(16);
 var buildURL = __webpack_require__(5);
 var parseHeaders = __webpack_require__(57);
 var isURLSameOrigin = __webpack_require__(58);
@@ -12606,7 +12648,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 "use strict";
 
 
-var Cancel = __webpack_require__(23);
+var Cancel = __webpack_require__(24);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -13149,7 +13191,7 @@ module.exports = { State, StateCache }
  */
 
 const { Jig } = __webpack_require__(4)
-const expect = __webpack_require__(24)
+const expect = __webpack_require__(25)
 
 class Token extends Jig {
   init (amount, _tokenToDecrease, _tokensToCombine) {
