@@ -3424,7 +3424,7 @@ module.exports = Run;
 /* 12 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"richObjectToJson\":\"aal\",\"jsonToRichObject\":\"aam\",\"extractJigsAndCodeToArray\":\"aan\",\"injectJigsAndCodeFromArray\":\"aao\",\"deepTraverse\":\"aap\",\"activeRunInstance\":\"aaq\",\"sameJig\":\"aar\",\"networkSuffix\":\"aas\",\"isBlockchain\":\"aahc\",\"broadcastUrl\":\"aau\",\"broadcastData\":\"aav\",\"fetchUrl\":\"aaw\",\"fetchResp\":\"aax\",\"utxosUrl\":\"aay\",\"utxosResp\":\"aaz\",\"_dedupUtxos\":\"aaab\",\"correctForServerUtxoIndexingDelay\":\"aabb\",\"fetched\":\"aacb\",\"broadcasted\":\"aadb\",\"isSandbox\":\"aaeb\",\"getInstalled\":\"aafb\",\"installFromTx\":\"aagb\",\"installJig\":\"aahb\",\"fastForward\":\"aaib\",\"finish\":\"aajb\",\"publishNext\":\"aakb\",\"publish\":\"aalb\",\"storeCode\":\"aamb\",\"storeAction\":\"aanb\",\"setProtoTxAndCreator\":\"aaob\",\"buildBsvTransaction\":\"aapb\",\"_fromPrivateKey\":\"aaqb\",\"_fromPublicKey\":\"aarb\",\"_fromAddress\":\"aasb\",\"_queryLatest\":\"aatb\",\"_removeErrorRefs\":\"aaub\",\"_update\":\"aavb\",\"_estimateSize\":\"aawb\",\"_util\":\"aaxb\",\"intrinsics\":\"aayb\",\"proxies\":\"aazb\",\"enforce\":\"aaac\",\"stack\":\"aabc\",\"reads\":\"aacc\",\"creates\":\"aadc\",\"saves\":\"aaec\",\"callers\":\"aafc\",\"stateToInject\":\"aagc\",\"requests\":\"aaic\",\"broadcasts\":\"aajc\",\"expiration\":\"aakc\",\"indexingDelay\":\"aalc\",\"fetchedTime\":\"aamc\",\"transactions\":\"aanc\",\"utxosByLocation\":\"aaoc\",\"utxosByAddress\":\"aapc\",\"blockHeight\":\"aaqc\",\"installs\":\"aarc\",\"syncer\":\"aasc\",\"protoTx\":\"aatc\",\"beginCount\":\"aauc\",\"cachedTx\":\"aavc\",\"syncListeners\":\"aawc\",\"onBroadcastListeners\":\"aaxc\",\"lastPosted\":\"aayc\",\"queued\":\"aazc\",\"sizeBytes\":\"aaad\",\"maxSizeBytes\":\"aabd\",\"JigControl\":\"aacd\",\"ProtoTransaction\":\"aadd\",\"PROTOCOL_VERSION\":\"aaed\",\"SerialTaskQueue\":\"aafd\",\"extractProps\":\"aagd\",\"onReadyForPublish\":\"aahd\",\"spentJigs\":\"aaid\",\"spentLocations\":\"aajd\"}");
+module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"activeRunInstance\":\"aal\",\"sameJig\":\"aam\",\"networkSuffix\":\"aan\",\"isBlockchain\":\"aacc\",\"broadcastUrl\":\"aap\",\"broadcastData\":\"aaq\",\"fetchUrl\":\"aar\",\"fetchResp\":\"aas\",\"utxosUrl\":\"aat\",\"utxosResp\":\"aau\",\"_dedupUtxos\":\"aav\",\"correctForServerUtxoIndexingDelay\":\"aaw\",\"fetched\":\"aax\",\"broadcasted\":\"aay\",\"isSandbox\":\"aaz\",\"getInstalled\":\"aaab\",\"installFromTx\":\"aabb\",\"installJig\":\"aacb\",\"fastForward\":\"aadb\",\"finish\":\"aaeb\",\"publishNext\":\"aafb\",\"publish\":\"aagb\",\"storeCode\":\"aahb\",\"storeAction\":\"aaib\",\"setProtoTxAndCreator\":\"aajb\",\"buildBsvTransaction\":\"aakb\",\"_fromPrivateKey\":\"aalb\",\"_fromPublicKey\":\"aamb\",\"_fromAddress\":\"aanb\",\"_queryLatest\":\"aaob\",\"_removeErrorRefs\":\"aapb\",\"_update\":\"aaqb\",\"_estimateSize\":\"aarb\",\"_util\":\"aasb\",\"intrinsics\":\"aatb\",\"proxies\":\"aaub\",\"enforce\":\"aavb\",\"stack\":\"aawb\",\"reads\":\"aaxb\",\"creates\":\"aayb\",\"before\":\"aazb\",\"callers\":\"aaac\",\"stateToInject\":\"aabc\",\"requests\":\"aadc\",\"broadcasts\":\"aaec\",\"expiration\":\"aafc\",\"indexingDelay\":\"aagc\",\"fetchedTime\":\"aahc\",\"transactions\":\"aaic\",\"utxosByLocation\":\"aajc\",\"utxosByAddress\":\"aakc\",\"blockHeight\":\"aalc\",\"installs\":\"aamc\",\"syncer\":\"aanc\",\"protoTx\":\"aaoc\",\"beginCount\":\"aapc\",\"cachedTx\":\"aaqc\",\"syncListeners\":\"aarc\",\"onBroadcastListeners\":\"aasc\",\"lastPosted\":\"aatc\",\"queued\":\"aauc\",\"sizeBytes\":\"aavc\",\"maxSizeBytes\":\"aawc\",\"JigControl\":\"aaxc\",\"ProtoTransaction\":\"aayc\",\"PROTOCOL_VERSION\":\"aazc\",\"SerialTaskQueue\":\"aaad\",\"extractProps\":\"aabd\",\"onReadyForPublish\":\"aacd\",\"spentJigs\":\"aadd\",\"spentLocations\":\"aaed\"}");
 
 /***/ }),
 /* 13 */
@@ -4448,7 +4448,49 @@ const getIntrinsics = () => {
   return new Function(code)() // eslint-disable-line
 }
 
-module.exports = { getIntrinsics, intrinsicNames }
+const globalIntrinsics = getIntrinsics()
+
+// ------------------------------------------------------------------------------------------------
+// Intrinsics
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Manages known intrinsics
+ */
+class Intrinsics {
+  constructor () {
+    this.default = null
+    this.allowed = []
+    this.types = new Set()
+    this.use(globalIntrinsics)
+  }
+
+  set (intrinsics) {
+    this.default = null
+    this.allowed = []
+    this.types = new Set()
+    this.use(intrinsics)
+    return this
+  }
+
+  allow (intrinsics) {
+    this.allowed.push(intrinsics)
+    Object.keys(intrinsics).forEach(name => this.types.add(intrinsics[name]))
+    return this
+  }
+
+  use (intrinsics) {
+    this.allow(intrinsics)
+    this.default = intrinsics
+    return this
+  }
+}
+
+Intrinsics.defaultIntrinsics = new Intrinsics()
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 
 
 /***/ }),
@@ -4658,7 +4700,7 @@ describe('Jig', () => {
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
-    it('should create basic jig', async () => {
+    it.only('should create basic jig', async () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -5497,7 +5539,7 @@ describe('Jig', () => {
         expect(buf[0]).to.equal(1)
         expect(buf[1]).to.equal(2)
         expect(buf[2]).to.equal(3)
-        expect(buf.constructor === run.code.evaluator.intrinsics.Uint8Array).to.equal(true)
+        expect(buf.constructor === run.code.intrinsics.default.Uint8Array).to.equal(true)
       }
       testBuf(a.buf)
       testBuf(a.buf2)
@@ -9570,7 +9612,6 @@ const {
   jsonToRichObject,
   extractJigsAndCodeToArray,
   injectJigsAndCodeFromArray,
-  deepTraverse,
   SerialTaskQueue
 } = Run._util
 
@@ -9935,7 +9976,7 @@ describe('util', () => {
     })
 
     it('should convert uint8array', () => {
-      const Uint8Array = run.code.evaluator.intrinsics.Uint8Array
+      const Uint8Array = run.code.intrinsics.default.Uint8Array
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: '' })).to.deep.equal(new Uint8Array(0))
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: 'AA==' })).to.deep.equal(new Uint8Array(1))
       expect(jsonToRichObject({ $class: 'Uint8Array', base64Data: 'AQID' })).to.deep.equal(new Uint8Array([1, 2, 3]))
@@ -9993,79 +10034,6 @@ describe('util', () => {
       expect(obj.a).to.equal(arr[0])
       expect(obj.b[0]).to.equal(arr[1])
       expect(obj.b[1]).to.equal(arr[2])
-    })
-  })
-
-  describe('deepTraverse', () => {
-    function expectTraverse (target, expectedVisitArgs) {
-      deepTraverse(target, (target, parent, name) => {
-        const [expectedTarget, expectedParent, expectedName] = expectedVisitArgs.shift()
-        expect(target).to.deep.equal(expectedTarget)
-        expect(parent).to.deep.equal(expectedParent)
-        expect(name).to.deep.equal(expectedName)
-      })
-    }
-
-    it('should traverse basic types', () => {
-      expectTraverse(0, [[0, null, null]])
-      expectTraverse(1, [[1, null, null]])
-      expectTraverse(1.5, [[1.5, null, null]])
-      expectTraverse('hello', [['hello', null, null]])
-      expectTraverse(true, [[true, null, null]])
-      expectTraverse(false, [[false, null, null]])
-      expectTraverse(NaN, [[NaN, null, null]])
-      expectTraverse(Infinity, [[Infinity, null, null]])
-      expectTraverse(null, [[null, null, null]])
-      expectTraverse({}, [[{}, null, null]])
-      expectTraverse([], [[[], null, null]])
-    })
-
-    it('should traverse nested objects', () => {
-      const target = { a: { b: 1 }, c: 2 }
-      expectTraverse(target, [
-        [target, null, null],
-        [target.a, target, 'a'],
-        [target.a.b, target.a, 'b'],
-        [target.c, target, 'c']
-      ])
-    })
-
-    it('should traverse duplicate objects', () => {
-      const a = { n: 1 }
-      const target = { a, b: { a } }
-      expectTraverse(target, [
-        [target, null, null],
-        [target.a, target, 'a'],
-        [target.a.n, target.a, 'n'],
-        [target.b, target, 'b'],
-        [target.b.a, target.b, 'a']
-      ])
-    })
-
-    it('should traverse circular objects', () => {
-      const target = { }
-      target.target = target
-      expectTraverse(target, [
-        [target, null, null],
-        [target.target, target, 'target']
-      ])
-    })
-
-    it('should traverse arrays', () => {
-      const target = [1, '2', [3]]
-      expectTraverse(target, [
-        [target, null, null],
-        [target[0], target, '0'],
-        [target[1], target, '1'],
-        [target[2], target, '2'],
-        [target[2][0], target[2], '0']
-      ])
-    })
-
-    it('should traverse using multiple visiters', () => {
-      let numVisited = 0
-      deepTraverse({}, [() => { numVisited += 1 }, () => { numVisited += 1 }])
-      expect(numVisited).to.equal(2)
     })
   })
 

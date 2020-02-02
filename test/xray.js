@@ -1,10 +1,10 @@
 const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { Intrinsics } = require('../../lib/intrinsics')
-const Xray = require('../../lib/v2/xray')
-const { display } = require('../../lib/util')
-const Evaluator = require('../../lib/evaluator')
+const { Intrinsics } = require('../lib/intrinsics')
+const Xray = require('../lib/xray')
+const { display } = require('../lib/util')
+const Evaluator = require('../lib/evaluator')
 
 // ------------------------------------------------------------------------------------------------
 // Test vector class
