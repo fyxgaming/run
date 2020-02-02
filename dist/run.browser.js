@@ -92,8 +92,8 @@ var Run =
 "use strict";
 
 
-var bind = __webpack_require__(13);
-var isBuffer = __webpack_require__(33);
+var bind = __webpack_require__(12);
+var isBuffer = __webpack_require__(34);
 
 /*global toString:true*/
 
@@ -914,20 +914,20 @@ module.exports = bsv;
  */
 
 const bsv = __webpack_require__(2)
-const Code = __webpack_require__(22)
+const Code = __webpack_require__(21)
 const Evaluator = __webpack_require__(7)
-const Syncer = __webpack_require__(29)
-const { Transaction } = __webpack_require__(11)
+const Syncer = __webpack_require__(30)
+const { Transaction } = __webpack_require__(10)
 const util = __webpack_require__(1)
-const { Pay, Purse } = __webpack_require__(30)
-const Owner = __webpack_require__(49)
-const { Blockchain, BlockchainServer } = __webpack_require__(12)
-const Mockchain = __webpack_require__(50)
-const { StateCache } = __webpack_require__(51)
+const { Pay, Purse } = __webpack_require__(31)
+const Owner = __webpack_require__(50)
+const { Blockchain, BlockchainServer } = __webpack_require__(11)
+const Mockchain = __webpack_require__(51)
+const { StateCache } = __webpack_require__(52)
 const { PrivateKey } = bsv
 const { Jig } = __webpack_require__(4)
-const Token = __webpack_require__(52)
-const expect = __webpack_require__(21)
+const Token = __webpack_require__(53)
+const expect = __webpack_require__(20)
 
 // ------------------------------------------------------------------------------------------------
 // Primary Run class
@@ -1206,7 +1206,7 @@ module.exports = Run
 
 // TODO
 // Sets and maps respect tokens in jigs ... these are overrides for Jigs
-//    How? TokenSet, TokenMap
+//    How? UniqueSet, UniqueMap
 
 const util = __webpack_require__(1)
 
@@ -1222,11 +1222,11 @@ const JigControl = { // control state shared across all jigs, similar to a PCB
   stateToInject: undefined
 }
 
-JigControl.disableProxy = func => {
+JigControl.disableProxy = f => {
   const lastEnforce = JigControl.enforce
   try {
     JigControl.enforce = false
-    return func()
+    return f()
   } finally {
     JigControl.enforce = lastEnforce
   }
@@ -1564,6 +1564,8 @@ class Jig {
         const callArgs = parentIsAJig ? util.jsonToRichObject(savedArgs,
           [util.injectJigsAndCodeFromArray(savedArgRefs)]) : args
 
+        // TODO: Create a clone instead
+
         // Call the method
         //
         // The call target is the object we call the method on. When our target is a jig,
@@ -1716,6 +1718,8 @@ class Jig {
             Object.keys(target).forEach(key => delete target[key])
             Object.assign(target, util.jsonToRichObject(save.json,
               [util.injectJigsAndCodeFromArray(save.refs)]))
+
+            // TODO: Deserialize with a token restorer
           })
 
           resetJigControl()
@@ -1834,9 +1838,9 @@ module.exports = g;
 
 
 
-var base64 = __webpack_require__(23)
-var ieee754 = __webpack_require__(24)
-var isArray = __webpack_require__(25)
+var base64 = __webpack_require__(22)
+var ieee754 = __webpack_require__(23)
+var isArray = __webpack_require__(24)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -3626,7 +3630,7 @@ function isnan (val) {
  * The evaluator runs arbitrary code in a secure sandbox
  */
 
-const ses = __webpack_require__(26)
+const ses = __webpack_require__(25)
 const { getIntrinsics, intrinsicNames } = __webpack_require__(8)
 
 // ------------------------------------------------------------------------------------------------
@@ -3948,232 +3952,1059 @@ module.exports = { getIntrinsics, intrinsicNames }
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/**
- * protocol.js
+/* WEBPACK VAR INJECTION */(function(Buffer) {/**
+ * xray.js
  *
- * Manager for what token protocols are supported by Run
+ * Powerful object scanner to deeply inspect, serialize, deserialize, and clone objects.
  */
 
-const { JigControl } = __webpack_require__(4)
-const { RunSet } = __webpack_require__(10)
+// TODO
+// Document serialization protocol
+//  -Tests
+//  -Tokens and deployables don't need sets. Need loaders.
+//  -Documentation (remove Builder references)
+//  -Does UniqueSet need special handling for Set?
+//  -Hook up to existing code (And UniqueSet as default)
+//  -How to load other protocols?
+// - intrinsics are designed to be as flexible as safe.
+// So Objects and arrays are acceptible from without.
+// Document scanner API
+
+const Protocol = __webpack_require__(27)
+const { display } = __webpack_require__(1)
+const { getIntrinsics } = __webpack_require__(8)
 
 // ------------------------------------------------------------------------------------------------
-// Protocol manager
-// ------------------------------------------------------------------------------------------------
-
-class Protocol {
-  static install(loader) {
-    if (!loader || !(loader instanceof Loader)) {
-      throw new Error(`Cannot install loader: ${loader}`)
-    }
-    Protocol.loaders.add(loader)
-  }
-
-  static isToken(x) {
-    switch (typeof x) {
-      case 'object': return x && (x instanceof Jig || x instanceof Jiglet)
-      case 'function': return !!x.origin && !!x.location && !!x.owner
-      default: return false
-    }
-  }
-
-  static getLocation (x) {
-    const location = JigControl.disableProxy(() => x.location)
-    if (typeof location !== 'string' || !location.length) {
-      throw new Error(`Location not valid: ${location}`)
-    }
-    return location
-  }
-
-  static getOrigin (x) {
-    if (x && x instanceof Jiglet) return Protocol.getLocation(x)
-    const origin = JigControl.disableProxy(() => x.origin)
-    if (typeof origin !== 'string' || !origin.length) {
-      throw new Error(`Origin not valid: ${origin}`)
-    }
-    return origin
-  }
-
-  static async loadJiglet (location, blockchain) {
-    const promises = []
-    for (const loader of Protocol.loaders) {
-      promises.push(loader.load(location, blockchain))
-    }
-    return Promise.race(promises)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Loader API for custom Jiglets
-// ------------------------------------------------------------------------------------------------
-
-class Loader {
-  async load(location, blockchain) {
-    // Fetch the transaction
-    // Extract relevant data out of it
-    // Create and return a jiglet
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-Protocol.loaders = new RunSet()
-Protocol.Loader = Loader
-
-module.exports = Protocol
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Protocol = __webpack_require__(9)
-
-// ------------------------------------------------------------------------------------------------
-// RunSet
-// ------------------------------------------------------------------------------------------------
+// Xray
+// -----------------------------------------------------------------------------------------------
 
 /**
- * A Set that guarantees tokens are unique. The API is intended to be the same as the built-in
- * Set so that this can be a drop-in replacement in sandboxed code.
+ * The Xray is a scanner that an clone, serialize, and deserialize complex JavaScript objects with
+ * tokens into formats that be stored on a blockchain and cached. To use the Xray, create one using
+ * the Builder below, specifying and properties needed. Then, you may begin scanning objects. The
+ * Xray has internal caches and assumes that while using the scanner objects will not change. The
+ * Xray uses Scanners to process objects. Scanners have a consistent API documented below.
+ *
+ * Format:
+ *  $class
+ *
+ * Caches, intrinsics - membrane, not passing objects or arrays, primitives OK.
+ *
+ * Serialization is JSON
  */
-class RunSet {
-  constructor (iterable) {
-    this.map = new RunMap()
-    if (iterable) { for (const x of iterable) this.add(x) }
+class Xray {
+  /**
+   * Creates an Xray that uses the default intrinsics and a set of basic scanners. Tokens and
+   * deployables are not supported by default in scanned objects and must be enabled.
+   */
+  constructor () {
+    this.intrinsics = Intrinsics.defaultIntrinsics
+    this.tokenizer = null
+    this.deployables = null
+    this.tokens = null
+    this.caches = {
+      scanned: new Set(),
+      cloneable: new Map(),
+      serializable: new Map(),
+      deserializable: new Map(),
+      clone: new Map(),
+      serialize: new Map(),
+      deserialize: new Map(),
+      predeserialize: new Map()
+    }
+    this.scanners = [
+      new DedupScanner(),
+      new UndefinedScanner(),
+      new PrimitiveScanner(),
+      new BasicObjectScanner(),
+      new BasicArrayScanner(),
+      new Uint8ArrayScanner(),
+      new SetScanner(),
+      new MapScanner()
+    ]
   }
 
-  get size () { return this.map.size }
-  get [Symbol.species] () { return RunSet }
-
-  add (x) { this.map.set(x, x); return this }
-  clear () { this.map.clear() }
-  delete (x) { return this.map.delete(x) }
-  entries () { return this.map.entries() }
-  forEach (callback, thisArg) { return this.map.forEach(x => callback.call(thisArg, x)) }
-  has (x) { return this.map.has(x) }
-  values () { return this.map.values() }
-
-  [Symbol.iterator] () { return this.map.keys() }
-}
-
-// ------------------------------------------------------------------------------------------------
-// RunMap
-// ------------------------------------------------------------------------------------------------
-
-/**
- * A Map that guarantees token keys are unique. The API is intended to be the same as the built-in
- * Set so that this can be a drop-in replacement in sandboxed code.
- */
-class RunMap {
-  constructor (iterable) {
-    this._locations = new Map() // Location -> Token
-    this._origins = new Map() // Origin -> Token
-    this._map = new Map()
-    if (iterable) { for (const [x, y] of iterable) this.set(x, y) }
-  }
-
-  get (x) {
-    if (!Protocol.isToken(x)) {
-      return this._map.get(x)
+  allowTokens () {
+    if (!this.tokens) {
+      this.tokens = new Set()
+      this.scanners.unshift(new TokenScanner())
     }
-
-    const location = Protocol.getLocation(x)
-    const origin = Protocol.getOrigin(x)
-    const existingToken = this._origins.get(origin) || this._locations.get(location)
-    if (!existingToken) return undefined
-
-    if (Protocol.getLocation(existingToken) !== location) {
-      throw new Error('Detected two of the same token with different locations')
-    }
-
-    return this._map.get(existingToken)
-  }
-
-  set (x, y) {
-    if (!Protocol.isToken(x)) {
-      this._map.set(x, y)
-      return this
-    }
-
-    const location = Protocol.getLocation(x)
-    if (this._locations.has(location)) {
-      const existingToken = this._locations.get(location)
-      this._map.set(existingToken, y)
-      return this
-    }
-
-    const origin = Protocol.getOrigin(x)
-    if (this._origins.has(origin)) {
-      throw new Error('Detected two of the same token with different locations')
-    }
-
-    this._locations.set(location, x)
-    this._origins.set(origin, x)
-    this._map.set(x, y)
-
     return this
   }
 
-  clear () {
-    this._locations.clear()
-    this._origins.clear()
-    this._map.clear()
+  allowDeployables () {
+    if (!this.deployables) {
+      this.deployables = new Set()
+      this.scanners.unshift(new DeployableScanner())
+      this.scanners.push(new ArbitraryObjectScanner())
+    }
+    return this
   }
 
-  delete (x) {
-    if (!Protocol.isToken(x)) {
-      return this._map.delete(x)
+  useTokenSaver (saveToken) { this.saveToken = saveToken; return this }
+  useTokenLoader (loadToken) { this.loadToken = loadToken; return this }
+  useCodeCloner (cloneCode) { this.cloneCode = cloneCode; return this }
+  useIntrinsics (intrinsics) { this.intrinsics = intrinsics; return this }
+
+  scan (x) {
+    if (this.caches.scanned.has(x)) return this
+    for (const scanner of this.scanners) {
+      const value = scanner.scan(x, this)
+      if (typeof value === 'undefined') continue
+      this.caches.scanned.add(x)
+      if (value === false) break
+      return true
     }
+    throw new Error(`${display(x)} cannot be scanned`)
+  }
 
-    const location = Protocol.getLocation(x)
-    const origin = Protocol.getOrigin(x)
-    const existingToken = this._origins.get(origin) || this._locations.get(location)
-    if (!existingToken) return false
-
-    if (Protocol.getLocation(existingToken) !== location) {
-      throw new Error('Detected two of the same token with different locations')
+  /**
+   * Returns whether an object can be cloned by this Xray
+   */
+  cloneable (x) {
+    if (this.caches.cloneable.has(x)) return this.caches.cloneable.get(x)
+    for (const scanner of this.scanners) {
+      const value = scanner.cloneable(x, this)
+      if (typeof value === 'undefined') continue
+      this.caches.cloneable.set(x, value)
+      return value
     }
+    this.caches.cloneable.set(x, false)
+    return false
+  }
 
-    this._locations.delete(location)
-    this._origins.delete(origin)
-    this._map.delete(existingToken)
+  /**
+   * Returns whether an object can be serialized by this Xray
+   */
+  serializable (x) {
+    if (this.caches.serializable.has(x)) return this.caches.serializable.get(x)
+    for (const scanner of this.scanners) {
+      const value = scanner.serializable(x, this)
+      if (typeof value === 'undefined') continue
+      this.caches.serializable.set(x, value)
+      return value
+    }
+    this.caches.serializable.set(x, false)
+    return false
+  }
+
+  /**
+   * Returns whether an object can be deserialized by this Xray
+   */
+  deserializable (x) {
+    if (this.caches.deserializable.has(x)) return this.caches.deserializable.get(x)
+    for (const scanner of this.scanners) {
+      const value = scanner.deserializable(x, this)
+      if (typeof value === 'undefined') continue
+      this.caches.deserializable.set(x, value)
+      return value
+    }
+    this.caches.deserializable.set(x, false)
+    return false
+  }
+
+  clone (x) {
+    if (this.caches.clone.has(x)) return this.caches.clone.get(x)
+    for (const scanner of this.scanners) {
+      const cloneable = scanner.cloneable(x, this)
+      if (typeof cloneable === 'undefined') continue
+      if (cloneable === false) break
+      const y = scanner.clone(x, this)
+      this.caches.clone.set(x, y)
+      return y
+    }
+    throw new Error(`${display(x)} cannot be cloned`)
+  }
+
+  serialize (x) {
+    if (this.caches.serialize.has(x)) return this.caches.serialize.get(x)
+    for (const scanner of this.scanners) {
+      const serializable = scanner.serializable(x, this)
+      if (typeof serializable === 'undefined') continue
+      if (serializable === false) break
+      const y = scanner.serialize(x, this)
+      this.caches.serialize.set(x, y)
+      return y
+    }
+    throw new Error(`${display(x)} cannot be serialized`)
+  }
+
+  deserialize (x) {
+    if (this.caches.deserialize.has(x)) return this.caches.deserialize.get(x)
+    for (const scanner of this.scanners) {
+      const deserializable = scanner.deserializable(x, this)
+      if (typeof deserializable === 'undefined') continue
+      if (deserializable === false) break
+      const y = scanner.deserialize(x, this)
+      this.caches.deserialize.set(x, y)
+      return y
+    }
+    throw new Error(`${display(x)} cannot be deserialized`)
+  }
+
+  predeserialize (x) {
+    if (this.caches.predeserialize.has(x)) return
+    for (const scanner of this.scanners) {
+      const deserializable = scanner.deserializable(x, this)
+      if (typeof deserializable === 'undefined') continue
+      if (deserializable === false) break
+      const y = scanner.predeserialize(x, this)
+      this.caches.predeserialize.set(x, y)
+      return y
+    }
+    throw new Error(`${display(x)} cannot be predeserialized`)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Scanner API
+// -----------------------------------------------------------------------------------------------
+
+class Scanner {
+  // Return true to skip, false to stop, undefined to continue
+  scan (x, xray) { throw new Error('Not implemented') }
+  cloneable (x, xray) { throw new Error('Not implemented') }
+  serializable (x, xray) { throw new Error('Not implemented') }
+  deserializable (x, xray) { throw new Error('Not implemented') }
+  clone (x, xray) { throw new Error('Not implemented') }
+  serialize (x, xray) { throw new Error('Not implemented') }
+  deserialize (x, xray) { throw new Error('Not implemented') }
+  predeserialize (x, xray) { throw new Error('Not implemented') }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Undefined value scanner
+// -----------------------------------------------------------------------------------------------
+
+/**
+ * Scanner to handle undefined, which cannot be passed through during serializion
+ */
+class UndefinedScanner {
+  scan (x, xray) { if (typeof x === 'undefined') return true }
+  cloneable (x, xray) { if (typeof x === 'undefined') return true }
+  serializable (x, xray) { if (typeof x === 'undefined') return true }
+  deserializable (x, xray) {
+    if (typeof x !== 'object' || !x || typeof x.$undef === 'undefined') return
+    return x.$undef === 1
+  }
+
+  clone (x, xray) { return x }
+  serialize (x, xray) {
+    const { Object } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    y.$undef = 1
+    return y
+  }
+
+  deserialize (x, xray) { return undefined }
+  predeserialize (x, xray) { }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Primitive value scanner
+// -----------------------------------------------------------------------------------------------
+
+/**
+ * Scanner to handle booleans, numbers, strings, and null
+ */
+class PrimitiveScanner {
+  scan (x, xray) {
+    switch (typeof x) {
+      case 'boolean': return true
+      case 'number': return true
+      case 'string': return true
+      case 'object': return x === null ? true : undefined
+    }
+  }
+
+  cloneable (x, xray) {
+    switch (typeof x) {
+      case 'boolean': return true
+      case 'number': return true
+      case 'string': return true
+      case 'object': return x === null ? true : undefined
+    }
+  }
+
+  serializable (x, xray) {
+    switch (typeof x) {
+      case 'boolean': return true
+      case 'number': return !isNaN(x) && isFinite(x)
+      case 'string': return true
+      case 'object': return x === null ? true : undefined
+    }
+  }
+
+  deserializable (x, xray) {
+    switch (typeof x) {
+      case 'boolean': return true
+      case 'number': return !isNaN(x) && isFinite(x)
+      case 'string': return true
+      case 'object': return x === null ? true : undefined
+    }
+  }
+
+  clone (x, xray) { return x }
+  serialize (x, xray) { return x }
+  deserialize (x, xray) { return x }
+  predeserialize (x, xray) { }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Normal object scanner
+// -----------------------------------------------------------------------------------------------
+
+class BasicObjectScanner {
+  scan (x, xray) {
+    if (this.isBasicObject(x, xray)) {
+      xray.caches.scanned.add(x)
+      Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
+      return true
+    }
+  }
+
+  cloneable (x, xray) {
+    if (!this.isBasicObject(x, xray)) return
+    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
+    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
+  }
+
+  serializable (x, xray) {
+    if (!this.isBasicObject(x, xray)) return
+    if (Object.keys(x).find(key => key.startsWith('$'))) return false
+    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
+    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
+  }
+
+  deserializable (x, xray) {
+    if (!this.isBasicObject(x, xray)) return
+    if (Object.keys(x).find(key => key.startsWith('$'))) return
+    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
+    return !Object.keys(x).some(key => !xray.deserializable(key) || !xray.deserializable(x[key]))
+  }
+
+  clone (x, xray) {
+    const { Object } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    xray.caches.clone.set(x, y)
+    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
+    return y
+  }
+
+  serialize (x, xray) {
+    const { Object } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    xray.caches.serialize.set(x, y)
+    Object.keys(x).forEach(key => { y[xray.serialize(key)] = xray.serialize(x[key]) })
+    return y
+  }
+
+  deserialize (x, xray) {
+    const { Object } = xray.intrinsics.default
+    const y = xray.caches.predeserialize.get(x) || Object.create(Object.prototype)
+    xray.caches.deserialize.set(x, y)
+    Object.keys(x).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x[key]) })
+    return y
+  }
+
+  predeserialize (x, xray) {
+    const { Object } = xray.intrinsics.default
+    return Object.create(Object.prototype)
+  }
+
+  isBasicObject (x, xray) {
+    if (typeof x !== 'object' || !x) return false
+    if (xray.intrinsics.types.has(x)) return false
+    return getPrototypeCount(x) === 1 // Object
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Normal array scanner
+// -----------------------------------------------------------------------------------------------
+
+class BasicArrayScanner {
+  scan (x, xray) {
+    if (this.isBasicArray(x, xray)) {
+      xray.caches.scanned.add(x)
+      Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
+      return true
+    }
+  }
+
+  cloneable (x, xray) {
+    if (!this.isBasicArray(x, xray)) return
+    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
+    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
+  }
+
+  serializable (x, xray) {
+    if (!this.isBasicArray(x, xray)) return
+    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
+    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
+  }
+
+  deserializable (x, xray) {
+    if (!this.isBasicArray(x, xray)) return
+    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
+    return !Object.keys(x).some(key => !xray.deserializable(key) || !xray.deserializable(x[key]))
+  }
+
+  clone (x, xray) {
+    const { Array } = xray.intrinsics.default
+    const y = Array.from([])
+    xray.caches.clone.set(x, y)
+    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
+    return y
+  }
+
+  serialize (x, xray) {
+    const { Array } = xray.intrinsics.default
+    const y = Array.from([])
+    xray.caches.serialize.set(x, y)
+    Object.keys(x).forEach(key => { y[xray.serialize(key)] = xray.serialize(x[key]) })
+    return y
+  }
+
+  deserialize (x, xray) {
+    const { Array } = xray.intrinsics.default
+    const y = xray.caches.predeserialize.get(x) || Array.from([])
+    xray.caches.deserialize.set(x, y)
+    Object.keys(x).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x[key]) })
+    return y
+  }
+
+  predeserialize (x, xray) {
+    const { Array } = xray.intrinsics.default
+    return Array.from([])
+  }
+
+  isBasicArray (x, xray) {
+    if (typeof x !== 'object' || !x) return false
+    if (getPrototypeCount(x) !== 2) return false // Array, Object
+    return xray.intrinsics.allowed.some(intrinsics => intrinsics.Array.isArray(x))
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Uint8Array scanner
+// -----------------------------------------------------------------------------------------------
+
+const base64Chars = new Set()
+'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
+  .split('').forEach(x => base64Chars.add(x))
+
+class Uint8ArrayScanner {
+  scan (x, xray) { if (this.isUint8Array(x, xray)) return true }
+  cloneable (x, xray) { if (this.isUint8Array(x, xray)) return true }
+  serializable (x, xray) { if (this.isUint8Array(x, xray)) return true }
+
+  deserializable (x, xray) {
+    if (typeof x !== 'object' || !x || typeof x.$ui8a === 'undefined') return
+    if (typeof x.$ui8a !== 'string') return false
+    return !x.$ui8a.split('').some(x => !base64Chars.has(x))
+  }
+
+  clone (x, xray) {
+    const { Uint8Array } = xray.intrinsics.default
+    return Uint8Array.from(x)
+  }
+
+  serialize (x, xray) {
+    const { Object } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    y.$ui8a = Buffer.from(x).toString('base64')
+    return y
+  }
+
+  deserialize (x, xray) {
+    const { Uint8Array } = xray.intrinsics.default
+    return xray.caches.predeserialize.get(x) ||
+      Uint8Array.from(Buffer.from(x.$ui8a, 'base64'))
+  }
+
+  predeserialize (x, xray) {
+    const { Uint8Array } = xray.intrinsics.default
+    return Uint8Array.from(Buffer.from(x.$ui8a, 'base64'))
+  }
+
+  isUint8Array (x, xray) {
+    if (typeof x !== 'object' || !x) return false
+    if (getPrototypeCount(x) !== 3) return false // Uint8Array, TypedArray, Object
+    if (Object.keys(x).some(key => isNaN(key) || x[key] > 255 || x[key] < 0)) return false
+    return xray.intrinsics.allowed.some(intrinsics => x instanceof intrinsics.Uint8Array)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Set scanner
+// -----------------------------------------------------------------------------------------------
+
+class SetScanner {
+  scan (x, xray) {
+    if (this.isSet(x, xray)) {
+      xray.caches.scanned.add(x)
+      for (const y of x) { xray.scan(y) }
+      Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
+      return true
+    }
+  }
+
+  cloneable (x, xray) {
+    if (!this.isSet(x, xray)) return
+    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
+    for (const y of x) { if (!xray.cloneable(y)) return false }
+    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
+  }
+
+  serializable (x, xray) {
+    if (!this.isSet(x, xray)) return
+    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
+    for (const y of x) { if (!xray.serializable(y)) return false }
+    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
+  }
+
+  deserializable (x, xray) {
+    if (typeof x !== 'object' || !x || typeof x.$set === 'undefined') return
+    if (!Array.isArray(x.$set)) return false
+    if (typeof x.props !== 'undefined' && (typeof x.props !== 'object' || !x.props)) return false
+    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
+    if (x.$set && x.$set.some(y => !xray.deserializable(y))) return false
+    if (x.props) return !Object.keys(x.props).some(key => !xray.deserializable(key) || !xray.deserializable(x.props[key]))
     return true
   }
 
-  has (x) {
-    if (!Protocol.isToken(x)) {
-      return this._map.has(x)
-    }
-
-    const location = Protocol.getLocation(x)
-    const origin = Protocol.getOrigin(x)
-    const existingToken = this._origins.get(origin) || this._locations.get(location)
-    if (!existingToken) return false
-
-    if (Protocol.getLocation(existingToken) !== location) {
-      throw new Error('Detected two of the same token with different locations')
-    }
-
-    return !!existingToken
+  clone (x, xray) {
+    const { Set } = xray.intrinsics.default
+    const y = new Set()
+    xray.caches.clone.set(x, y)
+    for (const entry of x) { y.add(xray.clone(entry)) }
+    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
+    return y
   }
 
-  get size () { return this._map.size }
-  get [Symbol.species] () { return RunMap }
-  entries () { return this._map.entries() }
-  keys () { return this._map.keys() }
-  forEach (callback, thisArg) { return this._map.forEach(callback, thisArg) }
-  values () { return this._map.values() }
-  [Symbol.iterator] () { return this._map[Symbol.iterator]() }
+  serialize (x, xray) {
+    const { Object, Array } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    xray.caches.serialize.set(x, y)
+    y.$set = Array.from([])
+    for (const entry of x) { y.$set.push(xray.serialize(entry)) }
+    if (Object.keys(x).length) {
+      y.props = Object.create(Object.prototype)
+      Object.keys(x).forEach(key => { y.props[xray.serialize(key)] = xray.serialize(x[key]) })
+    }
+    return y
+  }
+
+  deserialize (x, xray) {
+    const { Set } = xray.intrinsics.default
+    const y = xray.caches.predeserialize.get(x) || new Set()
+    xray.caches.deserialize.set(x, y)
+    for (const entry of x.$set) { y.add(xray.deserialize(entry)) }
+    if (x.props) Object.keys(x.props).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x.props[key]) })
+    return y
+  }
+
+  predeserialize (x, xray) {
+    const { Set } = xray.intrinsics.default
+    return new Set()
+  }
+
+  isSet (x, xray) {
+    if (typeof x !== 'object' || !x) return false
+    if (getPrototypeCount(x) !== 2) return false // Set, Object
+    return xray.intrinsics.allowed.some(intrinsics => x instanceof intrinsics.Set)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Map scanner
+// -----------------------------------------------------------------------------------------------
+
+class MapScanner {
+  scan (x, xray) {
+    if (this.isMap(x, xray)) {
+      xray.caches.scanned.add(x)
+      for (const entry of x) xray.scan(entry)
+      Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
+      return true
+    }
+  }
+
+  cloneable (x, xray) {
+    if (!this.isMap(x, xray)) return
+    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
+    for (const [key, val] of x) {
+      if (!xray.cloneable(key)) return false
+      if (!xray.cloneable(val)) return false
+    }
+    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
+  }
+
+  serializable (x, xray) {
+    if (!this.isMap(x, xray)) return
+    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
+    for (const [key, val] of x) {
+      if (!xray.serializable(key)) return false
+      if (!xray.serializable(val)) return false
+    }
+    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
+  }
+
+  deserializable (x, xray) {
+    if (typeof x !== 'object' || !x || typeof x.$map === 'undefined') return
+    if (!Array.isArray(x.$map)) return false
+    if (typeof x.props !== 'undefined' && (typeof x.props !== 'object' || !x.props)) return false
+    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
+    for (const entry of x.$map) {
+      if (!Array.isArray(entry) || entry.length !== 2) return false
+      if (!xray.deserializable(entry[0])) return false
+      if (!xray.deserializable(entry[1])) return false
+    }
+    if (x.props) {
+      return !Object.keys(x.props).some(key =>
+        !xray.deserializable(key) || !xray.deserializable(x.props[key]))
+    }
+    return true
+  }
+
+  clone (x, xray) {
+    const { Map } = xray.intrinsics.default
+    const y = new Map()
+    xray.caches.clone.set(x, y)
+    for (const [key, val] of x) { y.set(xray.clone(key), xray.clone(val)) }
+    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
+    return y
+  }
+
+  serialize (x, xray) {
+    const { Object, Array } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    y.$map = Array.from([])
+    xray.caches.serialize.set(x, y)
+    for (const entry of x) y.$map.push(xray.serialize(entry))
+    if (Object.keys(x).length) {
+      y.props = Object.create(Object.prototype)
+      Object.keys(x).forEach(key => { y.props[xray.serialize(key)] = xray.serialize(x[key]) })
+    }
+    return y
+  }
+
+  deserialize (x, xray) {
+    const { Map } = xray.intrinsics.default
+    const y = xray.caches.predeserialize.get(x) || new Map()
+    xray.caches.deserialize.set(x, y)
+    for (const [key, val] of x.$map) { y.set(xray.deserialize(key), xray.deserialize(val)) }
+    if (x.props) Object.keys(x.props).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x.props[key]) })
+    return y
+  }
+
+  predeserialize (x, xray) {
+    const { Map } = xray.intrinsics.default
+    return new Map()
+  }
+
+  isMap (x, xray) {
+    if (typeof x !== 'object' || !x) return false
+    if (getPrototypeCount(x) !== 2) return false // Map, Object
+    return xray.intrinsics.allowed.some(intrinsics => x instanceof intrinsics.Map)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Arbitrary classes
+// ------------------------------------------------------------------------------------------------
+
+class ArbitraryObjectScanner {
+  constructor () {
+    this.basicObjectScanner = new BasicObjectScanner()
+  }
+
+  scan (x, xray) {
+    if (this.isArbitraryObject(x)) {
+      xray.caches.scanned.add(x)
+      Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
+      xray.scan(x.constructor)
+      return true
+    }
+  }
+
+  cloneable (x, xray) {
+    if (!this.isArbitraryObject(x, xray)) return
+    return this.basicObjectScanner.cloneable(Object.assign({}, x), xray)
+  }
+
+  serializable (x, xray) {
+    if (!this.isArbitraryObject(x, xray)) return
+    return this.basicObjectScanner.serializable(Object.assign({}, x), xray)
+  }
+
+  deserializable (x, xray) {
+    if (typeof x !== 'object' || !x || typeof x.$arbob === 'undefined') return
+    if (typeof x.$arbob !== 'object' || !x.$arbob) return false
+    if (typeof x.type !== 'string') return false
+    return true
+  }
+
+  clone (x, xray) {
+    if (!xray.cloneCode) throw new Error(`No code cloner available to clone ${display(x)}`)
+    const clone = this.basicObjectScanner.clone(Object.assign({}, x), xray)
+    const sandbox = xray.cloneCode(x.constructor)
+    Object.setPrototypeOf(clone, sandbox.prototype)
+    return clone
+  }
+
+  serialize (x, xray) {
+    if (!xray.saveToken) throw new Error(`No token saver available to serialize ${display(x)}`)
+    const { Object } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    y.$arbob = this.basicObjectScanner.serialize(Object.assign({}, x), xray)
+    y.type = xray.saveToken(x.constructor)
+    return y
+  }
+
+  deserialize (x, xray) {
+    if (!xray.restoreToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
+    const { Object } = xray.intrinsics.default
+    const obj = xray.caches.predeserialize.get(x) || Object.create(Object.prototype)
+    Object.assign(obj, this.basicObjectScanner.deserialize(x.$arbob, xray))
+    const type = xray.restoreToken(x.type)
+    Object.setPrototypeOf(obj, type.prototype)
+    return obj
+  }
+
+  predeserialize (x, xray) {
+    const { Object } = xray.intrinsics.default
+    return Object.create(Object.prototype)
+  }
+
+  isArbitraryObject (x, xray) {
+    if (typeof x !== 'object' || !x) return false
+    if (!deployable(x.constructor, xray)) return false
+    if (Protocol.isToken(x.constructor)) xray.tokens.add(x.constructor)
+    xray.deployables.add(x.constructor)
+    return true
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Duplicate object scanner
+// ------------------------------------------------------------------------------------------------
+
+class DedupScanner {
+  constructor () {
+    this.topLevel = true
+    this.dups = null
+    this.checkingDeserializability = false
+    this.deserializingDups = false
+    this.deserializingMaster = false
+  }
+
+  scan (x, xray) { }
+  cloneable (x, xray) { }
+
+  serializable (x, xray) {
+    const topLevel = this.topLevel
+    this.topLevel = false
+    try {
+      if (topLevel) return xray.serializable(x, xray)
+    } finally {
+      this.topLevel = topLevel
+    }
+  }
+
+  deserializable (x, xray) {
+    const topLevel = this.topLevel
+    this.topLevel = false
+    try {
+      if (topLevel) {
+        if (typeof x !== 'object' || !x || typeof x.$dedup === 'undefined') return
+        if (!Array.isArray(x.dups)) return false
+        this.dups = x.dups
+        try {
+          this.checkingDeserializability = true
+          return xray.deserializable(x.$dedup) && xray.deserializable(x.dups)
+        } finally {
+          this.checkingDeserializability = false
+          this.dups = null
+        }
+      } else {
+        if (this.checkingDeserializability || this.deserializingDups || this.deserializingMaster) {
+          if (typeof x !== 'object' || !x || typeof x.$dup === 'undefined') return
+          if (typeof x.$dup !== 'number') return false
+          if (!Number.isInteger(x.$dup) || x.$dup < 0 || x.$dup >= this.dups.length) return false
+          return true
+        }
+      }
+    } finally {
+      this.topLevel = topLevel
+    }
+  }
+
+  clone (x, xray) { }
+
+  serialize (x, xray) {
+    const topLevel = this.topLevel
+    this.topLevel = false
+    try {
+      if (topLevel) return this.dedup(x, xray)
+    } finally {
+      this.topLevel = topLevel
+    }
+  }
+
+  deserialize (x, xray) {
+    const topLevel = this.topLevel
+    this.topLevel = false
+    try {
+      if (topLevel) {
+        if (typeof x !== 'object' || !x || typeof x.$dedup === 'undefined') return
+
+        this.dups = x.dups
+
+        // Predeserialize each dup to put objects in the cache
+        this.dups = this.dups.map(dup => xray.predeserialize(dup))
+
+        // Deserialize each dup
+        try {
+          this.deserializingDups = true
+          this.dups = x.dups.map(dup => xray.deserialize(dup))
+        } finally {
+          this.deserializingDups = false
+        }
+
+        // Deserialize the master object
+        try {
+          this.deserializingMaster = true
+          return xray.deserialize(x.$dedup)
+        } finally {
+          this.deserializingMaster = false
+        }
+      } else {
+        // If we are deserializing any dups, replace them with our known set
+        if (this.deserializingDups || this.deserializingMaster) {
+          return this.dups[x.$dup]
+        }
+      }
+    } finally {
+      this.topLevel = topLevel
+    }
+  }
+
+  predeserialize (x, xray) { }
+
+  dedup (x, xray) {
+    const serialized = xray.serialize(x)
+
+    const { Object, Array } = xray.intrinsics.default
+
+    const seen = new Set()
+    const indexes = new Map()
+    function detectDups (x) {
+      if (typeof x !== 'object' || !x) return
+      if (seen.has(x)) {
+        if (!indexes.has(x)) indexes.set(x, indexes.size)
+      } else {
+        seen.add(x)
+        Object.keys(x).forEach(key => detectDups(x[key]))
+      }
+    }
+
+    detectDups(serialized)
+
+    if (!indexes.size) return serialized
+
+    function replaceDups (x) {
+      if (typeof x !== 'object' || !x) return x
+      if (indexes.has(x)) {
+        const y = Object.create(Object.prototype)
+        y.$dup = indexes.get(x)
+        return y
+      } else {
+        Object.keys(x).forEach(key => { x[key] = replaceDups(x[key]) })
+        return x
+      }
+    }
+
+    const value = replaceDups(serialized)
+    const dups = Array.from(indexes.keys())
+
+    dups.forEach(dup => {
+      Object.keys(dup).forEach(key => { dup[key] = replaceDups(dup[key]) })
+    })
+
+    const y = Object.create(Object.prototype)
+    y.$dedup = value
+    y.dups = dups
+    return y
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Code detector
+// -----------------------------------------------------------------------------------------------
+
+class DeployableScanner {
+  scan (x, xray) {
+    if (deployable(x, xray)) {
+      xray.deployables.add(x)
+      return true
+    }
+  }
+
+  cloneable (x, xray) {
+    if (deployable(x, xray)) {
+      xray.deployables.add(x)
+      return true
+    }
+  }
+
+  serializable (x, xray) {
+    // We never serialize deployables. They must be tokens when serialized.
+  }
+
+  deserializable (x, xray) {
+    // We never deserialize deployables. They become tokens when serialized.
+  }
+
+  clone (x, xray) {
+    if (!xray.cloneCode) throw new Error(`No code cloner available to clone ${display(x)}`)
+    return xray.cloneCode(x)
+  }
+
+  serialize (x, xray) {
+    // We never serialize deployables. They become tokens when serialized.
+  }
+
+  deserialize (x, xray) {
+    // We never deserialize deployables. They become tokens when serialized.
+  }
+
+  predeserialize (x, xray) {
+    // We never deserialize deployables. They become tokens when serialized.
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Token detector
+// -----------------------------------------------------------------------------------------------
+
+class TokenScanner {
+  scan (x, xray) {
+    if (Protocol.isToken(x)) {
+      xray.tokens.add(x)
+      return true
+    }
+  }
+
+  cloneable (x, xray) {
+    if (Protocol.isToken(x)) {
+      xray.tokens.add(x)
+      return true
+    }
+  }
+
+  serializable (x, xray) {
+    if (Protocol.isToken(x)) {
+      xray.tokens.add(x)
+      return true
+    }
+  }
+
+  deserializable (x, xray) {
+    if (typeof x !== 'object' || !x || typeof x.$ref === 'undefined') return
+    if (typeof x.$ref !== 'string') return false
+    return true
+  }
+
+  clone (x, xray) {
+    // Clone is often used to provide safe sandboxing, but all tokens are safely sandboxed
+    return x
+  }
+
+  serialize (x, xray) {
+    if (!xray.saveToken) throw new Error(`No token saver available to serialize ${display(x)}`)
+    const { Object } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    y.$ref = xray.saveToken(x)
+    return y
+  }
+
+  deserialize (x, xray) {
+    if (!xray.restoreToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
+    return xray.restoreToken(x.$ref)
+  }
+
+  predeserialize (x, xray) { }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Intrinsics
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Manages known intrinsics
+ */
+class Intrinsics {
+  constructor () {
+    this.default = null
+    this.allowed = []
+    this.types = new Set()
+    this.use(getIntrinsics())
+  }
+
+  set (intrinsics) {
+    this.default = null
+    this.allowed = []
+    this.types = new Set()
+    this.use(intrinsics)
+    return this
+  }
+
+  allow (intrinsics) {
+    this.allowed.push(intrinsics)
+    Object.keys(intrinsics).forEach(name => this.types.add(intrinsics[name]))
+    return this
+  }
+
+  use (intrinsics) {
+    this.allow(intrinsics)
+    this.default = intrinsics
+    return this
+  }
+}
+
+Intrinsics.defaultIntrinsics = new Intrinsics()
+
+// ------------------------------------------------------------------------------------------------
+// Helper functions
+// ------------------------------------------------------------------------------------------------
+
+function getPrototypeCount (x) {
+  let count = 0
+  x = Object.getPrototypeOf(x)
+  while (x) { x = Object.getPrototypeOf(x); count++ }
+  return count
+}
+
+function deployable (x, xray) {
+  if (typeof x !== 'function') return false
+  if (display(x).indexOf('[native code]') !== -1) return false
+  if (xray.intrinsics.types.has(x)) return false
+  return true
 }
 
 // ------------------------------------------------------------------------------------------------
 
-module.exports = { RunSet, RunMap }
+Xray.Scanner = Scanner
+Xray.Intrinsics = Intrinsics
 
+module.exports = Xray
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6).Buffer))
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -4267,6 +5098,7 @@ class ProtoTransaction {
           refs.set(id, `${txin.prevTxId.toString('hex')}_o${txin.outputIndex}`)
         }
       }
+
       if (action.target && action.method !== 'init') addRef(action.target)
       const detectRefs = target => {
         if (target && typeof target.$ref !== 'undefined') {
@@ -4275,6 +5107,24 @@ class ProtoTransaction {
       }
       // TODO: Don't unpack twice
       util.deepTraverse(action.args, detectRefs)
+
+      // TODO
+      /*
+
+      // How do we find $refs inside? Currently only if we deserialize. But the
+      // scanner should be able to find it. So let's allow that. Not sure we
+      // will always need to do this. Might just be temporary before we switch
+      // to the new protocol. Also, we are mixing two modes with tokens ---
+      // refs, and non-refs. This will lead to extra checks.
+
+      const xray = new Xray()
+        .allowTokens()
+        .useIntrinsics(intrinsics)
+
+      xray.scan(action)
+
+      xray.refs.forEach(addRef)
+      */
     }
 
     // make sure all of the refs we read are recent
@@ -4342,6 +5192,44 @@ class ProtoTransaction {
       }
       util.deepTraverse(jig, dedupRef)
       JigControl.enforce = true
+
+      /*
+      // TODO
+
+      // Argument for a global object cache
+      // Two jigs loaded might refer to the same third jig. There's no current way to dedup
+      // These. It's a problem if we have two jigs that both need to update a third in
+      // the same transaction but don't get loaded together. Two writes cannot be to the
+      // same third object in different instances. How to resolve? The ideal would be to have
+      // an object map at the global level and always use those. But we need objects in
+      // specific states during reload. So maybe we do that. But when we sync, we ask
+      // for a global object.
+
+      // We care about deduping writes here. What was the state of the object at this time?
+      // And reads, I guess too. We need to put the object in its state at the time.
+      // Replace? clone?
+
+      const tokensByOrigin = new Map()
+      // Fill in
+
+      function replacer(x) {
+        if (x instanceof Jig && x !== jig) {
+          return tokensByOrigin.get(x.origin)
+        }
+      }
+
+      const xray = new Xray()
+        .allowTokens()
+        .deeplyScanTokens()
+        .useTokenReplacer(replacer)
+        .useIntrinsics(intrinsics)
+
+      JigControl.disableProxy(() => xray.scan(jig))
+
+      // Instead of token replacer, could just detect all tokens, and dive inner, and
+      // then update each's state? But we want single objects, so that won't work. Need
+      // replacements.
+      */
     }
 
     // update the refs themselves with themselves
@@ -4365,6 +5253,8 @@ class ProtoTransaction {
           return this.proxies.get(this.outputs[n])
         }
       }
+
+      // TODO: Deserialize args
 
       JigControl.enforce = false
       const args = util.jsonToRichObject(action.args, [reviveArgRef])
@@ -4457,6 +5347,8 @@ class ProtoTransaction {
       if (packedState.origin.startsWith(tx.hash)) delete packedState.origin
       if (packedState.location.startsWith(tx.hash)) delete packedState.location
 
+      // TODO: More serialization
+
       let type = jigProxies[vout].constructor[`origin${net}`]
       if (type.startsWith(tx.hash)) type = type.slice(64)
 
@@ -4517,6 +5409,8 @@ class ProtoTransaction {
       Object.assign(jig, util.jsonToRichObject(this.stateBefore.get(jig).json, [unpacker]))
       jig.origin = origin
       jig.location = lastPosted.get(origin)
+
+      // TODO: Deserialize saved state
     })
 
     // notify the owner of jig rollbacks
@@ -4964,6 +5858,26 @@ class Transaction {
         }
       })
 
+      /*
+      // TODO: Scan for inner refs using the xray
+
+      const xray = new Xray()
+        .allowTokens()
+        .useIntrinsics(intrinsics)
+
+      xray.scan(cachedState.state)
+
+      // Or
+
+      const xray = new Xray()
+        .addJavaScriptScanners()
+        .addRefDetector()
+        .useIntrinsics(intrinsics)
+        .scan(cachedState.state)
+
+      xray.refs.forEach(ref => cachedRefs.set(loc, null))
+      */
+
       // load each inner reference, using cached when possible
       const copyOfCachedRefs = new Map(cachedRefs)
       for (const [refLocation, ref] of copyOfCachedRefs) {
@@ -4980,6 +5894,11 @@ class Transaction {
         if (target && target.$ref) parent[name] = cachedRefs.get(fullLocation(target.$ref))
       })
       JigControl.enforce = true
+
+      // TODO: This is similar to a deserialize. But we want to change this logic. First
+      // find all of the refs. Then create the jig without a state. Then load the refs
+      // Then deserialize with the refs. So we need to detect refs again. Then we need
+      // to deserialize. Use the same scanner for both.
 
       return instance
     }
@@ -5019,7 +5938,7 @@ module.exports = { ProtoTransaction, Transaction }
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6).Buffer))
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -5029,7 +5948,7 @@ module.exports = { ProtoTransaction, Transaction }
  */
 
 const { Address, Script, Transaction } = __webpack_require__(2)
-const axios = __webpack_require__(31)
+const axios = __webpack_require__(32)
 const util = __webpack_require__(1)
 
 // ------------------------------------------------------------------------------------------------
@@ -5452,7 +6371,7 @@ module.exports = { Blockchain, BlockchainServer }
 
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5470,7 +6389,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5548,7 +6467,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5560,14 +6479,14 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(0);
-var normalizeHeaderName = __webpack_require__(39);
+var normalizeHeaderName = __webpack_require__(40);
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -5584,10 +6503,10 @@ function getDefaultAdapter() {
   // Only Node.JS has a process variable that is of [[Class]] process
   if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(17);
+    adapter = __webpack_require__(16);
   } else if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(17);
+    adapter = __webpack_require__(16);
   }
   return adapter;
 }
@@ -5663,21 +6582,21 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = defaults;
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(38)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(39)))
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(40);
-var buildURL = __webpack_require__(14);
-var parseHeaders = __webpack_require__(42);
-var isURLSameOrigin = __webpack_require__(43);
-var createError = __webpack_require__(18);
+var settle = __webpack_require__(41);
+var buildURL = __webpack_require__(13);
+var parseHeaders = __webpack_require__(43);
+var isURLSameOrigin = __webpack_require__(44);
+var createError = __webpack_require__(17);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -5769,7 +6688,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(44);
+      var cookies = __webpack_require__(45);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -5847,13 +6766,13 @@ module.exports = function xhrAdapter(config) {
 
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var enhanceError = __webpack_require__(41);
+var enhanceError = __webpack_require__(42);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -5872,7 +6791,7 @@ module.exports = function createError(message, config, code, request, response) 
 
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5930,7 +6849,7 @@ module.exports = function mergeConfig(config1, config2) {
 
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5956,7 +6875,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, exports) {
 
 /**
@@ -6026,7 +6945,7 @@ module.exports = expect
 
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -6037,10 +6956,9 @@ module.exports = expect
 
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(1)
-const { display } = util
 const Evaluator = __webpack_require__(7)
 const { Jig, JigControl } = __webpack_require__(4)
-const Xray = __webpack_require__(28)
+const Xray = __webpack_require__(9)
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -6089,8 +7007,10 @@ class Code {
       .allowDeployables()
       .useIntrinsics(intrinsics)
 
-    if (!xray.serializable(props)) {
-      throw new Error(`A property is not serializable: ${display(props)}`)
+    try {
+      xray.scan(props)
+    } catch (e) {
+      throw new Error(`A static property of ${type.name} is not supported\n\n${e}`)
     }
 
     // Save the any deployables and tokens
@@ -6159,17 +7079,25 @@ class Code {
       this.installs.set(type, sandbox)
       this.installs.set(sandbox, sandbox)
 
-      /*
-      const { tokens, deployables } = new Xray()
+      // Deploy any code found in the static properties
+
+      const intrinsics = new Xray.Intrinsics()
+        .use(this.evaluator.intrinsics)
+
+      const xray = new Xray()
         .allowTokens()
         .allowDeployables()
-        .useIntrinsics(sandboxIntrinsics)
-        .scan(Object.assign({}, type))
-      */
+        .useIntrinsics(intrinsics)
+        .useCodeCloner(x => this.getInstalled(x))
 
-      const { props, refs } = this.extractProps(type)
-      Object.keys(props).forEach(key => { sandbox[key] = props[key] })
-      const codeRefs = refs.filter(ref => util.deployable(ref))
+      const staticProps = Object.assign({}, type)
+      stringProps.forEach(name => { delete staticProps[name] })
+
+      try {
+        xray.scan(staticProps)
+      } catch (e) {
+        throw new Error(`A static property of ${type.name} is not supported\n\n${e}`)
+      }
 
       // if location is already set for the network, assume correct and don't reupload
       if (classProps.includes(`origin${net}`) || classProps.includes(`location${net}`)) {
@@ -6205,47 +7133,31 @@ class Code {
           delete type[`owner${net}`]; delete sandbox[`owner${net}`]
         }
 
-        const tempLocation = run.transaction.storeCode(type, sandbox, realdeps, props, success, error)
+        const actionProps = Object.assign({}, staticProps)
+        delete actionProps.deps
+        const tempLocation = run.transaction.storeCode(type, sandbox, realdeps, actionProps, success, error)
+
         type[`origin${net}`] = type[`location${net}`] = tempLocation
         sandbox[`origin${net}`] = sandbox[`location${net}`] = tempLocation
         type[`owner${net}`] = sandbox[`owner${net}`] = type.owner
       }
 
-      // deploy deps and set to sandbox globals after origin is set, allowing circular dependencies
+      // Deploy each deployable
+      xray.deployables.forEach(x => this.deploy(x))
+
+      // Create a safe clone of the static properties for the sandbox
+      try {
+        const safeStaticProps = xray.clone(staticProps)
+        Object.assign(sandbox, safeStaticProps)
+      } catch (e) {
+        throw new Error(`A static property of ${type.name} cannot be sandboxed\n\n${e}`)
+      }
+
+      // Set dependencies now as sandbox globals. We've delayed this to enable circular deps.
       if (sandboxGlobal) {
         Object.entries(realdeps).forEach(([name, dep]) => {
           if (dep === parentClass || dep === env[parentClass.name]) return
           sandboxGlobal[name] = this.deploy(dep)
-        })
-      }
-      codeRefs.forEach(ref => this.deploy(ref))
-
-      /*
-      const xray = new Xray.Builder()
-        .allowTokens()
-        .useIntrinsics(sandboxIntrinsics)
-        .build()
-
-      Object.keys(props).forEach(prop => {
-        sandbox[prop] = xray.clone(prop)
-      })
-      */
-
-      // replace all static props that are code with sandboxed code because sandboxes
-      // should only know about other sandboxed code and never application code.
-      Object.keys(props).forEach(prop => {
-        JigControl.enforce = false
-        util.deepTraverse(sandbox[prop], (target, parent, name) => {
-          const installed = this.getInstalled(target)
-          if (installed && name) parent[name] = installed
-          if (installed && !name) sandbox[prop] = installed
-        })
-        JigControl.enforce = true
-      })
-      if (Object.keys(realdeps).length) {
-        sandbox.deps = { }
-        Object.keys(realdeps).forEach(name => {
-          sandbox.deps[name] = this.deploy(realdeps[name])
         })
       }
 
@@ -6335,6 +7247,11 @@ class Code {
       }
       const classProps = util.jsonToRichObject(def.props || {}, [findRefsToLoad])
 
+      // TODO
+      // This won't work. First we need to scan the object. Then we need to deserialize it.
+      // If we were to try to both together, and come up with replacers for each, that would
+      // do a ton of extra work. Scan for refs, then deserialize. Use the same scanner for both.
+
       // Hydrate each reference and set it on classProps
       const expandLocation = id => { return (id[1] === 'i' || id[1] === 'o') ? txid + id : id }
       const loadPromises = refsToLoad.map(ref =>
@@ -6416,7 +7333,7 @@ module.exports = Code
 
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6575,7 +7492,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -6665,7 +7582,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -6676,7 +7593,7 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (global, factory) {
@@ -7349,7 +8266,7 @@ module.exports = Array.isArray || function (arr) {
     }
 
     // eslint-disable-next-line global-require
-    const vm = __webpack_require__(27);
+    const vm = __webpack_require__(26);
 
     // Use unsafeGlobalEvalSrc to ensure we get the right 'this'.
     const unsafeGlobal = vm.runInNewContext(unsafeGlobalEvalSrc);
@@ -10632,7 +11549,7 @@ You probably want a Compartment instead, like:
 
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ (function(module, exports) {
 
 var indexOf = function (xs, item) {
@@ -10787,1097 +11704,294 @@ exports.createContext = Script.createContext = function (context) {
 
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {/**
- * xray.js
- *
- * Powerful object scanner to deeply inspect, serialize, deserialize, and clone objects.
- */
-
-// TODO
-// Document serialization protocol
-//  -Tests
-//  -Tokens and deployables don't need sets. Need loaders.
-//  -Documentation (remove Builder references)
-//  -Does RunSet need special handling for Set?
-//  -Hook up to existing code (And RunSet as default)
-//  -How to load other protocols?
-// - intrinsics are designed to be as flexible as safe.
-// So Objects and arrays are acceptible from without.
-// Document scanner API
-
-const Protocol = __webpack_require__(9)
-const { RunSet } = __webpack_require__(10)
-const { display } = __webpack_require__(1)
-const { getIntrinsics } = __webpack_require__(8)
-
-// ------------------------------------------------------------------------------------------------
-// Xray
-// -----------------------------------------------------------------------------------------------
-
 /**
- * The Xray is a scanner that an clone, serialize, and deserialize complex JavaScript objects with
- * tokens into formats that be stored on a blockchain and cached. To use the Xray, create one using
- * the Builder below, specifying and properties needed. Then, you may begin scanning objects. The
- * Xray has internal caches and assumes that while using the scanner objects will not change. The
- * Xray uses Scanners to process objects. Scanners have a consistent API documented below.
+ * protocol.js
  *
- * Format:
- *  $class
- *
- * Caches, intrinsics - membrane, not passing objects or arrays, primitives OK.
- *
- * Serialization is JSON
+ * Manager for token protocols are supported by Run
  */
-class Xray {
-  /**
-   * Creates an Xray that uses the default intrinsics and a set of basic scanners. Tokens and
-   * deployables are not supported by default in scanned objects and must be enabled.
-   */
-  constructor () {
-    this.intrinsics = Intrinsics.defaultIntrinsics
-    this.tokenizer = null
-    this.deployables = null
-    this.tokens = null
-    this.caches = {
-      scanned: new Set(),
-      cloneable: new Map(),
-      serializable: new Map(),
-      deserializable: new Map(),
-      clone: new Map(),
-      serialize: new Map(),
-      deserialize: new Map(),
-      predeserialize: new Map()
-    }
-    this.scanners = [
-      new DedupScanner(),
-      new UndefinedScanner(),
-      new PrimitiveScanner(),
-      new BasicObjectScanner(),
-      new BasicArrayScanner(),
-      new Uint8ArrayScanner(),
-      new SetScanner(),
-      new MapScanner()
-    ]
-  }
 
-  allowTokens () {
-    if (!this.tokens) {
-      this.tokens = new RunSet()
-      this.scanners.unshift(new TokenScanner())
-    }
-    return this
-  }
-
-  allowDeployables () {
-    if (!this.deployables) {
-      this.deployables = new Set()
-      this.scanners.unshift(new DeployableScanner())
-      this.scanners.push(new ArbitraryObjectScanner())
-    }
-    return this
-  }
-
-  useTokenizer (tokenizer) {
-    this.tokenizer = tokenizer
-    return this
-  }
-
-  useIntrinsics (intrinsics) {
-    this.intrinsics = intrinsics
-    return this
-  }
-
-  scan (x) {
-    if (this.caches.scanned.has(x)) return this
-    for (const scanner of this.scanners) {
-      const value = scanner.scan(x, this)
-      if (typeof value === 'undefined') continue
-      this.caches.scanned.add(x)
-      if (value === false) break
-      return true
-    }
-    throw new Error(`${display(x)} cannot be scanned`)
-  }
-
-  /**
-   * Returns whether an object can be cloned by this Xray
-   */
-  cloneable (x) {
-    if (this.caches.cloneable.has(x)) return this.caches.cloneable.get(x)
-    for (const scanner of this.scanners) {
-      const value = scanner.cloneable(x, this)
-      if (typeof value === 'undefined') continue
-      this.caches.cloneable.set(x, value)
-      return value
-    }
-    this.caches.cloneable.set(x, false)
-    return false
-  }
-
-  /**
-   * Returns whether an object can be serialized by this Xray
-   */
-  serializable (x) {
-    if (this.caches.serializable.has(x)) return this.caches.serializable.get(x)
-    for (const scanner of this.scanners) {
-      const value = scanner.serializable(x, this)
-      if (typeof value === 'undefined') continue
-      this.caches.serializable.set(x, value)
-      return value
-    }
-    this.caches.serializable.set(x, false)
-    return false
-  }
-
-  /**
-   * Returns whether an object can be deserialized by this Xray
-   */
-  deserializable (x) {
-    if (this.caches.deserializable.has(x)) return this.caches.deserializable.get(x)
-    for (const scanner of this.scanners) {
-      const value = scanner.deserializable(x, this)
-      if (typeof value === 'undefined') continue
-      this.caches.deserializable.set(x, value)
-      return value
-    }
-    this.caches.deserializable.set(x, false)
-    return false
-  }
-
-  clone (x) {
-    if (this.caches.clone.has(x)) return this.caches.clone.get(x)
-    for (const scanner of this.scanners) {
-      const cloneable = scanner.cloneable(x, this)
-      if (typeof cloneable === 'undefined') continue
-      if (cloneable === false) break
-      const y = scanner.clone(x, this)
-      this.caches.clone.set(x, y)
-      return y
-    }
-    throw new Error(`${display(x)} cannot be cloned`)
-  }
-
-  serialize (x) {
-    if (this.caches.serialize.has(x)) return this.caches.serialize.get(x)
-    for (const scanner of this.scanners) {
-      const serializable = scanner.serializable(x, this)
-      if (typeof serializable === 'undefined') continue
-      if (serializable === false) break
-      const y = scanner.serialize(x, this)
-      this.caches.serialize.set(x, y)
-      return y
-    }
-    throw new Error(`${display(x)} cannot be serialized`)
-  }
-
-  deserialize (x) {
-    if (this.caches.deserialize.has(x)) return this.caches.deserialize.get(x)
-    for (const scanner of this.scanners) {
-      const deserializable = scanner.deserializable(x, this)
-      if (typeof deserializable === 'undefined') continue
-      if (deserializable === false) break
-      const y = scanner.deserialize(x, this)
-      this.caches.deserialize.set(x, y)
-      return y
-    }
-    throw new Error(`${display(x)} cannot be deserialized`)
-  }
-
-  predeserialize (x) {
-    if (this.caches.predeserialize.has(x)) return
-    for (const scanner of this.scanners) {
-      const deserializable = scanner.deserializable(x, this)
-      if (typeof deserializable === 'undefined') continue
-      if (deserializable === false) break
-      const y = scanner.predeserialize(x, this)
-      this.caches.predeserialize.set(x, y)
-      return y
-    }
-    throw new Error(`${display(x)} cannot be predeserialized`)
-  }
-}
+const { Jig, JigControl } = __webpack_require__(4)
+const { Jiglet, JigletControl } = __webpack_require__(28)
+const Location = __webpack_require__(29)
 
 // ------------------------------------------------------------------------------------------------
-// Tokenizer API
+// Protocol manager
 // ------------------------------------------------------------------------------------------------
 
-/**
- * API to load tokens and deploy code within the xray. The API communicates with some real
- * system that is able perform these actions on tokens.
- */
-class Tokenizer {
-  // Returns sandboxed token
-  load (location) { throw new Error('Not implemented') }
-  // Returns location after deploying
-  deploy (deployable) { throw new Error('Not implemented') }
-}
+class Protocol {
+  static install (loader) {
+    // Should deploy? Need sandbox, for sandboxed jiglets. Or maybe not?
 
-// How to clone a deployable. Why clone a deployable.
-// We clone in Code to assign sandbox properties
-// Maybe what we do is deploy all of the code.
-
-// ------------------------------------------------------------------------------------------------
-// Scanner API
-// -----------------------------------------------------------------------------------------------
-
-class Scanner {
-  // Return true to skip, false to stop, undefined to continue
-  scan (x, xray) { throw new Error('Not implemented') }
-  cloneable (x, xray) { throw new Error('Not implemented') }
-  serializable (x, xray) { throw new Error('Not implemented') }
-  deserializable (x, xray) { throw new Error('Not implemented') }
-  clone (x, xray) { throw new Error('Not implemented') }
-  serialize (x, xray) { throw new Error('Not implemented') }
-  deserialize (x, xray) { throw new Error('Not implemented') }
-  predeserialize (x, xray) { throw new Error('Not implemented') }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Undefined value scanner
-// -----------------------------------------------------------------------------------------------
-
-/**
- * Scanner to handle undefined, which cannot be passed through during serializion
- */
-class UndefinedScanner {
-  scan (x, xray) { if (typeof x === 'undefined') return true }
-  cloneable (x, xray) { if (typeof x === 'undefined') return true }
-  serializable (x, xray) { if (typeof x === 'undefined') return true }
-  deserializable (x, xray) {
-    if (typeof x !== 'object' || !x || typeof x.$undef === 'undefined') return
-    return x.$undef === 1
+    if (typeof loader !== 'function' && typeof loader.load !== 'function') {
+      throw new Error(`Cannot install loader: ${loader}`)
+    }
+    Protocol.loaders.add(loader)
   }
 
-  clone (x, xray) { return x }
-  serialize (x, xray) {
-    const { Object } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    y.$undef = 1
-    return y
+  static uninstall (loader) {
+    return Protocol.loaders.delete(loader)
   }
 
-  deserialize (x, xray) { return undefined }
-  predeserialize (x, xray) { }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Primitive value scanner
-// -----------------------------------------------------------------------------------------------
-
-/**
- * Scanner to handle booleans, numbers, strings, and null
- */
-class PrimitiveScanner {
-  scan (x, xray) {
+  static isToken (x) {
     switch (typeof x) {
-      case 'boolean': return true
-      case 'number': return true
-      case 'string': return true
-      case 'object': return x === null ? true : undefined
+      case 'object': return x && (x instanceof Jig || x instanceof Jiglet)
+      case 'function': return !!x.origin && !!x.location && !!x.owner
+      default: return false
     }
   }
 
-  cloneable (x, xray) {
-    switch (typeof x) {
-      case 'boolean': return true
-      case 'number': return true
-      case 'string': return true
-      case 'object': return x === null ? true : undefined
-    }
+  static isDeployable (x) {
+    if (typeof x !== 'function') return false
+    return x.toString().indexOf('[native code]') === -1
   }
 
-  serializable (x, xray) {
-    switch (typeof x) {
-      case 'boolean': return true
-      case 'number': return !isNaN(x) && isFinite(x)
-      case 'string': return true
-      case 'object': return x === null ? true : undefined
-    }
+  static getLocation (x) {
+    const location = JigControl.disableProxy(() => x.location)
+    Location.parse(location)
+    return location
   }
 
-  deserializable (x, xray) {
-    switch (typeof x) {
-      case 'boolean': return true
-      case 'number': return !isNaN(x) && isFinite(x)
-      case 'string': return true
-      case 'object': return x === null ? true : undefined
-    }
+  static getOrigin (x) {
+    if (x && x instanceof Jiglet) return Protocol.getLocation(x)
+    const origin = JigControl.disableProxy(() => x.origin)
+    Location.parse(origin)
+    return origin
   }
 
-  clone (x, xray) { return x }
-  serialize (x, xray) { return x }
-  deserialize (x, xray) { return x }
-  predeserialize (x, xray) { }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Normal object scanner
-// -----------------------------------------------------------------------------------------------
-
-class BasicObjectScanner {
-  scan (x, xray) {
-    if (this.isBasicObject(x, xray)) {
-      xray.caches.scanned.add(x)
-      Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
-      return true
-    }
-  }
-
-  cloneable (x, xray) {
-    if (!this.isBasicObject(x, xray)) return
-    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
-    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
-  }
-
-  serializable (x, xray) {
-    if (!this.isBasicObject(x, xray)) return
-    if (Object.keys(x).find(key => key.startsWith('$'))) return false
-    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
-    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
-  }
-
-  deserializable (x, xray) {
-    if (!this.isBasicObject(x, xray)) return
-    if (Object.keys(x).find(key => key.startsWith('$'))) return
-    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
-    return !Object.keys(x).some(key => !xray.deserializable(key) || !xray.deserializable(x[key]))
-  }
-
-  clone (x, xray) {
-    const { Object } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    xray.caches.clone.set(x, y)
-    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
-    return y
-  }
-
-  serialize (x, xray) {
-    const { Object } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    xray.caches.serialize.set(x, y)
-    Object.keys(x).forEach(key => { y[xray.serialize(key)] = xray.serialize(x[key]) })
-    return y
-  }
-
-  deserialize (x, xray) {
-    const { Object } = xray.intrinsics.default
-    const y = xray.caches.predeserialize.get(x) || Object.create(Object.prototype)
-    xray.caches.deserialize.set(x, y)
-    Object.keys(x).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x[key]) })
-    return y
-  }
-
-  predeserialize (x, xray) {
-    const { Object } = xray.intrinsics.default
-    return Object.create(Object.prototype)
-  }
-
-  isBasicObject (x, xray) {
-    if (typeof x !== 'object' || !x) return false
-    if (xray.intrinsics.types.has(x)) return false
-    return getPrototypeCount(x) === 1 // Object
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Normal array scanner
-// -----------------------------------------------------------------------------------------------
-
-class BasicArrayScanner {
-  scan (x, xray) {
-    if (this.isBasicArray(x, xray)) {
-      xray.caches.scanned.add(x)
-      Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
-      return true
-    }
-  }
-
-  cloneable (x, xray) {
-    if (!this.isBasicArray(x, xray)) return
-    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
-    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
-  }
-
-  serializable (x, xray) {
-    if (!this.isBasicArray(x, xray)) return
-    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
-    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
-  }
-
-  deserializable (x, xray) {
-    if (!this.isBasicArray(x, xray)) return
-    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
-    return !Object.keys(x).some(key => !xray.deserializable(key) || !xray.deserializable(x[key]))
-  }
-
-  clone (x, xray) {
-    const { Array } = xray.intrinsics.default
-    const y = Array.from([])
-    xray.caches.clone.set(x, y)
-    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
-    return y
-  }
-
-  serialize (x, xray) {
-    const { Array } = xray.intrinsics.default
-    const y = Array.from([])
-    xray.caches.serialize.set(x, y)
-    Object.keys(x).forEach(key => { y[xray.serialize(key)] = xray.serialize(x[key]) })
-    return y
-  }
-
-  deserialize (x, xray) {
-    const { Array } = xray.intrinsics.default
-    const y = xray.caches.predeserialize.get(x) || Array.from([])
-    xray.caches.deserialize.set(x, y)
-    Object.keys(x).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x[key]) })
-    return y
-  }
-
-  predeserialize (x, xray) {
-    const { Array } = xray.intrinsics.default
-    return Array.from([])
-  }
-
-  isBasicArray (x, xray) {
-    if (typeof x !== 'object' || !x) return false
-    if (getPrototypeCount(x) !== 2) return false // Array, Object
-    return xray.intrinsics.allowed.some(intrinsics => intrinsics.Array.isArray(x))
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Uint8Array scanner
-// -----------------------------------------------------------------------------------------------
-
-const base64Chars = new Set()
-'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
-  .split('').forEach(x => base64Chars.add(x))
-
-class Uint8ArrayScanner {
-  scan (x, xray) { if (this.isUint8Array(x, xray)) return true }
-  cloneable (x, xray) { if (this.isUint8Array(x, xray)) return true }
-  serializable (x, xray) { if (this.isUint8Array(x, xray)) return true }
-
-  deserializable (x, xray) {
-    if (typeof x !== 'object' || !x || typeof x.$ui8a === 'undefined') return
-    if (typeof x.$ui8a !== 'string') return false
-    return !x.$ui8a.split('').some(x => !base64Chars.has(x))
-  }
-
-  clone (x, xray) {
-    const { Uint8Array } = xray.intrinsics.default
-    return Uint8Array.from(x)
-  }
-
-  serialize (x, xray) {
-    const { Object } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    y.$ui8a = Buffer.from(x).toString('base64')
-    return y
-  }
-
-  deserialize (x, xray) {
-    const { Uint8Array } = xray.intrinsics.default
-    return xray.caches.predeserialize.get(x) ||
-      Uint8Array.from(Buffer.from(x.$ui8a, 'base64'))
-  }
-
-  predeserialize (x, xray) {
-    const { Uint8Array } = xray.intrinsics.default
-    return Uint8Array.from(Buffer.from(x.$ui8a, 'base64'))
-  }
-
-  isUint8Array (x, xray) {
-    if (typeof x !== 'object' || !x) return false
-    if (getPrototypeCount(x) !== 3) return false // Uint8Array, TypedArray, Object
-    if (Object.keys(x).some(key => isNaN(key) || x[key] > 255 || x[key] < 0)) return false
-    return xray.intrinsics.allowed.some(intrinsics => x instanceof intrinsics.Uint8Array)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Set scanner
-// -----------------------------------------------------------------------------------------------
-
-class SetScanner {
-  scan (x, xray) {
-    if (this.isSet(x, xray)) {
-      xray.caches.scanned.add(x)
-      for (const y of x) { xray.scan(y) }
-      Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
-      return true
-    }
-  }
-
-  cloneable (x, xray) {
-    if (!this.isSet(x, xray)) return
-    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
-    for (const y of x) { if (!xray.cloneable(y)) return false }
-    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
-  }
-
-  serializable (x, xray) {
-    if (!this.isSet(x, xray)) return
-    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
-    for (const y of x) { if (!xray.serializable(y)) return false }
-    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
-  }
-
-  deserializable (x, xray) {
-    if (typeof x !== 'object' || !x || typeof x.$set === 'undefined') return
-    if (!Array.isArray(x.$set)) return false
-    if (typeof x.props !== 'undefined' && (typeof x.props !== 'object' || !x.props)) return false
-    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
-    if (x.$set && x.$set.some(y => !xray.deserializable(y))) return false
-    if (x.props) return !Object.keys(x.props).some(key => !xray.deserializable(key) || !xray.deserializable(x.props[key]))
-    return true
-  }
-
-  clone (x, xray) {
-    const { Set } = xray.intrinsics.default
-    const y = new Set()
-    xray.caches.clone.set(x, y)
-    for (const entry of x) { y.add(xray.clone(entry)) }
-    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
-    return y
-  }
-
-  serialize (x, xray) {
-    const { Object, Array } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    xray.caches.serialize.set(x, y)
-    y.$set = Array.from([])
-    for (const entry of x) { y.$set.push(xray.serialize(entry)) }
-    if (Object.keys(x).length) {
-      y.props = Object.create(Object.prototype)
-      Object.keys(x).forEach(key => { y.props[xray.serialize(key)] = xray.serialize(x[key]) })
-    }
-    return y
-  }
-
-  deserialize (x, xray) {
-    const { Set } = xray.intrinsics.default
-    const y = xray.caches.predeserialize.get(x) || new Set()
-    xray.caches.deserialize.set(x, y)
-    for (const entry of x.$set) { y.add(xray.deserialize(entry)) }
-    if (x.props) Object.keys(x.props).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x.props[key]) })
-    return y
-  }
-
-  predeserialize (x, xray) {
-    const { Set } = xray.intrinsics.default
-    return new Set()
-  }
-
-  isSet (x, xray) {
-    if (typeof x !== 'object' || !x) return false
-    if (getPrototypeCount(x) !== 2) return false // Set, Object
-    return xray.intrinsics.allowed.some(intrinsics => x instanceof intrinsics.Set)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Map scanner
-// -----------------------------------------------------------------------------------------------
-
-class MapScanner {
-  scan (x, xray) {
-    if (this.isMap(x, xray)) {
-      xray.caches.scanned.add(x)
-      for (const entry of x) xray.scan(entry)
-      Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
-      return true
-    }
-  }
-
-  cloneable (x, xray) {
-    if (!this.isMap(x, xray)) return
-    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
-    for (const [key, val] of x) {
-      if (!xray.cloneable(key)) return false
-      if (!xray.cloneable(val)) return false
-    }
-    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
-  }
-
-  serializable (x, xray) {
-    if (!this.isMap(x, xray)) return
-    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
-    for (const [key, val] of x) {
-      if (!xray.serializable(key)) return false
-      if (!xray.serializable(val)) return false
-    }
-    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
-  }
-
-  deserializable (x, xray) {
-    if (typeof x !== 'object' || !x || typeof x.$map === 'undefined') return
-    if (!Array.isArray(x.$map)) return false
-    if (typeof x.props !== 'undefined' && (typeof x.props !== 'object' || !x.props)) return false
-    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
-    for (const entry of x.$map) {
-      if (!Array.isArray(entry) || entry.length !== 2) return false
-      if (!xray.deserializable(entry[0])) return false
-      if (!xray.deserializable(entry[1])) return false
-    }
-    if (x.props) {
-      return !Object.keys(x.props).some(key =>
-        !xray.deserializable(key) || !xray.deserializable(x.props[key]))
-    }
-    return true
-  }
-
-  clone (x, xray) {
-    const { Map } = xray.intrinsics.default
-    const y = new Map()
-    xray.caches.clone.set(x, y)
-    for (const [key, val] of x) { y.set(xray.clone(key), xray.clone(val)) }
-    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
-    return y
-  }
-
-  serialize (x, xray) {
-    const { Object, Array } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    y.$map = Array.from([])
-    xray.caches.serialize.set(x, y)
-    for (const entry of x) y.$map.push(xray.serialize(entry))
-    if (Object.keys(x).length) {
-      y.props = Object.create(Object.prototype)
-      Object.keys(x).forEach(key => { y.props[xray.serialize(key)] = xray.serialize(x[key]) })
-    }
-    return y
-  }
-
-  deserialize (x, xray) {
-    const { Map } = xray.intrinsics.default
-    const y = xray.caches.predeserialize.get(x) || new Map()
-    xray.caches.deserialize.set(x, y)
-    for (const [key, val] of x.$map) { y.set(xray.deserialize(key), xray.deserialize(val)) }
-    if (x.props) Object.keys(x.props).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x.props[key]) })
-    return y
-  }
-
-  predeserialize (x, xray) {
-    const { Map } = xray.intrinsics.default
-    return new Map()
-  }
-
-  isMap (x, xray) {
-    if (typeof x !== 'object' || !x) return false
-    if (getPrototypeCount(x) !== 2) return false // Map, Object
-    return xray.intrinsics.allowed.some(intrinsics => x instanceof intrinsics.Map)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Arbitrary classes
-// ------------------------------------------------------------------------------------------------
-
-class ArbitraryObjectScanner {
-  constructor () {
-    this.basicObjectScanner = new BasicObjectScanner()
-  }
-
-  scan (x, xray) {
-    if (this.isArbitraryObject(x)) {
-      xray.caches.scanned.add(x)
-      xray.deployables.add(x.constructor)
-      Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
-      return true
-    }
-  }
-
-  cloneable (x, xray) {
-    if (!this.isArbitraryObject(x, xray)) return
-    xray.deployables.add(x.constructor)
-    return this.basicObjectScanner.cloneable(Object.assign({}, x), xray)
-  }
-
-  serializable (x, xray) {
-    if (!this.isArbitraryObject(x, xray)) return
-    xray.deployables.add(x.constructor)
-    return this.basicObjectScanner.serializable(Object.assign({}, x), xray)
-  }
-
-  deserializable (x, xray) {
-    if (typeof x !== 'object' || !x || x.$class !== 'arbitraryObject') return
-    if (!xray.tokenizer) throw new Error(`No tokenizer provided to deserialize ${display(x)}`)
-    if (!xray.tokenizer.load(x.type)) return false
-    if (typeof x.value !== 'object' || !x.value) return false
-    return true
-  }
-
-  clone (x, xray) {
-    if (!xray.tokenizer) throw new Error(`No tokenizer provided to clone ${display(x)}`)
-    const clone = this.basicObjectScanner.clone(Object.assign({}, x), xray)
-    const sandbox = xray.tokenizer.load(xray.tokenizer.deploy(x.constructor))
-    Object.setPrototypeOf(clone, sandbox.prototype)
-    return clone
-  }
-
-  serialize (x, xray) {
-    if (!xray.tokenizer) throw new Error(`No tokenizer provided to serialize ${display(x)}`)
-    const { Object } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    y.$class = 'arbitraryObject'
-    y.type = xray.tokenizer.deploy(x.constructor)
-    y.value = this.basicObjectScanner.serialize(Object.assign({}, x), xray)
-    return y
-  }
-
-  deserialize (x, xray) {
-    if (!xray.tokenizer) throw new Error(`No tokenizer provided to deserialize ${display(x)}`)
-    const type = xray.tokenizer.load(x.type)
-    const { Object } = xray.intrinsics.default
-    const obj = xray.caches.predeserialize.get(x) || Object.create(Object.prototype)
-    Object.assign(obj, x.value)
-    Object.setPrototypeOf(obj, type.prototype)
-    return obj
-  }
-
-  predeserialize (x, xray) {
-    const { Object } = xray.intrinsics.default
-    return Object.create(Object.prototype)
-  }
-
-  isArbitraryObject (x, xray) {
-    if (typeof x !== 'object' || !x) return false
-    return deployable(x.constructor, xray)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Duplicate object scanner
-// ------------------------------------------------------------------------------------------------
-
-class DedupScanner {
-  constructor () {
-    this.topLevel = true
-    this.dups = null
-    this.checkingDeserializability = false
-    this.deserializingDups = false
-    this.deserializingMaster = false
-  }
-
-  scan (x, xray) { }
-  cloneable (x, xray) { }
-
-  serializable (x, xray) {
-    const topLevel = this.topLevel
-    this.topLevel = false
-    try {
-      if (topLevel) return xray.serializable(x, xray)
-    } finally {
-      this.topLevel = topLevel
-    }
-  }
-
-  deserializable (x, xray) {
-    const topLevel = this.topLevel
-    this.topLevel = false
-    try {
-      if (topLevel) {
-        if (typeof x !== 'object' || !x || typeof x.$dedup === 'undefined') return
-        if (!Array.isArray(x.dups)) return false
-        this.dups = x.dups
-        try {
-          this.checkingDeserializability = true
-          return xray.deserializable(x.$dedup) && xray.deserializable(x.dups)
-        } finally {
-          this.checkingDeserializability = false
-          this.dups = null
-        }
-      } else {
-        if (this.checkingDeserializability || this.deserializingDups || this.deserializingMaster) {
-          if (typeof x !== 'object' || !x || typeof x.$dup === 'undefined') return
-          if (typeof x.$dup !== 'number') return false
-          if (!Number.isInteger(x.$dup) || x.$dup < 0 || x.$dup >= this.dups.length) return false
-          return true
-        }
-      }
-    } finally {
-      this.topLevel = topLevel
-    }
-  }
-
-  clone (x, xray) { }
-
-  serialize (x, xray) {
-    const topLevel = this.topLevel
-    this.topLevel = false
-    try {
-      if (topLevel) return this.dedup(x, xray)
-    } finally {
-      this.topLevel = topLevel
-    }
-  }
-
-  deserialize (x, xray) {
-    const topLevel = this.topLevel
-    this.topLevel = false
-    try {
-      if (topLevel) {
-        if (typeof x !== 'object' || !x || typeof x.$dedup === 'undefined') return
-
-        this.dups = x.dups
-
-        // Predeserialize each dup to put objects in the cache
-        this.dups = this.dups.map(dup => xray.predeserialize(dup))
-
-        // Deserialize each dup
-        try {
-          this.deserializingDups = true
-          this.dups = x.dups.map(dup => xray.deserialize(dup))
-        } finally {
-          this.deserializingDups = false
-        }
-
-        // Deserialize the master object
-        try {
-          this.deserializingMaster = true
-          return xray.deserialize(x.$dedup)
-        } finally {
-          this.deserializingMaster = false
-        }
-      } else {
-        // If we are deserializing any dups, replace them with our known set
-        if (this.deserializingDups || this.deserializingMaster) {
-          return this.dups[x.$dup]
-        }
-      }
-    } finally {
-      this.topLevel = topLevel
-    }
-  }
-
-  predeserialize (x, xray) { }
-
-  dedup (x, xray) {
-    const serialized = xray.serialize(x)
-
-    const { Object, Array } = xray.intrinsics.default
-
-    const seen = new Set()
-    const indexes = new Map()
-    function detectDups (x) {
-      if (typeof x !== 'object' || !x) return
-      if (seen.has(x)) {
-        if (!indexes.has(x)) indexes.set(x, indexes.size)
-      } else {
-        seen.add(x)
-        Object.keys(x).forEach(key => detectDups(x[key]))
+  static async loadJiglet (location, blockchain) {
+    for (const loader of Protocol.loaders) {
+      try {
+        JigletControl.loader = loader
+        return await loader.load(location, blockchain)
+      } catch (e) {
+        continue
+      } finally {
+        JigletControl.loader = undefined
       }
     }
-
-    detectDups(serialized)
-
-    if (!indexes.size) return serialized
-
-    function replaceDups (x) {
-      if (typeof x !== 'object' || !x) return x
-      if (indexes.has(x)) {
-        const y = Object.create(Object.prototype)
-        y.$dup = indexes.get(x)
-        return y
-      } else {
-        Object.keys(x).forEach(key => { x[key] = replaceDups(x[key]) })
-        return x
-      }
-    }
-
-    const value = replaceDups(serialized)
-    const dups = Array.from(indexes.keys())
-
-    dups.forEach(dup => {
-      Object.keys(dup).forEach(key => { dup[key] = replaceDups(dup[key]) })
-    })
-
-    const y = Object.create(Object.prototype)
-    y.$dedup = value
-    y.dups = dups
-    return y
+    throw new Error(`No loader available for ${location}`)
   }
 }
 
 // ------------------------------------------------------------------------------------------------
-// Code detector
-// -----------------------------------------------------------------------------------------------
+// Loader API for custom Jiglets
+// ------------------------------------------------------------------------------------------------
 
-class DeployableScanner {
-  scan (x, xray) {
-    if (deployable(x, xray)) {
-      xray.deployables.add(x)
-      return true
-    }
-  }
-
-  cloneable (x, xray) {
-    if (deployable(x, xray)) {
-      xray.deployables.add(x)
-      return true
-    }
-  }
-
-  serializable (x, xray) {
-    if (deployable(x, xray)) {
-      xray.deployables.add(x)
-      return true
-    }
-  }
-
-  deserializable (x, xray) {
-    // We never deserialize deployables. They become tokens when serialized.
-  }
-
-  clone (x, xray) {
-    if (!xray.tokenizer) throw new Error(`No tokenizer provided to clone ${display(x)}`)
-    return xray.tokenizer.load(xray.tokenizer.deploy(x))
-  }
-
-  serialize (x, xray) {
-    if (!xray.tokenizer) throw new Error(`No tokenizer provided to clone ${display(x)}`)
-
-    const { Object } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-
-    const deployed = xray.tokenizer.deploy(x)
-    y.$token = Protocol.getLocation(deployed)
-
-    return y
-  }
-
-  deserialize (x, xray) {
-    // We never deserialize deployables. They become tokens when serialized.
-  }
-
-  predeserialize (x, xray) {
-    // We never deserialize deployables. They become tokens when serialized.
+class Loader {
+  // Static to keep stateless
+  static async load (location, blockchain) {
+    // Fetch the transaction
+    // Extract relevant data out of it
+    // Create and return a jiglet
   }
 }
 
 // ------------------------------------------------------------------------------------------------
-// Token detector
-// -----------------------------------------------------------------------------------------------
 
-class TokenScanner {
-  scan (x, xray) {
-    if (Protocol.isToken(x)) {
-      xray.tokens.add(x)
-      return true
+Protocol.loaders = new Set()
+Protocol.Loader = Loader
+
+module.exports = Protocol
+
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports) {
+
+const JigletControl = {
+  loader: undefined
+}
+
+// Note: This is a good way to learn the Jig
+class Jiglet {
+  constructor (...args) {
+    // Sandbox here
+
+    // Check the Jiglet is property derived (no constructors)
+
+    // Check that the loader matches
+    if (!JigletControl.loader || JigletControl.loader !== this.constructor.loader) {
+      throw new Error('Must only create Jiglet from its loader')
     }
-  }
 
-  cloneable (x, xray) {
-    if (Protocol.isToken(x)) {
-      xray.tokens.add(x)
-      return true
+    // Run the init
+    this.init(...args)
+
+    // Validate the location
+    if (typeof this.location !== 'string') {
+      throw new Error('Jiglet init() must set a location')
     }
+
+    // Free the object so there are no more changes
+    // TODO: deep freeze
+    Object.freeze(this)
   }
 
-  serializable (x, xray) {
-    if (Protocol.isToken(x)) {
-      xray.tokens.add(x)
-      return true
-    }
-  }
+  init () { }
 
-  deserializable (x, xray) {
-    if (typeof x !== 'object' || !x || typeof x.$ref === 'undefined') return
-    if (typeof x.$ref !== 'string') return false
-    return true
-  }
-
-  clone (x, xray) {
-    return x
-  }
-
-  serialize (x, xray) {
-    if (!xray.tokenizer) throw new Error(`No tokenizer provided to clone ${display(x)}`)
-
-    // Get the location for a token?
-  }
-
-  deserialize (x, xray) {
-    // Load the token from a location
-  }
-
-  predeserialize (x, xray) { }
+  // TODO: instanceof override
 }
 
-// ------------------------------------------------------------------------------------------------
-// Intrinsics
-// ------------------------------------------------------------------------------------------------
+// This should be overridden in each child class
+Jiglet.loader = undefined
 
-/**
- * Manages known intrinsics
- */
-class Intrinsics {
-  constructor () {
-    this.default = null
-    this.allowed = []
-    this.types = new Set()
-    this.use(getIntrinsics())
-  }
+module.exports = { Jiglet, JigletControl }
 
-  set (intrinsics) {
-    this.default = null
-    this.allowed = []
-    this.types = new Set()
-    this.use(intrinsics)
-    return this
-  }
-
-  allow (intrinsics) {
-    this.allowed.push(intrinsics)
-    Object.keys(intrinsics).forEach(name => this.types.add(intrinsics[name]))
-    return this
-  }
-
-  use (intrinsics) {
-    this.allow(intrinsics)
-    this.default = intrinsics
-    return this
-  }
-}
-
-Intrinsics.defaultIntrinsics = new Intrinsics()
-
-// ------------------------------------------------------------------------------------------------
-// Helper functions
-// ------------------------------------------------------------------------------------------------
-
-function getPrototypeCount (x) {
-  let count = 0
-  x = Object.getPrototypeOf(x)
-  while (x) { x = Object.getPrototypeOf(x); count++ }
-  return count
-}
-
-function deployable (x, xray) {
-  if (typeof x !== 'function') return false
-  if (display(x).indexOf('[native code]') !== -1) return false
-  if (xray.intrinsics.types.has(x)) return false
-  if (Protocol.isToken(x)) return false
-  return true
-}
-
-// ------------------------------------------------------------------------------------------------
-
-Xray.Scanner = Scanner
-Xray.Tokenizer = Tokenizer
-Xray.Intrinsics = Intrinsics
-
-module.exports = Xray
-
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6).Buffer))
 
 /***/ }),
 /* 29 */
+/***/ (function(module, exports) {
+
+/**
+ * location.js
+ *
+ * Parses and builds location strings that point to tokens on the blockchain
+ */
+
+/**
+ * Helper class to create and parse location strings
+ *
+ * Every token in Run is stored at a location on the blockchain. Both the "origin"
+ * property and "location" property on jigs and code are location strings. Jiglets
+ * have a location but not an origin. To the user, these come in the form:
+ *
+ *  <txid>_o<vout>
+ *
+ * Where txid is a transaction id in hex, and vout is the output index as an integer.
+ * Locations are usually outputs. But they need not always be outputs. There are other
+ * kinds of locations. If the location ends with _i<vin>, then the location refers
+ * to an input of a transaction. If the location ends in _r<vref>, then the location
+ * refers to another "ref" location within the OP_RETURN JSON. Sometimes within the
+ * OP_RETURN JSON you will see locations without txids, and these refer to relative
+ * locations. They look like _o1, _i0, etc.
+ *
+ * While a transaction is being built, a jig may have a temporary location. This is
+ * identified by a random temporary txid that starts with '?'. This will get turned
+ * into a real location when the token's transaction is known and published. The
+ * convention is for temporary txids to have 48 ?'s followed by 16 random hex chars
+ * to uniquely identify the temporary txid, but this is not strictly required.
+ *
+ * Finally, it is important that tokens be deterministically loadable. Most tokens
+ * are jigs and code and are parsed by the Run protocol. However with Jiglets, a
+ * token may be parsed by another protocol. Two locations may even be parsed differently
+ * by two different protocols, so it's important when identifying the location of a
+ * jiglet to attach its protocol to its location. So, we add a protocol prefix:
+ *
+ *      <protocol_location>://<token_location>
+ *
+ * This class helps store and read all of this, but within Run's code, it is important
+ * to consider all of the above cases when looking at a location.
+ */
+class Location {
+  /**
+     * Parses a location string
+     * @param {string} location Location to parse
+     * @return {object} out
+     * @return {string=} out.txid Transaction ID
+     * @return {number=} out.vout Output index
+     * @return {number=} out.vin Input index
+     * @return {number=} out.vref Reference index
+     * @return {string=} out.tempTxid Temporary transaction ID
+     * @return {object=} out.proto Protocol location object
+     */
+  static parse (location) {
+    const error = s => { throw new Error(`${s}: ${location}`) }
+
+    if (typeof location !== 'string') error('Location must be a string')
+    if (!location.length) error('Location must not be empty')
+
+    // Check if we are dealing with a protocol
+    const protoParts = location.split('://')
+    if (protoParts.length > 2) error('Location must only have one protocol')
+    if (protoParts.length === 2) {
+      return Object.assign({}, Location.parse(protoParts[1]),
+        { proto: Location.parse(protoParts[0]) })
+    }
+
+    // Split the txid and index parts
+    const parts = location.split('_')
+    if (parts.length > 2) error('Location has an unexpected _ separator')
+    if (parts.length < 2) error('Location requires a _ separator')
+
+    const output = {}
+
+    // Validate the txid
+    if (parts[0].length !== 0 && parts[0].length !== 64) error('Location has an invalid txid length')
+    if (parts[0][0] === '?') {
+      output.tempTxid = parts[0]
+    } else if (parts[0].length) {
+      if (!/^[a-fA-F0-9]*$/.test(parts[0])) error('Location has invalid hex in its txid')
+      output.txid = parts[0]
+    }
+
+    // Validate the index number
+    const indexString = parts[1].slice(1)
+    const index = parseInt(indexString, 10)
+    if (isNaN(index) || !/^[0-9]*$/.test(indexString)) error('Location has an invalid index number')
+
+    // Validate the index category
+    switch (parts[1][0]) {
+      case 'o': { output.vout = index; break }
+      case 'i': { output.vin = index; break }
+      case 'r': { output.vref = index; break }
+      default: error('Location has an invalid index category')
+    }
+
+    return output
+  }
+
+  /**
+     * Creates a location string from options
+     * @param {object} options
+     * @param {string=} options.txid Transaction ID
+     * @param {number=} options.vout Output index
+     * @param {number=} options.outputIndex Output index
+     * @param {number=} options.vin Input index
+     * @param {number=} options.vref Reference index
+     * @param {string=} options.tempTxid Temporary transaction ID
+     * @param {object=} options.proto Protocol location object
+     * @return {string} The built location string
+     */
+  static build (options) {
+    const error = s => { throw new Error(`${s}: ${JSON.stringify(options)}`) }
+
+    if (typeof options !== 'object' || !options) error('Location object is invalid')
+    if (options.proto && options.proto.proto) error('Location must only have one protocol')
+
+    // If we have a protocol, build that first.
+    const prefix = options.proto ? `${Location.build(options.proto)}://` : ''
+
+    // Get the txid
+    const txid = `${options.txid || options.tempTxid || ''}`
+
+    // Get the index
+    let category = null; let index = null
+    if (typeof options.vout === 'number') {
+      category = 'o'
+      index = options.vout
+    } else if (typeof options.vin === 'number') {
+      category = 'i'
+      index = options.vin
+    } else if (typeof options.vref === 'number') {
+      category = 'r'
+      index = options.vref
+    } else error('Location index unspecified')
+
+    const badIndex = isNaN(index) || !isFinite(index) || !Number.isInteger(index) || index < 0
+    if (badIndex) error('Location index must be a non-negative integer')
+
+    return `${prefix}${txid}_${category}${index}`
+  }
+}
+
+module.exports = Location
+
+
+/***/ }),
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -11886,8 +12000,9 @@ module.exports = Xray
  * Enqueues transactions and syncs jigs
  */
 
-const { ProtoTransaction } = __webpack_require__(11)
+const { ProtoTransaction } = __webpack_require__(10)
 const { JigControl } = __webpack_require__(4)
+const Xray = __webpack_require__(9)
 const util = __webpack_require__(1)
 
 /**
@@ -12037,6 +12152,9 @@ owner: ${spentJigs[i].owner}`)
         }
       }])
 
+      // TODO: If I could use the actions protocol, then I could have the saved state be
+      // the state cache state of the jig. For now, I would just deserialize and serialize again.
+
       if (packedState.origin.startsWith(tx.hash)) delete packedState.origin
       if (packedState.location.startsWith(tx.hash)) delete packedState.location
 
@@ -12155,29 +12273,36 @@ owner: ${spentJigs[i].owner}`)
       vout = parseInt(jig.location.slice(66))
     }
 
-    // mark this jig as updated so it isn't updated again by a circular reference
+    // Mark this jig as updated so it isn't updated again by a circular reference
     seen.set(jig.origin, jig)
 
-    // update each jig referenced by this jig
-    const innerJigs = new Set()
+    this.fastForwardInnerTokens(jig, dontRefresh, seen)
+  }
+
+  async fastForwardInnerTokens (x, dontRefresh, seen) {
+    const intrinsics = new Xray.Intrinsics()
+      .use(this.code.evaluator.intrinsics)
+
+    const xray = new Xray()
+      .allowTokens()
+      .deeplyScanTokens()
+      .useIntrinsics(intrinsics)
+
+    JigControl.disableProxy(() => xray.scan(x))
+
     const { Jig } = __webpack_require__(3)
-    const findInners = (target, parent, name) => {
-      if (target && target instanceof Jig && name) {
-        innerJigs.add(target)
+
+    for (const token of xray.tokens) {
+      if (token !== x && token instanceof Jig) {
+        await this.fastForward(token, dontRefresh, seen)
       }
-    }
-    JigControl.enforce = false
-    util.deepTraverse(jig, findInners)
-    JigControl.enforce = true
-    for (const innerJig of innerJigs) {
-      await this.fastForward(innerJig, dontRefresh, seen)
     }
   }
 }
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -12188,7 +12313,7 @@ owner: ${spentJigs[i].owner}`)
 
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(1)
-const { Blockchain } = __webpack_require__(12)
+const { Blockchain } = __webpack_require__(11)
 
 // ------------------------------------------------------------------------------------------------
 // Pay API
@@ -12383,23 +12508,23 @@ module.exports = { Pay, Purse }
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(32);
+module.exports = __webpack_require__(33);
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var bind = __webpack_require__(13);
-var Axios = __webpack_require__(34);
-var mergeConfig = __webpack_require__(19);
-var defaults = __webpack_require__(16);
+var bind = __webpack_require__(12);
+var Axios = __webpack_require__(35);
+var mergeConfig = __webpack_require__(18);
+var defaults = __webpack_require__(15);
 
 /**
  * Create an instance of Axios
@@ -12432,15 +12557,15 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(20);
-axios.CancelToken = __webpack_require__(47);
-axios.isCancel = __webpack_require__(15);
+axios.Cancel = __webpack_require__(19);
+axios.CancelToken = __webpack_require__(48);
+axios.isCancel = __webpack_require__(14);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(48);
+axios.spread = __webpack_require__(49);
 
 module.exports = axios;
 
@@ -12449,7 +12574,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports) {
 
 /*!
@@ -12466,17 +12591,17 @@ module.exports = function isBuffer (obj) {
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var buildURL = __webpack_require__(14);
-var InterceptorManager = __webpack_require__(35);
-var dispatchRequest = __webpack_require__(36);
-var mergeConfig = __webpack_require__(19);
+var buildURL = __webpack_require__(13);
+var InterceptorManager = __webpack_require__(36);
+var dispatchRequest = __webpack_require__(37);
+var mergeConfig = __webpack_require__(18);
 
 /**
  * Create a new instance of Axios
@@ -12559,7 +12684,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12618,18 +12743,18 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var transformData = __webpack_require__(37);
-var isCancel = __webpack_require__(15);
-var defaults = __webpack_require__(16);
-var isAbsoluteURL = __webpack_require__(45);
-var combineURLs = __webpack_require__(46);
+var transformData = __webpack_require__(38);
+var isCancel = __webpack_require__(14);
+var defaults = __webpack_require__(15);
+var isAbsoluteURL = __webpack_require__(46);
+var combineURLs = __webpack_require__(47);
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -12711,7 +12836,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12738,7 +12863,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -12928,7 +13053,7 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12947,13 +13072,13 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var createError = __webpack_require__(18);
+var createError = __webpack_require__(17);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -12979,7 +13104,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13028,7 +13153,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13088,7 +13213,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13163,7 +13288,7 @@ module.exports = (
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13223,7 +13348,7 @@ module.exports = (
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13244,7 +13369,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13265,13 +13390,13 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Cancel = __webpack_require__(20);
+var Cancel = __webpack_require__(19);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -13329,7 +13454,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13363,7 +13488,7 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -13539,7 +13664,7 @@ module.exports = Owner
 
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -13680,7 +13805,7 @@ module.exports = class Mockchain {
 
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports) {
 
 /**
@@ -13804,7 +13929,7 @@ module.exports = { State, StateCache }
 
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -13814,7 +13939,7 @@ module.exports = { State, StateCache }
  */
 
 const { Jig } = __webpack_require__(4)
-const expect = __webpack_require__(21)
+const expect = __webpack_require__(20)
 
 class Token extends Jig {
   init (amount, _tokenToDecrease, _tokensToCombine) {

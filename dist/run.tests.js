@@ -4872,7 +4872,7 @@ describe('Jig', () => {
       expect(a.x).to.equal(2)
     })
 
-    it('should forward sync inner jigs', async () => {
+    it.only('should forward sync inner jigs', async () => {
       class A extends Jig { set (x, y) { this[x] = y } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
