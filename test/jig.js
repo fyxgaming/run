@@ -232,7 +232,7 @@ describe('Jig', () => {
       expect(a.x).to.equal(2)
     })
 
-    it.only('should forward sync inner jigs', async () => {
+    it('should forward sync inner jigs', async () => {
       class A extends Jig { set (x, y) { this[x] = y } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -250,21 +250,23 @@ describe('Jig', () => {
       expect(a.b.n).to.equal(1)
     })
 
-    it('should forward sync circularly referenced jigs', async () => {
-      class A extends Jig { set (x, y) { this[x] = y } }
+    it.only('should forward sync circularly referenced jigs', async () => {
+      class A extends Jig { setB (b) { this.b = b } }
+      class B extends Jig { setA (a) { this.a = a } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      const b = new A()
+      const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      a.set('b', b)
+      a.setB(b)
       await run.sync()
       const run2 = createRun({ blockchain: run.blockchain, owner: run.owner.privkey })
       const a2 = await run2.load(a.location)
       const b2 = await run2.load(b.location)
-      b2.set('a', a2)
+      b2.setA(a2)
       await b2.sync()
       run.activate()
       expect(a.b.a).to.equal(undefined)
+      console.log('-----')
       await a.sync()
       expect(a.b.a.location).to.equal(a.location)
     })
