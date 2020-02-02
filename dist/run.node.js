@@ -914,7 +914,7 @@ module.exports = require("bsv");
 
 const bsv = __webpack_require__(2)
 const Code = __webpack_require__(26)
-const Evaluator = __webpack_require__(7)
+const Evaluator = __webpack_require__(8)
 const Syncer = __webpack_require__(32)
 const { Transaction } = __webpack_require__(11)
 const util = __webpack_require__(1)
@@ -1799,436 +1799,6 @@ module.exports = { Jig, JigControl }
 /* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
-var utils = __webpack_require__(0);
-
-function encode(val) {
-  return encodeURIComponent(val).
-    replace(/%40/gi, '@').
-    replace(/%3A/gi, ':').
-    replace(/%24/g, '$').
-    replace(/%2C/gi, ',').
-    replace(/%20/g, '+').
-    replace(/%5B/gi, '[').
-    replace(/%5D/gi, ']');
-}
-
-/**
- * Build a URL by appending params to the end
- *
- * @param {string} url The base of the url (e.g., http://www.google.com)
- * @param {object} [params] The params to be appended
- * @returns {string} The formatted url
- */
-module.exports = function buildURL(url, params, paramsSerializer) {
-  /*eslint no-param-reassign:0*/
-  if (!params) {
-    return url;
-  }
-
-  var serializedParams;
-  if (paramsSerializer) {
-    serializedParams = paramsSerializer(params);
-  } else if (utils.isURLSearchParams(params)) {
-    serializedParams = params.toString();
-  } else {
-    var parts = [];
-
-    utils.forEach(params, function serialize(val, key) {
-      if (val === null || typeof val === 'undefined') {
-        return;
-      }
-
-      if (utils.isArray(val)) {
-        key = key + '[]';
-      } else {
-        val = [val];
-      }
-
-      utils.forEach(val, function parseValue(v) {
-        if (utils.isDate(v)) {
-          v = v.toISOString();
-        } else if (utils.isObject(v)) {
-          v = JSON.stringify(v);
-        }
-        parts.push(encode(key) + '=' + encode(v));
-      });
-    });
-
-    serializedParams = parts.join('&');
-  }
-
-  if (serializedParams) {
-    var hashmarkIndex = url.indexOf('#');
-    if (hashmarkIndex !== -1) {
-      url = url.slice(0, hashmarkIndex);
-    }
-
-    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
-  }
-
-  return url;
-};
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var enhanceError = __webpack_require__(17);
-
-/**
- * Create an Error with the specified message, config, error code, request and response.
- *
- * @param {string} message The error message.
- * @param {Object} config The config.
- * @param {string} [code] The error code (for example, 'ECONNABORTED').
- * @param {Object} [request] The request.
- * @param {Object} [response] The response.
- * @returns {Error} The created error.
- */
-module.exports = function createError(message, config, code, request, response) {
-  var error = new Error(message);
-  return enhanceError(error, config, code, request, response);
-};
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * evaluator.js
- *
- * The evaluator runs arbitrary code in a secure sandbox
- */
-
-const ses = __webpack_require__(27)
-const { getIntrinsics, intrinsicNames } = __webpack_require__(8)
-
-// ------------------------------------------------------------------------------------------------
-// Evaluator
-// ------------------------------------------------------------------------------------------------
-
-class Evaluator {
-  constructor (options = {}) {
-    this.sandbox = typeof options.sandbox !== 'undefined' ? options.sandbox : true
-    this.logger = typeof options.logger !== 'undefined' ? options.logger : null
-
-    // The realms-shim requires a body for sandboxing. If it doesn't exist, create one.
-    if (typeof window !== 'undefined' && !window.document.body) {
-      window.document.body = document.createElement('body')
-    }
-
-    this.sandboxEvaluator = new SESEvaluator()
-    this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
-    this.intrinsics = this.sandboxEvaluator.intrinsics
-  }
-
-  evaluate (code, env) {
-    if (this.logger) this.logger.info(`Evaluating code starting with: "${code.slice(0, 20)}"`)
-    const evaluator = this.willSandbox(code) ? this.sandboxEvaluator : this.globalEvaluator
-    return evaluator.evaluate(code, env)
-  }
-
-  willSandbox (code) {
-    if (typeof this.sandbox === 'boolean') return this.sandbox
-    const nameRegex = /^(function|class)\s+([a-zA-Z0-9_$]+)/
-    const match = code.match(nameRegex)
-    return match ? this.sandbox.test(match[2]) : false
-  }
-
-  activate () { this.globalEvaluator.activate() }
-  deactivate () { this.globalEvaluator.deactivate() }
-}
-
-// ------------------------------------------------------------------------------------------------
-// SESEvaluator
-// ------------------------------------------------------------------------------------------------
-
-// Non-deterministic globals will be banned
-const nonDeterministicGlobals = [
-  'Date',
-  'Math',
-  'eval',
-  'XMLHttpRequest',
-  'FileReader',
-  'WebSocket',
-  'setTimeout',
-  'setInterval'
-]
-
-/**
- * Secure sandboxer for arbitrary code
- */
-class SESEvaluator {
-  constructor () {
-    this.realm = ses.makeSESRootRealm()
-
-    // Keep track of common intrinsics shared between realms. The SES realm creates
-    // these, and we just evaluate a list of them and store them here.
-    this.intrinsics = this.realm.evaluate(`(${getIntrinsics.toString()})()`, { intrinsicNames })
-
-    // We also overwrite console so that console.log in sandboxed code is relogged outside
-    const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
-    this.intrinsics.console = this.realm.evaluate(consoleCode, { c: console })
-  }
-
-  evaluate (code, env = {}) {
-    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
-    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
-    if ('$globals' in env) throw new Error('Environment must not contain $globals')
-
-    // Create the globals object in the SES realm so it doesn't expose ours
-    const $globals = this.realm.evaluate('({})')
-
-    // Disable each non-deterministic global
-    env = Object.assign({}, env)
-    nonDeterministicGlobals.forEach(key => {
-      if (!(key in env)) env[key] = undefined
-    })
-
-    // Create the real env we'll use
-    env = Object.assign({}, this.intrinsics, env, { $globals })
-
-    // When a function is anonymous, it will be named the variable it is assigned. We give it
-    // a friendly anonymous name to distinguish it from named classes and functions.
-    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
-
-    // Execute the code in strict mode.
-    const script = `with($globals){'use strict';const ${anon}=${code};${anon}}`
-    const result = this.realm.evaluate(script, env)
-
-    return [result, $globals]
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// GlobalEvaluator
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Evaluates code using dependences that are set as globals. This is quite dangerous, but we
- * only use it when sandbox=false, which is intended for testing code coverage and debugging.
- */
-class GlobalEvaluator {
-  constructor (options = {}) {
-    this.logger = options.logger
-    this.activated = true
-    // We will save the prior globals before overriding them so they can be reverted.
-    // This will also store our globals when we deactivate so we can re-activate them.
-    this.savedGlobalDescriptors = {}
-  }
-
-  evaluate (code, env = {}) {
-    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
-    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
-    if ('$globals' in env) throw new Error('Environment must not contain $globals')
-
-    // When a function is anonymous, it will be named the variable it is assigned. We give it
-    // a friendly anonymous name to distinguish it from named classes and functions.
-    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
-
-    // Set each env as a global
-    const options = { configurable: true, enumerable: true, writable: true }
-    Object.keys(env).forEach(key => this.setGlobalDescriptor(key, Object.assign({}, options, { value: env[key] })))
-
-    // Turn the code into an object
-    const result = eval(`const ${anon} = ${code}; ${anon}`) // eslint-disable-line
-
-    // Wrap global sets so that we update savedGlobalDescriptors
-    const wrappedGlobal = new Proxy(global, {
-      set: (target, prop, value) => {
-        this.setGlobalDescriptor(prop, Object.assign({}, options, { value }))
-        return true
-      },
-      defineProperty: (target, prop, descriptor) => {
-        this.setGlobalDescriptor(prop, descriptor)
-        return true
-      }
-    })
-
-    return [result, wrappedGlobal]
-  }
-
-  setGlobalDescriptor (key, descriptor) {
-    // Save the previous global the first time we override it. Future overrides
-    // will throw a warning because now there are two values at the global scope.
-    const priorDescriptor = Object.getOwnPropertyDescriptor(global, key)
-
-    if (!(key in this.savedGlobalDescriptors)) {
-      this.savedGlobalDescriptors[key] = priorDescriptor
-    } else if (!sameDescriptors(descriptor, priorDescriptor)) {
-      if (this.logger) {
-        const warning = 'There might be bugs with sandboxing disabled'
-        const reason = `Two different values were set at the global scope for ${key}`
-        this.logger.warn(`${warning}\n\n${reason}`)
-      }
-    }
-
-    Object.defineProperty(global, key, descriptor)
-  }
-
-  activate () {
-    if (this.activated) return
-    this.swapSavedGlobals()
-    this.activated = true
-  }
-
-  deactivate () {
-    if (!this.activated) return
-    this.swapSavedGlobals()
-    this.activated = false
-  }
-
-  swapSavedGlobals () {
-    const swappedGlobalDescriptors = {}
-
-    Object.keys(this.savedGlobalDescriptors).forEach(key => {
-      swappedGlobalDescriptors[key] = Object.getOwnPropertyDescriptor(global, key)
-
-      if (typeof this.savedGlobalDescriptors[key] === 'undefined') {
-        delete global[key]
-      } else {
-        Object.defineProperty(global, key, this.savedGlobalDescriptors[key])
-      }
-    })
-
-    this.savedGlobalDescriptors = swappedGlobalDescriptors
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Helper methods
-// ------------------------------------------------------------------------------------------------
-
-function sameDescriptors (a, b) {
-  if (typeof a !== typeof b) return false
-  const aKeys = Array.from(Object.keys(a))
-  const bKeys = Array.from(Object.keys(b))
-  if (aKeys.length !== bKeys.length) return false
-  return !aKeys.some(key => a[key] !== b[key])
-}
-
-// ------------------------------------------------------------------------------------------------
-
-Evaluator.SESEvaluator = SESEvaluator
-Evaluator.GlobalEvaluator = GlobalEvaluator
-Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
-
-module.exports = Evaluator
-
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports) {
-
-/**
- * intrinsics.js
- *
- * Helpers for the known built-in objects in JavaScript
- */
-
-// See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
-const intrinsicNames = [
-  // Global functions
-  'console',
-  'eval',
-  'isFinite',
-  'isNaN',
-  'parseFloat',
-  'parseInt',
-  'decodeURI',
-  'decodeURIComponent',
-  'encodeURI',
-  'encodeURIComponent',
-  'escape',
-
-  // Fundamental objects
-  'Object',
-  'Function',
-  'Boolean',
-  'Symbol',
-  'Error',
-  'EvalError',
-  'RangeError',
-  'ReferenceError',
-  'SyntaxError',
-  'TypeError',
-  'URIError',
-
-  // Numbers and dates
-  'Number',
-  'BigInt',
-  'Math',
-  'Date',
-
-  // Text processing
-  'String',
-  'RegExp',
-
-  // Indexed collections
-  'Array',
-  'Int8Array',
-  'Uint8Array',
-  'Uint8ClampedArray',
-  'Int16Array',
-  'Uint16Array',
-  'Int32Array',
-  'Uint32Array',
-  'Float32Array',
-  'Float64Array',
-  'BigInt64Array',
-  'BigUint64Array',
-
-  // Keyed collections
-  'Map',
-  'Set',
-  'WeakMap',
-  'WeakSet',
-
-  // Structured data
-  'ArrayBuffer',
-  'DataView',
-  'JSON',
-
-  // Control abstraction objects
-  'Promise',
-  'Generator',
-  'GeneratorFunction',
-  'AsyncFunction',
-
-  // Reflection
-  'Reflect',
-  'Proxy',
-
-  // Internationalization
-  'Intl',
-
-  // WebAssembly
-  'WebAssembly'
-]
-
-// Returns an object with the built-in intrinsics in this environment
-const getIntrinsics = () => {
-  let code = 'const x = {};'
-  intrinsicNames.forEach(name => { code += `x.${name}=typeof ${name}!=='undefined'?${name}:undefined;` })
-  code += 'return x'
-  return new Function(code)() // eslint-disable-line
-}
-
-module.exports = { getIntrinsics, intrinsicNames }
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
 /**
  * xray.js
  *
@@ -2249,7 +1819,7 @@ module.exports = { getIntrinsics, intrinsicNames }
 
 const Protocol = __webpack_require__(30)
 const { display } = __webpack_require__(1)
-const { getIntrinsics } = __webpack_require__(8)
+const { getIntrinsics } = __webpack_require__(9)
 const { JigControl } = __webpack_require__(4)
 
 // ------------------------------------------------------------------------------------------------
@@ -2280,6 +1850,7 @@ class Xray {
     this.tokenizer = null
     this.deployables = null
     this.tokens = null
+    this.refs = null
     this.caches = {
       scanned: new Set(),
       cloneable: new Map(),
@@ -2305,6 +1876,7 @@ class Xray {
   allowTokens () {
     if (!this.tokens) {
       this.tokens = new Set()
+      this.refs = new Set()
       this.scanners.unshift(new TokenScanner())
     }
     return this
@@ -3184,11 +2756,23 @@ class TokenScanner {
       }
       return true
     }
+
+    if (typeof x === 'object' && x && typeof x.$ref !== 'undefined') {
+      if (typeof x.$ref !== 'string') return false
+      xray.refs.add(x.$ref)
+      return true
+    }
   }
 
   cloneable (x, xray) {
     if (Protocol.isToken(x)) {
       xray.tokens.add(x)
+      return true
+    }
+
+    if (typeof x === 'object' && x && typeof x.$ref !== 'undefined') {
+      if (typeof x.$ref !== 'string') return false
+      xray.refs.add(x.$ref)
       return true
     }
   }
@@ -3203,6 +2787,7 @@ class TokenScanner {
   deserializable (x, xray) {
     if (typeof x !== 'object' || !x || typeof x.$ref === 'undefined') return
     if (typeof x.$ref !== 'string') return false
+    xray.refs.add(x.$ref)
     return true
   }
 
@@ -3289,6 +2874,436 @@ Xray.Scanner = Scanner
 Xray.Intrinsics = Intrinsics
 
 module.exports = Xray
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(0);
+
+function encode(val) {
+  return encodeURIComponent(val).
+    replace(/%40/gi, '@').
+    replace(/%3A/gi, ':').
+    replace(/%24/g, '$').
+    replace(/%2C/gi, ',').
+    replace(/%20/g, '+').
+    replace(/%5B/gi, '[').
+    replace(/%5D/gi, ']');
+}
+
+/**
+ * Build a URL by appending params to the end
+ *
+ * @param {string} url The base of the url (e.g., http://www.google.com)
+ * @param {object} [params] The params to be appended
+ * @returns {string} The formatted url
+ */
+module.exports = function buildURL(url, params, paramsSerializer) {
+  /*eslint no-param-reassign:0*/
+  if (!params) {
+    return url;
+  }
+
+  var serializedParams;
+  if (paramsSerializer) {
+    serializedParams = paramsSerializer(params);
+  } else if (utils.isURLSearchParams(params)) {
+    serializedParams = params.toString();
+  } else {
+    var parts = [];
+
+    utils.forEach(params, function serialize(val, key) {
+      if (val === null || typeof val === 'undefined') {
+        return;
+      }
+
+      if (utils.isArray(val)) {
+        key = key + '[]';
+      } else {
+        val = [val];
+      }
+
+      utils.forEach(val, function parseValue(v) {
+        if (utils.isDate(v)) {
+          v = v.toISOString();
+        } else if (utils.isObject(v)) {
+          v = JSON.stringify(v);
+        }
+        parts.push(encode(key) + '=' + encode(v));
+      });
+    });
+
+    serializedParams = parts.join('&');
+  }
+
+  if (serializedParams) {
+    var hashmarkIndex = url.indexOf('#');
+    if (hashmarkIndex !== -1) {
+      url = url.slice(0, hashmarkIndex);
+    }
+
+    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
+  }
+
+  return url;
+};
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var enhanceError = __webpack_require__(17);
+
+/**
+ * Create an Error with the specified message, config, error code, request and response.
+ *
+ * @param {string} message The error message.
+ * @param {Object} config The config.
+ * @param {string} [code] The error code (for example, 'ECONNABORTED').
+ * @param {Object} [request] The request.
+ * @param {Object} [response] The response.
+ * @returns {Error} The created error.
+ */
+module.exports = function createError(message, config, code, request, response) {
+  var error = new Error(message);
+  return enhanceError(error, config, code, request, response);
+};
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * evaluator.js
+ *
+ * The evaluator runs arbitrary code in a secure sandbox
+ */
+
+const ses = __webpack_require__(27)
+const { getIntrinsics, intrinsicNames } = __webpack_require__(9)
+
+// ------------------------------------------------------------------------------------------------
+// Evaluator
+// ------------------------------------------------------------------------------------------------
+
+class Evaluator {
+  constructor (options = {}) {
+    this.sandbox = typeof options.sandbox !== 'undefined' ? options.sandbox : true
+    this.logger = typeof options.logger !== 'undefined' ? options.logger : null
+
+    // The realms-shim requires a body for sandboxing. If it doesn't exist, create one.
+    if (typeof window !== 'undefined' && !window.document.body) {
+      window.document.body = document.createElement('body')
+    }
+
+    this.sandboxEvaluator = new SESEvaluator()
+    this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
+    this.intrinsics = this.sandboxEvaluator.intrinsics
+  }
+
+  evaluate (code, env) {
+    if (this.logger) this.logger.info(`Evaluating code starting with: "${code.slice(0, 20)}"`)
+    const evaluator = this.willSandbox(code) ? this.sandboxEvaluator : this.globalEvaluator
+    return evaluator.evaluate(code, env)
+  }
+
+  willSandbox (code) {
+    if (typeof this.sandbox === 'boolean') return this.sandbox
+    const nameRegex = /^(function|class)\s+([a-zA-Z0-9_$]+)/
+    const match = code.match(nameRegex)
+    return match ? this.sandbox.test(match[2]) : false
+  }
+
+  activate () { this.globalEvaluator.activate() }
+  deactivate () { this.globalEvaluator.deactivate() }
+}
+
+// ------------------------------------------------------------------------------------------------
+// SESEvaluator
+// ------------------------------------------------------------------------------------------------
+
+// Non-deterministic globals will be banned
+const nonDeterministicGlobals = [
+  'Date',
+  'Math',
+  'eval',
+  'XMLHttpRequest',
+  'FileReader',
+  'WebSocket',
+  'setTimeout',
+  'setInterval'
+]
+
+/**
+ * Secure sandboxer for arbitrary code
+ */
+class SESEvaluator {
+  constructor () {
+    this.realm = ses.makeSESRootRealm()
+
+    // Keep track of common intrinsics shared between realms. The SES realm creates
+    // these, and we just evaluate a list of them and store them here.
+    this.intrinsics = this.realm.evaluate(`(${getIntrinsics.toString()})()`, { intrinsicNames })
+
+    // We also overwrite console so that console.log in sandboxed code is relogged outside
+    const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
+    this.intrinsics.console = this.realm.evaluate(consoleCode, { c: console })
+  }
+
+  evaluate (code, env = {}) {
+    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
+    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
+    if ('$globals' in env) throw new Error('Environment must not contain $globals')
+
+    // Create the globals object in the SES realm so it doesn't expose ours
+    const $globals = this.realm.evaluate('({})')
+
+    // Disable each non-deterministic global
+    env = Object.assign({}, env)
+    nonDeterministicGlobals.forEach(key => {
+      if (!(key in env)) env[key] = undefined
+    })
+
+    // Create the real env we'll use
+    env = Object.assign({}, this.intrinsics, env, { $globals })
+
+    // When a function is anonymous, it will be named the variable it is assigned. We give it
+    // a friendly anonymous name to distinguish it from named classes and functions.
+    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
+
+    // Execute the code in strict mode.
+    const script = `with($globals){'use strict';const ${anon}=${code};${anon}}`
+    const result = this.realm.evaluate(script, env)
+
+    return [result, $globals]
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// GlobalEvaluator
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Evaluates code using dependences that are set as globals. This is quite dangerous, but we
+ * only use it when sandbox=false, which is intended for testing code coverage and debugging.
+ */
+class GlobalEvaluator {
+  constructor (options = {}) {
+    this.logger = options.logger
+    this.activated = true
+    // We will save the prior globals before overriding them so they can be reverted.
+    // This will also store our globals when we deactivate so we can re-activate them.
+    this.savedGlobalDescriptors = {}
+  }
+
+  evaluate (code, env = {}) {
+    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
+    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
+    if ('$globals' in env) throw new Error('Environment must not contain $globals')
+
+    // When a function is anonymous, it will be named the variable it is assigned. We give it
+    // a friendly anonymous name to distinguish it from named classes and functions.
+    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
+
+    // Set each env as a global
+    const options = { configurable: true, enumerable: true, writable: true }
+    Object.keys(env).forEach(key => this.setGlobalDescriptor(key, Object.assign({}, options, { value: env[key] })))
+
+    // Turn the code into an object
+    const result = eval(`const ${anon} = ${code}; ${anon}`) // eslint-disable-line
+
+    // Wrap global sets so that we update savedGlobalDescriptors
+    const wrappedGlobal = new Proxy(global, {
+      set: (target, prop, value) => {
+        this.setGlobalDescriptor(prop, Object.assign({}, options, { value }))
+        return true
+      },
+      defineProperty: (target, prop, descriptor) => {
+        this.setGlobalDescriptor(prop, descriptor)
+        return true
+      }
+    })
+
+    return [result, wrappedGlobal]
+  }
+
+  setGlobalDescriptor (key, descriptor) {
+    // Save the previous global the first time we override it. Future overrides
+    // will throw a warning because now there are two values at the global scope.
+    const priorDescriptor = Object.getOwnPropertyDescriptor(global, key)
+
+    if (!(key in this.savedGlobalDescriptors)) {
+      this.savedGlobalDescriptors[key] = priorDescriptor
+    } else if (!sameDescriptors(descriptor, priorDescriptor)) {
+      if (this.logger) {
+        const warning = 'There might be bugs with sandboxing disabled'
+        const reason = `Two different values were set at the global scope for ${key}`
+        this.logger.warn(`${warning}\n\n${reason}`)
+      }
+    }
+
+    Object.defineProperty(global, key, descriptor)
+  }
+
+  activate () {
+    if (this.activated) return
+    this.swapSavedGlobals()
+    this.activated = true
+  }
+
+  deactivate () {
+    if (!this.activated) return
+    this.swapSavedGlobals()
+    this.activated = false
+  }
+
+  swapSavedGlobals () {
+    const swappedGlobalDescriptors = {}
+
+    Object.keys(this.savedGlobalDescriptors).forEach(key => {
+      swappedGlobalDescriptors[key] = Object.getOwnPropertyDescriptor(global, key)
+
+      if (typeof this.savedGlobalDescriptors[key] === 'undefined') {
+        delete global[key]
+      } else {
+        Object.defineProperty(global, key, this.savedGlobalDescriptors[key])
+      }
+    })
+
+    this.savedGlobalDescriptors = swappedGlobalDescriptors
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Helper methods
+// ------------------------------------------------------------------------------------------------
+
+function sameDescriptors (a, b) {
+  if (typeof a !== typeof b) return false
+  const aKeys = Array.from(Object.keys(a))
+  const bKeys = Array.from(Object.keys(b))
+  if (aKeys.length !== bKeys.length) return false
+  return !aKeys.some(key => a[key] !== b[key])
+}
+
+// ------------------------------------------------------------------------------------------------
+
+Evaluator.SESEvaluator = SESEvaluator
+Evaluator.GlobalEvaluator = GlobalEvaluator
+Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
+
+module.exports = Evaluator
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports) {
+
+/**
+ * intrinsics.js
+ *
+ * Helpers for the known built-in objects in JavaScript
+ */
+
+// See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
+const intrinsicNames = [
+  // Global functions
+  'console',
+  'eval',
+  'isFinite',
+  'isNaN',
+  'parseFloat',
+  'parseInt',
+  'decodeURI',
+  'decodeURIComponent',
+  'encodeURI',
+  'encodeURIComponent',
+  'escape',
+
+  // Fundamental objects
+  'Object',
+  'Function',
+  'Boolean',
+  'Symbol',
+  'Error',
+  'EvalError',
+  'RangeError',
+  'ReferenceError',
+  'SyntaxError',
+  'TypeError',
+  'URIError',
+
+  // Numbers and dates
+  'Number',
+  'BigInt',
+  'Math',
+  'Date',
+
+  // Text processing
+  'String',
+  'RegExp',
+
+  // Indexed collections
+  'Array',
+  'Int8Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Int16Array',
+  'Uint16Array',
+  'Int32Array',
+  'Uint32Array',
+  'Float32Array',
+  'Float64Array',
+  'BigInt64Array',
+  'BigUint64Array',
+
+  // Keyed collections
+  'Map',
+  'Set',
+  'WeakMap',
+  'WeakSet',
+
+  // Structured data
+  'ArrayBuffer',
+  'DataView',
+  'JSON',
+
+  // Control abstraction objects
+  'Promise',
+  'Generator',
+  'GeneratorFunction',
+  'AsyncFunction',
+
+  // Reflection
+  'Reflect',
+  'Proxy',
+
+  // Internationalization
+  'Intl',
+
+  // WebAssembly
+  'WebAssembly'
+]
+
+// Returns an object with the built-in intrinsics in this environment
+const getIntrinsics = () => {
+  let code = 'const x = {};'
+  intrinsicNames.forEach(name => { code += `x.${name}=typeof ${name}!=='undefined'?${name}:undefined;` })
+  code += 'return x'
+  return new Function(code)() // eslint-disable-line
+}
+
+module.exports = { getIntrinsics, intrinsicNames }
 
 
 /***/ }),
@@ -3453,6 +3468,7 @@ module.exports = Location
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(1)
 const { JigControl } = __webpack_require__(4)
+const Xray = __webpack_require__(5)
 
 /**
  * Proto-transaction: A temporary structure Run uses to build transactions. This structure
@@ -3537,31 +3553,11 @@ class ProtoTransaction {
       }
 
       if (action.target && action.method !== 'init') addRef(action.target)
-      const detectRefs = target => {
-        if (target && typeof target.$ref !== 'undefined') {
-          addRef(target.$ref)
-        }
-      }
-      // TODO: Don't unpack twice
-      util.deepTraverse(action.args, detectRefs)
 
-      // TODO
-      /*
-
-      // How do we find $refs inside? Currently only if we deserialize. But the
-      // scanner should be able to find it. So let's allow that. Not sure we
-      // will always need to do this. Might just be temporary before we switch
-      // to the new protocol. Also, we are mixing two modes with tokens ---
-      // refs, and non-refs. This will lead to extra checks.
-
-      const xray = new Xray()
-        .allowTokens()
-        .useIntrinsics(intrinsics)
-
-      xray.scan(action)
-
-      xray.refs.forEach(addRef)
-      */
+      const intrinsics = new Xray.Intrinsics().use(this.code.evaluator.intrinsics)
+      const xray = new Xray().allowTokens().useIntrinsics(intrinsics)
+      xray.scan(action.args)
+      xray.refs.forEach(ref => addRef(ref))
     }
 
     // make sure all of the refs we read are recent
@@ -4287,33 +4283,13 @@ class Transaction {
         return partialLocation
       }
 
-      // find all inner references within this jig
-      util.deepTraverse(cachedState.state, target => {
-        if (target && target.$ref) {
-          const loc = fullLocation(target.$ref)
-          if (!cachedRefs.has(loc)) cachedRefs.set(loc, null)
-        }
-      })
-
-      /*
-      // TODO: Scan for inner refs using the xray
-
-      const xray = new Xray()
-        .allowTokens()
-        .useIntrinsics(intrinsics)
-
-      xray.scan(cachedState.state)
-
-      // Or
-
-      const xray = new Xray()
-        .addJavaScriptScanners()
-        .addRefDetector()
-        .useIntrinsics(intrinsics)
-        .scan(cachedState.state)
-
-      xray.refs.forEach(ref => cachedRefs.set(loc, null))
-      */
+      // Find all inner references in this jig
+      {
+        const intrinsics = new Xray.Intrinsics().use(this.code.evaluator.intrinsics)
+        const xray = new Xray().allowTokens().useIntrinsics(intrinsics)
+        xray.scan(cachedState.state)
+        xray.refs.forEach(ref => cachedRefs.set(fullLocation(ref), null))
+      }
 
       // load each inner reference, using cached when possible
       const copyOfCachedRefs = new Map(cachedRefs)
@@ -4948,7 +4924,7 @@ module.exports = defaults;
 "use strict";
 
 
-var createError = __webpack_require__(6);
+var createError = __webpack_require__(7);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -5765,9 +5741,9 @@ module.exports = expect
 
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(1)
-const Evaluator = __webpack_require__(7)
+const Evaluator = __webpack_require__(8)
 const { Jig, JigControl } = __webpack_require__(4)
-const Xray = __webpack_require__(9)
+const Xray = __webpack_require__(5)
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -5808,13 +5784,8 @@ class Code {
     propNames.forEach(name => { props[name] = type[name] })
 
     // Check that these properties are serializable
-    const intrinsics = new Xray.Intrinsics()
-      .use(this.evaluator.intrinsics)
-
-    const xray = new Xray()
-      .allowTokens()
-      .allowDeployables()
-      .useIntrinsics(intrinsics)
+    const intrinsics = new Xray.Intrinsics().use(this.evaluator.intrinsics)
+    const xray = new Xray().allowTokens().allowDeployables().useIntrinsics(intrinsics)
 
     try {
       xray.scan(props)
@@ -5890,8 +5861,7 @@ class Code {
 
       // Deploy any code found in the static properties
 
-      const intrinsics = new Xray.Intrinsics()
-        .use(this.evaluator.intrinsics)
+      const intrinsics = new Xray.Intrinsics().use(this.evaluator.intrinsics)
 
       const xray = new Xray()
         .allowTokens()
@@ -10263,7 +10233,7 @@ module.exports = { Jiglet, JigletControl }
 
 const { ProtoTransaction } = __webpack_require__(11)
 const { JigControl } = __webpack_require__(4)
-const Xray = __webpack_require__(9)
+const Xray = __webpack_require__(5)
 const util = __webpack_require__(1)
 const Location = __webpack_require__(10)
 
@@ -10571,19 +10541,21 @@ owner: ${spentJigs[i].owner}`)
   }
 
   async fastForwardInnerTokens (x, alreadyForceFetched, synced) {
-    const intrinsics = new Xray.Intrinsics()
-      .use(this.code.evaluator.intrinsics)
+    let tokens = null
 
-    const xray = new Xray()
-      .allowTokens()
-      .deeplyScanTokens()
-      .useIntrinsics(intrinsics)
-
-    xray.scan(x)
+    {
+      const intrinsics = new Xray.Intrinsics().use(this.code.evaluator.intrinsics)
+      const xray = new Xray()
+        .allowTokens()
+        .deeplyScanTokens()
+        .useIntrinsics(intrinsics)
+      xray.scan(x)
+      tokens = new Set(xray.tokens)
+    }
 
     const { Jig } = __webpack_require__(3)
 
-    for (const token of xray.tokens) {
+    for (const token of tokens) {
       if (token !== x && token instanceof Jig) {
         await this.fastForward(token, alreadyForceFetched, synced)
       }
@@ -10889,7 +10861,7 @@ module.exports = function isBuffer (obj) {
 
 
 var utils = __webpack_require__(0);
-var buildURL = __webpack_require__(5);
+var buildURL = __webpack_require__(6);
 var InterceptorManager = __webpack_require__(38);
 var dispatchRequest = __webpack_require__(39);
 var mergeConfig = __webpack_require__(23);
@@ -11181,7 +11153,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 var utils = __webpack_require__(0);
 var settle = __webpack_require__(16);
-var buildURL = __webpack_require__(5);
+var buildURL = __webpack_require__(6);
 var http = __webpack_require__(18);
 var https = __webpack_require__(19);
 var httpFollow = __webpack_require__(20).http;
@@ -11189,7 +11161,7 @@ var httpsFollow = __webpack_require__(20).https;
 var url = __webpack_require__(21);
 var zlib = __webpack_require__(54);
 var pkg = __webpack_require__(55);
-var createError = __webpack_require__(6);
+var createError = __webpack_require__(7);
 var enhanceError = __webpack_require__(17);
 
 var isHttps = /https:?/;
@@ -12232,10 +12204,10 @@ module.exports = JSON.parse("{\"_from\":\"axios@0.19.0\",\"_id\":\"axios@0.19.0\
 
 var utils = __webpack_require__(0);
 var settle = __webpack_require__(16);
-var buildURL = __webpack_require__(5);
+var buildURL = __webpack_require__(6);
 var parseHeaders = __webpack_require__(57);
 var isURLSameOrigin = __webpack_require__(58);
-var createError = __webpack_require__(6);
+var createError = __webpack_require__(7);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {

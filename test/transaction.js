@@ -515,7 +515,7 @@ describe('Transaction', () => {
       expect(a.n).to.equal(3)
     })
 
-    it.only('should load jig method call', async () => {
+    it('should load jig method call', async () => {
       class A extends Jig { f (n) { this.n = n }}
       const a = await new A().sync()
       const actions = [{ target: '_i0', method: 'f', args: [1] }]

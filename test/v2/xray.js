@@ -1,6 +1,7 @@
 const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+const { Intrinsics } = require('../../lib/intrinsics')
 const Xray = require('../../lib/v2/xray')
 const { display } = require('../../lib/util')
 const Evaluator = require('../../lib/evaluator')
@@ -20,7 +21,7 @@ class TestVector {
     this.cloneChecks = []
     this.serializedChecks = []
     this.deserializedChecks = []
-    this.intrinsics = Xray.Intrinsics.defaultIntrinsics
+    this.intrinsics = Intrinsics.defaultIntrinsics
   }
 
   unscannable () { this.scannable = false; return this }
@@ -476,14 +477,14 @@ function addTestVectors (intrinsics, testIntrinsics) {
 
 const evaluator = new Evaluator()
 
-const globalIntrinsics = new Xray.Intrinsics()
+const globalIntrinsics = new Intrinsics()
 addTestVectors(globalIntrinsics, globalIntrinsics.allowed[0])
 
-const sesIntrinsics = new Xray.Intrinsics()
+const sesIntrinsics = new Intrinsics()
 sesIntrinsics.set(evaluator.intrinsics)
 addTestVectors(sesIntrinsics, sesIntrinsics.allowed[0])
 
-const allIntrinsics = new Xray.Intrinsics()
+const allIntrinsics = new Intrinsics()
 allIntrinsics.use(evaluator.intrinsics)
 addTestVectors(allIntrinsics, allIntrinsics.allowed[0])
 addTestVectors(allIntrinsics, allIntrinsics.allowed[1])
@@ -495,7 +496,7 @@ addTestVectors(allIntrinsics, allIntrinsics.allowed[1])
 describe('Xray', () => {
   describe('constructor', () => {
     it('should use default intrinsics', () => {
-      expect(new Xray().intrinsics).to.equal(Xray.Intrinsics.defaultIntrinsics)
+      expect(new Xray().intrinsics).to.equal(Intrinsics.defaultIntrinsics)
     })
   })
 
