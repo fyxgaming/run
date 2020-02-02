@@ -22,7 +22,6 @@ const {
   jsonToRichObject,
   extractJigsAndCodeToArray,
   injectJigsAndCodeFromArray,
-  deepTraverse,
   SerialTaskQueue
 } = Run._util
 
@@ -445,79 +444,6 @@ describe('util', () => {
       expect(obj.a).to.equal(arr[0])
       expect(obj.b[0]).to.equal(arr[1])
       expect(obj.b[1]).to.equal(arr[2])
-    })
-  })
-
-  describe('deepTraverse', () => {
-    function expectTraverse (target, expectedVisitArgs) {
-      deepTraverse(target, (target, parent, name) => {
-        const [expectedTarget, expectedParent, expectedName] = expectedVisitArgs.shift()
-        expect(target).to.deep.equal(expectedTarget)
-        expect(parent).to.deep.equal(expectedParent)
-        expect(name).to.deep.equal(expectedName)
-      })
-    }
-
-    it('should traverse basic types', () => {
-      expectTraverse(0, [[0, null, null]])
-      expectTraverse(1, [[1, null, null]])
-      expectTraverse(1.5, [[1.5, null, null]])
-      expectTraverse('hello', [['hello', null, null]])
-      expectTraverse(true, [[true, null, null]])
-      expectTraverse(false, [[false, null, null]])
-      expectTraverse(NaN, [[NaN, null, null]])
-      expectTraverse(Infinity, [[Infinity, null, null]])
-      expectTraverse(null, [[null, null, null]])
-      expectTraverse({}, [[{}, null, null]])
-      expectTraverse([], [[[], null, null]])
-    })
-
-    it('should traverse nested objects', () => {
-      const target = { a: { b: 1 }, c: 2 }
-      expectTraverse(target, [
-        [target, null, null],
-        [target.a, target, 'a'],
-        [target.a.b, target.a, 'b'],
-        [target.c, target, 'c']
-      ])
-    })
-
-    it('should traverse duplicate objects', () => {
-      const a = { n: 1 }
-      const target = { a, b: { a } }
-      expectTraverse(target, [
-        [target, null, null],
-        [target.a, target, 'a'],
-        [target.a.n, target.a, 'n'],
-        [target.b, target, 'b'],
-        [target.b.a, target.b, 'a']
-      ])
-    })
-
-    it('should traverse circular objects', () => {
-      const target = { }
-      target.target = target
-      expectTraverse(target, [
-        [target, null, null],
-        [target.target, target, 'target']
-      ])
-    })
-
-    it('should traverse arrays', () => {
-      const target = [1, '2', [3]]
-      expectTraverse(target, [
-        [target, null, null],
-        [target[0], target, '0'],
-        [target[1], target, '1'],
-        [target[2], target, '2'],
-        [target[2][0], target[2], '0']
-      ])
-    })
-
-    it('should traverse using multiple visiters', () => {
-      let numVisited = 0
-      deepTraverse({}, [() => { numVisited += 1 }, () => { numVisited += 1 }])
-      expect(numVisited).to.equal(2)
     })
   })
 
