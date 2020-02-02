@@ -17,7 +17,7 @@ describe('Jig', () => {
   beforeEach(() => run.blockchain.block())
   beforeEach(() => run.activate())
 
-  describe.only('constructor', () => {
+  describe('constructor', () => {
     it('should create basic jig', async () => {
       class A extends Jig { }
       const a = new A()
@@ -99,7 +99,7 @@ describe('Jig', () => {
     })
   })
 
-  describe('instanceof', () => {
+  describe.only('instanceof', () => {
     it('should match basic jigs', () => {
       class A extends Jig { }
       const a = new A()
