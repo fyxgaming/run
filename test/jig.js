@@ -99,7 +99,7 @@ describe('Jig', () => {
     })
   })
 
-  describe.only('instanceof', () => {
+  describe('instanceof', () => {
     it('should match basic jigs', () => {
       class A extends Jig { }
       const a = new A()
@@ -182,7 +182,7 @@ describe('Jig', () => {
     })
   })
 
-  describe('sync', () => {
+  describe.only('sync', () => {
     it('should set origins and locations on class and instance', async () => {
       class A extends Jig { }
       const a = new A()
@@ -233,10 +233,10 @@ describe('Jig', () => {
     })
 
     it('should forward sync inner jigs', async () => {
-      class A extends Jig { set (x, y) { this[x] = y } }
-      const a = new A()
+      class Store extends Jig { set (x, y) { this[x] = y } }
+      const a = new Store()
       expectAction(a, 'init', [], [], [a], [])
-      const b = new A()
+      const b = new Store()
       expectAction(b, 'init', [], [], [b], [])
       a.set('b', b)
       await run.sync()
