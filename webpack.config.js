@@ -34,11 +34,6 @@ const methodsToObfuscate = [
   'deployable',
   'encryptRunData',
   'decryptRunData',
-  'richObjectToJson',
-  'jsonToRichObject',
-  'extractJigsAndCodeToArray',
-  'injectJigsAndCodeFromArray',
-  'deepTraverse',
   'activeRunInstance',
   'sameJig',
   'networkSuffix',
@@ -97,12 +92,14 @@ const propertiesToObfuscate = [
 
   // code.js
   'intrinsics',
+
+  // jig.js
   'proxies',
   'enforce',
   'stack',
   'reads',
   'creates',
-  'saves',
+  'before',
   'callers',
   'stateToInject',
   // 'error', - interfers with console.error
