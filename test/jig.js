@@ -182,7 +182,7 @@ describe('Jig', () => {
     })
   })
 
-  describe.only('sync', () => {
+  describe('sync', () => {
     it('should set origins and locations on class and instance', async () => {
       class A extends Jig { }
       const a = new A()
@@ -394,37 +394,37 @@ describe('Jig', () => {
     })
 
     it('should restore old state if method throws', () => {
-      class C extends Jig { f () { this.n = 1 } }
-      class B extends Jig { g () { this.z = 1 } }
-      class A extends Jig {
+      class Outer extends Jig { setN () { this.n = 1 } }
+      class Inner extends Jig { setZ () { this.z = 1 } }
+      class Revertable extends Jig {
         init () {
           this.n = 1
           this.arr = ['a', { b: 1 }]
           this.self = this
-          this.b = new B()
+          this.inner = new Inner()
         }
 
-        f (c) {
-          c.f()
+        methodThatThrows (outer) {
+          outer.setN()
           this.n = 2
           this.arr[2].b = 2
           this.arr.push(3)
-          this.b.g()
+          this.inner.setZ()
           throw new Error()
         }
       }
-      A.deps = { B }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a, a.b], [])
-      const c = new C()
-      expectAction(c, 'init', [], [], [c], [])
-      expect(() => a.f(c)).to.throw()
+      Revertable.deps = { Inner }
+      const main = new Revertable()
+      expectAction(main, 'init', [], [], [main, main.inner], [])
+      const outer = new Outer()
+      expectAction(outer, 'init', [], [], [outer], [])
+      expect(() => main.methodThatThrows(outer)).to.throw()
       expectNoAction()
-      expect(a.n).to.equal(1)
-      expect(a.arr).to.deep.equal(['a', { b: 1 }])
-      expect(a.self).to.equal(a)
-      expect(a.b.z).to.equal(undefined)
-      expect(c.n).to.equal(undefined)
+      expect(main.n).to.equal(1)
+      expect(main.arr).to.deep.equal(['a', { b: 1 }])
+      expect(main.self).to.equal(main)
+      expect(main.inner.z).to.equal(undefined)
+      expect(outer.n).to.equal(undefined)
     })
 
     it('should throw if swallow internal errors', () => {
