@@ -400,7 +400,7 @@ describe('Code', () => {
       expect(run2.code.installs.get(A)).to.equal(await run2.load(A.location))
     })
 
-    it('should support dependencies in different transactions', async () => {
+    it.only('should support dependencies in different transactions', async () => {
       class A {}
       class B extends A {}
       class C {}
@@ -417,7 +417,7 @@ describe('Code', () => {
   })
 
   describe('static props', () => {
-    it('should support circular props', async () => {
+    it.only('should support circular props', async () => {
       class A extends Jig { }
       class B extends Jig { }
       A.B = B
