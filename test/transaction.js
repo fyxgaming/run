@@ -366,7 +366,7 @@ describe('Transaction', () => {
       expect(data.actions).to.deep.equal([{ target: '_i0', method: 'f', args: args }])
     })
 
-    it('should support passing classes as args', async () => {
+    it.only('should support passing classes as args', async () => {
       class A extends Jig {
         init (a) { this.a = a }
 
@@ -385,8 +385,11 @@ describe('Transaction', () => {
       expect(data.jigs).to.equal(1)
       await new C().sync()
       await a.set(C).sync()
+      console.log(a)
       expect(data.actions).to.deep.equal([{ target: '_i0', method: 'set', args: [{ $ref: `${C.location}` }] }])
+      console.log('----4')
       await a.set(A).sync()
+      console.log('----5')
       expect(data.actions).to.deep.equal([{ target: '_i0', method: 'set', args: [{ $ref: `${A.location}` }] }])
     })
 

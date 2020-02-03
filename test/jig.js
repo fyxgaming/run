@@ -1468,7 +1468,7 @@ describe('Jig', () => {
       expect(() => a.f()).to.throw()
       expectNoAction()
       try { console.log(a.n) } catch (e) {
-        expect(e.toString().startsWith('Error: deploy failed')).to.equal(true)
+        expect(e.toString().startsWith('Error: Deploy failed')).to.equal(true)
         expect(e.toString().indexOf('Error: Broadcast failed, tx has no inputs')).not.to.equal(-1)
       }
       run.purse.pay = oldPay
@@ -1547,11 +1547,11 @@ describe('Jig', () => {
           try { a.origin } catch (e) { completed = true } // eslint-disable-line
           if (completed) {
             run.blockchain.broadcast = oldBroadcast
-            expect(() => a.origin).to.throw('a previous update failed')
-            expect(() => a.location).to.throw('a previous update failed')
-            expect(() => a.owner).to.throw('a previous update failed')
-            expect(() => a.n).to.throw('a previous update failed')
-            expect(() => a.f()).to.throw('a previous update failed')
+            expect(() => a.origin).to.throw('A previous update failed')
+            expect(() => a.location).to.throw('A previous update failed')
+            expect(() => a.owner).to.throw('A previous update failed')
+            expect(() => a.n).to.throw('A previous update failed')
+            expect(() => a.f()).to.throw('A previous update failed')
             resolve()
           }
         }, 1)
