@@ -359,10 +359,10 @@ describe('Transaction', () => {
       const a = await new A().sync()
       const b = await new A().sync()
       await a.f(b, { a }, [b]).sync()
-      const arg1 = { $ref: b.location }
-      const arg2 = { a: { $ref: '_i0' } }
-      const arg3 = [{ $ref: b.location }]
-      const args = [arg1, arg2, arg3]
+      const aref = { $ref: '_i0' }
+      const bref = { $dup: 0 }
+      const dups = [{ $ref: b.location }]
+      const args = { $dedup: [bref, { a: aref }, [bref]], dups }
       expect(data.actions).to.deep.equal([{ target: '_i0', method: 'f', args: args }])
     })
 
