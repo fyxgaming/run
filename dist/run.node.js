@@ -1293,7 +1293,7 @@ const { Pay, Purse } = __webpack_require__(34)
 const Owner = __webpack_require__(65)
 const { Blockchain, BlockchainServer } = __webpack_require__(13)
 const Mockchain = __webpack_require__(66)
-const { StateCache } = __webpack_require__(67)
+const { State, StateCache } = __webpack_require__(67)
 const { PrivateKey } = bsv
 const { Jig } = __webpack_require__(3)
 const Token = __webpack_require__(68)
@@ -1550,6 +1550,7 @@ Run.Evaluator = Evaluator
 Run.Mockchain = Mockchain
 Run.Pay = Pay
 Run.Purse = Purse
+Run.State = State
 Run.StateCache = StateCache
 
 Run.Jig = Jig
@@ -12942,14 +12943,14 @@ class State {
    * @param {string} location Jig location string
    * @returns State object previously given with set, or undefined if it's not available
    */
-  async get (location) { throw new Error('not implemented') }
+  async get (location) { throw new Error('Not implemented') }
 
   /**
    * Saves the known state of a jig
    * @param {string} location Jig location to save
    * @param {object} state Known state
    */
-  async set (location, state) { throw new Error('not implemented') }
+  async set (location, state) { throw new Error('Not implemented') }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -12968,9 +12969,10 @@ class StateCache {
   async get (location) {
     Location.parse(location)
 
+    const had = this.cache.has(location)
     const value = this.cache.get(location)
 
-    if (value) {
+    if (had) {
       // bump the state to the top
       this.set(location, value)
 
@@ -12990,10 +12992,11 @@ class StateCache {
       return !aKeys.some(key => !deepEqual(a[key], b[key]))
     }
 
+    const had = this.cache.has(location)
     const previous = this.cache.get(location)
 
     // If we are overwriting a previous value, check that the states are the same.
-    if (previous) {
+    if (had) {
       if (!deepEqual(state, previous)) {
         const hint = 'This is an internal Run bug. Please report it to the library developers.'
         throw new Error(`Attempt to set different states for the same location: ${location}\n\n${hint}`)
@@ -13004,7 +13007,7 @@ class StateCache {
 
     this.cache.set(location, state)
 
-    if (previous) return
+    if (had) return
 
     this.sizeBytes += StateCache._estimateSize(state)
 

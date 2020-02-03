@@ -8034,7 +8034,9 @@ const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run, Jig, createRun } = __webpack_require__(2)
-const { StateCache } = Run
+const { State, StateCache } = Run
+
+const txid = '0000000000000000000000000000000000000000000000000000000000000000'
 
 describe('StateCache', () => {
   const stateGets = []
@@ -8079,9 +8081,9 @@ describe('StateCache', () => {
       const a = new A()
       await a.sync()
       expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
-      await a.set(3)
+      await a.set([true, null])
       await a.sync()
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: 3 } })
+      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: [true, null] } })
     })
 
     it('should cache satoshis', async () => {
@@ -8134,30 +8136,32 @@ describe('StateCache', () => {
     it('should respect max cache size', async () => {
       const state = new Run.StateCache({ maxSizeMB: 400 / 1000 / 1000 })
       for (let i = 0; i < 100; i++) {
-        await state.set('x' + i, i)
+        await state.set(`${txid}_o` + i, i)
       }
       expect(state.cache.size < 100).to.equal(true)
-      expect(state.cache.has('x99')).to.equal(true)
-      expect(state.cache.has('x0')).to.equal(false)
+      expect(state.cache.has(`${txid}_o99`)).to.equal(true)
+      expect(state.cache.has(`${txid}_o0`)).to.equal(false)
     })
 
     it('should move existing values to the front of the cache', async () => {
       const state = new Run.StateCache({ maxSizeMB: 30 })
-      await state.set('a', 1)
-      await state.set('b', 2)
-      await state.set('c', 3)
-      expect(state.cache.keys().next().value).to.equal('a')
+      await state.set(`${txid}_o0`, undefined)
+      await state.set(`${txid}_o1`, undefined)
+      await state.set(`${txid}_o2`, undefined)
+      expect(state.cache.keys().next().value).to.equal(`${txid}_o0`)
       const sizeBytesBefore = state.sizeBytes
       expect(sizeBytesBefore).not.to.equal(0)
-      await state.set('a', 1)
+      await state.set(`${txid}_o0`, undefined)
       expect(state.sizeBytes).to.equal(sizeBytesBefore)
-      expect(state.cache.keys().next().value).to.equal('b')
+      expect(state.cache.keys().next().value).to.equal(`${txid}_o1`)
     })
 
     it('should throw for different values of same key', async () => {
       const state = new Run.StateCache({ maxSizeMB: 30 })
-      await state.set('a', 1)
-      await expect(state.set('a', 2)).to.be.rejectedWith('Attempt to set different states for the same location')
+      await state.set(`${txid}_o0`, { n: 1 })
+      await expect(state.set(`${txid}_o0`, { n: 2 })).to.be.rejectedWith('Attempt to set different states for the same location')
+      await expect(state.set(`${txid}_o0`, { n: 'a' })).to.be.rejectedWith('Attempt to set different states for the same location')
+      await expect(state.set(`${txid}_o0`, { n: 'a', m: 'b' })).to.be.rejectedWith('Attempt to set different states for the same location')
     })
   })
 
@@ -8228,6 +8232,11 @@ describe('StateCache', () => {
       expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
     })
 
+    it('should return undefined if missing', async () => {
+      const state = new Run.StateCache({ maxSizeMB: 30 })
+      expect(await state.get(`${txid}_o0`)).to.equal(undefined)
+    })
+
     it.skip('should throw if hashed state does not match', async () => {
       class A extends Jig { }
       const a = new A()
@@ -8239,6 +8248,13 @@ describe('StateCache', () => {
     })
 
     // TODO: pending state of jigs changed, make sure does not interfere in publishNext
+  })
+})
+
+describe('State', () => {
+  it('should throw not implemented errors', async () => {
+    await expect(new State().get(`${txid}_o0`)).to.be.rejectedWith('Not implemented')
+    await expect(new State().set(`${txid}_o0`, 0)).to.be.rejectedWith('Not implemented')
   })
 })
 
@@ -8299,8 +8315,8 @@ describe('Token', () => {
       expect(() => new TestToken(-1)).to.throw('amount must be positive')
       expect(() => new TestToken(Number.MAX_SAFE_INTEGER + 1)).to.throw('amount too large')
       expect(() => new TestToken(1.5)).to.throw('amount must be an integer')
-      expect(() => new TestToken(Infinity)).to.throw('Infinity cannot be serialized to json')
-      expect(() => new TestToken(NaN)).to.throw('NaN cannot be serialized to json')
+      expect(() => new TestToken(Infinity)).to.throw('Infinity cannot be serialized')
+      expect(() => new TestToken(NaN)).to.throw('NaN cannot be serialized')
     })
   })
 
@@ -8339,8 +8355,8 @@ describe('Token', () => {
       expect(() => token.send(pubkey, -1)).to.throw('amount must be positive')
       expect(() => token.send(pubkey, Number.MAX_SAFE_INTEGER + 1)).to.throw('amount too large')
       expect(() => token.send(pubkey, 1.5)).to.throw('amount must be an integer')
-      expect(() => token.send(pubkey, Infinity)).to.throw('Infinity cannot be serialized to json')
-      expect(() => token.send(pubkey, NaN)).to.throw('NaN cannot be serialized to json')
+      expect(() => token.send(pubkey, Infinity)).to.throw('Infinity cannot be serialized')
+      expect(() => token.send(pubkey, NaN)).to.throw('NaN cannot be serialized')
     })
 
     it('should throw if send to bad owner', () => {

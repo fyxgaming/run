@@ -50,8 +50,8 @@ describe('Token', () => {
       expect(() => new TestToken(-1)).to.throw('amount must be positive')
       expect(() => new TestToken(Number.MAX_SAFE_INTEGER + 1)).to.throw('amount too large')
       expect(() => new TestToken(1.5)).to.throw('amount must be an integer')
-      expect(() => new TestToken(Infinity)).to.throw('Infinity cannot be serialized to json')
-      expect(() => new TestToken(NaN)).to.throw('NaN cannot be serialized to json')
+      expect(() => new TestToken(Infinity)).to.throw('Infinity cannot be serialized')
+      expect(() => new TestToken(NaN)).to.throw('NaN cannot be serialized')
     })
   })
 
@@ -90,8 +90,8 @@ describe('Token', () => {
       expect(() => token.send(pubkey, -1)).to.throw('amount must be positive')
       expect(() => token.send(pubkey, Number.MAX_SAFE_INTEGER + 1)).to.throw('amount too large')
       expect(() => token.send(pubkey, 1.5)).to.throw('amount must be an integer')
-      expect(() => token.send(pubkey, Infinity)).to.throw('Infinity cannot be serialized to json')
-      expect(() => token.send(pubkey, NaN)).to.throw('NaN cannot be serialized to json')
+      expect(() => token.send(pubkey, Infinity)).to.throw('Infinity cannot be serialized')
+      expect(() => token.send(pubkey, NaN)).to.throw('NaN cannot be serialized')
     })
 
     it('should throw if send to bad owner', () => {
