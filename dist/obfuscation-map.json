@@ -51,7 +51,7 @@
   "creates": "aayb",
   "before": "aazb",
   "callers": "aaac",
-  "stateToInject": "aabc",
+  "blankSlate": "aabc",
   "requests": "aadc",
   "broadcasts": "aaec",
   "expiration": "aafc",

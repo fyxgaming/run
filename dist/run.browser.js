@@ -216,8 +216,7 @@ function getNormalizedSourceCode (type) {
  * and also that it is not a native function built into JavaScript runtime.
  */
 function deployable (type) {
-  return typeof type === 'function' && (/^class [A-Za-z0-9_]/.test(type.toString()) ||
-    /^function [A-Za-z0-9_]/.test(type.toString())) && type.toString().indexOf('[native code]') === -1
+  return typeof type === 'function' && type.toString().indexOf('[native code]') === -1
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -297,10 +296,12 @@ function bsvNetwork (network) {
  * Converts a value into a format suitable for display
  */
 function display (x) {
-  if (typeof x === 'undefined') return '[undefined]'
-  if (typeof x === 'symbol') return x.toString()
-  if (x === null) return '[null]'
-  return `${x}`
+  try {
+    if (typeof x === 'undefined') return '[undefined]'
+    if (typeof x === 'symbol') return x.toString()
+    if (x === null) return '[null]'
+    return `${x}`
+  } catch (e) { return 'Value' }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -722,7 +723,7 @@ module.exports = bsv;
 // Sets and maps respect tokens in jigs ... these are overrides for Jigs
 //    How? UniqueSet, UniqueMap
 
-const Context = __webpack_require__(9)
+const Context = __webpack_require__(10)
 
 const JigControl = { // control state shared across all jigs, similar to a PCB
   stack: [], // jig call stack for the current method (Array<Target>)
@@ -733,7 +734,7 @@ const JigControl = { // control state shared across all jigs, similar to a PCB
   error: null, // if any errors occurred to prevent swallows
   enforce: true, // enable safeguards for the user
   proxies: new Map(), // map connecting targets to proxies (Target->Proxy)
-  stateToInject: undefined
+  blankSlate: false // Whether to create the jig as an empty object
 }
 
 JigControl.disableProxy = f => {
@@ -816,7 +817,7 @@ class Jig {
     const fromInstanceOfDifferentJigClass = () => JigControl.stack.length && topOfStack().constructor !== proxy.constructor
 
     // internal variable that tracks whether init is called. if we are injecting a state, then init was called.
-    let calledInit = !!JigControl.stateToInject
+    let calledInit = !!JigControl.blankSlate
 
     handler.getPrototypeOf = function (target) {
       checkValid()
@@ -923,13 +924,18 @@ class Jig {
       }
 
       if (typeof target[prop] === 'function') {
+        // console.log('prop', prop)
+        // console.log(Context.deployable(target[prop]))
+        // console.log(targetIsAJig)
         // we must check if method includes prop because the Safari browser thinks class
         // methods are deployable. other browser do not
-        if (Context.deployable(target[prop]) && (!targetIsAJig || !methods.includes(prop))) return target[prop]
+        // if (Context.deployable(target[prop]) && (!targetIsAJig || !methods.includes(prop))) return target[prop]
+        // console.log('--')
 
         // the property is a method on the object. wrap it up so that we can intercept its execution
         // to publish an action on the blockchain.
-        return new Proxy(target[prop], Object.assign({}, this, { parent: target, name: prop }))
+        const handler = Object.assign({}, this, { parent: target, name: prop })
+        return new Proxy(target[prop], handler)
       }
     }
 
@@ -1062,8 +1068,7 @@ class Jig {
 
         JigControl.disableProxy(() => {
           if (!JigControl.before.has(original)) {
-            const obj = Object.assign({}, original)
-            const checkpoint = new Context.Checkpoint(obj, run.code, proxy)
+            const checkpoint = new Context.Checkpoint(original, run.code, proxy)
             JigControl.before.set(original, checkpoint)
           }
         })
@@ -1116,13 +1121,12 @@ class Jig {
           const objectsToSave = new Set(JigControl.reads)
           Array.from(JigControl.before.keys()).forEach(x => objectsToSave.add(x))
           objectsToSave.forEach(target => {
-            const obj = Object.assign({}, target)
-            after.set(target, new Context.Checkpoint(obj, run.code, proxy))
+            after.set(target, new Context.Checkpoint(target, run.code, proxy))
           })
 
           // Calculate the changed array
           const didChange = ([x, checkpoint]) => !checkpoint.equals(after.get(x))
-          const changed = Array.from(JigControl.before).filter(didChange)
+          const changed = Array.from(JigControl.before).filter(didChange).map(([target]) => target)
 
           // re-enable enforcement and set back the old reads
           JigControl.enforce = true
@@ -1201,7 +1205,7 @@ class Jig {
 
         JigControl.stack.pop()
 
-        // if we are at the bottom of the stack, and there was an error, then
+        // If we are at the bottom of the stack, and there was an error, then
         // reset all jigs involved back to their original state before throwing
         // the error to the user.
         if (!JigControl.stack.length) {
@@ -1220,11 +1224,8 @@ class Jig {
       }
     }
 
-    // if we are injecting a state directly from a cache, do that and just return
-    if (JigControl.stateToInject) {
-      Object.assign(this, JigControl.stateToInject)
-      return proxy
-    }
+    // if we are injecting a state directly from a cache, just return
+    if (JigControl.blankSlate) return proxy
 
     this.owner = JigControl.stack.length ? JigControl.stack[JigControl.stack.length - 1].owner : run.transaction.owner
     this.satoshis = 0
@@ -1293,7 +1294,7 @@ module.exports = { Jig, JigControl }
 
 const bsv = __webpack_require__(2)
 const Code = __webpack_require__(23)
-const Evaluator = __webpack_require__(8)
+const Evaluator = __webpack_require__(9)
 const Syncer = __webpack_require__(31)
 const { Transaction } = __webpack_require__(12)
 const util = __webpack_require__(0)
@@ -1739,22 +1740,12 @@ module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 
 const Protocol = __webpack_require__(29)
 const { display } = __webpack_require__(0)
-const { JigControl } = __webpack_require__(3)
+const { Jig, JigControl } = __webpack_require__(3)
 const { Intrinsics } = __webpack_require__(5)
 
 // ------------------------------------------------------------------------------------------------
 // Xray
 // -----------------------------------------------------------------------------------------------
-
-/*
-// detect references to properties of other jigs or code, and throw
-const preventPropertiesOfOtherObjects = (target, parent, name) => {
-  if (typeof target.$owner !== 'undefined' && target.$owner !== proxy) {
-    const suggestion = `Hint: Consider saving a clone of ${name}'s value instead.`
-    throw new Error(`property ${name} is owned by a different jig\n\n${suggestion}`)
-  }
-}
-*/
 
 /**
  * The Xray is a scanner that an clone, serialize, and deserialize complex JavaScript objects with
@@ -1850,9 +1841,11 @@ class Xray {
       const value = scanner.cloneable(x, this)
       if (typeof value === 'undefined') continue
       this.caches.cloneable.set(x, value)
+      if (!value && typeof this.errorObject === 'undefined') this.errorObject = x
       return value
     }
     this.caches.cloneable.set(x, false)
+    if (typeof this.errorObject === 'undefined') this.errorObject = x
     return false
   }
 
@@ -1865,9 +1858,11 @@ class Xray {
       const value = scanner.serializable(x, this)
       if (typeof value === 'undefined') continue
       this.caches.serializable.set(x, value)
+      if (!value && typeof this.errorObject === 'undefined') this.errorObject = x
       return value
     }
     this.caches.serializable.set(x, false)
+    if (typeof this.errorObject === 'undefined') this.errorObject = x
     return false
   }
 
@@ -1880,13 +1875,16 @@ class Xray {
       const value = scanner.deserializable(x, this)
       if (typeof value === 'undefined') continue
       this.caches.deserializable.set(x, value)
+      if (!value && typeof this.errorObject === 'undefined') this.errorObject = x
       return value
     }
     this.caches.deserializable.set(x, false)
+    if (typeof this.errorObject === 'undefined') this.errorObject = x
     return false
   }
 
   clone (x) {
+    this.errorObject = undefined
     if (this.caches.clone.has(x)) return this.caches.clone.get(x)
     for (const scanner of this.scanners) {
       const cloneable = scanner.cloneable(x, this)
@@ -1896,10 +1894,12 @@ class Xray {
       this.caches.clone.set(x, y)
       return y
     }
-    throw new Error(`${display(x)} cannot be cloned`)
+    const errorObject = typeof this.errorObject !== 'undefined' ? this.errorObject : x
+    throw new Error(`${display(errorObject)} cannot be cloned`)
   }
 
   serialize (x) {
+    this.errorObject = undefined
     if (this.caches.serialize.has(x)) return this.caches.serialize.get(x)
     for (const scanner of this.scanners) {
       const serializable = scanner.serializable(x, this)
@@ -1909,10 +1909,12 @@ class Xray {
       this.caches.serialize.set(x, y)
       return y
     }
-    throw new Error(`${display(x)} cannot be serialized`)
+    const errorObject = typeof this.errorObject !== 'undefined' ? this.errorObject : x
+    throw new Error(`${display(errorObject)} cannot be serialized`)
   }
 
   deserialize (x) {
+    this.errorObject = undefined
     if (this.caches.deserialize.has(x)) return this.caches.deserialize.get(x)
     for (const scanner of this.scanners) {
       const deserializable = scanner.deserializable(x, this)
@@ -1922,7 +1924,8 @@ class Xray {
       this.caches.deserialize.set(x, y)
       return y
     }
-    throw new Error(`${display(x)} cannot be deserialized`)
+    const errorObject = typeof this.errorObject !== 'undefined' ? this.errorObject : x
+    throw new Error(`${display(errorObject)} cannot be deserialized`)
   }
 
   predeserialize (x) {
@@ -1945,6 +1948,13 @@ class Xray {
       if (replacement) return replacement
     }
     return x
+  }
+
+  checkOwner (x) {
+    if (typeof x.$owner !== 'undefined' && x.$owner !== this.restrictedOwner) {
+      const suggestion = `Hint: Consider saving a clone of ${x} value instead.`
+      throw new Error(`Property ${display(x)} is owned by a different token\n\n${suggestion}`)
+    }
   }
 }
 
@@ -2006,6 +2016,7 @@ class PrimitiveScanner {
       case 'number': return true
       case 'string': return true
       case 'object': return x === null ? true : undefined
+      case 'symbol': return true
     }
   }
 
@@ -2049,8 +2060,14 @@ class PrimitiveScanner {
 class BasicObjectScanner {
   scan (x, xray) {
     if (this.isBasicObject(x, xray)) {
+      xray.checkOwner(x)
       xray.caches.scanned.add(x)
-      Object.keys(x).forEach(key => { xray.scan(key); x[key] = xray.scanAndReplace(x[key]) })
+      Object.keys(x).forEach(key => {
+        xray.scan(key);
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
       return true
     }
   }
@@ -2118,8 +2135,14 @@ class BasicObjectScanner {
 class BasicArrayScanner {
   scan (x, xray) {
     if (this.isBasicArray(x, xray)) {
+      xray.checkOwner(x)
       xray.caches.scanned.add(x)
-      Object.keys(x).forEach(key => { xray.scan(key); x[key] = xray.scanAndReplace(x[key]) })
+      Object.keys(x).forEach(key => {
+        xray.scan(key);
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
       return true
     }
   }
@@ -2187,7 +2210,13 @@ const base64Chars = new Set()
   .split('').forEach(x => base64Chars.add(x))
 
 class Uint8ArrayScanner {
-  scan (x, xray) { if (this.isUint8Array(x, xray)) return true }
+  scan (x, xray) {
+    if (this.isUint8Array(x, xray)) {
+      xray.checkOwner(x)
+      return true
+    }
+  }
+
   cloneable (x, xray) { if (this.isUint8Array(x, xray)) return true }
   serializable (x, xray) { if (this.isUint8Array(x, xray)) return true }
 
@@ -2235,6 +2264,7 @@ class Uint8ArrayScanner {
 class SetScanner {
   scan (x, xray) {
     if (this.isSet(x, xray)) {
+      xray.checkOwner(x)
       xray.caches.scanned.add(x)
       if (xray.replaceToken) {
         const newSet = new Set()
@@ -2242,7 +2272,12 @@ class SetScanner {
         x.clear()
         newSet.forEach(y => x.add(y))
       } else for (const y of x) { xray.scan(y) }
-      Object.keys(x).forEach(key => { xray.scan(key); x[key] = xray.scanAndReplace(x[key]) })
+      Object.keys(x).forEach(key => {
+        xray.scan(key);
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
       return true
     }
   }
@@ -2321,6 +2356,7 @@ class SetScanner {
 class MapScanner {
   scan (x, xray) {
     if (this.isMap(x, xray)) {
+      xray.checkOwner(x)
       xray.caches.scanned.add(x)
       for (const entry of x) xray.scan(entry)
       if (xray.replaceToken) {
@@ -2329,7 +2365,12 @@ class MapScanner {
         x.clear()
         newMap.forEach(([key, val]) => x.set(key, val))
       } else for (const entry of x) { xray.scan(entry) }
-      Object.keys(x).forEach(key => { xray.scan(key); x[key] = xray.scanAndReplace(x[key]) })
+      Object.keys(x).forEach(key => {
+        xray.scan(key);
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
       return true
     }
   }
@@ -2424,9 +2465,15 @@ class ArbitraryObjectScanner {
   }
 
   scan (x, xray) {
-    if (this.isArbitraryObject(x)) {
+    if (this.isArbitraryObject(x, xray)) {
+      xray.checkOwner(x)
       xray.caches.scanned.add(x)
-      Object.keys(x).forEach(key => { xray.scan(key); x[key] = xray.scanAndReplace(x[key]) })
+      Object.keys(x).forEach(key => {
+        xray.scan(key);
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
       const newConstructor = xray.scanAndReplace(x.constructor)
       if (newConstructor !== x.constructor) Object.setPrototypeOf(x, newConstructor)
       return true
@@ -2464,15 +2511,16 @@ class ArbitraryObjectScanner {
     const y = Object.create(Object.prototype)
     y.$arbob = this.basicObjectScanner.serialize(Object.assign({}, x), xray)
     y.type = xray.saveToken(x.constructor)
+    if (typeof y.type !== 'string') throw new Error(`Saved type location must be a string: ${y.type}`)
     return y
   }
 
   deserialize (x, xray) {
-    if (!xray.restoreToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
+    if (!xray.loadToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
     const { Object } = xray.intrinsics.default
     const obj = xray.caches.predeserialize.get(x) || Object.create(Object.prototype)
     Object.assign(obj, this.basicObjectScanner.deserialize(x.$arbob, xray))
-    const type = xray.restoreToken(x.type)
+    const type = xray.loadToken(x.type)
     Object.setPrototypeOf(obj, type.prototype)
     return obj
   }
@@ -2651,10 +2699,16 @@ class DedupScanner {
 class DeployableScanner {
   scan (x, xray) {
     if (deployable(x, xray)) {
+      xray.checkOwner(x)
       xray.deployables.add(x)
       if (xray.deeplyScanTokens) {
         xray.caches.scanned.add(x)
-        Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
+        Object.keys(x).forEach(key => {
+          xray.scan(key);
+          if (xray.replaceToken) {
+            x[key] = xray.scanAndReplace(x[key])
+          } else xray.scan(x[key])
+        })
       }
       return true
     }
@@ -2704,7 +2758,12 @@ class TokenScanner {
       if (xray.deeplyScanTokens) {
         xray.caches.scanned.add(x)
         JigControl.disableProxy(() => {
-          Object.keys(x).forEach(key => { xray.scan(key); x[key] = xray.scanAndReplace(x[key]) })
+          Object.keys(x).forEach(key => {
+            xray.scan(key);
+            if (xray.replaceToken) {
+              x[key] = xray.scanAndReplace(x[key])
+            } else xray.scan(x[key])
+          })
         })
       }
       return true
@@ -2754,12 +2813,13 @@ class TokenScanner {
     const { Object } = xray.intrinsics.default
     const y = Object.create(Object.prototype)
     y.$ref = xray.saveToken(x)
+    if (typeof y.$ref !== 'string') throw new Error(`Saved token location must be a string: ${y.$ref}`)
     return y
   }
 
   deserialize (x, xray) {
-    if (!xray.restoreToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
-    return xray.restoreToken(x.$ref)
+    if (!xray.loadToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
+    return xray.loadToken(x.$ref)
   }
 
   predeserialize (x, xray) { }
@@ -2797,17 +2857,18 @@ class Checkpoint {
       .allowTokens()
       .restrictOwner(owner)
       .useIntrinsics(code.intrinsics)
-      .useTokenSaver(token => { this.refs.push(token); return this.refs.length })
-      .useTokenLoader(ref => this.refs.get(ref))
+      .useTokenSaver(token => { this.refs.push(token); return (this.refs.length - 1).toString() })
+      .useTokenLoader(ref => this.refs[parseInt(ref, 10)])
 
     // Note: We should scan and deploy in one pass
-    this.xray.scan(x)
+    const obj = x instanceof Jig ? Object.assign({}, x) : x
+    this.xray.scan(obj)
     this.xray.deployables.forEach(deployable => code.deploy(deployable))
-    this.state = this.xray.serialize(x)
+    this.state = this.xray.serialize(obj)
   }
 
   restore () {
-    return this.xray.deserialize(this.x)
+    return this.xray.deserialize(this.state)
   }
 
   restoreInPlace () {
@@ -2841,7 +2902,7 @@ Xray.Checkpoint = Checkpoint
 
 module.exports = Xray
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(10).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(11).Buffer))
 
 /***/ }),
 /* 7 */
@@ -2871,6 +2932,155 @@ module.exports = g;
 
 /***/ }),
 /* 8 */
+/***/ (function(module, exports) {
+
+/**
+ * location.js
+ *
+ * Parses and builds location strings that point to tokens on the blockchain
+ */
+
+/**
+ * Helper class to create and parse location strings
+ *
+ * Every token in Run is stored at a location on the blockchain. Both the "origin"
+ * property and "location" property on jigs and code are location strings. Jiglets
+ * have a location but not an origin. To the user, these come in the form:
+ *
+ *  <txid>_o<vout>
+ *
+ * Where txid is a transaction id in hex, and vout is the output index as an integer.
+ * Locations are usually outputs. But they need not always be outputs. There are other
+ * kinds of locations. If the location ends with _i<vin>, then the location refers
+ * to an input of a transaction. If the location ends in _r<vref>, then the location
+ * refers to another "ref" location within the OP_RETURN JSON. Sometimes within the
+ * OP_RETURN JSON you will see locations without txids, and these refer to relative
+ * locations. They look like _o1, _i0, etc.
+ *
+ * While a transaction is being built, a jig may have a temporary location. This is
+ * identified by a random temporary txid that starts with '?'. This will get turned
+ * into a real location when the token's transaction is known and published. The
+ * convention is for temporary txids to have 48 ?'s followed by 16 random hex chars
+ * to uniquely identify the temporary txid, but this is not strictly required.
+ *
+ * Finally, it is important that tokens be deterministically loadable. Most tokens
+ * are jigs and code and are parsed by the Run protocol. However with Jiglets, a
+ * token may be parsed by another protocol. Two locations may even be parsed differently
+ * by two different protocols, so it's important when identifying the location of a
+ * jiglet to attach its protocol to its location. So, we add a protocol prefix:
+ *
+ *      <protocol_location>://<token_location>
+ *
+ * This class helps store and read all of this, but within Run's code, it is important
+ * to consider all of the above cases when looking at a location.
+ */
+class Location {
+  /**
+     * Parses a location string
+     * @param {string} location Location to parse
+     * @return {object} out
+     * @return {string=} out.txid Transaction ID
+     * @return {number=} out.vout Output index
+     * @return {number=} out.vin Input index
+     * @return {number=} out.vref Reference index
+     * @return {string=} out.tempTxid Temporary transaction ID
+     * @return {object=} out.proto Protocol location object
+     */
+  static parse (location) {
+    const error = s => { throw new Error(`${s}: ${location}`) }
+
+    if (typeof location !== 'string') error('Location must be a string')
+    if (!location.length) error('Location must not be empty')
+
+    // Check if we are dealing with a protocol
+    const protoParts = location.split('://')
+    if (protoParts.length > 2) error('Location must only have one protocol')
+    if (protoParts.length === 2) {
+      return Object.assign({}, Location.parse(protoParts[1]),
+        { proto: Location.parse(protoParts[0]) })
+    }
+
+    // Split the txid and index parts
+    const parts = location.split('_')
+    if (parts.length > 2) error('Location has an unexpected _ separator')
+    if (parts.length < 2) error('Location requires a _ separator')
+
+    const output = {}
+
+    // Validate the txid
+    if (parts[0].length !== 0 && parts[0].length !== 64) error('Location has an invalid txid length')
+    if (parts[0][0] === '?') {
+      output.tempTxid = parts[0]
+    } else if (parts[0].length) {
+      if (!/^[a-fA-F0-9]*$/.test(parts[0])) error('Location has invalid hex in its txid')
+      output.txid = parts[0]
+    }
+
+    // Validate the index number
+    const indexString = parts[1].slice(1)
+    const index = parseInt(indexString, 10)
+    if (isNaN(index) || !/^[0-9]*$/.test(indexString)) error('Location has an invalid index number')
+
+    // Validate the index category
+    switch (parts[1][0]) {
+      case 'o': { output.vout = index; break }
+      case 'i': { output.vin = index; break }
+      case 'r': { output.vref = index; break }
+      default: error('Location has an invalid index category')
+    }
+
+    return output
+  }
+
+  /**
+     * Creates a location string from options
+     * @param {object} options
+     * @param {string=} options.txid Transaction ID
+     * @param {number=} options.vout Output index
+     * @param {number=} options.outputIndex Output index
+     * @param {number=} options.vin Input index
+     * @param {number=} options.vref Reference index
+     * @param {string=} options.tempTxid Temporary transaction ID
+     * @param {object=} options.proto Protocol location object
+     * @return {string} The built location string
+     */
+  static build (options) {
+    const error = s => { throw new Error(`${s}: ${JSON.stringify(options)}`) }
+
+    if (typeof options !== 'object' || !options) error('Location object is invalid')
+    if (options.proto && options.proto.proto) error('Location must only have one protocol')
+
+    // If we have a protocol, build that first.
+    const prefix = options.proto ? `${Location.build(options.proto)}://` : ''
+
+    // Get the txid
+    const txid = `${options.txid || options.tempTxid || ''}`
+
+    // Get the index
+    let category = null; let index = null
+    if (typeof options.vout === 'number') {
+      category = 'o'
+      index = options.vout
+    } else if (typeof options.vin === 'number') {
+      category = 'i'
+      index = options.vin
+    } else if (typeof options.vref === 'number') {
+      category = 'r'
+      index = options.vref
+    } else error('Location index unspecified')
+
+    const badIndex = isNaN(index) || !isFinite(index) || !Number.isInteger(index) || index < 0
+    if (badIndex) error('Location index must be a non-negative integer')
+
+    return `${prefix}${txid}_${category}${index}`
+  }
+}
+
+module.exports = Location
+
+
+/***/ }),
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -3097,7 +3307,7 @@ module.exports = Evaluator
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -3116,7 +3326,7 @@ module.exports = Context
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4913,155 +5123,6 @@ function isnan (val) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
 
 /***/ }),
-/* 11 */
-/***/ (function(module, exports) {
-
-/**
- * location.js
- *
- * Parses and builds location strings that point to tokens on the blockchain
- */
-
-/**
- * Helper class to create and parse location strings
- *
- * Every token in Run is stored at a location on the blockchain. Both the "origin"
- * property and "location" property on jigs and code are location strings. Jiglets
- * have a location but not an origin. To the user, these come in the form:
- *
- *  <txid>_o<vout>
- *
- * Where txid is a transaction id in hex, and vout is the output index as an integer.
- * Locations are usually outputs. But they need not always be outputs. There are other
- * kinds of locations. If the location ends with _i<vin>, then the location refers
- * to an input of a transaction. If the location ends in _r<vref>, then the location
- * refers to another "ref" location within the OP_RETURN JSON. Sometimes within the
- * OP_RETURN JSON you will see locations without txids, and these refer to relative
- * locations. They look like _o1, _i0, etc.
- *
- * While a transaction is being built, a jig may have a temporary location. This is
- * identified by a random temporary txid that starts with '?'. This will get turned
- * into a real location when the token's transaction is known and published. The
- * convention is for temporary txids to have 48 ?'s followed by 16 random hex chars
- * to uniquely identify the temporary txid, but this is not strictly required.
- *
- * Finally, it is important that tokens be deterministically loadable. Most tokens
- * are jigs and code and are parsed by the Run protocol. However with Jiglets, a
- * token may be parsed by another protocol. Two locations may even be parsed differently
- * by two different protocols, so it's important when identifying the location of a
- * jiglet to attach its protocol to its location. So, we add a protocol prefix:
- *
- *      <protocol_location>://<token_location>
- *
- * This class helps store and read all of this, but within Run's code, it is important
- * to consider all of the above cases when looking at a location.
- */
-class Location {
-  /**
-     * Parses a location string
-     * @param {string} location Location to parse
-     * @return {object} out
-     * @return {string=} out.txid Transaction ID
-     * @return {number=} out.vout Output index
-     * @return {number=} out.vin Input index
-     * @return {number=} out.vref Reference index
-     * @return {string=} out.tempTxid Temporary transaction ID
-     * @return {object=} out.proto Protocol location object
-     */
-  static parse (location) {
-    const error = s => { throw new Error(`${s}: ${location}`) }
-
-    if (typeof location !== 'string') error('Location must be a string')
-    if (!location.length) error('Location must not be empty')
-
-    // Check if we are dealing with a protocol
-    const protoParts = location.split('://')
-    if (protoParts.length > 2) error('Location must only have one protocol')
-    if (protoParts.length === 2) {
-      return Object.assign({}, Location.parse(protoParts[1]),
-        { proto: Location.parse(protoParts[0]) })
-    }
-
-    // Split the txid and index parts
-    const parts = location.split('_')
-    if (parts.length > 2) error('Location has an unexpected _ separator')
-    if (parts.length < 2) error('Location requires a _ separator')
-
-    const output = {}
-
-    // Validate the txid
-    if (parts[0].length !== 0 && parts[0].length !== 64) error('Location has an invalid txid length')
-    if (parts[0][0] === '?') {
-      output.tempTxid = parts[0]
-    } else if (parts[0].length) {
-      if (!/^[a-fA-F0-9]*$/.test(parts[0])) error('Location has invalid hex in its txid')
-      output.txid = parts[0]
-    }
-
-    // Validate the index number
-    const indexString = parts[1].slice(1)
-    const index = parseInt(indexString, 10)
-    if (isNaN(index) || !/^[0-9]*$/.test(indexString)) error('Location has an invalid index number')
-
-    // Validate the index category
-    switch (parts[1][0]) {
-      case 'o': { output.vout = index; break }
-      case 'i': { output.vin = index; break }
-      case 'r': { output.vref = index; break }
-      default: error('Location has an invalid index category')
-    }
-
-    return output
-  }
-
-  /**
-     * Creates a location string from options
-     * @param {object} options
-     * @param {string=} options.txid Transaction ID
-     * @param {number=} options.vout Output index
-     * @param {number=} options.outputIndex Output index
-     * @param {number=} options.vin Input index
-     * @param {number=} options.vref Reference index
-     * @param {string=} options.tempTxid Temporary transaction ID
-     * @param {object=} options.proto Protocol location object
-     * @return {string} The built location string
-     */
-  static build (options) {
-    const error = s => { throw new Error(`${s}: ${JSON.stringify(options)}`) }
-
-    if (typeof options !== 'object' || !options) error('Location object is invalid')
-    if (options.proto && options.proto.proto) error('Location must only have one protocol')
-
-    // If we have a protocol, build that first.
-    const prefix = options.proto ? `${Location.build(options.proto)}://` : ''
-
-    // Get the txid
-    const txid = `${options.txid || options.tempTxid || ''}`
-
-    // Get the index
-    let category = null; let index = null
-    if (typeof options.vout === 'number') {
-      category = 'o'
-      index = options.vout
-    } else if (typeof options.vin === 'number') {
-      category = 'i'
-      index = options.vin
-    } else if (typeof options.vref === 'number') {
-      category = 'r'
-      index = options.vref
-    } else error('Location index unspecified')
-
-    const badIndex = isNaN(index) || !isFinite(index) || !Number.isInteger(index) || index < 0
-    if (badIndex) error('Location index must be a non-negative integer')
-
-    return `${prefix}${txid}_${category}${index}`
-  }
-}
-
-module.exports = Location
-
-
-/***/ }),
 /* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -5847,30 +5908,33 @@ class Transaction {
         .useIntrinsics(this.run.code.intrinsics)
         .useTokenLoader(tokenLoader)
 
-      xray.scan(cachedState.state)
-
-      for (const ref of xray.refs) {
-        const fullLoc = fullLocation(ref)
-        if (cachedRefs.has(fullLoc)) continue
-        const token = await this.load(fullLoc, { cachedRefs })
-        if (cachedRefs.has(fullLoc)) cachedRefs.set(fullLoc, token)
-      }
-
-      // Create the new type and inject its state
       try {
-        JigControl.stateToInject = xray.deserialize(cachedState.state)
-        JigControl.stateToInject.origin = JigControl.stateToInject.origin || location
-        JigControl.stateToInject.location = JigControl.stateToInject.location || location
+        JigControl.blankSlate = true
 
+        // Create the new instance as a blank slate
         const typeLocation = cachedState.type.startsWith('_') ? location.slice(0, 64) + cachedState.type : cachedState.type
         const T = await this.load(typeLocation)
-
         const instance = new T()
-
         cachedRefs.set(location, instance)
 
+        // Load all dependencies
+        xray.scan(cachedState.state)
+        for (const ref of xray.refs) {
+          const fullLoc = fullLocation(ref)
+          if (cachedRefs.has(fullLoc)) continue
+          const token = await this.load(fullLoc, { cachedRefs })
+          if (cachedRefs.has(fullLoc)) cachedRefs.set(fullLoc, token)
+        }
+
+        // Deserialize and inject our state
+        JigControl.disableProxy(() => {
+          Object.assign(instance, xray.deserialize(cachedState.state))
+          instance.origin = instance.origin || location
+          instance.location = instance.location || location
+        })
+
         return instance
-      } finally { JigControl.stateToInject = null }
+      } finally { JigControl.blankSlate = false }
     }
 
     // --------------------------------------------------------------------------------------------
@@ -5905,7 +5969,7 @@ class Transaction {
 
 module.exports = { ProtoTransaction, Transaction }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(10).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(11).Buffer))
 
 /***/ }),
 /* 13 */
@@ -6926,11 +6990,11 @@ module.exports = expect
 
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
-const Evaluator = __webpack_require__(8)
+const Evaluator = __webpack_require__(9)
 const { Jig, JigControl } = __webpack_require__(3)
 const { Intrinsics } = __webpack_require__(5)
 const Xray = __webpack_require__(6)
-const Context = __webpack_require__(9)
+const Context = __webpack_require__(10)
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -6972,13 +7036,10 @@ class Code {
     propNames.forEach(name => { props[name] = type[name] })
 
     // Check that these properties are serializable
-    const intrinsics = new Intrinsics()
-      .use(this.evaluator.intrinsics)
-
     const xray = new Xray()
       .allowTokens()
       .allowDeployables()
-      .useIntrinsics(intrinsics)
+      .useIntrinsics(this.intrinsics)
 
     try {
       xray.scan(props)
@@ -7030,7 +7091,9 @@ class Code {
       // realdeps is type.deps with its parent if not there
       const parentClass = Object.getPrototypeOf(type)
       const realdeps = classProps.includes('deps') ? Object.assign({}, type.deps) : {}
-      if (parentClass !== Object.getPrototypeOf(Object)) {
+      const SandboxObject = this.evaluator.intrinsics.Object
+      if (parentClass !== Object.getPrototypeOf(Object) &&
+        parentClass !== SandboxObject.getPrototypeOf(SandboxObject)) {
         env[parentClass.name] = this.deploy(parentClass)
         if (realdeps[parentClass.name]) {
           const currentSandbox = this.getInstalled(realdeps[parentClass.name])
@@ -7053,13 +7116,10 @@ class Code {
       this.installs.set(sandbox, sandbox)
 
       // Deploy any code found in the static properties
-
-      const intrinsics = new Intrinsics().use(this.evaluator.intrinsics)
-
       const xray = new Xray()
         .allowTokens()
         .allowDeployables()
-        .useIntrinsics(intrinsics)
+        .useIntrinsics(this.intrinsics)
         .useCodeCloner(x => this.getInstalled(x))
 
       const staticProps = Object.assign({}, type)
@@ -11676,7 +11736,8 @@ module.exports = Array.isArray || function (arr) {
 
 const { Jig, JigControl } = __webpack_require__(3)
 const { Jiglet, JigletControl } = __webpack_require__(30)
-const Location = __webpack_require__(11)
+const Location = __webpack_require__(8)
+const util = __webpack_require__(0)
 
 // ------------------------------------------------------------------------------------------------
 // Protocol manager
@@ -11699,7 +11760,11 @@ class Protocol {
   static isToken (x) {
     switch (typeof x) {
       case 'object': return x && (x instanceof Jig || x instanceof Jiglet)
-      case 'function': return !!x.origin && !!x.location && !!x.owner
+      case 'function': {
+        if (!!x.origin && !!x.location && !!x.owner) return true
+        const net = util.networkSuffix(util.activeRunInstance().blockchain.network)
+        return !!x[`origin${net}`] && !!x[`location${net}`] && !!x[`owner${net}`]
+      }
       default: return false
     }
   }
@@ -11816,7 +11881,7 @@ const { ProtoTransaction } = __webpack_require__(12)
 const { JigControl } = __webpack_require__(3)
 const Xray = __webpack_require__(6)
 const util = __webpack_require__(0)
-const Location = __webpack_require__(11)
+const Location = __webpack_require__(8)
 
 /**
  * Proto-transaction: A temporary structure Run uses to build transactions. This structure
@@ -13649,13 +13714,15 @@ module.exports = class Mockchain {
 
 /***/ }),
 /* 53 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
 /**
  * state.js
  *
  * State API and its default StateCache implementation that ships with Run
  */
+
+const Location = __webpack_require__(8)
 
 // ------------------------------------------------------------------------------------------------
 
@@ -13697,6 +13764,8 @@ class StateCache {
   }
 
   async get (location) {
+    Location.parse(location)
+
     const value = this.cache.get(location)
 
     if (value) {
@@ -13708,6 +13777,8 @@ class StateCache {
   }
 
   async set (location, state) {
+    Location.parse(location)
+
     function deepEqual (a, b) {
       if (typeof a !== typeof b) return false
       if (typeof a !== 'object' || !a || !b) return a === b

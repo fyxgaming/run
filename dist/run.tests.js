@@ -3424,7 +3424,7 @@ module.exports = Run;
 /* 12 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"activeRunInstance\":\"aal\",\"sameJig\":\"aam\",\"networkSuffix\":\"aan\",\"isBlockchain\":\"aacc\",\"broadcastUrl\":\"aap\",\"broadcastData\":\"aaq\",\"fetchUrl\":\"aar\",\"fetchResp\":\"aas\",\"utxosUrl\":\"aat\",\"utxosResp\":\"aau\",\"_dedupUtxos\":\"aav\",\"correctForServerUtxoIndexingDelay\":\"aaw\",\"fetched\":\"aax\",\"broadcasted\":\"aay\",\"isSandbox\":\"aaz\",\"getInstalled\":\"aaab\",\"installFromTx\":\"aabb\",\"installJig\":\"aacb\",\"fastForward\":\"aadb\",\"finish\":\"aaeb\",\"publishNext\":\"aafb\",\"publish\":\"aagb\",\"storeCode\":\"aahb\",\"storeAction\":\"aaib\",\"setProtoTxAndCreator\":\"aajb\",\"buildBsvTransaction\":\"aakb\",\"_fromPrivateKey\":\"aalb\",\"_fromPublicKey\":\"aamb\",\"_fromAddress\":\"aanb\",\"_queryLatest\":\"aaob\",\"_removeErrorRefs\":\"aapb\",\"_update\":\"aaqb\",\"_estimateSize\":\"aarb\",\"_util\":\"aasb\",\"intrinsics\":\"aatb\",\"proxies\":\"aaub\",\"enforce\":\"aavb\",\"stack\":\"aawb\",\"reads\":\"aaxb\",\"creates\":\"aayb\",\"before\":\"aazb\",\"callers\":\"aaac\",\"stateToInject\":\"aabc\",\"requests\":\"aadc\",\"broadcasts\":\"aaec\",\"expiration\":\"aafc\",\"indexingDelay\":\"aagc\",\"fetchedTime\":\"aahc\",\"transactions\":\"aaic\",\"utxosByLocation\":\"aajc\",\"utxosByAddress\":\"aakc\",\"blockHeight\":\"aalc\",\"installs\":\"aamc\",\"syncer\":\"aanc\",\"protoTx\":\"aaoc\",\"beginCount\":\"aapc\",\"cachedTx\":\"aaqc\",\"syncListeners\":\"aarc\",\"onBroadcastListeners\":\"aasc\",\"lastPosted\":\"aatc\",\"queued\":\"aauc\",\"sizeBytes\":\"aavc\",\"maxSizeBytes\":\"aawc\",\"JigControl\":\"aaxc\",\"ProtoTransaction\":\"aayc\",\"PROTOCOL_VERSION\":\"aazc\",\"SerialTaskQueue\":\"aaad\",\"extractProps\":\"aabd\",\"onReadyForPublish\":\"aacd\",\"spentJigs\":\"aadd\",\"spentLocations\":\"aaed\"}");
+module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"activeRunInstance\":\"aal\",\"sameJig\":\"aam\",\"networkSuffix\":\"aan\",\"isBlockchain\":\"aacc\",\"broadcastUrl\":\"aap\",\"broadcastData\":\"aaq\",\"fetchUrl\":\"aar\",\"fetchResp\":\"aas\",\"utxosUrl\":\"aat\",\"utxosResp\":\"aau\",\"_dedupUtxos\":\"aav\",\"correctForServerUtxoIndexingDelay\":\"aaw\",\"fetched\":\"aax\",\"broadcasted\":\"aay\",\"isSandbox\":\"aaz\",\"getInstalled\":\"aaab\",\"installFromTx\":\"aabb\",\"installJig\":\"aacb\",\"fastForward\":\"aadb\",\"finish\":\"aaeb\",\"publishNext\":\"aafb\",\"publish\":\"aagb\",\"storeCode\":\"aahb\",\"storeAction\":\"aaib\",\"setProtoTxAndCreator\":\"aajb\",\"buildBsvTransaction\":\"aakb\",\"_fromPrivateKey\":\"aalb\",\"_fromPublicKey\":\"aamb\",\"_fromAddress\":\"aanb\",\"_queryLatest\":\"aaob\",\"_removeErrorRefs\":\"aapb\",\"_update\":\"aaqb\",\"_estimateSize\":\"aarb\",\"_util\":\"aasb\",\"intrinsics\":\"aatb\",\"proxies\":\"aaub\",\"enforce\":\"aavb\",\"stack\":\"aawb\",\"reads\":\"aaxb\",\"creates\":\"aayb\",\"before\":\"aazb\",\"callers\":\"aaac\",\"blankSlate\":\"aabc\",\"requests\":\"aadc\",\"broadcasts\":\"aaec\",\"expiration\":\"aafc\",\"indexingDelay\":\"aagc\",\"fetchedTime\":\"aahc\",\"transactions\":\"aaic\",\"utxosByLocation\":\"aajc\",\"utxosByAddress\":\"aakc\",\"blockHeight\":\"aalc\",\"installs\":\"aamc\",\"syncer\":\"aanc\",\"protoTx\":\"aaoc\",\"beginCount\":\"aapc\",\"cachedTx\":\"aaqc\",\"syncListeners\":\"aarc\",\"onBroadcastListeners\":\"aasc\",\"lastPosted\":\"aatc\",\"queued\":\"aauc\",\"sizeBytes\":\"aavc\",\"maxSizeBytes\":\"aawc\",\"JigControl\":\"aaxc\",\"ProtoTransaction\":\"aayc\",\"PROTOCOL_VERSION\":\"aazc\",\"SerialTaskQueue\":\"aaad\",\"extractProps\":\"aabd\",\"onReadyForPublish\":\"aacd\",\"spentJigs\":\"aadd\",\"spentLocations\":\"aaed\"}");
 
 /***/ }),
 /* 13 */
@@ -4700,7 +4700,7 @@ describe('Jig', () => {
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
-    it.only('should create basic jig', async () => {
+    it('should create basic jig', async () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -4915,10 +4915,10 @@ describe('Jig', () => {
     })
 
     it('should forward sync inner jigs', async () => {
-      class A extends Jig { set (x, y) { this[x] = y } }
-      const a = new A()
+      class Store extends Jig { set (x, y) { this[x] = y } }
+      const a = new Store()
       expectAction(a, 'init', [], [], [a], [])
-      const b = new A()
+      const b = new Store()
       expectAction(b, 'init', [], [], [b], [])
       a.set('b', b)
       await run.sync()
@@ -5076,37 +5076,37 @@ describe('Jig', () => {
     })
 
     it('should restore old state if method throws', () => {
-      class C extends Jig { f () { this.n = 1 } }
-      class B extends Jig { g () { this.z = 1 } }
-      class A extends Jig {
+      class Outer extends Jig { setN () { this.n = 1 } }
+      class Inner extends Jig { setZ () { this.z = 1 } }
+      class Revertable extends Jig {
         init () {
           this.n = 1
           this.arr = ['a', { b: 1 }]
           this.self = this
-          this.b = new B()
+          this.inner = new Inner()
         }
 
-        f (c) {
-          c.f()
+        methodThatThrows (outer) {
+          outer.setN()
           this.n = 2
           this.arr[2].b = 2
           this.arr.push(3)
-          this.b.g()
+          this.inner.setZ()
           throw new Error()
         }
       }
-      A.deps = { B }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a, a.b], [])
-      const c = new C()
-      expectAction(c, 'init', [], [], [c], [])
-      expect(() => a.f(c)).to.throw()
+      Revertable.deps = { Inner }
+      const main = new Revertable()
+      expectAction(main, 'init', [], [], [main, main.inner], [])
+      const outer = new Outer()
+      expectAction(outer, 'init', [], [], [outer], [])
+      expect(() => main.methodThatThrows(outer)).to.throw()
       expectNoAction()
-      expect(a.n).to.equal(1)
-      expect(a.arr).to.deep.equal(['a', { b: 1 }])
-      expect(a.self).to.equal(a)
-      expect(a.b.z).to.equal(undefined)
-      expect(c.n).to.equal(undefined)
+      expect(main.n).to.equal(1)
+      expect(main.arr).to.deep.equal(['a', { b: 1 }])
+      expect(main.self).to.equal(main)
+      expect(main.inner.z).to.equal(undefined)
+      expect(outer.n).to.equal(undefined)
     })
 
     it('should throw if swallow internal errors', () => {
@@ -5177,23 +5177,27 @@ describe('Jig', () => {
       expectAction(a, 'f', [{ a: { b: {} } }, { a: [1, 2, 3] }], [a], [a], [])
       a.f(a, [a], { a })
       expectAction(a, 'f', [a, [a], { a }], [a], [a], [])
+      a.f(new Set())
+      expectAction(a, 'f', [new Set()], [a], [a], [])
+      a.f(new Map())
+      expectAction(a, 'f', [new Map()], [a], [a], [])
+      const g = () => {}
+      a.f(g)
+      expectAction(a, 'f', [g], [a], [a], [])
+      const blob = new (class Blob {})()
+      a.f(blob)
+      expectAction(a, 'f', [blob], [a], [a], [])
     })
 
     it('should throw if not arguments not serializable', () => {
       class A extends Jig { f (...args) { this.args = args } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f(NaN)).to.throw('NaN cannot be serialized to json')
+      expect(() => a.f(NaN)).to.throw('NaN cannot be serialized')
       expectNoAction()
-      expect(() => a.f(Infinity)).to.throw('Infinity cannot be serialized to json')
+      expect(() => a.f(Infinity)).to.throw('Infinity cannot be serialized')
       expectNoAction()
-      expect(() => a.f(new Set())).to.throw('Set cannot be serialized to json')
-      expectNoAction()
-      expect(() => a.f(new Map())).to.throw('Map cannot be serialized to json')
-      expectNoAction()
-      expect(() => a.f(Symbol.hasInstance)).to.throw('Symbol(Symbol.hasInstance) cannot be serialized to json')
-      expectNoAction()
-      expect(() => a.f(() => { })).to.throw('cannot be serialized to json')
+      expect(() => a.f(Symbol.hasInstance)).to.throw('Symbol(Symbol.hasInstance) cannot be serialized')
     })
 
     it('should support changing args in method', () => {
@@ -5555,21 +5559,21 @@ describe('Jig', () => {
   describe('set', () => {
     it('should throw if unserializable value', () => {
       class A extends Jig {
-        f () { this.n = new Set() }
+        f () { this.n = NaN }
 
         g () { this.n = Symbol.hasInstance }
 
-        h () { this.n = () => { } }
+        h () { this.n = -Infinity }
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f()).to.throw('Set cannot be serialized to json')
+      expect(() => a.f()).to.throw('NaN cannot be serialized')
       expectNoAction()
       expect(typeof a.n).to.equal('undefined')
-      expect(() => a.g()).to.throw('Symbol(Symbol.hasInstance) cannot be serialized to json')
+      expect(() => a.g()).to.throw('Symbol(Symbol.hasInstance) cannot be serialized')
       expectNoAction()
       expect(typeof a.n).to.equal('undefined')
-      expect(() => a.h()).to.throw('cannot be serialized to json')
+      expect(() => a.h()).to.throw('-Infinity cannot be serialized')
       expectNoAction()
       expect(typeof a.n).to.equal('undefined')
     })
@@ -5946,7 +5950,7 @@ describe('Jig', () => {
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
       const publicKey = new PrivateKey().publicKey
-      expect(() => a.send(publicKey)).to.throw('cannot be serialized to json')
+      expect(() => a.send(publicKey)).to.throw('is not deployable')
       expect(() => a.send(JSON.parse(JSON.stringify(publicKey)))).to.throw('owner must be a pubkey string')
       expect(() => a.send('123')).to.throw('owner is not a valid public key')
       expectNoAction()
@@ -6971,9 +6975,9 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).to.throw('property x is owned by a different jig')
-      expect(() => b.g(a)).to.throw('property y is owned by a different jig')
-      expect(() => b.h(a)).to.throw('property z is owned by a different jig')
+      expect(() => b.f(a)).to.throw('Property [object Object] is owned by a different token')
+      expect(() => b.g(a)).to.throw('Property 1,2,3 is owned by a different token')
+      expect(() => b.h(a)).to.throw('Property 1,2 is owned by a different token')
     })
 
     it('should not throw if save a copy of an internal property on another jig', () => {
@@ -7001,13 +7005,18 @@ describe('Jig', () => {
     })
 
     it('should throw if save an internal method on another jig', () => {
-      class A extends Jig { init () { this.arr = [] } }
-      class B extends Jig { f (a) { this.x = a.arr.filter } }
+      class A extends Jig {
+        init () {
+          class Blob { f () { return 2 } }
+          this.blob = new Blob()
+        }
+      }
+      class B extends Jig { f (a) { this.x = a.blob.f } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).to.throw('property x is owned by a different jig')
+      expect(() => b.f(a)).to.throw('Property f () { return 2 } is owned by a different token')
     })
   })
 })

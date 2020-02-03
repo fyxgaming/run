@@ -89,6 +89,283 @@ module.exports =
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
+/**
+ * util.js
+ *
+ * Helpers used throughout the library
+ */
+
+const bsv = __webpack_require__(2)
+const { Intrinsics } = __webpack_require__(5)
+
+// ------------------------------------------------------------------------------------------------
+// JIG CHECKS
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * The maximum amount of satoshis able to be set on a Jig. Currently 1 BSV. We restrict this
+ * for security reasons. TODO: There should be an option to disable this in the future.
+ */
+const MAX_SATOSHIS = 100000000
+
+/**
+ * Checks that the satoshis property of a Jig is a non-negative number within a certain range
+ */
+function checkSatoshis (satoshis) {
+  if (typeof satoshis !== 'number') throw new Error('satoshis must be a number')
+  if (!Number.isInteger(satoshis)) throw new Error('satoshis must be an integer')
+  if (isNaN(satoshis) || !isFinite(satoshis)) throw new Error('satoshis must be finite')
+  if (satoshis < 0) throw new Error('satoshis must be non-negative')
+  if (satoshis > MAX_SATOSHIS) throw new Error(`satoshis must be less than ${MAX_SATOSHIS}`)
+}
+
+/**
+ * Checks that the owner of a Jig is a valid public key. Public keys are not network-specific.
+ */
+function checkOwner (owner) {
+  if (typeof owner !== 'string') throw new Error('owner must be a pubkey string')
+  try { new bsv.PublicKey(owner) } // eslint-disable-line
+  catch (e) { throw new Error(`owner is not a valid public key\n\n${e}`) }
+}
+
+// ------------------------------------------------------------------------------------------------
+// OP_RETURN PARSING
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * The version of the run protocol. This will be increased with every breaking change.
+ */
+const PROTOCOL_VERSION = 0x02 // TODO: Reset to 0 for public launch
+
+/**
+ * Returns whether a given transaction is tagged as a run transaction
+ */
+function checkRunTransaction (tx) {
+  const isRunTransaction = tx.outputs.length &&
+    tx.outputs[0].script.isSafeDataOut() &&
+    tx.outputs[0].script.chunks.length === 7 &&
+    tx.outputs[0].script.chunks[2].buf.toString('utf8') === 'run'
+
+  // TODO: Notify shruggr if these error message change
+  if (!isRunTransaction) throw new Error(`not a run tx: ${tx.hash}`)
+
+  const isAllowedProtocol = tx.outputs[0].script.chunks[3].buf.length === 1 &&
+      tx.outputs[0].script.chunks[3].buf[0] === PROTOCOL_VERSION
+
+  if (!isAllowedProtocol) {
+    const suggestion = 'Hint: Are you trying to load jigs created by a different version of run? This is not possible in the private alpha, sorry.'
+    throw new Error(`Unsupported run protocol in tx: ${tx.hash}\n\n${suggestion}`)
+  }
+}
+
+/**
+ * Extracts the custom run json data out of the op_return
+ */
+function extractRunData (tx) {
+  checkRunTransaction(tx)
+  const encrypted = tx.outputs[0].script.chunks[5].buf.toString('utf8')
+  return decryptRunData(encrypted)
+
+  // TODO: do basic checks, that code, actions and jigs are arrays (and nothing else),
+  // and that jigs are hashes
+}
+
+/**
+ * Gets what kind of output this is. Possibilities are 'rundata', code', 'jig', and 'other'.
+ */
+function outputType (tx, vout) {
+  try { checkRunTransaction(tx) } catch (e) { return 'other' }
+  if (vout === 0) return 'rundata'
+  const encrypted = tx.outputs[0].script.chunks[5].buf.toString('utf8')
+  try {
+    const data = decryptRunData(encrypted)
+    if (vout >= 1 && vout < 1 + data.code.length) return 'code'
+    if (vout >= 1 + data.code.length && vout < 1 + data.code.length + data.jigs) return 'jig'
+  } catch (e) { }
+  return 'other'
+}
+
+// ------------------------------------------------------------------------------------------------
+// CODE PARSING
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Returns the source code for a class or function. This is generally type.toString(), however if
+ * the type is a class and it extends another class, we make sure the parent class name in the
+ * extends expression is the actual name of the parent class name because a lot of times the code
+ * will be "class X extends SomeLibrary.Y" and what is deployed should be "class X extends Y"
+ *
+ * This may still return slightly different results. For example, node 8 and node 12 sometimes
+ * have slightly different spacing. Howeve, functionally the code should be the same.
+ */
+function getNormalizedSourceCode (type) {
+  const code = type.toString()
+  const parent = Object.getPrototypeOf(type)
+
+  if (parent.prototype) {
+    const classDef = /^class \S+ extends \S+ {/
+    return code.replace(classDef, `class ${type.name} extends ${parent.name} {`)
+  }
+
+  return code
+}
+
+/**
+ * Returns whether a given function or class can be deployed on-chain. Basically we are checking
+ * that the function or class has a name, which run currently requires to connect dependencies,
+ * and also that it is not a native function built into JavaScript runtime.
+ */
+function deployable (type) {
+  return typeof type === 'function' && type.toString().indexOf('[native code]') === -1
+}
+
+// ------------------------------------------------------------------------------------------------
+// OP_RETURN ENCRYPTION
+// ------------------------------------------------------------------------------------------------
+
+// We encrypt all OP_RETURN data using a simple ASCII character map. This is not intended for
+// security but just to remain in stealth mode for a bit longer.
+
+const alphabet = ' abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=~!@#$%^&*()_+,./;\'[]\\<>?:"{}|'
+const shuffled = 't08sY]m\'#$Dy1`}pCKrHG)f9[uq%3\\ha=!ZVMkJ-*L"xz67R? W~@wdO:Ecg|ITe52.+{ovBj>(&,/Q4lA;^<NPnXSFi_Ub'
+const encArr = alphabet.split('')
+const decArr = shuffled.split('')
+
+function encryptRunData (data) {
+  const s = JSON.stringify(data)
+  return s.split('').map(c => {
+    return encArr.indexOf(c) !== -1 ? decArr[encArr.indexOf(c)] : c
+  }).join('')
+}
+
+function decryptRunData (encrypted) {
+  const decrypted = encrypted.split('').map(c => {
+    return decArr.indexOf(c) !== -1 ? encArr[decArr.indexOf(c)] : c
+  }).join('')
+  try {
+    return JSON.parse(decrypted)
+  } catch (e) {
+    throw new Error(`unable to parse decrypted run data\n\n${e.toString()}\n\n${decrypted}`)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// MISC
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Returns the current run instance that is active
+ */
+function activeRunInstance () {
+  const Run = __webpack_require__(4)
+  if (!Run.instance) throw new Error('Run not instantiated')
+  return Run.instance
+}
+
+/**
+ * Returns whether two jigs have or will have the same blockchain origin
+ */
+function sameJig (a, b) {
+  if (a === b) return true
+  return a.origin && a.origin[0] !== '_' && a.origin === b.origin
+}
+
+/**
+ * Returns the network suffix used for network-specific class properties, like originMainnet,
+ * ownerTestnet, etc. The argument is the network set when creating Run.
+ */
+function networkSuffix (network) {
+  switch (network) {
+    case 'main': return 'Mainnet'
+    case 'test': return 'Testnet'
+    case 'stn': return 'Stn'
+    case 'mock': return 'Mocknet'
+    default: throw new Error(`Unknown network: ${network}`)
+  }
+}
+
+/**
+ * Gets the bsv library network string from the run network string
+ * @param {string} network run network string
+ */
+function bsvNetwork (network) {
+  return network === 'main' ? 'mainnet' : 'testnet'
+}
+
+/**
+ * Converts a value into a format suitable for display
+ */
+function display (x) {
+  try {
+    if (typeof x === 'undefined') return '[undefined]'
+    if (typeof x === 'symbol') return x.toString()
+    if (x === null) return '[null]'
+    return `${x}`
+  } catch (e) { return 'Value' }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+class SerialTaskQueue {
+  constructor () {
+    this.tasks = []
+  }
+
+  async enqueue (func) {
+    return new Promise((resolve, reject) => {
+      this.tasks.push({ func, reject, resolve })
+      if (this.tasks.length === 1) this.execNext()
+    })
+  }
+
+  async execNext () {
+    const next = this.tasks[0]
+    try {
+      const result = next.func()
+      next.resolve(result instanceof Promise ? await result : result)
+    } catch (e) {
+      next.reject(e)
+    } finally {
+      this.tasks.shift()
+      if (this.tasks.length) this.execNext()
+    }
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = {
+  PROTOCOL_VERSION,
+
+  checkOwner,
+  checkSatoshis,
+
+  checkRunTransaction,
+  extractRunData,
+  outputType,
+
+  getNormalizedSourceCode,
+  deployable,
+
+  encryptRunData,
+  decryptRunData,
+
+  activeRunInstance,
+  sameJig,
+  networkSuffix,
+  bsvNetwork,
+  display,
+
+  SerialTaskQueue,
+
+  Intrinsics
+}
+
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
 "use strict";
 
 
@@ -427,282 +704,6 @@ module.exports = {
 
 
 /***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * util.js
- *
- * Helpers used throughout the library
- */
-
-const bsv = __webpack_require__(2)
-const { Intrinsics } = __webpack_require__(5)
-
-// ------------------------------------------------------------------------------------------------
-// JIG CHECKS
-// ------------------------------------------------------------------------------------------------
-
-/**
- * The maximum amount of satoshis able to be set on a Jig. Currently 1 BSV. We restrict this
- * for security reasons. TODO: There should be an option to disable this in the future.
- */
-const MAX_SATOSHIS = 100000000
-
-/**
- * Checks that the satoshis property of a Jig is a non-negative number within a certain range
- */
-function checkSatoshis (satoshis) {
-  if (typeof satoshis !== 'number') throw new Error('satoshis must be a number')
-  if (!Number.isInteger(satoshis)) throw new Error('satoshis must be an integer')
-  if (isNaN(satoshis) || !isFinite(satoshis)) throw new Error('satoshis must be finite')
-  if (satoshis < 0) throw new Error('satoshis must be non-negative')
-  if (satoshis > MAX_SATOSHIS) throw new Error(`satoshis must be less than ${MAX_SATOSHIS}`)
-}
-
-/**
- * Checks that the owner of a Jig is a valid public key. Public keys are not network-specific.
- */
-function checkOwner (owner) {
-  if (typeof owner !== 'string') throw new Error('owner must be a pubkey string')
-  try { new bsv.PublicKey(owner) } // eslint-disable-line
-  catch (e) { throw new Error(`owner is not a valid public key\n\n${e}`) }
-}
-
-// ------------------------------------------------------------------------------------------------
-// OP_RETURN PARSING
-// ------------------------------------------------------------------------------------------------
-
-/**
- * The version of the run protocol. This will be increased with every breaking change.
- */
-const PROTOCOL_VERSION = 0x02 // TODO: Reset to 0 for public launch
-
-/**
- * Returns whether a given transaction is tagged as a run transaction
- */
-function checkRunTransaction (tx) {
-  const isRunTransaction = tx.outputs.length &&
-    tx.outputs[0].script.isSafeDataOut() &&
-    tx.outputs[0].script.chunks.length === 7 &&
-    tx.outputs[0].script.chunks[2].buf.toString('utf8') === 'run'
-
-  // TODO: Notify shruggr if these error message change
-  if (!isRunTransaction) throw new Error(`not a run tx: ${tx.hash}`)
-
-  const isAllowedProtocol = tx.outputs[0].script.chunks[3].buf.length === 1 &&
-      tx.outputs[0].script.chunks[3].buf[0] === PROTOCOL_VERSION
-
-  if (!isAllowedProtocol) {
-    const suggestion = 'Hint: Are you trying to load jigs created by a different version of run? This is not possible in the private alpha, sorry.'
-    throw new Error(`Unsupported run protocol in tx: ${tx.hash}\n\n${suggestion}`)
-  }
-}
-
-/**
- * Extracts the custom run json data out of the op_return
- */
-function extractRunData (tx) {
-  checkRunTransaction(tx)
-  const encrypted = tx.outputs[0].script.chunks[5].buf.toString('utf8')
-  return decryptRunData(encrypted)
-
-  // TODO: do basic checks, that code, actions and jigs are arrays (and nothing else),
-  // and that jigs are hashes
-}
-
-/**
- * Gets what kind of output this is. Possibilities are 'rundata', code', 'jig', and 'other'.
- */
-function outputType (tx, vout) {
-  try { checkRunTransaction(tx) } catch (e) { return 'other' }
-  if (vout === 0) return 'rundata'
-  const encrypted = tx.outputs[0].script.chunks[5].buf.toString('utf8')
-  try {
-    const data = decryptRunData(encrypted)
-    if (vout >= 1 && vout < 1 + data.code.length) return 'code'
-    if (vout >= 1 + data.code.length && vout < 1 + data.code.length + data.jigs) return 'jig'
-  } catch (e) { }
-  return 'other'
-}
-
-// ------------------------------------------------------------------------------------------------
-// CODE PARSING
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Returns the source code for a class or function. This is generally type.toString(), however if
- * the type is a class and it extends another class, we make sure the parent class name in the
- * extends expression is the actual name of the parent class name because a lot of times the code
- * will be "class X extends SomeLibrary.Y" and what is deployed should be "class X extends Y"
- *
- * This may still return slightly different results. For example, node 8 and node 12 sometimes
- * have slightly different spacing. Howeve, functionally the code should be the same.
- */
-function getNormalizedSourceCode (type) {
-  const code = type.toString()
-  const parent = Object.getPrototypeOf(type)
-
-  if (parent.prototype) {
-    const classDef = /^class \S+ extends \S+ {/
-    return code.replace(classDef, `class ${type.name} extends ${parent.name} {`)
-  }
-
-  return code
-}
-
-/**
- * Returns whether a given function or class can be deployed on-chain. Basically we are checking
- * that the function or class has a name, which run currently requires to connect dependencies,
- * and also that it is not a native function built into JavaScript runtime.
- */
-function deployable (type) {
-  return typeof type === 'function' && (/^class [A-Za-z0-9_]/.test(type.toString()) ||
-    /^function [A-Za-z0-9_]/.test(type.toString())) && type.toString().indexOf('[native code]') === -1
-}
-
-// ------------------------------------------------------------------------------------------------
-// OP_RETURN ENCRYPTION
-// ------------------------------------------------------------------------------------------------
-
-// We encrypt all OP_RETURN data using a simple ASCII character map. This is not intended for
-// security but just to remain in stealth mode for a bit longer.
-
-const alphabet = ' abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=~!@#$%^&*()_+,./;\'[]\\<>?:"{}|'
-const shuffled = 't08sY]m\'#$Dy1`}pCKrHG)f9[uq%3\\ha=!ZVMkJ-*L"xz67R? W~@wdO:Ecg|ITe52.+{ovBj>(&,/Q4lA;^<NPnXSFi_Ub'
-const encArr = alphabet.split('')
-const decArr = shuffled.split('')
-
-function encryptRunData (data) {
-  const s = JSON.stringify(data)
-  return s.split('').map(c => {
-    return encArr.indexOf(c) !== -1 ? decArr[encArr.indexOf(c)] : c
-  }).join('')
-}
-
-function decryptRunData (encrypted) {
-  const decrypted = encrypted.split('').map(c => {
-    return decArr.indexOf(c) !== -1 ? encArr[decArr.indexOf(c)] : c
-  }).join('')
-  try {
-    return JSON.parse(decrypted)
-  } catch (e) {
-    throw new Error(`unable to parse decrypted run data\n\n${e.toString()}\n\n${decrypted}`)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// MISC
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Returns the current run instance that is active
- */
-function activeRunInstance () {
-  const Run = __webpack_require__(4)
-  if (!Run.instance) throw new Error('Run not instantiated')
-  return Run.instance
-}
-
-/**
- * Returns whether two jigs have or will have the same blockchain origin
- */
-function sameJig (a, b) {
-  if (a === b) return true
-  return a.origin && a.origin[0] !== '_' && a.origin === b.origin
-}
-
-/**
- * Returns the network suffix used for network-specific class properties, like originMainnet,
- * ownerTestnet, etc. The argument is the network set when creating Run.
- */
-function networkSuffix (network) {
-  switch (network) {
-    case 'main': return 'Mainnet'
-    case 'test': return 'Testnet'
-    case 'stn': return 'Stn'
-    case 'mock': return 'Mocknet'
-    default: throw new Error(`Unknown network: ${network}`)
-  }
-}
-
-/**
- * Gets the bsv library network string from the run network string
- * @param {string} network run network string
- */
-function bsvNetwork (network) {
-  return network === 'main' ? 'mainnet' : 'testnet'
-}
-
-/**
- * Converts a value into a format suitable for display
- */
-function display (x) {
-  if (typeof x === 'undefined') return '[undefined]'
-  if (typeof x === 'symbol') return x.toString()
-  if (x === null) return '[null]'
-  return `${x}`
-}
-
-// ------------------------------------------------------------------------------------------------
-
-class SerialTaskQueue {
-  constructor () {
-    this.tasks = []
-  }
-
-  async enqueue (func) {
-    return new Promise((resolve, reject) => {
-      this.tasks.push({ func, reject, resolve })
-      if (this.tasks.length === 1) this.execNext()
-    })
-  }
-
-  async execNext () {
-    const next = this.tasks[0]
-    try {
-      const result = next.func()
-      next.resolve(result instanceof Promise ? await result : result)
-    } catch (e) {
-      next.reject(e)
-    } finally {
-      this.tasks.shift()
-      if (this.tasks.length) this.execNext()
-    }
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-module.exports = {
-  PROTOCOL_VERSION,
-
-  checkOwner,
-  checkSatoshis,
-
-  checkRunTransaction,
-  extractRunData,
-  outputType,
-
-  getNormalizedSourceCode,
-  deployable,
-
-  encryptRunData,
-  decryptRunData,
-
-  activeRunInstance,
-  sameJig,
-  networkSuffix,
-  bsvNetwork,
-  display,
-
-  SerialTaskQueue,
-
-  Intrinsics
-}
-
-
-/***/ }),
 /* 2 */
 /***/ (function(module, exports) {
 
@@ -722,7 +723,7 @@ module.exports = require("bsv");
 // Sets and maps respect tokens in jigs ... these are overrides for Jigs
 //    How? UniqueSet, UniqueMap
 
-const Context = __webpack_require__(10)
+const Context = __webpack_require__(11)
 
 const JigControl = { // control state shared across all jigs, similar to a PCB
   stack: [], // jig call stack for the current method (Array<Target>)
@@ -733,7 +734,7 @@ const JigControl = { // control state shared across all jigs, similar to a PCB
   error: null, // if any errors occurred to prevent swallows
   enforce: true, // enable safeguards for the user
   proxies: new Map(), // map connecting targets to proxies (Target->Proxy)
-  stateToInject: undefined
+  blankSlate: false // Whether to create the jig as an empty object
 }
 
 JigControl.disableProxy = f => {
@@ -816,7 +817,7 @@ class Jig {
     const fromInstanceOfDifferentJigClass = () => JigControl.stack.length && topOfStack().constructor !== proxy.constructor
 
     // internal variable that tracks whether init is called. if we are injecting a state, then init was called.
-    let calledInit = !!JigControl.stateToInject
+    let calledInit = !!JigControl.blankSlate
 
     handler.getPrototypeOf = function (target) {
       checkValid()
@@ -923,13 +924,18 @@ class Jig {
       }
 
       if (typeof target[prop] === 'function') {
+        // console.log('prop', prop)
+        // console.log(Context.deployable(target[prop]))
+        // console.log(targetIsAJig)
         // we must check if method includes prop because the Safari browser thinks class
         // methods are deployable. other browser do not
-        if (Context.deployable(target[prop]) && (!targetIsAJig || !methods.includes(prop))) return target[prop]
+        // if (Context.deployable(target[prop]) && (!targetIsAJig || !methods.includes(prop))) return target[prop]
+        // console.log('--')
 
         // the property is a method on the object. wrap it up so that we can intercept its execution
         // to publish an action on the blockchain.
-        return new Proxy(target[prop], Object.assign({}, this, { parent: target, name: prop }))
+        const handler = Object.assign({}, this, { parent: target, name: prop })
+        return new Proxy(target[prop], handler)
       }
     }
 
@@ -1062,8 +1068,7 @@ class Jig {
 
         JigControl.disableProxy(() => {
           if (!JigControl.before.has(original)) {
-            const obj = Object.assign({}, original)
-            const checkpoint = new Context.Checkpoint(obj, run.code, proxy)
+            const checkpoint = new Context.Checkpoint(original, run.code, proxy)
             JigControl.before.set(original, checkpoint)
           }
         })
@@ -1116,13 +1121,12 @@ class Jig {
           const objectsToSave = new Set(JigControl.reads)
           Array.from(JigControl.before.keys()).forEach(x => objectsToSave.add(x))
           objectsToSave.forEach(target => {
-            const obj = Object.assign({}, target)
-            after.set(target, new Context.Checkpoint(obj, run.code, proxy))
+            after.set(target, new Context.Checkpoint(target, run.code, proxy))
           })
 
           // Calculate the changed array
           const didChange = ([x, checkpoint]) => !checkpoint.equals(after.get(x))
-          const changed = Array.from(JigControl.before).filter(didChange)
+          const changed = Array.from(JigControl.before).filter(didChange).map(([target]) => target)
 
           // re-enable enforcement and set back the old reads
           JigControl.enforce = true
@@ -1201,7 +1205,7 @@ class Jig {
 
         JigControl.stack.pop()
 
-        // if we are at the bottom of the stack, and there was an error, then
+        // If we are at the bottom of the stack, and there was an error, then
         // reset all jigs involved back to their original state before throwing
         // the error to the user.
         if (!JigControl.stack.length) {
@@ -1220,11 +1224,8 @@ class Jig {
       }
     }
 
-    // if we are injecting a state directly from a cache, do that and just return
-    if (JigControl.stateToInject) {
-      Object.assign(this, JigControl.stateToInject)
-      return proxy
-    }
+    // if we are injecting a state directly from a cache, just return
+    if (JigControl.blankSlate) return proxy
 
     this.owner = JigControl.stack.length ? JigControl.stack[JigControl.stack.length - 1].owner : run.transaction.owner
     this.satoshis = 0
@@ -1293,10 +1294,10 @@ module.exports = { Jig, JigControl }
 
 const bsv = __webpack_require__(2)
 const Code = __webpack_require__(27)
-const Evaluator = __webpack_require__(9)
+const Evaluator = __webpack_require__(10)
 const Syncer = __webpack_require__(33)
 const { Transaction } = __webpack_require__(12)
-const util = __webpack_require__(1)
+const util = __webpack_require__(0)
 const { Pay, Purse } = __webpack_require__(34)
 const Owner = __webpack_require__(65)
 const { Blockchain, BlockchainServer } = __webpack_require__(13)
@@ -1737,23 +1738,13 @@ module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 // Document scanner API
 
 const Protocol = __webpack_require__(31)
-const { display } = __webpack_require__(1)
-const { JigControl } = __webpack_require__(3)
+const { display } = __webpack_require__(0)
+const { Jig, JigControl } = __webpack_require__(3)
 const { Intrinsics } = __webpack_require__(5)
 
 // ------------------------------------------------------------------------------------------------
 // Xray
 // -----------------------------------------------------------------------------------------------
-
-/*
-// detect references to properties of other jigs or code, and throw
-const preventPropertiesOfOtherObjects = (target, parent, name) => {
-  if (typeof target.$owner !== 'undefined' && target.$owner !== proxy) {
-    const suggestion = `Hint: Consider saving a clone of ${name}'s value instead.`
-    throw new Error(`property ${name} is owned by a different jig\n\n${suggestion}`)
-  }
-}
-*/
 
 /**
  * The Xray is a scanner that an clone, serialize, and deserialize complex JavaScript objects with
@@ -1849,9 +1840,11 @@ class Xray {
       const value = scanner.cloneable(x, this)
       if (typeof value === 'undefined') continue
       this.caches.cloneable.set(x, value)
+      if (!value && typeof this.errorObject === 'undefined') this.errorObject = x
       return value
     }
     this.caches.cloneable.set(x, false)
+    if (typeof this.errorObject === 'undefined') this.errorObject = x
     return false
   }
 
@@ -1864,9 +1857,11 @@ class Xray {
       const value = scanner.serializable(x, this)
       if (typeof value === 'undefined') continue
       this.caches.serializable.set(x, value)
+      if (!value && typeof this.errorObject === 'undefined') this.errorObject = x
       return value
     }
     this.caches.serializable.set(x, false)
+    if (typeof this.errorObject === 'undefined') this.errorObject = x
     return false
   }
 
@@ -1879,13 +1874,16 @@ class Xray {
       const value = scanner.deserializable(x, this)
       if (typeof value === 'undefined') continue
       this.caches.deserializable.set(x, value)
+      if (!value && typeof this.errorObject === 'undefined') this.errorObject = x
       return value
     }
     this.caches.deserializable.set(x, false)
+    if (typeof this.errorObject === 'undefined') this.errorObject = x
     return false
   }
 
   clone (x) {
+    this.errorObject = undefined
     if (this.caches.clone.has(x)) return this.caches.clone.get(x)
     for (const scanner of this.scanners) {
       const cloneable = scanner.cloneable(x, this)
@@ -1895,10 +1893,12 @@ class Xray {
       this.caches.clone.set(x, y)
       return y
     }
-    throw new Error(`${display(x)} cannot be cloned`)
+    const errorObject = typeof this.errorObject !== 'undefined' ? this.errorObject : x
+    throw new Error(`${display(errorObject)} cannot be cloned`)
   }
 
   serialize (x) {
+    this.errorObject = undefined
     if (this.caches.serialize.has(x)) return this.caches.serialize.get(x)
     for (const scanner of this.scanners) {
       const serializable = scanner.serializable(x, this)
@@ -1908,10 +1908,12 @@ class Xray {
       this.caches.serialize.set(x, y)
       return y
     }
-    throw new Error(`${display(x)} cannot be serialized`)
+    const errorObject = typeof this.errorObject !== 'undefined' ? this.errorObject : x
+    throw new Error(`${display(errorObject)} cannot be serialized`)
   }
 
   deserialize (x) {
+    this.errorObject = undefined
     if (this.caches.deserialize.has(x)) return this.caches.deserialize.get(x)
     for (const scanner of this.scanners) {
       const deserializable = scanner.deserializable(x, this)
@@ -1921,7 +1923,8 @@ class Xray {
       this.caches.deserialize.set(x, y)
       return y
     }
-    throw new Error(`${display(x)} cannot be deserialized`)
+    const errorObject = typeof this.errorObject !== 'undefined' ? this.errorObject : x
+    throw new Error(`${display(errorObject)} cannot be deserialized`)
   }
 
   predeserialize (x) {
@@ -1944,6 +1947,13 @@ class Xray {
       if (replacement) return replacement
     }
     return x
+  }
+
+  checkOwner (x) {
+    if (typeof x.$owner !== 'undefined' && x.$owner !== this.restrictedOwner) {
+      const suggestion = `Hint: Consider saving a clone of ${x} value instead.`
+      throw new Error(`Property ${display(x)} is owned by a different token\n\n${suggestion}`)
+    }
   }
 }
 
@@ -2005,6 +2015,7 @@ class PrimitiveScanner {
       case 'number': return true
       case 'string': return true
       case 'object': return x === null ? true : undefined
+      case 'symbol': return true
     }
   }
 
@@ -2048,8 +2059,14 @@ class PrimitiveScanner {
 class BasicObjectScanner {
   scan (x, xray) {
     if (this.isBasicObject(x, xray)) {
+      xray.checkOwner(x)
       xray.caches.scanned.add(x)
-      Object.keys(x).forEach(key => { xray.scan(key); x[key] = xray.scanAndReplace(x[key]) })
+      Object.keys(x).forEach(key => {
+        xray.scan(key);
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
       return true
     }
   }
@@ -2117,8 +2134,14 @@ class BasicObjectScanner {
 class BasicArrayScanner {
   scan (x, xray) {
     if (this.isBasicArray(x, xray)) {
+      xray.checkOwner(x)
       xray.caches.scanned.add(x)
-      Object.keys(x).forEach(key => { xray.scan(key); x[key] = xray.scanAndReplace(x[key]) })
+      Object.keys(x).forEach(key => {
+        xray.scan(key);
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
       return true
     }
   }
@@ -2186,7 +2209,13 @@ const base64Chars = new Set()
   .split('').forEach(x => base64Chars.add(x))
 
 class Uint8ArrayScanner {
-  scan (x, xray) { if (this.isUint8Array(x, xray)) return true }
+  scan (x, xray) {
+    if (this.isUint8Array(x, xray)) {
+      xray.checkOwner(x)
+      return true
+    }
+  }
+
   cloneable (x, xray) { if (this.isUint8Array(x, xray)) return true }
   serializable (x, xray) { if (this.isUint8Array(x, xray)) return true }
 
@@ -2234,6 +2263,7 @@ class Uint8ArrayScanner {
 class SetScanner {
   scan (x, xray) {
     if (this.isSet(x, xray)) {
+      xray.checkOwner(x)
       xray.caches.scanned.add(x)
       if (xray.replaceToken) {
         const newSet = new Set()
@@ -2241,7 +2271,12 @@ class SetScanner {
         x.clear()
         newSet.forEach(y => x.add(y))
       } else for (const y of x) { xray.scan(y) }
-      Object.keys(x).forEach(key => { xray.scan(key); x[key] = xray.scanAndReplace(x[key]) })
+      Object.keys(x).forEach(key => {
+        xray.scan(key);
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
       return true
     }
   }
@@ -2320,6 +2355,7 @@ class SetScanner {
 class MapScanner {
   scan (x, xray) {
     if (this.isMap(x, xray)) {
+      xray.checkOwner(x)
       xray.caches.scanned.add(x)
       for (const entry of x) xray.scan(entry)
       if (xray.replaceToken) {
@@ -2328,7 +2364,12 @@ class MapScanner {
         x.clear()
         newMap.forEach(([key, val]) => x.set(key, val))
       } else for (const entry of x) { xray.scan(entry) }
-      Object.keys(x).forEach(key => { xray.scan(key); x[key] = xray.scanAndReplace(x[key]) })
+      Object.keys(x).forEach(key => {
+        xray.scan(key);
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
       return true
     }
   }
@@ -2423,9 +2464,15 @@ class ArbitraryObjectScanner {
   }
 
   scan (x, xray) {
-    if (this.isArbitraryObject(x)) {
+    if (this.isArbitraryObject(x, xray)) {
+      xray.checkOwner(x)
       xray.caches.scanned.add(x)
-      Object.keys(x).forEach(key => { xray.scan(key); x[key] = xray.scanAndReplace(x[key]) })
+      Object.keys(x).forEach(key => {
+        xray.scan(key);
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
       const newConstructor = xray.scanAndReplace(x.constructor)
       if (newConstructor !== x.constructor) Object.setPrototypeOf(x, newConstructor)
       return true
@@ -2463,15 +2510,16 @@ class ArbitraryObjectScanner {
     const y = Object.create(Object.prototype)
     y.$arbob = this.basicObjectScanner.serialize(Object.assign({}, x), xray)
     y.type = xray.saveToken(x.constructor)
+    if (typeof y.type !== 'string') throw new Error(`Saved type location must be a string: ${y.type}`)
     return y
   }
 
   deserialize (x, xray) {
-    if (!xray.restoreToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
+    if (!xray.loadToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
     const { Object } = xray.intrinsics.default
     const obj = xray.caches.predeserialize.get(x) || Object.create(Object.prototype)
     Object.assign(obj, this.basicObjectScanner.deserialize(x.$arbob, xray))
-    const type = xray.restoreToken(x.type)
+    const type = xray.loadToken(x.type)
     Object.setPrototypeOf(obj, type.prototype)
     return obj
   }
@@ -2650,10 +2698,16 @@ class DedupScanner {
 class DeployableScanner {
   scan (x, xray) {
     if (deployable(x, xray)) {
+      xray.checkOwner(x)
       xray.deployables.add(x)
       if (xray.deeplyScanTokens) {
         xray.caches.scanned.add(x)
-        Object.keys(x).forEach(key => { xray.scan(key); xray.scan(x[key]) })
+        Object.keys(x).forEach(key => {
+          xray.scan(key);
+          if (xray.replaceToken) {
+            x[key] = xray.scanAndReplace(x[key])
+          } else xray.scan(x[key])
+        })
       }
       return true
     }
@@ -2703,7 +2757,12 @@ class TokenScanner {
       if (xray.deeplyScanTokens) {
         xray.caches.scanned.add(x)
         JigControl.disableProxy(() => {
-          Object.keys(x).forEach(key => { xray.scan(key); x[key] = xray.scanAndReplace(x[key]) })
+          Object.keys(x).forEach(key => {
+            xray.scan(key);
+            if (xray.replaceToken) {
+              x[key] = xray.scanAndReplace(x[key])
+            } else xray.scan(x[key])
+          })
         })
       }
       return true
@@ -2753,12 +2812,13 @@ class TokenScanner {
     const { Object } = xray.intrinsics.default
     const y = Object.create(Object.prototype)
     y.$ref = xray.saveToken(x)
+    if (typeof y.$ref !== 'string') throw new Error(`Saved token location must be a string: ${y.$ref}`)
     return y
   }
 
   deserialize (x, xray) {
-    if (!xray.restoreToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
-    return xray.restoreToken(x.$ref)
+    if (!xray.loadToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
+    return xray.loadToken(x.$ref)
   }
 
   predeserialize (x, xray) { }
@@ -2796,17 +2856,18 @@ class Checkpoint {
       .allowTokens()
       .restrictOwner(owner)
       .useIntrinsics(code.intrinsics)
-      .useTokenSaver(token => { this.refs.push(token); return this.refs.length })
-      .useTokenLoader(ref => this.refs.get(ref))
+      .useTokenSaver(token => { this.refs.push(token); return (this.refs.length - 1).toString() })
+      .useTokenLoader(ref => this.refs[parseInt(ref, 10)])
 
     // Note: We should scan and deploy in one pass
-    this.xray.scan(x)
+    const obj = x instanceof Jig ? Object.assign({}, x) : x
+    this.xray.scan(obj)
     this.xray.deployables.forEach(deployable => code.deploy(deployable))
-    this.state = this.xray.serialize(x)
+    this.state = this.xray.serialize(obj)
   }
 
   restore () {
-    return this.xray.deserialize(this.x)
+    return this.xray.deserialize(this.state)
   }
 
   restoreInPlace () {
@@ -2843,12 +2904,161 @@ module.exports = Xray
 
 /***/ }),
 /* 7 */
+/***/ (function(module, exports) {
+
+/**
+ * location.js
+ *
+ * Parses and builds location strings that point to tokens on the blockchain
+ */
+
+/**
+ * Helper class to create and parse location strings
+ *
+ * Every token in Run is stored at a location on the blockchain. Both the "origin"
+ * property and "location" property on jigs and code are location strings. Jiglets
+ * have a location but not an origin. To the user, these come in the form:
+ *
+ *  <txid>_o<vout>
+ *
+ * Where txid is a transaction id in hex, and vout is the output index as an integer.
+ * Locations are usually outputs. But they need not always be outputs. There are other
+ * kinds of locations. If the location ends with _i<vin>, then the location refers
+ * to an input of a transaction. If the location ends in _r<vref>, then the location
+ * refers to another "ref" location within the OP_RETURN JSON. Sometimes within the
+ * OP_RETURN JSON you will see locations without txids, and these refer to relative
+ * locations. They look like _o1, _i0, etc.
+ *
+ * While a transaction is being built, a jig may have a temporary location. This is
+ * identified by a random temporary txid that starts with '?'. This will get turned
+ * into a real location when the token's transaction is known and published. The
+ * convention is for temporary txids to have 48 ?'s followed by 16 random hex chars
+ * to uniquely identify the temporary txid, but this is not strictly required.
+ *
+ * Finally, it is important that tokens be deterministically loadable. Most tokens
+ * are jigs and code and are parsed by the Run protocol. However with Jiglets, a
+ * token may be parsed by another protocol. Two locations may even be parsed differently
+ * by two different protocols, so it's important when identifying the location of a
+ * jiglet to attach its protocol to its location. So, we add a protocol prefix:
+ *
+ *      <protocol_location>://<token_location>
+ *
+ * This class helps store and read all of this, but within Run's code, it is important
+ * to consider all of the above cases when looking at a location.
+ */
+class Location {
+  /**
+     * Parses a location string
+     * @param {string} location Location to parse
+     * @return {object} out
+     * @return {string=} out.txid Transaction ID
+     * @return {number=} out.vout Output index
+     * @return {number=} out.vin Input index
+     * @return {number=} out.vref Reference index
+     * @return {string=} out.tempTxid Temporary transaction ID
+     * @return {object=} out.proto Protocol location object
+     */
+  static parse (location) {
+    const error = s => { throw new Error(`${s}: ${location}`) }
+
+    if (typeof location !== 'string') error('Location must be a string')
+    if (!location.length) error('Location must not be empty')
+
+    // Check if we are dealing with a protocol
+    const protoParts = location.split('://')
+    if (protoParts.length > 2) error('Location must only have one protocol')
+    if (protoParts.length === 2) {
+      return Object.assign({}, Location.parse(protoParts[1]),
+        { proto: Location.parse(protoParts[0]) })
+    }
+
+    // Split the txid and index parts
+    const parts = location.split('_')
+    if (parts.length > 2) error('Location has an unexpected _ separator')
+    if (parts.length < 2) error('Location requires a _ separator')
+
+    const output = {}
+
+    // Validate the txid
+    if (parts[0].length !== 0 && parts[0].length !== 64) error('Location has an invalid txid length')
+    if (parts[0][0] === '?') {
+      output.tempTxid = parts[0]
+    } else if (parts[0].length) {
+      if (!/^[a-fA-F0-9]*$/.test(parts[0])) error('Location has invalid hex in its txid')
+      output.txid = parts[0]
+    }
+
+    // Validate the index number
+    const indexString = parts[1].slice(1)
+    const index = parseInt(indexString, 10)
+    if (isNaN(index) || !/^[0-9]*$/.test(indexString)) error('Location has an invalid index number')
+
+    // Validate the index category
+    switch (parts[1][0]) {
+      case 'o': { output.vout = index; break }
+      case 'i': { output.vin = index; break }
+      case 'r': { output.vref = index; break }
+      default: error('Location has an invalid index category')
+    }
+
+    return output
+  }
+
+  /**
+     * Creates a location string from options
+     * @param {object} options
+     * @param {string=} options.txid Transaction ID
+     * @param {number=} options.vout Output index
+     * @param {number=} options.outputIndex Output index
+     * @param {number=} options.vin Input index
+     * @param {number=} options.vref Reference index
+     * @param {string=} options.tempTxid Temporary transaction ID
+     * @param {object=} options.proto Protocol location object
+     * @return {string} The built location string
+     */
+  static build (options) {
+    const error = s => { throw new Error(`${s}: ${JSON.stringify(options)}`) }
+
+    if (typeof options !== 'object' || !options) error('Location object is invalid')
+    if (options.proto && options.proto.proto) error('Location must only have one protocol')
+
+    // If we have a protocol, build that first.
+    const prefix = options.proto ? `${Location.build(options.proto)}://` : ''
+
+    // Get the txid
+    const txid = `${options.txid || options.tempTxid || ''}`
+
+    // Get the index
+    let category = null; let index = null
+    if (typeof options.vout === 'number') {
+      category = 'o'
+      index = options.vout
+    } else if (typeof options.vin === 'number') {
+      category = 'i'
+      index = options.vin
+    } else if (typeof options.vref === 'number') {
+      category = 'r'
+      index = options.vref
+    } else error('Location index unspecified')
+
+    const badIndex = isNaN(index) || !isFinite(index) || !Number.isInteger(index) || index < 0
+    if (badIndex) error('Location index must be a non-negative integer')
+
+    return `${prefix}${txid}_${category}${index}`
+  }
+}
+
+module.exports = Location
+
+
+/***/ }),
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(0);
+var utils = __webpack_require__(1);
 
 function encode(val) {
   return encodeURIComponent(val).
@@ -2920,7 +3130,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2945,7 +3155,7 @@ module.exports = function createError(message, config, code, request, response) 
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -3171,7 +3381,7 @@ module.exports = Evaluator
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -3179,163 +3389,14 @@ module.exports = Evaluator
  */
 class Context {
   static get Checkpoint () { return __webpack_require__(6).Checkpoint }
-  static activeRunInstance () { return __webpack_require__(1).activeRunInstance() }
-  static deployable (x) { return __webpack_require__(1).deployable(x) }
-  static checkOwner (x) { return __webpack_require__(1).checkOwner(x) }
-  static checkSatoshis (x) { return __webpack_require__(1).checkSatoshis(x) }
-  static networkSuffix (x) { return __webpack_require__(1).networkSuffix(x) }
+  static activeRunInstance () { return __webpack_require__(0).activeRunInstance() }
+  static deployable (x) { return __webpack_require__(0).deployable(x) }
+  static checkOwner (x) { return __webpack_require__(0).checkOwner(x) }
+  static checkSatoshis (x) { return __webpack_require__(0).checkSatoshis(x) }
+  static networkSuffix (x) { return __webpack_require__(0).networkSuffix(x) }
 }
 
 module.exports = Context
-
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports) {
-
-/**
- * location.js
- *
- * Parses and builds location strings that point to tokens on the blockchain
- */
-
-/**
- * Helper class to create and parse location strings
- *
- * Every token in Run is stored at a location on the blockchain. Both the "origin"
- * property and "location" property on jigs and code are location strings. Jiglets
- * have a location but not an origin. To the user, these come in the form:
- *
- *  <txid>_o<vout>
- *
- * Where txid is a transaction id in hex, and vout is the output index as an integer.
- * Locations are usually outputs. But they need not always be outputs. There are other
- * kinds of locations. If the location ends with _i<vin>, then the location refers
- * to an input of a transaction. If the location ends in _r<vref>, then the location
- * refers to another "ref" location within the OP_RETURN JSON. Sometimes within the
- * OP_RETURN JSON you will see locations without txids, and these refer to relative
- * locations. They look like _o1, _i0, etc.
- *
- * While a transaction is being built, a jig may have a temporary location. This is
- * identified by a random temporary txid that starts with '?'. This will get turned
- * into a real location when the token's transaction is known and published. The
- * convention is for temporary txids to have 48 ?'s followed by 16 random hex chars
- * to uniquely identify the temporary txid, but this is not strictly required.
- *
- * Finally, it is important that tokens be deterministically loadable. Most tokens
- * are jigs and code and are parsed by the Run protocol. However with Jiglets, a
- * token may be parsed by another protocol. Two locations may even be parsed differently
- * by two different protocols, so it's important when identifying the location of a
- * jiglet to attach its protocol to its location. So, we add a protocol prefix:
- *
- *      <protocol_location>://<token_location>
- *
- * This class helps store and read all of this, but within Run's code, it is important
- * to consider all of the above cases when looking at a location.
- */
-class Location {
-  /**
-     * Parses a location string
-     * @param {string} location Location to parse
-     * @return {object} out
-     * @return {string=} out.txid Transaction ID
-     * @return {number=} out.vout Output index
-     * @return {number=} out.vin Input index
-     * @return {number=} out.vref Reference index
-     * @return {string=} out.tempTxid Temporary transaction ID
-     * @return {object=} out.proto Protocol location object
-     */
-  static parse (location) {
-    const error = s => { throw new Error(`${s}: ${location}`) }
-
-    if (typeof location !== 'string') error('Location must be a string')
-    if (!location.length) error('Location must not be empty')
-
-    // Check if we are dealing with a protocol
-    const protoParts = location.split('://')
-    if (protoParts.length > 2) error('Location must only have one protocol')
-    if (protoParts.length === 2) {
-      return Object.assign({}, Location.parse(protoParts[1]),
-        { proto: Location.parse(protoParts[0]) })
-    }
-
-    // Split the txid and index parts
-    const parts = location.split('_')
-    if (parts.length > 2) error('Location has an unexpected _ separator')
-    if (parts.length < 2) error('Location requires a _ separator')
-
-    const output = {}
-
-    // Validate the txid
-    if (parts[0].length !== 0 && parts[0].length !== 64) error('Location has an invalid txid length')
-    if (parts[0][0] === '?') {
-      output.tempTxid = parts[0]
-    } else if (parts[0].length) {
-      if (!/^[a-fA-F0-9]*$/.test(parts[0])) error('Location has invalid hex in its txid')
-      output.txid = parts[0]
-    }
-
-    // Validate the index number
-    const indexString = parts[1].slice(1)
-    const index = parseInt(indexString, 10)
-    if (isNaN(index) || !/^[0-9]*$/.test(indexString)) error('Location has an invalid index number')
-
-    // Validate the index category
-    switch (parts[1][0]) {
-      case 'o': { output.vout = index; break }
-      case 'i': { output.vin = index; break }
-      case 'r': { output.vref = index; break }
-      default: error('Location has an invalid index category')
-    }
-
-    return output
-  }
-
-  /**
-     * Creates a location string from options
-     * @param {object} options
-     * @param {string=} options.txid Transaction ID
-     * @param {number=} options.vout Output index
-     * @param {number=} options.outputIndex Output index
-     * @param {number=} options.vin Input index
-     * @param {number=} options.vref Reference index
-     * @param {string=} options.tempTxid Temporary transaction ID
-     * @param {object=} options.proto Protocol location object
-     * @return {string} The built location string
-     */
-  static build (options) {
-    const error = s => { throw new Error(`${s}: ${JSON.stringify(options)}`) }
-
-    if (typeof options !== 'object' || !options) error('Location object is invalid')
-    if (options.proto && options.proto.proto) error('Location must only have one protocol')
-
-    // If we have a protocol, build that first.
-    const prefix = options.proto ? `${Location.build(options.proto)}://` : ''
-
-    // Get the txid
-    const txid = `${options.txid || options.tempTxid || ''}`
-
-    // Get the index
-    let category = null; let index = null
-    if (typeof options.vout === 'number') {
-      category = 'o'
-      index = options.vout
-    } else if (typeof options.vin === 'number') {
-      category = 'i'
-      index = options.vin
-    } else if (typeof options.vref === 'number') {
-      category = 'r'
-      index = options.vref
-    } else error('Location index unspecified')
-
-    const badIndex = isNaN(index) || !isFinite(index) || !Number.isInteger(index) || index < 0
-    if (badIndex) error('Location index must be a non-negative integer')
-
-    return `${prefix}${txid}_${category}${index}`
-  }
-}
-
-module.exports = Location
 
 
 /***/ }),
@@ -3349,7 +3410,7 @@ module.exports = Location
  */
 
 const bsv = __webpack_require__(2)
-const util = __webpack_require__(1)
+const util = __webpack_require__(0)
 const { JigControl } = __webpack_require__(3)
 const Xray = __webpack_require__(6)
 
@@ -4124,30 +4185,33 @@ class Transaction {
         .useIntrinsics(this.run.code.intrinsics)
         .useTokenLoader(tokenLoader)
 
-      xray.scan(cachedState.state)
-
-      for (const ref of xray.refs) {
-        const fullLoc = fullLocation(ref)
-        if (cachedRefs.has(fullLoc)) continue
-        const token = await this.load(fullLoc, { cachedRefs })
-        if (cachedRefs.has(fullLoc)) cachedRefs.set(fullLoc, token)
-      }
-
-      // Create the new type and inject its state
       try {
-        JigControl.stateToInject = xray.deserialize(cachedState.state)
-        JigControl.stateToInject.origin = JigControl.stateToInject.origin || location
-        JigControl.stateToInject.location = JigControl.stateToInject.location || location
+        JigControl.blankSlate = true
 
+        // Create the new instance as a blank slate
         const typeLocation = cachedState.type.startsWith('_') ? location.slice(0, 64) + cachedState.type : cachedState.type
         const T = await this.load(typeLocation)
-
         const instance = new T()
-
         cachedRefs.set(location, instance)
 
+        // Load all dependencies
+        xray.scan(cachedState.state)
+        for (const ref of xray.refs) {
+          const fullLoc = fullLocation(ref)
+          if (cachedRefs.has(fullLoc)) continue
+          const token = await this.load(fullLoc, { cachedRefs })
+          if (cachedRefs.has(fullLoc)) cachedRefs.set(fullLoc, token)
+        }
+
+        // Deserialize and inject our state
+        JigControl.disableProxy(() => {
+          Object.assign(instance, xray.deserialize(cachedState.state))
+          instance.origin = instance.origin || location
+          instance.location = instance.location || location
+        })
+
         return instance
-      } finally { JigControl.stateToInject = null }
+      } finally { JigControl.blankSlate = false }
     }
 
     // --------------------------------------------------------------------------------------------
@@ -4195,7 +4259,7 @@ module.exports = { ProtoTransaction, Transaction }
 
 const { Address, Script, Transaction } = __webpack_require__(2)
 const axios = __webpack_require__(35)
-const util = __webpack_require__(1)
+const util = __webpack_require__(0)
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain API
@@ -4653,7 +4717,7 @@ module.exports = function isCancel(value) {
 "use strict";
 
 
-var utils = __webpack_require__(0);
+var utils = __webpack_require__(1);
 var normalizeHeaderName = __webpack_require__(42);
 
 var DEFAULT_CONTENT_TYPE = {
@@ -4758,7 +4822,7 @@ module.exports = defaults;
 "use strict";
 
 
-var createError = __webpack_require__(8);
+var createError = __webpack_require__(9);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -5416,7 +5480,7 @@ function coerce(val) {
 "use strict";
 
 
-var utils = __webpack_require__(0);
+var utils = __webpack_require__(1);
 
 /**
  * Config-specific merge-function which creates a new config-object
@@ -5574,12 +5638,12 @@ module.exports = expect
  */
 
 const bsv = __webpack_require__(2)
-const util = __webpack_require__(1)
-const Evaluator = __webpack_require__(9)
+const util = __webpack_require__(0)
+const Evaluator = __webpack_require__(10)
 const { Jig, JigControl } = __webpack_require__(3)
 const { Intrinsics } = __webpack_require__(5)
 const Xray = __webpack_require__(6)
-const Context = __webpack_require__(10)
+const Context = __webpack_require__(11)
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -5621,13 +5685,10 @@ class Code {
     propNames.forEach(name => { props[name] = type[name] })
 
     // Check that these properties are serializable
-    const intrinsics = new Intrinsics()
-      .use(this.evaluator.intrinsics)
-
     const xray = new Xray()
       .allowTokens()
       .allowDeployables()
-      .useIntrinsics(intrinsics)
+      .useIntrinsics(this.intrinsics)
 
     try {
       xray.scan(props)
@@ -5679,7 +5740,9 @@ class Code {
       // realdeps is type.deps with its parent if not there
       const parentClass = Object.getPrototypeOf(type)
       const realdeps = classProps.includes('deps') ? Object.assign({}, type.deps) : {}
-      if (parentClass !== Object.getPrototypeOf(Object)) {
+      const SandboxObject = this.evaluator.intrinsics.Object
+      if (parentClass !== Object.getPrototypeOf(Object) &&
+        parentClass !== SandboxObject.getPrototypeOf(SandboxObject)) {
         env[parentClass.name] = this.deploy(parentClass)
         if (realdeps[parentClass.name]) {
           const currentSandbox = this.getInstalled(realdeps[parentClass.name])
@@ -5702,13 +5765,10 @@ class Code {
       this.installs.set(sandbox, sandbox)
 
       // Deploy any code found in the static properties
-
-      const intrinsics = new Intrinsics().use(this.evaluator.intrinsics)
-
       const xray = new Xray()
         .allowTokens()
         .allowDeployables()
-        .useIntrinsics(intrinsics)
+        .useIntrinsics(this.intrinsics)
         .useCodeCloner(x => this.getInstalled(x))
 
       const staticProps = Object.assign({}, type)
@@ -9926,7 +9986,8 @@ module.exports = require("vm");
 
 const { Jig, JigControl } = __webpack_require__(3)
 const { Jiglet, JigletControl } = __webpack_require__(32)
-const Location = __webpack_require__(11)
+const Location = __webpack_require__(7)
+const util = __webpack_require__(0)
 
 // ------------------------------------------------------------------------------------------------
 // Protocol manager
@@ -9949,7 +10010,11 @@ class Protocol {
   static isToken (x) {
     switch (typeof x) {
       case 'object': return x && (x instanceof Jig || x instanceof Jiglet)
-      case 'function': return !!x.origin && !!x.location && !!x.owner
+      case 'function': {
+        if (!!x.origin && !!x.location && !!x.owner) return true
+        const net = util.networkSuffix(util.activeRunInstance().blockchain.network)
+        return !!x[`origin${net}`] && !!x[`location${net}`] && !!x[`owner${net}`]
+      }
       default: return false
     }
   }
@@ -10065,8 +10130,8 @@ module.exports = { Jiglet, JigletControl }
 const { ProtoTransaction } = __webpack_require__(12)
 const { JigControl } = __webpack_require__(3)
 const Xray = __webpack_require__(6)
-const util = __webpack_require__(1)
-const Location = __webpack_require__(11)
+const util = __webpack_require__(0)
+const Location = __webpack_require__(7)
 
 /**
  * Proto-transaction: A temporary structure Run uses to build transactions. This structure
@@ -10405,7 +10470,7 @@ owner: ${spentJigs[i].owner}`)
  */
 
 const bsv = __webpack_require__(2)
-const util = __webpack_require__(1)
+const util = __webpack_require__(0)
 const { Blockchain } = __webpack_require__(13)
 
 // ------------------------------------------------------------------------------------------------
@@ -10613,7 +10678,7 @@ module.exports = __webpack_require__(36);
 "use strict";
 
 
-var utils = __webpack_require__(0);
+var utils = __webpack_require__(1);
 var bind = __webpack_require__(14);
 var Axios = __webpack_require__(38);
 var mergeConfig = __webpack_require__(24);
@@ -10690,8 +10755,8 @@ module.exports = function isBuffer (obj) {
 "use strict";
 
 
-var utils = __webpack_require__(0);
-var buildURL = __webpack_require__(7);
+var utils = __webpack_require__(1);
+var buildURL = __webpack_require__(8);
 var InterceptorManager = __webpack_require__(39);
 var dispatchRequest = __webpack_require__(40);
 var mergeConfig = __webpack_require__(24);
@@ -10783,7 +10848,7 @@ module.exports = Axios;
 "use strict";
 
 
-var utils = __webpack_require__(0);
+var utils = __webpack_require__(1);
 
 function InterceptorManager() {
   this.handlers = [];
@@ -10842,7 +10907,7 @@ module.exports = InterceptorManager;
 "use strict";
 
 
-var utils = __webpack_require__(0);
+var utils = __webpack_require__(1);
 var transformData = __webpack_require__(41);
 var isCancel = __webpack_require__(15);
 var defaults = __webpack_require__(16);
@@ -10935,7 +11000,7 @@ module.exports = function dispatchRequest(config) {
 "use strict";
 
 
-var utils = __webpack_require__(0);
+var utils = __webpack_require__(1);
 
 /**
  * Transform the data for a request or a response
@@ -10962,7 +11027,7 @@ module.exports = function transformData(data, headers, fns) {
 "use strict";
 
 
-var utils = __webpack_require__(0);
+var utils = __webpack_require__(1);
 
 module.exports = function normalizeHeaderName(headers, normalizedName) {
   utils.forEach(headers, function processHeader(value, name) {
@@ -10981,9 +11046,9 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 "use strict";
 
 
-var utils = __webpack_require__(0);
+var utils = __webpack_require__(1);
 var settle = __webpack_require__(17);
-var buildURL = __webpack_require__(7);
+var buildURL = __webpack_require__(8);
 var http = __webpack_require__(19);
 var https = __webpack_require__(20);
 var httpFollow = __webpack_require__(21).http;
@@ -10991,7 +11056,7 @@ var httpsFollow = __webpack_require__(21).https;
 var url = __webpack_require__(22);
 var zlib = __webpack_require__(55);
 var pkg = __webpack_require__(56);
-var createError = __webpack_require__(8);
+var createError = __webpack_require__(9);
 var enhanceError = __webpack_require__(18);
 
 var isHttps = /https:?/;
@@ -12032,12 +12097,12 @@ module.exports = JSON.parse("{\"_from\":\"axios@0.19.0\",\"_id\":\"axios@0.19.0\
 "use strict";
 
 
-var utils = __webpack_require__(0);
+var utils = __webpack_require__(1);
 var settle = __webpack_require__(17);
-var buildURL = __webpack_require__(7);
+var buildURL = __webpack_require__(8);
 var parseHeaders = __webpack_require__(58);
 var isURLSameOrigin = __webpack_require__(59);
-var createError = __webpack_require__(8);
+var createError = __webpack_require__(9);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -12213,7 +12278,7 @@ module.exports = function xhrAdapter(config) {
 "use strict";
 
 
-var utils = __webpack_require__(0);
+var utils = __webpack_require__(1);
 
 // Headers whose duplicates are ignored by node
 // c.f. https://nodejs.org/api/http.html#http_message_headers
@@ -12273,7 +12338,7 @@ module.exports = function parseHeaders(headers) {
 "use strict";
 
 
-var utils = __webpack_require__(0);
+var utils = __webpack_require__(1);
 
 module.exports = (
   utils.isStandardBrowserEnv() ?
@@ -12348,7 +12413,7 @@ module.exports = (
 "use strict";
 
 
-var utils = __webpack_require__(0);
+var utils = __webpack_require__(1);
 
 module.exports = (
   utils.isStandardBrowserEnv() ?
@@ -12552,7 +12617,7 @@ module.exports = function spread(callback) {
  */
 
 const bsv = __webpack_require__(2)
-const util = __webpack_require__(1)
+const util = __webpack_require__(0)
 
 class Owner {
   constructor (keyOrAddress, options) {
@@ -12860,13 +12925,15 @@ module.exports = class Mockchain {
 
 /***/ }),
 /* 67 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
 /**
  * state.js
  *
  * State API and its default StateCache implementation that ships with Run
  */
+
+const Location = __webpack_require__(7)
 
 // ------------------------------------------------------------------------------------------------
 
@@ -12908,6 +12975,8 @@ class StateCache {
   }
 
   async get (location) {
+    Location.parse(location)
+
     const value = this.cache.get(location)
 
     if (value) {
@@ -12919,6 +12988,8 @@ class StateCache {
   }
 
   async set (location, state) {
+    Location.parse(location)
+
     function deepEqual (a, b) {
       if (typeof a !== typeof b) return false
       if (typeof a !== 'object' || !a || !b) return a === b

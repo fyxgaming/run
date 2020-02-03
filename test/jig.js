@@ -877,21 +877,21 @@ describe('Jig', () => {
   describe('set', () => {
     it('should throw if unserializable value', () => {
       class A extends Jig {
-        f () { this.n = new Set() }
+        f () { this.n = NaN }
 
         g () { this.n = Symbol.hasInstance }
 
-        h () { this.n = () => { } }
+        h () { this.n = -Infinity }
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f()).to.throw('Set cannot be serialized to json')
+      expect(() => a.f()).to.throw('NaN cannot be serialized')
       expectNoAction()
       expect(typeof a.n).to.equal('undefined')
-      expect(() => a.g()).to.throw('Symbol(Symbol.hasInstance) cannot be serialized to json')
+      expect(() => a.g()).to.throw('Symbol(Symbol.hasInstance) cannot be serialized')
       expectNoAction()
       expect(typeof a.n).to.equal('undefined')
-      expect(() => a.h()).to.throw('cannot be serialized to json')
+      expect(() => a.h()).to.throw('-Infinity cannot be serialized')
       expectNoAction()
       expect(typeof a.n).to.equal('undefined')
     })
@@ -1268,7 +1268,7 @@ describe('Jig', () => {
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
       const publicKey = new PrivateKey().publicKey
-      expect(() => a.send(publicKey)).to.throw('cannot be serialized to json')
+      expect(() => a.send(publicKey)).to.throw('is not deployable')
       expect(() => a.send(JSON.parse(JSON.stringify(publicKey)))).to.throw('owner must be a pubkey string')
       expect(() => a.send('123')).to.throw('owner is not a valid public key')
       expectNoAction()
@@ -1955,7 +1955,7 @@ describe('Jig', () => {
       expect(b2.n).to.equal(2)
     })
 
-    it.only('should support load of batch with self-references', async () => {
+    it('should support load of batch with self-references', async () => {
       class A extends Jig { f (a) { this.n = a } }
       run.transaction.begin()
       const a = new A()
@@ -2293,9 +2293,9 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).to.throw('property x is owned by a different jig')
-      expect(() => b.g(a)).to.throw('property y is owned by a different jig')
-      expect(() => b.h(a)).to.throw('property z is owned by a different jig')
+      expect(() => b.f(a)).to.throw('Property [object Object] is owned by a different token')
+      expect(() => b.g(a)).to.throw('Property 1,2,3 is owned by a different token')
+      expect(() => b.h(a)).to.throw('Property 1,2 is owned by a different token')
     })
 
     it('should not throw if save a copy of an internal property on another jig', () => {
@@ -2323,13 +2323,18 @@ describe('Jig', () => {
     })
 
     it('should throw if save an internal method on another jig', () => {
-      class A extends Jig { init () { this.arr = [] } }
-      class B extends Jig { f (a) { this.x = a.arr.filter } }
+      class A extends Jig {
+        init () {
+          class Blob { f () { return 2 } }
+          this.blob = new Blob()
+        }
+      }
+      class B extends Jig { f (a) { this.x = a.blob.f } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).to.throw('property x is owned by a different jig')
+      expect(() => b.f(a)).to.throw('Property f () { return 2 } is owned by a different token')
     })
   })
 })
