@@ -1955,7 +1955,7 @@ describe('Jig', () => {
       expect(b2.n).to.equal(2)
     })
 
-    it('should support load of batch with self-references', async () => {
+    it.only('should support load of batch with self-references', async () => {
       class A extends Jig { f (a) { this.n = a } }
       run.transaction.begin()
       const a = new A()
