@@ -6150,7 +6150,7 @@ describe('Jig', () => {
       expect(() => a.f()).to.throw()
       expectNoAction()
       try { console.log(a.n) } catch (e) {
-        expect(e.toString().startsWith('Error: deploy failed')).to.equal(true)
+        expect(e.toString().startsWith('Error: Deploy failed')).to.equal(true)
         expect(e.toString().indexOf('Error: Broadcast failed, tx has no inputs')).not.to.equal(-1)
       }
       run.purse.pay = oldPay
@@ -6229,11 +6229,11 @@ describe('Jig', () => {
           try { a.origin } catch (e) { completed = true } // eslint-disable-line
           if (completed) {
             run.blockchain.broadcast = oldBroadcast
-            expect(() => a.origin).to.throw('a previous update failed')
-            expect(() => a.location).to.throw('a previous update failed')
-            expect(() => a.owner).to.throw('a previous update failed')
-            expect(() => a.n).to.throw('a previous update failed')
-            expect(() => a.f()).to.throw('a previous update failed')
+            expect(() => a.origin).to.throw('A previous update failed')
+            expect(() => a.location).to.throw('A previous update failed')
+            expect(() => a.owner).to.throw('A previous update failed')
+            expect(() => a.n).to.throw('A previous update failed')
+            expect(() => a.f()).to.throw('A previous update failed')
             resolve()
           }
         }, 1)
@@ -8836,10 +8836,10 @@ describe('Transaction', () => {
       const a = await new A().sync()
       const b = await new A().sync()
       await a.f(b, { a }, [b]).sync()
-      const arg1 = { $ref: b.location }
-      const arg2 = { a: { $ref: '_i0' } }
-      const arg3 = [{ $ref: b.location }]
-      const args = [arg1, arg2, arg3]
+      const aref = { $ref: '_i0' }
+      const bref = { $dup: 0 }
+      const dups = [{ $ref: b.location }]
+      const args = { $dedup: [bref, { a: aref }, [bref]], dups }
       expect(data.actions).to.deep.equal([{ target: '_i0', method: 'f', args: args }])
     })
 
@@ -9141,7 +9141,7 @@ describe('Transaction', () => {
         const a = await new A().sync()
         const actions = [{ target: '_i0', method: 'f', args: [{ $class: 'Map' }] }]
         const txid = await build([], actions, [a.location], null, 1)
-        await expect(run.load(txid + '_o1')).to.be.rejectedWith('$ properties must not be defined')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('[object Object] cannot be deserialized')
       })
 
       it('should throw if nonexistant jig arg', async () => {
@@ -9271,10 +9271,10 @@ describe('Transaction', () => {
         class A extends Jig { }
         const code = [{ text: A.toString(), props: { n: { $class: 'Set' } }, owner }]
         const txid = await build(code, [], [], null, 0)
-        await expect(run.load(txid + '_o1')).to.be.rejectedWith('$ properties must not be defined')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('[object Object] cannot be deserialized')
         const code2 = [{ text: A.toString(), props: { n: { $ref: 123 } }, owner }]
         const txid2 = await build(code2, [], [], null, 0)
-        await expect(run.load(txid2 + '_o1')).to.be.rejectedWith('typeof location is number - must be string')
+        await expect(run.load(txid2 + '_o1')).to.be.rejectedWith('[object Object] cannot be scanned')
       })
 
       it('should throw if non-existant ref', async () => {

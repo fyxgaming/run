@@ -2856,11 +2856,14 @@ class Checkpoint {
     const obj = x instanceof Jig ? Object.assign({}, x) : x
     this.xray.scan(obj)
     this.xray.deployables.forEach(deployable => code.deploy(deployable))
-    this.state = this.xray.serialize(obj)
+    this.serialized = this.xray.serialize(obj)
   }
 
   restore () {
-    return this.xray.deserialize(this.state)
+    if (!('restored' in this)) {
+      this.restored = this.xray.deserialize(this.serialized)
+    }
+    return this.restored
   }
 
   restoreInPlace () {
@@ -2880,8 +2883,7 @@ class Checkpoint {
       return a === b
     }
 
-    if (!deepEqual(this.state, other.state)) return false
-    if (JSON.stringify(this.state) !== JSON.stringify(other.state)) return false
+    if (!deepEqual(this.serialized, other.serialized)) return false
     if (this.refs.length !== other.refs.length) return false
     return this.refs.every((ref, n) => this.refs[n] === other.refs[n])
   }
@@ -5406,11 +5408,11 @@ class ProtoTransaction {
 
         const obj = Object.assign({}, jigProxies[vout])
 
+        if (obj.origin.startsWith(tx.hash) || obj.origin.startsWith('_')) delete obj.origin
+        if (obj.location.startsWith(tx.hash) || obj.location.startsWith('_')) delete obj.location
+
         return xray.serialize(obj)
       })
-
-      if (serialized.origin.startsWith(tx.hash)) delete serialized.origin
-      if (serialized.location.startsWith(tx.hash)) delete serialized.location
 
       let type = jigProxies[vout].constructor[`origin${net}`]
       if (type.startsWith(tx.hash)) type = type.slice(64)
@@ -5454,8 +5456,8 @@ class ProtoTransaction {
       // if the jig was never deployed, or if there was an unhandled error leading to this
       // rollback, then make this jig permanently unusable by setting a bad origin.
       if (jig.origin[0] === '_' || unhandled) {
-        const err = `!${jig.origin[0] === '_' ? 'deploy failed'
-          : 'a previous update failed'}\n\n${error}`
+        const err = `!${jig.origin[0] === '_' ? 'Deploy failed'
+          : 'A previous update failed'}\n\n${error.stack}`
         // TODO: log the error here
         Object.keys(jig).forEach(key => delete jig[key])
         jig.origin = jig.location = err
@@ -5583,7 +5585,7 @@ class ProtoTransaction {
       // STORE THE ACTION IN THE PROTO TRANSACTION
       // ------------------------------------------------------------------------------------------
 
-      const creator = before.get(target).state.owner
+      const creator = before.get(target).restore().owner
 
       this.actions.push({ target, method, creator, args, inputs, outputs, reads })
     } finally { this.end() }
@@ -5736,8 +5738,8 @@ class ProtoTransaction {
       const txid = spentLocations[index].slice(0, 64)
       const vout = parseInt(spentLocations[index].slice(66))
       const before = this.before.get(jig)
-      const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, before.state.satoshis)
-      const pubkey = new bsv.PublicKey(before.state.owner, { network: bsvNetwork })
+      const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, before.restore().satoshis)
+      const pubkey = new bsv.PublicKey(before.restore().owner, { network: bsvNetwork })
       const script = bsv.Script.buildPublicKeyHashOut(pubkey)
       const utxo = { txid, vout, script, satoshis }
       tx.from(utxo)
@@ -5747,9 +5749,9 @@ class ProtoTransaction {
     const defAdress = def => new bsv.PublicKey(def.owner, { network: bsvNetwork })
     this.code.forEach(def => tx.to(defAdress(def), bsv.Transaction.DUST_AMOUNT))
     this.outputs.forEach(jig => {
-      const ownerPubkey = this.after.get(jig).state.owner
+      const ownerPubkey = this.after.get(jig).restore().owner
       const ownerAddress = new bsv.PublicKey(ownerPubkey, { network: bsvNetwork }).toAddress()
-      const satoshis = this.after.get(jig).state.satoshis
+      const satoshis = this.after.get(jig).restore().satoshis
       tx.to(ownerAddress, Math.max(bsv.Transaction.DUST_AMOUNT, satoshis))
     })
 
@@ -11993,8 +11995,8 @@ owner: ${spentJigs[i].owner}`)
       }
 
       // also update after because we're going to use it to cache its state
-      next.after.get(target).state.origin = target.origin
-      next.after.get(target).state.location = `${tx.hash}_o${vout}`
+      next.after.get(target).restore().origin = target.origin
+      next.after.get(target).restore().location = `${tx.hash}_o${vout}`
     })
 
     next.code.forEach((def, index) => def.success(`${tx.hash}_o${index + 1}`))
@@ -12011,6 +12013,10 @@ owner: ${spentJigs[i].owner}`)
       // tad excessive. We could probably do a transformation on the json itself.
 
       const restored = after.restore()
+
+      const restoredLocation = restored.location
+      if (restored.origin.startsWith(tx.hash)) delete restored.origin
+      if (restored.location.startsWith(tx.hash)) delete restored.location
 
       const serialized = JigControl.disableProxy(() => {
         const tokenSaver = token => {
@@ -12029,14 +12035,11 @@ owner: ${spentJigs[i].owner}`)
       // TODO: If I could use the actions protocol, then I could have the saved state be
       // the state cache state of the jig. For now, I would just deserialize and serialize again.
 
-      if (serialized.origin.startsWith(tx.hash)) delete serialized.origin
-      if (serialized.location.startsWith(tx.hash)) delete serialized.location
-
       let type = jig.constructor[`origin${net}`]
       if (type.startsWith(tx.hash)) type = type.slice(64)
 
       const cachedState = { type, state: serialized }
-      await this.state.set(restored.location, cachedState)
+      await this.state.set(restoredLocation, cachedState)
     }
 
     // notify the owner
