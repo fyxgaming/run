@@ -495,23 +495,27 @@ describe('Jig', () => {
       expectAction(a, 'f', [{ a: { b: {} } }, { a: [1, 2, 3] }], [a], [a], [])
       a.f(a, [a], { a })
       expectAction(a, 'f', [a, [a], { a }], [a], [a], [])
+      a.f(new Set())
+      expectAction(a, 'f', [new Set()], [a], [a], [])
+      a.f(new Map())
+      expectAction(a, 'f', [new Map()], [a], [a], [])
+      const g = () => {}
+      a.f(g)
+      expectAction(a, 'f', [g], [a], [a], [])
+      const blob = new (class Blob {})()
+      a.f(blob)
+      expectAction(a, 'f', [blob], [a], [a], [])
     })
 
     it('should throw if not arguments not serializable', () => {
       class A extends Jig { f (...args) { this.args = args } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f(NaN)).to.throw('NaN cannot be serialized to json')
+      expect(() => a.f(NaN)).to.throw('NaN cannot be serialized')
       expectNoAction()
-      expect(() => a.f(Infinity)).to.throw('Infinity cannot be serialized to json')
+      expect(() => a.f(Infinity)).to.throw('Infinity cannot be serialized')
       expectNoAction()
-      expect(() => a.f(new Set())).to.throw('Set cannot be serialized to json')
-      expectNoAction()
-      expect(() => a.f(new Map())).to.throw('Map cannot be serialized to json')
-      expectNoAction()
-      expect(() => a.f(Symbol.hasInstance)).to.throw('Symbol(Symbol.hasInstance) cannot be serialized to json')
-      expectNoAction()
-      expect(() => a.f(() => { })).to.throw('cannot be serialized to json')
+      expect(() => a.f(Symbol.hasInstance)).to.throw('Symbol(Symbol.hasInstance) cannot be serialized')
     })
 
     it('should support changing args in method', () => {
