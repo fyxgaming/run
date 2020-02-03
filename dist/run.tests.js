@@ -9269,7 +9269,7 @@ describe('Transaction', () => {
         await run.sync()
         const actions = [{ target: '_i0', method: 'apply', args: [{ $ref: '_r1' }] }]
         const txid = await build([], actions, [b.location], null, 1, [a.location])
-        await expect(run.load(txid + '_o1')).to.be.rejectedWith('unexpected ref _r1')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('Unexpected ref _r1')
       })
 
       it('should throw if same jig used with different locations', async () => {

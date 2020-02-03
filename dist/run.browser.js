@@ -913,7 +913,8 @@ class Jig {
         if (!JigControl.enforce) return target[prop]
 
         // wrap existing objects for protection
-        return new Proxy(target[prop], Object.assign({}, this, { parent: target, name: prop }))
+        const handler = Object.assign({}, this, { parent: target, name: prop })
+        return new Proxy(target[prop], handler)
       }
 
       // If we are returning any constructor, then we don't need to wrap it. Only
@@ -924,16 +925,6 @@ class Jig {
       }
 
       if (typeof target[prop] === 'function') {
-        // console.log('prop', prop)
-        // console.log(Context.deployable(target[prop]))
-        // console.log(targetIsAJig)
-        // we must check if method includes prop because the Safari browser thinks class
-        // methods are deployable. other browser do not
-        // if (Context.deployable(target[prop]) && (!targetIsAJig || !methods.includes(prop))) return target[prop]
-        // console.log('--')
-
-        // the property is a method on the object. wrap it up so that we can intercept its execution
-        // to publish an action on the blockchain.
         const handler = Object.assign({}, this, { parent: target, name: prop })
         return new Proxy(target[prop], handler)
       }
@@ -2063,7 +2054,7 @@ class BasicObjectScanner {
       xray.checkOwner(x)
       xray.caches.scanned.add(x)
       Object.keys(x).forEach(key => {
-        xray.scan(key);
+        xray.scan(key)
         if (xray.replaceToken) {
           x[key] = xray.scanAndReplace(x[key])
         } else xray.scan(x[key])
@@ -2138,7 +2129,7 @@ class BasicArrayScanner {
       xray.checkOwner(x)
       xray.caches.scanned.add(x)
       Object.keys(x).forEach(key => {
-        xray.scan(key);
+        xray.scan(key)
         if (xray.replaceToken) {
           x[key] = xray.scanAndReplace(x[key])
         } else xray.scan(x[key])
@@ -2273,7 +2264,7 @@ class SetScanner {
         newSet.forEach(y => x.add(y))
       } else for (const y of x) { xray.scan(y) }
       Object.keys(x).forEach(key => {
-        xray.scan(key);
+        xray.scan(key)
         if (xray.replaceToken) {
           x[key] = xray.scanAndReplace(x[key])
         } else xray.scan(x[key])
@@ -2366,7 +2357,7 @@ class MapScanner {
         newMap.forEach(([key, val]) => x.set(key, val))
       } else for (const entry of x) { xray.scan(entry) }
       Object.keys(x).forEach(key => {
-        xray.scan(key);
+        xray.scan(key)
         if (xray.replaceToken) {
           x[key] = xray.scanAndReplace(x[key])
         } else xray.scan(x[key])
@@ -2469,7 +2460,7 @@ class ArbitraryObjectScanner {
       xray.checkOwner(x)
       xray.caches.scanned.add(x)
       Object.keys(x).forEach(key => {
-        xray.scan(key);
+        xray.scan(key)
         if (xray.replaceToken) {
           x[key] = xray.scanAndReplace(x[key])
         } else xray.scan(x[key])
@@ -2704,7 +2695,7 @@ class DeployableScanner {
       if (xray.deeplyScanTokens) {
         xray.caches.scanned.add(x)
         Object.keys(x).forEach(key => {
-          xray.scan(key);
+          xray.scan(key)
           if (xray.replaceToken) {
             x[key] = xray.scanAndReplace(x[key])
           } else xray.scan(x[key])
@@ -2759,7 +2750,7 @@ class TokenScanner {
         xray.caches.scanned.add(x)
         JigControl.disableProxy(() => {
           Object.keys(x).forEach(key => {
-            xray.scan(key);
+            xray.scan(key)
             if (xray.replaceToken) {
               x[key] = xray.scanAndReplace(x[key])
             } else xray.scan(x[key])
@@ -5318,7 +5309,7 @@ class ProtoTransaction {
             if (!token) throw new Error(`Unexpected ref ${ref}`)
             return token
           }
-          if (ref[1] !== 'o') throw new Error(`unexpected ref ${ref}`)
+          if (ref[1] !== 'o') throw new Error(`Unexpected ref ${ref}`)
           const n = parseInt(ref.slice(2)) - 1 - data.code.length
           return this.proxies.get(this.outputs[n])
         }
@@ -7280,7 +7271,7 @@ class Code {
         const fullLocation = loc => ((loc[1] === 'i' || loc[1] === 'o') ? txid + loc : loc)
         const loadRef = ref => run.transaction.load(fullLocation(ref), { partiallyInstalledCode })
           .then(token => tokens.set(ref, token))
-        await Promise.all(Array.from(xray.refs).forEach(ref => loadRef))
+        await Promise.all(Array.from(xray.refs).map(ref => loadRef(ref)))
 
         const classProps = xray.deserialize(def.props)
 

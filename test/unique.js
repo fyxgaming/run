@@ -2,7 +2,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const { UniqueSet, UniqueMap } = require('../lib/unique')
-const Protocol = require('../lib/protocol')
+const Protocol = require('../lib/v6/protocol')
 const { createRun } = require('./helpers')
 const Location = require('../lib/location')
 
