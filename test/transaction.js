@@ -664,7 +664,7 @@ describe('Transaction', () => {
         const a = await new A().sync()
         const actions = [{ target: '_i0', method: 'f', args: [{ $class: 'Map' }] }]
         const txid = await build([], actions, [a.location], null, 1)
-        await expect(run.load(txid + '_o1')).to.be.rejectedWith('$ properties must not be defined')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('[object Object] cannot be deserialized')
       })
 
       it('should throw if nonexistant jig arg', async () => {
@@ -794,10 +794,10 @@ describe('Transaction', () => {
         class A extends Jig { }
         const code = [{ text: A.toString(), props: { n: { $class: 'Set' } }, owner }]
         const txid = await build(code, [], [], null, 0)
-        await expect(run.load(txid + '_o1')).to.be.rejectedWith('$ properties must not be defined')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('[object Object] cannot be deserialized')
         const code2 = [{ text: A.toString(), props: { n: { $ref: 123 } }, owner }]
         const txid2 = await build(code2, [], [], null, 0)
-        await expect(run.load(txid2 + '_o1')).to.be.rejectedWith('typeof location is number - must be string')
+        await expect(run.load(txid2 + '_o1')).to.be.rejectedWith('[object Object] cannot be scanned')
       })
 
       it('should throw if non-existant ref', async () => {
