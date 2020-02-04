@@ -411,10 +411,10 @@ function addTestVectors (intrinsics, testIntrinsics) {
   }
 
   // Symbols
-  addTestVector(Symbol.hasInstance).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(Symbol.iterator).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(Symbol.species).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(Symbol.unscopables).unscannable().uncloneable().unserializable().undeserializable()
+  addTestVector(Symbol.hasInstance).uncloneable().unserializable().undeserializable()
+  addTestVector(Symbol.iterator).uncloneable().unserializable().undeserializable()
+  addTestVector(Symbol.species).uncloneable().unserializable().undeserializable()
+  addTestVector(Symbol.unscopables).uncloneable().unserializable().undeserializable()
 
   // Intrinsic objects
   addTestVector(console).unscannable().uncloneable().unserializable().undeserializable()
