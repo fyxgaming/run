@@ -170,9 +170,9 @@ async function deploy (Class) {
 
     await run.sync()
 
-    properties += `${Class.name}.${origin}= '${Class[origin]}'\n`
-    properties += `${Class.name}.${location}= '${Class[location]}'\n`
-    properties += `${Class.name}.${owner}= '${Class[owner]}'\n`
+    properties += `${Class.name}.${origin} = '${Class[origin]}'\n`
+    properties += `${Class.name}.${location} = '${Class[location]}'\n`
+    properties += `${Class.name}.${owner} = '${Class[owner]}'\n`
 
     run.deactivate()
   }
