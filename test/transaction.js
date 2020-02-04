@@ -866,6 +866,12 @@ describe('Transaction', () => {
         const txid = await build(code, [], [], null, 0)
         await expect(run.load(txid + '_o1')).to.be.rejectedWith(`bad def owner: ${txid}_o1`)
       })
+
+      it('should not load old protocol', async () => {
+        const loc = '04b294f5d30daf37f075869c864a40a03946fc2b764d75c47f276908445b3bf4_o2'
+        const run = createRun({ network: 'test' })
+        await expect(run.load(loc)).to.be.rejectedWith('Unsupported run protocol in tx')
+      })
     })
   })
 })
