@@ -369,7 +369,7 @@ module.exports = {
 "use strict";
 
 
-var bind = __webpack_require__(15);
+var bind = __webpack_require__(16);
 var isBuffer = __webpack_require__(35);
 
 /*global toString:true*/
@@ -723,7 +723,7 @@ module.exports = bsv;
 // Sets and maps respect tokens in jigs ... these are overrides for Jigs
 //    How? UniqueSet, UniqueMap
 
-const Context = __webpack_require__(8)
+const Context = __webpack_require__(10)
 
 const JigControl = { // control state shared across all jigs, similar to a PCB
   stack: [], // jig call stack for the current method (Array<Target>)
@@ -1284,21 +1284,22 @@ module.exports = { Jig, JigControl }
  */
 
 const bsv = __webpack_require__(2)
-const Code = __webpack_require__(24)
-const Evaluator = __webpack_require__(10)
+const Code = __webpack_require__(25)
+const Evaluator = __webpack_require__(12)
 const Syncer = __webpack_require__(31)
-const { Transaction } = __webpack_require__(13)
+const { Transaction } = __webpack_require__(14)
 const util = __webpack_require__(0)
 const { Pay, Purse } = __webpack_require__(32)
 const Owner = __webpack_require__(51)
-const { Blockchain, BlockchainServer } = __webpack_require__(14)
+const { Blockchain, BlockchainServer } = __webpack_require__(15)
 const Mockchain = __webpack_require__(52)
 const { State, StateCache } = __webpack_require__(53)
 const { PrivateKey } = bsv
 const { Jig } = __webpack_require__(3)
-const { Protocol } = __webpack_require__(12)
+const { Jiglet } = __webpack_require__(7)
+const Protocol = __webpack_require__(11)
 const Token = __webpack_require__(54)
-const expect = __webpack_require__(23)
+const expect = __webpack_require__(24)
 
 // ------------------------------------------------------------------------------------------------
 // Primary Run class
@@ -1539,10 +1540,11 @@ function setupBsvLibrary (network) {
 // Run static properties
 // ------------------------------------------------------------------------------------------------
 
-Run.version =  false ? undefined : "0.4.1"
+Run.version =  false ? undefined : "0.4.2"
 Run.protocol = util.PROTOCOL_VERSION
 Run._util = util
 Run.instance = null
+Run.protocol = Protocol
 
 Run.Blockchain = Blockchain
 Run.BlockchainServer = BlockchainServer
@@ -1555,16 +1557,18 @@ Run.State = State
 Run.StateCache = StateCache
 
 Run.Jig = Jig
+Run.Jiglet = Jiglet
 Run.Token = Token
 Run.expect = expect
 global.Jig = Jig
+global.Jiglet = Jiglet
 global.Token = Token
 
 // ------------------------------------------------------------------------------------------------
 
 module.exports = Run
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
 /* 5 */
@@ -1731,7 +1735,7 @@ module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 // So Objects and arrays are acceptible from without.
 // Document scanner API
 
-const Protocol = __webpack_require__(12)
+const Protocol = __webpack_require__(11)
 const { display } = __webpack_require__(0)
 const { Jig, JigControl } = __webpack_require__(3)
 const { Intrinsics } = __webpack_require__(5)
@@ -2897,55 +2901,100 @@ Xray.Checkpoint = Checkpoint
 
 module.exports = Xray
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(11).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13).Buffer))
 
 /***/ }),
 /* 7 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-var g;
+const Context = __webpack_require__(10)
 
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || new Function("return this")();
-} catch (e) {
-	// This works if the window reference is available
-	if (typeof window === "object") g = window;
+const JigletControl = {
+  loader: undefined
 }
 
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
+// Note: This is a good way to learn the Jig class
+class Jiglet {
+  constructor (...args) {
+    const run = Context.activeRunInstance()
 
-module.exports = g;
+    // Sandbox the Jiglet
+    if (!run.code.isSandbox(this.constructor)) {
+      run.transaction.begin()
+      try {
+        const T = run.code.deploy(this.constructor)
+        return new T(...args)
+      } finally { run.transaction.end() }
+    }
+
+    // Check the Jiglet is property derived (no constructors)
+    const childClasses = []
+    let type = this.constructor
+    while (type !== Jiglet) {
+      childClasses.push(type)
+      type = Object.getPrototypeOf(type)
+    }
+
+    if (childClasses.length === 0) { throw new Error('Jiglet must be extended') }
+
+    const constructorRegex = /\s+constructor\s*\(/
+    if (childClasses.some(type => constructorRegex.test(type.toString()))) {
+      throw new Error('Jiglet must use init() instead of constructor()')
+    }
+
+    // Check that the loader matches
+    if (!JigletControl.loader || JigletControl.loader !== this.constructor.loader) {
+      throw new Error('Must only create Jiglet from its loader')
+    }
+
+    // Run the init
+    this.init(...args)
+
+    // Validate the location
+    if (typeof this.location !== 'string') {
+      throw new Error('Jiglet init() must set a location')
+    }
+
+    // Free the object so there are no more changes
+    // TODO: deep freeze
+    Object.freeze(this)
+  }
+
+  init () { }
+
+  static [Symbol.hasInstance] (target) {
+    const run = Context.activeRunInstance()
+
+    // check if the target has a location. this will be false for this.constructor.prototype.
+    if (typeof target !== 'object' || !('location' in target)) return false
+
+    // find the sandboxed version of this class because thats what instances will be
+    let T = run.code.getInstalled(this)
+    if (!T) {
+      const net = Context.networkSuffix(run.blockchain.network)
+      T = run.code.getInstalled(this[`origin${net}`])
+      if (!T) return false
+    }
+
+    // check if this class's prototype is in the prototype chain of the target
+    let type = Object.getPrototypeOf(target)
+    while (type) {
+      if (type === T.prototype) return true
+      type = Object.getPrototypeOf(type)
+    }
+
+    return false
+  }
+}
+
+// This should be overridden in each child class
+Jiglet.loader = undefined
+
+module.exports = { Jiglet, JigletControl }
 
 
 /***/ }),
 /* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * The objects that are exposed from Run to our built-in sandboxes, Jig and Jiglet
- */
-class Context {
-  static get Checkpoint () { return __webpack_require__(6).Checkpoint }
-  static activeRunInstance () { return __webpack_require__(0).activeRunInstance() }
-  static deployable (x) { return __webpack_require__(0).deployable(x) }
-  static checkOwner (x) { return __webpack_require__(0).checkOwner(x) }
-  static checkSatoshis (x) { return __webpack_require__(0).checkSatoshis(x) }
-  static networkSuffix (x) { return __webpack_require__(0).networkSuffix(x) }
-}
-
-module.exports = Context
-
-
-/***/ }),
-/* 9 */
 /***/ (function(module, exports) {
 
 /**
@@ -2998,7 +3047,7 @@ class Location {
      * @return {number=} out.vin Input index
      * @return {number=} out.vref Reference index
      * @return {string=} out.tempTxid Temporary transaction ID
-     * @return {object=} out.proto Protocol location object
+     * @return {object=} out.protocol Protocol location object
      */
   static parse (location) {
     const error = s => { throw new Error(`${s}: ${location}`) }
@@ -3011,7 +3060,7 @@ class Location {
     if (protoParts.length > 2) error('Location must only have one protocol')
     if (protoParts.length === 2) {
       return Object.assign({}, Location.parse(protoParts[1]),
-        { proto: Location.parse(protoParts[0]) })
+        { protocol: Location.parse(protoParts[0]) })
     }
 
     // Split the txid and index parts
@@ -3055,17 +3104,17 @@ class Location {
      * @param {number=} options.vin Input index
      * @param {number=} options.vref Reference index
      * @param {string=} options.tempTxid Temporary transaction ID
-     * @param {object=} options.proto Protocol location object
+     * @param {object=} options.protocol Protocol location object
      * @return {string} The built location string
      */
   static build (options) {
     const error = s => { throw new Error(`${s}: ${JSON.stringify(options)}`) }
 
     if (typeof options !== 'object' || !options) error('Location object is invalid')
-    if (options.proto && options.proto.proto) error('Location must only have one protocol')
+    if (options.protocol && options.protocol.protocol) error('Location must only have one protocol')
 
     // If we have a protocol, build that first.
-    const prefix = options.proto ? `${Location.build(options.proto)}://` : ''
+    const prefix = options.protocol ? `${Location.build(options.protocol)}://` : ''
 
     // Get the txid
     const txid = `${options.txid || options.tempTxid || ''}`
@@ -3094,7 +3143,158 @@ module.exports = Location
 
 
 /***/ }),
+/* 9 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || new Function("return this")();
+} catch (e) {
+	// This works if the window reference is available
+	if (typeof window === "object") g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
 /* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * The objects that are exposed from Run to our built-in sandboxes, Jig and Jiglet
+ */
+class Context {
+  static get Checkpoint () { return __webpack_require__(6).Checkpoint }
+  static activeRunInstance () { return __webpack_require__(0).activeRunInstance() }
+  static deployable (x) { return __webpack_require__(0).deployable(x) }
+  static checkOwner (x) { return __webpack_require__(0).checkOwner(x) }
+  static checkSatoshis (x) { return __webpack_require__(0).checkSatoshis(x) }
+  static networkSuffix (x) { return __webpack_require__(0).networkSuffix(x) }
+}
+
+module.exports = Context
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * protocol.js
+ *
+ * Manager for token protocols are supported by Run
+ */
+
+const { Jig, JigControl } = __webpack_require__(3)
+const { Jiglet, JigletControl } = __webpack_require__(7)
+const Location = __webpack_require__(8)
+const util = __webpack_require__(0)
+
+// ------------------------------------------------------------------------------------------------
+// Protocol manager
+// ------------------------------------------------------------------------------------------------
+
+class Protocol {
+  static install (loader) {
+    // Should deploy? Need sandbox, for sandboxed jiglets. Or maybe not?
+
+    if (typeof loader !== 'function' && typeof loader.load !== 'function') {
+      throw new Error(`Cannot install loader: ${loader}`)
+    }
+    Protocol.loaders.add(loader)
+  }
+
+  static uninstall (loader) {
+    return Protocol.loaders.delete(loader)
+  }
+
+  static isToken (x) {
+    switch (typeof x) {
+      case 'object': return x && (x instanceof Jig || x instanceof Jiglet)
+      case 'function': {
+        if (!!x.origin && !!x.location && !!x.owner) return true
+        const net = util.networkSuffix(util.activeRunInstance().blockchain.network)
+        return !!x[`origin${net}`] && !!x[`location${net}`] && !!x[`owner${net}`]
+      }
+      default: return false
+    }
+  }
+
+  static isDeployable (x) {
+    if (typeof x !== 'function') return false
+    return x.toString().indexOf('[native code]') === -1
+  }
+
+  static getLocation (x) {
+    const location = JigControl.disableProxy(() => x.location)
+    Location.parse(location)
+    return location
+  }
+
+  static getOrigin (x) {
+    if (x && x instanceof Jiglet) return Protocol.getLocation(x)
+    const origin = JigControl.disableProxy(() => x.origin)
+    Location.parse(origin)
+    return origin
+  }
+
+  static async loadJiglet (location, blockchain, code) {
+    const errors = []
+    for (const loader of Protocol.loaders) {
+      try {
+        const sandboxedLoader = code.install(loader)
+        JigletControl.loader = sandboxedLoader
+        const token = await sandboxedLoader.load(location, blockchain)
+        if (!token) continue
+        const loc = Location.parse(token.location)
+        if (!loc.protocol) throw new Error(`Protocol must be set on Jiglet locations: ${token.location}`)
+        return token
+      } catch (e) {
+        errors.push(`${loader.name}: ${e.toString()}`)
+        continue
+      } finally {
+        JigletControl.loader = undefined
+      }
+    }
+    throw new Error(`No loader available for ${location}\n\n${errors}`)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Loader API for custom Jiglets
+// ------------------------------------------------------------------------------------------------
+
+class Loader {
+  // Static to keep stateless
+  static async load (location, blockchain) {
+    // Fetch tx
+    // Parse
+    // Return Jiglet
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+Protocol.loaders = new Set()
+Protocol.Loader = Loader
+
+module.exports = Protocol
+
+
+/***/ }),
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -3103,7 +3303,7 @@ module.exports = Location
  * The evaluator runs arbitrary code in a secure sandbox
  */
 
-const ses = __webpack_require__(25)
+const ses = __webpack_require__(26)
 const { getIntrinsics, intrinsicNames } = __webpack_require__(5)
 
 // ------------------------------------------------------------------------------------------------
@@ -3318,10 +3518,10 @@ Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
 
 module.exports = Evaluator
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3335,9 +3535,9 @@ module.exports = Evaluator
 
 
 
-var base64 = __webpack_require__(27)
-var ieee754 = __webpack_require__(28)
-var isArray = __webpack_require__(29)
+var base64 = __webpack_require__(28)
+var ieee754 = __webpack_require__(29)
+var isArray = __webpack_require__(30)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -5115,110 +5315,10 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * protocol.js
- *
- * Manager for token protocols are supported by Run
- */
-
-const { Jig, JigControl } = __webpack_require__(3)
-const { Jiglet, JigletControl } = __webpack_require__(30)
-const Location = __webpack_require__(9)
-const util = __webpack_require__(0)
-
-// ------------------------------------------------------------------------------------------------
-// Protocol manager
-// ------------------------------------------------------------------------------------------------
-
-class Protocol {
-  static install (loader) {
-    // Should deploy? Need sandbox, for sandboxed jiglets. Or maybe not?
-
-    if (typeof loader !== 'function' && typeof loader.load !== 'function') {
-      throw new Error(`Cannot install loader: ${loader}`)
-    }
-    Protocol.loaders.add(loader)
-  }
-
-  static uninstall (loader) {
-    return Protocol.loaders.delete(loader)
-  }
-
-  static isToken (x) {
-    switch (typeof x) {
-      case 'object': return x && (x instanceof Jig || x instanceof Jiglet)
-      case 'function': {
-        if (!!x.origin && !!x.location && !!x.owner) return true
-        const net = util.networkSuffix(util.activeRunInstance().blockchain.network)
-        return !!x[`origin${net}`] && !!x[`location${net}`] && !!x[`owner${net}`]
-      }
-      default: return false
-    }
-  }
-
-  static isDeployable (x) {
-    if (typeof x !== 'function') return false
-    return x.toString().indexOf('[native code]') === -1
-  }
-
-  static getLocation (x) {
-    const location = JigControl.disableProxy(() => x.location)
-    Location.parse(location)
-    return location
-  }
-
-  static getOrigin (x) {
-    if (x && x instanceof Jiglet) return Protocol.getLocation(x)
-    const origin = JigControl.disableProxy(() => x.origin)
-    Location.parse(origin)
-    return origin
-  }
-
-  static async loadJiglet (location, blockchain) {
-    for (const loader of Protocol.loaders) {
-      try {
-        JigletControl.loader = loader
-        return await loader.load(location, blockchain)
-      } catch (e) {
-        continue
-      } finally {
-        JigletControl.loader = undefined
-      }
-    }
-    throw new Error(`No loader available for ${location}`)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Loader API for custom Jiglets
-// ------------------------------------------------------------------------------------------------
-
-class Loader {
-  // Static to keep stateless
-  static async load (location, blockchain) {
-    // Fetch tx
-    // Parse
-    // Return Jiglet
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-Protocol.loaders = new Set()
-Protocol.Loader = Loader
-Protocol.TwetchLoader = TwetchLoader
-
-module.exports = Protocol
-
-
-/***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -5230,7 +5330,248 @@ module.exports = Protocol
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
 const { JigControl } = __webpack_require__(3)
+const { Jiglet, JigletControl } = __webpack_require__(7)
+const Location = __webpack_require__(8)
+const Protocol = __webpack_require__(11)
 const Xray = __webpack_require__(6)
+
+// ------------------------------------------------------------------------------------------------
+// Transaction
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * The main transaction API used by run
+ */
+class Transaction {
+  constructor (run) {
+    this.run = run
+    this.syncer = run.syncer
+    this.blockchain = run.blockchain
+    this.state = run.state
+    this.owner = run.owner.pubkey ? run.owner.pubkey : null
+    this.code = run.code
+    this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this)) // current proto-transaction
+  }
+
+  begin () { this.protoTx.begin(); return this.run }
+
+  end () { this.protoTx.end(); return this.run }
+
+  onReadyForPublish () {
+    this.syncer.publish(this.protoTx)
+    this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this))
+  }
+
+  export () {
+    if (this.syncer.queued.length > 0) {
+      // TODO: Only have to check if referenced jigs are in the queue
+      throw new Error('must not have any queued transactions before exporting')
+    }
+
+    if (this.protoTx.beginCount === 0) {
+      const suggestion = 'Hint: A transaction must first be created using begin() or loaded using import().'
+      throw new Error(`No transaction in progress\n\n${suggestion}`)
+    }
+
+    return this.protoTx.buildBsvTransaction(this.run).tx
+  }
+
+  import (tx) { return this.protoTx.import(tx, this.run, false) }
+
+  rollback () { this.protoTx.rollback(this.syncer.lastPosted, this.run, false, 'intentional rollback') }
+
+  async sign () { await this.protoTx.sign(this.run) }
+
+  async pay () { await this.protoTx.pay(this.run) }
+
+  // get inputs () {
+  // TODO: filtering by inputs is broken
+  // return this.protoTx.inputs
+  // .filter(input => input.origin !== '_')
+  // .map(input => this.protoTx.proxies.get(input))
+  // }
+
+  // get outputs () {
+  // return this.protoTx.outputs.map(output => this.protoTx.proxies.get(output))
+  // }
+
+  get actions () {
+    return this.protoTx.actions.map(action => {
+      return {
+        target: this.protoTx.proxies.get(action.target),
+        method: action.method,
+        args: action.args
+      }
+    })
+  }
+
+  storeCode (type, sandbox, deps, props, success, error) {
+    return this.protoTx.storeCode(type, sandbox, deps, props, success, error,
+      this.owner, this.code, this.run)
+  }
+
+  storeAction (target, method, args, inputs, outputs, reads, before, after, proxies, run) {
+    this.protoTx.storeAction(target, method, args, inputs, outputs, reads, before, after, proxies, this.run)
+  }
+
+  /**
+   * Loads a jig or class at a particular location
+   *
+   * location is a string
+   *
+   * cachedRefs stores a map from locations to jigs/classes loaded by load()
+   * from the state cache. load() will trigger additional loads recursively.
+   * both jigs and classes may have references to other jigs and other classes,
+   * and we don't want to load these multiple times. especially when they refer
+   * to each other cyclically as that could cause infinite loops.
+   */
+  async load (location, options = {}) {
+    if (this.run.logger) this.run.logger.info('Loading', location)
+
+    const loc = Location.parse(location)
+
+    if (loc.protocol) {
+      console.log('--', location)
+      // TODO: Put location on loc.protocol.location
+      const protocolLocation = `${loc.protocol.txid}_o${loc.protocol.vout}`
+      Protocol.loaders.forEach(x => this.code.install(x))
+      const loader = Array.from(Protocol.loaders).find(x => x.location === protocolLocation)
+      const sandboxedLoader = this.code.install(loader)
+      // TODO: This needs to move somewhere
+      try {
+        JigletControl.loader = sandboxedLoader
+        const y = await sandboxedLoader.load(`${loc.txid}_o${loc.vout}`, this.blockchain)
+        return y
+      } finally {
+        JigletControl.loader = undefined
+      }
+    }
+
+    console.log(location)
+    try {
+      return await this.loadRunToken(location)
+    } catch (e) {
+      try {
+        console.log('123', location, e)
+        return await Protocol.loadJiglet(location, this.blockchain, this.code)
+      } catch (e2) {
+        throw new Error(`${e}\n\n${e2}`)
+      }
+    }
+  }
+
+  async loadRunToken (location, options = {}) {
+    const cachedRefs = options.cachedRefs || new Map()
+
+    // --------------------------------------------------------------------------------------------
+    // CHECK THE CACHE
+    // --------------------------------------------------------------------------------------------
+
+    // check the code cache so we only have to download code once
+    const cachedCode = this.code.getInstalled(location)
+    if (cachedCode) return cachedCode
+
+    if (options.partiallyInstalledCode && options.partiallyInstalledCode.has(location)) {
+      return options.partiallyInstalledCode.get(location)
+    }
+
+    // parse the location
+    const txid = location.slice(0, 64)
+    if (location[64] !== '_') throw new Error(`Bad location: ${location}`)
+
+    // TODO: do we want to support loading locations with inputs?
+    // The transaction test "update class property jig in initializer" uses this
+    if (location[65] === 'i') {
+      const tx = await this.blockchain.fetch(txid)
+      const vin = parseInt(location.slice(66))
+      const prevTxId = tx.inputs[vin].prevTxId.toString('hex')
+      return this.load(`${prevTxId}_o${tx.inputs[vin].outputIndex}`)
+    }
+
+    const vout = parseInt(location.slice(66))
+    if (location[65] !== 'o' || isNaN(vout)) throw new Error(`Bad location: ${location}`)
+
+    // check the state cache so we only have to load each jig once
+    const cachedState = await this.state.get(location)
+    if (cachedState) {
+      // Make sure the cached state is valid
+      if (typeof cachedState.type !== 'string' || typeof cachedState.state !== 'object') {
+        const hint = 'Hint: Could the state cache be corrupted?'
+        throw new Error(`Cached state is missing a valid type and/or state property\n\n${JSON.stringify(cachedState)}\n\n${hint}`)
+      }
+
+      // Deserialize from a cached state, first by finding all inner tokens and loading them,
+      // and then deserializing
+      const fullLocation = loc => (loc.startsWith('_') ? `${location.slice(0, 64)}${loc}` : loc)
+      const tokenLoader = ref => cachedRefs.get(fullLocation(ref))
+
+      const xray = new Xray()
+        .allowTokens()
+        .useIntrinsics(this.run.code.intrinsics)
+        .useTokenLoader(tokenLoader)
+
+      try {
+        JigControl.blankSlate = true
+
+        // Create the new instance as a blank slate
+        const typeLocation = cachedState.type.startsWith('_') ? location.slice(0, 64) + cachedState.type : cachedState.type
+        const T = await this.load(typeLocation)
+        const instance = new T()
+        cachedRefs.set(location, instance)
+
+        // Load all dependencies
+        xray.scan(cachedState.state)
+        for (const ref of xray.refs) {
+          const fullLoc = fullLocation(ref)
+          if (cachedRefs.has(fullLoc)) continue
+          const token = await this.load(fullLoc, { cachedRefs })
+          if (cachedRefs.has(fullLoc)) cachedRefs.set(fullLoc, token)
+        }
+
+        // Deserialize and inject our state
+        JigControl.disableProxy(() => {
+          Object.assign(instance, xray.deserialize(cachedState.state))
+          instance.origin = instance.origin || location
+          instance.location = instance.location || location
+        })
+
+        return instance
+      } finally { JigControl.blankSlate = false }
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // LOAD THE TRANSACTION, AND THEN THE JIGS OR CODE
+    // --------------------------------------------------------------------------------------------
+
+    // load all the jigs for this transaction, and return the selected
+    const protoTx = new ProtoTransaction()
+    const tx = await this.blockchain.fetch(txid)
+    await protoTx.import(tx, this.run, null, true, vout, options.partiallyInstalledCode)
+
+    // if a definition, install
+    if (vout > 0 && vout < protoTx.code.length + 1) {
+      return this.code.getInstalled(location) || options.partiallyInstalledCode.get(location)
+    }
+
+    // otherwise, a jig. get the jig.
+    const proxies = protoTx.outputs.map(o => protoTx.proxies.get(o))
+    const jigProxies = new Array(1 + protoTx.code.length).concat(proxies)
+    // TODO: Notify shruggr if these error message change
+    if (typeof jigProxies[vout] === 'undefined') throw new Error('not a jig output')
+    return jigProxies[vout]
+  }
+
+  setProtoTxAndCreator (protoTx, creator) {
+    const old = { protoTx: this.protoTx, creator: this.owner }
+    this.protoTx = protoTx
+    this.owner = creator
+    return old
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// ProtoTransaction
+// ------------------------------------------------------------------------------------------------
 
 /**
  * Proto-transaction: A temporary structure Run uses to build transactions. This structure
@@ -5760,6 +6101,10 @@ class ProtoTransaction {
           ? `_o${parseInt(token[`location${net}`].slice(2)) + 1}`
           : token[`location${net}`]
       }
+
+      if (token instanceof Jiglet) {
+        return token.location
+      }
     }
 
     const xray = new Xray()
@@ -5861,213 +6206,14 @@ class ProtoTransaction {
   }
 }
 
-/**
- * The main transaction API used by run
- */
-class Transaction {
-  constructor (run) {
-    this.run = run
-    this.syncer = run.syncer
-    this.blockchain = run.blockchain
-    this.state = run.state
-    this.owner = run.owner.pubkey ? run.owner.pubkey : null
-    this.code = run.code
-    this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this)) // current proto-transaction
-  }
-
-  begin () { this.protoTx.begin(); return this.run }
-
-  end () { this.protoTx.end(); return this.run }
-
-  onReadyForPublish () {
-    this.syncer.publish(this.protoTx)
-    this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this))
-  }
-
-  export () {
-    if (this.syncer.queued.length > 0) {
-      // TODO: Only have to check if referenced jigs are in the queue
-      throw new Error('must not have any queued transactions before exporting')
-    }
-
-    if (this.protoTx.beginCount === 0) {
-      const suggestion = 'Hint: A transaction must first be created using begin() or loaded using import().'
-      throw new Error(`No transaction in progress\n\n${suggestion}`)
-    }
-
-    return this.protoTx.buildBsvTransaction(this.run).tx
-  }
-
-  import (tx) { return this.protoTx.import(tx, this.run, false) }
-
-  rollback () { this.protoTx.rollback(this.syncer.lastPosted, this.run, false, 'intentional rollback') }
-
-  async sign () { await this.protoTx.sign(this.run) }
-
-  async pay () { await this.protoTx.pay(this.run) }
-
-  // get inputs () {
-  // TODO: filtering by inputs is broken
-  // return this.protoTx.inputs
-  // .filter(input => input.origin !== '_')
-  // .map(input => this.protoTx.proxies.get(input))
-  // }
-
-  // get outputs () {
-  // return this.protoTx.outputs.map(output => this.protoTx.proxies.get(output))
-  // }
-
-  get actions () {
-    return this.protoTx.actions.map(action => {
-      return {
-        target: this.protoTx.proxies.get(action.target),
-        method: action.method,
-        args: action.args
-      }
-    })
-  }
-
-  storeCode (type, sandbox, deps, props, success, error) {
-    return this.protoTx.storeCode(type, sandbox, deps, props, success, error,
-      this.owner, this.code, this.run)
-  }
-
-  storeAction (target, method, args, inputs, outputs, reads, before, after, proxies, run) {
-    this.protoTx.storeAction(target, method, args, inputs, outputs, reads, before, after, proxies, this.run)
-  }
-
-  /**
-   * Loads a jig or class at a particular location
-   *
-   * location is a string
-   *
-   * cachedRefs stores a map from locations to jigs/classes loaded by load()
-   * from the state cache. load() will trigger additional loads recursively.
-   * both jigs and classes may have references to other jigs and other classes,
-   * and we don't want to load these multiple times. especially when they refer
-   * to each other cyclically as that could cause infinite loops.
-   */
-  async load (location, options = {}) {
-    if (this.run.logger) this.run.logger.info('Loading', location)
-
-    const cachedRefs = options.cachedRefs || new Map()
-
-    if (typeof location !== 'string') {
-      throw new Error(`typeof location is ${typeof location} - must be string`)
-    }
-
-    // --------------------------------------------------------------------------------------------
-    // CHECK THE CACHE
-    // --------------------------------------------------------------------------------------------
-
-    // check the code cache so we only have to download code once
-    const cachedCode = this.code.getInstalled(location)
-    if (cachedCode) return cachedCode
-
-    if (options.partiallyInstalledCode && options.partiallyInstalledCode.has(location)) {
-      return options.partiallyInstalledCode.get(location)
-    }
-
-    // parse the location
-    const txid = location.slice(0, 64)
-    if (location[64] !== '_') throw new Error(`Bad location: ${location}`)
-
-    // TODO: do we want to support loading locations with inputs?
-    // The transaction test "update class property jig in initializer" uses this
-    if (location[65] === 'i') {
-      const tx = await this.blockchain.fetch(txid)
-      const vin = parseInt(location.slice(66))
-      const prevTxId = tx.inputs[vin].prevTxId.toString('hex')
-      return this.load(`${prevTxId}_o${tx.inputs[vin].outputIndex}`)
-    }
-
-    const vout = parseInt(location.slice(66))
-    if (location[65] !== 'o' || isNaN(vout)) throw new Error(`Bad location: ${location}`)
-
-    // check the state cache so we only have to load each jig once
-    const cachedState = await this.state.get(location)
-    if (cachedState) {
-      // Make sure the cached state is valid
-      if (typeof cachedState.type !== 'string' || typeof cachedState.state !== 'object') {
-        const hint = 'Hint: Could the state cache be corrupted?'
-        throw new Error(`Cached state is missing a valid type and/or state property\n\n${JSON.stringify(cachedState)}\n\n${hint}`)
-      }
-
-      // Deserialize from a cached state, first by finding all inner tokens and loading them,
-      // and then deserializing
-      const fullLocation = loc => (loc.startsWith('_') ? `${location.slice(0, 64)}${loc}` : loc)
-      const tokenLoader = ref => cachedRefs.get(fullLocation(ref))
-
-      const xray = new Xray()
-        .allowTokens()
-        .useIntrinsics(this.run.code.intrinsics)
-        .useTokenLoader(tokenLoader)
-
-      try {
-        JigControl.blankSlate = true
-
-        // Create the new instance as a blank slate
-        const typeLocation = cachedState.type.startsWith('_') ? location.slice(0, 64) + cachedState.type : cachedState.type
-        const T = await this.load(typeLocation)
-        const instance = new T()
-        cachedRefs.set(location, instance)
-
-        // Load all dependencies
-        xray.scan(cachedState.state)
-        for (const ref of xray.refs) {
-          const fullLoc = fullLocation(ref)
-          if (cachedRefs.has(fullLoc)) continue
-          const token = await this.load(fullLoc, { cachedRefs })
-          if (cachedRefs.has(fullLoc)) cachedRefs.set(fullLoc, token)
-        }
-
-        // Deserialize and inject our state
-        JigControl.disableProxy(() => {
-          Object.assign(instance, xray.deserialize(cachedState.state))
-          instance.origin = instance.origin || location
-          instance.location = instance.location || location
-        })
-
-        return instance
-      } finally { JigControl.blankSlate = false }
-    }
-
-    // --------------------------------------------------------------------------------------------
-    // LOAD THE TRANSACTION, AND THEN THE JIGS OR CODE
-    // --------------------------------------------------------------------------------------------
-
-    // load all the jigs for this transaction, and return the selected
-    const protoTx = new ProtoTransaction()
-    const tx = await this.blockchain.fetch(txid)
-    await protoTx.import(tx, this.run, null, true, vout, options.partiallyInstalledCode)
-
-    // if a definition, install
-    if (vout > 0 && vout < protoTx.code.length + 1) {
-      return this.code.getInstalled(location) || options.partiallyInstalledCode.get(location)
-    }
-
-    // otherwise, a jig. get the jig.
-    const proxies = protoTx.outputs.map(o => protoTx.proxies.get(o))
-    const jigProxies = new Array(1 + protoTx.code.length).concat(proxies)
-    // TODO: Notify shruggr if these error message change
-    if (typeof jigProxies[vout] === 'undefined') throw new Error('not a jig output')
-    return jigProxies[vout]
-  }
-
-  setProtoTxAndCreator (protoTx, creator) {
-    const old = { protoTx: this.protoTx, creator: this.owner }
-    this.protoTx = protoTx
-    this.owner = creator
-    return old
-  }
-}
+// ------------------------------------------------------------------------------------------------
 
 module.exports = { ProtoTransaction, Transaction }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(11).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13).Buffer))
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -6228,6 +6374,9 @@ class BlockchainServer {
       // Query the utxos
       const data = (await this._get(this.api.utxosUrl(this.network, address))).data
       const utxos = this.api.utxosResp(data, address)
+      if (!Array.isArray(utxos)) {
+        throw new Error(`Received invalid utxos for ${address}\n\n: Type: ${typeof utxos}\n\nNetwork: ${this.network}`)
+      }
 
       // In case the utxos from the server have any duplicates, dedup them
       const dedupedUtxos = this._dedupUtxos(utxos)
@@ -6468,7 +6617,7 @@ const apis = [
     fetchUrl: (network, txid) => `${starApiHost}/v1/${network}/tx/${txid}`,
     fetchResp: data => jsonToTx(data),
     utxosUrl: (network, address) => `${starApiHost}/v1/${network}/utxos/${address.toString()}`,
-    utxosResp: (data, address) => data
+    utxosResp: (data, address) => typeof data === 'string' ? JSON.parse(data) : data
   },
   {
     name: 'bitindex',
@@ -6500,7 +6649,7 @@ module.exports = { Blockchain, BlockchainServer }
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6518,7 +6667,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6596,7 +6745,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6608,7 +6757,7 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6632,10 +6781,10 @@ function getDefaultAdapter() {
   // Only Node.JS has a process variable that is of [[Class]] process
   if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(19);
+    adapter = __webpack_require__(20);
   } else if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(19);
+    adapter = __webpack_require__(20);
   }
   return adapter;
 }
@@ -6714,7 +6863,7 @@ module.exports = defaults;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(40)))
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6722,10 +6871,10 @@ module.exports = defaults;
 
 var utils = __webpack_require__(1);
 var settle = __webpack_require__(42);
-var buildURL = __webpack_require__(16);
+var buildURL = __webpack_require__(17);
 var parseHeaders = __webpack_require__(44);
 var isURLSameOrigin = __webpack_require__(45);
-var createError = __webpack_require__(20);
+var createError = __webpack_require__(21);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -6895,7 +7044,7 @@ module.exports = function xhrAdapter(config) {
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6920,7 +7069,7 @@ module.exports = function createError(message, config, code, request, response) 
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6978,7 +7127,7 @@ module.exports = function mergeConfig(config1, config2) {
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7004,7 +7153,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports) {
 
 /**
@@ -7074,7 +7223,7 @@ module.exports = expect
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -7085,11 +7234,12 @@ module.exports = expect
 
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
-const Evaluator = __webpack_require__(10)
+const Evaluator = __webpack_require__(12)
 const { Jig, JigControl } = __webpack_require__(3)
+const { Jiglet, JigletControl } = __webpack_require__(7)
 const { Intrinsics } = __webpack_require__(5)
 const Xray = __webpack_require__(6)
-const Context = __webpack_require__(8)
+const Context = __webpack_require__(10)
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -7108,6 +7258,7 @@ class Code {
     this.evaluator = new Evaluator({ logger: options.logger, sandbox: options.sandbox })
     this.intrinsics = new Intrinsics().use(this.evaluator.intrinsics)
     this.installJig()
+    this.installJiglet()
   }
 
   isSandbox (type) {
@@ -7118,6 +7269,11 @@ class Code {
   getInstalled (typeOrLocation) {
     if (this.isSandbox(typeOrLocation)) return typeOrLocation
     return this.installs.get(typeOrLocation)
+  }
+
+  install (type) {
+    // Make sure the presets are there
+    return this.deploy(type, { requirePresets: true })
   }
 
   extractProps (type) {
@@ -7150,9 +7306,10 @@ class Code {
     return { props, refs }
   }
 
-  deploy (type) {
-    // short-circut deployment at Jig because this class already deployed it
+  deploy (type, options = {}) {
+    // short-circut deployment at Jig and Jiglet because this class already deployed it
     if (type === this.Jig || type === Jig) return this.Jig
+    if (type === this.Jiglet || type === Jiglet) return this.Jiglet
 
     // check that this code can be deployed
     if (!util.deployable(type)) throw new Error(`${type} is not deployable`)
@@ -7189,14 +7346,18 @@ class Code {
       const SandboxObject = this.evaluator.intrinsics.Object
       if (parentClass !== Object.getPrototypeOf(Object) &&
         parentClass !== SandboxObject.getPrototypeOf(SandboxObject)) {
-        env[parentClass.name] = this.deploy(parentClass)
+        env[parentClass.name] = this.deploy(parentClass, options)
         if (realdeps[parentClass.name]) {
           const currentSandbox = this.getInstalled(realdeps[parentClass.name])
           if (currentSandbox !== env[parentClass.name]) {
             throw new Error(`unexpected parent dependency ${parentClass.name}`)
           }
         }
-        if (!(parentClass.name in realdeps) && parentClass !== this.installs.get(Jig) && parentClass !== Jig) {
+        if (!(parentClass.name in realdeps) &&
+          parentClass !== this.installs.get(Jig) &&
+          parentClass !== Jig &&
+          parentClass !== this.installs.get(Jiglet) &&
+          parentClass !== Jiglet) {
           realdeps[parentClass.name] = parentClass
         }
       }
@@ -7226,8 +7387,13 @@ class Code {
         throw new Error(`A static property of ${type.name} is not supported\n\n${e}`)
       }
 
+      const hasPresets = classProps.includes(`origin${net}`) || classProps.includes(`location${net}`)
+      if (!hasPresets && options.requirePresets) {
+        throw new Error(`Preset location and origin are required to use ${type.name}`)
+      }
+
       // if location is already set for the network, assume correct and don't reupload
-      if (classProps.includes(`origin${net}`) || classProps.includes(`location${net}`)) {
+      if (hasPresets) {
         if (classProps.includes(`origin${net}`)) {
           sandbox[`origin${net}`] = sandbox.origin = type.origin = type[`origin${net}`]
         }
@@ -7270,7 +7436,7 @@ class Code {
       }
 
       // Deploy each deployable
-      xray.deployables.forEach(x => this.deploy(x))
+      xray.deployables.forEach(x => this.deploy(x, options))
 
       // Create a safe clone of the static properties for the sandbox
       try {
@@ -7284,7 +7450,7 @@ class Code {
       if (sandboxGlobal) {
         Object.entries(realdeps).forEach(([name, dep]) => {
           if (dep === parentClass || dep === env[parentClass.name]) return
-          sandboxGlobal[name] = this.deploy(dep)
+          sandboxGlobal[name] = this.deploy(dep, options)
         })
       }
 
@@ -7327,6 +7493,8 @@ class Code {
         let parentLocation = (def.deps || {})[parentName]
         if (parentName === 'Jig' && typeof parentLocation === 'undefined') {
           env.Jig = this.Jig
+        } else if (parentName === 'Jiglet' && typeof parentLocation === 'undefined') {
+          env.Jiglet = this.Jiglet
         } else {
           if (parentLocation.startsWith('_')) { parentLocation = tx.hash + parentLocation }
           env[parentName] = await run.transaction.load(parentLocation, { partiallyInstalledCode })
@@ -7407,6 +7575,13 @@ class Code {
     this.installs.set(this.Jig, this.Jig)
   }
 
+  installJiglet () {
+    const env = { JigletControl, Context }
+    this.Jiglet = this.sandboxType(Jiglet, env)[0]
+    this.installs.set(Jiglet, this.Jiglet)
+    this.installs.set(this.Jiglet, this.Jiglet)
+  }
+
   sandboxType (type, env) {
     const prev = this.installs.get(type)
     if (prev) return [prev, null]
@@ -7449,7 +7624,7 @@ module.exports = Code
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (global, factory) {
@@ -8122,7 +8297,7 @@ module.exports = Code
     }
 
     // eslint-disable-next-line global-require
-    const vm = __webpack_require__(26);
+    const vm = __webpack_require__(27);
 
     // Use unsafeGlobalEvalSrc to ensure we get the right 'this'.
     const unsafeGlobal = vm.runInNewContext(unsafeGlobalEvalSrc);
@@ -11405,7 +11580,7 @@ You probably want a Compartment instead, like:
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports) {
 
 var indexOf = function (xs, item) {
@@ -11560,7 +11735,7 @@ exports.createContext = Script.createContext = function (context) {
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11719,7 +11894,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -11809,7 +11984,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -11817,96 +11992,6 @@ var toString = {}.toString;
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
-
-
-/***/ }),
-/* 30 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Context = __webpack_require__(8)
-
-const JigletControl = {
-  loader: undefined
-}
-
-// Note: This is a good way to learn the Jig class
-class Jiglet {
-  constructor (...args) {
-    const run = Context.activeRunInstance()
-
-    // Sandbox the Jiglet
-    if (!run.code.isSandbox(this.constructor)) {
-      run.transaction.begin()
-      try {
-        const T = run.code.deploy(this.constructor)
-        return new T(...args)
-      } finally { run.transaction.end() }
-    }
-
-    // Check the Jiglet is property derived (no constructors)
-    const childClasses = []
-    let type = this.constructor
-    while (type !== Jiglet) {
-      childClasses.push(type)
-      type = Object.getPrototypeOf(type)
-    }
-
-    if (childClasses.length === 0) { throw new Error('Jiglet must be extended') }
-
-    const constructorRegex = /\s+constructor\s*\(/
-    if (childClasses.some(type => constructorRegex.test(type.toString()))) {
-      throw new Error('Jiglet must use init() instead of constructor()')
-    }
-
-    // Check that the loader matches
-    if (!JigletControl.loader || JigletControl.loader !== this.constructor.loader) {
-      throw new Error('Must only create Jiglet from its loader')
-    }
-
-    // Run the init
-    this.init(...args)
-
-    // Validate the location
-    if (typeof this.location !== 'string') {
-      throw new Error('Jiglet init() must set a location')
-    }
-
-    // Free the object so there are no more changes
-    // TODO: deep freeze
-    Object.freeze(this)
-  }
-
-  init () { }
-
-  static [Symbol.hasInstance] (target) {
-    const run = Context.activeRunInstance()
-
-    // check if the target has a location. this will be false for this.constructor.prototype.
-    if (typeof target !== 'object' || !('location' in target)) return false
-
-    // find the sandboxed version of this class because thats what instances will be
-    let T = run.code.getInstalled(this)
-    if (!T) {
-      const net = Context.networkSuffix(run.blockchain.network)
-      T = run.code.getInstalled(this[`origin${net}`])
-      if (!T) return false
-    }
-
-    // check if this class's prototype is in the prototype chain of the target
-    let type = Object.getPrototypeOf(target)
-    while (type) {
-      if (type === T.prototype) return true
-      type = Object.getPrototypeOf(type)
-    }
-
-    return false
-  }
-}
-
-// This should be overridden in each child class
-Jiglet.loader = undefined
-
-module.exports = { Jiglet, JigletControl }
 
 
 /***/ }),
@@ -11919,11 +12004,11 @@ module.exports = { Jiglet, JigletControl }
  * Enqueues transactions and syncs jigs
  */
 
-const { ProtoTransaction } = __webpack_require__(13)
+const { ProtoTransaction } = __webpack_require__(14)
 const { JigControl } = __webpack_require__(3)
 const Xray = __webpack_require__(6)
 const util = __webpack_require__(0)
-const Location = __webpack_require__(9)
+const Location = __webpack_require__(8)
 
 /**
  * Proto-transaction: A temporary structure Run uses to build transactions. This structure
@@ -12264,7 +12349,7 @@ owner: ${spentJigs[i].owner}`)
 
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
-const { Blockchain } = __webpack_require__(14)
+const { Blockchain } = __webpack_require__(15)
 
 // ------------------------------------------------------------------------------------------------
 // Pay API
@@ -12472,10 +12557,10 @@ module.exports = __webpack_require__(34);
 
 
 var utils = __webpack_require__(1);
-var bind = __webpack_require__(15);
+var bind = __webpack_require__(16);
 var Axios = __webpack_require__(36);
-var mergeConfig = __webpack_require__(21);
-var defaults = __webpack_require__(18);
+var mergeConfig = __webpack_require__(22);
+var defaults = __webpack_require__(19);
 
 /**
  * Create an instance of Axios
@@ -12508,9 +12593,9 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(22);
+axios.Cancel = __webpack_require__(23);
 axios.CancelToken = __webpack_require__(49);
-axios.isCancel = __webpack_require__(17);
+axios.isCancel = __webpack_require__(18);
 
 // Expose all/spread
 axios.all = function all(promises) {
@@ -12549,10 +12634,10 @@ module.exports = function isBuffer (obj) {
 
 
 var utils = __webpack_require__(1);
-var buildURL = __webpack_require__(16);
+var buildURL = __webpack_require__(17);
 var InterceptorManager = __webpack_require__(37);
 var dispatchRequest = __webpack_require__(38);
-var mergeConfig = __webpack_require__(21);
+var mergeConfig = __webpack_require__(22);
 
 /**
  * Create a new instance of Axios
@@ -12702,8 +12787,8 @@ module.exports = InterceptorManager;
 
 var utils = __webpack_require__(1);
 var transformData = __webpack_require__(39);
-var isCancel = __webpack_require__(17);
-var defaults = __webpack_require__(18);
+var isCancel = __webpack_require__(18);
+var defaults = __webpack_require__(19);
 var isAbsoluteURL = __webpack_require__(47);
 var combineURLs = __webpack_require__(48);
 
@@ -13029,7 +13114,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 "use strict";
 
 
-var createError = __webpack_require__(20);
+var createError = __webpack_require__(21);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -13347,7 +13432,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 "use strict";
 
 
-var Cancel = __webpack_require__(22);
+var Cancel = __webpack_require__(23);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -13765,7 +13850,7 @@ module.exports = class Mockchain {
  * State API and its default StateCache implementation that ships with Run
  */
 
-const Location = __webpack_require__(9)
+const Location = __webpack_require__(8)
 
 // ------------------------------------------------------------------------------------------------
 
@@ -13898,7 +13983,7 @@ module.exports = { State, StateCache }
  */
 
 const { Jig } = __webpack_require__(3)
-const expect = __webpack_require__(23)
+const expect = __webpack_require__(24)
 
 class Token extends Jig {
   init (amount, _tokenToDecrease, _tokensToCombine) {
