@@ -27,12 +27,12 @@ TwetchLoader.deps = { TwetchPost }
 
 TwetchPost.loader = TwetchLoader
 
-TwetchLoader.originMainnet = 'b446cb6e6187e79f95bc85df7d0e8332873f055d6b63bc29c049584917cceda0_o0'
-TwetchLoader.locationMainnet = 'b446cb6e6187e79f95bc85df7d0e8332873f055d6b63bc29c049584917cceda0_o0'
+TwetchLoader.originMainnet = '44aba573d166e6a67c2969dacd3ac14fa0b44d7e6162dad2d46069495c6097d6_o0'
+TwetchLoader.locationMainnet = '44aba573d166e6a67c2969dacd3ac14fa0b44d7e6162dad2d46069495c6097d6_o0'
 TwetchLoader.ownerMainnet = '02106ec352df6f29cbf65eb2fa8051ca1c2bce4605df0ae41600efd8f3a9276269'
 
-TwetchPost.originMainnet = 'b446cb6e6187e79f95bc85df7d0e8332873f055d6b63bc29c049584917cceda0_o1'
-TwetchPost.locationMainnet = 'b446cb6e6187e79f95bc85df7d0e8332873f055d6b63bc29c049584917cceda0_o1'
+TwetchPost.originMainnet = '44aba573d166e6a67c2969dacd3ac14fa0b44d7e6162dad2d46069495c6097d6_o1'
+TwetchPost.locationMainnet = '44aba573d166e6a67c2969dacd3ac14fa0b44d7e6162dad2d46069495c6097d6_o1'
 TwetchPost.ownerMainnet = '02106ec352df6f29cbf65eb2fa8051ca1c2bce4605df0ae41600efd8f3a9276269'
 
 const run = createRun({ network: 'main' })
@@ -41,6 +41,8 @@ Run.protocol.install(TwetchLoader)
 
 describe('Jiglet', () => {
   it('should load a twetch post', async () => {
+    console.log(Jig.name)
+    /*
     class Favorite extends Jig {
       init (post) {
         this.post = post
@@ -61,7 +63,9 @@ describe('Jiglet', () => {
     console.log(favorite)
     console.log('------------')
 
-    const favorite2 = await run.load('8a0c1220c75e852f98c4ab1e313d1f0e90fc98499039a8db5a54669eceeca0c1_o2')
+    const favorite2 = await run.load(favorite.location)
+    */
+    const favorite2 = await run.load('140a35a53523eb5538665847ecb4e1e8817e8dae2988cc2ba19e6da017f65c0c_o2')
 
     console.log('------------')
     console.log(favorite2)
