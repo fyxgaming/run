@@ -19,7 +19,7 @@ class TwetchLoader {
     if (protocol !== BProtocolIdentifier) return
 
     const text = tx.outputs[0].script.chunks[3].buf.toString('utf8')
-    return new TwetchPost(location, text)
+    return new TwetchPost(`${TwetchLoader.location}://${location}`, text)
   }
 }
 
