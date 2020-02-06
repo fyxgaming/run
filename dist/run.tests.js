@@ -272,9 +272,9 @@ async function deploy (Class) {
 
     await run.sync()
 
-    properties += `${Class.name}.${origin}= '${Class[origin]}'\n`
-    properties += `${Class.name}.${location}= '${Class[location]}'\n`
-    properties += `${Class.name}.${owner}= '${Class[owner]}'\n`
+    properties += `${Class.name}.${origin} = '${Class[origin]}'\n`
+    properties += `${Class.name}.${location} = '${Class[location]}'\n`
+    properties += `${Class.name}.${owner} = '${Class[owner]}'\n`
 
     run.deactivate()
   }
@@ -3449,6 +3449,10 @@ const { Run, Jig, createRun, hookPay } = __webpack_require__(2)
 // Code tests
 // ------------------------------------------------------------------------------------------------
 
+// These are set in 'should deploy to testnet' and used in 'should load from testnet'.
+let deployedCodeLocation = null
+let deployedCodeOwner = null
+
 describe('Code', () => {
   const run = createRun()
   beforeEach(() => run.activate())
@@ -3715,8 +3719,8 @@ describe('Code', () => {
       expect(A.locationTestnet.endsWith('_o2')).to.equal(true)
       expect(B.locationTestnet.endsWith('_o1')).to.equal(true)
       expect(C.locationTestnet.endsWith('_o3')).to.equal(true)
-      // console.log('origin', A.originTestnet)
-      // console.log('owner', A.ownerTestnet)
+      deployedCodeLocation = A.originTestnet
+      deployedCodeOwner = A.ownerTestnet
     }).timeout(30000)
 
     it('should support presets', async () => {
@@ -3791,16 +3795,13 @@ describe('Code', () => {
 
     it('should load from testnet', async () => {
       const run = createRun({ network: 'test' })
-      // TODO: do automatically
-      // generate this from the 'to testnet' test above
-      const loc = '04b294f5d30daf37f075869c864a40a03946fc2b764d75c47f276908445b3bf4_o2'
-      const A = await run.load(loc)
-      expect(A.origin).to.equal(loc)
-      expect(A.location).to.equal(loc)
-      expect(A.originTestnet).to.equal(loc)
-      expect(A.locationTestnet).to.equal(loc)
-      expect(A.owner).to.equal('0302c77434fa976a6d3932c2a337ebd825fe9152df2d34d08af13bf7c35189a527')
-      expect(A.ownerTestnet).to.equal('0302c77434fa976a6d3932c2a337ebd825fe9152df2d34d08af13bf7c35189a527')
+      const A = await run.load(deployedCodeLocation)
+      expect(A.origin).to.equal(deployedCodeLocation)
+      expect(A.location).to.equal(deployedCodeLocation)
+      expect(A.originTestnet).to.equal(deployedCodeLocation)
+      expect(A.locationTestnet).to.equal(deployedCodeLocation)
+      expect(A.owner).to.equal(deployedCodeOwner)
+      expect(A.ownerTestnet).to.equal(deployedCodeOwner)
       expect(new A().f()).to.equal(1)
       expect(new A().createC().g()).to.equal(1)
     }).timeout(30000)
@@ -9342,6 +9343,12 @@ describe('Transaction', () => {
         const code = [{ text: A.toString(), owner: differentOwner }]
         const txid = await build(code, [], [], null, 0)
         await expect(run.load(txid + '_o1')).to.be.rejectedWith(`bad def owner: ${txid}_o1`)
+      })
+
+      it('should not load old protocol', async () => {
+        const loc = '04b294f5d30daf37f075869c864a40a03946fc2b764d75c47f276908445b3bf4_o2'
+        const run = createRun({ network: 'test' })
+        await expect(run.load(loc)).to.be.rejectedWith('Unsupported run protocol in tx')
       })
     })
   })
