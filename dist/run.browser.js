@@ -96,7 +96,7 @@ var Run =
  */
 
 const bsv = __webpack_require__(2)
-const { Intrinsics } = __webpack_require__(5)
+const { Intrinsics } = __webpack_require__(6)
 
 // ------------------------------------------------------------------------------------------------
 // JIG CHECKS
@@ -1296,7 +1296,7 @@ const Mockchain = __webpack_require__(52)
 const { State, StateCache } = __webpack_require__(53)
 const { PrivateKey } = bsv
 const { Jig } = __webpack_require__(3)
-const { Jiglet } = __webpack_require__(7)
+const { Berry } = __webpack_require__(5)
 const Protocol = __webpack_require__(11)
 const Token = __webpack_require__(54)
 const expect = __webpack_require__(24)
@@ -1544,7 +1544,7 @@ Run.version =  false ? undefined : "0.4.2"
 Run.protocol = util.PROTOCOL_VERSION
 Run._util = util
 Run.instance = null
-Run.protocol = Protocol
+Run.installProtocol = Protocol.installBerryProtocol
 
 Run.Blockchain = Blockchain
 Run.BlockchainServer = BlockchainServer
@@ -1557,11 +1557,11 @@ Run.State = State
 Run.StateCache = StateCache
 
 Run.Jig = Jig
-Run.Jiglet = Jiglet
+Run.Berry = Berry
 Run.Token = Token
 Run.expect = expect
 global.Jig = Jig
-global.Jiglet = Jiglet
+global.Berry = Berry
 global.Token = Token
 
 // ------------------------------------------------------------------------------------------------
@@ -1572,6 +1572,96 @@ module.exports = Run
 
 /***/ }),
 /* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Context = __webpack_require__(10)
+
+const BerryControl = {
+  loader: undefined
+}
+
+// Note: This is a good way to learn the Jig class
+class Berry {
+  constructor (...args) {
+    const run = Context.activeRunInstance()
+
+    // Sandbox the berry
+    if (!run.code.isSandbox(this.constructor)) {
+      run.transaction.begin()
+      try {
+        const T = run.code.deploy(this.constructor)
+        return new T(...args)
+      } finally { run.transaction.end() }
+    }
+
+    // Check the berry is property derived (no constructors)
+    const childClasses = []
+    let type = this.constructor
+    while (type !== Berry) {
+      childClasses.push(type)
+      type = Object.getPrototypeOf(type)
+    }
+
+    if (childClasses.length === 0) { throw new Error('Berry must be extended') }
+
+    const constructorRegex = /\s+constructor\s*\(/
+    if (childClasses.some(type => constructorRegex.test(type.toString()))) {
+      throw new Error('Berry must use init() instead of constructor()')
+    }
+
+    // Check that the loader matches
+    if (!BerryControl.loader || BerryControl.loader !== this.constructor.loader) {
+      throw new Error('Must only create Berry from its loader')
+    }
+
+    // Run the init
+    this.init(...args)
+
+    // Validate the location
+    if (typeof this.location !== 'string') {
+      throw new Error('Berry init() must set a location')
+    }
+
+    // Free the object so there are no more changes
+    // TODO: deep freeze
+    Object.freeze(this)
+  }
+
+  init () { }
+
+  static [Symbol.hasInstance] (target) {
+    const run = Context.activeRunInstance()
+
+    // check if the target has a location. this will be false for this.constructor.prototype.
+    if (typeof target !== 'object' || !('location' in target)) return false
+
+    // find the sandboxed version of this class because thats what instances will be
+    let T = run.code.getInstalled(this)
+    if (!T) {
+      const net = Context.networkSuffix(run.blockchain.network)
+      T = run.code.getInstalled(this[`origin${net}`])
+      if (!T) return false
+    }
+
+    // check if this class's prototype is in the prototype chain of the target
+    let type = Object.getPrototypeOf(target)
+    while (type) {
+      if (type === T.prototype) return true
+      type = Object.getPrototypeOf(type)
+    }
+
+    return false
+  }
+}
+
+// This should be overridden in each child class
+Berry.loader = undefined
+
+module.exports = { Berry, BerryControl }
+
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports) {
 
 /**
@@ -1714,7 +1804,7 @@ module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -1738,7 +1828,8 @@ module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 const Protocol = __webpack_require__(11)
 const { display } = __webpack_require__(0)
 const { Jig, JigControl } = __webpack_require__(3)
-const { Intrinsics } = __webpack_require__(5)
+const { Berry } = __webpack_require__(5)
+const { Intrinsics } = __webpack_require__(6)
 
 // ------------------------------------------------------------------------------------------------
 // Xray
@@ -2754,12 +2845,16 @@ class TokenScanner {
       xray.tokens.add(x)
       if (xray.deeplyScanTokens) {
         xray.caches.scanned.add(x)
+
         JigControl.disableProxy(() => {
           Object.keys(x).forEach(key => {
             xray.scan(key)
-            if (xray.replaceToken) {
+            // Berries are frozen and their inner assets cannot be replaced
+            if (xray.replaceToken && !(x instanceof Berry)) {
               x[key] = xray.scanAndReplace(x[key])
-            } else xray.scan(x[key])
+            } else {
+              xray.scan(x[key])
+            }
           })
         })
       }
@@ -2904,96 +2999,6 @@ module.exports = Xray
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13).Buffer))
 
 /***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Context = __webpack_require__(10)
-
-const JigletControl = {
-  loader: undefined
-}
-
-// Note: This is a good way to learn the Jig class
-class Jiglet {
-  constructor (...args) {
-    const run = Context.activeRunInstance()
-
-    // Sandbox the Jiglet
-    if (!run.code.isSandbox(this.constructor)) {
-      run.transaction.begin()
-      try {
-        const T = run.code.deploy(this.constructor)
-        return new T(...args)
-      } finally { run.transaction.end() }
-    }
-
-    // Check the Jiglet is property derived (no constructors)
-    const childClasses = []
-    let type = this.constructor
-    while (type !== Jiglet) {
-      childClasses.push(type)
-      type = Object.getPrototypeOf(type)
-    }
-
-    if (childClasses.length === 0) { throw new Error('Jiglet must be extended') }
-
-    const constructorRegex = /\s+constructor\s*\(/
-    if (childClasses.some(type => constructorRegex.test(type.toString()))) {
-      throw new Error('Jiglet must use init() instead of constructor()')
-    }
-
-    // Check that the loader matches
-    if (!JigletControl.loader || JigletControl.loader !== this.constructor.loader) {
-      throw new Error('Must only create Jiglet from its loader')
-    }
-
-    // Run the init
-    this.init(...args)
-
-    // Validate the location
-    if (typeof this.location !== 'string') {
-      throw new Error('Jiglet init() must set a location')
-    }
-
-    // Free the object so there are no more changes
-    // TODO: deep freeze
-    Object.freeze(this)
-  }
-
-  init () { }
-
-  static [Symbol.hasInstance] (target) {
-    const run = Context.activeRunInstance()
-
-    // check if the target has a location. this will be false for this.constructor.prototype.
-    if (typeof target !== 'object' || !('location' in target)) return false
-
-    // find the sandboxed version of this class because thats what instances will be
-    let T = run.code.getInstalled(this)
-    if (!T) {
-      const net = Context.networkSuffix(run.blockchain.network)
-      T = run.code.getInstalled(this[`origin${net}`])
-      if (!T) return false
-    }
-
-    // check if this class's prototype is in the prototype chain of the target
-    let type = Object.getPrototypeOf(target)
-    while (type) {
-      if (type === T.prototype) return true
-      type = Object.getPrototypeOf(type)
-    }
-
-    return false
-  }
-}
-
-// This should be overridden in each child class
-Jiglet.loader = undefined
-
-module.exports = { Jiglet, JigletControl }
-
-
-/***/ }),
 /* 8 */
 /***/ (function(module, exports) {
 
@@ -3007,7 +3012,7 @@ module.exports = { Jiglet, JigletControl }
  * Helper class to create and parse location strings
  *
  * Every token in Run is stored at a location on the blockchain. Both the "origin"
- * property and "location" property on jigs and code are location strings. Jiglets
+ * property and "location" property on jigs and code are location strings. Berries
  * have a location but not an origin. To the user, these come in the form:
  *
  *  <txid>_o<vout>
@@ -3027,10 +3032,10 @@ module.exports = { Jiglet, JigletControl }
  * to uniquely identify the temporary txid, but this is not strictly required.
  *
  * Finally, it is important that tokens be deterministically loadable. Most tokens
- * are jigs and code and are parsed by the Run protocol. However with Jiglets, a
+ * are jigs and code and are parsed by the Run protocol. However with Berries, a
  * token may be parsed by another protocol. Two locations may even be parsed differently
  * by two different protocols, so it's important when identifying the location of a
- * jiglet to attach its protocol to its location. So, we add a protocol prefix:
+ * berry to attach its protocol to its location. So, we add a protocol prefix:
  *
  *      <protocol_location>://<token_location>
  *
@@ -3173,10 +3178,10 @@ module.exports = g;
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
- * The objects that are exposed from Run to our built-in sandboxes, Jig and Jiglet
+ * The objects that are exposed from Run to our built-in sandboxes, Jig and Berry
  */
 class Context {
-  static get Checkpoint () { return __webpack_require__(6).Checkpoint }
+  static get Checkpoint () { return __webpack_require__(7).Checkpoint }
   static activeRunInstance () { return __webpack_require__(0).activeRunInstance() }
   static deployable (x) { return __webpack_require__(0).deployable(x) }
   static checkOwner (x) { return __webpack_require__(0).checkOwner(x) }
@@ -3198,7 +3203,7 @@ module.exports = Context
  */
 
 const { Jig, JigControl } = __webpack_require__(3)
-const { Jiglet, JigletControl } = __webpack_require__(7)
+const { Berry, BerryControl } = __webpack_require__(5)
 const Location = __webpack_require__(8)
 const util = __webpack_require__(0)
 
@@ -3207,22 +3212,16 @@ const util = __webpack_require__(0)
 // ------------------------------------------------------------------------------------------------
 
 class Protocol {
-  static install (loader) {
-    // Should deploy? Need sandbox, for sandboxed jiglets. Or maybe not?
-
-    if (typeof loader !== 'function' && typeof loader.load !== 'function') {
-      throw new Error(`Cannot install loader: ${loader}`)
+  static installBerryProtocol (protocol) {
+    if (typeof protocol !== 'function' && typeof protocol.pluck !== 'function') {
+      throw new Error(`Cannot install protocol: ${protocol}`)
     }
-    Protocol.loaders.add(loader)
-  }
-
-  static uninstall (loader) {
-    return Protocol.loaders.delete(loader)
+    Protocol.berryProtocols.add(protocol)
   }
 
   static isToken (x) {
     switch (typeof x) {
-      case 'object': return x && (x instanceof Jig || x instanceof Jiglet)
+      case 'object': return x && (x instanceof Jig || x instanceof Berry)
       case 'function': {
         if (!!x.origin && !!x.location && !!x.owner) return true
         const net = util.networkSuffix(util.activeRunInstance().blockchain.network)
@@ -3244,28 +3243,28 @@ class Protocol {
   }
 
   static getOrigin (x) {
-    if (x && x instanceof Jiglet) return Protocol.getLocation(x)
+    if (x && x instanceof Berry) return Protocol.getLocation(x)
     const origin = JigControl.disableProxy(() => x.origin)
     Location.parse(origin)
     return origin
   }
 
-  static async loadJiglet (location, blockchain, code) {
+  static async loadBerry (location, blockchain, code) {
     const errors = []
     for (const loader of Protocol.loaders) {
       try {
         const sandboxedLoader = code.install(loader)
-        JigletControl.loader = sandboxedLoader
+        BerryControl.loader = sandboxedLoader
         const token = await sandboxedLoader.load(location, blockchain)
         if (!token) continue
         const loc = Location.parse(token.location)
-        if (!loc.protocol) throw new Error(`Protocol must be set on Jiglet locations: ${token.location}`)
+        if (!loc.protocol) throw new Error(`Protocol must be set on Berry locations: ${token.location}`)
         return token
       } catch (e) {
         errors.push(`${loader.name}: ${e.toString()}`)
         continue
       } finally {
-        JigletControl.loader = undefined
+        BerryControl.loader = undefined
       }
     }
     throw new Error(`No loader available for ${location}\n\n${errors}`)
@@ -3273,22 +3272,23 @@ class Protocol {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Loader API for custom Jiglets
+// Berry protocol plucker
 // ------------------------------------------------------------------------------------------------
 
-class Loader {
+class BerryProtocol {
   // Static to keep stateless
-  static async load (location, blockchain) {
+  // Location is defined by the protocol
+  static async pluck (location, fetch, pluck) {
     // Fetch tx
     // Parse
-    // Return Jiglet
+    // Return Berry
   }
 }
 
 // ------------------------------------------------------------------------------------------------
 
-Protocol.loaders = new Set()
-Protocol.Loader = Loader
+Protocol.berryProtocols = new Set()
+Protocol.BerryProtocol = BerryProtocol
 
 module.exports = Protocol
 
@@ -3304,7 +3304,7 @@ module.exports = Protocol
  */
 
 const ses = __webpack_require__(26)
-const { getIntrinsics, intrinsicNames } = __webpack_require__(5)
+const { getIntrinsics, intrinsicNames } = __webpack_require__(6)
 
 // ------------------------------------------------------------------------------------------------
 // Evaluator
@@ -5330,10 +5330,10 @@ function isnan (val) {
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
 const { JigControl } = __webpack_require__(3)
-const { Jiglet, JigletControl } = __webpack_require__(7)
+const { Berry, BerryControl } = __webpack_require__(5)
 const Location = __webpack_require__(8)
 const Protocol = __webpack_require__(11)
-const Xray = __webpack_require__(6)
+const Xray = __webpack_require__(7)
 
 // ------------------------------------------------------------------------------------------------
 // Transaction
@@ -5439,11 +5439,11 @@ class Transaction {
       const sandboxedLoader = this.code.install(loader)
       // TODO: This needs to move somewhere
       try {
-        JigletControl.loader = sandboxedLoader
+        BerryControl.loader = sandboxedLoader
         const y = await sandboxedLoader.load(`${loc.txid}_o${loc.vout}`, this.blockchain)
         return y
       } finally {
-        JigletControl.loader = undefined
+        BerryControl.loader = undefined
       }
     }
 
@@ -5453,7 +5453,7 @@ class Transaction {
     } catch (e) {
       try {
         console.log('123', location, e)
-        return await Protocol.loadJiglet(location, this.blockchain, this.code)
+        return await Protocol.pluckBerry(location, this.blockchain, this.code)
       } catch (e2) {
         throw new Error(`${e}\n\n${e2}`)
       }
@@ -6102,7 +6102,7 @@ class ProtoTransaction {
           : token[`location${net}`]
       }
 
-      if (token instanceof Jiglet) {
+      if (token instanceof Berry) {
         return token.location
       }
     }
@@ -7236,9 +7236,9 @@ const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
 const Evaluator = __webpack_require__(12)
 const { Jig, JigControl } = __webpack_require__(3)
-const { Jiglet, JigletControl } = __webpack_require__(7)
-const { Intrinsics } = __webpack_require__(5)
-const Xray = __webpack_require__(6)
+const { Berry, BerryControl } = __webpack_require__(5)
+const { Intrinsics } = __webpack_require__(6)
+const Xray = __webpack_require__(7)
 const Context = __webpack_require__(10)
 
 // ------------------------------------------------------------------------------------------------
@@ -7258,7 +7258,7 @@ class Code {
     this.evaluator = new Evaluator({ logger: options.logger, sandbox: options.sandbox })
     this.intrinsics = new Intrinsics().use(this.evaluator.intrinsics)
     this.installJig()
-    this.installJiglet()
+    this.installBerry()
   }
 
   isSandbox (type) {
@@ -7307,9 +7307,9 @@ class Code {
   }
 
   deploy (type, options = {}) {
-    // short-circut deployment at Jig and Jiglet because this class already deployed it
+    // short-circut deployment at Jig and Berry because this class already deployed it
     if (type === this.Jig || type === Jig) return this.Jig
-    if (type === this.Jiglet || type === Jiglet) return this.Jiglet
+    if (type === this.Berry || type === Berry) return this.Berry
 
     // check that this code can be deployed
     if (!util.deployable(type)) throw new Error(`${type} is not deployable`)
@@ -7356,8 +7356,8 @@ class Code {
         if (!(parentClass.name in realdeps) &&
           parentClass !== this.installs.get(Jig) &&
           parentClass !== Jig &&
-          parentClass !== this.installs.get(Jiglet) &&
-          parentClass !== Jiglet) {
+          parentClass !== this.installs.get(Berry) &&
+          parentClass !== Berry) {
           realdeps[parentClass.name] = parentClass
         }
       }
@@ -7493,8 +7493,8 @@ class Code {
         let parentLocation = (def.deps || {})[parentName]
         if (parentName === 'Jig' && typeof parentLocation === 'undefined') {
           env.Jig = this.Jig
-        } else if (parentName === 'Jiglet' && typeof parentLocation === 'undefined') {
-          env.Jiglet = this.Jiglet
+        } else if (parentName === 'Berry' && typeof parentLocation === 'undefined') {
+          env.Berry = this.Berry
         } else {
           if (parentLocation.startsWith('_')) { parentLocation = tx.hash + parentLocation }
           env[parentName] = await run.transaction.load(parentLocation, { partiallyInstalledCode })
@@ -7575,11 +7575,11 @@ class Code {
     this.installs.set(this.Jig, this.Jig)
   }
 
-  installJiglet () {
-    const env = { JigletControl, Context }
-    this.Jiglet = this.sandboxType(Jiglet, env)[0]
-    this.installs.set(Jiglet, this.Jiglet)
-    this.installs.set(this.Jiglet, this.Jiglet)
+  installBerry () {
+    const env = { BerryControl, Context }
+    this.Berry = this.sandboxType(Berry, env)[0]
+    this.installs.set(Berry, this.Berry)
+    this.installs.set(this.Berry, this.Berry)
   }
 
   sandboxType (type, env) {
@@ -12006,7 +12006,7 @@ module.exports = Array.isArray || function (arr) {
 
 const { ProtoTransaction } = __webpack_require__(14)
 const { JigControl } = __webpack_require__(3)
-const Xray = __webpack_require__(6)
+const Xray = __webpack_require__(7)
 const util = __webpack_require__(0)
 const Location = __webpack_require__(8)
 
