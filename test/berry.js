@@ -61,6 +61,8 @@ describe('Berry', () => {
     console.log('------------')
     console.log(favorite2)
     console.log('------------')
+
+    // Try loading a long-form location, with a specific protocol
   })
 
   // Test subloads
