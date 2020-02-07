@@ -28,8 +28,6 @@ Post.protocol = Twetch
 
 const run = createRun({ network: 'main' })
 
-Run.installProtocol(Twetch)
-
 describe('Berry', () => {
   it('should deploy and load a twetch post', async () => {
     class Favorite extends Jig {
@@ -38,14 +36,19 @@ describe('Berry', () => {
       }
     }
 
+    await run.deploy(Twetch)
+    console.log('---')
+    Run.installProtocol(Twetch)
     const twetchTxid = 'b446cb6e6187e79f95bc85df7d0e8332873f055d6b63bc29c049584917cceda0'
+    console.log('---')
     const post = await run.load(twetchTxid)
+    console.log(post)
     const favorite = new Favorite(post)
     await favorite.sync()
     console.log(favorite)
     const favorite2 = await run.load(favorite.location)
     console.log(favorite2)
-  })
+  }).timeout(10000)
 
   // Try loading a long-form location, with a specific protocol
   // Test subloads
