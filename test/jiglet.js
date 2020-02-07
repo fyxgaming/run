@@ -63,7 +63,7 @@ describe('Jiglet', () => {
     console.log(favorite)
     console.log('------------')
 
-    const favorite2 = await run.load(favorite.location)
+    // const favorite2 = await run.load(favorite.location)
     */
     const favorite2 = await run.load('140a35a53523eb5538665847ecb4e1e8817e8dae2988cc2ba19e6da017f65c0c_o2')
 
