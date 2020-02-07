@@ -49,7 +49,7 @@ describe('Location', () => {
       expect(Location.build({ txid, vout: 0 })).to.equal(`${txid}_o0`)
       expect(Location.build({ txid, vref: 1, innerLocation: 'hello' })).to.equal(`${txid}_r1://hello`)
       expect(Location.build({ tempTxid, vout: 3 })).to.equal(`${tempTxid}_o3`)
-      expect(Location.build({ error: 'Bad' })).to.equal(`!Bad`)
+      expect(Location.build({ error: 'Bad' })).to.equal('!Bad')
     })
 
     it('should throw for invalid options', () => {
