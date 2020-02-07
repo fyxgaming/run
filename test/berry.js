@@ -3,7 +3,7 @@ const { createRun, Run } = require('./helpers')
 const { Jig, Berry } = Run
 
 class Post extends Berry {
-  init (location, text) {
+  init (text) {
     this.text = text
   }
 }
@@ -56,7 +56,10 @@ describe('Berry', () => {
 
     // const favorite2 = await run.load(favorite.location)
     */
-    const favorite2 = await run.load('140a35a53523eb5538665847ecb4e1e8817e8dae2988cc2ba19e6da017f65c0c')
+
+    const twetchTx = 'b446cb6e6187e79f95bc85df7d0e8332873f055d6b63bc29c049584917cceda0'
+    // const runWithTwetchTx = '140a35a53523eb5538665847ecb4e1e8817e8dae2988cc2ba19e6da017f65c0c_o1'
+    const favorite2 = await run.load(twetchTx)
 
     console.log('------------')
     console.log(favorite2)
