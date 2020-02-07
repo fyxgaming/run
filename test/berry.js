@@ -36,17 +36,25 @@ describe('Berry', () => {
       }
     }
 
-    await run.deploy(Twetch)
-    Run.installProtocol(Twetch)
+    // await run.deploy(Twetch)
+    run.installProtocol(Twetch)
     const twetchTxid = 'b446cb6e6187e79f95bc85df7d0e8332873f055d6b63bc29c049584917cceda0'
     const post = await run.load(twetchTxid)
-    const favorite = new Favorite(post)
-    await favorite.sync()
+    console.log(post)
+
+    console.log(Favorite.name)
+    // const favorite = new Favorite(post)
+    // await favorite.sync()
     // run.state.cache.clear()
-    const favorite2 = await run.load(favorite.location)
-    console.log(favorite2)
+    // const favorite2 = await run.load(favorite.location)
+    // console.log(favorite2)
   }).timeout(10000)
 
+  it('should fail to deploy if protocol is undeployed', () => {
+
+  })
+
+  // Move the protocol manager inside of Run
   // Try loading a long-form location, with a specific protocol
   // Test subloads
 })
