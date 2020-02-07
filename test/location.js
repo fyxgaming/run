@@ -16,7 +16,8 @@ describe('Location', () => {
       expect(Location.parse(`${txid}_i1`)).to.deep.equal({ txid, vin: 1 })
       expect(Location.parse(`${txid}_r6000000000`)).to.deep.equal({ txid, vref: 6000000000 })
       expect(Location.parse(`${tempTxid}_o1`)).to.deep.equal({ tempTxid, vout: 1 })
-      expect(Location.parse(`${txid}_o1://${txid}_o2`)).to.deep.equal({ txid, vout: 2, protocol: { txid, vout: 1 } })
+      expect(Location.parse(`${txid}_o1://${txid}`)).to.deep.equal({ txid, vout: 1, innerLocation: txid })
+      expect(() => Location.parse(`${txid}_o1://hello`)).not.to.throw()
     })
 
     it('should throw for invalid locations', () => {
@@ -35,7 +36,6 @@ describe('Location', () => {
       expect(() => Location.parse(`${txid}_a1`)).to.throw('Location has an invalid index category')
       expect(() => Location.parse(`${txid}_o1://${txid}_o1://${txid}_o1`)).to.throw('Location must only have one protocol')
       expect(() => Location.parse(`${txid}_n1://${txid}_o1`)).to.throw('Location has an invalid index category')
-      expect(() => Location.parse(`${txid}_o1://${txid}_n1`)).to.throw('Location has an invalid index category')
     })
   })
 
@@ -45,7 +45,7 @@ describe('Location', () => {
       expect(Location.build({ vin: 1 })).to.equal('_i1')
       expect(Location.build({ vref: 2 })).to.equal('_r2')
       expect(Location.build({ txid, vout: 0 })).to.equal(`${txid}_o0`)
-      expect(Location.build({ txid, vref: 1, protocol: { txid, vin: 2 } })).to.equal(`${txid}_i2://${txid}_r1`)
+      expect(Location.build({ txid, vref: 1, innerLocation: 'hello' })).to.equal(`${txid}_r1://hello`)
       expect(Location.build({ tempTxid, vout: 3 })).to.equal(`${tempTxid}_o3`)
     })
 
@@ -61,7 +61,7 @@ describe('Location', () => {
       expect(() => Location.build({ vin: -1 })).to.throw('Location index must be a non-negative integer')
       expect(() => Location.build({ vref: Infinity })).to.throw('Location index must be a non-negative integer')
       expect(() => Location.build({ vout: NaN })).to.throw('Location index must be a non-negative integer')
-      expect(() => Location.build({ txid, vout: 0, protocol: { txid, vout: 0, protocol: {} } })).to.throw('Location must only have one protocol')
+      expect(() => Location.build({ txid, vout: 0, innerLocation: {} })).to.throw('Inner location must be a string')
     })
   })
 })
