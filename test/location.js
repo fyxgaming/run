@@ -18,6 +18,8 @@ describe('Location', () => {
       expect(Location.parse(`${tempTxid}_o1`)).to.deep.equal({ tempTxid, vout: 1 })
       expect(Location.parse(`${txid}_o1://${txid}`)).to.deep.equal({ txid, vout: 1, innerLocation: txid })
       expect(() => Location.parse(`${txid}_o1://hello`)).not.to.throw()
+      expect(Location.parse('!Bad')).to.deep.equal({ error: 'Bad' })
+      expect(Location.parse('!')).to.deep.equal({ error: '' })
     })
 
     it('should throw for invalid locations', () => {
@@ -47,6 +49,7 @@ describe('Location', () => {
       expect(Location.build({ txid, vout: 0 })).to.equal(`${txid}_o0`)
       expect(Location.build({ txid, vref: 1, innerLocation: 'hello' })).to.equal(`${txid}_r1://hello`)
       expect(Location.build({ tempTxid, vout: 3 })).to.equal(`${tempTxid}_o3`)
+      expect(Location.build({ error: 'Bad' })).to.equal(`!Bad`)
     })
 
     it('should throw for invalid options', () => {
@@ -62,6 +65,7 @@ describe('Location', () => {
       expect(() => Location.build({ vref: Infinity })).to.throw('Location index must be a non-negative integer')
       expect(() => Location.build({ vout: NaN })).to.throw('Location index must be a non-negative integer')
       expect(() => Location.build({ txid, vout: 0, innerLocation: {} })).to.throw('Inner location must be a string')
+      expect(() => Location.build({ error: null })).to.throw('Error must be a string')
     })
   })
 })
