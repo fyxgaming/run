@@ -37,15 +37,12 @@ describe('Berry', () => {
     }
 
     await run.deploy(Twetch)
-    console.log('---')
     Run.installProtocol(Twetch)
     const twetchTxid = 'b446cb6e6187e79f95bc85df7d0e8332873f055d6b63bc29c049584917cceda0'
-    console.log('---')
     const post = await run.load(twetchTxid)
-    console.log(post)
     const favorite = new Favorite(post)
     await favorite.sync()
-    console.log(favorite)
+    // run.state.cache.clear()
     const favorite2 = await run.load(favorite.location)
     console.log(favorite2)
   }).timeout(10000)
