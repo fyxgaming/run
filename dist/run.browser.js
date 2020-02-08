@@ -82,7 +82,7 @@ var Run =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
+/******/ 	return __webpack_require__(__webpack_require__.s = 5);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -96,7 +96,7 @@ var Run =
  */
 
 const bsv = __webpack_require__(2)
-const { Intrinsics } = __webpack_require__(6)
+const { Intrinsics } = __webpack_require__(7)
 
 // ------------------------------------------------------------------------------------------------
 // JIG CHECKS
@@ -257,7 +257,7 @@ function decryptRunData (encrypted) {
  * Returns the current run instance that is active
  */
 function activeRunInstance () {
-  const Run = __webpack_require__(4)
+  const Run = __webpack_require__(5)
   if (!Run.instance) throw new Error('Run not instantiated')
   return Run.instance
 }
@@ -723,7 +723,7 @@ module.exports = bsv;
 // Sets and maps respect tokens in jigs ... these are overrides for Jigs
 //    How? UniqueSet, UniqueMap
 
-const Context = __webpack_require__(10)
+const Context = __webpack_require__(11)
 
 const JigControl = { // control state shared across all jigs, similar to a PCB
   stack: [], // jig call stack for the current method (Array<Target>)
@@ -1275,6 +1275,198 @@ module.exports = { Jig, JigControl }
 
 /***/ }),
 /* 4 */
+/***/ (function(module, exports) {
+
+/**
+ * location.js
+ *
+ * Parses and builds location strings that point to tokens on the blockchain
+ */
+
+/**
+ * Helper class to create and parse location strings
+ *
+ * Every token in Run is stored at a location on the blockchain. Both the "origin"
+ * property and "location" property on jigs and code are location strings. Berries
+ * have a location but not an origin, and these are prefixed with a protocol.
+ *
+ * This class helps store and read all of this, but within Run's code, it is important
+ * to consider all of the above cases when looking at a location.
+ *
+ * ------------------
+ * JIG/CODE LOCATIONS
+ * ------------------
+ *
+ * To the user, most Jig locations come in the form:
+ *
+ *  "<txid>_o<vout>"
+ *
+ * The txid is a transaction id in hex, and vout is the output index as an integer.
+ * Locations are usually outputs. But they need not always be outputs. There are other
+ * kinds of locations. If the location ends with _i<vin>, then the location refers
+ * to an input of a transaction. If the location ends in _r<vref>, then the location
+ * refers to another asset reference within the OP_RETURN JSON. Sometimes within an
+ * OP_RETURN JSON you will see locations without txids, and these refer to locations
+ * in the CURRENT transaction. They look like _o1, _i0, etc.
+ *
+ * -------------------
+ * TEMPORARY LOCATIONS
+ * -------------------
+ *
+ * While a transaction is being built, a jig may have a temporary location:
+ *
+ *  "????????????????????????????????????????????????ca2f5ee8de79daf0_o1"
+ *
+ * This is identified by a random temporary txid that starts with '?'. It will get
+ * turned into a real location when the token's transaction is known and published.
+ * The convention is for temporary txids to have 48 ?'s followed by 16 random hex
+ * chars to uniquely identify the temporary txid, but this is not strictly required.
+ *
+ * ---------------
+ * BERRY LOCATIONS
+ * ---------------
+ *
+ * Berry locations are a combination of a protocol + inner location, and usually
+ * look like:
+ *
+ *  "<protocol_txid>_o<protocol_vout>://<inner_location>"
+ *
+ * The protocol uniquely identifies how the inner location is to be loaded.
+ * The inner location does not have to be a valid location in the normal sense.
+ * It will be parsed by the protocol, and may be a simple txid or friendly string.
+ *
+ * ---------------
+ * ERROR LOCATIONS
+ * ---------------
+ *
+ * Finally, a location may be invalid, in which case it starts with ! followed by
+ * an optional error string
+ *
+ *  "!This location is not valid"
+ */
+class Location {
+  /**
+     * Parses a location string
+     * @param {string} location Location to parse
+     * @return {object} out
+     * @return {string=} out.txid Transaction ID
+     * @return {number=} out.vout Output index
+     * @return {number=} out.vin Input index
+     * @return {number=} out.vref Reference index
+     * @return {string=} out.tempTxid Temporary transaction ID
+     * @return {string=} out.error Error string if this location is invalid
+     * @return {string=} out.innerLocation Inner location string if this location was a protocol
+     * @return {string=} out.location Location string passed in with protocol removed
+     */
+  static parse (location) {
+    const error = s => { throw new Error(`${s}: ${location}`) }
+
+    if (typeof location !== 'string') error('Location must be a string')
+    if (!location.length) error('Location must not be empty')
+
+    // Check if we are dealing with an error
+    if (location[0] === '!') {
+      return { error: location.slice(1), location }
+    }
+
+    // Check if we are dealing with a protocol
+    const protocolParts = location.split('://')
+    if (protocolParts.length > 2) error('Location must only have one protocol')
+    if (protocolParts.length === 2) {
+      return Object.assign({}, Location.parse(protocolParts[0]), { innerLocation: protocolParts[1] })
+    }
+
+    // Split the txid and index parts
+    const parts = location.split('_')
+    if (parts.length > 2) error('Location has an unexpected _ separator')
+    if (parts.length < 2) error('Location requires a _ separator')
+
+    const output = { location }
+
+    // Validate the txid
+    if (parts[0].length !== 0 && parts[0].length !== 64) error('Location has an invalid txid length')
+    if (parts[0][0] === '?') {
+      output.tempTxid = parts[0]
+    } else if (parts[0].length) {
+      if (!/^[a-fA-F0-9]*$/.test(parts[0])) error('Location has invalid hex in its txid')
+      output.txid = parts[0]
+    }
+
+    // Validate the index number
+    const indexString = parts[1].slice(1)
+    const index = parseInt(indexString, 10)
+    if (isNaN(index) || !/^[0-9]*$/.test(indexString)) error('Location has an invalid index number')
+
+    // Validate the index category
+    switch (parts[1][0]) {
+      case 'o': { output.vout = index; break }
+      case 'i': { output.vin = index; break }
+      case 'r': { output.vref = index; break }
+      default: error('Location has an invalid index category')
+    }
+
+    return output
+  }
+
+  /**
+     * Creates a location string from options
+     * @param {object} options
+     * @param {string=} options.txid Transaction ID
+     * @param {number=} options.vout Output index
+     * @param {number=} options.outputIndex Output index
+     * @param {number=} options.vin Input index
+     * @param {number=} options.vref Reference index
+     * @param {string=} options.tempTxid Temporary transaction ID
+     * @param {string=} out.error Error string if this location is invalid
+     * @param {string=} options.location Location when not specifying parts as above
+     * @param {string=} options.innerLocation Protocol inner location
+     * @return {string} The built location string
+     */
+  static build (options) {
+    const error = s => { throw new Error(`${s}: ${JSON.stringify(options)}`) }
+
+    if (typeof options !== 'object' || !options) error('Location object is invalid')
+    if (typeof options.innerLocation !== 'undefined' && typeof options.innerLocation !== 'string') error('Inner location must be a string')
+    if (typeof options.error !== 'undefined' && typeof options.error !== 'string') error('Error must be a string')
+
+    // If this is an error, return directly
+    if (typeof options.error !== 'undefined') return `!${options.error}`
+
+    let location = options.location
+    if (!location) {
+      // Get the txid
+      const txid = `${options.txid || options.tempTxid || ''}`
+
+      // Get the index
+      let category = null; let index = null
+      if (typeof options.vout === 'number') {
+        category = 'o'
+        index = options.vout
+      } else if (typeof options.vin === 'number') {
+        category = 'i'
+        index = options.vin
+      } else if (typeof options.vref === 'number') {
+        category = 'r'
+        index = options.vref
+      } else error('Location index unspecified')
+
+      const badIndex = isNaN(index) || !isFinite(index) || !Number.isInteger(index) || index < 0
+      if (badIndex) error('Location index must be a non-negative integer')
+
+      // Create the location
+      location = `${txid}_${category}${index}`
+    }
+
+    // Append the sub-location if this is a protocol
+    return options.innerLocation ? `${location}://${options.innerLocation}` : location
+  }
+}
+
+module.exports = Location
+
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -1296,10 +1488,12 @@ const Mockchain = __webpack_require__(52)
 const { State, StateCache } = __webpack_require__(53)
 const { PrivateKey } = bsv
 const { Jig } = __webpack_require__(3)
-const { Berry } = __webpack_require__(5)
-const Protocol = __webpack_require__(11)
+const { Berry } = __webpack_require__(6)
+const Protocol = __webpack_require__(9)
 const Token = __webpack_require__(54)
 const expect = __webpack_require__(24)
+const Location = __webpack_require__(4)
+const { UniqueSet, UniqueMap } = __webpack_require__(55)
 
 // ------------------------------------------------------------------------------------------------
 // Primary Run class
@@ -1553,10 +1747,13 @@ Run._util = util
 Run.instance = null
 Run.installProtocol = Protocol.installBerryProtocol
 
+Run.UniqueSet = UniqueSet
+Run.UniqueMap = UniqueMap
 Run.Blockchain = Blockchain
 Run.BlockchainServer = BlockchainServer
 Run.Code = Code
 Run.Evaluator = Evaluator
+Run.Location = Location
 Run.Mockchain = Mockchain
 Run.Pay = Pay
 Run.Purse = Purse
@@ -1575,13 +1772,13 @@ global.Token = Token
 
 module.exports = Run
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(10)))
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const Context = __webpack_require__(10)
+const Context = __webpack_require__(11)
 
 const BerryControl = {
   protocol: undefined,
@@ -1672,7 +1869,7 @@ module.exports = { Berry, BerryControl }
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports) {
 
 /**
@@ -1815,7 +2012,7 @@ module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -1836,11 +2033,11 @@ module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 // So Objects and arrays are acceptible from without.
 // Document scanner API
 
-const Protocol = __webpack_require__(11)
+const Protocol = __webpack_require__(9)
 const { display } = __webpack_require__(0)
 const { Jig, JigControl } = __webpack_require__(3)
-const { Berry } = __webpack_require__(5)
-const { Intrinsics } = __webpack_require__(6)
+const { Berry } = __webpack_require__(6)
+const { Intrinsics } = __webpack_require__(7)
 
 // ------------------------------------------------------------------------------------------------
 // Xray
@@ -3010,249 +3207,7 @@ module.exports = Xray
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13).Buffer))
 
 /***/ }),
-/* 8 */
-/***/ (function(module, exports) {
-
-/**
- * location.js
- *
- * Parses and builds location strings that point to tokens on the blockchain
- */
-
-/**
- * Helper class to create and parse location strings
- *
- * Every token in Run is stored at a location on the blockchain. Both the "origin"
- * property and "location" property on jigs and code are location strings. Berries
- * have a location but not an origin, and these are prefixed with a protocol.
- *
- * This class helps store and read all of this, but within Run's code, it is important
- * to consider all of the above cases when looking at a location.
- *
- * ------------------
- * JIG/CODE LOCATIONS
- * ------------------
- *
- * To the user, most Jig locations come in the form:
- *
- *  "<txid>_o<vout>"
- *
- * The txid is a transaction id in hex, and vout is the output index as an integer.
- * Locations are usually outputs. But they need not always be outputs. There are other
- * kinds of locations. If the location ends with _i<vin>, then the location refers
- * to an input of a transaction. If the location ends in _r<vref>, then the location
- * refers to another asset reference within the OP_RETURN JSON. Sometimes within an
- * OP_RETURN JSON you will see locations without txids, and these refer to locations
- * in the CURRENT transaction. They look like _o1, _i0, etc.
- *
- * -------------------
- * TEMPORARY LOCATIONS
- * -------------------
- *
- * While a transaction is being built, a jig may have a temporary location:
- *
- *  "????????????????????????????????????????????????ca2f5ee8de79daf0_o1"
- *
- * This is identified by a random temporary txid that starts with '?'. It will get
- * turned into a real location when the token's transaction is known and published.
- * The convention is for temporary txids to have 48 ?'s followed by 16 random hex
- * chars to uniquely identify the temporary txid, but this is not strictly required.
- *
- * ---------------
- * BERRY LOCATIONS
- * ---------------
- *
- * Berry locations are a combination of a protocol + inner location, and usually
- * look like:
- *
- *  "<protocol_txid>_o<protocol_vout>://<inner_location>"
- *
- * The protocol uniquely identifies how the inner location is to be loaded.
- * The inner location does not have to be a valid location in the normal sense.
- * It will be parsed by the protocol, and may be a simple txid or friendly string.
- *
- * ---------------
- * ERROR LOCATIONS
- * ---------------
- *
- * Finally, a location may be invalid, in which case it starts with ! followed by
- * an optional error string
- *
- *  "!This location is not valid"
- */
-class Location {
-  /**
-     * Parses a location string
-     * @param {string} location Location to parse
-     * @return {object} out
-     * @return {string=} out.txid Transaction ID
-     * @return {number=} out.vout Output index
-     * @return {number=} out.vin Input index
-     * @return {number=} out.vref Reference index
-     * @return {string=} out.tempTxid Temporary transaction ID
-     * @return {string=} out.error Error string if this location is invalid
-     * @return {string=} out.innerLocation Inner location string if this location was a protocol
-     * @return {string=} out.location Location string passed in with protocol removed
-     */
-  static parse (location) {
-    const error = s => { throw new Error(`${s}: ${location}`) }
-
-    if (typeof location !== 'string') error('Location must be a string')
-    if (!location.length) error('Location must not be empty')
-
-    // Check if we are dealing with an error
-    if (location[0] === '!') {
-      return { error: location.slice(1), location }
-    }
-
-    // Check if we are dealing with a protocol
-    const protocolParts = location.split('://')
-    if (protocolParts.length > 2) error('Location must only have one protocol')
-    if (protocolParts.length === 2) {
-      return Object.assign({}, Location.parse(protocolParts[0]), { innerLocation: protocolParts[1] })
-    }
-
-    // Split the txid and index parts
-    const parts = location.split('_')
-    if (parts.length > 2) error('Location has an unexpected _ separator')
-    if (parts.length < 2) error('Location requires a _ separator')
-
-    const output = { location }
-
-    // Validate the txid
-    if (parts[0].length !== 0 && parts[0].length !== 64) error('Location has an invalid txid length')
-    if (parts[0][0] === '?') {
-      output.tempTxid = parts[0]
-    } else if (parts[0].length) {
-      if (!/^[a-fA-F0-9]*$/.test(parts[0])) error('Location has invalid hex in its txid')
-      output.txid = parts[0]
-    }
-
-    // Validate the index number
-    const indexString = parts[1].slice(1)
-    const index = parseInt(indexString, 10)
-    if (isNaN(index) || !/^[0-9]*$/.test(indexString)) error('Location has an invalid index number')
-
-    // Validate the index category
-    switch (parts[1][0]) {
-      case 'o': { output.vout = index; break }
-      case 'i': { output.vin = index; break }
-      case 'r': { output.vref = index; break }
-      default: error('Location has an invalid index category')
-    }
-
-    return output
-  }
-
-  /**
-     * Creates a location string from options
-     * @param {object} options
-     * @param {string=} options.txid Transaction ID
-     * @param {number=} options.vout Output index
-     * @param {number=} options.outputIndex Output index
-     * @param {number=} options.vin Input index
-     * @param {number=} options.vref Reference index
-     * @param {string=} options.tempTxid Temporary transaction ID
-     * @param {string=} out.error Error string if this location is invalid
-     * @param {string=} options.location Location when not specifying parts as above
-     * @param {string=} options.innerLocation Protocol inner location
-     * @return {string} The built location string
-     */
-  static build (options) {
-    const error = s => { throw new Error(`${s}: ${JSON.stringify(options)}`) }
-
-    if (typeof options !== 'object' || !options) error('Location object is invalid')
-    if (typeof options.innerLocation !== 'undefined' && typeof options.innerLocation !== 'string') error('Inner location must be a string')
-    if (typeof options.error !== 'undefined' && typeof options.error !== 'string') error('Error must be a string')
-
-    // If this is an error, return directly
-    if (typeof options.error !== 'undefined') return `!${options.error}`
-
-    let location = options.location
-    if (!location) {
-      // Get the txid
-      const txid = `${options.txid || options.tempTxid || ''}`
-
-      // Get the index
-      let category = null; let index = null
-      if (typeof options.vout === 'number') {
-        category = 'o'
-        index = options.vout
-      } else if (typeof options.vin === 'number') {
-        category = 'i'
-        index = options.vin
-      } else if (typeof options.vref === 'number') {
-        category = 'r'
-        index = options.vref
-      } else error('Location index unspecified')
-
-      const badIndex = isNaN(index) || !isFinite(index) || !Number.isInteger(index) || index < 0
-      if (badIndex) error('Location index must be a non-negative integer')
-
-      // Create the location
-      location = `${txid}_${category}${index}`
-    }
-
-    // Append the sub-location if this is a protocol
-    return options.innerLocation ? `${location}://${options.innerLocation}` : location
-  }
-}
-
-module.exports = Location
-
-
-/***/ }),
 /* 9 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || new Function("return this")();
-} catch (e) {
-	// This works if the window reference is available
-	if (typeof window === "object") g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * The objects that are exposed from Run to our built-in sandboxes, Jig and Berry
- */
-class Context {
-  static get Checkpoint () { return __webpack_require__(7).Checkpoint }
-  static activeRunInstance () { return __webpack_require__(0).activeRunInstance() }
-  static deployable (x) { return __webpack_require__(0).deployable(x) }
-  static checkOwner (x) { return __webpack_require__(0).checkOwner(x) }
-  static checkSatoshis (x) { return __webpack_require__(0).checkSatoshis(x) }
-  static networkSuffix (x) { return __webpack_require__(0).networkSuffix(x) }
-
-  static deepFreeze (x) {
-    // TODO: deeply freeze
-    Object.freeze(x)
-  }
-}
-
-module.exports = Context
-
-
-/***/ }),
-/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -3263,8 +3218,8 @@ module.exports = Context
 
 const bsv = __webpack_require__(2)
 const { Jig, JigControl } = __webpack_require__(3)
-const { Berry, BerryControl } = __webpack_require__(5)
-const Location = __webpack_require__(8)
+const { Berry, BerryControl } = __webpack_require__(6)
+const Location = __webpack_require__(4)
 const util = __webpack_require__(0)
 
 // ------------------------------------------------------------------------------------------------
@@ -3453,6 +3408,56 @@ module.exports = Protocol
 
 
 /***/ }),
+/* 10 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || new Function("return this")();
+} catch (e) {
+	// This works if the window reference is available
+	if (typeof window === "object") g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * The objects that are exposed from Run to our built-in sandboxes, Jig and Berry
+ */
+class Context {
+  static get Checkpoint () { return __webpack_require__(8).Checkpoint }
+  static activeRunInstance () { return __webpack_require__(0).activeRunInstance() }
+  static deployable (x) { return __webpack_require__(0).deployable(x) }
+  static checkOwner (x) { return __webpack_require__(0).checkOwner(x) }
+  static checkSatoshis (x) { return __webpack_require__(0).checkSatoshis(x) }
+  static networkSuffix (x) { return __webpack_require__(0).networkSuffix(x) }
+
+  static deepFreeze (x) {
+    // TODO: deeply freeze
+    Object.freeze(x)
+  }
+}
+
+module.exports = Context
+
+
+/***/ }),
 /* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -3463,7 +3468,7 @@ module.exports = Protocol
  */
 
 const ses = __webpack_require__(26)
-const { getIntrinsics, intrinsicNames } = __webpack_require__(6)
+const { getIntrinsics, intrinsicNames } = __webpack_require__(7)
 
 // ------------------------------------------------------------------------------------------------
 // Evaluator
@@ -3677,7 +3682,7 @@ Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
 
 module.exports = Evaluator
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(10)))
 
 /***/ }),
 /* 13 */
@@ -5474,7 +5479,7 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(10)))
 
 /***/ }),
 /* 14 */
@@ -5489,10 +5494,10 @@ function isnan (val) {
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
 const { JigControl } = __webpack_require__(3)
-const { Berry } = __webpack_require__(5)
-const Location = __webpack_require__(8)
-const Protocol = __webpack_require__(11)
-const Xray = __webpack_require__(7)
+const { Berry } = __webpack_require__(6)
+const Location = __webpack_require__(4)
+const Protocol = __webpack_require__(9)
+const Xray = __webpack_require__(8)
 
 // ------------------------------------------------------------------------------------------------
 // Transaction
@@ -5859,7 +5864,7 @@ class ProtoTransaction {
     // dedupInnerRefs puts any internal objects in their referenced states using known references
     // ensuring that double-references refer to the same objects
     const dedupInnerRefs = jig => {
-      const { Jig } = __webpack_require__(4)
+      const { Jig } = __webpack_require__(5)
 
       const tokenReplacer = token => {
         if (token instanceof Jig && token !== jig) {
@@ -6209,7 +6214,7 @@ class ProtoTransaction {
     const refs = Array.from(readRefs.values())
 
     // Jig arguments, class props, and code need to be turned into token references
-    const { Jig } = __webpack_require__(4)
+    const { Jig } = __webpack_require__(5)
     const tokenSaver = token => {
       if (token instanceof Jig) {
         // find the jig if it is a proxy. it may not be a proxy if it wasn't used, but then
@@ -7377,10 +7382,10 @@ const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
 const Evaluator = __webpack_require__(12)
 const { Jig, JigControl } = __webpack_require__(3)
-const { Berry, BerryControl } = __webpack_require__(5)
-const { Intrinsics } = __webpack_require__(6)
-const Xray = __webpack_require__(7)
-const Context = __webpack_require__(10)
+const { Berry, BerryControl } = __webpack_require__(6)
+const { Intrinsics } = __webpack_require__(7)
+const Xray = __webpack_require__(8)
+const Context = __webpack_require__(11)
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -12153,9 +12158,9 @@ module.exports = Array.isArray || function (arr) {
 
 const { ProtoTransaction } = __webpack_require__(14)
 const { JigControl } = __webpack_require__(3)
-const Xray = __webpack_require__(7)
+const Xray = __webpack_require__(8)
 const util = __webpack_require__(0)
-const Location = __webpack_require__(8)
+const Location = __webpack_require__(4)
 
 /**
  * Proto-transaction: A temporary structure Run uses to build transactions. This structure
@@ -12473,7 +12478,7 @@ owner: ${spentJigs[i].owner}`)
 
     xray.scan(x)
 
-    const { Jig } = __webpack_require__(4)
+    const { Jig } = __webpack_require__(5)
 
     for (const token of xray.tokens) {
       if (token !== x && token instanceof Jig) {
@@ -13997,7 +14002,7 @@ module.exports = class Mockchain {
  * State API and its default StateCache implementation that ships with Run
  */
 
-const Location = __webpack_require__(8)
+const Location = __webpack_require__(4)
 
 // ------------------------------------------------------------------------------------------------
 
@@ -14223,6 +14228,144 @@ Token.locationMainnet = '8941b77582f9f0fb455b4cdb8283a0278b8efacfd4aaca772b1677a
 Token.ownerMainnet = '0306ff4478aeb2b1be9c8a592d5bd816a9419a6684af8b7fde1df1545379354987'
 
 module.exports = Token
+
+
+/***/ }),
+/* 55 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Protocol = __webpack_require__(9)
+const Location = __webpack_require__(4)
+
+// ------------------------------------------------------------------------------------------------
+// UniqueMap
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * A Map that guarantees token keys are unique. The API is intended to be the same as the built-in
+ * Map so that this can be a drop-in replacement in sandboxed code.
+
+ * For a given entry, there are 4 cases to consider:
+ *    1) Deployed tokens
+ *    2) Undeployed tokens
+ *    3) Deployable code currently undeployed
+ *    4) Everything else
+ */
+class UniqueMap {
+  constructor (iterable) {
+    this._undeployed = new Set() // Undeployed tokens without an origin
+    this._deployed = new Map() // Origin -> Token
+    this._map = new Map()
+    if (iterable) { for (const [x, y] of iterable) this.set(x, y) }
+  }
+
+  clear () {
+    this._undeployed.clear()
+    this._deployed.clear()
+    this._map.clear()
+  }
+
+  _getUniqueKey (x) {
+    const inconsistentWorldview = () => {
+      const hint = 'Hint: Try syncing the relevant tokens before use.'
+      const reason = 'Found two tokens with the same origin at different locations.'
+      const message = 'Inconsistent worldview'
+      throw new Error(`${message}\n\n${reason}\n\n${hint}`)
+    }
+
+    if (Protocol.isToken(x)) {
+      const xOrigin = Protocol.getOrigin(x)
+      const xLocation = Protocol.getLocation(x)
+      const deployed = !!Location.parse(xOrigin).txid
+
+      if (deployed) {
+        // Case 1: Deployed token
+
+        // Was this token previously in our undeployed set? If so, update it.
+        for (const y of this._undeployed) {
+          if (xOrigin === y.origin) {
+            const yLocation = Protocol.getLocation(y)
+            if (xLocation !== yLocation) inconsistentWorldview()
+            this._undeployed.delete(y)
+            this._deployed.set(xOrigin, y)
+            return y
+          }
+        }
+
+        // Have we already seen a token at this origin? If so, use that one.
+        const y = this._deployed.get(xOrigin)
+        if (y) {
+          const yLocation = Protocol.getLocation(y)
+          if (xLocation !== yLocation) inconsistentWorldview()
+          return y
+        }
+
+        // First time seeing a token at this origin. Remember it.
+        this._deployed.set(xOrigin, x)
+        return x
+      } else {
+        // Case 2: Undeployed token
+        this._undeployed.add(x)
+        return x
+      }
+    } else if (Protocol.isDeployable(x)) {
+      // Case 3: Undeployed code
+      this._undeployed.add(x)
+      return x
+    } else {
+      // Case 4: Everything else
+      return x
+    }
+  }
+
+  delete (x) {
+    const key = this._getUniqueKey(x)
+    this._undeployed.delete(key)
+    this._deployed.delete(key)
+    return this._map.delete(key)
+  }
+
+  get (x) { return this._map.get(this._getUniqueKey(x)) }
+  set (x, y) { this._map.set(this._getUniqueKey(x), y); return this }
+  has (x) { return this._map.has(this._getUniqueKey(x)) }
+  get size () { return this._map.size }
+  get [Symbol.species] () { return UniqueMap }
+  entries () { return this._map.entries() }
+  keys () { return this._map.keys() }
+  forEach (callback, thisArg) { return this._map.forEach(callback, thisArg) }
+  values () { return this._map.values() }
+  [Symbol.iterator] () { return this._map[Symbol.iterator]() }
+}
+
+// ------------------------------------------------------------------------------------------------
+// UniqueSet
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * A Set that guarantees tokens are unique. The API is intended to be the same as the built-in
+ * Set so that this can be a drop-in replacement in sandboxed code.
+ */
+class UniqueSet {
+  constructor (iterable) {
+    this.map = new UniqueMap()
+    if (iterable) { for (const x of iterable) this.add(x) }
+  }
+
+  get size () { return this.map.size }
+  get [Symbol.species] () { return UniqueSet }
+  add (x) { this.map.set(x, x); return this }
+  clear () { this.map.clear() }
+  delete (x) { return this.map.delete(x) }
+  entries () { return this.map.entries() }
+  forEach (callback, thisArg) { return this.map.forEach(x => callback.call(thisArg, x)) }
+  has (x) { return this.map.has(x) }
+  values () { return this.map.values() }
+  [Symbol.iterator] () { return this.map.keys() }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { UniqueSet, UniqueMap }
 
 
 /***/ })

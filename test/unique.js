@@ -1,12 +1,8 @@
-const { describe, it } = require('mocha')
+const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
-const { UniqueSet, UniqueMap } = require('../lib/unique')
-const Protocol = require('../lib/protocol')
-const { createRun } = require('./helpers')
-const Location = require('../lib/location')
-
-createRun()
+const { createRun, Run } = require('./helpers')
+const { Location, UniqueSet, UniqueMap } = Run
 
 // ------------------------------------------------------------------------------------------------
 // A temporary token used for testing
@@ -35,6 +31,9 @@ const testToken = (origin, location) => {
 // ------------------------------------------------------------------------------------------------
 
 describe('UniqueMap', () => {
+  const run = createRun()
+  beforeEach(() => run.activate())
+
   describe('constructor', () => {
     it('should create empty map', () => {
       expect(new UniqueMap().size).to.equal(0)
@@ -70,6 +69,7 @@ describe('UniqueMap', () => {
     })
 
     it('should clear token states', () => {
+      const { Run } = require('./helpers')
       const a = testToken()
       const b = testToken().deploy().publish()
       const map = new UniqueMap([[a, 1], [b, 2]])
@@ -402,11 +402,11 @@ describe('UniqueSet', () => {
 
     it('should clear token states', () => {
       const set = new UniqueSet()
-      const token = { $protocol: Protocol.RunProtocol, location: 'abc', origin: '123' }
+      const token = testToken().deploy().publish()
       set.add(token)
       set.delete(token)
       expect(set.size).to.equal(0)
-      set.add({ protocol: Protocol.RunProtocol, location: 'def', origin: '123' })
+      set.add(token.update().publish())
     })
 
     it('should throw for same tokens at different states', () => {
