@@ -727,7 +727,7 @@ describe('Jig', () => {
         apply (a2) { this.n = this.a + a2.n }
       }
       const b = new B(a)
-      expect(() => b.apply(a2)).to.throw('referenced different locations of same jig: [jig A]')
+      expect(() => b.apply(a2)).to.throw('Inconsistent worldview')
     })
 
     it('should throw if read different instance than written', async () => {
@@ -739,7 +739,7 @@ describe('Jig', () => {
       const a2 = await run.load(a.location)
       a2.set(2)
       const b = new B()
-      expect(() => b.apply(a, a2)).to.throw('referenced different locations of same jig: [jig A]')
+      expect(() => b.apply(a, a2)).to.throw('Inconsistent worldview')
     })
 
     it('should throw if read different instances of a jig across a batch', async () => {
@@ -1561,38 +1561,40 @@ describe('Jig', () => {
       })
     })
 
-    it.only('should use unique set and unique map', async () => {
+    it('should use unique set', async () => {
+      class B extends Jig {}
       class A extends Jig {
-        init () { console.log(Set.toString()) }
-        // init () { this.set = new Set() }
-        // add (x) { this.set.add(x) }
+        init () { this.set = new Set() }
+        add (x) { this.set.add(x) }
       }
       const a = await new A().sync()
-      console.log(a)
-      // const a2 = await run.load(a.location)
-      // a.add(a)
-      // a.add(a2)
-      // expect(a.set.size).to.equal(1)
+      const b = await new B().sync()
+      const b2 = await run.load(b.location)
+      a.add(b)
+      a.add(b2)
+      expect(a.set.size).to.equal(1)
     })
 
     it('should use unique map', async () => {
+      class B extends Jig {}
       class A extends Jig {
         init () { this.map = new Map() }
         set (x, y) { this.map.set(x, y) }
       }
       const a = await new A().sync()
-      const a2 = await run.load(a.location)
-      a.set(a, 1)
-      a.set(a2, 2)
+      const b = await new B().sync()
+      const b2 = await run.load(b.location)
+      a.set(b, 1)
+      a.set(b2, 2)
       expect(a.map.size).to.equal(1)
     })
 
-    it.only('should support arbitrary objects', () => {
-
+    it.skip('should support arbitrary objects', () => {
+      // TODO
     })
 
-    it.only('should support circular objects', () => {
-
+    it.skip('should support circular objects', () => {
+      // TODO
     })
   })
 
