@@ -219,7 +219,16 @@ const obfuscatePlugin = {
 }
 
 // Don't obfuscate these objects because they need to be preserved
-const dontObfuscate = ['Jig', 'JigControl', 'util', 'Token', 'expect', 'intrinsicNames', 'Berry', 'BerryControl']
+const dontObfuscate = [
+  'intrinsicNames',
+  'Context',
+  'Jig',
+  'JigControl',
+  'Berry',
+  'BerryControl',
+  'Token',
+  'expect'
+]
 
 const browser = {
   entry: path.join(__dirname, './lib'),
