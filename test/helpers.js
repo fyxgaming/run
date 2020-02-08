@@ -125,9 +125,9 @@ function hookStoreAction (run) {
   run.transaction.storeAction = (target, method, args, inputs, outputs, reads, before, after, proxies) => {
     origAction(target, method, args, inputs, outputs, reads, before, after, proxies)
     target = proxies.get(target)
-    inputs = new Set(Array.from(inputs.keys()).map(i => proxies.get(i)))
-    outputs = new Set(Array.from(outputs.keys()).map(o => proxies.get(o)))
-    reads = new Set(Array.from(reads.keys()).map(o => proxies.get(o)))
+    inputs = new Set(Array.from(inputs).map(i => proxies.get(i)))
+    outputs = new Set(Array.from(outputs).map(o => proxies.get(o)))
+    reads = new Set(Array.from(reads).map(o => proxies.get(o)))
     action = { target, method, args, inputs, outputs, reads }
   }
   return run
