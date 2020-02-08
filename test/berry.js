@@ -80,4 +80,8 @@ describe('Berry', () => {
   it('should throw if pluck more than one berry', () => {
     // TODO
   })
+
+  it('should support deploying protocol after already using it locally', () => {
+    // TODO
+  })
 })
