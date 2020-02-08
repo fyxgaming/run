@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 32);
+/******/ 	return __webpack_require__(__webpack_require__.s = 33);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -144,7 +144,7 @@ let Run = null
 if (false) {}
 if (false) {}
 if (false) {}
-if (true) Run = __webpack_require__(35)
+if (true) Run = __webpack_require__(36)
 
 // We check if _util is defined on Run to see if Run was obfuscated. If it was, we return a proxy
 // that allows tests to access the original properties as if they were unobfuscated.
@@ -154,7 +154,7 @@ const needsUnobfuscation = typeof Run._util === 'undefined'
 function unobfuscate (obj) {
   if (!needsUnobfuscation) return obj
 
-  const obfuscationMap = __webpack_require__(36)
+  const obfuscationMap = __webpack_require__(37)
 
   const handler = {
     get: (target, prop) => {
@@ -233,9 +233,9 @@ function hookStoreAction (run) {
   run.transaction.storeAction = (target, method, args, inputs, outputs, reads, before, after, proxies) => {
     origAction(target, method, args, inputs, outputs, reads, before, after, proxies)
     target = proxies.get(target)
-    inputs = new Set(Array.from(inputs.keys()).map(i => proxies.get(i)))
-    outputs = new Set(Array.from(outputs.keys()).map(o => proxies.get(o)))
-    reads = new Set(Array.from(reads.keys()).map(o => proxies.get(o)))
+    inputs = new Set(Array.from(inputs).map(i => proxies.get(i)))
+    outputs = new Set(Array.from(outputs).map(o => proxies.get(o)))
+    reads = new Set(Array.from(reads).map(o => proxies.get(o)))
     action = { target, method, args, inputs, outputs, reads }
   }
   return run
@@ -631,8 +631,8 @@ module.exports = {
 "use strict";
 
 
-var bind = __webpack_require__(23);
-var isBuffer = __webpack_require__(62);
+var bind = __webpack_require__(24);
+var isBuffer = __webpack_require__(63);
 
 /*global toString:true*/
 
@@ -972,7 +972,7 @@ module.exports = {
 "use strict";
 
 /* eslint-disable no-invalid-this */
-let checkError = __webpack_require__(34);
+let checkError = __webpack_require__(35);
 
 module.exports = (chai, utils) => {
     const Assertion = chai.Assertion;
@@ -1445,6 +1445,9 @@ class Location {
      * @return {string=} out.location Location string passed in with protocol removed
      */
   static parse (location) {
+    // TODO: Temporary: Remove this, once we start using tempTxid
+    if (location === '_') return { }
+
     const error = s => { throw new Error(`${s}: ${location}`) }
 
     if (typeof location !== 'string') error('Location must be a string')
@@ -2273,9 +2276,9 @@ module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 
 
 
-var base64 = __webpack_require__(49)
-var ieee754 = __webpack_require__(50)
-var isArray = __webpack_require__(51)
+var base64 = __webpack_require__(50)
+var ieee754 = __webpack_require__(51)
+var isArray = __webpack_require__(52)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -5556,24 +5559,24 @@ module.exports = Protocol
  */
 
 const bsv = __webpack_require__(0)
-const Code = __webpack_require__(55)
+const Code = __webpack_require__(56)
 const Evaluator = __webpack_require__(17)
-const Syncer = __webpack_require__(58)
-const { Transaction } = __webpack_require__(21)
+const Syncer = __webpack_require__(59)
+const { Transaction } = __webpack_require__(22)
 const util = __webpack_require__(4)
-const { Pay, Purse } = __webpack_require__(59)
-const Owner = __webpack_require__(77)
-const { Blockchain, BlockchainServer } = __webpack_require__(22)
-const Mockchain = __webpack_require__(78)
-const { State, StateCache } = __webpack_require__(79)
+const { Pay, Purse } = __webpack_require__(60)
+const Owner = __webpack_require__(78)
+const { Blockchain, BlockchainServer } = __webpack_require__(23)
+const Mockchain = __webpack_require__(79)
+const { State, StateCache } = __webpack_require__(80)
 const { PrivateKey } = bsv
 const { Jig } = __webpack_require__(9)
 const { Berry } = __webpack_require__(13)
 const Protocol = __webpack_require__(14)
-const Token = __webpack_require__(80)
-const expect = __webpack_require__(31)
+const Token = __webpack_require__(81)
+const expect = __webpack_require__(32)
 const Location = __webpack_require__(8)
-const { UniqueSet, UniqueMap } = __webpack_require__(81)
+const { UniqueSet, UniqueMap } = __webpack_require__(21)
 
 // ------------------------------------------------------------------------------------------------
 // Primary Run class
@@ -5888,8 +5891,9 @@ module.exports = Context
  * The evaluator runs arbitrary code in a secure sandbox
  */
 
-const ses = __webpack_require__(56)
-const { getIntrinsics, intrinsicNames } = __webpack_require__(10)
+const ses = __webpack_require__(57)
+const { getIntrinsics, intrinsicNames, Intrinsics } = __webpack_require__(10)
+const { UniqueSet, UniqueMap, UniqueSetDeps, UniqueMapDeps } = __webpack_require__(21)
 
 // ------------------------------------------------------------------------------------------------
 // Evaluator
@@ -5907,13 +5911,18 @@ class Evaluator {
 
     this.sandboxEvaluator = new SESEvaluator()
     this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
-    this.intrinsics = this.sandboxEvaluator.intrinsics
+
+    this.UniqueSet = this.sandboxEvaluator.evaluate(UniqueSet.toString(), UniqueSetDeps)[0]
+    this.UniqueMap = this.sandboxEvaluator.evaluate(UniqueMap.toString(), UniqueMapDeps)[0]
+    this.uniqueEnv = { Set: this.UniqueSet, Map: this.UniqueMap }
+    const custom = Object.assign({}, this.sandboxEvaluator.intrinsics, this.uniqueEnv)
+    this.intrinsics = new Intrinsics().allow(this.sandboxEvaluator.intrinsics).use(custom)
   }
 
   evaluate (code, env) {
     if (this.logger) this.logger.info(`Evaluating code starting with: "${code.slice(0, 20)}"`)
     const evaluator = this.willSandbox(code) ? this.sandboxEvaluator : this.globalEvaluator
-    return evaluator.evaluate(code, env)
+    return evaluator.evaluate(code, Object.assign({}, this.uniqueEnv, env))
   }
 
   willSandbox (code) {
@@ -6787,6 +6796,156 @@ module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com
 /* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
+const Protocol = __webpack_require__(14)
+const Location = __webpack_require__(8)
+
+const UniquePrivates = new WeakMap()
+
+// ------------------------------------------------------------------------------------------------
+// UniqueMap
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * A Map that guarantees token keys are unique. The API is intended to be the same as the built-in
+ * Map so that this can be a drop-in replacement in sandboxed code.
+
+ * For a given entry, there are 4 cases to consider:
+ *    1) Deployed tokens
+ *    2) Undeployed tokens
+ *    3) Deployable code currently undeployed
+ *    4) Everything else
+ */
+class UniqueMap {
+  constructor (iterable) {
+    const priv = {
+      undeployed: new Set(), // Undeployed tokens without an origin
+      deployed: new Map(), // Origin -> Token
+      map: new Map()
+    }
+    UniquePrivates.set(this, priv)
+    if (iterable) { for (const [x, y] of iterable) this.set(x, y) }
+  }
+
+  clear () {
+    const priv = UniquePrivates.get(this)
+    priv.undeployed.clear()
+    priv.deployed.clear()
+    priv.map.clear()
+  }
+
+  _getUniqueKey (x) {
+    const priv = UniquePrivates.get(this)
+
+    const inconsistentWorldview = () => {
+      const hint = 'Hint: Try syncing the relevant tokens before use.'
+      const reason = 'Found two tokens with the same origin at different locations.'
+      const message = 'Inconsistent worldview'
+      throw new Error(`${message}\n\n${reason}\n\n${hint}`)
+    }
+
+    if (Protocol.isToken(x)) {
+      const xOrigin = Protocol.getOrigin(x)
+      const xLocation = Protocol.getLocation(x)
+      const deployed = !!Location.parse(xOrigin).txid
+
+      if (deployed) {
+        // Case 1: Deployed token
+
+        // Was this token previously in our undeployed set? If so, update it.
+        for (const y of priv.undeployed) {
+          if (xOrigin === y.origin) {
+            const yLocation = Protocol.getLocation(y)
+            if (xLocation !== yLocation) inconsistentWorldview()
+            priv.undeployed.delete(y)
+            priv.deployed.set(xOrigin, y)
+            return y
+          }
+        }
+
+        // Have we already seen a token at this origin? If so, use that one.
+        const y = priv.deployed.get(xOrigin)
+        if (y) {
+          const yLocation = Protocol.getLocation(y)
+          if (xLocation !== yLocation) inconsistentWorldview()
+          return y
+        }
+
+        // First time seeing a token at this origin. Remember it.
+        priv.deployed.set(xOrigin, x)
+        return x
+      } else {
+        // Case 2: Undeployed token
+        priv.undeployed.add(x)
+        return x
+      }
+    } else if (Protocol.isDeployable(x)) {
+      // Case 3: Undeployed code
+      priv.undeployed.add(x)
+      return x
+    } else {
+      // Case 4: Everything else
+      return x
+    }
+  }
+
+  delete (x) {
+    const key = this._getUniqueKey(x)
+    const priv = UniquePrivates.get(this)
+    priv.undeployed.delete(key)
+    priv.deployed.delete(key)
+    return priv.map.delete(key)
+  }
+
+  get (x) { return UniquePrivates.get(this).map.get(this._getUniqueKey(x)) }
+  set (x, y) { UniquePrivates.get(this).map.set(this._getUniqueKey(x), y); return this }
+  has (x) { return UniquePrivates.get(this).map.has(this._getUniqueKey(x)) }
+  get size () { return UniquePrivates.get(this).map.size }
+  get [Symbol.species] () { return UniqueMap }
+  entries () { return UniquePrivates.get(this).map.entries() }
+  keys () { return UniquePrivates.get(this).map.keys() }
+  forEach (callback, thisArg) { return UniquePrivates.get(this).map.forEach(callback, thisArg) }
+  values () { return UniquePrivates.get(this).map.values() }
+  [Symbol.iterator] () { return UniquePrivates.get(this).map[Symbol.iterator]() }
+}
+
+// ------------------------------------------------------------------------------------------------
+// UniqueSet
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * A Set that guarantees tokens are unique. The API is intended to be the same as the built-in
+ * Set so that this can be a drop-in replacement in sandboxed code.
+ */
+class UniqueSet {
+  constructor (iterable) {
+    UniquePrivates.set(this, new UniqueMap())
+    if (iterable) { for (const x of iterable) this.add(x) }
+  }
+
+  get size () { return UniquePrivates.get(this).size }
+  get [Symbol.species] () { return UniqueSet }
+  add (x) { UniquePrivates.get(this).set(x, x); return this }
+  clear () { UniquePrivates.get(this).clear() }
+  delete (x) { return UniquePrivates.get(this).delete(x) }
+  entries () { return UniquePrivates.get(this).entries() }
+  forEach (callback, thisArg) { return UniquePrivates.get(this).forEach(x => callback.call(thisArg, x)) }
+  has (x) { return UniquePrivates.get(this).has(x) }
+  values () { return UniquePrivates.get(this).values() }
+  [Symbol.iterator] () { return UniquePrivates.get(this).keys() }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+const UniqueMapDeps = { Location, Protocol, UniquePrivates }
+const UniqueSetDeps = { UniqueMap, UniquePrivates }
+
+module.exports = { UniqueMap, UniqueSet, UniqueMapDeps, UniqueSetDeps }
+
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports, __webpack_require__) {
+
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
  * transaction.js
  *
@@ -7403,7 +7562,7 @@ class ProtoTransaction {
         const deployed = jig => typeof jig.origin !== 'undefined' && jig.origin[0] !== '_'
         const prevLocation = jigLocations.get(deployed(jig) ? jig.origin : jig)
         if (!prevLocation) return jigLocations.set(deployed(jig) ? jig.origin : jig, jig.location)
-        if (prevLocation !== jig.location) throw new Error(`referenced different locations of same jig: ${jig}`)
+        if (prevLocation !== jig.location) throw new Error(`Referenced different locations of same jig: ${jig}`)
       }
 
       checkJigInstance(target)
@@ -7661,7 +7820,7 @@ module.exports = { ProtoTransaction, Transaction }
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(11).Buffer))
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -7671,7 +7830,7 @@ module.exports = { ProtoTransaction, Transaction }
  */
 
 const { Address, Script, Transaction } = __webpack_require__(0)
-const axios = __webpack_require__(60)
+const axios = __webpack_require__(61)
 const util = __webpack_require__(4)
 
 // ------------------------------------------------------------------------------------------------
@@ -8097,7 +8256,7 @@ module.exports = { Blockchain, BlockchainServer }
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8115,7 +8274,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8193,7 +8352,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8205,14 +8364,14 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(5);
-var normalizeHeaderName = __webpack_require__(67);
+var normalizeHeaderName = __webpack_require__(68);
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -8229,10 +8388,10 @@ function getDefaultAdapter() {
   // Only Node.JS has a process variable that is of [[Class]] process
   if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(27);
+    adapter = __webpack_require__(28);
   } else if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(27);
+    adapter = __webpack_require__(28);
   }
   return adapter;
 }
@@ -8311,18 +8470,18 @@ module.exports = defaults;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(18)))
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(5);
-var settle = __webpack_require__(68);
-var buildURL = __webpack_require__(24);
-var parseHeaders = __webpack_require__(70);
-var isURLSameOrigin = __webpack_require__(71);
-var createError = __webpack_require__(28);
+var settle = __webpack_require__(69);
+var buildURL = __webpack_require__(25);
+var parseHeaders = __webpack_require__(71);
+var isURLSameOrigin = __webpack_require__(72);
+var createError = __webpack_require__(29);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -8414,7 +8573,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(72);
+      var cookies = __webpack_require__(73);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -8492,13 +8651,13 @@ module.exports = function xhrAdapter(config) {
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var enhanceError = __webpack_require__(69);
+var enhanceError = __webpack_require__(70);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -8517,7 +8676,7 @@ module.exports = function createError(message, config, code, request, response) 
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8575,7 +8734,7 @@ module.exports = function mergeConfig(config1, config2) {
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8601,7 +8760,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports) {
 
 /**
@@ -8671,7 +8830,7 @@ module.exports = expect
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -8680,9 +8839,8 @@ module.exports = expect
  * Includes all the tests that run using mocha
  */
 
-__webpack_require__(33)
+__webpack_require__(34)
 __webpack_require__(19)
-__webpack_require__(37)
 __webpack_require__(38)
 __webpack_require__(39)
 __webpack_require__(40)
@@ -8694,13 +8852,14 @@ __webpack_require__(45)
 __webpack_require__(46)
 __webpack_require__(47)
 __webpack_require__(48)
-__webpack_require__(52)
+__webpack_require__(49)
 __webpack_require__(53)
 __webpack_require__(54)
+__webpack_require__(55)
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const { describe, it, beforeEach } = __webpack_require__(2)
@@ -8794,7 +8953,7 @@ describe.skip('Berry', () => {
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8973,19 +9132,19 @@ module.exports = {
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports) {
 
 module.exports = Run;
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module) {
 
 module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"activeRunInstance\":\"aal\",\"sameJig\":\"aam\",\"networkSuffix\":\"aan\",\"isBlockchain\":\"aacc\",\"broadcastUrl\":\"aap\",\"broadcastData\":\"aaq\",\"fetchUrl\":\"aar\",\"fetchResp\":\"aas\",\"utxosUrl\":\"aat\",\"utxosResp\":\"aau\",\"_dedupUtxos\":\"aav\",\"correctForServerUtxoIndexingDelay\":\"aaw\",\"fetched\":\"aax\",\"broadcasted\":\"aay\",\"isSandbox\":\"aaz\",\"getInstalled\":\"aaab\",\"installFromTx\":\"aabb\",\"installJig\":\"aacb\",\"fastForward\":\"aadb\",\"finish\":\"aaeb\",\"publishNext\":\"aafb\",\"publish\":\"aagb\",\"storeCode\":\"aahb\",\"storeAction\":\"aaib\",\"setProtoTxAndCreator\":\"aajb\",\"buildBsvTransaction\":\"aakb\",\"_fromPrivateKey\":\"aalb\",\"_fromPublicKey\":\"aamb\",\"_fromAddress\":\"aanb\",\"_queryLatest\":\"aaob\",\"_removeErrorRefs\":\"aapb\",\"_update\":\"aaqb\",\"_estimateSize\":\"aarb\",\"_util\":\"aasb\",\"intrinsics\":\"aatb\",\"proxies\":\"aaub\",\"enforce\":\"aavb\",\"stack\":\"aawb\",\"reads\":\"aaxb\",\"creates\":\"aayb\",\"before\":\"aazb\",\"callers\":\"aaac\",\"blankSlate\":\"aabc\",\"requests\":\"aadc\",\"broadcasts\":\"aaec\",\"expiration\":\"aafc\",\"indexingDelay\":\"aagc\",\"fetchedTime\":\"aahc\",\"transactions\":\"aaic\",\"utxosByLocation\":\"aajc\",\"utxosByAddress\":\"aakc\",\"blockHeight\":\"aalc\",\"installs\":\"aamc\",\"syncer\":\"aanc\",\"protoTx\":\"aaoc\",\"beginCount\":\"aapc\",\"cachedTx\":\"aaqc\",\"syncListeners\":\"aarc\",\"onBroadcastListeners\":\"aasc\",\"lastPosted\":\"aatc\",\"queued\":\"aauc\",\"sizeBytes\":\"aavc\",\"maxSizeBytes\":\"aawc\",\"JigControl\":\"aaxc\",\"ProtoTransaction\":\"aayc\",\"PROTOCOL_VERSION\":\"aazc\",\"SerialTaskQueue\":\"aaad\",\"extractProps\":\"aabd\",\"onReadyForPublish\":\"aacd\",\"spentJigs\":\"aadd\",\"spentLocations\":\"aaed\"}");
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -9613,7 +9772,7 @@ describe('Code', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -9910,7 +10069,7 @@ describe('GlobalEvaluator', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -10093,7 +10252,7 @@ describe('expect', () => {
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -10825,7 +10984,7 @@ describe('Jig', () => {
         apply (a2) { this.n = this.a + a2.n }
       }
       const b = new B(a)
-      expect(() => b.apply(a2)).to.throw('referenced different locations of same jig: [jig A]')
+      expect(() => b.apply(a2)).to.throw('Inconsistent worldview')
     })
 
     it('should throw if read different instance than written', async () => {
@@ -10837,7 +10996,7 @@ describe('Jig', () => {
       const a2 = await run.load(a.location)
       a2.set(2)
       const b = new B()
-      expect(() => b.apply(a, a2)).to.throw('referenced different locations of same jig: [jig A]')
+      expect(() => b.apply(a, a2)).to.throw('Inconsistent worldview')
     })
 
     it('should throw if read different instances of a jig across a batch', async () => {
@@ -11576,7 +11735,7 @@ describe('Jig', () => {
     })
 
     it('should throw if transaction is unpaid', async () => {
-     class A extends Jig { set (x) { this.x = x } }
+      class A extends Jig { set (x) { this.x = x } }
       const a = await new A().sync()
       const oldPay = run.purse.pay
       run.purse.pay = async (tx) => { return tx }
@@ -11657,6 +11816,42 @@ describe('Jig', () => {
           }
         }, 1)
       })
+    })
+
+    it('should use unique set', async () => {
+      class B extends Jig {}
+      class A extends Jig {
+        init () { this.set = new Set() }
+        add (x) { this.set.add(x) }
+      }
+      const a = await new A().sync()
+      const b = await new B().sync()
+      const b2 = await run.load(b.location)
+      a.add(b)
+      a.add(b2)
+      expect(a.set.size).to.equal(1)
+    })
+
+    it('should use unique map', async () => {
+      class B extends Jig {}
+      class A extends Jig {
+        init () { this.map = new Map() }
+        set (x, y) { this.map.set(x, y) }
+      }
+      const a = await new A().sync()
+      const b = await new B().sync()
+      const b2 = await run.load(b.location)
+      a.set(b, 1)
+      a.set(b2, 2)
+      expect(a.map.size).to.equal(1)
+    })
+
+    it.skip('should support arbitrary objects', () => {
+      // TODO
+    })
+
+    it.skip('should support circular objects', () => {
+      // TODO
     })
   })
 
@@ -12443,7 +12638,7 @@ describe('Jig', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const { describe, it } = __webpack_require__(2)
@@ -12521,7 +12716,7 @@ describe('Location', () => {
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -12675,7 +12870,7 @@ describe('Mockchain', () => {
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -12855,7 +13050,7 @@ describe('Owner', () => {
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -13113,7 +13308,7 @@ describe('Purse', () => {
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -13509,7 +13704,7 @@ describe('Run', () => {
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -13751,7 +13946,7 @@ describe('State', () => {
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -13963,7 +14158,7 @@ describe('Token', () => {
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -14792,7 +14987,7 @@ describe('Transaction', () => {
         const args = [{ $ref: '_r0' }, { $ref: '_r1' }]
         const actions = [{ target: '_i0', method: 'apply', args }]
         const txid = await build([], actions, [b.location], null, 1, [a.location, a2.location])
-        await expect(run.load(txid + '_o1')).to.be.rejectedWith('referenced different locations of same jig: [jig A]')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('Referenced different locations of same jig: [jig A]')
       })
 
       it('should throw if same ref has different locations', async () => {
@@ -14808,7 +15003,7 @@ describe('Transaction', () => {
         const args = [{ $ref: `${a.location}` }, { $ref: `${a2.location}` }]
         const actions = [{ target: '_i0', method: 'apply', args }]
         const txid = await build([], actions, [b.location], null, 1)
-        await expect(run.load(txid + '_o1')).to.be.rejectedWith('referenced different locations of same jig: [jig A]')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('Referenced different locations of same jig: [jig A]')
       })
 
       it('should throw if bad refs array', async () => {
@@ -14847,7 +15042,7 @@ describe('Transaction', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(11).Buffer))
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15006,7 +15201,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -15096,7 +15291,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -15107,7 +15302,7 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const { describe, it, beforeEach } = __webpack_require__(2)
@@ -15181,7 +15376,6 @@ describe('UniqueMap', () => {
     })
 
     it('should clear token states', () => {
-      const { Run } = __webpack_require__(3)
       const a = testToken()
       const b = testToken().deploy().publish()
       const map = new UniqueMap([[a, 1], [b, 2]])
@@ -15623,7 +15817,7 @@ describe('UniqueSet', () => {
 
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -16102,7 +16296,7 @@ describe('util', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(11).Buffer))
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {const bsv = __webpack_require__(0)
@@ -16669,7 +16863,7 @@ describe('Xray', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(11).Buffer))
 
 /***/ }),
-/* 55 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -16683,7 +16877,6 @@ const util = __webpack_require__(4)
 const Evaluator = __webpack_require__(17)
 const { Jig, JigControl } = __webpack_require__(9)
 const { Berry, BerryControl } = __webpack_require__(13)
-const { Intrinsics } = __webpack_require__(10)
 const Xray = __webpack_require__(12)
 const Context = __webpack_require__(16)
 
@@ -16702,7 +16895,7 @@ class Code {
   constructor (options = {}) {
     this.installs = new Map() // Type | Location | Sandbox -> Sandbox
     this.evaluator = new Evaluator({ logger: options.logger, sandbox: options.sandbox })
-    this.intrinsics = new Intrinsics().use(this.evaluator.intrinsics)
+    this.intrinsics = this.evaluator.intrinsics
     this.installJig()
     this.installBerry()
   }
@@ -16793,7 +16986,7 @@ class Code {
       // realdeps is type.deps with its parent if not there
       const parentClass = Object.getPrototypeOf(type)
       const realdeps = classProps.includes('deps') ? Object.assign({}, type.deps) : {}
-      const SandboxObject = this.evaluator.intrinsics.Object
+      const SandboxObject = this.evaluator.intrinsics.default.Object
       if (parentClass !== Object.getPrototypeOf(Object) &&
         parentClass !== SandboxObject.getPrototypeOf(SandboxObject)) {
         env[parentClass.name] = this.deploy(parentClass, options)
@@ -17076,7 +17269,7 @@ module.exports = Code
 
 
 /***/ }),
-/* 56 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (global, factory) {
@@ -17749,7 +17942,7 @@ module.exports = Code
     }
 
     // eslint-disable-next-line global-require
-    const vm = __webpack_require__(57);
+    const vm = __webpack_require__(58);
 
     // Use unsafeGlobalEvalSrc to ensure we get the right 'this'.
     const unsafeGlobal = vm.runInNewContext(unsafeGlobalEvalSrc);
@@ -21032,7 +21225,7 @@ You probably want a Compartment instead, like:
 
 
 /***/ }),
-/* 57 */
+/* 58 */
 /***/ (function(module, exports) {
 
 var indexOf = function (xs, item) {
@@ -21187,7 +21380,7 @@ exports.createContext = Script.createContext = function (context) {
 
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -21196,7 +21389,7 @@ exports.createContext = Script.createContext = function (context) {
  * Enqueues transactions and syncs jigs
  */
 
-const { ProtoTransaction } = __webpack_require__(21)
+const { ProtoTransaction } = __webpack_require__(22)
 const { JigControl } = __webpack_require__(9)
 const Xray = __webpack_require__(12)
 const util = __webpack_require__(4)
@@ -21530,7 +21723,7 @@ owner: ${spentJigs[i].owner}`)
 
 
 /***/ }),
-/* 59 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -21541,7 +21734,7 @@ owner: ${spentJigs[i].owner}`)
 
 const bsv = __webpack_require__(0)
 const util = __webpack_require__(4)
-const { Blockchain } = __webpack_require__(22)
+const { Blockchain } = __webpack_require__(23)
 
 // ------------------------------------------------------------------------------------------------
 // Pay API
@@ -21736,23 +21929,23 @@ module.exports = { Pay, Purse }
 
 
 /***/ }),
-/* 60 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(61);
+module.exports = __webpack_require__(62);
 
 /***/ }),
-/* 61 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(5);
-var bind = __webpack_require__(23);
-var Axios = __webpack_require__(63);
-var mergeConfig = __webpack_require__(29);
-var defaults = __webpack_require__(26);
+var bind = __webpack_require__(24);
+var Axios = __webpack_require__(64);
+var mergeConfig = __webpack_require__(30);
+var defaults = __webpack_require__(27);
 
 /**
  * Create an instance of Axios
@@ -21785,15 +21978,15 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(30);
-axios.CancelToken = __webpack_require__(75);
-axios.isCancel = __webpack_require__(25);
+axios.Cancel = __webpack_require__(31);
+axios.CancelToken = __webpack_require__(76);
+axios.isCancel = __webpack_require__(26);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(76);
+axios.spread = __webpack_require__(77);
 
 module.exports = axios;
 
@@ -21802,7 +21995,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 62 */
+/* 63 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21819,17 +22012,17 @@ module.exports = function isBuffer (obj) {
 
 
 /***/ }),
-/* 63 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(5);
-var buildURL = __webpack_require__(24);
-var InterceptorManager = __webpack_require__(64);
-var dispatchRequest = __webpack_require__(65);
-var mergeConfig = __webpack_require__(29);
+var buildURL = __webpack_require__(25);
+var InterceptorManager = __webpack_require__(65);
+var dispatchRequest = __webpack_require__(66);
+var mergeConfig = __webpack_require__(30);
 
 /**
  * Create a new instance of Axios
@@ -21912,7 +22105,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 64 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21971,18 +22164,18 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 65 */
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(5);
-var transformData = __webpack_require__(66);
-var isCancel = __webpack_require__(25);
-var defaults = __webpack_require__(26);
-var isAbsoluteURL = __webpack_require__(73);
-var combineURLs = __webpack_require__(74);
+var transformData = __webpack_require__(67);
+var isCancel = __webpack_require__(26);
+var defaults = __webpack_require__(27);
+var isAbsoluteURL = __webpack_require__(74);
+var combineURLs = __webpack_require__(75);
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -22064,7 +22257,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 66 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22091,7 +22284,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 67 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22110,13 +22303,13 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 68 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var createError = __webpack_require__(28);
+var createError = __webpack_require__(29);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -22142,7 +22335,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 69 */
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22191,7 +22384,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 70 */
+/* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22251,7 +22444,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 71 */
+/* 72 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22326,7 +22519,7 @@ module.exports = (
 
 
 /***/ }),
-/* 72 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22386,7 +22579,7 @@ module.exports = (
 
 
 /***/ }),
-/* 73 */
+/* 74 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22407,7 +22600,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 74 */
+/* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22428,13 +22621,13 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 75 */
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Cancel = __webpack_require__(30);
+var Cancel = __webpack_require__(31);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -22492,7 +22685,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 76 */
+/* 77 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22526,7 +22719,7 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 77 */
+/* 78 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -22702,7 +22895,7 @@ module.exports = Owner
 
 
 /***/ }),
-/* 78 */
+/* 79 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -22843,7 +23036,7 @@ module.exports = class Mockchain {
 
 
 /***/ }),
-/* 79 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -22975,7 +23168,7 @@ module.exports = { State, StateCache }
 
 
 /***/ }),
-/* 80 */
+/* 81 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -22985,7 +23178,7 @@ module.exports = { State, StateCache }
  */
 
 const { Jig } = __webpack_require__(9)
-const expect = __webpack_require__(31)
+const expect = __webpack_require__(32)
 
 class Token extends Jig {
   init (amount, _tokenToDecrease, _tokensToCombine) {
@@ -23078,144 +23271,6 @@ Token.locationMainnet = '8941b77582f9f0fb455b4cdb8283a0278b8efacfd4aaca772b1677a
 Token.ownerMainnet = '0306ff4478aeb2b1be9c8a592d5bd816a9419a6684af8b7fde1df1545379354987'
 
 module.exports = Token
-
-
-/***/ }),
-/* 81 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Protocol = __webpack_require__(14)
-const Location = __webpack_require__(8)
-
-// ------------------------------------------------------------------------------------------------
-// UniqueMap
-// ------------------------------------------------------------------------------------------------
-
-/**
- * A Map that guarantees token keys are unique. The API is intended to be the same as the built-in
- * Map so that this can be a drop-in replacement in sandboxed code.
-
- * For a given entry, there are 4 cases to consider:
- *    1) Deployed tokens
- *    2) Undeployed tokens
- *    3) Deployable code currently undeployed
- *    4) Everything else
- */
-class UniqueMap {
-  constructor (iterable) {
-    this._undeployed = new Set() // Undeployed tokens without an origin
-    this._deployed = new Map() // Origin -> Token
-    this._map = new Map()
-    if (iterable) { for (const [x, y] of iterable) this.set(x, y) }
-  }
-
-  clear () {
-    this._undeployed.clear()
-    this._deployed.clear()
-    this._map.clear()
-  }
-
-  _getUniqueKey (x) {
-    const inconsistentWorldview = () => {
-      const hint = 'Hint: Try syncing the relevant tokens before use.'
-      const reason = 'Found two tokens with the same origin at different locations.'
-      const message = 'Inconsistent worldview'
-      throw new Error(`${message}\n\n${reason}\n\n${hint}`)
-    }
-
-    if (Protocol.isToken(x)) {
-      const xOrigin = Protocol.getOrigin(x)
-      const xLocation = Protocol.getLocation(x)
-      const deployed = !!Location.parse(xOrigin).txid
-
-      if (deployed) {
-        // Case 1: Deployed token
-
-        // Was this token previously in our undeployed set? If so, update it.
-        for (const y of this._undeployed) {
-          if (xOrigin === y.origin) {
-            const yLocation = Protocol.getLocation(y)
-            if (xLocation !== yLocation) inconsistentWorldview()
-            this._undeployed.delete(y)
-            this._deployed.set(xOrigin, y)
-            return y
-          }
-        }
-
-        // Have we already seen a token at this origin? If so, use that one.
-        const y = this._deployed.get(xOrigin)
-        if (y) {
-          const yLocation = Protocol.getLocation(y)
-          if (xLocation !== yLocation) inconsistentWorldview()
-          return y
-        }
-
-        // First time seeing a token at this origin. Remember it.
-        this._deployed.set(xOrigin, x)
-        return x
-      } else {
-        // Case 2: Undeployed token
-        this._undeployed.add(x)
-        return x
-      }
-    } else if (Protocol.isDeployable(x)) {
-      // Case 3: Undeployed code
-      this._undeployed.add(x)
-      return x
-    } else {
-      // Case 4: Everything else
-      return x
-    }
-  }
-
-  delete (x) {
-    const key = this._getUniqueKey(x)
-    this._undeployed.delete(key)
-    this._deployed.delete(key)
-    return this._map.delete(key)
-  }
-
-  get (x) { return this._map.get(this._getUniqueKey(x)) }
-  set (x, y) { this._map.set(this._getUniqueKey(x), y); return this }
-  has (x) { return this._map.has(this._getUniqueKey(x)) }
-  get size () { return this._map.size }
-  get [Symbol.species] () { return UniqueMap }
-  entries () { return this._map.entries() }
-  keys () { return this._map.keys() }
-  forEach (callback, thisArg) { return this._map.forEach(callback, thisArg) }
-  values () { return this._map.values() }
-  [Symbol.iterator] () { return this._map[Symbol.iterator]() }
-}
-
-// ------------------------------------------------------------------------------------------------
-// UniqueSet
-// ------------------------------------------------------------------------------------------------
-
-/**
- * A Set that guarantees tokens are unique. The API is intended to be the same as the built-in
- * Set so that this can be a drop-in replacement in sandboxed code.
- */
-class UniqueSet {
-  constructor (iterable) {
-    this.map = new UniqueMap()
-    if (iterable) { for (const x of iterable) this.add(x) }
-  }
-
-  get size () { return this.map.size }
-  get [Symbol.species] () { return UniqueSet }
-  add (x) { this.map.set(x, x); return this }
-  clear () { this.map.clear() }
-  delete (x) { return this.map.delete(x) }
-  entries () { return this.map.entries() }
-  forEach (callback, thisArg) { return this.map.forEach(x => callback.call(thisArg, x)) }
-  has (x) { return this.map.has(x) }
-  values () { return this.map.values() }
-  [Symbol.iterator] () { return this.map.keys() }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-module.exports = { UniqueSet, UniqueMap }
 
 
 /***/ })

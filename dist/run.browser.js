@@ -96,7 +96,7 @@ var Run =
  */
 
 const bsv = __webpack_require__(2)
-const { Intrinsics } = __webpack_require__(7)
+const { Intrinsics } = __webpack_require__(10)
 
 // ------------------------------------------------------------------------------------------------
 // JIG CHECKS
@@ -369,8 +369,8 @@ module.exports = {
 "use strict";
 
 
-var bind = __webpack_require__(16);
-var isBuffer = __webpack_require__(35);
+var bind = __webpack_require__(17);
+var isBuffer = __webpack_require__(36);
 
 /*global toString:true*/
 
@@ -1359,6 +1359,9 @@ class Location {
      * @return {string=} out.location Location string passed in with protocol removed
      */
   static parse (location) {
+    // TODO: Temporary: Remove this, once we start using tempTxid
+    if (location === '_') return { }
+
     const error = s => { throw new Error(`${s}: ${location}`) }
 
     if (typeof location !== 'string') error('Location must be a string')
@@ -1476,24 +1479,24 @@ module.exports = Location
  */
 
 const bsv = __webpack_require__(2)
-const Code = __webpack_require__(25)
+const Code = __webpack_require__(26)
 const Evaluator = __webpack_require__(12)
-const Syncer = __webpack_require__(31)
-const { Transaction } = __webpack_require__(14)
+const Syncer = __webpack_require__(32)
+const { Transaction } = __webpack_require__(15)
 const util = __webpack_require__(0)
-const { Pay, Purse } = __webpack_require__(32)
-const Owner = __webpack_require__(51)
-const { Blockchain, BlockchainServer } = __webpack_require__(15)
-const Mockchain = __webpack_require__(52)
-const { State, StateCache } = __webpack_require__(53)
+const { Pay, Purse } = __webpack_require__(33)
+const Owner = __webpack_require__(52)
+const { Blockchain, BlockchainServer } = __webpack_require__(16)
+const Mockchain = __webpack_require__(53)
+const { State, StateCache } = __webpack_require__(54)
 const { PrivateKey } = bsv
 const { Jig } = __webpack_require__(3)
 const { Berry } = __webpack_require__(6)
-const Protocol = __webpack_require__(9)
-const Token = __webpack_require__(54)
-const expect = __webpack_require__(24)
+const Protocol = __webpack_require__(7)
+const Token = __webpack_require__(55)
+const expect = __webpack_require__(25)
 const Location = __webpack_require__(4)
-const { UniqueSet, UniqueMap } = __webpack_require__(55)
+const { UniqueSet, UniqueMap } = __webpack_require__(13)
 
 // ------------------------------------------------------------------------------------------------
 // Primary Run class
@@ -1772,7 +1775,7 @@ global.Token = Token
 
 module.exports = Run
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(10)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
 /* 6 */
@@ -1870,145 +1873,203 @@ module.exports = { Berry, BerryControl }
 
 /***/ }),
 /* 7 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
 /**
- * intrinsics.js
+ * protocol.js
  *
- * Helpers for the known built-in objects in JavaScript
+ * Manager for token protocols are supported by Run
  */
 
-// See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
-const intrinsicNames = [
-  // Global functions
-  'console',
-  'eval',
-  'isFinite',
-  'isNaN',
-  'parseFloat',
-  'parseInt',
-  'decodeURI',
-  'decodeURIComponent',
-  'encodeURI',
-  'encodeURIComponent',
-  'escape',
+const bsv = __webpack_require__(2)
+const { Jig, JigControl } = __webpack_require__(3)
+const { Berry, BerryControl } = __webpack_require__(6)
+const Location = __webpack_require__(4)
+const util = __webpack_require__(0)
 
-  // Fundamental objects
-  'Object',
-  'Function',
-  'Boolean',
-  'Symbol',
-  'Error',
-  'EvalError',
-  'RangeError',
-  'ReferenceError',
-  'SyntaxError',
-  'TypeError',
-  'URIError',
+// ------------------------------------------------------------------------------------------------
+// Protocol manager
+// ------------------------------------------------------------------------------------------------
 
-  // Numbers and dates
-  'Number',
-  'BigInt',
-  'Math',
-  'Date',
-
-  // Text processing
-  'String',
-  'RegExp',
-
-  // Indexed collections
-  'Array',
-  'Int8Array',
-  'Uint8Array',
-  'Uint8ClampedArray',
-  'Int16Array',
-  'Uint16Array',
-  'Int32Array',
-  'Uint32Array',
-  'Float32Array',
-  'Float64Array',
-  'BigInt64Array',
-  'BigUint64Array',
-
-  // Keyed collections
-  'Map',
-  'Set',
-  'WeakMap',
-  'WeakSet',
-
-  // Structured data
-  'ArrayBuffer',
-  'DataView',
-  'JSON',
-
-  // Control abstraction objects
-  'Promise',
-  'Generator',
-  'GeneratorFunction',
-  'AsyncFunction',
-
-  // Reflection
-  'Reflect',
-  'Proxy',
-
-  // Internationalization
-  'Intl',
-
-  // WebAssembly
-  'WebAssembly'
-]
-
-// Returns an object with the built-in intrinsics in this environment
-const getIntrinsics = () => {
-  let code = 'const x = {};'
-  intrinsicNames.forEach(name => { code += `x.${name}=typeof ${name}!=='undefined'?${name}:undefined;` })
-  code += 'return x'
-  return new Function(code)() // eslint-disable-line
+// A modified version of the txo format form unwriter
+// Source: https://github.com/interplanaria/txo/blob/master/index.js
+var txToTxo = function (tx, options) {
+  const gene = new bsv.Transaction(tx)
+  const t = gene.toObject()
+  const inputs = []
+  const outputs = []
+  if (gene.inputs) {
+    gene.inputs.forEach(function (input, inputIndex) {
+      if (input.script) {
+        const xput = { i: inputIndex, seq: input.sequenceNumber }
+        input.script.chunks.forEach(function (c, chunkIndex) {
+          if (c.buf) {
+            if (c.buf.byteLength >= 1000000) {
+              xput['xlb' + chunkIndex] = c.buf.toString('base64')
+            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
+              xput['lb' + chunkIndex] = c.buf.toString('base64')
+            } else {
+              xput['b' + chunkIndex] = c.buf.toString('base64')
+            }
+            if (options && options.h && options.h > 0) {
+              xput['h' + chunkIndex] = c.buf.toString('hex')
+            }
+          } else {
+            if (typeof c.opcodenum !== 'undefined') {
+              xput['b' + chunkIndex] = {
+                op: c.opcodenum
+              }
+            } else {
+              xput['b' + chunkIndex] = c
+            }
+          }
+        })
+        const sender = {
+          h: input.prevTxId.toString('hex'),
+          i: input.outputIndex
+        }
+        const address = input.script.toAddress(bsv.Networks.livenet).toString()
+        if (address && address.length > 0) {
+          sender.a = address
+        }
+        xput.e = sender
+        inputs.push(xput)
+      }
+    })
+  }
+  if (gene.outputs) {
+    gene.outputs.forEach(function (output, outputIndex) {
+      if (output.script) {
+        const xput = { i: outputIndex }
+        output.script.chunks.forEach(function (c, chunkIndex) {
+          if (c.buf) {
+            if (c.buf.byteLength >= 1000000) {
+              xput['xlb' + chunkIndex] = c.buf.toString('base64')
+              xput['xls' + chunkIndex] = c.buf.toString('utf8')
+            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
+              xput['lb' + chunkIndex] = c.buf.toString('base64')
+              xput['ls' + chunkIndex] = c.buf.toString('utf8')
+            } else {
+              xput['b' + chunkIndex] = c.buf.toString('base64')
+              xput['s' + chunkIndex] = c.buf.toString('utf8')
+            }
+            if (options && options.h && options.h > 0) {
+              xput['h' + chunkIndex] = c.buf.toString('hex')
+            }
+          } else {
+            if (typeof c.opcodenum !== 'undefined') {
+              xput['b' + chunkIndex] = {
+                op: c.opcodenum
+              }
+            } else {
+              xput['b' + chunkIndex] = c
+            }
+          }
+        })
+        const receiver = {
+          v: output.satoshis,
+          i: outputIndex
+        }
+        const address = output.script.toAddress(bsv.Networks.livenet).toString()
+        if (address && address.length > 0) {
+          receiver.a = address
+        }
+        xput.e = receiver
+        outputs.push(xput)
+      }
+    })
+  }
+  const r = {
+    tx: { h: t.hash },
+    in: inputs,
+    out: outputs,
+    lock: t.nLockTime
+  }
+  // confirmations
+  if (options && options.confirmations) {
+    r.confirmations = options.confirmations
+  }
+  return r
 }
 
-const globalIntrinsics = getIntrinsics()
+class Protocol {
+  static async pluckBerry (location, blockchain, code, protocol) {
+    // TODO: Make fetch and pluck secure, as well as txo above
+    const fetch = async x => txToTxo(await blockchain.fetch(x))
+    const pluck = x => this.pluckBerry(x, blockchain, code)
 
-// ------------------------------------------------------------------------------------------------
-// Intrinsics
-// ------------------------------------------------------------------------------------------------
+    try {
+      // TODO: Allow undeployed, with bad locations
+      const sandboxedProtocol = code.installBerryProtocol(protocol)
 
-/**
- * Manages known intrinsics
- */
-class Intrinsics {
-  constructor () {
-    this.default = null
-    this.allowed = []
-    this.types = new Set()
-    this.use(globalIntrinsics)
+      BerryControl.protocol = sandboxedProtocol
+      if (Location.parse(sandboxedProtocol.location).error) {
+        BerryControl.location = Location.build({ error: `${protocol.name} protocol not deployed` })
+      } else {
+        BerryControl.location = Location.build({ location: sandboxedProtocol.location, innerLocation: location })
+      }
+
+      const berry = await sandboxedProtocol.pluck(location, fetch, pluck)
+
+      if (!berry) throw new Error(`Failed to load berry using ${protocol.name}: ${location}`)
+
+      return berry
+    } finally {
+      BerryControl.protocol = undefined
+      BerryControl.location = undefined
+    }
   }
 
-  set (intrinsics) {
-    this.default = null
-    this.allowed = []
-    this.types = new Set()
-    this.use(intrinsics)
-    return this
+  static isToken (x) {
+    switch (typeof x) {
+      case 'object': return x && (x instanceof Jig || x instanceof Berry)
+      case 'function': {
+        if (!!x.origin && !!x.location && !!x.owner) return true
+        const net = util.networkSuffix(util.activeRunInstance().blockchain.network)
+        return !!x[`origin${net}`] && !!x[`location${net}`] && !!x[`owner${net}`]
+      }
+      default: return false
+    }
   }
 
-  allow (intrinsics) {
-    this.allowed.push(intrinsics)
-    Object.keys(intrinsics).forEach(name => this.types.add(intrinsics[name]))
-    return this
+  static isDeployable (x) {
+    if (typeof x !== 'function') return false
+    return x.toString().indexOf('[native code]') === -1
   }
 
-  use (intrinsics) {
-    this.allow(intrinsics)
-    this.default = intrinsics
-    return this
+  static getLocation (x) {
+    const location = JigControl.disableProxy(() => x.location)
+    Location.parse(location)
+    return location
+  }
+
+  static getOrigin (x) {
+    if (x && x instanceof Berry) return Protocol.getLocation(x)
+    const origin = JigControl.disableProxy(() => x.origin)
+    Location.parse(origin)
+    return origin
   }
 }
 
-Intrinsics.defaultIntrinsics = new Intrinsics()
+// ------------------------------------------------------------------------------------------------
+// Berry protocol plucker
+// ------------------------------------------------------------------------------------------------
+
+class BerryProtocol {
+  // Static to keep stateless
+  // Location is defined by the protocol
+  static async pluck (location, fetch, pluck) {
+    // Fetch tx
+    // Parse
+    // Return Berry
+  }
+}
 
 // ------------------------------------------------------------------------------------------------
 
-module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
+Protocol.BerryProtocol = BerryProtocol
+
+module.exports = Protocol
 
 
 /***/ }),
@@ -2033,11 +2094,11 @@ module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 // So Objects and arrays are acceptible from without.
 // Document scanner API
 
-const Protocol = __webpack_require__(9)
+const Protocol = __webpack_require__(7)
 const { display } = __webpack_require__(0)
 const { Jig, JigControl } = __webpack_require__(3)
 const { Berry } = __webpack_require__(6)
-const { Intrinsics } = __webpack_require__(7)
+const { Intrinsics } = __webpack_require__(10)
 
 // ------------------------------------------------------------------------------------------------
 // Xray
@@ -3204,211 +3265,10 @@ Xray.Checkpoint = Checkpoint
 
 module.exports = Xray
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14).Buffer))
 
 /***/ }),
 /* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * protocol.js
- *
- * Manager for token protocols are supported by Run
- */
-
-const bsv = __webpack_require__(2)
-const { Jig, JigControl } = __webpack_require__(3)
-const { Berry, BerryControl } = __webpack_require__(6)
-const Location = __webpack_require__(4)
-const util = __webpack_require__(0)
-
-// ------------------------------------------------------------------------------------------------
-// Protocol manager
-// ------------------------------------------------------------------------------------------------
-
-// A modified version of the txo format form unwriter
-// Source: https://github.com/interplanaria/txo/blob/master/index.js
-var txToTxo = function (tx, options) {
-  const gene = new bsv.Transaction(tx)
-  const t = gene.toObject()
-  const inputs = []
-  const outputs = []
-  if (gene.inputs) {
-    gene.inputs.forEach(function (input, inputIndex) {
-      if (input.script) {
-        const xput = { i: inputIndex, seq: input.sequenceNumber }
-        input.script.chunks.forEach(function (c, chunkIndex) {
-          if (c.buf) {
-            if (c.buf.byteLength >= 1000000) {
-              xput['xlb' + chunkIndex] = c.buf.toString('base64')
-            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
-              xput['lb' + chunkIndex] = c.buf.toString('base64')
-            } else {
-              xput['b' + chunkIndex] = c.buf.toString('base64')
-            }
-            if (options && options.h && options.h > 0) {
-              xput['h' + chunkIndex] = c.buf.toString('hex')
-            }
-          } else {
-            if (typeof c.opcodenum !== 'undefined') {
-              xput['b' + chunkIndex] = {
-                op: c.opcodenum
-              }
-            } else {
-              xput['b' + chunkIndex] = c
-            }
-          }
-        })
-        const sender = {
-          h: input.prevTxId.toString('hex'),
-          i: input.outputIndex
-        }
-        const address = input.script.toAddress(bsv.Networks.livenet).toString()
-        if (address && address.length > 0) {
-          sender.a = address
-        }
-        xput.e = sender
-        inputs.push(xput)
-      }
-    })
-  }
-  if (gene.outputs) {
-    gene.outputs.forEach(function (output, outputIndex) {
-      if (output.script) {
-        const xput = { i: outputIndex }
-        output.script.chunks.forEach(function (c, chunkIndex) {
-          if (c.buf) {
-            if (c.buf.byteLength >= 1000000) {
-              xput['xlb' + chunkIndex] = c.buf.toString('base64')
-              xput['xls' + chunkIndex] = c.buf.toString('utf8')
-            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
-              xput['lb' + chunkIndex] = c.buf.toString('base64')
-              xput['ls' + chunkIndex] = c.buf.toString('utf8')
-            } else {
-              xput['b' + chunkIndex] = c.buf.toString('base64')
-              xput['s' + chunkIndex] = c.buf.toString('utf8')
-            }
-            if (options && options.h && options.h > 0) {
-              xput['h' + chunkIndex] = c.buf.toString('hex')
-            }
-          } else {
-            if (typeof c.opcodenum !== 'undefined') {
-              xput['b' + chunkIndex] = {
-                op: c.opcodenum
-              }
-            } else {
-              xput['b' + chunkIndex] = c
-            }
-          }
-        })
-        const receiver = {
-          v: output.satoshis,
-          i: outputIndex
-        }
-        const address = output.script.toAddress(bsv.Networks.livenet).toString()
-        if (address && address.length > 0) {
-          receiver.a = address
-        }
-        xput.e = receiver
-        outputs.push(xput)
-      }
-    })
-  }
-  const r = {
-    tx: { h: t.hash },
-    in: inputs,
-    out: outputs,
-    lock: t.nLockTime
-  }
-  // confirmations
-  if (options && options.confirmations) {
-    r.confirmations = options.confirmations
-  }
-  return r
-}
-
-class Protocol {
-  static async pluckBerry (location, blockchain, code, protocol) {
-    // TODO: Make fetch and pluck secure, as well as txo above
-    const fetch = async x => txToTxo(await blockchain.fetch(x))
-    const pluck = x => this.pluckBerry(x, blockchain, code)
-
-    try {
-      // TODO: Allow undeployed, with bad locations
-      const sandboxedProtocol = code.installBerryProtocol(protocol)
-
-      BerryControl.protocol = sandboxedProtocol
-      if (Location.parse(sandboxedProtocol.location).error) {
-        BerryControl.location = Location.build({ error: `${protocol.name} protocol not deployed` })
-      } else {
-        BerryControl.location = Location.build({ location: sandboxedProtocol.location, innerLocation: location })
-      }
-
-      const berry = await sandboxedProtocol.pluck(location, fetch, pluck)
-
-      if (!berry) throw new Error(`Failed to load berry using ${protocol.name}: ${location}`)
-
-      return berry
-    } finally {
-      BerryControl.protocol = undefined
-      BerryControl.location = undefined
-    }
-  }
-
-  static isToken (x) {
-    switch (typeof x) {
-      case 'object': return x && (x instanceof Jig || x instanceof Berry)
-      case 'function': {
-        if (!!x.origin && !!x.location && !!x.owner) return true
-        const net = util.networkSuffix(util.activeRunInstance().blockchain.network)
-        return !!x[`origin${net}`] && !!x[`location${net}`] && !!x[`owner${net}`]
-      }
-      default: return false
-    }
-  }
-
-  static isDeployable (x) {
-    if (typeof x !== 'function') return false
-    return x.toString().indexOf('[native code]') === -1
-  }
-
-  static getLocation (x) {
-    const location = JigControl.disableProxy(() => x.location)
-    Location.parse(location)
-    return location
-  }
-
-  static getOrigin (x) {
-    if (x && x instanceof Berry) return Protocol.getLocation(x)
-    const origin = JigControl.disableProxy(() => x.origin)
-    Location.parse(origin)
-    return origin
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Berry protocol plucker
-// ------------------------------------------------------------------------------------------------
-
-class BerryProtocol {
-  // Static to keep stateless
-  // Location is defined by the protocol
-  static async pluck (location, fetch, pluck) {
-    // Fetch tx
-    // Parse
-    // Return Berry
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-Protocol.BerryProtocol = BerryProtocol
-
-module.exports = Protocol
-
-
-/***/ }),
-/* 10 */
 /***/ (function(module, exports) {
 
 var g;
@@ -3431,6 +3291,149 @@ try {
 // easier to handle this case. if(!global) { ...}
 
 module.exports = g;
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports) {
+
+/**
+ * intrinsics.js
+ *
+ * Helpers for the known built-in objects in JavaScript
+ */
+
+// See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
+const intrinsicNames = [
+  // Global functions
+  'console',
+  'eval',
+  'isFinite',
+  'isNaN',
+  'parseFloat',
+  'parseInt',
+  'decodeURI',
+  'decodeURIComponent',
+  'encodeURI',
+  'encodeURIComponent',
+  'escape',
+
+  // Fundamental objects
+  'Object',
+  'Function',
+  'Boolean',
+  'Symbol',
+  'Error',
+  'EvalError',
+  'RangeError',
+  'ReferenceError',
+  'SyntaxError',
+  'TypeError',
+  'URIError',
+
+  // Numbers and dates
+  'Number',
+  'BigInt',
+  'Math',
+  'Date',
+
+  // Text processing
+  'String',
+  'RegExp',
+
+  // Indexed collections
+  'Array',
+  'Int8Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Int16Array',
+  'Uint16Array',
+  'Int32Array',
+  'Uint32Array',
+  'Float32Array',
+  'Float64Array',
+  'BigInt64Array',
+  'BigUint64Array',
+
+  // Keyed collections
+  'Map',
+  'Set',
+  'WeakMap',
+  'WeakSet',
+
+  // Structured data
+  'ArrayBuffer',
+  'DataView',
+  'JSON',
+
+  // Control abstraction objects
+  'Promise',
+  'Generator',
+  'GeneratorFunction',
+  'AsyncFunction',
+
+  // Reflection
+  'Reflect',
+  'Proxy',
+
+  // Internationalization
+  'Intl',
+
+  // WebAssembly
+  'WebAssembly'
+]
+
+// Returns an object with the built-in intrinsics in this environment
+const getIntrinsics = () => {
+  let code = 'const x = {};'
+  intrinsicNames.forEach(name => { code += `x.${name}=typeof ${name}!=='undefined'?${name}:undefined;` })
+  code += 'return x'
+  return new Function(code)() // eslint-disable-line
+}
+
+const globalIntrinsics = getIntrinsics()
+
+// ------------------------------------------------------------------------------------------------
+// Intrinsics
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Manages known intrinsics
+ */
+class Intrinsics {
+  constructor () {
+    this.default = null
+    this.allowed = []
+    this.types = new Set()
+    this.use(globalIntrinsics)
+  }
+
+  set (intrinsics) {
+    this.default = null
+    this.allowed = []
+    this.types = new Set()
+    this.use(intrinsics)
+    return this
+  }
+
+  allow (intrinsics) {
+    this.allowed.push(intrinsics)
+    Object.keys(intrinsics).forEach(name => this.types.add(intrinsics[name]))
+    return this
+  }
+
+  use (intrinsics) {
+    this.allow(intrinsics)
+    this.default = intrinsics
+    return this
+  }
+}
+
+Intrinsics.defaultIntrinsics = new Intrinsics()
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 
 
 /***/ }),
@@ -3467,8 +3470,9 @@ module.exports = Context
  * The evaluator runs arbitrary code in a secure sandbox
  */
 
-const ses = __webpack_require__(26)
-const { getIntrinsics, intrinsicNames } = __webpack_require__(7)
+const ses = __webpack_require__(27)
+const { getIntrinsics, intrinsicNames, Intrinsics } = __webpack_require__(10)
+const { UniqueSet, UniqueMap, UniqueSetDeps, UniqueMapDeps } = __webpack_require__(13)
 
 // ------------------------------------------------------------------------------------------------
 // Evaluator
@@ -3486,13 +3490,18 @@ class Evaluator {
 
     this.sandboxEvaluator = new SESEvaluator()
     this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
-    this.intrinsics = this.sandboxEvaluator.intrinsics
+
+    this.UniqueSet = this.sandboxEvaluator.evaluate(UniqueSet.toString(), UniqueSetDeps)[0]
+    this.UniqueMap = this.sandboxEvaluator.evaluate(UniqueMap.toString(), UniqueMapDeps)[0]
+    this.uniqueEnv = { Set: this.UniqueSet, Map: this.UniqueMap }
+    const custom = Object.assign({}, this.sandboxEvaluator.intrinsics, this.uniqueEnv)
+    this.intrinsics = new Intrinsics().allow(this.sandboxEvaluator.intrinsics).use(custom)
   }
 
   evaluate (code, env) {
     if (this.logger) this.logger.info(`Evaluating code starting with: "${code.slice(0, 20)}"`)
     const evaluator = this.willSandbox(code) ? this.sandboxEvaluator : this.globalEvaluator
-    return evaluator.evaluate(code, env)
+    return evaluator.evaluate(code, Object.assign({}, this.uniqueEnv, env))
   }
 
   willSandbox (code) {
@@ -3682,10 +3691,160 @@ Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
 
 module.exports = Evaluator
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(10)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
 /* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Protocol = __webpack_require__(7)
+const Location = __webpack_require__(4)
+
+const UniquePrivates = new WeakMap()
+
+// ------------------------------------------------------------------------------------------------
+// UniqueMap
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * A Map that guarantees token keys are unique. The API is intended to be the same as the built-in
+ * Map so that this can be a drop-in replacement in sandboxed code.
+
+ * For a given entry, there are 4 cases to consider:
+ *    1) Deployed tokens
+ *    2) Undeployed tokens
+ *    3) Deployable code currently undeployed
+ *    4) Everything else
+ */
+class UniqueMap {
+  constructor (iterable) {
+    const priv = {
+      undeployed: new Set(), // Undeployed tokens without an origin
+      deployed: new Map(), // Origin -> Token
+      map: new Map()
+    }
+    UniquePrivates.set(this, priv)
+    if (iterable) { for (const [x, y] of iterable) this.set(x, y) }
+  }
+
+  clear () {
+    const priv = UniquePrivates.get(this)
+    priv.undeployed.clear()
+    priv.deployed.clear()
+    priv.map.clear()
+  }
+
+  _getUniqueKey (x) {
+    const priv = UniquePrivates.get(this)
+
+    const inconsistentWorldview = () => {
+      const hint = 'Hint: Try syncing the relevant tokens before use.'
+      const reason = 'Found two tokens with the same origin at different locations.'
+      const message = 'Inconsistent worldview'
+      throw new Error(`${message}\n\n${reason}\n\n${hint}`)
+    }
+
+    if (Protocol.isToken(x)) {
+      const xOrigin = Protocol.getOrigin(x)
+      const xLocation = Protocol.getLocation(x)
+      const deployed = !!Location.parse(xOrigin).txid
+
+      if (deployed) {
+        // Case 1: Deployed token
+
+        // Was this token previously in our undeployed set? If so, update it.
+        for (const y of priv.undeployed) {
+          if (xOrigin === y.origin) {
+            const yLocation = Protocol.getLocation(y)
+            if (xLocation !== yLocation) inconsistentWorldview()
+            priv.undeployed.delete(y)
+            priv.deployed.set(xOrigin, y)
+            return y
+          }
+        }
+
+        // Have we already seen a token at this origin? If so, use that one.
+        const y = priv.deployed.get(xOrigin)
+        if (y) {
+          const yLocation = Protocol.getLocation(y)
+          if (xLocation !== yLocation) inconsistentWorldview()
+          return y
+        }
+
+        // First time seeing a token at this origin. Remember it.
+        priv.deployed.set(xOrigin, x)
+        return x
+      } else {
+        // Case 2: Undeployed token
+        priv.undeployed.add(x)
+        return x
+      }
+    } else if (Protocol.isDeployable(x)) {
+      // Case 3: Undeployed code
+      priv.undeployed.add(x)
+      return x
+    } else {
+      // Case 4: Everything else
+      return x
+    }
+  }
+
+  delete (x) {
+    const key = this._getUniqueKey(x)
+    const priv = UniquePrivates.get(this)
+    priv.undeployed.delete(key)
+    priv.deployed.delete(key)
+    return priv.map.delete(key)
+  }
+
+  get (x) { return UniquePrivates.get(this).map.get(this._getUniqueKey(x)) }
+  set (x, y) { UniquePrivates.get(this).map.set(this._getUniqueKey(x), y); return this }
+  has (x) { return UniquePrivates.get(this).map.has(this._getUniqueKey(x)) }
+  get size () { return UniquePrivates.get(this).map.size }
+  get [Symbol.species] () { return UniqueMap }
+  entries () { return UniquePrivates.get(this).map.entries() }
+  keys () { return UniquePrivates.get(this).map.keys() }
+  forEach (callback, thisArg) { return UniquePrivates.get(this).map.forEach(callback, thisArg) }
+  values () { return UniquePrivates.get(this).map.values() }
+  [Symbol.iterator] () { return UniquePrivates.get(this).map[Symbol.iterator]() }
+}
+
+// ------------------------------------------------------------------------------------------------
+// UniqueSet
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * A Set that guarantees tokens are unique. The API is intended to be the same as the built-in
+ * Set so that this can be a drop-in replacement in sandboxed code.
+ */
+class UniqueSet {
+  constructor (iterable) {
+    UniquePrivates.set(this, new UniqueMap())
+    if (iterable) { for (const x of iterable) this.add(x) }
+  }
+
+  get size () { return UniquePrivates.get(this).size }
+  get [Symbol.species] () { return UniqueSet }
+  add (x) { UniquePrivates.get(this).set(x, x); return this }
+  clear () { UniquePrivates.get(this).clear() }
+  delete (x) { return UniquePrivates.get(this).delete(x) }
+  entries () { return UniquePrivates.get(this).entries() }
+  forEach (callback, thisArg) { return UniquePrivates.get(this).forEach(x => callback.call(thisArg, x)) }
+  has (x) { return UniquePrivates.get(this).has(x) }
+  values () { return UniquePrivates.get(this).values() }
+  [Symbol.iterator] () { return UniquePrivates.get(this).keys() }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+const UniqueMapDeps = { Location, Protocol, UniquePrivates }
+const UniqueSetDeps = { UniqueMap, UniquePrivates }
+
+module.exports = { UniqueMap, UniqueSet, UniqueMapDeps, UniqueSetDeps }
+
+
+/***/ }),
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3699,9 +3858,9 @@ module.exports = Evaluator
 
 
 
-var base64 = __webpack_require__(28)
-var ieee754 = __webpack_require__(29)
-var isArray = __webpack_require__(30)
+var base64 = __webpack_require__(29)
+var ieee754 = __webpack_require__(30)
+var isArray = __webpack_require__(31)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -5479,10 +5638,10 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(10)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -5496,7 +5655,7 @@ const util = __webpack_require__(0)
 const { JigControl } = __webpack_require__(3)
 const { Berry } = __webpack_require__(6)
 const Location = __webpack_require__(4)
-const Protocol = __webpack_require__(9)
+const Protocol = __webpack_require__(7)
 const Xray = __webpack_require__(8)
 
 // ------------------------------------------------------------------------------------------------
@@ -6101,7 +6260,7 @@ class ProtoTransaction {
         const deployed = jig => typeof jig.origin !== 'undefined' && jig.origin[0] !== '_'
         const prevLocation = jigLocations.get(deployed(jig) ? jig.origin : jig)
         if (!prevLocation) return jigLocations.set(deployed(jig) ? jig.origin : jig, jig.location)
-        if (prevLocation !== jig.location) throw new Error(`referenced different locations of same jig: ${jig}`)
+        if (prevLocation !== jig.location) throw new Error(`Referenced different locations of same jig: ${jig}`)
       }
 
       checkJigInstance(target)
@@ -6356,10 +6515,10 @@ class ProtoTransaction {
 
 module.exports = { ProtoTransaction, Transaction }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14).Buffer))
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -6369,7 +6528,7 @@ module.exports = { ProtoTransaction, Transaction }
  */
 
 const { Address, Script, Transaction } = __webpack_require__(2)
-const axios = __webpack_require__(33)
+const axios = __webpack_require__(34)
 const util = __webpack_require__(0)
 
 // ------------------------------------------------------------------------------------------------
@@ -6795,7 +6954,7 @@ module.exports = { Blockchain, BlockchainServer }
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6813,7 +6972,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6891,7 +7050,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6903,14 +7062,14 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(1);
-var normalizeHeaderName = __webpack_require__(41);
+var normalizeHeaderName = __webpack_require__(42);
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -6927,10 +7086,10 @@ function getDefaultAdapter() {
   // Only Node.JS has a process variable that is of [[Class]] process
   if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(20);
+    adapter = __webpack_require__(21);
   } else if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(20);
+    adapter = __webpack_require__(21);
   }
   return adapter;
 }
@@ -7006,21 +7165,21 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = defaults;
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(40)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(41)))
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(1);
-var settle = __webpack_require__(42);
-var buildURL = __webpack_require__(17);
-var parseHeaders = __webpack_require__(44);
-var isURLSameOrigin = __webpack_require__(45);
-var createError = __webpack_require__(21);
+var settle = __webpack_require__(43);
+var buildURL = __webpack_require__(18);
+var parseHeaders = __webpack_require__(45);
+var isURLSameOrigin = __webpack_require__(46);
+var createError = __webpack_require__(22);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -7112,7 +7271,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(46);
+      var cookies = __webpack_require__(47);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -7190,13 +7349,13 @@ module.exports = function xhrAdapter(config) {
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var enhanceError = __webpack_require__(43);
+var enhanceError = __webpack_require__(44);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -7215,7 +7374,7 @@ module.exports = function createError(message, config, code, request, response) 
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7273,7 +7432,7 @@ module.exports = function mergeConfig(config1, config2) {
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7299,7 +7458,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports) {
 
 /**
@@ -7369,7 +7528,7 @@ module.exports = expect
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -7383,7 +7542,6 @@ const util = __webpack_require__(0)
 const Evaluator = __webpack_require__(12)
 const { Jig, JigControl } = __webpack_require__(3)
 const { Berry, BerryControl } = __webpack_require__(6)
-const { Intrinsics } = __webpack_require__(7)
 const Xray = __webpack_require__(8)
 const Context = __webpack_require__(11)
 
@@ -7402,7 +7560,7 @@ class Code {
   constructor (options = {}) {
     this.installs = new Map() // Type | Location | Sandbox -> Sandbox
     this.evaluator = new Evaluator({ logger: options.logger, sandbox: options.sandbox })
-    this.intrinsics = new Intrinsics().use(this.evaluator.intrinsics)
+    this.intrinsics = this.evaluator.intrinsics
     this.installJig()
     this.installBerry()
   }
@@ -7493,7 +7651,7 @@ class Code {
       // realdeps is type.deps with its parent if not there
       const parentClass = Object.getPrototypeOf(type)
       const realdeps = classProps.includes('deps') ? Object.assign({}, type.deps) : {}
-      const SandboxObject = this.evaluator.intrinsics.Object
+      const SandboxObject = this.evaluator.intrinsics.default.Object
       if (parentClass !== Object.getPrototypeOf(Object) &&
         parentClass !== SandboxObject.getPrototypeOf(SandboxObject)) {
         env[parentClass.name] = this.deploy(parentClass, options)
@@ -7776,7 +7934,7 @@ module.exports = Code
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (global, factory) {
@@ -8449,7 +8607,7 @@ module.exports = Code
     }
 
     // eslint-disable-next-line global-require
-    const vm = __webpack_require__(27);
+    const vm = __webpack_require__(28);
 
     // Use unsafeGlobalEvalSrc to ensure we get the right 'this'.
     const unsafeGlobal = vm.runInNewContext(unsafeGlobalEvalSrc);
@@ -11732,7 +11890,7 @@ You probably want a Compartment instead, like:
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports) {
 
 var indexOf = function (xs, item) {
@@ -11887,7 +12045,7 @@ exports.createContext = Script.createContext = function (context) {
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12046,7 +12204,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -12136,7 +12294,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -12147,7 +12305,7 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -12156,7 +12314,7 @@ module.exports = Array.isArray || function (arr) {
  * Enqueues transactions and syncs jigs
  */
 
-const { ProtoTransaction } = __webpack_require__(14)
+const { ProtoTransaction } = __webpack_require__(15)
 const { JigControl } = __webpack_require__(3)
 const Xray = __webpack_require__(8)
 const util = __webpack_require__(0)
@@ -12490,7 +12648,7 @@ owner: ${spentJigs[i].owner}`)
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -12501,7 +12659,7 @@ owner: ${spentJigs[i].owner}`)
 
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
-const { Blockchain } = __webpack_require__(15)
+const { Blockchain } = __webpack_require__(16)
 
 // ------------------------------------------------------------------------------------------------
 // Pay API
@@ -12696,23 +12854,23 @@ module.exports = { Pay, Purse }
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(34);
+module.exports = __webpack_require__(35);
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(1);
-var bind = __webpack_require__(16);
-var Axios = __webpack_require__(36);
-var mergeConfig = __webpack_require__(22);
-var defaults = __webpack_require__(19);
+var bind = __webpack_require__(17);
+var Axios = __webpack_require__(37);
+var mergeConfig = __webpack_require__(23);
+var defaults = __webpack_require__(20);
 
 /**
  * Create an instance of Axios
@@ -12745,15 +12903,15 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(23);
-axios.CancelToken = __webpack_require__(49);
-axios.isCancel = __webpack_require__(18);
+axios.Cancel = __webpack_require__(24);
+axios.CancelToken = __webpack_require__(50);
+axios.isCancel = __webpack_require__(19);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(50);
+axios.spread = __webpack_require__(51);
 
 module.exports = axios;
 
@@ -12762,7 +12920,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports) {
 
 /*!
@@ -12779,17 +12937,17 @@ module.exports = function isBuffer (obj) {
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(1);
-var buildURL = __webpack_require__(17);
-var InterceptorManager = __webpack_require__(37);
-var dispatchRequest = __webpack_require__(38);
-var mergeConfig = __webpack_require__(22);
+var buildURL = __webpack_require__(18);
+var InterceptorManager = __webpack_require__(38);
+var dispatchRequest = __webpack_require__(39);
+var mergeConfig = __webpack_require__(23);
 
 /**
  * Create a new instance of Axios
@@ -12872,7 +13030,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12931,18 +13089,18 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(1);
-var transformData = __webpack_require__(39);
-var isCancel = __webpack_require__(18);
-var defaults = __webpack_require__(19);
-var isAbsoluteURL = __webpack_require__(47);
-var combineURLs = __webpack_require__(48);
+var transformData = __webpack_require__(40);
+var isCancel = __webpack_require__(19);
+var defaults = __webpack_require__(20);
+var isAbsoluteURL = __webpack_require__(48);
+var combineURLs = __webpack_require__(49);
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -13024,7 +13182,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13051,7 +13209,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -13241,7 +13399,7 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13260,13 +13418,13 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var createError = __webpack_require__(21);
+var createError = __webpack_require__(22);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -13292,7 +13450,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13341,7 +13499,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13401,7 +13559,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13476,7 +13634,7 @@ module.exports = (
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13536,7 +13694,7 @@ module.exports = (
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13557,7 +13715,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13578,13 +13736,13 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Cancel = __webpack_require__(23);
+var Cancel = __webpack_require__(24);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -13642,7 +13800,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13676,7 +13834,7 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -13852,7 +14010,7 @@ module.exports = Owner
 
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -13993,7 +14151,7 @@ module.exports = class Mockchain {
 
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -14125,7 +14283,7 @@ module.exports = { State, StateCache }
 
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -14135,7 +14293,7 @@ module.exports = { State, StateCache }
  */
 
 const { Jig } = __webpack_require__(3)
-const expect = __webpack_require__(24)
+const expect = __webpack_require__(25)
 
 class Token extends Jig {
   init (amount, _tokenToDecrease, _tokensToCombine) {
@@ -14228,144 +14386,6 @@ Token.locationMainnet = '8941b77582f9f0fb455b4cdb8283a0278b8efacfd4aaca772b1677a
 Token.ownerMainnet = '0306ff4478aeb2b1be9c8a592d5bd816a9419a6684af8b7fde1df1545379354987'
 
 module.exports = Token
-
-
-/***/ }),
-/* 55 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Protocol = __webpack_require__(9)
-const Location = __webpack_require__(4)
-
-// ------------------------------------------------------------------------------------------------
-// UniqueMap
-// ------------------------------------------------------------------------------------------------
-
-/**
- * A Map that guarantees token keys are unique. The API is intended to be the same as the built-in
- * Map so that this can be a drop-in replacement in sandboxed code.
-
- * For a given entry, there are 4 cases to consider:
- *    1) Deployed tokens
- *    2) Undeployed tokens
- *    3) Deployable code currently undeployed
- *    4) Everything else
- */
-class UniqueMap {
-  constructor (iterable) {
-    this._undeployed = new Set() // Undeployed tokens without an origin
-    this._deployed = new Map() // Origin -> Token
-    this._map = new Map()
-    if (iterable) { for (const [x, y] of iterable) this.set(x, y) }
-  }
-
-  clear () {
-    this._undeployed.clear()
-    this._deployed.clear()
-    this._map.clear()
-  }
-
-  _getUniqueKey (x) {
-    const inconsistentWorldview = () => {
-      const hint = 'Hint: Try syncing the relevant tokens before use.'
-      const reason = 'Found two tokens with the same origin at different locations.'
-      const message = 'Inconsistent worldview'
-      throw new Error(`${message}\n\n${reason}\n\n${hint}`)
-    }
-
-    if (Protocol.isToken(x)) {
-      const xOrigin = Protocol.getOrigin(x)
-      const xLocation = Protocol.getLocation(x)
-      const deployed = !!Location.parse(xOrigin).txid
-
-      if (deployed) {
-        // Case 1: Deployed token
-
-        // Was this token previously in our undeployed set? If so, update it.
-        for (const y of this._undeployed) {
-          if (xOrigin === y.origin) {
-            const yLocation = Protocol.getLocation(y)
-            if (xLocation !== yLocation) inconsistentWorldview()
-            this._undeployed.delete(y)
-            this._deployed.set(xOrigin, y)
-            return y
-          }
-        }
-
-        // Have we already seen a token at this origin? If so, use that one.
-        const y = this._deployed.get(xOrigin)
-        if (y) {
-          const yLocation = Protocol.getLocation(y)
-          if (xLocation !== yLocation) inconsistentWorldview()
-          return y
-        }
-
-        // First time seeing a token at this origin. Remember it.
-        this._deployed.set(xOrigin, x)
-        return x
-      } else {
-        // Case 2: Undeployed token
-        this._undeployed.add(x)
-        return x
-      }
-    } else if (Protocol.isDeployable(x)) {
-      // Case 3: Undeployed code
-      this._undeployed.add(x)
-      return x
-    } else {
-      // Case 4: Everything else
-      return x
-    }
-  }
-
-  delete (x) {
-    const key = this._getUniqueKey(x)
-    this._undeployed.delete(key)
-    this._deployed.delete(key)
-    return this._map.delete(key)
-  }
-
-  get (x) { return this._map.get(this._getUniqueKey(x)) }
-  set (x, y) { this._map.set(this._getUniqueKey(x), y); return this }
-  has (x) { return this._map.has(this._getUniqueKey(x)) }
-  get size () { return this._map.size }
-  get [Symbol.species] () { return UniqueMap }
-  entries () { return this._map.entries() }
-  keys () { return this._map.keys() }
-  forEach (callback, thisArg) { return this._map.forEach(callback, thisArg) }
-  values () { return this._map.values() }
-  [Symbol.iterator] () { return this._map[Symbol.iterator]() }
-}
-
-// ------------------------------------------------------------------------------------------------
-// UniqueSet
-// ------------------------------------------------------------------------------------------------
-
-/**
- * A Set that guarantees tokens are unique. The API is intended to be the same as the built-in
- * Set so that this can be a drop-in replacement in sandboxed code.
- */
-class UniqueSet {
-  constructor (iterable) {
-    this.map = new UniqueMap()
-    if (iterable) { for (const x of iterable) this.add(x) }
-  }
-
-  get size () { return this.map.size }
-  get [Symbol.species] () { return UniqueSet }
-  add (x) { this.map.set(x, x); return this }
-  clear () { this.map.clear() }
-  delete (x) { return this.map.delete(x) }
-  entries () { return this.map.entries() }
-  forEach (callback, thisArg) { return this.map.forEach(x => callback.call(thisArg, x)) }
-  has (x) { return this.map.has(x) }
-  values () { return this.map.values() }
-  [Symbol.iterator] () { return this.map.keys() }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-module.exports = { UniqueSet, UniqueMap }
 
 
 /***/ })
