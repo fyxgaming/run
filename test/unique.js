@@ -69,7 +69,6 @@ describe('UniqueMap', () => {
     })
 
     it('should clear token states', () => {
-      const { Run } = require('./helpers')
       const a = testToken()
       const b = testToken().deploy().publish()
       const map = new UniqueMap([[a, 1], [b, 2]])

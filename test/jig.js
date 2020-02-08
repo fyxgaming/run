@@ -1478,7 +1478,7 @@ describe('Jig', () => {
     })
 
     it('should throw if transaction is unpaid', async () => {
-     class A extends Jig { set (x) { this.x = x } }
+      class A extends Jig { set (x) { this.x = x } }
       const a = await new A().sync()
       const oldPay = run.purse.pay
       run.purse.pay = async (tx) => { return tx }
@@ -1559,6 +1559,38 @@ describe('Jig', () => {
           }
         }, 1)
       })
+    })
+
+    it.only('should use unique set and unique map', async () => {
+      class A extends Jig {
+        init () { this.set = new Set() }
+        add (x) { this.set.add(x) }
+      }
+      const a = await new A().sync()
+      const a2 = await run.load(a.location)
+      a.add(a)
+      a.add(a2)
+      expect(a.set.size).to.equal(1)
+    })
+
+    it.only('should use unique map', async () => {
+      class A extends Jig {
+        init () { this.map = new Map() }
+        set (x, y) { this.map.set(x, y) }
+      }
+      const a = await new A().sync()
+      const a2 = await run.load(a.location)
+      a.set(a, 1)
+      a.set(a2, 2)
+      expect(a.map.size).to.equal(1)
+    })
+
+    it.only('should support arbitrary objects', () => {
+
+    })
+
+    it.only('should support circular objects', () => {
+
     })
   })
 
