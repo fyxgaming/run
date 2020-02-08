@@ -35,7 +35,7 @@ Twetch.deps = { TwetchPost }
 // ----------------------------------------------------------------------------
 
 const network = 'main'
-const twetchPostTxid = 'b446cb6e6187e79f95bc85df7d0e8332873f055d6b63bc29c049584917cceda0'
+const twetchPostTxid = '4e146ac161324ef0b388798462867c29ad681ef4624ea4e3f7c775561af3ddd0'
 const purse = 'KxCNcuTavkKd943xAypLjRKufmdXUaooZzWoB4piRRvJK74LYwCR'
 
 async function main() {
@@ -47,12 +47,18 @@ async function main() {
     // We use the { protocol } syntax to specify this Twetch protocol is to be used
     const post = await run.load(twetchPostTxid, { protocol: Twetch })
 
-    // TODO: Metanet example does this:
-    console.log(post)
-    console.log(Twetch.location)
-    console.log(Twetch.owner)
-    console.log(TwetchPost.location)
-    console.log(TwetchPost.owner)
+    class MyFavoritePost extends Jig {
+        init(post) {
+            expect(post).toBeInstanceOf(TwetchPost)
+            this.post = post
+        }
+    }
+
+    MyFavoritePost.deps = { TwetchPost, expect: Run.expect }
+
+    const favorite = await new MyFavoritePost(post).sync()
+
+    console.log(favorite.post.text)
 }
 
 main()
