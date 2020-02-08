@@ -9,17 +9,18 @@ const tempTxid = '????????????????????????????????????????????????5f0084e81bda33
 describe('Location', () => {
   describe('parse', () => {
     it('should parse valid locations', () => {
-      expect(Location.parse('_o0')).to.deep.equal({ vout: 0 })
-      expect(Location.parse('_i1')).to.deep.equal({ vin: 1 })
-      expect(Location.parse('_r2')).to.deep.equal({ vref: 2 })
-      expect(Location.parse(`${txid}_o0`)).to.deep.equal({ txid, vout: 0 })
-      expect(Location.parse(`${txid}_i1`)).to.deep.equal({ txid, vin: 1 })
-      expect(Location.parse(`${txid}_r6000000000`)).to.deep.equal({ txid, vref: 6000000000 })
-      expect(Location.parse(`${tempTxid}_o1`)).to.deep.equal({ tempTxid, vout: 1 })
-      expect(Location.parse(`${txid}_o1://${txid}`)).to.deep.equal({ txid, vout: 1, innerLocation: txid })
+      const expectLocation = (s, obj) => expect(Location.parse(s)).to.deep.equal(Object.assign({ location: s }, obj))
+      expectLocation('_o0', { vout: 0 })
+      expectLocation('_i1', { vin: 1 })
+      expectLocation('_r2', { vref: 2 })
+      expectLocation(`${txid}_o0`, { txid, vout: 0 })
+      expectLocation(`${txid}_i1`, { txid, vin: 1 })
+      expectLocation(`${txid}_r6000000000`, { txid, vref: 6000000000 })
+      expectLocation(`${tempTxid}_o1`, { tempTxid, vout: 1 })
+      expectLocation(`${txid}_o1://${txid}`, { txid, vout: 1, innerLocation: txid, location: `${txid}_o1` })
       expect(() => Location.parse(`${txid}_o1://hello`)).not.to.throw()
-      expect(Location.parse('!Bad')).to.deep.equal({ error: 'Bad' })
-      expect(Location.parse('!')).to.deep.equal({ error: '' })
+      expectLocation('!Bad', { error: 'Bad' })
+      expectLocation('!', { error: '' })
     })
 
     it('should throw for invalid locations', () => {
@@ -42,7 +43,7 @@ describe('Location', () => {
   })
 
   describe('build', () => {
-    it('should parse valid options', () => {
+    it('should create from valid options', () => {
       expect(Location.build({ vout: 0 })).to.equal('_o0')
       expect(Location.build({ vin: 1 })).to.equal('_i1')
       expect(Location.build({ vref: 2 })).to.equal('_r2')

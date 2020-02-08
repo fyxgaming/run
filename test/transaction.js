@@ -602,7 +602,7 @@ describe('Transaction', () => {
       const action = new SetAction(10)
       await run.sync()
 
-      // Clear caches and load
+      // Clear caches and reload
       run.deactivate()
       const run2 = createRun({ blockchain: run.blockchain })
       await run2.load(action.location)

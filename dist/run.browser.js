@@ -3102,7 +3102,7 @@ class Location {
 
     // Check if we are dealing with an error
     if (location[0] === '!') {
-      return { error: location.slice(1) }
+      return { error: location.slice(1), location }
     }
 
     // Check if we are dealing with a protocol
@@ -5624,10 +5624,10 @@ class Transaction {
 
     // TODO: do we want to support loading locations with inputs?
     // The transaction test "update class property jig in initializer" uses this
-    if (vin) {
+    if (typeof vin !== 'undefined') {
       const tx = await this.blockchain.fetch(txid)
       const prevTxId = tx.inputs[vin].prevTxId.toString('hex')
-      return this.load(`${prevTxId}_o${tx.inputs[vin].outputIndex}`)
+      return this.load(`${prevTxId}_o${tx.inputs[vin].outputIndex}`, { cachedRefs })
     }
 
     // check the state cache so we only have to load each jig once
