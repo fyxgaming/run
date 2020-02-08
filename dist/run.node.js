@@ -1332,6 +1332,7 @@ class Run {
     this._purse = parsePurse(options.purse, this.blockchain, this.logger)
     this.code = parseCode(options.code, parseSandbox(options.sandbox), this.logger)
     this.syncer = new Syncer(this)
+    this.protocol = Run.instance ? Run.instance.protocol : new Protocol()
     this.transaction = new Transaction(this)
     this.loadQueue = new util.SerialTaskQueue()
 
@@ -1347,13 +1348,15 @@ class Run {
   /**
    * Loads jigs or code from the blockchain
    * @param {string} location Location string
+   * @param {object=} options Optional settings to use in load
+   * @param {function=} protocol Custom protocol to use to load the berry
    * @returns {Promise<Object|Function|Class>} Class or function in a promise
    */
-  async load (location) {
+  async load (location, options = {}) {
     this._checkActive()
 
     // Everything else gets serialized
-    return this.loadQueue.enqueue(() => this.transaction.load(location))
+    return this.loadQueue.enqueue(() => this.transaction.load(location, options))
   }
 
   /**
@@ -1373,6 +1376,10 @@ class Run {
    */
   async sync () {
     return this.owner.sync()
+  }
+
+  installProtocol (protocol) {
+    this.protocol.installBerryProtocol(protocol)
   }
 
   /**
@@ -1576,7 +1583,8 @@ module.exports = Run
 const Context = __webpack_require__(9)
 
 const BerryControl = {
-  loader: undefined
+  protocol: undefined,
+  location: undefined
 }
 
 // Note: This is a good way to learn the Jig class
@@ -1608,22 +1616,25 @@ class Berry {
       throw new Error('Berry must use init() instead of constructor()')
     }
 
-    // Check that the loader matches
-    if (!BerryControl.loader || BerryControl.loader !== this.constructor.loader) {
-      throw new Error('Must only create Berry from its loader')
+    // Check that the protocol matches
+    if (!BerryControl.protocol || BerryControl.protocol !== this.constructor.protocol) {
+      throw new Error('Must only create Berry from its protocol')
     }
 
     // Run the init
     this.init(...args)
 
     // Validate the location
-    if (typeof this.location !== 'string') {
-      throw new Error('Berry init() must set a location')
+    if (typeof this.location !== 'undefined') {
+      throw new Error('Berry init() must not set a location')
     }
 
+    if (!BerryControl.location) throw new Error('Must only pluck one berry at a time')
+    this.location = BerryControl.location
+    BerryControl.location = undefined
+
     // Free the object so there are no more changes
-    // TODO: deep freeze
-    Object.freeze(this)
+    Context.deepFreeze(this)
   }
 
   init () { }
@@ -1654,7 +1665,7 @@ class Berry {
 }
 
 // This should be overridden in each child class
-Berry.loader = undefined
+Berry.protocol = undefined
 
 module.exports = { Berry, BerryControl }
 
@@ -3011,34 +3022,61 @@ module.exports = Xray
  *
  * Every token in Run is stored at a location on the blockchain. Both the "origin"
  * property and "location" property on jigs and code are location strings. Berries
- * have a location but not an origin. To the user, these come in the form:
- *
- *  <txid>_o<vout>
- *
- * Where txid is a transaction id in hex, and vout is the output index as an integer.
- * Locations are usually outputs. But they need not always be outputs. There are other
- * kinds of locations. If the location ends with _i<vin>, then the location refers
- * to an input of a transaction. If the location ends in _r<vref>, then the location
- * refers to another "ref" location within the OP_RETURN JSON. Sometimes within the
- * OP_RETURN JSON you will see locations without txids, and these refer to relative
- * locations. They look like _o1, _i0, etc.
- *
- * While a transaction is being built, a jig may have a temporary location. This is
- * identified by a random temporary txid that starts with '?'. This will get turned
- * into a real location when the token's transaction is known and published. The
- * convention is for temporary txids to have 48 ?'s followed by 16 random hex chars
- * to uniquely identify the temporary txid, but this is not strictly required.
- *
- * Finally, it is important that tokens be deterministically loadable. Most tokens
- * are jigs and code and are parsed by the Run protocol. However with Berries, a
- * token may be parsed by another protocol. Two locations may even be parsed differently
- * by two different protocols, so it's important when identifying the location of a
- * berry to attach its protocol to its location. So, we add a protocol prefix:
- *
- *      <protocol_location>://<token_location>
+ * have a location but not an origin, and these are prefixed with a protocol.
  *
  * This class helps store and read all of this, but within Run's code, it is important
  * to consider all of the above cases when looking at a location.
+ *
+ * ------------------
+ * JIG/CODE LOCATIONS
+ * ------------------
+ *
+ * To the user, most Jig locations come in the form:
+ *
+ *  "<txid>_o<vout>"
+ *
+ * The txid is a transaction id in hex, and vout is the output index as an integer.
+ * Locations are usually outputs. But they need not always be outputs. There are other
+ * kinds of locations. If the location ends with _i<vin>, then the location refers
+ * to an input of a transaction. If the location ends in _r<vref>, then the location
+ * refers to another asset reference within the OP_RETURN JSON. Sometimes within an
+ * OP_RETURN JSON you will see locations without txids, and these refer to locations
+ * in the CURRENT transaction. They look like _o1, _i0, etc.
+ *
+ * -------------------
+ * TEMPORARY LOCATIONS
+ * -------------------
+ *
+ * While a transaction is being built, a jig may have a temporary location:
+ *
+ *  "????????????????????????????????????????????????ca2f5ee8de79daf0_o1"
+ *
+ * This is identified by a random temporary txid that starts with '?'. It will get
+ * turned into a real location when the token's transaction is known and published.
+ * The convention is for temporary txids to have 48 ?'s followed by 16 random hex
+ * chars to uniquely identify the temporary txid, but this is not strictly required.
+ *
+ * ---------------
+ * BERRY LOCATIONS
+ * ---------------
+ *
+ * Berry locations are a combination of a protocol + inner location, and usually
+ * look like:
+ *
+ *  "<protocol_txid>_o<protocol_vout>://<inner_location>"
+ *
+ * The protocol uniquely identifies how the inner location is to be loaded.
+ * The inner location does not have to be a valid location in the normal sense.
+ * It will be parsed by the protocol, and may be a simple txid or friendly string.
+ *
+ * ---------------
+ * ERROR LOCATIONS
+ * ---------------
+ *
+ * Finally, a location may be invalid, in which case it starts with ! followed by
+ * an optional error string
+ *
+ *  "!This location is not valid"
  */
 class Location {
   /**
@@ -3050,7 +3088,9 @@ class Location {
      * @return {number=} out.vin Input index
      * @return {number=} out.vref Reference index
      * @return {string=} out.tempTxid Temporary transaction ID
-     * @return {object=} out.protocol Protocol location object
+     * @return {string=} out.error Error string if this location is invalid
+     * @return {string=} out.innerLocation Inner location string if this location was a protocol
+     * @return {string=} out.location Location string passed in with protocol removed
      */
   static parse (location) {
     const error = s => { throw new Error(`${s}: ${location}`) }
@@ -3058,12 +3098,16 @@ class Location {
     if (typeof location !== 'string') error('Location must be a string')
     if (!location.length) error('Location must not be empty')
 
+    // Check if we are dealing with an error
+    if (location[0] === '!') {
+      return { error: location.slice(1) }
+    }
+
     // Check if we are dealing with a protocol
-    const protoParts = location.split('://')
-    if (protoParts.length > 2) error('Location must only have one protocol')
-    if (protoParts.length === 2) {
-      return Object.assign({}, Location.parse(protoParts[1]),
-        { protocol: Location.parse(protoParts[0]) })
+    const protocolParts = location.split('://')
+    if (protocolParts.length > 2) error('Location must only have one protocol')
+    if (protocolParts.length === 2) {
+      return Object.assign({}, Location.parse(protocolParts[0]), { innerLocation: protocolParts[1] })
     }
 
     // Split the txid and index parts
@@ -3071,7 +3115,7 @@ class Location {
     if (parts.length > 2) error('Location has an unexpected _ separator')
     if (parts.length < 2) error('Location requires a _ separator')
 
-    const output = {}
+    const output = { location }
 
     // Validate the txid
     if (parts[0].length !== 0 && parts[0].length !== 64) error('Location has an invalid txid length')
@@ -3107,38 +3151,48 @@ class Location {
      * @param {number=} options.vin Input index
      * @param {number=} options.vref Reference index
      * @param {string=} options.tempTxid Temporary transaction ID
-     * @param {object=} options.protocol Protocol location object
+     * @param {string=} out.error Error string if this location is invalid
+     * @param {string=} options.location Location when not specifying parts as above
+     * @param {string=} options.innerLocation Protocol inner location
      * @return {string} The built location string
      */
   static build (options) {
     const error = s => { throw new Error(`${s}: ${JSON.stringify(options)}`) }
 
     if (typeof options !== 'object' || !options) error('Location object is invalid')
-    if (options.protocol && options.protocol.protocol) error('Location must only have one protocol')
+    if (typeof options.innerLocation !== 'undefined' && typeof options.innerLocation !== 'string') error('Inner location must be a string')
+    if (typeof options.error !== 'undefined' && typeof options.error !== 'string') error('Error must be a string')
 
-    // If we have a protocol, build that first.
-    const prefix = options.protocol ? `${Location.build(options.protocol)}://` : ''
+    // If this is an error, return directly
+    if (typeof options.error !== 'undefined') return `!${options.error}`
 
-    // Get the txid
-    const txid = `${options.txid || options.tempTxid || ''}`
+    let location = options.location
+    if (!location) {
+      // Get the txid
+      const txid = `${options.txid || options.tempTxid || ''}`
 
-    // Get the index
-    let category = null; let index = null
-    if (typeof options.vout === 'number') {
-      category = 'o'
-      index = options.vout
-    } else if (typeof options.vin === 'number') {
-      category = 'i'
-      index = options.vin
-    } else if (typeof options.vref === 'number') {
-      category = 'r'
-      index = options.vref
-    } else error('Location index unspecified')
+      // Get the index
+      let category = null; let index = null
+      if (typeof options.vout === 'number') {
+        category = 'o'
+        index = options.vout
+      } else if (typeof options.vin === 'number') {
+        category = 'i'
+        index = options.vin
+      } else if (typeof options.vref === 'number') {
+        category = 'r'
+        index = options.vref
+      } else error('Location index unspecified')
 
-    const badIndex = isNaN(index) || !isFinite(index) || !Number.isInteger(index) || index < 0
-    if (badIndex) error('Location index must be a non-negative integer')
+      const badIndex = isNaN(index) || !isFinite(index) || !Number.isInteger(index) || index < 0
+      if (badIndex) error('Location index must be a non-negative integer')
 
-    return `${prefix}${txid}_${category}${index}`
+      // Create the location
+      location = `${txid}_${category}${index}`
+    }
+
+    // Append the sub-location if this is a protocol
+    return options.innerLocation ? `${location}://${options.innerLocation}` : location
   }
 }
 
@@ -3159,6 +3213,11 @@ class Context {
   static checkOwner (x) { return __webpack_require__(0).checkOwner(x) }
   static checkSatoshis (x) { return __webpack_require__(0).checkSatoshis(x) }
   static networkSuffix (x) { return __webpack_require__(0).networkSuffix(x) }
+
+  static deepFreeze (x) {
+    // TODO: deeply freeze
+    Object.freeze(x)
+  }
 }
 
 module.exports = Context
@@ -3174,6 +3233,7 @@ module.exports = Context
  * Manager for token protocols are supported by Run
  */
 
+const bsv = __webpack_require__(2)
 const { Jig, JigControl } = __webpack_require__(3)
 const { Berry, BerryControl } = __webpack_require__(5)
 const Location = __webpack_require__(8)
@@ -3183,12 +3243,133 @@ const util = __webpack_require__(0)
 // Protocol manager
 // ------------------------------------------------------------------------------------------------
 
+// A modified version of the txo format form unwriter
+// Source: https://github.com/interplanaria/txo/blob/master/index.js
+var txToTxo = function (tx, options) {
+  const gene = new bsv.Transaction(tx)
+  const t = gene.toObject()
+  const inputs = []
+  const outputs = []
+  if (gene.inputs) {
+    gene.inputs.forEach(function (input, inputIndex) {
+      if (input.script) {
+        const xput = { i: inputIndex, seq: input.sequenceNumber }
+        input.script.chunks.forEach(function (c, chunkIndex) {
+          if (c.buf) {
+            if (c.buf.byteLength >= 1000000) {
+              xput['xlb' + chunkIndex] = c.buf.toString('base64')
+            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
+              xput['lb' + chunkIndex] = c.buf.toString('base64')
+            } else {
+              xput['b' + chunkIndex] = c.buf.toString('base64')
+            }
+            if (options && options.h && options.h > 0) {
+              xput['h' + chunkIndex] = c.buf.toString('hex')
+            }
+          } else {
+            if (typeof c.opcodenum !== 'undefined') {
+              xput['b' + chunkIndex] = {
+                op: c.opcodenum
+              }
+            } else {
+              xput['b' + chunkIndex] = c
+            }
+          }
+        })
+        const sender = {
+          h: input.prevTxId.toString('hex'),
+          i: input.outputIndex
+        }
+        const address = input.script.toAddress(bsv.Networks.livenet).toString()
+        if (address && address.length > 0) {
+          sender.a = address
+        }
+        xput.e = sender
+        inputs.push(xput)
+      }
+    })
+  }
+  if (gene.outputs) {
+    gene.outputs.forEach(function (output, outputIndex) {
+      if (output.script) {
+        const xput = { i: outputIndex }
+        output.script.chunks.forEach(function (c, chunkIndex) {
+          if (c.buf) {
+            if (c.buf.byteLength >= 1000000) {
+              xput['xlb' + chunkIndex] = c.buf.toString('base64')
+              xput['xls' + chunkIndex] = c.buf.toString('utf8')
+            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
+              xput['lb' + chunkIndex] = c.buf.toString('base64')
+              xput['ls' + chunkIndex] = c.buf.toString('utf8')
+            } else {
+              xput['b' + chunkIndex] = c.buf.toString('base64')
+              xput['s' + chunkIndex] = c.buf.toString('utf8')
+            }
+            if (options && options.h && options.h > 0) {
+              xput['h' + chunkIndex] = c.buf.toString('hex')
+            }
+          } else {
+            if (typeof c.opcodenum !== 'undefined') {
+              xput['b' + chunkIndex] = {
+                op: c.opcodenum
+              }
+            } else {
+              xput['b' + chunkIndex] = c
+            }
+          }
+        })
+        const receiver = {
+          v: output.satoshis,
+          i: outputIndex
+        }
+        const address = output.script.toAddress(bsv.Networks.livenet).toString()
+        if (address && address.length > 0) {
+          receiver.a = address
+        }
+        xput.e = receiver
+        outputs.push(xput)
+      }
+    })
+  }
+  const r = {
+    tx: { h: t.hash },
+    in: inputs,
+    out: outputs,
+    lock: t.nLockTime
+  }
+  // confirmations
+  if (options && options.confirmations) {
+    r.confirmations = options.confirmations
+  }
+  return r
+}
+
 class Protocol {
-  static installBerryProtocol (protocol) {
-    if (typeof protocol !== 'function' && typeof protocol.pluck !== 'function') {
-      throw new Error(`Cannot install protocol: ${protocol}`)
+  static async pluckBerry (location, blockchain, code, protocol) {
+    // TODO: Make fetch and pluck secure, as well as txo above
+    const fetch = async x => txToTxo(await blockchain.fetch(x))
+    const pluck = x => this.pluckBerry(x, blockchain, code)
+
+    try {
+      // TODO: Allow undeployed, with bad locations
+      const sandboxedProtocol = code.installBerryProtocol(protocol)
+
+      BerryControl.protocol = sandboxedProtocol
+      if (Location.parse(sandboxedProtocol.location).error) {
+        BerryControl.location = Location.build({ error: `${protocol.name} protocol not deployed` })
+      } else {
+        BerryControl.location = Location.build({ location: sandboxedProtocol.location, innerLocation: location })
+      }
+
+      const berry = await sandboxedProtocol.pluck(location, fetch, pluck)
+
+      if (!berry) throw new Error(`Failed to load berry using ${protocol.name}: ${location}`)
+
+      return berry
+    } finally {
+      BerryControl.protocol = undefined
+      BerryControl.location = undefined
     }
-    Protocol.berryProtocols.add(protocol)
   }
 
   static isToken (x) {
@@ -3220,27 +3401,6 @@ class Protocol {
     Location.parse(origin)
     return origin
   }
-
-  static async loadBerry (location, blockchain, code) {
-    const errors = []
-    for (const loader of Protocol.loaders) {
-      try {
-        const sandboxedLoader = code.install(loader)
-        BerryControl.loader = sandboxedLoader
-        const token = await sandboxedLoader.load(location, blockchain)
-        if (!token) continue
-        const loc = Location.parse(token.location)
-        if (!loc.protocol) throw new Error(`Protocol must be set on Berry locations: ${token.location}`)
-        return token
-      } catch (e) {
-        errors.push(`${loader.name}: ${e.toString()}`)
-        continue
-      } finally {
-        BerryControl.loader = undefined
-      }
-    }
-    throw new Error(`No loader available for ${location}\n\n${errors}`)
-  }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -3259,7 +3419,6 @@ class BerryProtocol {
 
 // ------------------------------------------------------------------------------------------------
 
-Protocol.berryProtocols = new Set()
 Protocol.BerryProtocol = BerryProtocol
 
 module.exports = Protocol
@@ -3607,7 +3766,7 @@ module.exports = Evaluator
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
 const { JigControl } = __webpack_require__(3)
-const { Berry, BerryControl } = __webpack_require__(5)
+const { Berry } = __webpack_require__(5)
 const Location = __webpack_require__(8)
 const Protocol = __webpack_require__(10)
 const Xray = __webpack_require__(7)
@@ -3705,35 +3864,19 @@ class Transaction {
   async load (location, options = {}) {
     if (this.run.logger) this.run.logger.info('Loading', location)
 
-    const loc = Location.parse(location)
-
-    if (loc.protocol) {
-      console.log('--', location)
-      // TODO: Put location on loc.protocol.location
-      const protocolLocation = `${loc.protocol.txid}_o${loc.protocol.vout}`
-      Protocol.loaders.forEach(x => this.code.install(x))
-      const loader = Array.from(Protocol.loaders).find(x => x.location === protocolLocation)
-      const sandboxedLoader = this.code.install(loader)
-      // TODO: This needs to move somewhere
-      try {
-        BerryControl.loader = sandboxedLoader
-        const y = await sandboxedLoader.load(`${loc.txid}_o${loc.vout}`, this.blockchain)
-        return y
-      } finally {
-        BerryControl.loader = undefined
-      }
+    // If there's a custom protocol, use it
+    if (options.protocol) {
+      return Protocol.pluckBerry(location, this.blockchain, this.code, options.protocol)
     }
 
-    console.log(location)
-    try {
-      return await this.loadRunToken(location)
-    } catch (e) {
-      try {
-        console.log('123', location, e)
-        return await Protocol.pluckBerry(location, this.blockchain, this.code)
-      } catch (e2) {
-        throw new Error(`${e}\n\n${e2}`)
-      }
+    // Either load a run token, or a berry, depending on if there's a protocol in location
+    const loc = Location.parse(location)
+
+    if (!loc.innerLocation) {
+      return this.loadRunToken(location, options)
+    } else {
+      const protocol = await this.load(loc.location, options)
+      return Protocol.pluckBerry(loc.innerLocation, this.blockchain, this.code, protocol)
     }
   }
 
@@ -3752,21 +3895,17 @@ class Transaction {
       return options.partiallyInstalledCode.get(location)
     }
 
-    // parse the location
-    const txid = location.slice(0, 64)
-    if (location[64] !== '_') throw new Error(`Bad location: ${location}`)
+    const loc = Location.parse(location)
+    if (loc.error || loc.innerLocation || loc.vref || loc.tempTxid) throw new Error(`Bad location: ${location}`)
+    const { txid, vout, vin } = loc
 
     // TODO: do we want to support loading locations with inputs?
     // The transaction test "update class property jig in initializer" uses this
-    if (location[65] === 'i') {
+    if (vin) {
       const tx = await this.blockchain.fetch(txid)
-      const vin = parseInt(location.slice(66))
       const prevTxId = tx.inputs[vin].prevTxId.toString('hex')
       return this.load(`${prevTxId}_o${tx.inputs[vin].outputIndex}`)
     }
-
-    const vout = parseInt(location.slice(66))
-    if (location[65] !== 'o' || isNaN(vout)) throw new Error(`Bad location: ${location}`)
 
     // check the state cache so we only have to load each jig once
     const cachedState = await this.state.get(location)
@@ -3802,7 +3941,7 @@ class Transaction {
           const fullLoc = fullLocation(ref)
           if (cachedRefs.has(fullLoc)) continue
           const token = await this.load(fullLoc, { cachedRefs })
-          if (cachedRefs.has(fullLoc)) cachedRefs.set(fullLoc, token)
+          if (!cachedRefs.has(fullLoc)) cachedRefs.set(fullLoc, token)
         }
 
         // Deserialize and inject our state
@@ -4380,6 +4519,8 @@ class ProtoTransaction {
       }
 
       if (token instanceof Berry) {
+        const error = Location.parse(token.location).error
+        if (error) throw new Error(`Cannot serialize berry: ${error}`)
         return token.location
       }
     }
@@ -5920,9 +6061,13 @@ class Code {
     return this.installs.get(typeOrLocation)
   }
 
-  install (type) {
+  // Install loads code into a sandbox and makes it available to use
+  // It does not deploy the code. It does however check that the code
+  // is deployable. The main purpose is to install berry protocols for
+  // use on mainnet and testnet without deploying the protocol to the chain.
+  installBerryProtocol (type) {
     // Make sure the presets are there
-    return this.deploy(type, { requirePresets: true })
+    return this.deploy(type, { dontDeploy: true })
   }
 
   extractProps (type) {
@@ -6036,12 +6181,8 @@ class Code {
         throw new Error(`A static property of ${type.name} is not supported\n\n${e}`)
       }
 
+      // If location is already set for the network, assume correct and don't reupload
       const hasPresets = classProps.includes(`origin${net}`) || classProps.includes(`location${net}`)
-      if (!hasPresets && options.requirePresets) {
-        throw new Error(`Preset location and origin are required to use ${type.name}`)
-      }
-
-      // if location is already set for the network, assume correct and don't reupload
       if (hasPresets) {
         if (classProps.includes(`origin${net}`)) {
           sandbox[`origin${net}`] = sandbox.origin = type.origin = type[`origin${net}`]
@@ -6050,8 +6191,14 @@ class Code {
         sandbox[`owner${net}`] = sandbox.owner = type.owner = type[`owner${net}`]
 
         this.installs.set(sandbox[`location${net}`], sandbox)
+      } else if (options.dontDeploy) {
+        // Berry protocols
+        const location = '!Not deployed'
+        sandbox[`origin${net}`] = sandbox.origin = type.origin = type[`origin${net}`] = location
+        sandbox[`location${net}`] = sandbox.location = type.location = type[`location${net}`] || type.origin
+        sandbox[`owner${net}`] = sandbox.owner = type.owner = type[`owner${net}`] = null
       } else {
-        // location is not set. use a temporary location and deploy
+        // Location is not set. use a temporary location and deploy
 
         const currentNetwork = run.blockchain.network
         const success = (location) => {
