@@ -7345,7 +7345,7 @@ class ProtoTransaction {
       // rollback, then make this jig permanently unusable by setting a bad origin.
       if (jig.origin[0] === '_' || unhandled) {
         const err = `!${jig.origin[0] === '_' ? 'Deploy failed'
-          : 'A previous update failed'}\n\n${error.stack}`
+          : 'A previous update failed'}\n\n${error}`
         // TODO: log the error here
         Object.keys(jig).forEach(key => delete jig[key])
         jig.origin = jig.location = err
@@ -9584,7 +9584,7 @@ describe('Code', () => {
       expect(A.location.length).to.equal(67)
       expect(A.location).to.equal(A.locationMocknet)
       expect(A.owner).to.equal(A.ownerMocknet)
-      expect(run.code.installs.size).to.equal( false ? undefined : 6)
+      expect(run.code.installs.size).to.equal( false ? undefined : 8)
     }).timeout(30000)
 
     it('should set correct owner for different networks', async () => {
@@ -11565,15 +11565,18 @@ describe('Jig', () => {
       expect(() => Reflect.ownKeys(a)).to.throw()
       expect(() => a.f()).to.throw()
       expectNoAction()
-      try { console.log(a.n) } catch (e) {
+      try {
+        console.log(a.n)
+      } catch (e) {
         expect(e.toString().startsWith('Error: Deploy failed')).to.equal(true)
         expect(e.toString().indexOf('Error: Broadcast failed, tx has no inputs')).not.to.equal(-1)
+      } finally {
+        run.purse.pay = oldPay
       }
-      run.purse.pay = oldPay
     })
 
     it('should throw if transaction is unpaid', async () => {
-      class A extends Jig { set (x) { this.x = x } }
+     class A extends Jig { set (x) { this.x = x } }
       const a = await new A().sync()
       const oldPay = run.purse.pay
       run.purse.pay = async (tx) => { return tx }

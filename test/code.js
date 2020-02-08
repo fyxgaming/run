@@ -594,7 +594,7 @@ describe('Code', () => {
       expect(A.location.length).to.equal(67)
       expect(A.location).to.equal(A.locationMocknet)
       expect(A.owner).to.equal(A.ownerMocknet)
-      expect(run.code.installs.size).to.equal(TEST_MODE === 'cover' ? 5 : 6)
+      expect(run.code.installs.size).to.equal(TEST_MODE === 'cover' ? 7 : 8)
     }).timeout(30000)
 
     it('should set correct owner for different networks', async () => {

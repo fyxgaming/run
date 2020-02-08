@@ -6043,7 +6043,7 @@ class ProtoTransaction {
       // rollback, then make this jig permanently unusable by setting a bad origin.
       if (jig.origin[0] === '_' || unhandled) {
         const err = `!${jig.origin[0] === '_' ? 'Deploy failed'
-          : 'A previous update failed'}\n\n${error.stack}`
+          : 'A previous update failed'}\n\n${error}`
         // TODO: log the error here
         Object.keys(jig).forEach(key => delete jig[key])
         jig.origin = jig.location = err

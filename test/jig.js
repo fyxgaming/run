@@ -1467,15 +1467,18 @@ describe('Jig', () => {
       expect(() => Reflect.ownKeys(a)).to.throw()
       expect(() => a.f()).to.throw()
       expectNoAction()
-      try { console.log(a.n) } catch (e) {
+      try {
+        console.log(a.n)
+      } catch (e) {
         expect(e.toString().startsWith('Error: Deploy failed')).to.equal(true)
         expect(e.toString().indexOf('Error: Broadcast failed, tx has no inputs')).not.to.equal(-1)
+      } finally {
+        run.purse.pay = oldPay
       }
-      run.purse.pay = oldPay
     })
 
     it('should throw if transaction is unpaid', async () => {
-      class A extends Jig { set (x) { this.x = x } }
+     class A extends Jig { set (x) { this.x = x } }
       const a = await new A().sync()
       const oldPay = run.purse.pay
       run.purse.pay = async (tx) => { return tx }
