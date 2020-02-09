@@ -1,10 +1,11 @@
 const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { Intrinsics } = require('../lib/intrinsics')
-const Xray = require('../lib/xray')
-const { display } = require('../lib/util')
-const Evaluator = require('../lib/evaluator')
+const { Run, createRun } = require('./helpers')
+const { Evaluator, _util, Xray, Intrinsics } = Run
+const { display } = _util
+
+createRun()
 
 // ------------------------------------------------------------------------------------------------
 // Test vector class
@@ -290,7 +291,7 @@ function addTestVectors (intrinsics, testIntrinsics) {
   addTestVector(dupSet)
     .serialized({ $dedup: { $set: [{ a: { $dup: 0 } }, { b: { $dup: 0 } }] }, dups: [{ $set: [] }] })
     .checkDeserialized(x => {
-      const keys = Array.from(x.keys())
+      const keys = Array.from(x)
       expect(keys[0].a).to.equal(keys[1].b)
       expect(keys[0].a).not.to.equal(undefined)
     })
@@ -347,7 +348,7 @@ function addTestVectors (intrinsics, testIntrinsics) {
       $dedup: { $dup: 0 },
       dups: [{ $set: [{ $dup: 0 }], props: { c: { $dup: 0 } } }]
     })
-    .checkDeserialized(x => expect(x.c).to.equal(x.keys().next().value))
+    .checkDeserialized(x => expect(x.c).to.equal(x.values().next().value))
   const circMap = new Map()
   circMap.set(circMap, 1)
   circMap.set(1, circMap)
@@ -441,10 +442,10 @@ function addTestVectors (intrinsics, testIntrinsics) {
   addTestVector(/^abc/).unscannable().uncloneable().unserializable().undeserializable()
 
   // Unknown intrinsics
-  const { intrinsics: unknown } = new Evaluator()
-  addTestVector(new unknown.Uint8Array()).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(new unknown.Set()).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(new unknown.Map()).unscannable().uncloneable().unserializable().undeserializable()
+  const sandboxIntrinsics = new Evaluator().intrinsics.allowed[1]
+  addTestVector(new sandboxIntrinsics.Uint8Array()).unscannable().uncloneable().unserializable().undeserializable()
+  addTestVector(new sandboxIntrinsics.Set()).unscannable().uncloneable().unserializable().undeserializable()
+  addTestVector(new sandboxIntrinsics.Map()).unscannable().uncloneable().unserializable().undeserializable()
 
   // Deployable
   // finish implementing serializable, etc.
@@ -495,13 +496,13 @@ const globalIntrinsics = new Intrinsics()
 addTestVectors(globalIntrinsics, globalIntrinsics.allowed[0])
 
 const sesIntrinsics = new Intrinsics()
-sesIntrinsics.set(evaluator.intrinsics)
+sesIntrinsics.set(evaluator.intrinsics.default)
 addTestVectors(sesIntrinsics, sesIntrinsics.allowed[0])
 
-const allIntrinsics = new Intrinsics()
-allIntrinsics.use(evaluator.intrinsics)
-addTestVectors(allIntrinsics, allIntrinsics.allowed[0])
-addTestVectors(allIntrinsics, allIntrinsics.allowed[1])
+// const allIntrinsics = new Intrinsics()
+// allIntrinsics.use(evaluator.intrinsics.default)
+// addTestVectors(allIntrinsics, allIntrinsics.allowed[0])
+// addTestVectors(allIntrinsics, allIntrinsics.allowed[1])
 
 // ------------------------------------------------------------------------------------------------
 // Tests

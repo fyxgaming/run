@@ -1386,7 +1386,7 @@ describe('Jig', () => {
       a.f(50)
       await run.sync()
       await run.load(a.location)
-    }).timeout(30000)
+    }).timeout(10000)
 
     it('should throw if create satoshis method', () => {
       class A extends Jig { owner () {} }
@@ -1564,7 +1564,7 @@ describe('Jig', () => {
     it('should use unique set', async () => {
       class B extends Jig {}
       class A extends Jig {
-        init () { this.set = new Set() }
+        init () { console.log(Map.toString()); this.set = new Set() }
         add (x) { this.set.add(x) }
       }
       const a = await new A().sync()
@@ -1820,16 +1820,16 @@ describe('Jig', () => {
     })
 
     it('should support arguments with different instances of the same jig location', async () => {
-      class A extends Jig { init (n) { this.n = n }}
-      const a = await new A(1).sync()
+      class Num extends Jig { init (n) { this.n = n }}
+      const a = await new Num(1).sync()
       expectAction(a, 'init', [1], [], [a], [])
       const a2 = await run.load(a.location)
       const a3 = await run.load(a.location)
-      class B extends Jig { init (x, y) { this.n = x.n + y.n }}
-      const b = new B(a2, a3)
-      expectAction(b, 'init', [a2, a3], [], [b], [a2, a3])
+      class Sum extends Jig { init (x, y) { this.n = x.n + y.n }}
+      const sum = new Sum(a2, a3)
+      expectAction(sum, 'init', [a2, a3], [], [sum], [a2, a3])
       await run.sync()
-      expect(b.n).to.equal(2)
+      expect(sum.n).to.equal(2)
     })
 
     it('should throw if pass different locations of same jig as arguments', async () => {

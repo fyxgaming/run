@@ -96,7 +96,7 @@ module.exports =
  */
 
 const bsv = __webpack_require__(2)
-const { Intrinsics } = __webpack_require__(9)
+const { Intrinsics } = __webpack_require__(10)
 
 // ------------------------------------------------------------------------------------------------
 // JIG CHECKS
@@ -723,7 +723,7 @@ module.exports = require("bsv");
 // Sets and maps respect tokens in jigs ... these are overrides for Jigs
 //    How? UniqueSet, UniqueMap
 
-const Context = __webpack_require__(10)
+const Context = __webpack_require__(6)
 
 const JigControl = { // control state shared across all jigs, similar to a PCB
   stack: [], // jig call stack for the current method (Array<Target>)
@@ -1480,7 +1480,7 @@ module.exports = Location
 
 const bsv = __webpack_require__(2)
 const Code = __webpack_require__(30)
-const Evaluator = __webpack_require__(13)
+const Evaluator = __webpack_require__(14)
 const Syncer = __webpack_require__(34)
 const { Transaction } = __webpack_require__(15)
 const util = __webpack_require__(0)
@@ -1491,12 +1491,14 @@ const Mockchain = __webpack_require__(67)
 const { State, StateCache } = __webpack_require__(68)
 const { PrivateKey } = bsv
 const { Jig } = __webpack_require__(3)
-const { Berry } = __webpack_require__(6)
-const Protocol = __webpack_require__(7)
+const { Berry } = __webpack_require__(8)
+const Protocol = __webpack_require__(11)
 const Token = __webpack_require__(69)
 const expect = __webpack_require__(29)
 const Location = __webpack_require__(4)
-const { UniqueSet, UniqueMap } = __webpack_require__(14)
+const { UniqueSet, UniqueMap } = __webpack_require__(9)
+const { Intrinsics } = __webpack_require__(10)
+const Xray = __webpack_require__(7)
 
 // ------------------------------------------------------------------------------------------------
 // Primary Run class
@@ -1756,12 +1758,14 @@ Run.Blockchain = Blockchain
 Run.BlockchainServer = BlockchainServer
 Run.Code = Code
 Run.Evaluator = Evaluator
+Run.Intrinsics = Intrinsics
 Run.Location = Location
 Run.Mockchain = Mockchain
 Run.Pay = Pay
 Run.Purse = Purse
 Run.State = State
 Run.StateCache = StateCache
+Run.Xray = Xray
 
 Run.Jig = Jig
 Run.Berry = Berry
@@ -1780,299 +1784,35 @@ module.exports = Run
 /* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const Context = __webpack_require__(10)
+const uniquePrivates = new WeakMap()
 
-const BerryControl = {
-  protocol: undefined,
-  location: undefined
-}
+/**
+ * The objects that are exposed from Run to our built-in sandboxes, Jig and Berry
+ */
+class Context {
+  static get Checkpoint () { return __webpack_require__(7).Checkpoint }
+  static activeRunInstance () { return __webpack_require__(0).activeRunInstance() }
+  static deployable (x) { return __webpack_require__(0).deployable(x) }
+  static checkOwner (x) { return __webpack_require__(0).checkOwner(x) }
+  static checkSatoshis (x) { return __webpack_require__(0).checkSatoshis(x) }
+  static networkSuffix (x) { return __webpack_require__(0).networkSuffix(x) }
+  static get Location () { return __webpack_require__(4) }
+  static get Protocol () { return __webpack_require__(11) }
+  static get uniquePrivates () { return uniquePrivates }
+  static get UniqueSet () { return __webpack_require__(9).UniqueSet }
+  static get UniqueMap () { return __webpack_require__(9).UniqueMap }
 
-// Note: This is a good way to learn the Jig class
-class Berry {
-  constructor (...args) {
-    const run = Context.activeRunInstance()
-
-    // Sandbox the berry
-    if (!run.code.isSandbox(this.constructor)) {
-      run.transaction.begin()
-      try {
-        const T = run.code.deploy(this.constructor)
-        return new T(...args)
-      } finally { run.transaction.end() }
-    }
-
-    // Check the berry is property derived (no constructors)
-    const childClasses = []
-    let type = this.constructor
-    while (type !== Berry) {
-      childClasses.push(type)
-      type = Object.getPrototypeOf(type)
-    }
-
-    if (childClasses.length === 0) { throw new Error('Berry must be extended') }
-
-    const constructorRegex = /\s+constructor\s*\(/
-    if (childClasses.some(type => constructorRegex.test(type.toString()))) {
-      throw new Error('Berry must use init() instead of constructor()')
-    }
-
-    // Check that the protocol matches
-    if (!BerryControl.protocol || BerryControl.protocol !== this.constructor.protocol) {
-      throw new Error('Must only create Berry from its protocol')
-    }
-
-    // Run the init
-    this.init(...args)
-
-    // Validate the location
-    if (typeof this.location !== 'undefined') {
-      throw new Error('Berry init() must not set a location')
-    }
-
-    if (!BerryControl.location) throw new Error('Must only pluck one berry at a time')
-    this.location = BerryControl.location
-    BerryControl.location = undefined
-
-    // Free the object so there are no more changes
-    Context.deepFreeze(this)
-  }
-
-  init () { }
-
-  static [Symbol.hasInstance] (target) {
-    const run = Context.activeRunInstance()
-
-    // check if the target has a location. this will be false for this.constructor.prototype.
-    if (typeof target !== 'object' || !('location' in target)) return false
-
-    // find the sandboxed version of this class because thats what instances will be
-    let T = run.code.getInstalled(this)
-    if (!T) {
-      const net = Context.networkSuffix(run.blockchain.network)
-      T = run.code.getInstalled(this[`origin${net}`])
-      if (!T) return false
-    }
-
-    // check if this class's prototype is in the prototype chain of the target
-    let type = Object.getPrototypeOf(target)
-    while (type) {
-      if (type === T.prototype) return true
-      type = Object.getPrototypeOf(type)
-    }
-
-    return false
+  static deepFreeze (x) {
+    // TODO: deeply freeze
+    Object.freeze(x)
   }
 }
 
-// This should be overridden in each child class
-Berry.protocol = undefined
-
-module.exports = { Berry, BerryControl }
+module.exports = Context
 
 
 /***/ }),
 /* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * protocol.js
- *
- * Manager for token protocols are supported by Run
- */
-
-const bsv = __webpack_require__(2)
-const { Jig, JigControl } = __webpack_require__(3)
-const { Berry, BerryControl } = __webpack_require__(6)
-const Location = __webpack_require__(4)
-const util = __webpack_require__(0)
-
-// ------------------------------------------------------------------------------------------------
-// Protocol manager
-// ------------------------------------------------------------------------------------------------
-
-// A modified version of the txo format form unwriter
-// Source: https://github.com/interplanaria/txo/blob/master/index.js
-var txToTxo = function (tx, options) {
-  const gene = new bsv.Transaction(tx)
-  const t = gene.toObject()
-  const inputs = []
-  const outputs = []
-  if (gene.inputs) {
-    gene.inputs.forEach(function (input, inputIndex) {
-      if (input.script) {
-        const xput = { i: inputIndex, seq: input.sequenceNumber }
-        input.script.chunks.forEach(function (c, chunkIndex) {
-          if (c.buf) {
-            if (c.buf.byteLength >= 1000000) {
-              xput['xlb' + chunkIndex] = c.buf.toString('base64')
-            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
-              xput['lb' + chunkIndex] = c.buf.toString('base64')
-            } else {
-              xput['b' + chunkIndex] = c.buf.toString('base64')
-            }
-            if (options && options.h && options.h > 0) {
-              xput['h' + chunkIndex] = c.buf.toString('hex')
-            }
-          } else {
-            if (typeof c.opcodenum !== 'undefined') {
-              xput['b' + chunkIndex] = {
-                op: c.opcodenum
-              }
-            } else {
-              xput['b' + chunkIndex] = c
-            }
-          }
-        })
-        const sender = {
-          h: input.prevTxId.toString('hex'),
-          i: input.outputIndex
-        }
-        const address = input.script.toAddress(bsv.Networks.livenet).toString()
-        if (address && address.length > 0) {
-          sender.a = address
-        }
-        xput.e = sender
-        inputs.push(xput)
-      }
-    })
-  }
-  if (gene.outputs) {
-    gene.outputs.forEach(function (output, outputIndex) {
-      if (output.script) {
-        const xput = { i: outputIndex }
-        output.script.chunks.forEach(function (c, chunkIndex) {
-          if (c.buf) {
-            if (c.buf.byteLength >= 1000000) {
-              xput['xlb' + chunkIndex] = c.buf.toString('base64')
-              xput['xls' + chunkIndex] = c.buf.toString('utf8')
-            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
-              xput['lb' + chunkIndex] = c.buf.toString('base64')
-              xput['ls' + chunkIndex] = c.buf.toString('utf8')
-            } else {
-              xput['b' + chunkIndex] = c.buf.toString('base64')
-              xput['s' + chunkIndex] = c.buf.toString('utf8')
-            }
-            if (options && options.h && options.h > 0) {
-              xput['h' + chunkIndex] = c.buf.toString('hex')
-            }
-          } else {
-            if (typeof c.opcodenum !== 'undefined') {
-              xput['b' + chunkIndex] = {
-                op: c.opcodenum
-              }
-            } else {
-              xput['b' + chunkIndex] = c
-            }
-          }
-        })
-        const receiver = {
-          v: output.satoshis,
-          i: outputIndex
-        }
-        const address = output.script.toAddress(bsv.Networks.livenet).toString()
-        if (address && address.length > 0) {
-          receiver.a = address
-        }
-        xput.e = receiver
-        outputs.push(xput)
-      }
-    })
-  }
-  const r = {
-    tx: { h: t.hash },
-    in: inputs,
-    out: outputs,
-    lock: t.nLockTime
-  }
-  // confirmations
-  if (options && options.confirmations) {
-    r.confirmations = options.confirmations
-  }
-  return r
-}
-
-class Protocol {
-  static async pluckBerry (location, blockchain, code, protocol) {
-    // TODO: Make fetch and pluck secure, as well as txo above
-    const fetch = async x => txToTxo(await blockchain.fetch(x))
-    const pluck = x => this.pluckBerry(x, blockchain, code)
-
-    try {
-      // TODO: Allow undeployed, with bad locations
-      const sandboxedProtocol = code.installBerryProtocol(protocol)
-
-      BerryControl.protocol = sandboxedProtocol
-      if (Location.parse(sandboxedProtocol.location).error) {
-        BerryControl.location = Location.build({ error: `${protocol.name} protocol not deployed` })
-      } else {
-        BerryControl.location = Location.build({ location: sandboxedProtocol.location, innerLocation: location })
-      }
-
-      const berry = await sandboxedProtocol.pluck(location, fetch, pluck)
-
-      if (!berry) throw new Error(`Failed to load berry using ${protocol.name}: ${location}`)
-
-      return berry
-    } finally {
-      BerryControl.protocol = undefined
-      BerryControl.location = undefined
-    }
-  }
-
-  static isToken (x) {
-    switch (typeof x) {
-      case 'object': return x && (x instanceof Jig || x instanceof Berry)
-      case 'function': {
-        if (!!x.origin && !!x.location && !!x.owner) return true
-        const net = util.networkSuffix(util.activeRunInstance().blockchain.network)
-        return !!x[`origin${net}`] && !!x[`location${net}`] && !!x[`owner${net}`]
-      }
-      default: return false
-    }
-  }
-
-  static isDeployable (x) {
-    if (typeof x !== 'function') return false
-    return x.toString().indexOf('[native code]') === -1
-  }
-
-  static getLocation (x) {
-    const location = JigControl.disableProxy(() => x.location)
-    Location.parse(location)
-    return location
-  }
-
-  static getOrigin (x) {
-    if (x && x instanceof Berry) return Protocol.getLocation(x)
-    const origin = JigControl.disableProxy(() => x.origin)
-    Location.parse(origin)
-    return origin
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Berry protocol plucker
-// ------------------------------------------------------------------------------------------------
-
-class BerryProtocol {
-  // Static to keep stateless
-  // Location is defined by the protocol
-  static async pluck (location, fetch, pluck) {
-    // Fetch tx
-    // Parse
-    // Return Berry
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-Protocol.BerryProtocol = BerryProtocol
-
-module.exports = Protocol
-
-
-/***/ }),
-/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -2093,11 +1833,11 @@ module.exports = Protocol
 // So Objects and arrays are acceptible from without.
 // Document scanner API
 
-const Protocol = __webpack_require__(7)
+const Protocol = __webpack_require__(11)
 const { display } = __webpack_require__(0)
 const { Jig, JigControl } = __webpack_require__(3)
-const { Berry } = __webpack_require__(6)
-const { Intrinsics } = __webpack_require__(9)
+const { Berry } = __webpack_require__(8)
+const { Intrinsics } = __webpack_require__(10)
 
 // ------------------------------------------------------------------------------------------------
 // Xray
@@ -3266,7 +3006,245 @@ module.exports = Xray
 
 
 /***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Context = __webpack_require__(6)
+
+const BerryControl = {
+  protocol: undefined,
+  location: undefined
+}
+
+// Note: This is a good way to learn the Jig class
+class Berry {
+  constructor (...args) {
+    const run = Context.activeRunInstance()
+
+    // Sandbox the berry
+    if (!run.code.isSandbox(this.constructor)) {
+      run.transaction.begin()
+      try {
+        const T = run.code.deploy(this.constructor)
+        return new T(...args)
+      } finally { run.transaction.end() }
+    }
+
+    // Check the berry is property derived (no constructors)
+    const childClasses = []
+    let type = this.constructor
+    while (type !== Berry) {
+      childClasses.push(type)
+      type = Object.getPrototypeOf(type)
+    }
+
+    if (childClasses.length === 0) { throw new Error('Berry must be extended') }
+
+    const constructorRegex = /\s+constructor\s*\(/
+    if (childClasses.some(type => constructorRegex.test(type.toString()))) {
+      throw new Error('Berry must use init() instead of constructor()')
+    }
+
+    // Check that the protocol matches
+    if (!BerryControl.protocol || BerryControl.protocol !== this.constructor.protocol) {
+      throw new Error('Must only create Berry from its protocol')
+    }
+
+    // Run the init
+    this.init(...args)
+
+    // Validate the location
+    if (typeof this.location !== 'undefined') {
+      throw new Error('Berry init() must not set a location')
+    }
+
+    if (!BerryControl.location) throw new Error('Must only pluck one berry at a time')
+    this.location = BerryControl.location
+    BerryControl.location = undefined
+
+    // Free the object so there are no more changes
+    Context.deepFreeze(this)
+  }
+
+  init () { }
+
+  static [Symbol.hasInstance] (target) {
+    const run = Context.activeRunInstance()
+
+    // check if the target has a location. this will be false for this.constructor.prototype.
+    if (typeof target !== 'object' || !('location' in target)) return false
+
+    // find the sandboxed version of this class because thats what instances will be
+    let T = run.code.getInstalled(this)
+    if (!T) {
+      const net = Context.networkSuffix(run.blockchain.network)
+      T = run.code.getInstalled(this[`origin${net}`])
+      if (!T) return false
+    }
+
+    // check if this class's prototype is in the prototype chain of the target
+    let type = Object.getPrototypeOf(target)
+    while (type) {
+      if (type === T.prototype) return true
+      type = Object.getPrototypeOf(type)
+    }
+
+    return false
+  }
+}
+
+// This should be overridden in each child class
+Berry.protocol = undefined
+
+module.exports = { Berry, BerryControl }
+
+
+/***/ }),
 /* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Context = __webpack_require__(6)
+
+// ------------------------------------------------------------------------------------------------
+// UniqueMap
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * A Map that guarantees token keys are unique. The API is intended to be the same as the built-in
+ * Map so that this can be a drop-in replacement in sandboxed code.
+
+ * For a given entry, there are 4 cases to consider:
+ *    1) Deployed tokens
+ *    2) Undeployed tokens
+ *    3) Deployable code currently undeployed
+ *    4) Everything else
+ */
+class UniqueMap {
+  constructor (iterable) {
+    const priv = {
+      undeployed: new Set(), // Undeployed tokens without an origin
+      deployed: new Map(), // Origin -> Token
+      map: new Map()
+    }
+    Context.uniquePrivates.set(this, priv)
+    if (iterable) { for (const [x, y] of iterable) this.set(x, y) }
+  }
+
+  clear () {
+    const priv = Context.uniquePrivates.get(this)
+    priv.undeployed.clear()
+    priv.deployed.clear()
+    priv.map.clear()
+  }
+
+  _getUniqueKey (x) {
+    const priv = Context.uniquePrivates.get(this)
+
+    const inconsistentWorldview = () => {
+      const hint = 'Hint: Try syncing the relevant tokens before use.'
+      const reason = 'Found two tokens with the same origin at different locations.'
+      const message = 'Inconsistent worldview'
+      throw new Error(`${message}\n\n${reason}\n\n${hint}`)
+    }
+
+    if (Context.Protocol.isToken(x)) {
+      const xOrigin = Context.Protocol.getOrigin(x)
+      const xLocation = Context.Protocol.getLocation(x)
+      const deployed = !!Context.Location.parse(xOrigin).txid
+
+      if (deployed) {
+        // Case 1: Deployed token
+
+        // Was this token previously in our undeployed set? If so, update it.
+        for (const y of priv.undeployed) {
+          if (xOrigin === y.origin) {
+            const yLocation = Context.Protocol.getLocation(y)
+            if (xLocation !== yLocation) inconsistentWorldview()
+            priv.undeployed.delete(y)
+            priv.deployed.set(xOrigin, y)
+            return y
+          }
+        }
+
+        // Have we already seen a token at this origin? If so, use that one.
+        const y = priv.deployed.get(xOrigin)
+        if (y) {
+          const yLocation = Context.Protocol.getLocation(y)
+          if (xLocation !== yLocation) inconsistentWorldview()
+          return y
+        }
+
+        // First time seeing a token at this origin. Remember it.
+        priv.deployed.set(xOrigin, x)
+        return x
+      } else {
+        // Case 2: Undeployed token
+        priv.undeployed.add(x)
+        return x
+      }
+    } else if (Context.Protocol.isDeployable(x)) {
+      // Case 3: Undeployed code
+      priv.undeployed.add(x)
+      return x
+    } else {
+      // Case 4: Everything else
+      return x
+    }
+  }
+
+  delete (x) {
+    const key = this._getUniqueKey(x)
+    const priv = Context.uniquePrivates.get(this)
+    priv.undeployed.delete(key)
+    priv.deployed.delete(key)
+    return priv.map.delete(key)
+  }
+
+  get (x) { return Context.uniquePrivates.get(this).map.get(this._getUniqueKey(x)) }
+  set (x, y) { Context.uniquePrivates.get(this).map.set(this._getUniqueKey(x), y); return this }
+  has (x) { return Context.uniquePrivates.get(this).map.has(this._getUniqueKey(x)) }
+  get size () { return Context.uniquePrivates.get(this).map.size }
+  get [Symbol.species] () { return UniqueMap }
+  entries () { return Context.uniquePrivates.get(this).map.entries() }
+  keys () { return Context.uniquePrivates.get(this).map.keys() }
+  forEach (callback, thisArg) { return Context.uniquePrivates.get(this).map.forEach(callback, thisArg) }
+  values () { return Context.uniquePrivates.get(this).map.values() }
+  [Symbol.iterator] () { return Context.uniquePrivates.get(this).map[Symbol.iterator]() }
+}
+
+// ------------------------------------------------------------------------------------------------
+// UniqueSet
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * A Set that guarantees tokens are unique. The API is intended to be the same as the built-in
+ * Set so that this can be a drop-in replacement in sandboxed code.
+ */
+class UniqueSet {
+  constructor (iterable) {
+    Context.uniquePrivates.set(this, new Context.UniqueMap())
+    if (iterable) { for (const x of iterable) this.add(x) }
+  }
+
+  get size () { return Context.uniquePrivates.get(this).size }
+  get [Symbol.species] () { return UniqueSet }
+  add (x) { Context.uniquePrivates.get(this).set(x, x); return this }
+  clear () { Context.uniquePrivates.get(this).clear() }
+  delete (x) { return Context.uniquePrivates.get(this).delete(x) }
+  entries () { return Context.uniquePrivates.get(this).entries() }
+  forEach (callback, thisArg) { return Context.uniquePrivates.get(this).forEach(x => callback.call(thisArg, x)) }
+  has (x) { return Context.uniquePrivates.get(this).has(x) }
+  values () { return Context.uniquePrivates.get(this).values() }
+  [Symbol.iterator] () { return Context.uniquePrivates.get(this).keys() }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { UniqueMap, UniqueSet }
+
+
+/***/ }),
+/* 10 */
 /***/ (function(module, exports) {
 
 /**
@@ -3409,31 +3387,208 @@ module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
- * The objects that are exposed from Run to our built-in sandboxes, Jig and Berry
+ * protocol.js
+ *
+ * Manager for token protocols are supported by Run
  */
-class Context {
-  static get Checkpoint () { return __webpack_require__(8).Checkpoint }
-  static activeRunInstance () { return __webpack_require__(0).activeRunInstance() }
-  static deployable (x) { return __webpack_require__(0).deployable(x) }
-  static checkOwner (x) { return __webpack_require__(0).checkOwner(x) }
-  static checkSatoshis (x) { return __webpack_require__(0).checkSatoshis(x) }
-  static networkSuffix (x) { return __webpack_require__(0).networkSuffix(x) }
 
-  static deepFreeze (x) {
-    // TODO: deeply freeze
-    Object.freeze(x)
+const bsv = __webpack_require__(2)
+const { Jig, JigControl } = __webpack_require__(3)
+const { Berry, BerryControl } = __webpack_require__(8)
+const Location = __webpack_require__(4)
+const util = __webpack_require__(0)
+
+// ------------------------------------------------------------------------------------------------
+// Protocol manager
+// ------------------------------------------------------------------------------------------------
+
+// A modified version of the txo format form unwriter
+// Source: https://github.com/interplanaria/txo/blob/master/index.js
+var txToTxo = function (tx, options) {
+  const gene = new bsv.Transaction(tx)
+  const t = gene.toObject()
+  const inputs = []
+  const outputs = []
+  if (gene.inputs) {
+    gene.inputs.forEach(function (input, inputIndex) {
+      if (input.script) {
+        const xput = { i: inputIndex, seq: input.sequenceNumber }
+        input.script.chunks.forEach(function (c, chunkIndex) {
+          if (c.buf) {
+            if (c.buf.byteLength >= 1000000) {
+              xput['xlb' + chunkIndex] = c.buf.toString('base64')
+            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
+              xput['lb' + chunkIndex] = c.buf.toString('base64')
+            } else {
+              xput['b' + chunkIndex] = c.buf.toString('base64')
+            }
+            if (options && options.h && options.h > 0) {
+              xput['h' + chunkIndex] = c.buf.toString('hex')
+            }
+          } else {
+            if (typeof c.opcodenum !== 'undefined') {
+              xput['b' + chunkIndex] = {
+                op: c.opcodenum
+              }
+            } else {
+              xput['b' + chunkIndex] = c
+            }
+          }
+        })
+        const sender = {
+          h: input.prevTxId.toString('hex'),
+          i: input.outputIndex
+        }
+        const address = input.script.toAddress(bsv.Networks.livenet).toString()
+        if (address && address.length > 0) {
+          sender.a = address
+        }
+        xput.e = sender
+        inputs.push(xput)
+      }
+    })
+  }
+  if (gene.outputs) {
+    gene.outputs.forEach(function (output, outputIndex) {
+      if (output.script) {
+        const xput = { i: outputIndex }
+        output.script.chunks.forEach(function (c, chunkIndex) {
+          if (c.buf) {
+            if (c.buf.byteLength >= 1000000) {
+              xput['xlb' + chunkIndex] = c.buf.toString('base64')
+              xput['xls' + chunkIndex] = c.buf.toString('utf8')
+            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
+              xput['lb' + chunkIndex] = c.buf.toString('base64')
+              xput['ls' + chunkIndex] = c.buf.toString('utf8')
+            } else {
+              xput['b' + chunkIndex] = c.buf.toString('base64')
+              xput['s' + chunkIndex] = c.buf.toString('utf8')
+            }
+            if (options && options.h && options.h > 0) {
+              xput['h' + chunkIndex] = c.buf.toString('hex')
+            }
+          } else {
+            if (typeof c.opcodenum !== 'undefined') {
+              xput['b' + chunkIndex] = {
+                op: c.opcodenum
+              }
+            } else {
+              xput['b' + chunkIndex] = c
+            }
+          }
+        })
+        const receiver = {
+          v: output.satoshis,
+          i: outputIndex
+        }
+        const address = output.script.toAddress(bsv.Networks.livenet).toString()
+        if (address && address.length > 0) {
+          receiver.a = address
+        }
+        xput.e = receiver
+        outputs.push(xput)
+      }
+    })
+  }
+  const r = {
+    tx: { h: t.hash },
+    in: inputs,
+    out: outputs,
+    lock: t.nLockTime
+  }
+  // confirmations
+  if (options && options.confirmations) {
+    r.confirmations = options.confirmations
+  }
+  return r
+}
+
+class Protocol {
+  static async pluckBerry (location, blockchain, code, protocol) {
+    // TODO: Make fetch and pluck secure, as well as txo above
+    const fetch = async x => txToTxo(await blockchain.fetch(x))
+    const pluck = x => this.pluckBerry(x, blockchain, code)
+
+    try {
+      // TODO: Allow undeployed, with bad locations
+      const sandboxedProtocol = code.installBerryProtocol(protocol)
+
+      BerryControl.protocol = sandboxedProtocol
+      if (Location.parse(sandboxedProtocol.location).error) {
+        BerryControl.location = Location.build({ error: `${protocol.name} protocol not deployed` })
+      } else {
+        BerryControl.location = Location.build({ location: sandboxedProtocol.location, innerLocation: location })
+      }
+
+      const berry = await sandboxedProtocol.pluck(location, fetch, pluck)
+
+      if (!berry) throw new Error(`Failed to load berry using ${protocol.name}: ${location}`)
+
+      return berry
+    } finally {
+      BerryControl.protocol = undefined
+      BerryControl.location = undefined
+    }
+  }
+
+  static isToken (x) {
+    switch (typeof x) {
+      case 'object': return x && (x instanceof Jig || x instanceof Berry)
+      case 'function': {
+        if (!!x.origin && !!x.location && !!x.owner) return true
+        const net = util.networkSuffix(util.activeRunInstance().blockchain.network)
+        return !!x[`origin${net}`] && !!x[`location${net}`] && !!x[`owner${net}`]
+      }
+      default: return false
+    }
+  }
+
+  static isDeployable (x) {
+    if (typeof x !== 'function') return false
+    return x.toString().indexOf('[native code]') === -1
+  }
+
+  static getLocation (x) {
+    const location = JigControl.disableProxy(() => x.location)
+    Location.parse(location)
+    return location
+  }
+
+  static getOrigin (x) {
+    if (x && x instanceof Berry) return Protocol.getLocation(x)
+    const origin = JigControl.disableProxy(() => x.origin)
+    Location.parse(origin)
+    return origin
   }
 }
 
-module.exports = Context
+// ------------------------------------------------------------------------------------------------
+// Berry protocol plucker
+// ------------------------------------------------------------------------------------------------
+
+class BerryProtocol {
+  // Static to keep stateless
+  // Location is defined by the protocol
+  static async pluck (location, fetch, pluck) {
+    // Fetch tx
+    // Parse
+    // Return Berry
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+Protocol.BerryProtocol = BerryProtocol
+
+module.exports = Protocol
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3511,7 +3666,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3536,7 +3691,7 @@ module.exports = function createError(message, config, code, request, response) 
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -3546,8 +3701,9 @@ module.exports = function createError(message, config, code, request, response) 
  */
 
 const ses = __webpack_require__(31)
-const { getIntrinsics, intrinsicNames, Intrinsics } = __webpack_require__(9)
-const { UniqueSet, UniqueMap, UniqueSetDeps, UniqueMapDeps } = __webpack_require__(14)
+const { getIntrinsics, intrinsicNames, Intrinsics } = __webpack_require__(10)
+const Context = __webpack_require__(6)
+const { UniqueSet, UniqueMap } = __webpack_require__(9)
 
 // ------------------------------------------------------------------------------------------------
 // Evaluator
@@ -3566,17 +3722,32 @@ class Evaluator {
     this.sandboxEvaluator = new SESEvaluator()
     this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
 
-    this.UniqueSet = this.sandboxEvaluator.evaluate(UniqueSet.toString(), UniqueSetDeps)[0]
-    this.UniqueMap = this.sandboxEvaluator.evaluate(UniqueMap.toString(), UniqueMapDeps)[0]
+    if (this.willSandbox(UniqueSet.toString())) {
+      this.UniqueSet = this.sandboxEvaluator.evaluate(UniqueSet.toString(), { Context })[0]
+    } else {
+      this.UniqueSet = UniqueSet
+    }
+
+    if (this.willSandbox(UniqueMap.toString())) {
+      this.UniqueMap = this.sandboxEvaluator.evaluate(UniqueMap.toString(), { Context })[0]
+    } else {
+      this.UniqueMap = UniqueMap
+    }
+
     this.uniqueEnv = { Set: this.UniqueSet, Map: this.UniqueMap }
+
     const custom = Object.assign({}, this.sandboxEvaluator.intrinsics, this.uniqueEnv)
     this.intrinsics = new Intrinsics().allow(this.sandboxEvaluator.intrinsics).use(custom)
   }
 
   evaluate (code, env) {
     if (this.logger) this.logger.info(`Evaluating code starting with: "${code.slice(0, 20)}"`)
-    const evaluator = this.willSandbox(code) ? this.sandboxEvaluator : this.globalEvaluator
-    return evaluator.evaluate(code, Object.assign({}, this.uniqueEnv, env))
+    if (this.willSandbox(code)) {
+      return this.sandboxEvaluator.evaluate(code, Object.assign({}, this.uniqueEnv, env))
+    } else {
+      // Don't replace Set and Map when using the global evaluator
+      return this.globalEvaluator.evaluate(code, Object.assign({}, env))
+    }
   }
 
   willSandbox (code) {
@@ -3768,156 +3939,6 @@ module.exports = Evaluator
 
 
 /***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Protocol = __webpack_require__(7)
-const Location = __webpack_require__(4)
-
-const UniquePrivates = new WeakMap()
-
-// ------------------------------------------------------------------------------------------------
-// UniqueMap
-// ------------------------------------------------------------------------------------------------
-
-/**
- * A Map that guarantees token keys are unique. The API is intended to be the same as the built-in
- * Map so that this can be a drop-in replacement in sandboxed code.
-
- * For a given entry, there are 4 cases to consider:
- *    1) Deployed tokens
- *    2) Undeployed tokens
- *    3) Deployable code currently undeployed
- *    4) Everything else
- */
-class UniqueMap {
-  constructor (iterable) {
-    const priv = {
-      undeployed: new Set(), // Undeployed tokens without an origin
-      deployed: new Map(), // Origin -> Token
-      map: new Map()
-    }
-    UniquePrivates.set(this, priv)
-    if (iterable) { for (const [x, y] of iterable) this.set(x, y) }
-  }
-
-  clear () {
-    const priv = UniquePrivates.get(this)
-    priv.undeployed.clear()
-    priv.deployed.clear()
-    priv.map.clear()
-  }
-
-  _getUniqueKey (x) {
-    const priv = UniquePrivates.get(this)
-
-    const inconsistentWorldview = () => {
-      const hint = 'Hint: Try syncing the relevant tokens before use.'
-      const reason = 'Found two tokens with the same origin at different locations.'
-      const message = 'Inconsistent worldview'
-      throw new Error(`${message}\n\n${reason}\n\n${hint}`)
-    }
-
-    if (Protocol.isToken(x)) {
-      const xOrigin = Protocol.getOrigin(x)
-      const xLocation = Protocol.getLocation(x)
-      const deployed = !!Location.parse(xOrigin).txid
-
-      if (deployed) {
-        // Case 1: Deployed token
-
-        // Was this token previously in our undeployed set? If so, update it.
-        for (const y of priv.undeployed) {
-          if (xOrigin === y.origin) {
-            const yLocation = Protocol.getLocation(y)
-            if (xLocation !== yLocation) inconsistentWorldview()
-            priv.undeployed.delete(y)
-            priv.deployed.set(xOrigin, y)
-            return y
-          }
-        }
-
-        // Have we already seen a token at this origin? If so, use that one.
-        const y = priv.deployed.get(xOrigin)
-        if (y) {
-          const yLocation = Protocol.getLocation(y)
-          if (xLocation !== yLocation) inconsistentWorldview()
-          return y
-        }
-
-        // First time seeing a token at this origin. Remember it.
-        priv.deployed.set(xOrigin, x)
-        return x
-      } else {
-        // Case 2: Undeployed token
-        priv.undeployed.add(x)
-        return x
-      }
-    } else if (Protocol.isDeployable(x)) {
-      // Case 3: Undeployed code
-      priv.undeployed.add(x)
-      return x
-    } else {
-      // Case 4: Everything else
-      return x
-    }
-  }
-
-  delete (x) {
-    const key = this._getUniqueKey(x)
-    const priv = UniquePrivates.get(this)
-    priv.undeployed.delete(key)
-    priv.deployed.delete(key)
-    return priv.map.delete(key)
-  }
-
-  get (x) { return UniquePrivates.get(this).map.get(this._getUniqueKey(x)) }
-  set (x, y) { UniquePrivates.get(this).map.set(this._getUniqueKey(x), y); return this }
-  has (x) { return UniquePrivates.get(this).map.has(this._getUniqueKey(x)) }
-  get size () { return UniquePrivates.get(this).map.size }
-  get [Symbol.species] () { return UniqueMap }
-  entries () { return UniquePrivates.get(this).map.entries() }
-  keys () { return UniquePrivates.get(this).map.keys() }
-  forEach (callback, thisArg) { return UniquePrivates.get(this).map.forEach(callback, thisArg) }
-  values () { return UniquePrivates.get(this).map.values() }
-  [Symbol.iterator] () { return UniquePrivates.get(this).map[Symbol.iterator]() }
-}
-
-// ------------------------------------------------------------------------------------------------
-// UniqueSet
-// ------------------------------------------------------------------------------------------------
-
-/**
- * A Set that guarantees tokens are unique. The API is intended to be the same as the built-in
- * Set so that this can be a drop-in replacement in sandboxed code.
- */
-class UniqueSet {
-  constructor (iterable) {
-    UniquePrivates.set(this, new UniqueMap())
-    if (iterable) { for (const x of iterable) this.add(x) }
-  }
-
-  get size () { return UniquePrivates.get(this).size }
-  get [Symbol.species] () { return UniqueSet }
-  add (x) { UniquePrivates.get(this).set(x, x); return this }
-  clear () { UniquePrivates.get(this).clear() }
-  delete (x) { return UniquePrivates.get(this).delete(x) }
-  entries () { return UniquePrivates.get(this).entries() }
-  forEach (callback, thisArg) { return UniquePrivates.get(this).forEach(x => callback.call(thisArg, x)) }
-  has (x) { return UniquePrivates.get(this).has(x) }
-  values () { return UniquePrivates.get(this).values() }
-  [Symbol.iterator] () { return UniquePrivates.get(this).keys() }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-const UniqueMapDeps = { Location, Protocol, UniquePrivates }
-const UniqueSetDeps = { UniqueMap, UniquePrivates }
-
-module.exports = { UniqueMap, UniqueSet, UniqueMapDeps, UniqueSetDeps }
-
-
-/***/ }),
 /* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -3930,10 +3951,11 @@ module.exports = { UniqueMap, UniqueSet, UniqueMapDeps, UniqueSetDeps }
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
 const { JigControl } = __webpack_require__(3)
-const { Berry } = __webpack_require__(6)
+const { Berry } = __webpack_require__(8)
 const Location = __webpack_require__(4)
-const Protocol = __webpack_require__(7)
-const Xray = __webpack_require__(8)
+const Protocol = __webpack_require__(11)
+const { UniqueSet } = __webpack_require__(9)
+const Xray = __webpack_require__(7)
 
 // ------------------------------------------------------------------------------------------------
 // Transaction
@@ -4531,19 +4553,10 @@ class ProtoTransaction {
       // Also, inner references that aren't read aren't checked, but this isn't a problem because
       // the user can 'sync' these up to their latest state before they read them in the future.
 
-      const jigLocations = new Map()
-
-      const checkJigInstance = jig => {
-        const deployed = jig => typeof jig.origin !== 'undefined' && jig.origin[0] !== '_'
-        const prevLocation = jigLocations.get(deployed(jig) ? jig.origin : jig)
-        if (!prevLocation) return jigLocations.set(deployed(jig) ? jig.origin : jig, jig.location)
-        if (prevLocation !== jig.location) throw new Error(`Referenced different locations of same jig: ${jig}`)
-      }
-
-      checkJigInstance(target)
-      inputs.forEach(jig => checkJigInstance(jig))
-      outputs.forEach(jig => checkJigInstance(jig))
-      reads.forEach(jig => checkJigInstance(jig))
+      const uniqueJigs = new UniqueSet([target])
+      inputs.forEach(jig => uniqueJigs.add(jig))
+      outputs.forEach(jig => uniqueJigs.add(jig))
+      reads.forEach(jig => uniqueJigs.add(jig))
 
       // ------------------------------------------------------------------------------------------
       // STORE NEW BEFORE STATES AND ALL AFTER STATES FOR JIGS IN THE PROTO TRANSACTION
@@ -4870,7 +4883,10 @@ class BlockchainServer {
     this.logger = parseLogger(options.logger)
     this.api = parseApi(options.api)
     this.cache = parseCache(options.lastBlockchain, this.network)
-    this.axios = axios.create({ timeout: parseTimeout(options.timeout) })
+    this.axios = axios.create({
+      timeout: parseTimeout(options.timeout),
+      headers: { 'Accept-Encoding': 'gzip' }
+    })
     this.bsvNetwork = util.bsvNetwork(this.network)
     this.requests = new Map() // txid|address -> Array<Function>
   }
@@ -5371,7 +5387,7 @@ module.exports = defaults;
 "use strict";
 
 
-var createError = __webpack_require__(12);
+var createError = __webpack_require__(13);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -6188,11 +6204,11 @@ module.exports = expect
 
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
-const Evaluator = __webpack_require__(13)
+const Evaluator = __webpack_require__(14)
 const { Jig, JigControl } = __webpack_require__(3)
-const { Berry, BerryControl } = __webpack_require__(6)
-const Xray = __webpack_require__(8)
-const Context = __webpack_require__(10)
+const { Berry, BerryControl } = __webpack_require__(8)
+const Xray = __webpack_require__(7)
+const Context = __webpack_require__(6)
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -6528,7 +6544,8 @@ class Code {
   }
 
   installJig () {
-    const env = { JigControl, Context }
+    // Jigs don't use UniqueSet and UniqueMap, because it makes
+    const env = { JigControl, Context, Set, Map }
     this.Jig = this.sandboxType(Jig, env)[0]
     this.installs.set(Jig, this.Jig)
     this.installs.set(this.Jig, this.Jig)
@@ -10566,7 +10583,7 @@ module.exports = require("vm");
 
 const { ProtoTransaction } = __webpack_require__(15)
 const { JigControl } = __webpack_require__(3)
-const Xray = __webpack_require__(8)
+const Xray = __webpack_require__(7)
 const util = __webpack_require__(0)
 const Location = __webpack_require__(4)
 
@@ -11194,7 +11211,7 @@ module.exports = function isBuffer (obj) {
 
 
 var utils = __webpack_require__(1);
-var buildURL = __webpack_require__(11);
+var buildURL = __webpack_require__(12);
 var InterceptorManager = __webpack_require__(40);
 var dispatchRequest = __webpack_require__(41);
 var mergeConfig = __webpack_require__(27);
@@ -11486,7 +11503,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 var utils = __webpack_require__(1);
 var settle = __webpack_require__(20);
-var buildURL = __webpack_require__(11);
+var buildURL = __webpack_require__(12);
 var http = __webpack_require__(22);
 var https = __webpack_require__(23);
 var httpFollow = __webpack_require__(24).http;
@@ -11494,7 +11511,7 @@ var httpsFollow = __webpack_require__(24).https;
 var url = __webpack_require__(25);
 var zlib = __webpack_require__(56);
 var pkg = __webpack_require__(57);
-var createError = __webpack_require__(12);
+var createError = __webpack_require__(13);
 var enhanceError = __webpack_require__(21);
 
 var isHttps = /https:?/;
@@ -12537,10 +12554,10 @@ module.exports = JSON.parse("{\"_from\":\"axios@0.19.0\",\"_id\":\"axios@0.19.0\
 
 var utils = __webpack_require__(1);
 var settle = __webpack_require__(20);
-var buildURL = __webpack_require__(11);
+var buildURL = __webpack_require__(12);
 var parseHeaders = __webpack_require__(59);
 var isURLSameOrigin = __webpack_require__(60);
-var createError = __webpack_require__(12);
+var createError = __webpack_require__(13);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {

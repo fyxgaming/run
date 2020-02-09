@@ -91,7 +91,7 @@ const propertiesToObfuscate = [
   '_util',
 
   // code.js
-  'intrinsics',
+  // 'intrinsics',
 
   // jig.js
   'proxies',
@@ -222,6 +222,8 @@ const obfuscatePlugin = {
 const dontObfuscate = [
   'intrinsicNames',
   'Context',
+  'UniqueSet',
+  'UniqueMap',
   'Jig',
   'JigControl',
   'Berry',
