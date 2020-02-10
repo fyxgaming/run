@@ -375,7 +375,7 @@ describe('BlockchainServer', () => {
       await expect(Promise.all(requests)).to.be.rejected
     })
 
-    it('should return larger number of UTXOS', async () => {
+    it('should return large number of UTXOS', async () => {
       const run = createRun({ network: 'main' })
       const utxos = await run.blockchain.utxos('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1')
       expect(utxos.length > 1220).to.equal(true)

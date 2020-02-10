@@ -1564,7 +1564,7 @@ describe('Jig', () => {
     it('should use unique set', async () => {
       class B extends Jig {}
       class A extends Jig {
-        init () { console.log(Map.toString()); this.set = new Set() }
+        init () { this.set = new Set() }
         add (x) { this.set.add(x) }
       }
       const a = await new A().sync()
@@ -1573,6 +1573,10 @@ describe('Jig', () => {
       a.add(b)
       a.add(b2)
       expect(a.set.size).to.equal(1)
+      await run.sync()
+      await run.load(a.location)
+      run.state.cache.clear()
+      await run.load(a.location)
     })
 
     it('should use unique map', async () => {
@@ -1587,14 +1591,36 @@ describe('Jig', () => {
       a.set(b, 1)
       a.set(b2, 2)
       expect(a.map.size).to.equal(1)
+      await run.sync()
+      await run.load(a.location)
+      run.state.cache.clear()
+      await run.load(a.location)
     })
 
-    it.skip('should support arbitrary objects', () => {
-      // TODO
+    it('should support arbitrary objects', async () => {
+      class Store extends Jig { set (x) { this.x = x } }
+      const store = new Store()
+      class Dragon { }
+      store.set(new Dragon())
+      await store.sync()
+      expect(!!Dragon.location).to.equal(true)
+      await run.load(store.location)
+      run.state.cache.clear()
+      await run.load(store.location)
     })
 
-    it.skip('should support circular objects', () => {
-      // TODO
+    it('should support circular objects', async () => {
+      class A extends Jig {
+        init () {
+          this.x = []
+          this.x.push(this.x)
+        }
+      }
+      const a = new A()
+      await a.sync()
+      await run.load(a.location)
+      run.state.cache.clear()
+      await run.load(a.location)
     })
   })
 
