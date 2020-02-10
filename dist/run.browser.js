@@ -1763,6 +1763,7 @@ Run.Intrinsics = Intrinsics
 Run.Location = Location
 Run.Mockchain = Mockchain
 Run.Pay = Pay
+Run.Plucker = Protocol.BerryProtocol
 Run.Purse = Purse
 Run.State = State
 Run.StateCache = StateCache
@@ -12871,9 +12872,8 @@ function parseFeePerKb (feePerKb) {
       if (feePerKb <= 0) throw new Error(`Option feePerKb must be at least 1: ${feePerKb}`)
       return feePerKb
     case 'undefined':
-      // Current fees are 1 sat per byte, but miners are lowering to 0.5 sat/byte.
-      // We should consider lowering this to 0.5 sat/byte soon.
-      return 1000
+      // Current fees are 0.5 sat per byte
+      return 500
     default: throw new Error(`Invalid feePerKb option: ${feePerKb}`)
   }
 }
