@@ -1916,7 +1916,7 @@ class Xray {
   useCodeCloner (cloneCode) { this.cloneCode = cloneCode; return this }
   useIntrinsics (intrinsics) { this.intrinsics = intrinsics; return this }
   restrictOwner (owner) { this.restrictedOwner = owner; return this }
-  deeplyScanTokens () { this.deeplyScanTokens = true; return this }
+  deeplyScanTokens () { this.deepScanTokens = true; return this }
   useTokenReplacer (replaceToken) { this.replaceToken = replaceToken; return this }
 
   scan (x) {
@@ -2645,6 +2645,7 @@ class ArbitraryObjectScanner {
 
   isArbitraryObject (x, xray) {
     if (typeof x !== 'object' || !x) return false
+    if (Protocol.isToken(x)) return false
     if (!deployable(x.constructor, xray)) return false
     if (Protocol.isToken(x.constructor)) {
       xray.tokens.add(x.constructor)
@@ -2817,7 +2818,7 @@ class DeployableScanner {
     if (deployable(x, xray)) {
       xray.checkOwner(x)
       xray.deployables.add(x)
-      if (xray.deeplyScanTokens) {
+      if (xray.deepScanTokens) {
         xray.caches.scanned.add(x)
         Object.keys(x).forEach(key => {
           xray.scan(key)
@@ -2871,7 +2872,7 @@ class TokenScanner {
   scan (x, xray) {
     if (Protocol.isToken(x)) {
       xray.tokens.add(x)
-      if (xray.deeplyScanTokens) {
+      if (xray.deepScanTokens) {
         xray.caches.scanned.add(x)
 
         JigControl.disableProxy(() => {
