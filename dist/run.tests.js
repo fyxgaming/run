@@ -2920,7 +2920,7 @@ describe('BlockchainServer', () => {
       await expect(Promise.all(requests)).to.be.rejected
     })
 
-    it.only('should return larger number of UTXOS', async () => {
+    it('should return large number of UTXOS', async () => {
       const run = createRun({ network: 'main' })
       const utxos = await run.blockchain.utxos('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1')
       expect(utxos.length > 1220).to.equal(true)
@@ -6352,7 +6352,7 @@ describe('Jig', () => {
     it('should use unique set', async () => {
       class B extends Jig {}
       class A extends Jig {
-        init () { console.log(Map.toString()); this.set = new Set() }
+        init () { this.set = new Set() }
         add (x) { this.set.add(x) }
       }
       const a = await new A().sync()
@@ -6361,6 +6361,10 @@ describe('Jig', () => {
       a.add(b)
       a.add(b2)
       expect(a.set.size).to.equal(1)
+      await run.sync()
+      await run.load(a.location)
+      run.state.cache.clear()
+      await run.load(a.location)
     })
 
     it('should use unique map', async () => {
@@ -6375,14 +6379,36 @@ describe('Jig', () => {
       a.set(b, 1)
       a.set(b2, 2)
       expect(a.map.size).to.equal(1)
+      await run.sync()
+      await run.load(a.location)
+      run.state.cache.clear()
+      await run.load(a.location)
     })
 
-    it.skip('should support arbitrary objects', () => {
-      // TODO
+    it('should support arbitrary objects', async () => {
+      class Store extends Jig { set (x) { this.x = x } }
+      const store = new Store()
+      class Dragon { }
+      store.set(new Dragon())
+      await store.sync()
+      expect(!!Dragon.location).to.equal(true)
+      await run.load(store.location)
+      run.state.cache.clear()
+      await run.load(store.location)
     })
 
-    it.skip('should support circular objects', () => {
-      // TODO
+    it('should support circular objects', async () => {
+      class A extends Jig {
+        init () {
+          this.x = []
+          this.x.push(this.x)
+        }
+      }
+      const a = new A()
+      await a.sync()
+      await run.load(a.location)
+      run.state.cache.clear()
+      await run.load(a.location)
     })
   })
 
@@ -9719,7 +9745,7 @@ describe('Transaction', () => {
         const args = [{ $ref: '_r0' }, { $ref: '_r1' }]
         const actions = [{ target: '_i0', method: 'apply', args }]
         const txid = await build([], actions, [b.location], null, 1, [a.location, a2.location])
-        await expect(run.load(txid + '_o1')).to.be.rejectedWith('Referenced different locations of same jig: [jig A]')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('Inconsistent worldview')
       })
 
       it('should throw if same ref has different locations', async () => {
@@ -9735,7 +9761,7 @@ describe('Transaction', () => {
         const args = [{ $ref: `${a.location}` }, { $ref: `${a2.location}` }]
         const actions = [{ target: '_i0', method: 'apply', args }]
         const txid = await build([], actions, [b.location], null, 1)
-        await expect(run.load(txid + '_o1')).to.be.rejectedWith('Referenced different locations of same jig: [jig A]')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('Inconsistent worldview')
       })
 
       it('should throw if bad refs array', async () => {

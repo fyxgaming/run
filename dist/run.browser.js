@@ -1170,10 +1170,11 @@ class Jig {
               if (!JigControl.proxies.has(target)) outerJigControl.proxies.set(target, proxy)
             })
             JigControl.callers.forEach((callers, target) => {
-              if (!JigControl.callers.has(target)) {
+              if (!outerJigControl.callers.has(target)) {
                 outerJigControl.callers.set(target, callers)
               } else {
-                callers.forEach(caller => outerJigControl.get(target).add(caller))
+                const outerCallers = outerJigControl.callers.get(target)
+                callers.forEach(caller => outerCallers.add(caller))
               }
             })
             Object.assign(JigControl, outerJigControl)
@@ -1831,6 +1832,7 @@ module.exports = Context
 //  -Hook up to existing code (And UniqueSet as default)
 //  -How to load other protocols?
 // - intrinsics are designed to be as flexible as safe.
+// Scanning is done both forward and backward. Strange.
 // So Objects and arrays are acceptible from without.
 // Document scanner API
 
@@ -1895,6 +1897,7 @@ class Xray {
     if (!this.tokens) {
       this.tokens = new Set()
       this.refs = new Set()
+      this.scanners.unshift(new ArbitraryObjectScanner())
       this.scanners.unshift(new TokenScanner())
     }
     return this
@@ -1903,8 +1906,8 @@ class Xray {
   allowDeployables () {
     if (!this.deployables) {
       this.deployables = new Set()
+      this.scanners.unshift(new ArbitraryObjectScanner())
       this.scanners.unshift(new DeployableScanner())
-      this.scanners.push(new ArbitraryObjectScanner())
     }
     return this
   }
@@ -2048,7 +2051,8 @@ class Xray {
   }
 
   checkOwner (x) {
-    if (typeof x.$owner !== 'undefined' && x.$owner !== this.restrictedOwner) {
+    if (typeof x.$owner !== 'undefined' && typeof this.restrictedOwner !== 'undefined' &&
+        x.$owner !== this.restrictedOwner) {
       const suggestion = `Hint: Consider saving a clone of ${x} value instead.`
       throw new Error(`Property ${display(x)} is owned by a different token\n\n${suggestion}`)
     }
@@ -2079,7 +2083,11 @@ class Scanner {
  * Scanner to handle undefined, which cannot be passed through during serializion
  */
 class UndefinedScanner {
-  scan (x, xray) { if (typeof x === 'undefined') return true }
+  scan (x, xray) {
+    if (typeof x === 'undefined') return true
+    if (typeof x === 'object' && x && x.$undef === 1) return true
+  }
+
   cloneable (x, xray) { if (typeof x === 'undefined') return true }
   serializable (x, xray) { if (typeof x === 'undefined') return true }
   deserializable (x, xray) {
@@ -2221,6 +2229,7 @@ class BasicObjectScanner {
   isBasicObject (x, xray) {
     if (typeof x !== 'object' || !x) return false
     if (xray.intrinsics.types.has(x)) return false
+    // if (Object.keys(x).some(y => y.startsWith('$'))) return false
     return getPrototypeCount(x) === 1 // Object
   }
 }
@@ -2364,10 +2373,11 @@ class SetScanner {
       xray.checkOwner(x)
       xray.caches.scanned.add(x)
       if (xray.replaceToken) {
+        const { Set } = xray.intrinsics.default
         const newSet = new Set()
         for (const y of x) { newSet.add(xray.scanAndReplace(y)) }
         x.clear()
-        newSet.forEach(y => x.add(y))
+        for (const y of newSet) { x.add(y) }
       } else for (const y of x) { xray.scan(y) }
       Object.keys(x).forEach(key => {
         xray.scan(key)
@@ -2457,10 +2467,11 @@ class MapScanner {
       xray.caches.scanned.add(x)
       for (const entry of x) xray.scan(entry)
       if (xray.replaceToken) {
+        const { Map } = xray.intrinsics.default
         const newMap = new Map()
         for (const [key, val] of x) newMap.set(xray.scanAndReplace(key), xray.scanAndReplace(val))
         x.clear()
-        newMap.forEach(([key, val]) => x.set(key, val))
+        for (const [key, val] of newMap) { x.set(key, val) }
       } else for (const entry of x) { xray.scan(entry) }
       Object.keys(x).forEach(key => {
         xray.scan(key)
@@ -2573,7 +2584,13 @@ class ArbitraryObjectScanner {
       })
       const newConstructor = xray.scanAndReplace(x.constructor)
       if (newConstructor !== x.constructor) Object.setPrototypeOf(x, newConstructor)
+      xray.refs.add(x.type)
       return true
+    }
+
+    if (typeof x === 'object' && x && typeof x.$arbob !== 'undefined') {
+      xray.refs.add(x.type)
+      return xray.scan(x.$arbob)
     }
   }
 
@@ -2630,8 +2647,11 @@ class ArbitraryObjectScanner {
   isArbitraryObject (x, xray) {
     if (typeof x !== 'object' || !x) return false
     if (!deployable(x.constructor, xray)) return false
-    if (Protocol.isToken(x.constructor)) xray.tokens.add(x.constructor)
-    xray.deployables.add(x.constructor)
+    if (Protocol.isToken(x.constructor)) {
+      xray.tokens.add(x.constructor)
+    } else {
+      xray.deployables.add(x.constructor)
+    }
     return true
   }
 }
@@ -5957,9 +5977,10 @@ class ProtoTransaction {
     // harder parallelize safely. We need some atomicity, which could be a protoTx loading
     // for a tx.
     let index = 1
+    const loadedCode = []
     for (const def of data.code) {
       const location = `${tx.hash}_o${index++}`
-      await run.code.installFromTx(def, location, tx, run, bsvNetwork, cache)
+      loadedCode.push(await run.code.installFromTx(def, location, tx, run, bsvNetwork, cache))
     }
 
     if (vout && vout > 0 && vout < 1 + data.code.length) {
@@ -6080,8 +6101,9 @@ class ProtoTransaction {
             return token
           }
           if (ref[1] !== 'o') throw new Error(`Unexpected ref ${ref}`)
-          const n = parseInt(ref.slice(2)) - 1 - data.code.length
-          return this.proxies.get(this.outputs[n])
+          const vout = parseInt(ref.slice(2)) - 1
+          if (vout < data.code.length) return loadedCode[vout]
+          return this.proxies.get(this.outputs[vout - data.code.length])
         }
 
         const xray = new Xray()

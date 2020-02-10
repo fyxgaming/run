@@ -824,7 +824,7 @@ describe('Transaction', () => {
         const args = [{ $ref: '_r0' }, { $ref: '_r1' }]
         const actions = [{ target: '_i0', method: 'apply', args }]
         const txid = await build([], actions, [b.location], null, 1, [a.location, a2.location])
-        await expect(run.load(txid + '_o1')).to.be.rejectedWith('Referenced different locations of same jig: [jig A]')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('Inconsistent worldview')
       })
 
       it('should throw if same ref has different locations', async () => {
@@ -840,7 +840,7 @@ describe('Transaction', () => {
         const args = [{ $ref: `${a.location}` }, { $ref: `${a2.location}` }]
         const actions = [{ target: '_i0', method: 'apply', args }]
         const txid = await build([], actions, [b.location], null, 1)
-        await expect(run.load(txid + '_o1')).to.be.rejectedWith('Referenced different locations of same jig: [jig A]')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('Inconsistent worldview')
       })
 
       it('should throw if bad refs array', async () => {
