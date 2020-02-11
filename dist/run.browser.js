@@ -7253,6 +7253,7 @@ async function call (promise) {
 }
 
 function jsonToTx (json) {
+  if (typeof json !== 'object') throw new Error(`JSON returned is invalid or not an object: ${json}`)
   const tx = new Transaction(json.hex || json.rawtx)
   tx.time = json.time * 1000 || Date.now()
   if (json.blockhash && json.blockhash.length) tx.blockhash = json.blockhash
