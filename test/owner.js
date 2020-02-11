@@ -34,7 +34,9 @@ describe('AddressScript', () => {
 describe('PubKeyScript', () => {
   it.only('throws if bad address', () => {
     const pubkey = new bsv.PrivateKey().publicKey.toString()
-    console.log(new PubKeyScript(pubkey).getBuffer()) // eslint-disable-line
+    const script = new PubKeyScript(pubkey).getBuffer()
+    console.log(new Uint8Array(new bsv.PublicKey(pubkey).toBuffer()))
+    console.log(script)
   })
 })
 
