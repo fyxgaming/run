@@ -22,6 +22,7 @@ describe.only('Address', () => {
     const x = Array.from(Buffer.from('00291D4797C2817F6247481E261A3CCB35C24E38AB59C1ACEA', 'hex'))
     console.log(x)
     console.log(new Address('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').getBuffer())
+    console.log(new Address('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').getBuffer())
     // console.log(new Address('%').getBuffer())
   })
 })
