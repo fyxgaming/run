@@ -289,9 +289,9 @@ describe('Run', () => {
 
     it('should throw for invalid arg', async () => {
       const run = createRun()
-      await expect(run.load()).to.be.rejectedWith('typeof location is undefined - must be string')
-      await expect(run.load(123)).to.be.rejectedWith('typeof location is number - must be string')
-      await expect(run.load({})).to.be.rejectedWith('typeof location is object - must be string')
+      await expect(run.load()).to.be.rejectedWith('Location must be a string: undefined')
+      await expect(run.load(123)).to.be.rejectedWith('Location must be a string: 123')
+      await expect(run.load({})).to.be.rejectedWith('Location must be a string: [object Object]')
     })
   })
 
