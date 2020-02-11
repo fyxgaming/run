@@ -19,7 +19,8 @@ const { Address } = Run
 
 describe.only('Address', () => {
   it('throws if bad address', () => {
-    console.log(new Address('123'))
+    console.log(new Address('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').getBuffer())
+    // console.log(new Address('%').getBuffer())
   })
 })
 
