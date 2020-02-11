@@ -8,9 +8,10 @@ const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run, createRun } = require('./helpers')
+const { AddressScript, PubKeyScript } = Run
 const {
-  checkOwner,
   checkSatoshis,
+  getOwnerScript,
   getNormalizedSourceCode,
   deployable,
   checkRunTransaction,
@@ -44,19 +45,27 @@ describe('util', () => {
     })
   })
 
-  describe('checkOwner', () => {
+  describe('getOwnerScript', () => {
     it('should support valid owners on different networks', () => {
-      expect(() => checkOwner(new bsv.PrivateKey('mainnet').publicKey.toString())).not.to.throw()
-      expect(() => checkOwner(new bsv.PrivateKey('testnet').publicKey.toString())).not.to.throw()
+      const mainnet = new bsv.PrivateKey('mainnet')
+      const testnet = new bsv.PrivateKey('testnet')
+      expect(() => getOwnerScript(mainnet.publicKey.toString())).not.to.throw()
+      expect(() => getOwnerScript(testnet.publicKey.toString())).not.to.throw()
+      expect(() => getOwnerScript(testnet.publicKey.toAddress().toString())).not.to.throw()
+      expect(() => getOwnerScript(testnet.publicKey.toAddress().toString())).not.to.throw()
+      expect(() => getOwnerScript(new PubKeyScript(mainnet.publicKey.toString()))).not.to.throw()
+      expect(() => getOwnerScript(new PubKeyScript(testnet.publicKey.toString()))).not.to.throw()
+      expect(() => getOwnerScript(new AddressScript(mainnet.publicKey.toAddress().toString()))).not.to.throw()
+      expect(() => getOwnerScript(new AddressScript(testnet.publicKey.toAddress().toString()))).not.to.throw()
     })
 
     it('should throw if bad owner', () => {
-      expect(() => checkOwner()).to.throw('owner must be a pubkey string')
-      expect(() => checkOwner(123)).to.throw('owner must be a pubkey string')
-      expect(() => checkOwner('hello')).to.throw('owner is not a valid public key')
-      expect(() => checkOwner(new bsv.PrivateKey())).to.throw('owner must be a pubkey string')
-      expect(() => checkOwner(new bsv.PrivateKey().publicKey)).to.throw('owner must be a pubkey string')
-      expect(() => checkOwner([new bsv.PrivateKey().publicKey.toString()])).to.throw('owner must be a pubkey string')
+      expect(() => getOwnerScript()).to.throw('owner must be a pubkey string')
+      expect(() => getOwnerScript(123)).to.throw('owner must be a pubkey string')
+      expect(() => getOwnerScript('hello')).to.throw('owner is not a valid public key')
+      expect(() => getOwnerScript(new bsv.PrivateKey())).to.throw('owner must be a pubkey string')
+      expect(() => getOwnerScript(new bsv.PrivateKey().publicKey)).to.throw('owner must be a pubkey string')
+      expect(() => getOwnerScript([new bsv.PrivateKey().publicKey.toString()])).to.throw('owner must be a pubkey string')
     })
   })
 

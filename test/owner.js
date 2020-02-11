@@ -11,19 +11,30 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Jig, Run, createRun, hookPay } = require('./helpers')
-const { Address } = Run
+const { AddressScript, PubKeyScript } = Run
 
 // ------------------------------------------------------------------------------------------------
-// Address tests
+// AddressScript tests
 // ------------------------------------------------------------------------------------------------
 
-describe('Address', () => {
+describe('AddressScript', () => {
   it('throws if bad address', () => {
     // const x = Array.from(Buffer.from('00291D4797C2817F6247481E261A3CCB35C24E38AB59C1ACEA', 'hex'))
     // console.log(x)
-    new Address('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').getBuffer() // eslint-disable-line
-    new Address('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').getBuffer() // eslint-disable-line
+    new AddressScript('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').getBuffer() // eslint-disable-line
+    new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').getBuffer() // eslint-disable-line
     // console.log(new Address('%').getBuffer())
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// PubKeyScript tests
+// ------------------------------------------------------------------------------------------------
+
+describe('PubKeyScript', () => {
+  it.only('throws if bad address', () => {
+    const pubkey = new bsv.PrivateKey().publicKey.toString()
+    console.log(new PubKeyScript(pubkey).getBuffer()) // eslint-disable-line
   })
 })
 
