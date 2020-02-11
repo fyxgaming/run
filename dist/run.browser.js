@@ -3686,7 +3686,35 @@ class Address {
   }
 
   getBuffer () {
-    // TODO
+    // Based on https://gist.github.com/diafygi/90a3e80ca1c2793220e5/
+    const A = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+    var d = [] // the array for storing the stream of decoded bytes
+    var b = [] // the result byte array that will be returned
+    var i // the iterator variable for the base58 string
+    var j // the iterator variable for the byte array (d)
+    var c // the carry amount variable that is used to overflow from the current byte to the next byte
+    var n // a temporary placeholder variable for the current byte
+    const s = this.address
+    for (i in s) { // loop through each base58 character in the input string
+      j = 0 // reset the byte iterator
+      c = A.indexOf(s[i]) // set the initial carry amount equal to the current base58 digit
+      if (c < 0) throw new Error(`Invalid base58 char: ${s[i]}`) // see if each char is base 58
+      if (!(c || b.length ^ i)) b.push(0) // prepend the result array with a zero if the base58 digit is zero and non-zero characters haven't been seen yet (to ensure correct decode length)
+      while (j in d || c) { // start looping through the bytes until there are no more bytes and no carry amount
+        n = d[j] // set the placeholder for the current byte
+        n = n ? n * 58 + c : c // shift the current byte 58 units and add the carry amount (or just add the carry amount if this is a new byte)
+        c = n >> 8 // find the new carry amount (1-byte shift of current byte value)
+        d[j] = n % 256 // reset the current byte to the remainder (the carry amount will pass on the overflow)
+        j++ // iterate to the next byte
+      }
+    }
+    while (j--) { b.push(d[j]) } // since the byte array is backwards, loop through it in reverse order, and append
+    if (b.length < 6) throw new Error(`Base58 check string too short: ${b.length}`)
+    // TODO: Verify the checksum. To do this, we need an onchain sha256.
+    if (b[0] !== 0 && b[0] !== 111) throw new Error('P2SH addresses are not supported')
+    const hash160 = b.slice(1, b.length - 4)
+    const script = [118, 169, ...hash160, 135, 172] // OP_DUP OP_HASH160 <PKH> OP_EQUAL OP_CHECKSIG
+    return new Uint8Array(script)
   }
 }
 
@@ -6001,7 +6029,9 @@ class Transaction {
     this.syncer = run.syncer
     this.blockchain = run.blockchain
     this.state = run.state
-    this.owner = run.owner.pubkey ? run.owner.pubkey : null // TODO: Update
+    try {
+      this.owner = run.owner.getScript() // TODO
+    } catch (e) { this.owner = null }
     this.code = run.code
     this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this)) // current proto-transaction
   }
@@ -6566,7 +6596,7 @@ class ProtoTransaction {
     try {
       this.code.push({ type, sandbox, deps, props, success, error, owner })
       const tempLocation = `_d${this.code.length - 1}`
-      type.owner = sandbox.owner = owner
+      type.owner = sandbox.owner = owner // TODO: Sandbox owner
       if (run.owner instanceof Owner) run.owner.update(code.getInstalled(type))
       return tempLocation
     } finally { this.end() }
@@ -6751,7 +6781,7 @@ class ProtoTransaction {
         const targetLocation = action.target.constructor[`origin${net}`] ||
             action.target.constructor[`location${net}`]
         const target = targetLocation[0] === '_' ? `_o${1 + parseInt(targetLocation.slice(2))}` : targetLocation
-        return { target, method, args, creator: action.creator }
+        return { target, method, args, creator: xray.serialize(action.creator) }
       }
 
       // if the jig has an input, use it
@@ -6819,14 +6849,19 @@ class ProtoTransaction {
       tx.from(utxo)
     })
 
-    // build run outputs first by adding code then by adding jigs
-    const defAdress = def => new bsv.PublicKey(def.owner, { network: bsvNetwork })
-    this.code.forEach(def => tx.to(defAdress(def), bsv.Transaction.DUST_AMOUNT))
+    // Build run outputs first by adding code then by adding jigs
+
+    this.code.forEach(def => {
+      const script = new bsv.Script(def.owner.getBuffer())
+      const satoshis = bsv.Transaction.DUST_AMOUNT
+      tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
+    })
+
     this.outputs.forEach(jig => {
-      const ownerPubkey = this.after.get(jig).restore().owner
-      const ownerAddress = new bsv.PublicKey(ownerPubkey, { network: bsvNetwork }).toAddress()
-      const satoshis = this.after.get(jig).restore().satoshis
-      tx.to(ownerAddress, Math.max(bsv.Transaction.DUST_AMOUNT, satoshis))
+      const restored = this.after.get(jig).restore()
+      const script = new bsv.Script(restored.owner.getBuffer())
+      const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, restored.satoshis)
+      tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
     })
 
     this.cachedTx = { tx, refs, spentJigs, spentLocations }
@@ -12815,8 +12850,8 @@ owner: ${spentJigs[i].owner}`)
 
     // notify the owner
     const update = x => { if (this.run.owner instanceof Owner) this.run.owner.update(x) }
-    next.code.forEach(def => update(def))
-    next.outputs.forEach(jig => update(jig))
+    next.code.forEach(def => update(def.sandbox))
+    next.outputs.forEach(jig => update(next.proxies.get(jig)))
 
     this.finish()
   }

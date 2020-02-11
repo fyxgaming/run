@@ -4806,7 +4806,7 @@ describe('Jig', () => {
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
-    it('should create basic jig', async () => {
+    it.only('should create basic jig', async () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -7637,7 +7637,26 @@ const chai = __webpack_require__(0)
 const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Jig, createRun, hookPay } = __webpack_require__(2)
+const { Jig, Run, createRun, hookPay } = __webpack_require__(2)
+const { Address } = Run
+
+// ------------------------------------------------------------------------------------------------
+// Address tests
+// ------------------------------------------------------------------------------------------------
+
+describe('Address', () => {
+  it('throws if bad address', () => {
+    // const x = Array.from(Buffer.from('00291D4797C2817F6247481E261A3CCB35C24E38AB59C1ACEA', 'hex'))
+    // console.log(x)
+    new Address('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').getBuffer() // eslint-disable-line
+    new Address('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').getBuffer() // eslint-disable-line
+    // console.log(new Address('%').getBuffer())
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// Owner tests
+// ------------------------------------------------------------------------------------------------
 
 describe('Owner', () => {
   describe('constructor', () => {
