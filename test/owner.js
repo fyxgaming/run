@@ -34,9 +34,11 @@ describe('AddressScript', () => {
 describe('PubKeyScript', () => {
   it.only('throws if bad address', () => {
     const pubkey = new bsv.PrivateKey().publicKey.toString()
+    const pubkeyBuf = new Uint8Array(new bsv.PublicKey(pubkey).toBuffer())
     const script = new PubKeyScript(pubkey).getBuffer()
-    console.log(new Uint8Array(new bsv.PublicKey(pubkey).toBuffer()))
-    console.log(script)
+    expect(script.length).to.equal(34)
+    expect(script.slice(0, 33)).to.deep.equal(pubkeyBuf)
+    expect(script[33]).to.equal(172)
   })
 })
 
