@@ -10,7 +10,22 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Jig, createRun, hookPay } = require('./helpers')
+const { Jig, Run, createRun, hookPay } = require('./helpers')
+const { Address } = Run
+
+// ------------------------------------------------------------------------------------------------
+// Address tests
+// ------------------------------------------------------------------------------------------------
+
+describe.only('Address', () => {
+  it('throws if bad address', () => {
+    console.log(new Address('123'))
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// Owner tests
+// ------------------------------------------------------------------------------------------------
 
 describe('Owner', () => {
   describe('constructor', () => {
