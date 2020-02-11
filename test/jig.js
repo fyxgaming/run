@@ -25,6 +25,8 @@ describe('Jig', () => {
       expect(run.code.installs.has(A)).to.equal(true)
       await run.sync()
       expect(A.origin.length).to.equal(67)
+      console.log(a)
+      console.log(A)
     })
 
     it('throws if not extended', () => {
