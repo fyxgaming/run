@@ -32,7 +32,7 @@ describe('AddressScript', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('PubKeyScript', () => {
-  it.only('throws if bad address', () => {
+  it('throws if bad address', () => {
     const pubkey = new bsv.PrivateKey().publicKey.toString()
     const pubkeyBuf = new Uint8Array(new bsv.PublicKey(pubkey).toBuffer())
     const script = new PubKeyScript(pubkey).getBuffer()
