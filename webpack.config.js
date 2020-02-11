@@ -73,9 +73,9 @@ const methodsToObfuscate = [
   'buildBsvTransaction',
 
   // owner.js
-  'fromPrivateKey',
-  'fromPublicKey',
-  'fromAddress',
+  'setupFromPrivateKey',
+  'setupFromPublicKey',
+  'setupFromAddress',
   'queryLatest',
   'removeBadAssets',
 

@@ -1732,6 +1732,9 @@ function setupBsvLibrary (network) {
   // Set the default bsv network
   bsv.Networks.defaultNetwork = util.bsvNetwork(network)
 
+  // On Bitcoin SV, 0.5 sats/byte are normal now, but 1sat/byte is still safer
+  bsv.Transaction.FEE_PER_KB = 1000
+
   // Hook sign to not run isValidSignature, which is slow and unnecessary
   const oldSign = bsv.Transaction.prototype.sign
   bsv.Transaction.prototype.sign = function (...args) {
@@ -3836,19 +3839,19 @@ class AddressOwner extends Owner {
     try {
       const bsvPrivateKey = new bsv.PrivateKey(keyOrAddress, bsvNetwork)
       if (bsvPrivateKey.toString() !== keyOrAddress.toString()) throw new Error()
-      return this.fromPrivateKey(bsvPrivateKey)
+      return this.setupFromPrivateKey(bsvPrivateKey)
     } catch (e) {
       if (e.message === 'Private key network mismatch') throw e
     }
 
     // Try creating from a public key
     try {
-      return this.fromPublicKey(new bsv.PublicKey(keyOrAddress, { network: bsvNetwork }))
+      return this.setupFromPublicKey(new bsv.PublicKey(keyOrAddress, { network: bsvNetwork }))
     } catch (e) { }
 
     // Try creating from an address
     try {
-      return this.fromAddress(new bsv.Address(keyOrAddress, bsvNetwork))
+      return this.setupFromAddress(new bsv.Address(keyOrAddress, bsvNetwork))
     } catch (e) {
       if (e.message === 'Address has mismatched network type.') throw e
     }
@@ -3856,19 +3859,19 @@ class AddressOwner extends Owner {
     throw new Error(`bad owner key or address: ${keyOrAddress}`)
   }
 
-  fromPrivateKey (bsvPrivateKey) {
+  setupFromPrivateKey (bsvPrivateKey) {
     this.bsvPrivateKey = bsvPrivateKey
     this.privkey = bsvPrivateKey.toString()
-    return this.fromPublicKey(bsvPrivateKey.publicKey)
+    return this.setupFromPublicKey(bsvPrivateKey.publicKey)
   }
 
-  fromPublicKey (bsvPublicKey) {
+  setupFromPublicKey (bsvPublicKey) {
     this.bsvPublicKey = bsvPublicKey
     this.pubkey = bsvPublicKey.toString()
-    return this.fromAddress(bsvPublicKey.toAddress())
+    return this.setupFromAddress(bsvPublicKey.toAddress())
   }
 
-  fromAddress (bsvAddress) {
+  setupFromAddress (bsvAddress) {
     this.bsvAddress = bsvAddress
     this.address = bsvAddress.toString()
     this.addressScript = new Address(this.address)
@@ -10961,8 +10964,6 @@ module.exports = class Syncer {
         tx = await this.pay(tx)
       }
       tx = await this.sign(tx)
-      console.log('---')
-      console.log(tx.toJSON())
 
       // check that we have all signatures. this is more of a friendly error.
       for (let i = 0; i < spentJigs.length; i++) {
@@ -11409,8 +11410,8 @@ function parseFeePerKb (feePerKb) {
       if (feePerKb <= 0) throw new Error(`Option feePerKb must be at least 1: ${feePerKb}`)
       return feePerKb
     case 'undefined':
-      // Current fees are 0.5 sat per byte
-      return 500
+      // Current safe fees are 0.5 sat per byte, even though many miners are accepting 0.5
+      return 1000
     default: throw new Error(`Invalid feePerKb option: ${feePerKb}`)
   }
 }
@@ -13403,7 +13404,7 @@ module.exports = class Mockchain {
     // Basic transaction checks
     if (tx.inputs.length === 0) throw new Error('tx has no inputs')
     if (tx.outputs.length === 0) throw new Error('tx has no outputs')
-    if (tx.getFee() < tx.toBuffer().length) throw new Error('tx fee too low')
+    if (tx.getFee() < tx.toBuffer().length * Transaction.FEE_PER_KB / 1000) throw new Error('tx fee too low')
     if (tx.verify() !== true) throw new Error(tx.verify())
     if (tx.isFullySigned() !== true) throw new Error('tx not fully signed')
 
