@@ -369,8 +369,8 @@ module.exports = {
 "use strict";
 
 
-var bind = __webpack_require__(17);
-var isBuffer = __webpack_require__(36);
+var bind = __webpack_require__(18);
+var isBuffer = __webpack_require__(37);
 
 /*global toString:true*/
 
@@ -1480,14 +1480,14 @@ module.exports = Location
  */
 
 const bsv = __webpack_require__(2)
-const Code = __webpack_require__(26)
-const Evaluator = __webpack_require__(13)
-const Syncer = __webpack_require__(32)
-const { Transaction } = __webpack_require__(15)
+const Code = __webpack_require__(27)
+const Evaluator = __webpack_require__(14)
+const Syncer = __webpack_require__(33)
+const { Transaction } = __webpack_require__(16)
 const util = __webpack_require__(0)
-const { Pay, Purse } = __webpack_require__(33)
-const Owner = __webpack_require__(52)
-const { Blockchain, BlockchainServer } = __webpack_require__(16)
+const { Pay, Purse } = __webpack_require__(34)
+const { Address, PubKey, Sign, Owner, AddressOwner } = __webpack_require__(13)
+const { Blockchain, BlockchainServer } = __webpack_require__(17)
 const Mockchain = __webpack_require__(53)
 const { State, StateCache } = __webpack_require__(54)
 const { PrivateKey } = bsv
@@ -1495,7 +1495,7 @@ const { Jig } = __webpack_require__(3)
 const { Berry } = __webpack_require__(8)
 const Protocol = __webpack_require__(11)
 const Token = __webpack_require__(55)
-const expect = __webpack_require__(25)
+const expect = __webpack_require__(26)
 const Location = __webpack_require__(4)
 const { UniqueSet, UniqueMap } = __webpack_require__(9)
 const { Intrinsics } = __webpack_require__(10)
@@ -1673,7 +1673,7 @@ function parseOwner (owner, network, logger, run) {
     case 'string':
     case 'object':
     case 'undefined':
-      return new Owner(owner, { network, logger, run })
+      return new AddressOwner(owner, network)
     default: throw new Error(`Option 'owner' must be a valid key or address. Received: ${owner}`)
   }
 }
@@ -1768,6 +1768,12 @@ Run.Purse = Purse
 Run.State = State
 Run.StateCache = StateCache
 Run.Xray = Xray
+
+Run.Address = Address
+Run.PubKey = PubKey
+Run.Sign = Sign
+Run.Owner = Owner
+Run.AddressOwner = AddressOwner
 
 Run.Jig = Jig
 Run.Berry = Berry
@@ -3027,7 +3033,7 @@ Xray.Checkpoint = Checkpoint
 
 module.exports = Xray
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(15).Buffer))
 
 /***/ }),
 /* 8 */
@@ -3641,13 +3647,289 @@ module.exports = g;
 /* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
+/**
+ * owner.js
+ *
+ * Owner API that manages jigs and signs transactions
+ */
+
+const bsv = __webpack_require__(2)
+const util = __webpack_require__(0)
+
+// ------------------------------------------------------------------------------------------------
+// Script API
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * API that all custom scripts need to implement to become jig owners
+ */
+class Script {
+  /**
+   * Calculates a buffer for the script. This should be calculated on-demand.
+   * @returns {Uint8Array} Uint8Array script
+   */
+  getBuffer () {
+    throw new Error('Not implemented')
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// P2PKH Script
+// ------------------------------------------------------------------------------------------------
+
+class Address {
+  constructor (address) {
+    this.address = address
+  }
+
+  getBuffer () {
+    // TODO
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// P2PKH Script
+// ------------------------------------------------------------------------------------------------
+
+class PubKey {
+  constructor (pubkey) {
+    // Check if string
+    this.pubkey = pubkey
+  }
+
+  getBuffer () {
+    // TODO
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Sign API
+// ------------------------------------------------------------------------------------------------
+
+class Sign {
+  /**
+   * Returns an owner script that is used for new jigs
+   * @returns {Script} New owner script
+   */
+  getScript () {
+    throw new Error('Not implemented')
+  }
+
+  /**
+   * Signs run tokens inputs
+   *
+   * In a server, maybe it loads the tx to see what it's signing
+   * @param {bsv.Transaction} tx Transaction to sign
+   * @returns {bsv.Transaction} Signed transaction
+   */
+  async sign (tx) {
+    throw new Error('Not implemented')
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Owner wrapper to private syncing and tracking
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Base owner class that may be derived from to track jigs and code
+ */
+class Owner extends Sign {
+  constructor () {
+    super()
+
+    // Each asset should only be stored once. If we have an origin, prefer it
+    this.assets = new Map() // origin|Jig|Class|Function -> Jig|Class|Function
+  }
+
+  get run () { return util.activeRunInstance() }
+  get logger () { return util.activeRunInstance().logger }
+
+  get jigs () {
+    try {
+      return Array.from(this.assets.values())
+        .filter(asset => asset instanceof this.run.constructor.Jig)
+    } catch (e) {
+      if (this.logger) this.logger.error(`Bad asset found in owner. Removing.\n\n${e}`)
+      this.removeBadAssets()
+      return this.jigs
+    }
+  }
+
+  get code () {
+    try {
+      return Array.from(this.assets.values())
+        .filter(asset => !(asset instanceof this.run.constructor.Jig))
+    } catch (e) {
+      if (this.logger) this.logger.error(`Bad asset found in owner. Removing.\n\n${e}`)
+      this.removeBadAssets()
+      return this.code
+    }
+  }
+
+  removeBadAssets () {
+    let uselessVar = true
+    const toRemove = []
+    for (const [key, asset] of this.assets) {
+      try {
+        // If a asset failed to deploy, then it will have ! in its origin and throw here
+        const isJig = asset instanceof this.run.constructor.Jig
+        // We need to do something with the result to keep it from being minified away.
+        uselessVar = uselessVar ? !isJig : isJig
+      } catch (e) {
+        toRemove.push(key)
+      }
+    }
+    toRemove.forEach(key => this.assets.delete(key))
+  }
+
+  async sync () {
+    // Post any pending transactions
+    await this.run.syncer.sync()
+
+    // Query the latest jigs and code, but only have one query at a time
+    if (!this.query) {
+      this.query = new Promise((resolve, reject) => {
+        this.queryLatest()
+          .then(() => { this.query = null; resolve() })
+          .catch(e => { this.query = null; reject(e) })
+      })
+    }
+    return this.query
+  }
+
+  async queryLatest () {
+    const queryString = this.address ? this.address
+      : bsv.crypto.Hash.sha256(this.getScript()).toString('hex') // script hash
+    const newUtxos = await this.run.blockchain.utxos(queryString)
+
+    // Create a new asset set initially comprised of all pending assets, since they won't
+    // be in the utxos, and also a map of our non-pending jigs to their present
+    // locations so we don't reload them.
+    const newAssets = new Map()
+    const locationMap = new Map()
+    for (const [key, asset] of this.assets) {
+      if (typeof key !== 'string') newAssets.set(key, asset)
+      try { locationMap.set(asset.location, asset) } catch (e) { }
+    }
+
+    // load each new utxo, and if we come across a jig we already know, re-use it
+    for (const utxo of newUtxos) {
+      const location = `${utxo.txid}_o${utxo.vout}`
+      const prevAsset = locationMap.get(location)
+      if (prevAsset) {
+        newAssets.delete(prevAsset)
+        newAssets.set(location, prevAsset)
+        continue
+      }
+      try {
+        const asset = await this.run.load(location)
+        newAssets.set(asset.origin, asset)
+      } catch (e) {
+        if (this.logger) this.logger.error(`Failed to load owner location ${location}\n\n${e.toString()}`)
+      }
+    }
+
+    this.assets = newAssets
+  }
+
+  update (asset) {
+    this.assets.delete(asset)
+    try {
+      if (asset.owner === this.pubkey) {
+        try {
+          if (typeof asset.origin === 'undefined') throw new Error()
+          if (asset.origin.startsWith('_')) throw new Error()
+          this.assets.set(asset.origin, asset)
+        } catch (e) { this.assets.set(asset, asset) }
+      } else {
+        try { this.assets.delete(asset.origin) } catch (e) { }
+      }
+    } catch (e) { }
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// P2PKH owner class
+// ------------------------------------------------------------------------------------------------
+
+class AddressOwner extends Owner {
+  constructor (keyOrAddress, network) {
+    super()
+
+    const bsvNetwork = util.bsvNetwork(network)
+    keyOrAddress = keyOrAddress || new bsv.PrivateKey(bsvNetwork)
+
+    // Try creating the private key on mainnet and testnet
+    try {
+      const bsvPrivateKey = new bsv.PrivateKey(keyOrAddress, bsvNetwork)
+      if (bsvPrivateKey.toString() !== keyOrAddress.toString()) throw new Error()
+      return this.fromPrivateKey(bsvPrivateKey)
+    } catch (e) {
+      if (e.message === 'Private key network mismatch') throw e
+    }
+
+    // Try creating from a public key
+    try {
+      return this.fromPublicKey(new bsv.PublicKey(keyOrAddress, { network: bsvNetwork }))
+    } catch (e) { }
+
+    // Try creating from an address
+    try {
+      return this.fromAddress(new bsv.Address(keyOrAddress, bsvNetwork))
+    } catch (e) {
+      if (e.message === 'Address has mismatched network type.') throw e
+    }
+
+    throw new Error(`bad owner key or address: ${keyOrAddress}`)
+  }
+
+  fromPrivateKey (bsvPrivateKey) {
+    this.bsvPrivateKey = bsvPrivateKey
+    this.privkey = bsvPrivateKey.toString()
+    return this.fromPublicKey(bsvPrivateKey.publicKey)
+  }
+
+  fromPublicKey (bsvPublicKey) {
+    this.bsvPublicKey = bsvPublicKey
+    this.pubkey = bsvPublicKey.toString()
+    return this.fromAddress(bsvPublicKey.toAddress())
+  }
+
+  fromAddress (bsvAddress) {
+    this.bsvAddress = bsvAddress
+    this.address = bsvAddress.toString()
+    this.addressScript = new Address(this.address)
+    return this
+  }
+
+  getScript () {
+    return this.addressScript
+  }
+
+  async sign (tx) {
+    if (!this.bsvPrivateKey) throw new Error('Cannot sign. Owner does not have a private key declared.')
+    tx.sign(this.bsvPrivateKey)
+    return tx
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { Script, Address, PubKey, Sign, Owner, AddressOwner }
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
 /* WEBPACK VAR INJECTION */(function(global) {/**
  * evaluator.js
  *
  * The evaluator runs arbitrary code in a secure sandbox
  */
 
-const ses = __webpack_require__(27)
+const ses = __webpack_require__(28)
 const { getIntrinsics, intrinsicNames, Intrinsics } = __webpack_require__(10)
 const Context = __webpack_require__(6)
 const { UniqueSet, UniqueMap } = __webpack_require__(9)
@@ -3887,7 +4169,7 @@ module.exports = Evaluator
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(12)))
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3901,9 +4183,9 @@ module.exports = Evaluator
 
 
 
-var base64 = __webpack_require__(29)
-var ieee754 = __webpack_require__(30)
-var isArray = __webpack_require__(31)
+var base64 = __webpack_require__(30)
+var ieee754 = __webpack_require__(31)
+var isArray = __webpack_require__(32)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -5684,7 +5966,7 @@ function isnan (val) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(12)))
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -5696,6 +5978,7 @@ function isnan (val) {
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
 const { JigControl } = __webpack_require__(3)
+const { Owner } = __webpack_require__(13)
 const { Berry } = __webpack_require__(8)
 const Location = __webpack_require__(4)
 const Protocol = __webpack_require__(11)
@@ -5715,7 +5998,7 @@ class Transaction {
     this.syncer = run.syncer
     this.blockchain = run.blockchain
     this.state = run.state
-    this.owner = run.owner.pubkey ? run.owner.pubkey : null
+    this.owner = run.owner.pubkey ? run.owner.pubkey : null // TODO: Update
     this.code = run.code
     this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this)) // current proto-transaction
   }
@@ -6240,7 +6523,7 @@ class ProtoTransaction {
     this.code.forEach(def => def.error())
 
     // notify the owner. this may remove it from its list.
-    this.code.forEach(def => run.owner._update(def.sandbox))
+    this.code.forEach(def => { if (run.owner instanceof Owner) run.owner.update(def.sandbox) })
 
     // revert the state of each jig
     this.outputs.forEach(jig => {
@@ -6268,7 +6551,7 @@ class ProtoTransaction {
     })
 
     // notify the owner of jig rollbacks
-    this.outputs.forEach(jig => run.owner._update(this.proxies.get(jig)))
+    this.outputs.forEach(jig => { if (run.owner instanceof Owner) run.owner.update(jig) })
 
     this.reset()
   }
@@ -6281,7 +6564,7 @@ class ProtoTransaction {
       this.code.push({ type, sandbox, deps, props, success, error, owner })
       const tempLocation = `_d${this.code.length - 1}`
       type.owner = sandbox.owner = owner
-      run.owner._update(code.getInstalled(type))
+      if (run.owner instanceof Owner) run.owner.update(code.getInstalled(type))
       return tempLocation
     } finally { this.end() }
   }
@@ -6373,7 +6656,7 @@ class ProtoTransaction {
     } finally { this.end() }
 
     // Notify the owner of each output they may care about
-    outputs.forEach(target => run.owner._update(proxies.get(target)))
+    outputs.forEach(target => { if (run.owner instanceof Owner) run.owner.update(proxies.get(target)) })
   }
 
   async pay (run) {
@@ -6552,10 +6835,10 @@ class ProtoTransaction {
 
 module.exports = { ProtoTransaction, Transaction }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(15).Buffer))
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -6565,7 +6848,7 @@ module.exports = { ProtoTransaction, Transaction }
  */
 
 const { Address, Script, Transaction } = __webpack_require__(2)
-const axios = __webpack_require__(34)
+const axios = __webpack_require__(35)
 const util = __webpack_require__(0)
 
 // ------------------------------------------------------------------------------------------------
@@ -6724,7 +7007,7 @@ class BlockchainServer {
       }
 
       // In case the utxos from the server have any duplicates, dedup them
-      const dedupedUtxos = this._dedupUtxos(utxos)
+      const dedupedUtxos = this.dedupUtxos(utxos)
 
       // The server may not index utxos right away. update the utxos with our own broadcasted txns
       const correctedUtxos = this.cache.correctForServerUtxoIndexingDelay(dedupedUtxos, address)
@@ -6744,7 +7027,7 @@ class BlockchainServer {
     }
   }
 
-  _dedupUtxos (utxos) {
+  dedupUtxos (utxos) {
     // In case the server has a bug, run must be able to handle duplicate utxos returned. If we
     // don't dedup, then later we will create a transaction with more than one of the same input.
     const locations = new Set()
@@ -6994,7 +7277,7 @@ module.exports = { Blockchain, BlockchainServer }
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7012,7 +7295,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7090,7 +7373,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7102,14 +7385,14 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(1);
-var normalizeHeaderName = __webpack_require__(42);
+var normalizeHeaderName = __webpack_require__(43);
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -7126,10 +7409,10 @@ function getDefaultAdapter() {
   // Only Node.JS has a process variable that is of [[Class]] process
   if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(21);
+    adapter = __webpack_require__(22);
   } else if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(21);
+    adapter = __webpack_require__(22);
   }
   return adapter;
 }
@@ -7205,21 +7488,21 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = defaults;
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(41)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(42)))
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(1);
-var settle = __webpack_require__(43);
-var buildURL = __webpack_require__(18);
-var parseHeaders = __webpack_require__(45);
-var isURLSameOrigin = __webpack_require__(46);
-var createError = __webpack_require__(22);
+var settle = __webpack_require__(44);
+var buildURL = __webpack_require__(19);
+var parseHeaders = __webpack_require__(46);
+var isURLSameOrigin = __webpack_require__(47);
+var createError = __webpack_require__(23);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -7311,7 +7594,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(47);
+      var cookies = __webpack_require__(48);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -7389,13 +7672,13 @@ module.exports = function xhrAdapter(config) {
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var enhanceError = __webpack_require__(44);
+var enhanceError = __webpack_require__(45);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -7414,7 +7697,7 @@ module.exports = function createError(message, config, code, request, response) 
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7472,7 +7755,7 @@ module.exports = function mergeConfig(config1, config2) {
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7498,7 +7781,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports) {
 
 /**
@@ -7568,7 +7851,7 @@ module.exports = expect
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -7579,7 +7862,7 @@ module.exports = expect
 
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
-const Evaluator = __webpack_require__(13)
+const Evaluator = __webpack_require__(14)
 const { Jig, JigControl } = __webpack_require__(3)
 const { Berry, BerryControl } = __webpack_require__(8)
 const Xray = __webpack_require__(7)
@@ -7975,7 +8258,7 @@ module.exports = Code
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (global, factory) {
@@ -8648,7 +8931,7 @@ module.exports = Code
     }
 
     // eslint-disable-next-line global-require
-    const vm = __webpack_require__(28);
+    const vm = __webpack_require__(29);
 
     // Use unsafeGlobalEvalSrc to ensure we get the right 'this'.
     const unsafeGlobal = vm.runInNewContext(unsafeGlobalEvalSrc);
@@ -11931,7 +12214,7 @@ You probably want a Compartment instead, like:
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports) {
 
 var indexOf = function (xs, item) {
@@ -12086,7 +12369,7 @@ exports.createContext = Script.createContext = function (context) {
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12245,7 +12528,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -12335,7 +12618,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -12346,7 +12629,7 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -12355,8 +12638,9 @@ module.exports = Array.isArray || function (arr) {
  * Enqueues transactions and syncs jigs
  */
 
-const { ProtoTransaction } = __webpack_require__(15)
+const { ProtoTransaction } = __webpack_require__(16)
 const { JigControl } = __webpack_require__(3)
+const { Owner } = __webpack_require__(13)
 const Xray = __webpack_require__(7)
 const util = __webpack_require__(0)
 const Location = __webpack_require__(4)
@@ -12427,6 +12711,8 @@ module.exports = class Syncer {
         tx = await this.pay(tx)
       }
       tx = await this.sign(tx)
+      console.log('---')
+      console.log(tx.toJSON())
 
       // check that we have all signatures. this is more of a friendly error.
       for (let i = 0; i < spentJigs.length; i++) {
@@ -12527,8 +12813,9 @@ owner: ${spentJigs[i].owner}`)
     }
 
     // notify the owner
-    next.code.forEach(def => this.run.owner._update(def.sandbox))
-    next.outputs.forEach(jig => this.run.owner._update(next.proxies.get(jig)))
+    const update = x => { if (this.run.owner instanceof Owner) this.run.owner.update(x) }
+    next.code.forEach(def => update(def))
+    next.outputs.forEach(jig => update(jig))
 
     this.finish()
   }
@@ -12689,7 +12976,7 @@ owner: ${spentJigs[i].owner}`)
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -12700,7 +12987,7 @@ owner: ${spentJigs[i].owner}`)
 
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
-const { Blockchain } = __webpack_require__(16)
+const { Blockchain } = __webpack_require__(17)
 
 // ------------------------------------------------------------------------------------------------
 // Pay API
@@ -12894,23 +13181,23 @@ module.exports = { Pay, Purse }
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(35);
+module.exports = __webpack_require__(36);
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(1);
-var bind = __webpack_require__(17);
-var Axios = __webpack_require__(37);
-var mergeConfig = __webpack_require__(23);
-var defaults = __webpack_require__(20);
+var bind = __webpack_require__(18);
+var Axios = __webpack_require__(38);
+var mergeConfig = __webpack_require__(24);
+var defaults = __webpack_require__(21);
 
 /**
  * Create an instance of Axios
@@ -12943,15 +13230,15 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(24);
-axios.CancelToken = __webpack_require__(50);
-axios.isCancel = __webpack_require__(19);
+axios.Cancel = __webpack_require__(25);
+axios.CancelToken = __webpack_require__(51);
+axios.isCancel = __webpack_require__(20);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(51);
+axios.spread = __webpack_require__(52);
 
 module.exports = axios;
 
@@ -12960,7 +13247,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports) {
 
 /*!
@@ -12977,17 +13264,17 @@ module.exports = function isBuffer (obj) {
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(1);
-var buildURL = __webpack_require__(18);
-var InterceptorManager = __webpack_require__(38);
-var dispatchRequest = __webpack_require__(39);
-var mergeConfig = __webpack_require__(23);
+var buildURL = __webpack_require__(19);
+var InterceptorManager = __webpack_require__(39);
+var dispatchRequest = __webpack_require__(40);
+var mergeConfig = __webpack_require__(24);
 
 /**
  * Create a new instance of Axios
@@ -13070,7 +13357,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13129,18 +13416,18 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(1);
-var transformData = __webpack_require__(40);
-var isCancel = __webpack_require__(19);
-var defaults = __webpack_require__(20);
-var isAbsoluteURL = __webpack_require__(48);
-var combineURLs = __webpack_require__(49);
+var transformData = __webpack_require__(41);
+var isCancel = __webpack_require__(20);
+var defaults = __webpack_require__(21);
+var isAbsoluteURL = __webpack_require__(49);
+var combineURLs = __webpack_require__(50);
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -13222,7 +13509,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13249,7 +13536,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -13439,7 +13726,7 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13458,13 +13745,13 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var createError = __webpack_require__(22);
+var createError = __webpack_require__(23);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -13490,7 +13777,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13539,7 +13826,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13599,7 +13886,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13674,7 +13961,7 @@ module.exports = (
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13734,7 +14021,7 @@ module.exports = (
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13755,7 +14042,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13776,13 +14063,13 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Cancel = __webpack_require__(24);
+var Cancel = __webpack_require__(25);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -13840,7 +14127,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13871,182 +14158,6 @@ module.exports = function spread(callback) {
     return callback.apply(null, arr);
   };
 };
-
-
-/***/ }),
-/* 52 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * owner.js
- *
- * Owner API that manages jigs and signs transactions
- */
-
-const bsv = __webpack_require__(2)
-const util = __webpack_require__(0)
-
-class Owner {
-  constructor (keyOrAddress, options) {
-    const bsvNetwork = util.bsvNetwork(options.network)
-    this.logger = options.logger
-    this.run = options.run
-    keyOrAddress = keyOrAddress || new bsv.PrivateKey(bsvNetwork)
-
-    // Try creating the private key on mainnet and testnet
-    try {
-      const bsvPrivateKey = new bsv.PrivateKey(keyOrAddress, bsvNetwork)
-      if (bsvPrivateKey.toString() !== keyOrAddress.toString()) throw new Error()
-      return this._fromPrivateKey(bsvPrivateKey)
-    } catch (e) {
-      if (e.message === 'Private key network mismatch') throw e
-    }
-
-    // Try creating from a public key
-    try {
-      return this._fromPublicKey(new bsv.PublicKey(keyOrAddress, { network: bsvNetwork }))
-    } catch (e) { }
-
-    // Try creating from an address
-    try {
-      return this._fromAddress(new bsv.Address(keyOrAddress, bsvNetwork))
-    } catch (e) {
-      if (e.message === 'Address has mismatched network type.') throw e
-    }
-
-    throw new Error(`bad owner key or address: ${keyOrAddress}`)
-  }
-
-  _fromPrivateKey (bsvPrivateKey) {
-    this.bsvPrivateKey = bsvPrivateKey
-    this.privkey = bsvPrivateKey.toString()
-    return this._fromPublicKey(bsvPrivateKey.publicKey)
-  }
-
-  _fromPublicKey (bsvPublicKey) {
-    this.bsvPublicKey = bsvPublicKey
-    this.pubkey = bsvPublicKey.toString()
-    return this._fromAddress(bsvPublicKey.toAddress())
-  }
-
-  _fromAddress (bsvAddress) {
-    this.bsvAddress = bsvAddress
-    this.address = bsvAddress.toString()
-
-    // Each ref should only be stored once. If we have an origin, prefer it
-    this.refs = new Map() // origin|Jig|Class -> Jig|Class
-
-    return this
-  }
-
-  get jigs () {
-    try {
-      return Array.from(this.refs.values())
-        .filter(ref => ref instanceof this.run.constructor.Jig)
-    } catch (e) {
-      if (this.logger) this.logger.error(`Bad token found in owner refs. Removing.\n\n${e}`)
-      this._removeErrorRefs()
-      return this.jigs
-    }
-  }
-
-  get code () {
-    try {
-      return Array.from(this.refs.values())
-        .filter(ref => !(ref instanceof this.run.constructor.Jig))
-    } catch (e) {
-      if (this.logger) this.logger.error(`Bad token found in owner refs. Removing.\n\n${e}`)
-      this._removeErrorRefs()
-      return this.code
-    }
-  }
-
-  _removeErrorRefs () {
-    let uselessVar = true
-    const toRemove = []
-    for (const [key, ref] of this.refs) {
-      try {
-        // If a ref failed to deploy, then it will have ! in its origin and throw here
-        const isJig = ref instanceof this.run.constructor.Jig
-        // We need to do something with the result to keep it from being minified away.
-        uselessVar = uselessVar ? !isJig : isJig
-      } catch (e) {
-        toRemove.push(key)
-      }
-    }
-    toRemove.forEach(key => this.refs.delete(key))
-  }
-
-  async sign (tx) {
-    if (this.bsvPrivateKey) tx.sign(this.bsvPrivateKey)
-    return tx
-  }
-
-  async sync () {
-    // post any pending transactions
-    await this.run.syncer.sync()
-
-    // query the latest jigs and code, but only do once at a time
-    if (!this._query) {
-      this._query = new Promise((resolve, reject) => {
-        this._queryLatest()
-          .then(() => { this._query = null; resolve() })
-          .catch(e => { this._query = null; reject(e) })
-      })
-    }
-    return this._query
-  }
-
-  async _queryLatest () {
-    const newUtxos = await this.run.blockchain.utxos(this.address)
-
-    // create a new ref set initially comprised of all pending refs, since they won't
-    // be in the utxos, and also a map of our non-pending jigs to their present
-    // locations so we don't reload them.
-    const newRefs = new Map()
-    const locationMap = new Map()
-    for (const [key, ref] of this.refs) {
-      if (typeof key !== 'string') newRefs.set(key, ref)
-      try { locationMap.set(ref.location, ref) } catch (e) { }
-    }
-
-    // load each new utxo, and if we come across a jig we already know, re-use it
-    for (const utxo of newUtxos) {
-      const location = `${utxo.txid}_o${utxo.vout}`
-      const prevRef = locationMap.get(location)
-      if (prevRef) {
-        newRefs.delete(prevRef)
-        newRefs.set(location, prevRef)
-        continue
-      }
-      try {
-        const ref = await this.run.load(location)
-        newRefs.set(ref.origin, ref)
-      } catch (e) {
-        if (this.logger) this.logger.error(`Failed to load owner location ${location}\n\n${e.toString()}`)
-      }
-    }
-
-    this.refs = newRefs
-  }
-
-  _update (ref) {
-    this.refs.delete(ref)
-    try {
-      if (ref.owner === this.pubkey) {
-        try {
-          if (typeof ref.origin === 'undefined') throw new Error()
-          if (ref.origin.startsWith('_')) throw new Error()
-          this.refs.set(ref.origin, ref)
-        } catch (e) { this.refs.set(ref, ref) }
-      } else {
-        try { this.refs.delete(ref.origin) } catch (e) { }
-      }
-    } catch (e) { }
-  }
-}
-
-module.exports = Owner
 
 
 /***/ }),
@@ -14284,17 +14395,17 @@ class StateCache {
 
     if (had) return
 
-    this.sizeBytes += StateCache._estimateSize(state)
+    this.sizeBytes += StateCache.estimateSize(state)
 
     while (this.sizeBytes > this.maxSizeBytes) {
       const oldestLocation = this.cache.keys().next().value
       const state = this.cache.get(oldestLocation)
       this.cache.delete(oldestLocation)
-      this.sizeBytes -= StateCache._estimateSize(state)
+      this.sizeBytes -= StateCache.estimateSize(state)
     }
   }
 
-  static _estimateSize (state) {
+  static estimateSize (state) {
     // Assumes only JSON-serializable values
     // Assume each property has a 1 byte type field, and pointers are 4 bytes.
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures
@@ -14307,8 +14418,8 @@ class StateCache {
         const keys = Object.keys(state)
         let size = 1 + keys.length * 4
         keys.forEach(key => {
-          size += StateCache._estimateSize(key)
-          size += StateCache._estimateSize(state[key])
+          size += StateCache.estimateSize(key)
+          size += StateCache.estimateSize(state[key])
         })
         return size
       }
@@ -14333,7 +14444,7 @@ module.exports = { State, StateCache }
  */
 
 const { Jig } = __webpack_require__(3)
-const expect = __webpack_require__(25)
+const expect = __webpack_require__(26)
 
 class Token extends Jig {
   init (amount, _tokenToDecrease, _tokensToCombine) {

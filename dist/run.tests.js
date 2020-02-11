@@ -3529,7 +3529,7 @@ module.exports = Run;
 /* 13 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"activeRunInstance\":\"aal\",\"sameJig\":\"aam\",\"networkSuffix\":\"aan\",\"isBlockchain\":\"aabc\",\"broadcastUrl\":\"aap\",\"broadcastData\":\"aaq\",\"fetchUrl\":\"aar\",\"fetchResp\":\"aas\",\"utxosUrl\":\"aat\",\"utxosResp\":\"aau\",\"_dedupUtxos\":\"aav\",\"correctForServerUtxoIndexingDelay\":\"aaw\",\"fetched\":\"aax\",\"broadcasted\":\"aay\",\"isSandbox\":\"aaz\",\"getInstalled\":\"aaab\",\"installFromTx\":\"aabb\",\"installJig\":\"aacb\",\"fastForward\":\"aadb\",\"finish\":\"aaeb\",\"publishNext\":\"aafb\",\"publish\":\"aagb\",\"storeCode\":\"aahb\",\"storeAction\":\"aaib\",\"setProtoTxAndCreator\":\"aajb\",\"buildBsvTransaction\":\"aakb\",\"_fromPrivateKey\":\"aalb\",\"_fromPublicKey\":\"aamb\",\"_fromAddress\":\"aanb\",\"_queryLatest\":\"aaob\",\"_removeErrorRefs\":\"aapb\",\"_update\":\"aaqb\",\"_estimateSize\":\"aarb\",\"_util\":\"aasb\",\"proxies\":\"aatb\",\"enforce\":\"aaub\",\"stack\":\"aavb\",\"reads\":\"aawb\",\"creates\":\"aaxb\",\"before\":\"aayb\",\"callers\":\"aazb\",\"blankSlate\":\"aaac\",\"requests\":\"aacc\",\"broadcasts\":\"aadc\",\"expiration\":\"aaec\",\"indexingDelay\":\"aafc\",\"fetchedTime\":\"aagc\",\"transactions\":\"aahc\",\"utxosByLocation\":\"aaic\",\"utxosByAddress\":\"aajc\",\"blockHeight\":\"aakc\",\"installs\":\"aalc\",\"syncer\":\"aamc\",\"protoTx\":\"aanc\",\"beginCount\":\"aaoc\",\"cachedTx\":\"aapc\",\"syncListeners\":\"aaqc\",\"onBroadcastListeners\":\"aarc\",\"lastPosted\":\"aasc\",\"queued\":\"aatc\",\"sizeBytes\":\"aauc\",\"maxSizeBytes\":\"aavc\",\"JigControl\":\"aawc\",\"ProtoTransaction\":\"aaxc\",\"PROTOCOL_VERSION\":\"aayc\",\"SerialTaskQueue\":\"aazc\",\"extractProps\":\"aaad\",\"onReadyForPublish\":\"aabd\",\"spentJigs\":\"aacd\",\"spentLocations\":\"aadd\"}");
+module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"activeRunInstance\":\"aal\",\"sameJig\":\"aam\",\"networkSuffix\":\"aan\",\"isBlockchain\":\"aaac\",\"broadcastUrl\":\"aap\",\"broadcastData\":\"aaq\",\"fetchUrl\":\"aar\",\"fetchResp\":\"aas\",\"utxosUrl\":\"aat\",\"utxosResp\":\"aau\",\"dedupUtxos\":\"aav\",\"correctForServerUtxoIndexingDelay\":\"aaw\",\"fetched\":\"aax\",\"broadcasted\":\"aay\",\"isSandbox\":\"aaz\",\"getInstalled\":\"aaab\",\"installFromTx\":\"aabb\",\"installJig\":\"aacb\",\"fastForward\":\"aadb\",\"finish\":\"aaeb\",\"publishNext\":\"aafb\",\"publish\":\"aagb\",\"storeCode\":\"aahb\",\"storeAction\":\"aaib\",\"setProtoTxAndCreator\":\"aajb\",\"buildBsvTransaction\":\"aakb\",\"fromPrivateKey\":\"aalb\",\"fromPublicKey\":\"aamb\",\"fromAddress\":\"aanb\",\"queryLatest\":\"aaob\",\"removeBadAssets\":\"aapb\",\"estimateSize\":\"aaqb\",\"_util\":\"aarb\",\"proxies\":\"aasb\",\"enforce\":\"aatb\",\"stack\":\"aaub\",\"reads\":\"aavb\",\"creates\":\"aawb\",\"before\":\"aaxb\",\"callers\":\"aayb\",\"blankSlate\":\"aazb\",\"requests\":\"aabc\",\"broadcasts\":\"aacc\",\"expiration\":\"aadc\",\"indexingDelay\":\"aaec\",\"fetchedTime\":\"aafc\",\"transactions\":\"aagc\",\"utxosByLocation\":\"aahc\",\"utxosByAddress\":\"aaic\",\"blockHeight\":\"aajc\",\"installs\":\"aakc\",\"syncer\":\"aalc\",\"protoTx\":\"aamc\",\"beginCount\":\"aanc\",\"cachedTx\":\"aaoc\",\"syncListeners\":\"aapc\",\"onBroadcastListeners\":\"aaqc\",\"lastPosted\":\"aarc\",\"queued\":\"aasc\",\"sizeBytes\":\"aatc\",\"maxSizeBytes\":\"aauc\",\"JigControl\":\"aavc\",\"ProtoTransaction\":\"aawc\",\"PROTOCOL_VERSION\":\"aaxc\",\"SerialTaskQueue\":\"aayc\",\"extractProps\":\"aazc\",\"onReadyForPublish\":\"aaad\",\"spentJigs\":\"aabd\",\"spentLocations\":\"aacd\"}");
 
 /***/ }),
 /* 14 */
@@ -4806,7 +4806,7 @@ describe('Jig', () => {
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
-    it('should create basic jig', async () => {
+    it.only('should create basic jig', async () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -10587,7 +10587,7 @@ describe('UniqueSet', () => {
 const bsv = __webpack_require__(3)
 const { describe, it } = __webpack_require__(1)
 const { expect } = __webpack_require__(0)
-const { Run, Jig, createRun } = __webpack_require__(2)
+const { Run, createRun } = __webpack_require__(2)
 const {
   checkOwner,
   checkSatoshis,
@@ -10598,14 +10598,10 @@ const {
   outputType,
   encryptRunData,
   decryptRunData,
-  richObjectToJson,
-  jsonToRichObject,
-  extractJigsAndCodeToArray,
-  injectJigsAndCodeFromArray,
   SerialTaskQueue
 } = Run._util
 
-const run = createRun()
+createRun()
 
 describe('util', () => {
   describe('checkSatoshis', () => {
@@ -10816,6 +10812,7 @@ describe('util', () => {
     })
   })
 
+  /*
   describe('richObjectToJson', () => {
     it('should convert number', () => {
       expect(richObjectToJson(1)).to.equal(1)
@@ -11026,6 +11023,7 @@ describe('util', () => {
       expect(obj.b[1]).to.equal(arr[2])
     })
   })
+  */
 
   describe('SerialTaskQueue', () => {
     const sleep = ms => { return new Promise(resolve => setTimeout(resolve, ms)) }

@@ -46,7 +46,7 @@ const methodsToObfuscate = [
   'fetchResp',
   'utxosUrl',
   'utxosResp',
-  '_dedupUtxos',
+  'dedupUtxos',
   'correctForServerUtxoIndexingDelay',
   'fetched',
   'broadcasted',
@@ -73,15 +73,14 @@ const methodsToObfuscate = [
   'buildBsvTransaction',
 
   // owner.js
-  '_fromPrivateKey',
-  '_fromPublicKey',
-  '_fromAddress',
-  '_queryLatest',
-  '_removeErrorRefs',
-  '_update',
+  'fromPrivateKey',
+  'fromPublicKey',
+  'fromAddress',
+  'queryLatest',
+  'removeBadAssets',
 
   // state.js
-  '_estimateSize'
+  'estimateSize'
 ]
 
 const propertiesToObfuscate = [

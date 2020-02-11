@@ -7,7 +7,7 @@
 const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { Run, Jig, createRun } = require('./helpers')
+const { Run, createRun } = require('./helpers')
 const {
   checkOwner,
   checkSatoshis,
@@ -18,14 +18,10 @@ const {
   outputType,
   encryptRunData,
   decryptRunData,
-  richObjectToJson,
-  jsonToRichObject,
-  extractJigsAndCodeToArray,
-  injectJigsAndCodeFromArray,
   SerialTaskQueue
 } = Run._util
 
-const run = createRun()
+createRun()
 
 describe('util', () => {
   describe('checkSatoshis', () => {
@@ -236,6 +232,7 @@ describe('util', () => {
     })
   })
 
+  /*
   describe('richObjectToJson', () => {
     it('should convert number', () => {
       expect(richObjectToJson(1)).to.equal(1)
@@ -446,6 +443,7 @@ describe('util', () => {
       expect(obj.b[1]).to.equal(arr[2])
     })
   })
+  */
 
   describe('SerialTaskQueue', () => {
     const sleep = ms => { return new Promise(resolve => setTimeout(resolve, ms)) }
