@@ -10,8 +10,8 @@ class SumScript {
 }
 
 class MathProblem extends Jig {
-    init(owner) { this.owner = owner }
-    claim(owner) { this.owner = owner }
+    init(problem) { this.owner = problem }
+    solve() { this.solved = true }
 }
 
 class MathSolver extends Owner {
@@ -20,16 +20,25 @@ class MathSolver extends Owner {
     }
 
     async sign(tx) {
+        // Find the input that has the SumScript
+        // Write the signature [1, 1]
         return tx
     }
 }
 
 async function main() {
-    const owner = new MathSolver()
-    const run = new Run({ network: 'mock', owner })
+    const teacher = new Run({ network: 'mock' })
 
+    // Create a math problem. What numbers sum to 2? Spend the output to answer.
     const problemScript = new SumScript()
     const mathProblem = new MathProblem(problemScript)
+    await mathProblem.sync()
+
+    console.log(mathProblem)
+
+    const solver = new MathSolver()
+    const student = new Run({ network: 'mock', owner: solver })
+    mathProblem.solve()
     await mathProblem.sync()
 
     console.log(mathProblem)
