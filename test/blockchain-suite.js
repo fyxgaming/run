@@ -200,9 +200,9 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
       await Promise.all(requests)
     })
 
-    it('should throw for invalid address', async () => {
-      const requests = ['123', '123', '123'].map(addr => blockchain.utxos(addr))
-      await expect(Promise.all(requests)).to.be.rejectedWith()
+    it('should throw for invalid script hash', async () => {
+      const requests = ['z', '%', []].map(addr => blockchain.utxos(addr))
+      await expect(Promise.all(requests)).to.be.rejected
     })
   })
 }
