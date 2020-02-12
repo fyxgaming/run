@@ -757,9 +757,9 @@ module.exports = g;
 
 
 
-var base64 = __webpack_require__(29)
-var ieee754 = __webpack_require__(30)
-var isArray = __webpack_require__(31)
+var base64 = __webpack_require__(30)
+var ieee754 = __webpack_require__(31)
+var isArray = __webpack_require__(32)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -2546,53 +2546,17 @@ function isnan (val) {
 /**
  * blockchain.js
  *
- * Tests for ../lib/blockchain.js
+ * Universal blockchain API test suite
  */
 
 const bsv = __webpack_require__(3)
-const { describe, it, beforeEach } = __webpack_require__(1)
+const { describe, it } = __webpack_require__(1)
 const chai = __webpack_require__(0)
 const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Run, createRun, payFor, unobfuscate } = __webpack_require__(2)
+const { Run, payFor } = __webpack_require__(2)
 const { BlockchainServer } = Run
-const Blockchain = unobfuscate(Run.Blockchain)
-
-// ------------------------------------------------------------------------------------------------
-// Blockchain API tests
-// ------------------------------------------------------------------------------------------------
-
-describe('Blockchain', () => {
-  it('should throw not implemented', async () => {
-    const blockchain = new Blockchain()
-    expect(() => blockchain.network).to.throw('Not implemented')
-    await expect(blockchain.broadcast()).to.be.rejectedWith('Not implemented')
-    await expect(blockchain.fetch()).to.be.rejectedWith('Not implemented')
-    await expect(blockchain.utxos()).to.be.rejectedWith('Not implemented')
-  })
-
-  describe('isBlockchain', () => {
-    it('should return true for valid blockchain', () => {
-      const mockchain = new Run.Mockchain()
-      expect(Blockchain.isBlockchain(mockchain)).to.equal(true)
-      const blockchainServer = new Run.BlockchainServer()
-      expect(Blockchain.isBlockchain(blockchainServer)).to.equal(true)
-    })
-
-    it('should return false for invalid blockchain', () => {
-      expect(Blockchain.isBlockchain()).to.equal(false)
-      expect(Blockchain.isBlockchain({})).to.equal(false)
-      expect(Blockchain.isBlockchain(false)).to.equal(false)
-      expect(Blockchain.isBlockchain(null)).to.equal(false)
-      expect(Blockchain.isBlockchain(() => {})).to.equal(false)
-    })
-  })
-})
-
-// ------------------------------------------------------------------------------------------------
-// Universal blockchain API test suite
-// ------------------------------------------------------------------------------------------------
 
 function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
   supportsSpentTxIdInBlocks, supportsSpentTxIdInMempool, indexingLatency, errors) {
@@ -2781,248 +2745,12 @@ function runBlockchainTestSuite (blockchain, privateKey, sampleTx,
       await Promise.all(requests)
     })
 
-    it('should throw for invalid address', async () => {
-      const requests = ['123', '123', '123'].map(addr => blockchain.utxos(addr))
-      await expect(Promise.all(requests)).to.be.rejectedWith()
-    })
-  })
-}
-
-// ------------------------------------------------------------------------------------------------
-// Blockchain tests
-// ------------------------------------------------------------------------------------------------
-
-describe('Blockchain', () => {
-  describe('constructor', () => {
-    it('should return mainnet blockchain for main network', () => {
-      expect(createRun({ network: 'main' }).blockchain).not.to.equal(undefined)
-    })
-
-    it('should return testnet blockchain for test network', () => {
-      expect(createRun({ network: 'test' }).blockchain).not.to.equal(undefined)
-    })
-
-    it('should return scaling blockchain for stn network', () => {
-      expect(createRun({ network: 'stn' }).blockchain).not.to.equal(undefined)
-    })
-
-    it('should return mock blockchain for mock network', () => {
-      expect(createRun({ network: 'mock' }).blockchain).not.to.equal(undefined)
-    })
-
-    it('should throw for bad network', () => {
-      expect(() => createRun({ network: 'bitcoin' })).to.throw()
-    })
-  })
-})
-
-// ------------------------------------------------------------------------------------------------
-// BlockchainServer tests
-// ------------------------------------------------------------------------------------------------
-
-describe('BlockchainServer', () => {
-  describe('constructor', () => {
-    describe('network', () => {
-      it('should default network to main', () => {
-        expect(new BlockchainServer().network).to.equal('main')
-      })
-
-      it('should throw for bad network', () => {
-        expect(() => new BlockchainServer({ network: 'bad' })).to.throw('Unknown network: bad')
-        expect(() => new BlockchainServer({ network: 0 })).to.throw('Invalid network: 0')
-        expect(() => new BlockchainServer({ network: {} })).to.throw('Invalid network: [object Object]')
-        expect(() => new BlockchainServer({ network: null })).to.throw('Invalid network: null')
-      })
-    })
-
-    describe('logger', () => {
-      it('should support null loggers', () => {
-        expect(new BlockchainServer({ logger: null }).logger).to.equal(null)
-      })
-
-      it('should throw for bad logger', () => {
-        expect(() => new BlockchainServer({ logger: 'bad' })).to.throw('Invalid logger: bad')
-        expect(() => new BlockchainServer({ logger: false })).to.throw('Invalid logger: false')
-      })
-    })
-
-    describe('api', () => {
-      it('should default to star api', () => {
-        expect(unobfuscate(new BlockchainServer()).api.name).to.equal('star')
-      })
-
-      it('should throw for bad api', () => {
-        expect(() => new BlockchainServer({ api: 'bad' })).to.throw('Unknown blockchain API: bad')
-        expect(() => new BlockchainServer({ api: null })).to.throw('Invalid blockchain API: null')
-        expect(() => new BlockchainServer({ api: 123 })).to.throw('Invalid blockchain API: 123')
-      })
-    })
-
-    describe('lastBlockchain', () => {
-      it('should support passing different last blockchain', () => {
-        const lastBlockchain = { cache: {} }
-        expect(new BlockchainServer({ lastBlockchain }).cache).not.to.equal(lastBlockchain.cache)
-      })
-
-      it('should only copy cache if same network', async () => {
-        const testnet1 = new BlockchainServer({ network: 'test' })
-        // Fill the cache with one transaction
-        await testnet1.fetch('d89f6bfb9f4373212ed18b9da5f45426d50a4676a4a684c002a4e838618cf3ee')
-        const testnet2 = new BlockchainServer({ network: 'test', lastBlockchain: testnet1 })
-        const mainnet = new BlockchainServer({ network: 'main', lastBlockchain: testnet2 })
-        expect(testnet2.cache).to.deep.equal(testnet1.cache)
-        expect(mainnet.cache).not.to.equal(testnet2.cache)
-      })
-    })
-
-    describe('timeout', () => {
-      it('should support custom timeouts', () => {
-        expect(new BlockchainServer({ timeout: 3333 }).axios.defaults.timeout).to.equal(3333)
-      })
-
-      it('should default timeout to 10000', () => {
-        expect(new BlockchainServer().axios.defaults.timeout).to.equal(10000)
-      })
-
-      it('should throw for bad timeout', () => {
-        expect(() => new BlockchainServer({ timeout: 'bad' })).to.throw('Invalid timeout: bad')
-        expect(() => new BlockchainServer({ timeout: null })).to.throw('Invalid timeout: null')
-        expect(() => new BlockchainServer({ timeout: -1 })).to.throw('Invalid timeout: -1')
-        expect(() => new BlockchainServer({ timeout: NaN })).to.throw('Invalid timeout: NaN')
-      })
-    })
-  })
-
-  describe('utxos', () => {
-    it('should correct for server returning duplicates', async () => {
-      const address = bsv.PrivateKey('mainnet').toAddress().toString()
-      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
-      const api = unobfuscate({ })
-      api.utxosUrl = (network, address) => 'https://api.run.network/v1/main/status'
-      api.utxosResp = (data, address) => {
-        const utxo = { txid, vout: 0, satoshis: 0, script: new bsv.Script() }
-        return [utxo, utxo]
-      }
-      function warn (warning) { this.lastWarning = warning }
-      const logger = { warn, info: () => {} }
-      const blockchain = new BlockchainServer({ network: 'main', api, logger })
-      const utxos = await blockchain.utxos(address)
-      expect(utxos.length).to.equal(1)
-      expect(logger.lastWarning).to.equal(`Duplicate utxo returned from server: ${txid}_o0`)
-    }).timeout(30000)
-
-    it('should throw if API is down', async () => {
-      const api = unobfuscate({ })
-      api.utxosUrl = (network, address) => 'bad-url'
-      const blockchain = new BlockchainServer({ network: 'main', api })
-      const address = bsv.PrivateKey('mainnet').toAddress().toString()
-      const requests = [blockchain.utxos(address), blockchain.utxos(address)]
+    it('should throw for invalid script hash', async () => {
+      const requests = ['z', '%', []].map(addr => blockchain.utxos(addr))
       await expect(Promise.all(requests)).to.be.rejected
     })
-
-    it('should return large number of UTXOS', async () => {
-      const run = createRun({ network: 'main' })
-      const utxos = await run.blockchain.utxos('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1')
-      expect(utxos.length > 1220).to.equal(true)
-    })
   })
-})
-
-// ------------------------------------------------------------------------------------------------
-// BlockchainServerCache tests
-// ------------------------------------------------------------------------------------------------
-
-describe('BlockchainServerCache', () => {
-  describe('get', () => {
-    it('should not return expired transactions', async () => {
-      const cache = unobfuscate(new BlockchainServer.Cache())
-      cache.expiration = 1
-      const tx = new bsv.Transaction()
-      cache.fetched(tx)
-      const sleep = ms => { return new Promise(resolve => setTimeout(resolve, ms)) }
-      await sleep(10)
-      expect(cache.get(tx.hash)).not.to.equal(tx)
-    })
-  })
-
-  describe('fetched', () => {
-    it('should flush oldest transcation when full', () => {
-      const cache = unobfuscate(new BlockchainServer.Cache({ size: 1 }))
-      cache.size = 1
-      const tx1 = new bsv.Transaction().addData('1')
-      const tx2 = new bsv.Transaction().addData('2')
-      cache.fetched(tx1)
-      cache.fetched(tx2)
-      expect(cache.transactions.size).to.equal(1)
-      expect(cache.transactions.get(tx2.hash)).to.equal(tx2)
-    })
-  })
-})
-
-// ------------------------------------------------------------------------------------------------
-// API tests
-// ------------------------------------------------------------------------------------------------
-
-// sample transactions with spent outputs in mined blocks on each network
-const sampleTransactions = {
-  main: {
-    txid: 'afc557ef2970af0b5fb8bc1a70a320af425c7a45ca5d40eac78475109563c5f8',
-    blockhash: '000000000000000005609907e3092b92882c522fffb0705c73e91ddc3a6941ed',
-    blocktime: 1556620117,
-    time: 1556620117000,
-    minConfirmations: 15000,
-    vout: [{
-      spentTxId: '26fb663eeb8d3cd407276b045a8d71da9f625ef3dca66f51cb047d97a8cad3a6',
-      spentIndex: 0,
-      spentHeight: 580333
-    }]
-  },
-  test: {
-    txid: 'acf2d978febb09e3a0d5817f180b19df675a0e95f75a2a1efeec739ebff865a7',
-    blockhash: '00000000000001ffaf368388b7ac954a562bd76fe39f6e114b171655273a38a7',
-    blocktime: 1556695666,
-    time: 1556695666000,
-    minConfirmations: 18000,
-    vout: [{
-      spentTxId: '806444d15f416477b00b6bbd937c02ff3c8f8c5e09dae28425c87a8a0ef58af0',
-      spentIndex: 0,
-      spentHeight: 1298618
-    }]
-  },
-  stn: {
-    txid: 'a40ee613c5982d6b39d2425368eb2375f49b38a45b457bd72db4ec666d96d4c6'
-  }
 }
-
-const errors = {
-  noInputs: 'tx has no inputs',
-  noOutputs: 'tx has no outputs',
-  feeTooLow: 'tx fee too low',
-  notFullySigned: 'tx not fully signed',
-  duplicateInput: /transaction input [0-9]* duplicate input/,
-  missingInput: 'Missing inputs'
-}
-
-const apis = { Star: 'star', BitIndex: 'bitindex', WhatsOnChain: 'whatsonchain' }
-const networks = ['main', 'test']
-const supportsSpentTxIdInBlocks = { Star: true, BitIndex: true, WhatsOnChain: false }
-const supportsSpentTxIdInMempool = { Star: true, BitIndex: true, WhatsOnChain: false }
-
-// Iterate networks first, then APIs, so that we can reuse the caches when possible
-networks.forEach(network => {
-  Object.keys(apis).forEach(api => {
-    describe(`${api} (${network})`, function () {
-      const run = createRun({ network, blockchain: apis[api] })
-      beforeEach(() => run.activate())
-      this.timeout(30000)
-      runBlockchainTestSuite(run.blockchain, run.purse.bsvPrivateKey,
-        sampleTransactions[network], supportsSpentTxIdInBlocks[api],
-        supportsSpentTxIdInMempool[api], 1000 /* indexingLatency */, errors)
-    })
-  })
-})
-
-// ------------------------------------------------------------------------------------------------
 
 module.exports = runBlockchainTestSuite
 
@@ -3038,22 +2766,22 @@ module.exports = runBlockchainTestSuite
  */
 
 __webpack_require__(9)
-__webpack_require__(7)
 __webpack_require__(14)
 __webpack_require__(15)
-__webpack_require__(17)
+__webpack_require__(16)
 __webpack_require__(18)
 __webpack_require__(19)
-__webpack_require__(21)
+__webpack_require__(20)
 __webpack_require__(22)
 __webpack_require__(23)
 __webpack_require__(24)
-__webpack_require__(26)
+__webpack_require__(25)
 __webpack_require__(27)
 __webpack_require__(28)
-__webpack_require__(32)
+__webpack_require__(29)
 __webpack_require__(33)
 __webpack_require__(34)
+__webpack_require__(35)
 
 
 /***/ }),
@@ -3529,10 +3257,301 @@ module.exports = Run;
 /* 13 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"activeRunInstance\":\"aal\",\"sameJig\":\"aam\",\"networkSuffix\":\"aan\",\"isBlockchain\":\"aaac\",\"broadcastUrl\":\"aap\",\"broadcastData\":\"aaq\",\"fetchUrl\":\"aar\",\"fetchResp\":\"aas\",\"utxosUrl\":\"aat\",\"utxosResp\":\"aau\",\"dedupUtxos\":\"aav\",\"correctForServerUtxoIndexingDelay\":\"aaw\",\"fetched\":\"aax\",\"broadcasted\":\"aay\",\"isSandbox\":\"aaz\",\"getInstalled\":\"aaab\",\"installFromTx\":\"aabb\",\"installJig\":\"aacb\",\"fastForward\":\"aadb\",\"finish\":\"aaeb\",\"publishNext\":\"aafb\",\"publish\":\"aagb\",\"storeCode\":\"aahb\",\"storeAction\":\"aaib\",\"setProtoTxAndCreator\":\"aajb\",\"buildBsvTransaction\":\"aakb\",\"setupFromPrivateKey\":\"aalb\",\"setupFromPublicKey\":\"aamb\",\"setupFromAddress\":\"aanb\",\"queryLatest\":\"aaob\",\"removeBadAssets\":\"aapb\",\"estimateSize\":\"aaqb\",\"_util\":\"aarb\",\"proxies\":\"aasb\",\"enforce\":\"aatb\",\"stack\":\"aaub\",\"reads\":\"aavb\",\"creates\":\"aawb\",\"before\":\"aaxb\",\"callers\":\"aayb\",\"blankSlate\":\"aazb\",\"requests\":\"aabc\",\"broadcasts\":\"aacc\",\"expiration\":\"aadc\",\"indexingDelay\":\"aaec\",\"fetchedTime\":\"aafc\",\"transactions\":\"aagc\",\"utxosByLocation\":\"aahc\",\"utxosByAddress\":\"aaic\",\"blockHeight\":\"aajc\",\"installs\":\"aakc\",\"syncer\":\"aalc\",\"protoTx\":\"aamc\",\"beginCount\":\"aanc\",\"cachedTx\":\"aaoc\",\"syncListeners\":\"aapc\",\"onBroadcastListeners\":\"aaqc\",\"lastPosted\":\"aarc\",\"queued\":\"aasc\",\"sizeBytes\":\"aatc\",\"maxSizeBytes\":\"aauc\",\"JigControl\":\"aavc\",\"ProtoTransaction\":\"aawc\",\"PROTOCOL_VERSION\":\"aaxc\",\"SerialTaskQueue\":\"aayc\",\"extractProps\":\"aazc\",\"onReadyForPublish\":\"aaad\",\"spentJigs\":\"aabd\",\"spentLocations\":\"aacd\"}");
+module.exports = JSON.parse("{\"_checkActive\":\"aab\",\"checkOwner\":\"aac\",\"checkSatoshis\":\"aad\",\"checkRunTransaction\":\"aae\",\"extractRunData\":\"aaf\",\"outputType\":\"aag\",\"getNormalizedSourceCode\":\"aah\",\"deployable\":\"aai\",\"encryptRunData\":\"aaj\",\"decryptRunData\":\"aak\",\"activeRunInstance\":\"aal\",\"sameJig\":\"aam\",\"networkSuffix\":\"aan\",\"isBlockchain\":\"aaac\",\"broadcastUrl\":\"aap\",\"broadcastData\":\"aaq\",\"fetchUrl\":\"aar\",\"fetchResp\":\"aas\",\"utxosUrl\":\"aat\",\"utxosResp\":\"aau\",\"dedupUtxos\":\"aav\",\"correctForServerUtxoIndexingDelay\":\"aaw\",\"fetched\":\"aax\",\"broadcasted\":\"aay\",\"isSandbox\":\"aaz\",\"getInstalled\":\"aaab\",\"installFromTx\":\"aabb\",\"installJig\":\"aacb\",\"fastForward\":\"aadb\",\"finish\":\"aaeb\",\"publishNext\":\"aafb\",\"publish\":\"aagb\",\"storeCode\":\"aahb\",\"storeAction\":\"aaib\",\"setProtoTxAndCreator\":\"aajb\",\"buildBsvTransaction\":\"aakb\",\"setupFromPrivateKey\":\"aalb\",\"setupFromPublicKey\":\"aamb\",\"setupFromAddress\":\"aanb\",\"queryLatest\":\"aaob\",\"removeBadAssets\":\"aapb\",\"estimateSize\":\"aaqb\",\"_util\":\"aarb\",\"proxies\":\"aasb\",\"enforce\":\"aatb\",\"stack\":\"aaub\",\"reads\":\"aavb\",\"creates\":\"aawb\",\"before\":\"aaxb\",\"callers\":\"aayb\",\"blankSlate\":\"aazb\",\"requests\":\"aabc\",\"broadcasts\":\"aacc\",\"expiration\":\"aadc\",\"indexingDelay\":\"aaec\",\"fetchedTime\":\"aafc\",\"transactions\":\"aagc\",\"utxosByLocation\":\"aahc\",\"utxosByScriptHash\":\"aaic\",\"blockHeight\":\"aajc\",\"installs\":\"aakc\",\"syncer\":\"aalc\",\"protoTx\":\"aamc\",\"beginCount\":\"aanc\",\"cachedTx\":\"aaoc\",\"syncListeners\":\"aapc\",\"onBroadcastListeners\":\"aaqc\",\"lastPosted\":\"aarc\",\"queued\":\"aasc\",\"sizeBytes\":\"aatc\",\"maxSizeBytes\":\"aauc\",\"JigControl\":\"aavc\",\"ProtoTransaction\":\"aawc\",\"PROTOCOL_VERSION\":\"aaxc\",\"SerialTaskQueue\":\"aayc\",\"extractProps\":\"aazc\",\"onReadyForPublish\":\"aaad\",\"spentJigs\":\"aabd\",\"spentLocations\":\"aacd\"}");
 
 /***/ }),
 /* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * blockchain.js
+ *
+ * Tests for ../lib/blockchain.js
+ */
+
+const bsv = __webpack_require__(3)
+const { describe, it, beforeEach } = __webpack_require__(1)
+const chai = __webpack_require__(0)
+const chaiAsPromised = __webpack_require__(4)
+chai.use(chaiAsPromised)
+const { expect } = chai
+const { Run, createRun, unobfuscate } = __webpack_require__(2)
+const { BlockchainServer } = Run
+const runBlockchainTestSuite = __webpack_require__(7)
+const Blockchain = unobfuscate(Run.Blockchain)
+
+// ------------------------------------------------------------------------------------------------
+// Blockchain API tests
+// ------------------------------------------------------------------------------------------------
+
+describe('Blockchain', () => {
+  it('should throw not implemented', async () => {
+    const blockchain = new Blockchain()
+    expect(() => blockchain.network).to.throw('Not implemented')
+    await expect(blockchain.broadcast()).to.be.rejectedWith('Not implemented')
+    await expect(blockchain.fetch()).to.be.rejectedWith('Not implemented')
+    await expect(blockchain.utxos()).to.be.rejectedWith('Not implemented')
+  })
+
+  describe('isBlockchain', () => {
+    it('should return true for valid blockchain', () => {
+      const mockchain = new Run.Mockchain()
+      expect(Blockchain.isBlockchain(mockchain)).to.equal(true)
+      const blockchainServer = new Run.BlockchainServer()
+      expect(Blockchain.isBlockchain(blockchainServer)).to.equal(true)
+    })
+
+    it('should return false for invalid blockchain', () => {
+      expect(Blockchain.isBlockchain()).to.equal(false)
+      expect(Blockchain.isBlockchain({})).to.equal(false)
+      expect(Blockchain.isBlockchain(false)).to.equal(false)
+      expect(Blockchain.isBlockchain(null)).to.equal(false)
+      expect(Blockchain.isBlockchain(() => {})).to.equal(false)
+    })
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// Blockchain tests
+// ------------------------------------------------------------------------------------------------
+
+describe('Blockchain', () => {
+  describe('constructor', () => {
+    it('should return mainnet blockchain for main network', () => {
+      expect(createRun({ network: 'main' }).blockchain).not.to.equal(undefined)
+    })
+
+    it('should return testnet blockchain for test network', () => {
+      expect(createRun({ network: 'test' }).blockchain).not.to.equal(undefined)
+    })
+
+    it('should return scaling blockchain for stn network', () => {
+      expect(createRun({ network: 'stn' }).blockchain).not.to.equal(undefined)
+    })
+
+    it('should return mock blockchain for mock network', () => {
+      expect(createRun({ network: 'mock' }).blockchain).not.to.equal(undefined)
+    })
+
+    it('should throw for bad network', () => {
+      expect(() => createRun({ network: 'bitcoin' })).to.throw()
+    })
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// BlockchainServer tests
+// ------------------------------------------------------------------------------------------------
+
+describe('BlockchainServer', () => {
+  describe('constructor', () => {
+    describe('network', () => {
+      it('should default network to main', () => {
+        expect(new BlockchainServer().network).to.equal('main')
+      })
+
+      it('should throw for bad network', () => {
+        expect(() => new BlockchainServer({ network: 'bad' })).to.throw('Unknown network: bad')
+        expect(() => new BlockchainServer({ network: 0 })).to.throw('Invalid network: 0')
+        expect(() => new BlockchainServer({ network: {} })).to.throw('Invalid network: [object Object]')
+        expect(() => new BlockchainServer({ network: null })).to.throw('Invalid network: null')
+      })
+    })
+
+    describe('logger', () => {
+      it('should support null loggers', () => {
+        expect(new BlockchainServer({ logger: null }).logger).to.equal(null)
+      })
+
+      it('should throw for bad logger', () => {
+        expect(() => new BlockchainServer({ logger: 'bad' })).to.throw('Invalid logger: bad')
+        expect(() => new BlockchainServer({ logger: false })).to.throw('Invalid logger: false')
+      })
+    })
+
+    describe('api', () => {
+      it('should default to star api', () => {
+        expect(unobfuscate(new BlockchainServer()).api.name).to.equal('star')
+      })
+
+      it('should throw for bad api', () => {
+        expect(() => new BlockchainServer({ api: 'bad' })).to.throw('Unknown blockchain API: bad')
+        expect(() => new BlockchainServer({ api: null })).to.throw('Invalid blockchain API: null')
+        expect(() => new BlockchainServer({ api: 123 })).to.throw('Invalid blockchain API: 123')
+      })
+    })
+
+    describe('lastBlockchain', () => {
+      it('should support passing different last blockchain', () => {
+        const lastBlockchain = { cache: {} }
+        expect(new BlockchainServer({ lastBlockchain }).cache).not.to.equal(lastBlockchain.cache)
+      })
+
+      it('should only copy cache if same network', async () => {
+        const testnet1 = new BlockchainServer({ network: 'test' })
+        // Fill the cache with one transaction
+        await testnet1.fetch('d89f6bfb9f4373212ed18b9da5f45426d50a4676a4a684c002a4e838618cf3ee')
+        const testnet2 = new BlockchainServer({ network: 'test', lastBlockchain: testnet1 })
+        const mainnet = new BlockchainServer({ network: 'main', lastBlockchain: testnet2 })
+        expect(testnet2.cache).to.deep.equal(testnet1.cache)
+        expect(mainnet.cache).not.to.equal(testnet2.cache)
+      })
+    })
+
+    describe('timeout', () => {
+      it('should support custom timeouts', () => {
+        expect(new BlockchainServer({ timeout: 3333 }).axios.defaults.timeout).to.equal(3333)
+      })
+
+      it('should default timeout to 10000', () => {
+        expect(new BlockchainServer().axios.defaults.timeout).to.equal(10000)
+      })
+
+      it('should throw for bad timeout', () => {
+        expect(() => new BlockchainServer({ timeout: 'bad' })).to.throw('Invalid timeout: bad')
+        expect(() => new BlockchainServer({ timeout: null })).to.throw('Invalid timeout: null')
+        expect(() => new BlockchainServer({ timeout: -1 })).to.throw('Invalid timeout: -1')
+        expect(() => new BlockchainServer({ timeout: NaN })).to.throw('Invalid timeout: NaN')
+      })
+    })
+  })
+
+  describe('utxos', () => {
+    it('should correct for server returning duplicates', async () => {
+      const address = bsv.PrivateKey('mainnet').toAddress().toString()
+      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
+      const api = unobfuscate({ })
+      api.utxosUrl = (network, address) => 'https://api.run.network/v1/main/status'
+      api.utxosResp = (data, address) => {
+        const utxo = { txid, vout: 0, satoshis: 0, script: new bsv.Script() }
+        return [utxo, utxo]
+      }
+      function warn (warning) { this.lastWarning = warning }
+      const logger = { warn, info: () => {} }
+      const blockchain = new BlockchainServer({ network: 'main', api, logger })
+      const utxos = await blockchain.utxos(address)
+      expect(utxos.length).to.equal(1)
+      expect(logger.lastWarning).to.equal(`Duplicate utxo returned from server: ${txid}_o0`)
+    }).timeout(30000)
+
+    it('should throw if API is down', async () => {
+      const api = unobfuscate({ })
+      api.utxosUrl = (network, address) => 'bad-url'
+      const blockchain = new BlockchainServer({ network: 'main', api })
+      const address = bsv.PrivateKey('mainnet').toAddress().toString()
+      const requests = [blockchain.utxos(address), blockchain.utxos(address)]
+      await expect(Promise.all(requests)).to.be.rejected
+    })
+
+    it('should return large number of UTXOS', async () => {
+      const run = createRun({ network: 'main' })
+      const utxos = await run.blockchain.utxos('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1')
+      expect(utxos.length > 1220).to.equal(true)
+    })
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// BlockchainServerCache tests
+// ------------------------------------------------------------------------------------------------
+
+describe('BlockchainServerCache', () => {
+  describe('get', () => {
+    it('should not return expired transactions', async () => {
+      const cache = unobfuscate(new BlockchainServer.Cache())
+      cache.expiration = 1
+      const tx = new bsv.Transaction()
+      cache.fetched(tx)
+      const sleep = ms => { return new Promise(resolve => setTimeout(resolve, ms)) }
+      await sleep(10)
+      expect(cache.get(tx.hash)).not.to.equal(tx)
+    })
+  })
+
+  describe('fetched', () => {
+    it('should flush oldest transcation when full', () => {
+      const cache = unobfuscate(new BlockchainServer.Cache({ size: 1 }))
+      cache.size = 1
+      const tx1 = new bsv.Transaction().addData('1')
+      const tx2 = new bsv.Transaction().addData('2')
+      cache.fetched(tx1)
+      cache.fetched(tx2)
+      expect(cache.transactions.size).to.equal(1)
+      expect(cache.transactions.get(tx2.hash)).to.equal(tx2)
+    })
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// API tests
+// ------------------------------------------------------------------------------------------------
+
+// sample transactions with spent outputs in mined blocks on each network
+const sampleTransactions = {
+  main: {
+    txid: 'afc557ef2970af0b5fb8bc1a70a320af425c7a45ca5d40eac78475109563c5f8',
+    blockhash: '000000000000000005609907e3092b92882c522fffb0705c73e91ddc3a6941ed',
+    blocktime: 1556620117,
+    time: 1556620117000,
+    minConfirmations: 15000,
+    vout: [{
+      spentTxId: '26fb663eeb8d3cd407276b045a8d71da9f625ef3dca66f51cb047d97a8cad3a6',
+      spentIndex: 0,
+      spentHeight: 580333
+    }]
+  },
+  test: {
+    txid: 'acf2d978febb09e3a0d5817f180b19df675a0e95f75a2a1efeec739ebff865a7',
+    blockhash: '00000000000001ffaf368388b7ac954a562bd76fe39f6e114b171655273a38a7',
+    blocktime: 1556695666,
+    time: 1556695666000,
+    minConfirmations: 18000,
+    vout: [{
+      spentTxId: '806444d15f416477b00b6bbd937c02ff3c8f8c5e09dae28425c87a8a0ef58af0',
+      spentIndex: 0,
+      spentHeight: 1298618
+    }]
+  },
+  stn: {
+    txid: 'a40ee613c5982d6b39d2425368eb2375f49b38a45b457bd72db4ec666d96d4c6'
+  }
+}
+
+const errors = {
+  noInputs: 'tx has no inputs',
+  noOutputs: 'tx has no outputs',
+  feeTooLow: 'tx fee too low',
+  notFullySigned: 'tx not fully signed',
+  duplicateInput: /transaction input [0-9]* duplicate input/,
+  missingInput: 'Missing inputs'
+}
+
+const apis = { Star: 'star', BitIndex: 'bitindex', WhatsOnChain: 'whatsonchain' }
+const networks = ['main', 'test']
+const supportsSpentTxIdInBlocks = { Star: true, BitIndex: true, WhatsOnChain: false }
+const supportsSpentTxIdInMempool = { Star: true, BitIndex: true, WhatsOnChain: false }
+
+// Iterate networks first, then APIs, so that we can reuse the caches when possible
+networks.forEach(network => {
+  Object.keys(apis).forEach(api => {
+    describe(`${api} (${network})`, function () {
+      const run = createRun({ network, blockchain: apis[api] })
+      beforeEach(() => run.activate())
+      this.timeout(30000)
+      runBlockchainTestSuite(run.blockchain, run.purse.bsvPrivateKey,
+        sampleTransactions[network], supportsSpentTxIdInBlocks[api],
+        supportsSpentTxIdInMempool[api], 1000 /* indexingLatency */, errors)
+    })
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = runBlockchainTestSuite
+
+
+/***/ }),
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -3571,8 +3590,8 @@ describe('Code', () => {
       expect(A.location).to.equal(A.origin)
       expect(A.originMocknet).to.equal(A.origin)
       expect(A.locationMocknet).to.equal(A.origin)
-      expect(A.owner).to.equal(run.owner.pubkey)
-      expect(A.ownerMocknet).to.equal(run.owner.pubkey)
+      expect(A.owner).to.equal(run.owner.address)
+      expect(A.ownerMocknet).to.equal(run.owner.address)
     })
 
     it('should not deploy previous install', async () => {
@@ -3893,7 +3912,7 @@ describe('Code', () => {
       run.deactivate()
       const run2 = createRun({ blockchain: run.blockchain })
       const A3 = await run2.load(A.origin)
-      expect(A2.owner).to.equal(run.owner.pubkey)
+      expect(A2.owner).to.equal(run.owner.address)
       expect(A2.owner).to.equal(A2.ownerMocknet)
       expect(A3.owner).to.equal(A2.owner)
     })
@@ -4116,13 +4135,13 @@ describe('Code', () => {
       await run.deploy(A)
       expect(A.location.length).to.equal(67)
       expect(A.location).to.equal(A.locationMocknet)
-      expect(A.owner).to.equal(run.owner.pubkey)
-      expect(A.ownerMocknet).to.equal(run.owner.pubkey)
+      expect(A.owner).to.equal(run.owner.address)
+      expect(A.ownerMocknet).to.equal(run.owner.address)
       const run2 = createRun({ network: 'test' })
       expect(A.location).to.equal(undefined)
       expect(A.locationMocknet.length).to.equal(67)
       expect(A.owner).to.equal(undefined)
-      expect(A.ownerMocknet).to.equal(run.owner.pubkey)
+      expect(A.ownerMocknet).to.equal(run.owner.address)
       await run2.deploy(A)
       expect(A.location.length).to.equal(67)
       expect(A.location).to.equal(A.locationTestnet)
@@ -4160,7 +4179,7 @@ describe('Code', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -4172,7 +4191,7 @@ describe('Code', () => {
 const { describe, it } = __webpack_require__(1)
 const { expect } = __webpack_require__(0)
 const { Run } = __webpack_require__(2)
-const { intrinsicNames } = __webpack_require__(16)
+const { intrinsicNames } = __webpack_require__(17)
 
 // ------------------------------------------------------------------------------------------------
 // Evaluator test suite
@@ -4457,7 +4476,7 @@ describe('GlobalEvaluator', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports) {
 
 /**
@@ -4600,7 +4619,7 @@ module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -4783,7 +4802,7 @@ describe('expect', () => {
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/**
@@ -4806,15 +4825,13 @@ describe('Jig', () => {
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
-    it.only('should create basic jig', async () => {
+    it('should create basic jig', async () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
       expect(run.code.installs.has(A)).to.equal(true)
       await run.sync()
       expect(A.origin.length).to.equal(67)
-      console.log(a)
-      console.log(A)
     })
 
     it('throws if not extended', () => {
@@ -5325,7 +5342,7 @@ describe('Jig', () => {
       await run.deploy(B)
       const b = new B()
       const a = new A(b)
-      expect(b.x).to.equal(run.owner.pubkey)
+      expect(b.x).to.equal(run.owner.address)
       expect(a.test).to.equal(true)
       await run.sync()
       run.deactivate()
@@ -6053,14 +6070,14 @@ describe('Jig', () => {
       expect(a3.owner).to.equal(pubkey)
     })
 
-    it('should throw if not set to a public key', async () => {
+    it('should throw if not set to a valid owner', async () => {
       class A extends Jig { send (owner) { this.owner = owner }}
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
       const publicKey = new PrivateKey().publicKey
       expect(() => a.send(publicKey)).to.throw('is not deployable')
-      expect(() => a.send(JSON.parse(JSON.stringify(publicKey)))).to.throw('owner must be a pubkey string')
-      expect(() => a.send('123')).to.throw('owner is not a valid public key')
+      expect(() => a.send(JSON.parse(JSON.stringify(publicKey)))).to.throw('Invalid owner: [object Object]')
+      expect(() => a.send('123')).to.throw('Invalid owner: 123')
       expectNoAction()
     })
 
@@ -7197,12 +7214,12 @@ describe('Jig', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const { describe, it } = __webpack_require__(1)
 const { expect } = __webpack_require__(0)
-const Location = __webpack_require__(20)
+const Location = __webpack_require__(21)
 
 const txid = '98244c0b51c1af3c541d901ce4bfcc05041dc8e4e80747ac5f0084e81bda339b'
 const badHexTxid = '98244c0b51c1af3c541d901ce4bfcc05???dc8e4e80747ac5f0084e81bda339b'
@@ -7275,7 +7292,7 @@ describe('Location', () => {
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports) {
 
 /**
@@ -7470,7 +7487,7 @@ module.exports = Location
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -7624,7 +7641,7 @@ describe('Mockchain', () => {
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -7647,12 +7664,25 @@ const { AddressScript, PubKeyScript } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('AddressScript', () => {
+  it('should create buffer for valid addresses', () => {
+    new AddressScript('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').toBuffer() // eslint-disable-line
+    new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').toBuffer() // eslint-disable-line
+  })
+
   it('throws if bad address', () => {
-    // const x = Array.from(Buffer.from('00291D4797C2817F6247481E261A3CCB35C24E38AB59C1ACEA', 'hex'))
-    // console.log(x)
-    new AddressScript('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').getBuffer() // eslint-disable-line
-    new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').getBuffer() // eslint-disable-line
-    // console.log(new Address('%').getBuffer())
+    expect(() => new AddressScript().toBuffer()).to.throw('Address is not a string')
+    expect(() => new AddressScript([]).toBuffer()).to.throw('Address is not a string')
+    expect(() => new AddressScript('3P14159f73E4gFr7JterCCQh9QjiTjiZrG').toBuffer()).to.throw('Address may only be a P2PKH type')
+    expect(() => new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9n').toBuffer()).to.throw('Address may only be a P2PKH type')
+    expect(() => new AddressScript('@').toBuffer()).to.throw('Invalid character in address')
+  })
+
+  it('should correctly return P2PKH buffer', () => {
+    const addr = '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
+    const script = bsv.Script.fromAddress(addr)
+    const buffer1 = new Uint8Array(script.toBuffer())
+    const buffer2 = new AddressScript(addr).toBuffer()
+    expect(buffer1).to.deep.equal(buffer2)
   })
 })
 
@@ -7661,13 +7691,19 @@ describe('AddressScript', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('PubKeyScript', () => {
-  it('throws if bad address', () => {
-    const pubkey = new bsv.PrivateKey().publicKey.toString()
-    const pubkeyBuf = new Uint8Array(new bsv.PublicKey(pubkey).toBuffer())
-    const script = new PubKeyScript(pubkey).getBuffer()
-    expect(script.length).to.equal(34)
-    expect(script.slice(0, 33)).to.deep.equal(pubkeyBuf)
-    expect(script[33]).to.equal(172)
+  it('throws if bad pubkey', () => {
+    expect(() => new PubKeyScript().toBuffer()).to.throw('Pubkey is not a string')
+    expect(() => new PubKeyScript([]).toBuffer()).to.throw('Pubkey is not a string')
+    expect(() => new PubKeyScript('abcde').toBuffer()).to.throw('Pubkey has bad length')
+    expect(() => new PubKeyScript('@$').toBuffer()).to.throw('Invalid pubkey hex')
+  })
+
+  it('should correctly return P2PH buffer', () => {
+    const pubkey = new bsv.PrivateKey().publicKey
+    const script = bsv.Script.buildPublicKeyOut(pubkey)
+    const buffer1 = new Uint8Array(script.toBuffer())
+    const buffer2 = new PubKeyScript(pubkey.toString()).toBuffer()
+    expect(buffer1).to.deep.equal(buffer2)
   })
 })
 
@@ -7838,7 +7874,7 @@ describe('Owner', () => {
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -8096,7 +8132,7 @@ describe('Purse', () => {
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -8112,7 +8148,7 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 const { Jig, Run, createRun } = __webpack_require__(2)
 const bsv = __webpack_require__(3)
-const packageInfo = __webpack_require__(25)
+const packageInfo = __webpack_require__(26)
 
 describe('Run', () => {
   describe('constructor', () => {
@@ -8307,8 +8343,8 @@ describe('Run', () => {
       })
 
       it('should throw for invalid owner', () => {
-        expect(() => createRun({ owner: 123 })).to.throw('Option \'owner\' must be a valid key or address. Received: 123')
-        expect(() => createRun({ owner: false })).to.throw('Option \'owner\' must be a valid key or address. Received: false')
+        expect(() => createRun({ owner: 123 })).to.throw('Option \'owner\' must be a valid key, address, or Owner instance. Received: 123')
+        expect(() => createRun({ owner: false })).to.throw('Option \'owner\' must be a valid key, address, or Owner instance. Received: false')
       })
     })
 
@@ -8492,13 +8528,13 @@ describe('Run', () => {
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module) {
 
 module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.5.0\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"nyc\":{\"exclude\":[\"**/intrinsics.js\",\"**/test/**/*.js\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"ses\":\"github:runonbitcoin/ses\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -8560,17 +8596,17 @@ describe('StateCache', () => {
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       await a.sync()
-      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
+      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
       await a.set([true, null])
       await a.sync()
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: [true, null] } })
+      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: [true, null] } })
     })
 
     it('should cache satoshis', async () => {
       class A extends Jig { init () { this.satoshis = 3000 } }
       const a = new A()
       await a.sync()
-      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 3000 } })
+      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 3000 } })
     })
 
     it('should cache owner', async () => {
@@ -8587,8 +8623,8 @@ describe('StateCache', () => {
       A.deps = { B }
       const a = new A()
       await run.sync()
-      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0, b: { $ref: '_o4' } } })
-      expectStateSet(a.b.location, { type: '_o2', state: { owner: run.owner.pubkey, satoshis: 0 } })
+      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0, b: { $ref: '_o4' } } })
+      expectStateSet(a.b.location, { type: '_o2', state: { owner: run.owner.address, satoshis: 0 } })
     })
 
     it('should cache pre-existing jig references', async () => {
@@ -8598,9 +8634,9 @@ describe('StateCache', () => {
       const a = new A()
       await a.set(b)
       await run.sync()
-      expectStateSet(b.location, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, b: { $ref: b.location } } })
+      expectStateSet(b.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, b: { $ref: b.location } } })
     })
 
     it('should cache code references', async () => {
@@ -8610,7 +8646,7 @@ describe('StateCache', () => {
       A.deps = { B }
       const a = new A()
       await run.sync()
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0, A: { $ref: '_o1' }, B: { $ref: B.location } } })
+      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0, A: { $ref: '_o1' }, B: { $ref: B.location } } })
     })
 
     it('should respect max cache size', async () => {
@@ -8651,11 +8687,11 @@ describe('StateCache', () => {
       const a = new A()
       a.set(1)
       await a.sync()
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: 1 } })
+      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
       const a2 = await run.load(a.location)
       expectStateGet(a2.location)
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: 1 } })
+      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
     })
 
     it('should return original state', async () => {
@@ -8663,14 +8699,14 @@ describe('StateCache', () => {
       const a = new A()
       a.set(1)
       await a.sync()
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: 1 } })
+      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
       stateGetOverrides.set(a.location, undefined)
       const a2 = await run.load(a.location)
       expectStateGet(a2.location)
       expectStateGet(a2.origin)
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: 1 } })
+      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
     })
 
     it('should return middle state', async () => {
@@ -8681,24 +8717,24 @@ describe('StateCache', () => {
       const middleLocation = a.location
       a.set(a)
       await a.sync()
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
-      expectStateSet(middleLocation, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: 1 } })
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: { $ref: '_o1' } } })
+      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectStateSet(middleLocation, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
+      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: { $ref: '_o1' } } })
       stateGetOverrides.set(a.location, undefined)
       const a2 = await run.load(a.location)
       expectStateGet(a2.location)
       expectStateGet(middleLocation)
-      expectStateSet(middleLocation, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: 1 } })
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.pubkey, satoshis: 0, n: { $ref: '_o1' } } })
+      expectStateSet(middleLocation, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
+      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: { $ref: '_o1' } } })
     })
 
     it('should throw if invalid state', async () => {
       class A extends Jig { }
       const a = new A()
       await a.sync()
-      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
+      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
       // Load without a type property
-      stateGetOverrides.set(a.location, { state: { owner: run.owner.pubkey, satoshis: 0 } })
+      stateGetOverrides.set(a.location, { state: { owner: run.owner.address, satoshis: 0 } })
       await expect(run.load(a.location)).to.be.rejectedWith('Cached state is missing a valid type and/or state property')
       expectStateGet(a.location)
       // Load without a state property
@@ -8709,7 +8745,7 @@ describe('StateCache', () => {
       stateGetOverrides.clear()
       await run.load(a.location)
       expectStateGet(a.location)
-      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
+      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
     })
 
     it('should return undefined if missing', async () => {
@@ -8721,7 +8757,7 @@ describe('StateCache', () => {
       class A extends Jig { }
       const a = new A()
       await a.sync()
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.pubkey, satoshis: 0 } })
+      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
       stateGetOverrides.set(a.location, { n: 1 })
       await expect(run.load(a.location)).to.be.rejectedWith('hello')
       expectStateGet(a.location)
@@ -8740,7 +8776,7 @@ describe('State', () => {
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -8952,7 +8988,7 @@ describe('Token', () => {
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -9836,7 +9872,7 @@ describe('Transaction', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6).Buffer))
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9995,7 +10031,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -10085,7 +10121,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -10096,7 +10132,7 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const { describe, it, beforeEach } = __webpack_require__(1)
@@ -10611,7 +10647,7 @@ describe('UniqueSet', () => {
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -10675,10 +10711,10 @@ describe('util', () => {
       expect(() => getOwnerScript(new AddressScript(testnet.publicKey.toAddress().toString()))).not.to.throw()
     })
 
-    it('should throw if bad owner', () => {
-      expect(() => getOwnerScript()).to.throw('owner must be a pubkey string')
-      expect(() => getOwnerScript(123)).to.throw('owner must be a pubkey string')
-      expect(() => getOwnerScript('hello')).to.throw('owner is not a valid public key')
+    it.only('should throw if bad owner', () => {
+      expect(() => getOwnerScript()).to.throw('Invalid owner: undefined')
+      expect(() => getOwnerScript(123)).to.throw('Invalid owner: 123')
+      expect(() => getOwnerScript('hello')).to.throw('Invalid owner: hello')
       expect(() => getOwnerScript(new bsv.PrivateKey())).to.throw('owner must be a pubkey string')
       expect(() => getOwnerScript(new bsv.PrivateKey().publicKey)).to.throw('owner must be a pubkey string')
       expect(() => getOwnerScript([new bsv.PrivateKey().publicKey.toString()])).to.throw('owner must be a pubkey string')
@@ -11097,7 +11133,7 @@ describe('util', () => {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6).Buffer))
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {const bsv = __webpack_require__(3)

@@ -18,15 +18,13 @@ describe('Jig', () => {
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
-    it.only('should create basic jig', async () => {
+    it('should create basic jig', async () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
       expect(run.code.installs.has(A)).to.equal(true)
       await run.sync()
       expect(A.origin.length).to.equal(67)
-      console.log(a)
-      console.log(A)
     })
 
     it('throws if not extended', () => {
@@ -537,7 +535,7 @@ describe('Jig', () => {
       await run.deploy(B)
       const b = new B()
       const a = new A(b)
-      expect(b.x).to.equal(run.owner.pubkey)
+      expect(b.x).to.equal(run.owner.address)
       expect(a.test).to.equal(true)
       await run.sync()
       run.deactivate()
@@ -1265,14 +1263,14 @@ describe('Jig', () => {
       expect(a3.owner).to.equal(pubkey)
     })
 
-    it('should throw if not set to a public key', async () => {
+    it('should throw if not set to a valid owner', async () => {
       class A extends Jig { send (owner) { this.owner = owner }}
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
       const publicKey = new PrivateKey().publicKey
       expect(() => a.send(publicKey)).to.throw('is not deployable')
-      expect(() => a.send(JSON.parse(JSON.stringify(publicKey)))).to.throw('owner must be a pubkey string')
-      expect(() => a.send('123')).to.throw('owner is not a valid public key')
+      expect(() => a.send(JSON.parse(JSON.stringify(publicKey)))).to.throw('Invalid owner: [object Object]')
+      expect(() => a.send('123')).to.throw('Invalid owner: 123')
       expectNoAction()
     })
 

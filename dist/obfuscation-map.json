@@ -57,7 +57,7 @@
   "fetchedTime": "aafc",
   "transactions": "aagc",
   "utxosByLocation": "aahc",
-  "utxosByAddress": "aaic",
+  "utxosByScriptHash": "aaic",
   "blockHeight": "aajc",
   "installs": "aakc",
   "syncer": "aalc",

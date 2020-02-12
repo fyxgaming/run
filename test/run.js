@@ -206,8 +206,8 @@ describe('Run', () => {
       })
 
       it('should throw for invalid owner', () => {
-        expect(() => createRun({ owner: 123 })).to.throw('Option \'owner\' must be a valid key or address. Received: 123')
-        expect(() => createRun({ owner: false })).to.throw('Option \'owner\' must be a valid key or address. Received: false')
+        expect(() => createRun({ owner: 123 })).to.throw('Option \'owner\' must be a valid key, address, or Owner instance. Received: 123')
+        expect(() => createRun({ owner: false })).to.throw('Option \'owner\' must be a valid key, address, or Owner instance. Received: false')
       })
     })
 

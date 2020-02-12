@@ -96,7 +96,7 @@ var Run =
  */
 
 const bsv = __webpack_require__(2)
-const { Intrinsics } = __webpack_require__(10)
+const { Intrinsics } = __webpack_require__(12)
 
 // ------------------------------------------------------------------------------------------------
 // JIG CHECKS
@@ -124,7 +124,7 @@ function checkSatoshis (satoshis) {
  */
 function getOwnerScript (owner) {
   // Have to include here, because owner also requires util
-  const { AddressScript, PubKeyScript } = __webpack_require__(11)
+  const { AddressScript, PubKeyScript } = __webpack_require__(7)
 
   if (typeof owner === 'string') {
     // Try parsing it as a public key
@@ -141,8 +141,8 @@ function getOwnerScript (owner) {
   }
 
   // Check if it is a custom owner
-  if (typeof owner === 'object' && owner && typeof owner.getBuffer === 'function') {
-    owner.getBuffer()
+  if (typeof owner === 'object' && owner && typeof owner.toBuffer === 'function') {
+    owner.toBuffer()
     return owner
   }
 
@@ -744,7 +744,7 @@ module.exports = bsv;
 // Sets and maps respect tokens in jigs ... these are overrides for Jigs
 //    How? UniqueSet, UniqueMap
 
-const Context = __webpack_require__(6)
+const Context = __webpack_require__(8)
 
 const JigControl = { // control state shared across all jigs, similar to a PCB
   stack: [], // jig call stack for the current method (Array<Target>)
@@ -1507,20 +1507,20 @@ const Syncer = __webpack_require__(33)
 const { Transaction } = __webpack_require__(16)
 const util = __webpack_require__(0)
 const { Pay, Purse } = __webpack_require__(34)
-const { AddressScript, PubKeyScript, Sign, Owner, BasicOwner } = __webpack_require__(11)
+const { AddressScript, PubKeyScript, Sign, Owner, BasicOwner } = __webpack_require__(7)
 const { Blockchain, BlockchainServer } = __webpack_require__(17)
 const Mockchain = __webpack_require__(53)
 const { State, StateCache } = __webpack_require__(54)
 const { PrivateKey } = bsv
 const { Jig } = __webpack_require__(3)
-const { Berry } = __webpack_require__(8)
-const Protocol = __webpack_require__(12)
+const { Berry } = __webpack_require__(10)
+const Protocol = __webpack_require__(13)
 const Token = __webpack_require__(55)
 const expect = __webpack_require__(26)
 const Location = __webpack_require__(4)
-const { UniqueSet, UniqueMap } = __webpack_require__(9)
-const { Intrinsics } = __webpack_require__(10)
-const Xray = __webpack_require__(7)
+const { UniqueSet, UniqueMap } = __webpack_require__(11)
+const { Intrinsics } = __webpack_require__(12)
+const Xray = __webpack_require__(9)
 
 // ------------------------------------------------------------------------------------------------
 // Primary Run class
@@ -1812,2180 +1812,10 @@ global.Token = Token
 
 module.exports = Run
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14)))
 
 /***/ }),
 /* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const uniquePrivates = new WeakMap()
-
-/**
- * The objects that are exposed from Run to our built-in sandboxes, Jig and Berry
- */
-class Context {
-  static get Checkpoint () { return __webpack_require__(7).Checkpoint }
-  static activeRunInstance () { return __webpack_require__(0).activeRunInstance() }
-  static deployable (x) { return __webpack_require__(0).deployable(x) }
-  static checkSatoshis (x) { return __webpack_require__(0).checkSatoshis(x) }
-  static getOwnerScript (x) { return __webpack_require__(0).getOwnerScript(x) }
-  static networkSuffix (x) { return __webpack_require__(0).networkSuffix(x) }
-  static get Location () { return __webpack_require__(4) }
-  static get Protocol () { return __webpack_require__(12) }
-  static get uniquePrivates () { return uniquePrivates }
-  static get UniqueSet () { return __webpack_require__(9).UniqueSet }
-  static get UniqueMap () { return __webpack_require__(9).UniqueMap }
-
-  static deepFreeze (x) {
-    // TODO: deeply freeze
-    Object.freeze(x)
-  }
-}
-
-module.exports = Context
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(Buffer) {/**
- * xray.js
- *
- * Powerful object scanner to deeply inspect, serialize, deserialize, and clone objects.
- */
-
-// TODO
-// Document serialization protocol
-//  -Tests
-//  -Tokens and deployables don't need sets. Need loaders.
-//  -Documentation (remove Builder references)
-//  -Does UniqueSet need special handling for Set?
-//  -Hook up to existing code (And UniqueSet as default)
-//  -How to load other protocols?
-// - intrinsics are designed to be as flexible as safe.
-// Scanning is done both forward and backward. Strange.
-// So Objects and arrays are acceptible from without.
-// Document scanner API
-
-const Protocol = __webpack_require__(12)
-const { display } = __webpack_require__(0)
-const { Jig, JigControl } = __webpack_require__(3)
-const { Berry } = __webpack_require__(8)
-const { Intrinsics } = __webpack_require__(10)
-
-// ------------------------------------------------------------------------------------------------
-// Xray
-// -----------------------------------------------------------------------------------------------
-
-/**
- * The Xray is a scanner that an clone, serialize, and deserialize complex JavaScript objects with
- * tokens into formats that be stored on a blockchain and cached. To use the Xray, create one using
- * the Builder below, specifying and properties needed. Then, you may begin scanning objects. The
- * Xray has internal caches and assumes that while using the scanner objects will not change. The
- * Xray uses Scanners to process objects. Scanners have a consistent API documented below.
- *
- * Format:
- *  $class
- *
- * Caches, intrinsics - membrane, not passing objects or arrays, primitives OK.
- *
- * Serialization is JSON
- */
-class Xray {
-  /**
-   * Creates an Xray that uses the default intrinsics and a set of basic scanners. Tokens and
-   * deployables are not supported by default in scanned objects and must be enabled.
-   */
-  constructor () {
-    this.intrinsics = Intrinsics.defaultIntrinsics
-    this.tokenizer = null
-    this.deployables = null
-    this.tokens = null
-    this.refs = null
-    this.caches = {
-      scanned: new Set(),
-      cloneable: new Map(),
-      serializable: new Map(),
-      deserializable: new Map(),
-      clone: new Map(),
-      serialize: new Map(),
-      deserialize: new Map(),
-      predeserialize: new Map()
-    }
-    this.scanners = [
-      new DedupScanner(),
-      new UndefinedScanner(),
-      new PrimitiveScanner(),
-      new BasicObjectScanner(),
-      new BasicArrayScanner(),
-      new Uint8ArrayScanner(),
-      new SetScanner(),
-      new MapScanner()
-    ]
-  }
-
-  allowTokens () {
-    if (!this.tokens) {
-      this.tokens = new Set()
-      this.refs = new Set()
-      this.scanners.unshift(new ArbitraryObjectScanner())
-      this.scanners.unshift(new TokenScanner())
-    }
-    return this
-  }
-
-  allowDeployables () {
-    if (!this.deployables) {
-      this.deployables = new Set()
-      this.scanners.unshift(new ArbitraryObjectScanner())
-      this.scanners.unshift(new DeployableScanner())
-    }
-    return this
-  }
-
-  useTokenSaver (saveToken) { this.saveToken = saveToken; return this }
-  useTokenLoader (loadToken) { this.loadToken = loadToken; return this }
-  useCodeCloner (cloneCode) { this.cloneCode = cloneCode; return this }
-  useIntrinsics (intrinsics) { this.intrinsics = intrinsics; return this }
-  restrictOwner (owner) { this.restrictedOwner = owner; return this }
-  deeplyScanTokens () { this.deepScanTokens = true; return this }
-  useTokenReplacer (replaceToken) { this.replaceToken = replaceToken; return this }
-
-  scan (x) {
-    if (this.caches.scanned.has(x)) return this
-    for (const scanner of this.scanners) {
-      const value = scanner.scan(x, this)
-      if (typeof value === 'undefined') continue
-      this.caches.scanned.add(x)
-      if (value === false) break
-      return true
-    }
-    throw new Error(`${display(x)} cannot be scanned`)
-  }
-
-  /**
-   * Returns whether an object can be cloned by this Xray
-   */
-  cloneable (x) {
-    if (this.caches.cloneable.has(x)) return this.caches.cloneable.get(x)
-    for (const scanner of this.scanners) {
-      const value = scanner.cloneable(x, this)
-      if (typeof value === 'undefined') continue
-      this.caches.cloneable.set(x, value)
-      if (!value && typeof this.errorObject === 'undefined') this.errorObject = x
-      return value
-    }
-    this.caches.cloneable.set(x, false)
-    if (typeof this.errorObject === 'undefined') this.errorObject = x
-    return false
-  }
-
-  /**
-   * Returns whether an object can be serialized by this Xray
-   */
-  serializable (x) {
-    if (this.caches.serializable.has(x)) return this.caches.serializable.get(x)
-    for (const scanner of this.scanners) {
-      const value = scanner.serializable(x, this)
-      if (typeof value === 'undefined') continue
-      this.caches.serializable.set(x, value)
-      if (!value && typeof this.errorObject === 'undefined') this.errorObject = x
-      return value
-    }
-    this.caches.serializable.set(x, false)
-    if (typeof this.errorObject === 'undefined') this.errorObject = x
-    return false
-  }
-
-  /**
-   * Returns whether an object can be deserialized by this Xray
-   */
-  deserializable (x) {
-    if (this.caches.deserializable.has(x)) return this.caches.deserializable.get(x)
-    for (const scanner of this.scanners) {
-      const value = scanner.deserializable(x, this)
-      if (typeof value === 'undefined') continue
-      this.caches.deserializable.set(x, value)
-      if (!value && typeof this.errorObject === 'undefined') this.errorObject = x
-      return value
-    }
-    this.caches.deserializable.set(x, false)
-    if (typeof this.errorObject === 'undefined') this.errorObject = x
-    return false
-  }
-
-  clone (x) {
-    this.errorObject = undefined
-    if (this.caches.clone.has(x)) return this.caches.clone.get(x)
-    for (const scanner of this.scanners) {
-      const cloneable = scanner.cloneable(x, this)
-      if (typeof cloneable === 'undefined') continue
-      if (cloneable === false) break
-      const y = scanner.clone(x, this)
-      this.caches.clone.set(x, y)
-      return y
-    }
-    const errorObject = typeof this.errorObject !== 'undefined' ? this.errorObject : x
-    throw new Error(`${display(errorObject)} cannot be cloned`)
-  }
-
-  serialize (x) {
-    this.errorObject = undefined
-    if (this.caches.serialize.has(x)) return this.caches.serialize.get(x)
-    for (const scanner of this.scanners) {
-      const serializable = scanner.serializable(x, this)
-      if (typeof serializable === 'undefined') continue
-      if (serializable === false) break
-      const y = scanner.serialize(x, this)
-      this.caches.serialize.set(x, y)
-      return y
-    }
-    const errorObject = typeof this.errorObject !== 'undefined' ? this.errorObject : x
-    throw new Error(`${display(errorObject)} cannot be serialized`)
-  }
-
-  deserialize (x) {
-    this.errorObject = undefined
-    if (this.caches.deserialize.has(x)) return this.caches.deserialize.get(x)
-    for (const scanner of this.scanners) {
-      const deserializable = scanner.deserializable(x, this)
-      if (typeof deserializable === 'undefined') continue
-      if (deserializable === false) break
-      const y = scanner.deserialize(x, this)
-      this.caches.deserialize.set(x, y)
-      return y
-    }
-    const errorObject = typeof this.errorObject !== 'undefined' ? this.errorObject : x
-    throw new Error(`${display(errorObject)} cannot be deserialized`)
-  }
-
-  predeserialize (x) {
-    if (this.caches.predeserialize.has(x)) return
-    for (const scanner of this.scanners) {
-      const deserializable = scanner.deserializable(x, this)
-      if (typeof deserializable === 'undefined') continue
-      if (deserializable === false) break
-      const y = scanner.predeserialize(x, this)
-      this.caches.predeserialize.set(x, y)
-      return y
-    }
-    throw new Error(`${display(x)} cannot be predeserialized`)
-  }
-
-  scanAndReplace (x) {
-    this.scan(x)
-    if (this.replaceToken && Protocol.isToken(x)) {
-      const replacement = this.replaceToken(x)
-      if (replacement) return replacement
-    }
-    return x
-  }
-
-  checkOwner (x) {
-    if (typeof x.$owner !== 'undefined' && typeof this.restrictedOwner !== 'undefined' &&
-        x.$owner !== this.restrictedOwner) {
-      const suggestion = `Hint: Consider saving a clone of ${x} value instead.`
-      throw new Error(`Property ${display(x)} is owned by a different token\n\n${suggestion}`)
-    }
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Scanner API
-// -----------------------------------------------------------------------------------------------
-
-class Scanner {
-  // Return true to skip, false to stop, undefined to continue
-  scan (x, xray) { throw new Error('Not implemented') }
-  cloneable (x, xray) { throw new Error('Not implemented') }
-  serializable (x, xray) { throw new Error('Not implemented') }
-  deserializable (x, xray) { throw new Error('Not implemented') }
-  clone (x, xray) { throw new Error('Not implemented') }
-  serialize (x, xray) { throw new Error('Not implemented') }
-  deserialize (x, xray) { throw new Error('Not implemented') }
-  predeserialize (x, xray) { throw new Error('Not implemented') }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Undefined value scanner
-// -----------------------------------------------------------------------------------------------
-
-/**
- * Scanner to handle undefined, which cannot be passed through during serializion
- */
-class UndefinedScanner {
-  scan (x, xray) {
-    if (typeof x === 'undefined') return true
-    if (typeof x === 'object' && x && x.$undef === 1) return true
-  }
-
-  cloneable (x, xray) { if (typeof x === 'undefined') return true }
-  serializable (x, xray) { if (typeof x === 'undefined') return true }
-  deserializable (x, xray) {
-    if (typeof x !== 'object' || !x || typeof x.$undef === 'undefined') return
-    return x.$undef === 1
-  }
-
-  clone (x, xray) { return x }
-  serialize (x, xray) {
-    const { Object } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    y.$undef = 1
-    return y
-  }
-
-  deserialize (x, xray) { return undefined }
-  predeserialize (x, xray) { }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Primitive value scanner
-// -----------------------------------------------------------------------------------------------
-
-/**
- * Scanner to handle booleans, numbers, strings, and null
- */
-class PrimitiveScanner {
-  scan (x, xray) {
-    switch (typeof x) {
-      case 'boolean': return true
-      case 'number': return true
-      case 'string': return true
-      case 'object': return x === null ? true : undefined
-      case 'symbol': return true
-    }
-  }
-
-  cloneable (x, xray) {
-    switch (typeof x) {
-      case 'boolean': return true
-      case 'number': return true
-      case 'string': return true
-      case 'object': return x === null ? true : undefined
-    }
-  }
-
-  serializable (x, xray) {
-    switch (typeof x) {
-      case 'boolean': return true
-      case 'number': return !isNaN(x) && isFinite(x)
-      case 'string': return true
-      case 'object': return x === null ? true : undefined
-    }
-  }
-
-  deserializable (x, xray) {
-    switch (typeof x) {
-      case 'boolean': return true
-      case 'number': return !isNaN(x) && isFinite(x)
-      case 'string': return true
-      case 'object': return x === null ? true : undefined
-    }
-  }
-
-  clone (x, xray) { return x }
-  serialize (x, xray) { return x }
-  deserialize (x, xray) { return x }
-  predeserialize (x, xray) { }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Normal object scanner
-// -----------------------------------------------------------------------------------------------
-
-class BasicObjectScanner {
-  scan (x, xray) {
-    if (this.isBasicObject(x, xray)) {
-      xray.checkOwner(x)
-      xray.caches.scanned.add(x)
-      Object.keys(x).forEach(key => {
-        xray.scan(key)
-        if (xray.replaceToken) {
-          x[key] = xray.scanAndReplace(x[key])
-        } else xray.scan(x[key])
-      })
-      return true
-    }
-  }
-
-  cloneable (x, xray) {
-    if (!this.isBasicObject(x, xray)) return
-    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
-    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
-  }
-
-  serializable (x, xray) {
-    if (!this.isBasicObject(x, xray)) return
-    if (Object.keys(x).find(key => key.startsWith('$'))) return false
-    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
-    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
-  }
-
-  deserializable (x, xray) {
-    if (!this.isBasicObject(x, xray)) return
-    if (Object.keys(x).find(key => key.startsWith('$'))) return
-    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
-    return !Object.keys(x).some(key => !xray.deserializable(key) || !xray.deserializable(x[key]))
-  }
-
-  clone (x, xray) {
-    const { Object } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    xray.caches.clone.set(x, y)
-    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
-    return y
-  }
-
-  serialize (x, xray) {
-    const { Object } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    xray.caches.serialize.set(x, y)
-    Object.keys(x).forEach(key => { y[xray.serialize(key)] = xray.serialize(x[key]) })
-    return y
-  }
-
-  deserialize (x, xray) {
-    const { Object } = xray.intrinsics.default
-    const y = xray.caches.predeserialize.get(x) || Object.create(Object.prototype)
-    xray.caches.deserialize.set(x, y)
-    Object.keys(x).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x[key]) })
-    return y
-  }
-
-  predeserialize (x, xray) {
-    const { Object } = xray.intrinsics.default
-    return Object.create(Object.prototype)
-  }
-
-  isBasicObject (x, xray) {
-    if (typeof x !== 'object' || !x) return false
-    if (xray.intrinsics.types.has(x)) return false
-    // if (Object.keys(x).some(y => y.startsWith('$'))) return false
-    return getPrototypeCount(x) === 1 // Object
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Normal array scanner
-// -----------------------------------------------------------------------------------------------
-
-class BasicArrayScanner {
-  scan (x, xray) {
-    if (this.isBasicArray(x, xray)) {
-      xray.checkOwner(x)
-      xray.caches.scanned.add(x)
-      Object.keys(x).forEach(key => {
-        xray.scan(key)
-        if (xray.replaceToken) {
-          x[key] = xray.scanAndReplace(x[key])
-        } else xray.scan(x[key])
-      })
-      return true
-    }
-  }
-
-  cloneable (x, xray) {
-    if (!this.isBasicArray(x, xray)) return
-    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
-    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
-  }
-
-  serializable (x, xray) {
-    if (!this.isBasicArray(x, xray)) return
-    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
-    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
-  }
-
-  deserializable (x, xray) {
-    if (!this.isBasicArray(x, xray)) return
-    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
-    return !Object.keys(x).some(key => !xray.deserializable(key) || !xray.deserializable(x[key]))
-  }
-
-  clone (x, xray) {
-    const { Array } = xray.intrinsics.default
-    const y = Array.from([])
-    xray.caches.clone.set(x, y)
-    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
-    return y
-  }
-
-  serialize (x, xray) {
-    const { Array } = xray.intrinsics.default
-    const y = Array.from([])
-    xray.caches.serialize.set(x, y)
-    Object.keys(x).forEach(key => { y[xray.serialize(key)] = xray.serialize(x[key]) })
-    return y
-  }
-
-  deserialize (x, xray) {
-    const { Array } = xray.intrinsics.default
-    const y = xray.caches.predeserialize.get(x) || Array.from([])
-    xray.caches.deserialize.set(x, y)
-    Object.keys(x).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x[key]) })
-    return y
-  }
-
-  predeserialize (x, xray) {
-    const { Array } = xray.intrinsics.default
-    return Array.from([])
-  }
-
-  isBasicArray (x, xray) {
-    if (typeof x !== 'object' || !x) return false
-    if (getPrototypeCount(x) !== 2) return false // Array, Object
-    return xray.intrinsics.allowed.some(intrinsics => intrinsics.Array.isArray(x))
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Uint8Array scanner
-// -----------------------------------------------------------------------------------------------
-
-const base64Chars = new Set()
-'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
-  .split('').forEach(x => base64Chars.add(x))
-
-class Uint8ArrayScanner {
-  scan (x, xray) {
-    if (this.isUint8Array(x, xray)) {
-      xray.checkOwner(x)
-      return true
-    }
-  }
-
-  cloneable (x, xray) { if (this.isUint8Array(x, xray)) return true }
-  serializable (x, xray) { if (this.isUint8Array(x, xray)) return true }
-
-  deserializable (x, xray) {
-    if (typeof x !== 'object' || !x || typeof x.$ui8a === 'undefined') return
-    if (typeof x.$ui8a !== 'string') return false
-    return !x.$ui8a.split('').some(x => !base64Chars.has(x))
-  }
-
-  clone (x, xray) {
-    const { Uint8Array } = xray.intrinsics.default
-    return Uint8Array.from(x)
-  }
-
-  serialize (x, xray) {
-    const { Object } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    y.$ui8a = Buffer.from(x).toString('base64')
-    return y
-  }
-
-  deserialize (x, xray) {
-    const { Uint8Array } = xray.intrinsics.default
-    return xray.caches.predeserialize.get(x) ||
-      Uint8Array.from(Buffer.from(x.$ui8a, 'base64'))
-  }
-
-  predeserialize (x, xray) {
-    const { Uint8Array } = xray.intrinsics.default
-    return Uint8Array.from(Buffer.from(x.$ui8a, 'base64'))
-  }
-
-  isUint8Array (x, xray) {
-    if (typeof x !== 'object' || !x) return false
-    if (getPrototypeCount(x) !== 3) return false // Uint8Array, TypedArray, Object
-    if (Object.keys(x).some(key => isNaN(key) || x[key] > 255 || x[key] < 0)) return false
-    return xray.intrinsics.allowed.some(intrinsics => x instanceof intrinsics.Uint8Array)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Set scanner
-// -----------------------------------------------------------------------------------------------
-
-class SetScanner {
-  scan (x, xray) {
-    if (this.isSet(x, xray)) {
-      xray.checkOwner(x)
-      xray.caches.scanned.add(x)
-      if (xray.replaceToken) {
-        const { Set } = xray.intrinsics.default
-        const newSet = new Set()
-        for (const y of x) { newSet.add(xray.scanAndReplace(y)) }
-        x.clear()
-        for (const y of newSet) { x.add(y) }
-      } else for (const y of x) { xray.scan(y) }
-      Object.keys(x).forEach(key => {
-        xray.scan(key)
-        if (xray.replaceToken) {
-          x[key] = xray.scanAndReplace(x[key])
-        } else xray.scan(x[key])
-      })
-      return true
-    }
-  }
-
-  cloneable (x, xray) {
-    if (!this.isSet(x, xray)) return
-    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
-    for (const y of x) { if (!xray.cloneable(y)) return false }
-    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
-  }
-
-  serializable (x, xray) {
-    if (!this.isSet(x, xray)) return
-    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
-    for (const y of x) { if (!xray.serializable(y)) return false }
-    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
-  }
-
-  deserializable (x, xray) {
-    if (typeof x !== 'object' || !x || typeof x.$set === 'undefined') return
-    if (!Array.isArray(x.$set)) return false
-    if (typeof x.props !== 'undefined' && (typeof x.props !== 'object' || !x.props)) return false
-    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
-    if (x.$set && x.$set.some(y => !xray.deserializable(y))) return false
-    if (x.props) return !Object.keys(x.props).some(key => !xray.deserializable(key) || !xray.deserializable(x.props[key]))
-    return true
-  }
-
-  clone (x, xray) {
-    const { Set } = xray.intrinsics.default
-    const y = new Set()
-    xray.caches.clone.set(x, y)
-    for (const entry of x) { y.add(xray.clone(entry)) }
-    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
-    return y
-  }
-
-  serialize (x, xray) {
-    const { Object, Array } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    xray.caches.serialize.set(x, y)
-    y.$set = Array.from([])
-    for (const entry of x) { y.$set.push(xray.serialize(entry)) }
-    if (Object.keys(x).length) {
-      y.props = Object.create(Object.prototype)
-      Object.keys(x).forEach(key => { y.props[xray.serialize(key)] = xray.serialize(x[key]) })
-    }
-    return y
-  }
-
-  deserialize (x, xray) {
-    const { Set } = xray.intrinsics.default
-    const y = xray.caches.predeserialize.get(x) || new Set()
-    xray.caches.deserialize.set(x, y)
-    for (const entry of x.$set) { y.add(xray.deserialize(entry)) }
-    if (x.props) Object.keys(x.props).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x.props[key]) })
-    return y
-  }
-
-  predeserialize (x, xray) {
-    const { Set } = xray.intrinsics.default
-    return new Set()
-  }
-
-  isSet (x, xray) {
-    if (typeof x !== 'object' || !x) return false
-    if (getPrototypeCount(x) !== 2) return false // Set, Object
-    return xray.intrinsics.allowed.some(intrinsics => x instanceof intrinsics.Set)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Map scanner
-// -----------------------------------------------------------------------------------------------
-
-class MapScanner {
-  scan (x, xray) {
-    if (this.isMap(x, xray)) {
-      xray.checkOwner(x)
-      xray.caches.scanned.add(x)
-      for (const entry of x) xray.scan(entry)
-      if (xray.replaceToken) {
-        const { Map } = xray.intrinsics.default
-        const newMap = new Map()
-        for (const [key, val] of x) newMap.set(xray.scanAndReplace(key), xray.scanAndReplace(val))
-        x.clear()
-        for (const [key, val] of newMap) { x.set(key, val) }
-      } else for (const entry of x) { xray.scan(entry) }
-      Object.keys(x).forEach(key => {
-        xray.scan(key)
-        if (xray.replaceToken) {
-          x[key] = xray.scanAndReplace(x[key])
-        } else xray.scan(x[key])
-      })
-      return true
-    }
-  }
-
-  cloneable (x, xray) {
-    if (!this.isMap(x, xray)) return
-    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
-    for (const [key, val] of x) {
-      if (!xray.cloneable(key)) return false
-      if (!xray.cloneable(val)) return false
-    }
-    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
-  }
-
-  serializable (x, xray) {
-    if (!this.isMap(x, xray)) return
-    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
-    for (const [key, val] of x) {
-      if (!xray.serializable(key)) return false
-      if (!xray.serializable(val)) return false
-    }
-    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
-  }
-
-  deserializable (x, xray) {
-    if (typeof x !== 'object' || !x || typeof x.$map === 'undefined') return
-    if (!Array.isArray(x.$map)) return false
-    if (typeof x.props !== 'undefined' && (typeof x.props !== 'object' || !x.props)) return false
-    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
-    for (const entry of x.$map) {
-      if (!Array.isArray(entry) || entry.length !== 2) return false
-      if (!xray.deserializable(entry[0])) return false
-      if (!xray.deserializable(entry[1])) return false
-    }
-    if (x.props) {
-      return !Object.keys(x.props).some(key =>
-        !xray.deserializable(key) || !xray.deserializable(x.props[key]))
-    }
-    return true
-  }
-
-  clone (x, xray) {
-    const { Map } = xray.intrinsics.default
-    const y = new Map()
-    xray.caches.clone.set(x, y)
-    for (const [key, val] of x) { y.set(xray.clone(key), xray.clone(val)) }
-    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
-    return y
-  }
-
-  serialize (x, xray) {
-    const { Object, Array } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    y.$map = Array.from([])
-    xray.caches.serialize.set(x, y)
-    for (const entry of x) y.$map.push(xray.serialize(entry))
-    if (Object.keys(x).length) {
-      y.props = Object.create(Object.prototype)
-      Object.keys(x).forEach(key => { y.props[xray.serialize(key)] = xray.serialize(x[key]) })
-    }
-    return y
-  }
-
-  deserialize (x, xray) {
-    const { Map } = xray.intrinsics.default
-    const y = xray.caches.predeserialize.get(x) || new Map()
-    xray.caches.deserialize.set(x, y)
-    for (const [key, val] of x.$map) { y.set(xray.deserialize(key), xray.deserialize(val)) }
-    if (x.props) Object.keys(x.props).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x.props[key]) })
-    return y
-  }
-
-  predeserialize (x, xray) {
-    const { Map } = xray.intrinsics.default
-    return new Map()
-  }
-
-  isMap (x, xray) {
-    if (typeof x !== 'object' || !x) return false
-    if (getPrototypeCount(x) !== 2) return false // Map, Object
-    return xray.intrinsics.allowed.some(intrinsics => x instanceof intrinsics.Map)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Arbitrary classes
-// ------------------------------------------------------------------------------------------------
-
-class ArbitraryObjectScanner {
-  constructor () {
-    this.basicObjectScanner = new BasicObjectScanner()
-  }
-
-  scan (x, xray) {
-    if (this.isArbitraryObject(x, xray)) {
-      xray.checkOwner(x)
-      xray.caches.scanned.add(x)
-      Object.keys(x).forEach(key => {
-        xray.scan(key)
-        if (xray.replaceToken) {
-          x[key] = xray.scanAndReplace(x[key])
-        } else xray.scan(x[key])
-      })
-      const newConstructor = xray.scanAndReplace(x.constructor)
-      if (newConstructor !== x.constructor) Object.setPrototypeOf(x, newConstructor)
-      xray.refs.add(x.type)
-      return true
-    }
-
-    if (typeof x === 'object' && x && typeof x.$arbob !== 'undefined') {
-      xray.refs.add(x.type)
-      return xray.scan(x.$arbob)
-    }
-  }
-
-  cloneable (x, xray) {
-    if (!this.isArbitraryObject(x, xray)) return
-    return this.basicObjectScanner.cloneable(Object.assign({}, x), xray)
-  }
-
-  serializable (x, xray) {
-    if (!this.isArbitraryObject(x, xray)) return
-    return this.basicObjectScanner.serializable(Object.assign({}, x), xray)
-  }
-
-  deserializable (x, xray) {
-    if (typeof x !== 'object' || !x || typeof x.$arbob === 'undefined') return
-    if (typeof x.$arbob !== 'object' || !x.$arbob) return false
-    if (typeof x.type !== 'string') return false
-    return true
-  }
-
-  clone (x, xray) {
-    if (!xray.cloneCode) throw new Error(`No code cloner available to clone ${display(x)}`)
-    const clone = this.basicObjectScanner.clone(Object.assign({}, x), xray)
-    const sandbox = xray.cloneCode(x.constructor)
-    Object.setPrototypeOf(clone, sandbox.prototype)
-    return clone
-  }
-
-  serialize (x, xray) {
-    if (!xray.saveToken) throw new Error(`No token saver available to serialize ${display(x)}`)
-    const { Object } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    y.$arbob = this.basicObjectScanner.serialize(Object.assign({}, x), xray)
-    y.type = xray.saveToken(x.constructor)
-    if (typeof y.type !== 'string') throw new Error(`Saved type location must be a string: ${y.type}`)
-    return y
-  }
-
-  deserialize (x, xray) {
-    if (!xray.loadToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
-    const { Object } = xray.intrinsics.default
-    const obj = xray.caches.predeserialize.get(x) || Object.create(Object.prototype)
-    Object.assign(obj, this.basicObjectScanner.deserialize(x.$arbob, xray))
-    const type = xray.loadToken(x.type)
-    Object.setPrototypeOf(obj, type.prototype)
-    return obj
-  }
-
-  predeserialize (x, xray) {
-    const { Object } = xray.intrinsics.default
-    return Object.create(Object.prototype)
-  }
-
-  isArbitraryObject (x, xray) {
-    if (typeof x !== 'object' || !x) return false
-    if (Protocol.isToken(x)) return false
-    if (!deployable(x.constructor, xray)) return false
-    if (Protocol.isToken(x.constructor)) {
-      xray.tokens.add(x.constructor)
-    } else {
-      xray.deployables.add(x.constructor)
-    }
-    return true
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Duplicate object scanner
-// ------------------------------------------------------------------------------------------------
-
-class DedupScanner {
-  constructor () {
-    this.topLevel = true
-    this.dups = null
-    this.checkingDeserializability = false
-    this.deserializingDups = false
-    this.deserializingMaster = false
-  }
-
-  scan (x, xray) { }
-  cloneable (x, xray) { }
-
-  serializable (x, xray) {
-    const topLevel = this.topLevel
-    this.topLevel = false
-    try {
-      if (topLevel) return xray.serializable(x, xray)
-    } finally {
-      this.topLevel = topLevel
-    }
-  }
-
-  deserializable (x, xray) {
-    const topLevel = this.topLevel
-    this.topLevel = false
-    try {
-      if (topLevel) {
-        if (typeof x !== 'object' || !x || typeof x.$dedup === 'undefined') return
-        if (!Array.isArray(x.dups)) return false
-        this.dups = x.dups
-        try {
-          this.checkingDeserializability = true
-          return xray.deserializable(x.$dedup) && xray.deserializable(x.dups)
-        } finally {
-          this.checkingDeserializability = false
-          this.dups = null
-        }
-      } else {
-        if (this.checkingDeserializability || this.deserializingDups || this.deserializingMaster) {
-          if (typeof x !== 'object' || !x || typeof x.$dup === 'undefined') return
-          if (typeof x.$dup !== 'number') return false
-          if (!Number.isInteger(x.$dup) || x.$dup < 0 || x.$dup >= this.dups.length) return false
-          return true
-        }
-      }
-    } finally {
-      this.topLevel = topLevel
-    }
-  }
-
-  clone (x, xray) { }
-
-  serialize (x, xray) {
-    const topLevel = this.topLevel
-    this.topLevel = false
-    try {
-      if (topLevel) return this.dedup(x, xray)
-    } finally {
-      this.topLevel = topLevel
-    }
-  }
-
-  deserialize (x, xray) {
-    const topLevel = this.topLevel
-    this.topLevel = false
-    try {
-      if (topLevel) {
-        if (typeof x !== 'object' || !x || typeof x.$dedup === 'undefined') return
-
-        this.dups = x.dups
-
-        // Predeserialize each dup to put objects in the cache
-        this.dups = this.dups.map(dup => xray.predeserialize(dup))
-
-        // Deserialize each dup
-        try {
-          this.deserializingDups = true
-          this.dups = x.dups.map(dup => xray.deserialize(dup))
-        } finally {
-          this.deserializingDups = false
-        }
-
-        // Deserialize the master object
-        try {
-          this.deserializingMaster = true
-          return xray.deserialize(x.$dedup)
-        } finally {
-          this.deserializingMaster = false
-        }
-      } else {
-        // If we are deserializing any dups, replace them with our known set
-        if (this.deserializingDups || this.deserializingMaster) {
-          return this.dups[x.$dup]
-        }
-      }
-    } finally {
-      this.topLevel = topLevel
-    }
-  }
-
-  predeserialize (x, xray) { }
-
-  dedup (x, xray) {
-    const serialized = xray.serialize(x)
-
-    const { Object, Array } = xray.intrinsics.default
-
-    const seen = new Set()
-    const indexes = new Map()
-    function detectDups (x) {
-      if (typeof x !== 'object' || !x) return
-      if (seen.has(x)) {
-        if (!indexes.has(x)) indexes.set(x, indexes.size)
-      } else {
-        seen.add(x)
-        Object.keys(x).forEach(key => detectDups(x[key]))
-      }
-    }
-
-    detectDups(serialized)
-
-    if (!indexes.size) return serialized
-
-    function replaceDups (x) {
-      if (typeof x !== 'object' || !x) return x
-      if (indexes.has(x)) {
-        const y = Object.create(Object.prototype)
-        y.$dup = indexes.get(x)
-        return y
-      } else {
-        Object.keys(x).forEach(key => { x[key] = replaceDups(x[key]) })
-        return x
-      }
-    }
-
-    const value = replaceDups(serialized)
-    const dups = Array.from(indexes.keys())
-
-    dups.forEach(dup => {
-      Object.keys(dup).forEach(key => { dup[key] = replaceDups(dup[key]) })
-    })
-
-    const y = Object.create(Object.prototype)
-    y.$dedup = value
-    y.dups = dups
-    return y
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Code detector
-// -----------------------------------------------------------------------------------------------
-
-class DeployableScanner {
-  scan (x, xray) {
-    if (deployable(x, xray)) {
-      xray.checkOwner(x)
-      xray.deployables.add(x)
-      if (xray.deepScanTokens) {
-        xray.caches.scanned.add(x)
-        Object.keys(x).forEach(key => {
-          xray.scan(key)
-          if (xray.replaceToken) {
-            x[key] = xray.scanAndReplace(x[key])
-          } else xray.scan(x[key])
-        })
-      }
-      return true
-    }
-  }
-
-  cloneable (x, xray) {
-    if (deployable(x, xray)) {
-      xray.deployables.add(x)
-      return true
-    }
-  }
-
-  serializable (x, xray) {
-    // We never serialize deployables. They must be tokens when serialized.
-  }
-
-  deserializable (x, xray) {
-    // We never deserialize deployables. They become tokens when serialized.
-  }
-
-  clone (x, xray) {
-    if (!xray.cloneCode) throw new Error(`No code cloner available to clone ${display(x)}`)
-    return xray.cloneCode(x)
-  }
-
-  serialize (x, xray) {
-    // We never serialize deployables. They become tokens when serialized.
-  }
-
-  deserialize (x, xray) {
-    // We never deserialize deployables. They become tokens when serialized.
-  }
-
-  predeserialize (x, xray) {
-    // We never deserialize deployables. They become tokens when serialized.
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Token detector
-// -----------------------------------------------------------------------------------------------
-
-class TokenScanner {
-  scan (x, xray) {
-    if (Protocol.isToken(x)) {
-      xray.tokens.add(x)
-      if (xray.deepScanTokens) {
-        xray.caches.scanned.add(x)
-
-        JigControl.disableProxy(() => {
-          Object.keys(x).forEach(key => {
-            xray.scan(key)
-            // Berries are frozen and their inner assets cannot be replaced
-            if (xray.replaceToken && !(x instanceof Berry)) {
-              x[key] = xray.scanAndReplace(x[key])
-            } else {
-              xray.scan(x[key])
-            }
-          })
-        })
-      }
-      return true
-    }
-
-    if (typeof x === 'object' && x && typeof x.$ref !== 'undefined') {
-      if (typeof x.$ref !== 'string') return false
-      xray.refs.add(x.$ref)
-      return true
-    }
-  }
-
-  cloneable (x, xray) {
-    if (Protocol.isToken(x)) {
-      xray.tokens.add(x)
-      return true
-    }
-
-    if (typeof x === 'object' && x && typeof x.$ref !== 'undefined') {
-      if (typeof x.$ref !== 'string') return false
-      xray.refs.add(x.$ref)
-      return true
-    }
-  }
-
-  serializable (x, xray) {
-    if (Protocol.isToken(x)) {
-      xray.tokens.add(x)
-      return true
-    }
-  }
-
-  deserializable (x, xray) {
-    if (typeof x !== 'object' || !x || typeof x.$ref === 'undefined') return
-    if (typeof x.$ref !== 'string') return false
-    xray.refs.add(x.$ref)
-    return true
-  }
-
-  clone (x, xray) {
-    // Clone is often used to provide safe sandboxing, but all tokens are safely sandboxed
-    return x
-  }
-
-  serialize (x, xray) {
-    if (!xray.saveToken) throw new Error(`No token saver available to serialize ${display(x)}`)
-    const { Object } = xray.intrinsics.default
-    const y = Object.create(Object.prototype)
-    y.$ref = xray.saveToken(x)
-    if (typeof y.$ref !== 'string') throw new Error(`Saved token location must be a string: ${y.$ref}`)
-    return y
-  }
-
-  deserialize (x, xray) {
-    if (!xray.loadToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
-    return xray.loadToken(x.$ref)
-  }
-
-  predeserialize (x, xray) { }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Helper functions
-// ------------------------------------------------------------------------------------------------
-
-function getPrototypeCount (x) {
-  let count = 0
-  x = Object.getPrototypeOf(x)
-  while (x) { x = Object.getPrototypeOf(x); count++ }
-  return count
-}
-
-function deployable (x, xray) {
-  if (typeof x !== 'function') return false
-  if (display(x).indexOf('[native code]') !== -1) return false
-  if (xray.intrinsics.types.has(x)) return false
-  return true
-}
-
-// ------------------------------------------------------------------------------------------------
-// Jig Checkpoint
-// ------------------------------------------------------------------------------------------------
-
-class Checkpoint {
-  constructor (x, code, owner) {
-    this.x = x
-    this.refs = []
-
-    this.xray = new Xray()
-      .allowDeployables()
-      .allowTokens()
-      .restrictOwner(owner)
-      .useIntrinsics(code.intrinsics)
-      .useTokenSaver(token => { this.refs.push(token); return (this.refs.length - 1).toString() })
-      .useTokenLoader(ref => this.refs[parseInt(ref, 10)])
-
-    // Note: We should scan and deploy in one pass
-    const obj = x instanceof Jig ? Object.assign({}, x) : x
-    this.xray.scan(obj)
-    this.xray.deployables.forEach(deployable => code.deploy(deployable))
-    this.serialized = this.xray.serialize(obj)
-  }
-
-  restore () {
-    if (!('restored' in this)) {
-      this.restored = this.xray.deserialize(this.serialized)
-    }
-    return this.restored
-  }
-
-  restoreInPlace () {
-    JigControl.disableProxy(() => {
-      Object.keys(this.x).forEach(key => delete this.x[key])
-      Object.assign(this.x, this.restore())
-    })
-  }
-
-  equals (other) {
-    const deepEqual = (a, b) => {
-      if (typeof a !== typeof b) return false
-      if (typeof a === 'object' && typeof b === 'object') {
-        if (Object.keys(a).length !== Object.keys(b).length) return false
-        return Object.keys(a).every(key => deepEqual(a[key], b[key]))
-      }
-      return a === b
-    }
-
-    if (!deepEqual(this.serialized, other.serialized)) return false
-    if (this.refs.length !== other.refs.length) return false
-    return this.refs.every((ref, n) => this.refs[n] === other.refs[n])
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-Xray.Scanner = Scanner
-Xray.Checkpoint = Checkpoint
-
-module.exports = Xray
-
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14).Buffer))
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Context = __webpack_require__(6)
-
-const BerryControl = {
-  protocol: undefined,
-  location: undefined
-}
-
-// Note: This is a good way to learn the Jig class
-class Berry {
-  constructor (...args) {
-    const run = Context.activeRunInstance()
-
-    // Sandbox the berry
-    if (!run.code.isSandbox(this.constructor)) {
-      run.transaction.begin()
-      try {
-        const T = run.code.deploy(this.constructor)
-        return new T(...args)
-      } finally { run.transaction.end() }
-    }
-
-    // Check the berry is property derived (no constructors)
-    const childClasses = []
-    let type = this.constructor
-    while (type !== Berry) {
-      childClasses.push(type)
-      type = Object.getPrototypeOf(type)
-    }
-
-    if (childClasses.length === 0) { throw new Error('Berry must be extended') }
-
-    const constructorRegex = /\s+constructor\s*\(/
-    if (childClasses.some(type => constructorRegex.test(type.toString()))) {
-      throw new Error('Berry must use init() instead of constructor()')
-    }
-
-    // Check that the protocol matches
-    if (!BerryControl.protocol || BerryControl.protocol !== this.constructor.protocol) {
-      throw new Error('Must only create Berry from its protocol')
-    }
-
-    // Run the init
-    this.init(...args)
-
-    // Validate the location
-    if (typeof this.location !== 'undefined') {
-      throw new Error('Berry init() must not set a location')
-    }
-
-    if (!BerryControl.location) throw new Error('Must only pluck one berry at a time')
-    this.location = BerryControl.location
-    BerryControl.location = undefined
-
-    // Free the object so there are no more changes
-    Context.deepFreeze(this)
-  }
-
-  init () { }
-
-  static [Symbol.hasInstance] (target) {
-    const run = Context.activeRunInstance()
-
-    // check if the target has a location. this will be false for this.constructor.prototype.
-    if (typeof target !== 'object' || !('location' in target)) return false
-
-    // find the sandboxed version of this class because thats what instances will be
-    let T = run.code.getInstalled(this)
-    if (!T) {
-      const net = Context.networkSuffix(run.blockchain.network)
-      T = run.code.getInstalled(this[`origin${net}`])
-      if (!T) return false
-    }
-
-    // check if this class's prototype is in the prototype chain of the target
-    let type = Object.getPrototypeOf(target)
-    while (type) {
-      if (type === T.prototype) return true
-      type = Object.getPrototypeOf(type)
-    }
-
-    return false
-  }
-}
-
-// This should be overridden in each child class
-Berry.protocol = undefined
-
-module.exports = { Berry, BerryControl }
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Context = __webpack_require__(6)
-
-// ------------------------------------------------------------------------------------------------
-// UniqueMap
-// ------------------------------------------------------------------------------------------------
-
-/**
- * A Map that guarantees token keys are unique. The API is intended to be the same as the built-in
- * Map so that this can be a drop-in replacement in sandboxed code.
-
- * For a given entry, there are 4 cases to consider:
- *    1) Deployed tokens
- *    2) Undeployed tokens
- *    3) Deployable code currently undeployed
- *    4) Everything else
- */
-class UniqueMap {
-  constructor (iterable) {
-    const priv = {
-      undeployed: new Set(), // Undeployed tokens without an origin
-      deployed: new Map(), // Origin -> Token
-      map: new Map()
-    }
-    Context.uniquePrivates.set(this, priv)
-    if (iterable) { for (const [x, y] of iterable) this.set(x, y) }
-  }
-
-  clear () {
-    const priv = Context.uniquePrivates.get(this)
-    priv.undeployed.clear()
-    priv.deployed.clear()
-    priv.map.clear()
-  }
-
-  _getUniqueKey (x) {
-    const priv = Context.uniquePrivates.get(this)
-
-    const inconsistentWorldview = () => {
-      const hint = 'Hint: Try syncing the relevant tokens before use.'
-      const reason = 'Found two tokens with the same origin at different locations.'
-      const message = 'Inconsistent worldview'
-      throw new Error(`${message}\n\n${reason}\n\n${hint}`)
-    }
-
-    if (Context.Protocol.isToken(x)) {
-      const xOrigin = Context.Protocol.getOrigin(x)
-      const xLocation = Context.Protocol.getLocation(x)
-      const deployed = !!Context.Location.parse(xOrigin).txid
-
-      if (deployed) {
-        // Case 1: Deployed token
-
-        // Was this token previously in our undeployed set? If so, update it.
-        for (const y of priv.undeployed) {
-          if (xOrigin === y.origin) {
-            const yLocation = Context.Protocol.getLocation(y)
-            if (xLocation !== yLocation) inconsistentWorldview()
-            priv.undeployed.delete(y)
-            priv.deployed.set(xOrigin, y)
-            return y
-          }
-        }
-
-        // Have we already seen a token at this origin? If so, use that one.
-        const y = priv.deployed.get(xOrigin)
-        if (y) {
-          const yLocation = Context.Protocol.getLocation(y)
-          if (xLocation !== yLocation) inconsistentWorldview()
-          return y
-        }
-
-        // First time seeing a token at this origin. Remember it.
-        priv.deployed.set(xOrigin, x)
-        return x
-      } else {
-        // Case 2: Undeployed token
-        priv.undeployed.add(x)
-        return x
-      }
-    } else if (Context.Protocol.isDeployable(x)) {
-      // Case 3: Undeployed code
-      priv.undeployed.add(x)
-      return x
-    } else {
-      // Case 4: Everything else
-      return x
-    }
-  }
-
-  delete (x) {
-    const key = this._getUniqueKey(x)
-    const priv = Context.uniquePrivates.get(this)
-    priv.undeployed.delete(key)
-    priv.deployed.delete(key)
-    return priv.map.delete(key)
-  }
-
-  get (x) { return Context.uniquePrivates.get(this).map.get(this._getUniqueKey(x)) }
-  set (x, y) { Context.uniquePrivates.get(this).map.set(this._getUniqueKey(x), y); return this }
-  has (x) { return Context.uniquePrivates.get(this).map.has(this._getUniqueKey(x)) }
-  get size () { return Context.uniquePrivates.get(this).map.size }
-  get [Symbol.species] () { return UniqueMap }
-  entries () { return Context.uniquePrivates.get(this).map.entries() }
-  keys () { return Context.uniquePrivates.get(this).map.keys() }
-  forEach (callback, thisArg) { return Context.uniquePrivates.get(this).map.forEach(callback, thisArg) }
-  values () { return Context.uniquePrivates.get(this).map.values() }
-  [Symbol.iterator] () { return Context.uniquePrivates.get(this).map[Symbol.iterator]() }
-}
-
-// ------------------------------------------------------------------------------------------------
-// UniqueSet
-// ------------------------------------------------------------------------------------------------
-
-/**
- * A Set that guarantees tokens are unique. The API is intended to be the same as the built-in
- * Set so that this can be a drop-in replacement in sandboxed code.
- */
-class UniqueSet {
-  constructor (iterable) {
-    Context.uniquePrivates.set(this, new Context.UniqueMap())
-    if (iterable) { for (const x of iterable) this.add(x) }
-  }
-
-  get size () { return Context.uniquePrivates.get(this).size }
-  get [Symbol.species] () { return UniqueSet }
-  add (x) { Context.uniquePrivates.get(this).set(x, x); return this }
-  clear () { Context.uniquePrivates.get(this).clear() }
-  delete (x) { return Context.uniquePrivates.get(this).delete(x) }
-  entries () { return Context.uniquePrivates.get(this).entries() }
-  forEach (callback, thisArg) { return Context.uniquePrivates.get(this).forEach(x => callback.call(thisArg, x)) }
-  has (x) { return Context.uniquePrivates.get(this).has(x) }
-  values () { return Context.uniquePrivates.get(this).values() }
-  [Symbol.iterator] () { return Context.uniquePrivates.get(this).keys() }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-module.exports = { UniqueMap, UniqueSet }
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports) {
-
-/**
- * intrinsics.js
- *
- * Helpers for the known built-in objects in JavaScript
- */
-
-// See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
-const intrinsicNames = [
-  // Global functions
-  'console',
-  'eval',
-  'isFinite',
-  'isNaN',
-  'parseFloat',
-  'parseInt',
-  'decodeURI',
-  'decodeURIComponent',
-  'encodeURI',
-  'encodeURIComponent',
-  'escape',
-
-  // Fundamental objects
-  'Object',
-  'Function',
-  'Boolean',
-  'Symbol',
-  'Error',
-  'EvalError',
-  'RangeError',
-  'ReferenceError',
-  'SyntaxError',
-  'TypeError',
-  'URIError',
-
-  // Numbers and dates
-  'Number',
-  'BigInt',
-  'Math',
-  'Date',
-
-  // Text processing
-  'String',
-  'RegExp',
-
-  // Indexed collections
-  'Array',
-  'Int8Array',
-  'Uint8Array',
-  'Uint8ClampedArray',
-  'Int16Array',
-  'Uint16Array',
-  'Int32Array',
-  'Uint32Array',
-  'Float32Array',
-  'Float64Array',
-  'BigInt64Array',
-  'BigUint64Array',
-
-  // Keyed collections
-  'Map',
-  'Set',
-  'WeakMap',
-  'WeakSet',
-
-  // Structured data
-  'ArrayBuffer',
-  'DataView',
-  'JSON',
-
-  // Control abstraction objects
-  'Promise',
-  'Generator',
-  'GeneratorFunction',
-  'AsyncFunction',
-
-  // Reflection
-  'Reflect',
-  'Proxy',
-
-  // Internationalization
-  'Intl',
-
-  // WebAssembly
-  'WebAssembly'
-]
-
-// Returns an object with the built-in intrinsics in this environment
-const getIntrinsics = () => {
-  let code = 'const x = {};'
-  intrinsicNames.forEach(name => { code += `x.${name}=typeof ${name}!=='undefined'?${name}:undefined;` })
-  code += 'return x'
-  return new Function(code)() // eslint-disable-line
-}
-
-const globalIntrinsics = getIntrinsics()
-
-// ------------------------------------------------------------------------------------------------
-// Intrinsics
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Manages known intrinsics
- */
-class Intrinsics {
-  constructor () {
-    this.default = null
-    this.allowed = []
-    this.types = new Set()
-    this.use(globalIntrinsics)
-  }
-
-  set (intrinsics) {
-    this.default = null
-    this.allowed = []
-    this.types = new Set()
-    this.use(intrinsics)
-    return this
-  }
-
-  allow (intrinsics) {
-    this.allowed.push(intrinsics)
-    Object.keys(intrinsics).forEach(name => this.types.add(intrinsics[name]))
-    return this
-  }
-
-  use (intrinsics) {
-    this.allow(intrinsics)
-    this.default = intrinsics
-    return this
-  }
-}
-
-Intrinsics.defaultIntrinsics = new Intrinsics()
-
-// ------------------------------------------------------------------------------------------------
-
-module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
-
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * owner.js
- *
- * Owner API that manages jigs and signs transactions
- */
-
-const bsv = __webpack_require__(2)
-const util = __webpack_require__(0)
-
-// ------------------------------------------------------------------------------------------------
-// Script API
-// ------------------------------------------------------------------------------------------------
-
-/**
- * API that all custom scripts need to implement to become jig owners
- */
-class Script {
-  /**
-   * Calculates a buffer for the script. This should be calculated on-demand.
-   * @returns {Uint8Array} Uint8Array script
-   */
-  getBuffer () {
-    throw new Error('Not implemented')
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// P2PKH Script
-// ------------------------------------------------------------------------------------------------
-
-class AddressScript {
-  constructor (address) {
-    this.address = address
-  }
-
-  getBuffer () {
-    // Based on https://gist.github.com/diafygi/90a3e80ca1c2793220e5/
-    const A = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-    var d = [] // the array for storing the stream of decoded bytes
-    var b = [] // the result byte array that will be returned
-    var i // the iterator variable for the base58 string
-    var j // the iterator variable for the byte array (d)
-    var c // the carry amount variable that is used to overflow from the current byte to the next byte
-    var n // a temporary placeholder variable for the current byte
-    const s = this.address
-    for (i in s) { // loop through each base58 character in the input string
-      j = 0 // reset the byte iterator
-      c = A.indexOf(s[i]) // set the initial carry amount equal to the current base58 digit
-      if (c < 0) throw new Error(`Invalid base58 char: ${s[i]}`) // see if each char is base 58
-      if (!(c || b.length ^ i)) b.push(0) // prepend the result array with a zero if the base58 digit is zero and non-zero characters haven't been seen yet (to ensure correct decode length)
-      while (j in d || c) { // start looping through the bytes until there are no more bytes and no carry amount
-        n = d[j] // set the placeholder for the current byte
-        n = n ? n * 58 + c : c // shift the current byte 58 units and add the carry amount (or just add the carry amount if this is a new byte)
-        c = n >> 8 // find the new carry amount (1-byte shift of current byte value)
-        d[j] = n % 256 // reset the current byte to the remainder (the carry amount will pass on the overflow)
-        j++ // iterate to the next byte
-      }
-    }
-    while (j--) { b.push(d[j]) } // since the byte array is backwards, loop through it in reverse order, and append
-    if (b.length < 6) throw new Error(`Base58 check string too short: ${b.length}`)
-    // TODO: Verify the checksum. To do this, we need an onchain sha256.
-    if (b[0] !== 0 && b[0] !== 111) throw new Error('P2SH addresses are not supported')
-    const hash160 = b.slice(1, b.length - 4)
-    const script = [118, 169, ...hash160, 135, 172] // OP_DUP OP_HASH160 <PKH> OP_EQUAL OP_CHECKSIG
-    return new Uint8Array(script)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// P2PKH Script
-// ------------------------------------------------------------------------------------------------
-
-class PubKeyScript {
-  constructor (pubkey) {
-    // Check if string
-    this.pubkey = pubkey
-  }
-
-  getBuffer () {
-    const H = '0123456789abcdef'.split('')
-    const s = this.pubkey.toLowerCase()
-    const pk = []
-    if (s.length % 2 !== 0) throw new Error(`Invalid pubkey length: ${s.length}`)
-    for (let i = 0; i < s.length; i += 2) {
-      const h1 = H.indexOf(s[i])
-      const h2 = H.indexOf(s[i + 1])
-      if (h1 === -1 || h2 === -1) throw new Error(`Invalid pubkey hex: ${s}`)
-      pk.push(h1 * 16 + h2)
-    }
-    const script = [...pk, 172] // <PK> OP_CHECKSIG
-    return new Uint8Array(script)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Sign API
-// ------------------------------------------------------------------------------------------------
-
-class Sign {
-  /**
-   * Returns an owner script that is used for new jigs
-   * @returns {string|Script} New owner script, address, or pubkey
-   */
-  getOwner () {
-    throw new Error('Not implemented')
-  }
-
-  /**
-   * Signs run tokens inputs
-   *
-   * In a server, maybe it loads the tx to see what it's signing
-   * @param {bsv.Transaction} tx Transaction to sign
-   * @returns {bsv.Transaction} Signed transaction
-   */
-  async sign (tx) {
-    throw new Error('Not implemented')
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Owner wrapper to private syncing and tracking
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Base owner class that may be derived from to track jigs and code
- */
-class Owner extends Sign {
-  constructor () {
-    super()
-
-    // Each asset should only be stored once. If we have an origin, prefer it
-    this.assets = new Map() // origin|Jig|Class|Function -> Jig|Class|Function
-  }
-
-  get run () { return util.activeRunInstance() }
-  get logger () { return util.activeRunInstance().logger }
-
-  get jigs () {
-    try {
-      return Array.from(this.assets.values())
-        .filter(asset => asset instanceof this.run.constructor.Jig)
-    } catch (e) {
-      if (this.logger) this.logger.error(`Bad asset found in owner. Removing.\n\n${e}`)
-      this.removeBadAssets()
-      return this.jigs
-    }
-  }
-
-  get code () {
-    try {
-      return Array.from(this.assets.values())
-        .filter(asset => !(asset instanceof this.run.constructor.Jig))
-    } catch (e) {
-      if (this.logger) this.logger.error(`Bad asset found in owner. Removing.\n\n${e}`)
-      this.removeBadAssets()
-      return this.code
-    }
-  }
-
-  removeBadAssets () {
-    let uselessVar = true
-    const toRemove = []
-    for (const [key, asset] of this.assets) {
-      try {
-        // If a asset failed to deploy, then it will have ! in its origin and throw here
-        const isJig = asset instanceof this.run.constructor.Jig
-        // We need to do something with the result to keep it from being minified away.
-        uselessVar = uselessVar ? !isJig : isJig
-      } catch (e) {
-        toRemove.push(key)
-      }
-    }
-    toRemove.forEach(key => this.assets.delete(key))
-  }
-
-  async sync () {
-    // Post any pending transactions
-    await this.run.syncer.sync()
-
-    // Query the latest jigs and code, but only have one query at a time
-    if (!this.query) {
-      this.query = new Promise((resolve, reject) => {
-        this.queryLatest()
-          .then(() => { this.query = null; resolve() })
-          .catch(e => { this.query = null; reject(e) })
-      })
-    }
-    return this.query
-  }
-
-  async queryLatest () {
-    const queryString = this.address ? this.address
-      : bsv.crypto.Hash.sha256(this.getScript()).toString('hex') // script hash
-    const newUtxos = await this.run.blockchain.utxos(queryString)
-
-    // Create a new asset set initially comprised of all pending assets, since they won't
-    // be in the utxos, and also a map of our non-pending jigs to their present
-    // locations so we don't reload them.
-    const newAssets = new Map()
-    const locationMap = new Map()
-    for (const [key, asset] of this.assets) {
-      if (typeof key !== 'string') newAssets.set(key, asset)
-      try { locationMap.set(asset.location, asset) } catch (e) { }
-    }
-
-    // load each new utxo, and if we come across a jig we already know, re-use it
-    for (const utxo of newUtxos) {
-      const location = `${utxo.txid}_o${utxo.vout}`
-      const prevAsset = locationMap.get(location)
-      if (prevAsset) {
-        newAssets.delete(prevAsset)
-        newAssets.set(location, prevAsset)
-        continue
-      }
-      try {
-        const asset = await this.run.load(location)
-        newAssets.set(asset.origin, asset)
-      } catch (e) {
-        if (this.logger) this.logger.error(`Failed to load owner location ${location}\n\n${e.toString()}`)
-      }
-    }
-
-    this.assets = newAssets
-  }
-
-  update (asset) {
-    this.assets.delete(asset)
-    try {
-      // TODO: Update this
-      if (asset.owner === this.pubkey) {
-        try {
-          if (typeof asset.origin === 'undefined') throw new Error()
-          if (asset.origin.startsWith('_')) throw new Error()
-          this.assets.set(asset.origin, asset)
-        } catch (e) { this.assets.set(asset, asset) }
-      } else {
-        try { this.assets.delete(asset.origin) } catch (e) { }
-      }
-    } catch (e) { }
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Owner implementation based on a key or address
-// ------------------------------------------------------------------------------------------------
-
-class BasicOwner extends Owner {
-  constructor (keyOrAddress, network) {
-    super()
-
-    const bsvNetwork = util.bsvNetwork(network)
-    keyOrAddress = keyOrAddress || new bsv.PrivateKey(bsvNetwork)
-
-    // Try creating the private key on mainnet and testnet
-    try {
-      const bsvPrivateKey = new bsv.PrivateKey(keyOrAddress, bsvNetwork)
-      if (bsvPrivateKey.toString() !== keyOrAddress.toString()) throw new Error()
-      return this.setupFromPrivateKey(bsvPrivateKey)
-    } catch (e) {
-      if (e.message === 'Private key network mismatch') throw e
-    }
-
-    // Try creating from a public key
-    try {
-      return this.setupFromPublicKey(new bsv.PublicKey(keyOrAddress, { network: bsvNetwork }))
-    } catch (e) { }
-
-    // Try creating from an address
-    try {
-      return this.setupFromAddress(new bsv.Address(keyOrAddress, bsvNetwork))
-    } catch (e) {
-      if (e.message === 'Address has mismatched network type.') throw e
-    }
-
-    throw new Error(`bad owner key or address: ${keyOrAddress}`)
-  }
-
-  setupFromPrivateKey (bsvPrivateKey) {
-    this.bsvPrivateKey = bsvPrivateKey
-    this.privkey = bsvPrivateKey.toString()
-    return this.setupFromPublicKey(bsvPrivateKey.publicKey)
-  }
-
-  setupFromPublicKey (bsvPublicKey) {
-    this.bsvPublicKey = bsvPublicKey
-    this.pubkey = bsvPublicKey.toString()
-    return this.setupFromAddress(bsvPublicKey.toAddress())
-  }
-
-  setupFromAddress (bsvAddress) {
-    this.bsvAddress = bsvAddress
-    this.address = bsvAddress.toString()
-    return this
-  }
-
-  getOwner () {
-    // return new AddressScript(this.address)
-    return this.address
-  }
-
-  async sign (tx) {
-    if (!this.bsvPrivateKey) throw new Error('Cannot sign. Owner does not have a private key declared.')
-    tx.sign(this.bsvPrivateKey)
-    return tx
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-module.exports = { Script, AddressScript, PubKeyScript, Sign, Owner, BasicOwner }
-
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * protocol.js
- *
- * Manager for token protocols are supported by Run
- */
-
-const bsv = __webpack_require__(2)
-const { Jig, JigControl } = __webpack_require__(3)
-const { Berry, BerryControl } = __webpack_require__(8)
-const Location = __webpack_require__(4)
-const util = __webpack_require__(0)
-
-// ------------------------------------------------------------------------------------------------
-// Protocol manager
-// ------------------------------------------------------------------------------------------------
-
-// A modified version of the txo format form unwriter
-// Source: https://github.com/interplanaria/txo/blob/master/index.js
-var txToTxo = function (tx, options) {
-  const gene = new bsv.Transaction(tx)
-  const t = gene.toObject()
-  const inputs = []
-  const outputs = []
-  if (gene.inputs) {
-    gene.inputs.forEach(function (input, inputIndex) {
-      if (input.script) {
-        const xput = { i: inputIndex, seq: input.sequenceNumber }
-        input.script.chunks.forEach(function (c, chunkIndex) {
-          if (c.buf) {
-            if (c.buf.byteLength >= 1000000) {
-              xput['xlb' + chunkIndex] = c.buf.toString('base64')
-            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
-              xput['lb' + chunkIndex] = c.buf.toString('base64')
-            } else {
-              xput['b' + chunkIndex] = c.buf.toString('base64')
-            }
-            if (options && options.h && options.h > 0) {
-              xput['h' + chunkIndex] = c.buf.toString('hex')
-            }
-          } else {
-            if (typeof c.opcodenum !== 'undefined') {
-              xput['b' + chunkIndex] = {
-                op: c.opcodenum
-              }
-            } else {
-              xput['b' + chunkIndex] = c
-            }
-          }
-        })
-        const sender = {
-          h: input.prevTxId.toString('hex'),
-          i: input.outputIndex
-        }
-        const address = input.script.toAddress(bsv.Networks.livenet).toString()
-        if (address && address.length > 0) {
-          sender.a = address
-        }
-        xput.e = sender
-        inputs.push(xput)
-      }
-    })
-  }
-  if (gene.outputs) {
-    gene.outputs.forEach(function (output, outputIndex) {
-      if (output.script) {
-        const xput = { i: outputIndex }
-        output.script.chunks.forEach(function (c, chunkIndex) {
-          if (c.buf) {
-            if (c.buf.byteLength >= 1000000) {
-              xput['xlb' + chunkIndex] = c.buf.toString('base64')
-              xput['xls' + chunkIndex] = c.buf.toString('utf8')
-            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
-              xput['lb' + chunkIndex] = c.buf.toString('base64')
-              xput['ls' + chunkIndex] = c.buf.toString('utf8')
-            } else {
-              xput['b' + chunkIndex] = c.buf.toString('base64')
-              xput['s' + chunkIndex] = c.buf.toString('utf8')
-            }
-            if (options && options.h && options.h > 0) {
-              xput['h' + chunkIndex] = c.buf.toString('hex')
-            }
-          } else {
-            if (typeof c.opcodenum !== 'undefined') {
-              xput['b' + chunkIndex] = {
-                op: c.opcodenum
-              }
-            } else {
-              xput['b' + chunkIndex] = c
-            }
-          }
-        })
-        const receiver = {
-          v: output.satoshis,
-          i: outputIndex
-        }
-        const address = output.script.toAddress(bsv.Networks.livenet).toString()
-        if (address && address.length > 0) {
-          receiver.a = address
-        }
-        xput.e = receiver
-        outputs.push(xput)
-      }
-    })
-  }
-  const r = {
-    tx: { h: t.hash },
-    in: inputs,
-    out: outputs,
-    lock: t.nLockTime
-  }
-  // confirmations
-  if (options && options.confirmations) {
-    r.confirmations = options.confirmations
-  }
-  return r
-}
-
-class Protocol {
-  static async pluckBerry (location, blockchain, code, protocol) {
-    // TODO: Make fetch and pluck secure, as well as txo above
-    const fetch = async x => txToTxo(await blockchain.fetch(x))
-    const pluck = x => this.pluckBerry(x, blockchain, code)
-
-    try {
-      // TODO: Allow undeployed, with bad locations
-      const sandboxedProtocol = code.installBerryProtocol(protocol)
-
-      BerryControl.protocol = sandboxedProtocol
-      if (Location.parse(sandboxedProtocol.location).error) {
-        BerryControl.location = Location.build({ error: `${protocol.name} protocol not deployed` })
-      } else {
-        BerryControl.location = Location.build({ location: sandboxedProtocol.location, innerLocation: location })
-      }
-
-      const berry = await sandboxedProtocol.pluck(location, fetch, pluck)
-
-      if (!berry) throw new Error(`Failed to load berry using ${protocol.name}: ${location}`)
-
-      return berry
-    } finally {
-      BerryControl.protocol = undefined
-      BerryControl.location = undefined
-    }
-  }
-
-  static isToken (x) {
-    switch (typeof x) {
-      case 'object': return x && (x instanceof Jig || x instanceof Berry)
-      case 'function': {
-        if (!!x.origin && !!x.location && !!x.owner) return true
-        const net = util.networkSuffix(util.activeRunInstance().blockchain.network)
-        return !!x[`origin${net}`] && !!x[`location${net}`] && !!x[`owner${net}`]
-      }
-      default: return false
-    }
-  }
-
-  static isDeployable (x) {
-    if (typeof x !== 'function') return false
-    return x.toString().indexOf('[native code]') === -1
-  }
-
-  static getLocation (x) {
-    const location = JigControl.disableProxy(() => x.location)
-    Location.parse(location)
-    return location
-  }
-
-  static getOrigin (x) {
-    if (x && x instanceof Berry) return Protocol.getLocation(x)
-    const origin = JigControl.disableProxy(() => x.origin)
-    Location.parse(origin)
-    return origin
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Berry protocol plucker
-// ------------------------------------------------------------------------------------------------
-
-class BerryProtocol {
-  // Static to keep stateless
-  // Location is defined by the protocol
-  static async pluck (location, fetch, pluck) {
-    // Fetch tx
-    // Parse
-    // Return Berry
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-Protocol.BerryProtocol = BerryProtocol
-
-module.exports = Protocol
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || new Function("return this")();
-} catch (e) {
-	// This works if the window reference is available
-	if (typeof window === "object") g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5779,7 +3609,2201 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14)))
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(Buffer) {/**
+ * owner.js
+ *
+ * Owner API that manages jigs and signs transactions
+ */
+
+const bsv = __webpack_require__(2)
+const util = __webpack_require__(0)
+
+// ------------------------------------------------------------------------------------------------
+// Script API
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * API that all custom scripts need to implement to become jig owners
+ */
+class Script {
+  /**
+   * Calculates a buffer for the script. This should be calculated on-demand.
+   * @returns {Uint8Array} Uint8Array script
+   */
+  toBuffer () {
+    throw new Error('Not implemented')
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// P2PKH Script
+// ------------------------------------------------------------------------------------------------
+
+class AddressScript {
+  constructor (address) {
+    if (typeof address !== 'string') throw new Error(`Address is not a string: ${address}`)
+    this.address = address
+  }
+
+  toBuffer () {
+    // Based on https://gist.github.com/diafygi/90a3e80ca1c2793220e5/
+    const A = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+    var d = [] // the array for storing the stream of decoded bytes
+    var b = [] // the result byte array that will be returned
+    var i // the iterator variable for the base58 string
+    var j // the iterator variable for the byte array (d)
+    var c // the carry amount variable that is used to overflow from the current byte to the next byte
+    var n // a temporary placeholder variable for the current byte
+    const s = this.address
+    for (i in s) { // loop through each base58 character in the input string
+      j = 0 // reset the byte iterator
+      c = A.indexOf(s[i]) // set the initial carry amount equal to the current base58 digit
+      if (c < 0) throw new Error(`Invalid character in address: ${s}`) // see if each char is base 58
+      if (!(c || b.length ^ i)) b.push(0) // prepend the result array with a zero if the base58 digit is zero and non-zero characters haven't been seen yet (to ensure correct decode length)
+      while (j in d || c) { // start looping through the bytes until there are no more bytes and no carry amount
+        n = d[j] // set the placeholder for the current byte
+        n = n ? n * 58 + c : c // shift the current byte 58 units and add the carry amount (or just add the carry amount if this is a new byte)
+        c = n >> 8 // find the new carry amount (1-byte shift of current byte value)
+        d[j] = n % 256 // reset the current byte to the remainder (the carry amount will pass on the overflow)
+        j++ // iterate to the next byte
+      }
+    }
+    while (j--) { b.push(d[j]) } // since the byte array is backwards, loop through it in reverse order, and append
+    if (b.length < 6) throw new Error(`Address too short: ${s}`)
+    // TODO: Verify the checksum. To do this, we need an onchain sha256.
+    if (b[0] !== 0 && b[0] !== 111) throw new Error(`Address may only be a P2PKH type: ${s}`)
+    const hash160 = b.slice(1, b.length - 4)
+    const script = [118, 169, 20, ...hash160, 136, 172] // OP_DUP OP_HASH160 <PKH> OP_EQUALVERIFY OP_CHECKSIG
+    return new Uint8Array(script)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// P2PKH Script
+// ------------------------------------------------------------------------------------------------
+
+class PubKeyScript {
+  constructor (pubkey) {
+    if (typeof pubkey !== 'string') throw new Error(`Pubkey is not a string: ${pubkey}`)
+    this.pubkey = pubkey
+  }
+
+  toBuffer () {
+    const H = '0123456789abcdef'.split('')
+    const s = this.pubkey.toLowerCase()
+    const pk = []
+    if (s.length % 2 !== 0) throw new Error(`Pubkey has bad length: ${this.pubkey}`)
+    for (let i = 0; i < s.length; i += 2) {
+      const h1 = H.indexOf(s[i])
+      const h2 = H.indexOf(s[i + 1])
+      if (h1 === -1 || h2 === -1) throw new Error(`Invalid pubkey hex: ${s}`)
+      pk.push(h1 * 16 + h2)
+    }
+    const script = [pk.length, ...pk, 172] // <PK> OP_CHECKSIG
+    return new Uint8Array(script)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Sign API
+// ------------------------------------------------------------------------------------------------
+
+class Sign {
+  /**
+   * Returns an owner script that is used for new jigs
+   * @returns {string|Script} New owner script, address, or pubkey
+   */
+  getOwner () {
+    throw new Error('Not implemented')
+  }
+
+  /**
+   * Signs run tokens inputs
+   *
+   * In a server, maybe it loads the tx to see what it's signing
+   * @param {bsv.Transaction} tx Transaction to sign
+   * @returns {bsv.Transaction} Signed transaction
+   */
+  async sign (tx) {
+    throw new Error('Not implemented')
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Owner wrapper to private syncing and tracking
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Base owner class that may be derived from to track jigs and code
+ */
+class Owner extends Sign {
+  constructor () {
+    super()
+
+    // Each asset should only be stored once. If we have an origin, prefer it
+    this.assets = new Map() // origin|Jig|Class|Function -> Jig|Class|Function
+  }
+
+  get run () { return util.activeRunInstance() }
+  get logger () { return util.activeRunInstance().logger }
+
+  get jigs () {
+    try {
+      return Array.from(this.assets.values())
+        .filter(asset => asset instanceof this.run.constructor.Jig)
+    } catch (e) {
+      if (this.logger) this.logger.error(`Bad asset found in owner. Removing.\n\n${e}`)
+      this.removeBadAssets()
+      return this.jigs
+    }
+  }
+
+  get code () {
+    try {
+      return Array.from(this.assets.values())
+        .filter(asset => !(asset instanceof this.run.constructor.Jig))
+    } catch (e) {
+      if (this.logger) this.logger.error(`Bad asset found in owner. Removing.\n\n${e}`)
+      this.removeBadAssets()
+      return this.code
+    }
+  }
+
+  removeBadAssets () {
+    let uselessVar = true
+    const toRemove = []
+    for (const [key, asset] of this.assets) {
+      try {
+        // If a asset failed to deploy, then it will have ! in its origin and throw here
+        const isJig = asset instanceof this.run.constructor.Jig
+        // We need to do something with the result to keep it from being minified away.
+        uselessVar = uselessVar ? !isJig : isJig
+      } catch (e) {
+        toRemove.push(key)
+      }
+    }
+    toRemove.forEach(key => this.assets.delete(key))
+  }
+
+  async sync () {
+    // Post any pending transactions
+    await this.run.syncer.sync()
+
+    // Query the latest jigs and code, but only have one query at a time
+    if (!this.query) {
+      this.query = new Promise((resolve, reject) => {
+        this.queryLatest()
+          .then(() => { this.query = null; resolve() })
+          .catch(e => { this.query = null; reject(e) })
+      })
+    }
+    return this.query
+  }
+
+  async queryLatest () {
+    let query = this.getOwner()
+
+    // If owner is not an address of pubkey string, then it's a script object
+    // We'll query the UTXOs by script hash in this case.
+    if (typeof query === 'object') {
+      const script = query.toBuffer()
+      const scriptHash = bsv.crypto.Hash.sha256(Buffer.from(script))
+      query = scriptHash.toString('hex')
+    }
+
+    const newUtxos = await this.run.blockchain.utxos(query)
+
+    // Create a new asset set initially comprised of all pending assets, since they won't
+    // be in the utxos, and also a map of our non-pending jigs to their present
+    // locations so we don't reload them.
+    const newAssets = new Map()
+    const locationMap = new Map()
+    for (const [key, asset] of this.assets) {
+      if (typeof key !== 'string') newAssets.set(key, asset)
+      try { locationMap.set(asset.location, asset) } catch (e) { }
+    }
+
+    // Load each new utxo, and if we come across a jig we already know, re-use it
+    for (const utxo of newUtxos) {
+      const location = `${utxo.txid}_o${utxo.vout}`
+      const prevAsset = locationMap.get(location)
+      if (prevAsset) {
+        newAssets.delete(prevAsset)
+        newAssets.set(location, prevAsset)
+        continue
+      }
+      try {
+        const asset = await this.run.load(location)
+        newAssets.set(asset.origin, asset)
+      } catch (e) {
+        if (this.logger) this.logger.error(`Failed to load owner location ${location}\n\n${e.toString()}`)
+      }
+    }
+
+    this.assets = newAssets
+  }
+
+  update (asset) {
+    this.assets.delete(asset)
+    try {
+      if (this.sameOwner(asset.owner, this.getOwner())) {
+        try {
+          if (typeof asset.origin === 'undefined') throw new Error()
+          if (asset.origin.startsWith('_')) throw new Error()
+          this.assets.set(asset.origin, asset)
+        } catch (e) {
+          this.assets.set(asset, asset)
+        }
+      } else {
+        try {
+          // The owner is not us anymore. Remove it.
+          this.assets.delete(asset.origin)
+        } catch (e) {}
+      }
+    } catch (e) {}
+  }
+
+  sameOwner (x, y) {
+    if (typeof x !== typeof y) return false
+    if (typeof x === 'string') return x === y
+    if (typeof x !== 'object' || !x) return false
+    const xbuf = Buffer.from(x.toBuffer())
+    const ybuf = Buffer.from(y.toBuffer())
+    const z = xbuf.toString('hex') === ybuf.toString('hex')
+    return z
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Owner implementation based on a key or address
+// ------------------------------------------------------------------------------------------------
+
+class BasicOwner extends Owner {
+  constructor (keyOrAddress, network) {
+    super()
+
+    const bsvNetwork = util.bsvNetwork(network)
+    keyOrAddress = keyOrAddress || new bsv.PrivateKey(bsvNetwork)
+
+    // Try creating the private key on mainnet and testnet
+    try {
+      const bsvPrivateKey = new bsv.PrivateKey(keyOrAddress, bsvNetwork)
+      if (bsvPrivateKey.toString() !== keyOrAddress.toString()) throw new Error()
+      return this.setupFromPrivateKey(bsvPrivateKey)
+    } catch (e) {
+      if (e.message === 'Private key network mismatch') throw e
+    }
+
+    // Try creating from a public key
+    try {
+      return this.setupFromPublicKey(new bsv.PublicKey(keyOrAddress, { network: bsvNetwork }))
+    } catch (e) { }
+
+    // Try creating from an address
+    try {
+      return this.setupFromAddress(new bsv.Address(keyOrAddress, bsvNetwork))
+    } catch (e) {
+      if (e.message === 'Address has mismatched network type.') throw e
+    }
+
+    throw new Error(`bad owner key or address: ${keyOrAddress}`)
+  }
+
+  setupFromPrivateKey (bsvPrivateKey) {
+    this.bsvPrivateKey = bsvPrivateKey
+    this.privkey = bsvPrivateKey.toString()
+    return this.setupFromPublicKey(bsvPrivateKey.publicKey)
+  }
+
+  setupFromPublicKey (bsvPublicKey) {
+    this.bsvPublicKey = bsvPublicKey
+    this.pubkey = bsvPublicKey.toString()
+    return this.setupFromAddress(bsvPublicKey.toAddress())
+  }
+
+  setupFromAddress (bsvAddress) {
+    this.bsvAddress = bsvAddress
+    this.address = bsvAddress.toString()
+    return this
+  }
+
+  getOwner () {
+    // return new AddressScript(this.address)
+    return this.address
+  }
+
+  async sign (tx) {
+    if (!this.bsvPrivateKey) throw new Error('Cannot sign. Owner does not have a private key declared.')
+    tx.sign(this.bsvPrivateKey)
+    return tx
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { Script, AddressScript, PubKeyScript, Sign, Owner, BasicOwner }
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6).Buffer))
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const uniquePrivates = new WeakMap()
+
+/**
+ * The objects that are exposed from Run to our built-in sandboxes, Jig and Berry
+ */
+class Context {
+  static get Checkpoint () { return __webpack_require__(9).Checkpoint }
+  static activeRunInstance () { return __webpack_require__(0).activeRunInstance() }
+  static deployable (x) { return __webpack_require__(0).deployable(x) }
+  static checkSatoshis (x) { return __webpack_require__(0).checkSatoshis(x) }
+  static getOwnerScript (x) { return __webpack_require__(0).getOwnerScript(x) }
+  static networkSuffix (x) { return __webpack_require__(0).networkSuffix(x) }
+  static get Location () { return __webpack_require__(4) }
+  static get Protocol () { return __webpack_require__(13) }
+  static get uniquePrivates () { return uniquePrivates }
+  static get UniqueSet () { return __webpack_require__(11).UniqueSet }
+  static get UniqueMap () { return __webpack_require__(11).UniqueMap }
+
+  static deepFreeze (x) {
+    // TODO: deeply freeze
+    Object.freeze(x)
+  }
+}
+
+module.exports = Context
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(Buffer) {/**
+ * xray.js
+ *
+ * Powerful object scanner to deeply inspect, serialize, deserialize, and clone objects.
+ */
+
+// TODO
+// Document serialization protocol
+//  -Tests
+//  -Tokens and deployables don't need sets. Need loaders.
+//  -Documentation (remove Builder references)
+//  -Does UniqueSet need special handling for Set?
+//  -Hook up to existing code (And UniqueSet as default)
+//  -How to load other protocols?
+// - intrinsics are designed to be as flexible as safe.
+// Scanning is done both forward and backward. Strange.
+// So Objects and arrays are acceptible from without.
+// Document scanner API
+
+const Protocol = __webpack_require__(13)
+const { display } = __webpack_require__(0)
+const { Jig, JigControl } = __webpack_require__(3)
+const { Berry } = __webpack_require__(10)
+const { Intrinsics } = __webpack_require__(12)
+
+// ------------------------------------------------------------------------------------------------
+// Xray
+// -----------------------------------------------------------------------------------------------
+
+/**
+ * The Xray is a scanner that an clone, serialize, and deserialize complex JavaScript objects with
+ * tokens into formats that be stored on a blockchain and cached. To use the Xray, create one using
+ * the Builder below, specifying and properties needed. Then, you may begin scanning objects. The
+ * Xray has internal caches and assumes that while using the scanner objects will not change. The
+ * Xray uses Scanners to process objects. Scanners have a consistent API documented below.
+ *
+ * Format:
+ *  $class
+ *
+ * Caches, intrinsics - membrane, not passing objects or arrays, primitives OK.
+ *
+ * Serialization is JSON
+ */
+class Xray {
+  /**
+   * Creates an Xray that uses the default intrinsics and a set of basic scanners. Tokens and
+   * deployables are not supported by default in scanned objects and must be enabled.
+   */
+  constructor () {
+    this.intrinsics = Intrinsics.defaultIntrinsics
+    this.tokenizer = null
+    this.deployables = null
+    this.tokens = null
+    this.refs = null
+    this.caches = {
+      scanned: new Set(),
+      cloneable: new Map(),
+      serializable: new Map(),
+      deserializable: new Map(),
+      clone: new Map(),
+      serialize: new Map(),
+      deserialize: new Map(),
+      predeserialize: new Map()
+    }
+    this.scanners = [
+      new DedupScanner(),
+      new UndefinedScanner(),
+      new PrimitiveScanner(),
+      new BasicObjectScanner(),
+      new BasicArrayScanner(),
+      new Uint8ArrayScanner(),
+      new SetScanner(),
+      new MapScanner()
+    ]
+  }
+
+  allowTokens () {
+    if (!this.tokens) {
+      this.tokens = new Set()
+      this.refs = new Set()
+      this.scanners.unshift(new ArbitraryObjectScanner())
+      this.scanners.unshift(new TokenScanner())
+    }
+    return this
+  }
+
+  allowDeployables () {
+    if (!this.deployables) {
+      this.deployables = new Set()
+      this.scanners.unshift(new ArbitraryObjectScanner())
+      this.scanners.unshift(new DeployableScanner())
+    }
+    return this
+  }
+
+  useTokenSaver (saveToken) { this.saveToken = saveToken; return this }
+  useTokenLoader (loadToken) { this.loadToken = loadToken; return this }
+  useCodeCloner (cloneCode) { this.cloneCode = cloneCode; return this }
+  useIntrinsics (intrinsics) { this.intrinsics = intrinsics; return this }
+  restrictOwner (owner) { this.restrictedOwner = owner; return this }
+  deeplyScanTokens () { this.deepScanTokens = true; return this }
+  useTokenReplacer (replaceToken) { this.replaceToken = replaceToken; return this }
+
+  scan (x) {
+    if (this.caches.scanned.has(x)) return this
+    for (const scanner of this.scanners) {
+      const value = scanner.scan(x, this)
+      if (typeof value === 'undefined') continue
+      this.caches.scanned.add(x)
+      if (value === false) break
+      return true
+    }
+    throw new Error(`${display(x)} cannot be scanned`)
+  }
+
+  /**
+   * Returns whether an object can be cloned by this Xray
+   */
+  cloneable (x) {
+    if (this.caches.cloneable.has(x)) return this.caches.cloneable.get(x)
+    for (const scanner of this.scanners) {
+      const value = scanner.cloneable(x, this)
+      if (typeof value === 'undefined') continue
+      this.caches.cloneable.set(x, value)
+      if (!value && typeof this.errorObject === 'undefined') this.errorObject = x
+      return value
+    }
+    this.caches.cloneable.set(x, false)
+    if (typeof this.errorObject === 'undefined') this.errorObject = x
+    return false
+  }
+
+  /**
+   * Returns whether an object can be serialized by this Xray
+   */
+  serializable (x) {
+    if (this.caches.serializable.has(x)) return this.caches.serializable.get(x)
+    for (const scanner of this.scanners) {
+      const value = scanner.serializable(x, this)
+      if (typeof value === 'undefined') continue
+      this.caches.serializable.set(x, value)
+      if (!value && typeof this.errorObject === 'undefined') this.errorObject = x
+      return value
+    }
+    this.caches.serializable.set(x, false)
+    if (typeof this.errorObject === 'undefined') this.errorObject = x
+    return false
+  }
+
+  /**
+   * Returns whether an object can be deserialized by this Xray
+   */
+  deserializable (x) {
+    if (this.caches.deserializable.has(x)) return this.caches.deserializable.get(x)
+    for (const scanner of this.scanners) {
+      const value = scanner.deserializable(x, this)
+      if (typeof value === 'undefined') continue
+      this.caches.deserializable.set(x, value)
+      if (!value && typeof this.errorObject === 'undefined') this.errorObject = x
+      return value
+    }
+    this.caches.deserializable.set(x, false)
+    if (typeof this.errorObject === 'undefined') this.errorObject = x
+    return false
+  }
+
+  clone (x) {
+    this.errorObject = undefined
+    if (this.caches.clone.has(x)) return this.caches.clone.get(x)
+    for (const scanner of this.scanners) {
+      const cloneable = scanner.cloneable(x, this)
+      if (typeof cloneable === 'undefined') continue
+      if (cloneable === false) break
+      const y = scanner.clone(x, this)
+      this.caches.clone.set(x, y)
+      return y
+    }
+    const errorObject = typeof this.errorObject !== 'undefined' ? this.errorObject : x
+    throw new Error(`${display(errorObject)} cannot be cloned`)
+  }
+
+  serialize (x) {
+    this.errorObject = undefined
+    if (this.caches.serialize.has(x)) return this.caches.serialize.get(x)
+    for (const scanner of this.scanners) {
+      const serializable = scanner.serializable(x, this)
+      if (typeof serializable === 'undefined') continue
+      if (serializable === false) break
+      const y = scanner.serialize(x, this)
+      this.caches.serialize.set(x, y)
+      return y
+    }
+    const errorObject = typeof this.errorObject !== 'undefined' ? this.errorObject : x
+    throw new Error(`${display(errorObject)} cannot be serialized`)
+  }
+
+  deserialize (x) {
+    this.errorObject = undefined
+    if (this.caches.deserialize.has(x)) return this.caches.deserialize.get(x)
+    for (const scanner of this.scanners) {
+      const deserializable = scanner.deserializable(x, this)
+      if (typeof deserializable === 'undefined') continue
+      if (deserializable === false) break
+      const y = scanner.deserialize(x, this)
+      this.caches.deserialize.set(x, y)
+      return y
+    }
+    const errorObject = typeof this.errorObject !== 'undefined' ? this.errorObject : x
+    throw new Error(`${display(errorObject)} cannot be deserialized`)
+  }
+
+  predeserialize (x) {
+    if (this.caches.predeserialize.has(x)) return
+    for (const scanner of this.scanners) {
+      const deserializable = scanner.deserializable(x, this)
+      if (typeof deserializable === 'undefined') continue
+      if (deserializable === false) break
+      const y = scanner.predeserialize(x, this)
+      this.caches.predeserialize.set(x, y)
+      return y
+    }
+    throw new Error(`${display(x)} cannot be predeserialized`)
+  }
+
+  scanAndReplace (x) {
+    this.scan(x)
+    if (this.replaceToken && Protocol.isToken(x)) {
+      const replacement = this.replaceToken(x)
+      if (replacement) return replacement
+    }
+    return x
+  }
+
+  checkOwner (x) {
+    if (typeof x.$owner !== 'undefined' && typeof this.restrictedOwner !== 'undefined' &&
+        x.$owner !== this.restrictedOwner) {
+      const suggestion = `Hint: Consider saving a clone of ${x} value instead.`
+      throw new Error(`Property ${display(x)} is owned by a different token\n\n${suggestion}`)
+    }
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Scanner API
+// -----------------------------------------------------------------------------------------------
+
+class Scanner {
+  // Return true to skip, false to stop, undefined to continue
+  scan (x, xray) { throw new Error('Not implemented') }
+  cloneable (x, xray) { throw new Error('Not implemented') }
+  serializable (x, xray) { throw new Error('Not implemented') }
+  deserializable (x, xray) { throw new Error('Not implemented') }
+  clone (x, xray) { throw new Error('Not implemented') }
+  serialize (x, xray) { throw new Error('Not implemented') }
+  deserialize (x, xray) { throw new Error('Not implemented') }
+  predeserialize (x, xray) { throw new Error('Not implemented') }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Undefined value scanner
+// -----------------------------------------------------------------------------------------------
+
+/**
+ * Scanner to handle undefined, which cannot be passed through during serializion
+ */
+class UndefinedScanner {
+  scan (x, xray) {
+    if (typeof x === 'undefined') return true
+    if (typeof x === 'object' && x && x.$undef === 1) return true
+  }
+
+  cloneable (x, xray) { if (typeof x === 'undefined') return true }
+  serializable (x, xray) { if (typeof x === 'undefined') return true }
+  deserializable (x, xray) {
+    if (typeof x !== 'object' || !x || typeof x.$undef === 'undefined') return
+    return x.$undef === 1
+  }
+
+  clone (x, xray) { return x }
+  serialize (x, xray) {
+    const { Object } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    y.$undef = 1
+    return y
+  }
+
+  deserialize (x, xray) { return undefined }
+  predeserialize (x, xray) { }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Primitive value scanner
+// -----------------------------------------------------------------------------------------------
+
+/**
+ * Scanner to handle booleans, numbers, strings, and null
+ */
+class PrimitiveScanner {
+  scan (x, xray) {
+    switch (typeof x) {
+      case 'boolean': return true
+      case 'number': return true
+      case 'string': return true
+      case 'object': return x === null ? true : undefined
+      case 'symbol': return true
+    }
+  }
+
+  cloneable (x, xray) {
+    switch (typeof x) {
+      case 'boolean': return true
+      case 'number': return true
+      case 'string': return true
+      case 'object': return x === null ? true : undefined
+    }
+  }
+
+  serializable (x, xray) {
+    switch (typeof x) {
+      case 'boolean': return true
+      case 'number': return !isNaN(x) && isFinite(x)
+      case 'string': return true
+      case 'object': return x === null ? true : undefined
+    }
+  }
+
+  deserializable (x, xray) {
+    switch (typeof x) {
+      case 'boolean': return true
+      case 'number': return !isNaN(x) && isFinite(x)
+      case 'string': return true
+      case 'object': return x === null ? true : undefined
+    }
+  }
+
+  clone (x, xray) { return x }
+  serialize (x, xray) { return x }
+  deserialize (x, xray) { return x }
+  predeserialize (x, xray) { }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Normal object scanner
+// -----------------------------------------------------------------------------------------------
+
+class BasicObjectScanner {
+  scan (x, xray) {
+    if (this.isBasicObject(x, xray)) {
+      xray.checkOwner(x)
+      xray.caches.scanned.add(x)
+      Object.keys(x).forEach(key => {
+        xray.scan(key)
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
+      return true
+    }
+  }
+
+  cloneable (x, xray) {
+    if (!this.isBasicObject(x, xray)) return
+    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
+    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
+  }
+
+  serializable (x, xray) {
+    if (!this.isBasicObject(x, xray)) return
+    if (Object.keys(x).find(key => key.startsWith('$'))) return false
+    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
+    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
+  }
+
+  deserializable (x, xray) {
+    if (!this.isBasicObject(x, xray)) return
+    if (Object.keys(x).find(key => key.startsWith('$'))) return
+    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
+    return !Object.keys(x).some(key => !xray.deserializable(key) || !xray.deserializable(x[key]))
+  }
+
+  clone (x, xray) {
+    const { Object } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    xray.caches.clone.set(x, y)
+    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
+    return y
+  }
+
+  serialize (x, xray) {
+    const { Object } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    xray.caches.serialize.set(x, y)
+    Object.keys(x).forEach(key => { y[xray.serialize(key)] = xray.serialize(x[key]) })
+    return y
+  }
+
+  deserialize (x, xray) {
+    const { Object } = xray.intrinsics.default
+    const y = xray.caches.predeserialize.get(x) || Object.create(Object.prototype)
+    xray.caches.deserialize.set(x, y)
+    Object.keys(x).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x[key]) })
+    return y
+  }
+
+  predeserialize (x, xray) {
+    const { Object } = xray.intrinsics.default
+    return Object.create(Object.prototype)
+  }
+
+  isBasicObject (x, xray) {
+    if (typeof x !== 'object' || !x) return false
+    if (xray.intrinsics.types.has(x)) return false
+    // if (Object.keys(x).some(y => y.startsWith('$'))) return false
+    return getPrototypeCount(x) === 1 // Object
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Normal array scanner
+// -----------------------------------------------------------------------------------------------
+
+class BasicArrayScanner {
+  scan (x, xray) {
+    if (this.isBasicArray(x, xray)) {
+      xray.checkOwner(x)
+      xray.caches.scanned.add(x)
+      Object.keys(x).forEach(key => {
+        xray.scan(key)
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
+      return true
+    }
+  }
+
+  cloneable (x, xray) {
+    if (!this.isBasicArray(x, xray)) return
+    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
+    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
+  }
+
+  serializable (x, xray) {
+    if (!this.isBasicArray(x, xray)) return
+    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
+    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
+  }
+
+  deserializable (x, xray) {
+    if (!this.isBasicArray(x, xray)) return
+    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
+    return !Object.keys(x).some(key => !xray.deserializable(key) || !xray.deserializable(x[key]))
+  }
+
+  clone (x, xray) {
+    const { Array } = xray.intrinsics.default
+    const y = Array.from([])
+    xray.caches.clone.set(x, y)
+    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
+    return y
+  }
+
+  serialize (x, xray) {
+    const { Array } = xray.intrinsics.default
+    const y = Array.from([])
+    xray.caches.serialize.set(x, y)
+    Object.keys(x).forEach(key => { y[xray.serialize(key)] = xray.serialize(x[key]) })
+    return y
+  }
+
+  deserialize (x, xray) {
+    const { Array } = xray.intrinsics.default
+    const y = xray.caches.predeserialize.get(x) || Array.from([])
+    xray.caches.deserialize.set(x, y)
+    Object.keys(x).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x[key]) })
+    return y
+  }
+
+  predeserialize (x, xray) {
+    const { Array } = xray.intrinsics.default
+    return Array.from([])
+  }
+
+  isBasicArray (x, xray) {
+    if (typeof x !== 'object' || !x) return false
+    if (getPrototypeCount(x) !== 2) return false // Array, Object
+    return xray.intrinsics.allowed.some(intrinsics => intrinsics.Array.isArray(x))
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Uint8Array scanner
+// -----------------------------------------------------------------------------------------------
+
+const base64Chars = new Set()
+'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
+  .split('').forEach(x => base64Chars.add(x))
+
+class Uint8ArrayScanner {
+  scan (x, xray) {
+    if (this.isUint8Array(x, xray)) {
+      xray.checkOwner(x)
+      return true
+    }
+  }
+
+  cloneable (x, xray) { if (this.isUint8Array(x, xray)) return true }
+  serializable (x, xray) { if (this.isUint8Array(x, xray)) return true }
+
+  deserializable (x, xray) {
+    if (typeof x !== 'object' || !x || typeof x.$ui8a === 'undefined') return
+    if (typeof x.$ui8a !== 'string') return false
+    return !x.$ui8a.split('').some(x => !base64Chars.has(x))
+  }
+
+  clone (x, xray) {
+    const { Uint8Array } = xray.intrinsics.default
+    return Uint8Array.from(x)
+  }
+
+  serialize (x, xray) {
+    const { Object } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    y.$ui8a = Buffer.from(x).toString('base64')
+    return y
+  }
+
+  deserialize (x, xray) {
+    const { Uint8Array } = xray.intrinsics.default
+    return xray.caches.predeserialize.get(x) ||
+      Uint8Array.from(Buffer.from(x.$ui8a, 'base64'))
+  }
+
+  predeserialize (x, xray) {
+    const { Uint8Array } = xray.intrinsics.default
+    return Uint8Array.from(Buffer.from(x.$ui8a, 'base64'))
+  }
+
+  isUint8Array (x, xray) {
+    if (typeof x !== 'object' || !x) return false
+    if (getPrototypeCount(x) !== 3) return false // Uint8Array, TypedArray, Object
+    if (Object.keys(x).some(key => isNaN(key) || x[key] > 255 || x[key] < 0)) return false
+    return xray.intrinsics.allowed.some(intrinsics => x instanceof intrinsics.Uint8Array)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Set scanner
+// -----------------------------------------------------------------------------------------------
+
+class SetScanner {
+  scan (x, xray) {
+    if (this.isSet(x, xray)) {
+      xray.checkOwner(x)
+      xray.caches.scanned.add(x)
+      if (xray.replaceToken) {
+        const { Set } = xray.intrinsics.default
+        const newSet = new Set()
+        for (const y of x) { newSet.add(xray.scanAndReplace(y)) }
+        x.clear()
+        for (const y of newSet) { x.add(y) }
+      } else for (const y of x) { xray.scan(y) }
+      Object.keys(x).forEach(key => {
+        xray.scan(key)
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
+      return true
+    }
+  }
+
+  cloneable (x, xray) {
+    if (!this.isSet(x, xray)) return
+    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
+    for (const y of x) { if (!xray.cloneable(y)) return false }
+    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
+  }
+
+  serializable (x, xray) {
+    if (!this.isSet(x, xray)) return
+    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
+    for (const y of x) { if (!xray.serializable(y)) return false }
+    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
+  }
+
+  deserializable (x, xray) {
+    if (typeof x !== 'object' || !x || typeof x.$set === 'undefined') return
+    if (!Array.isArray(x.$set)) return false
+    if (typeof x.props !== 'undefined' && (typeof x.props !== 'object' || !x.props)) return false
+    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
+    if (x.$set && x.$set.some(y => !xray.deserializable(y))) return false
+    if (x.props) return !Object.keys(x.props).some(key => !xray.deserializable(key) || !xray.deserializable(x.props[key]))
+    return true
+  }
+
+  clone (x, xray) {
+    const { Set } = xray.intrinsics.default
+    const y = new Set()
+    xray.caches.clone.set(x, y)
+    for (const entry of x) { y.add(xray.clone(entry)) }
+    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
+    return y
+  }
+
+  serialize (x, xray) {
+    const { Object, Array } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    xray.caches.serialize.set(x, y)
+    y.$set = Array.from([])
+    for (const entry of x) { y.$set.push(xray.serialize(entry)) }
+    if (Object.keys(x).length) {
+      y.props = Object.create(Object.prototype)
+      Object.keys(x).forEach(key => { y.props[xray.serialize(key)] = xray.serialize(x[key]) })
+    }
+    return y
+  }
+
+  deserialize (x, xray) {
+    const { Set } = xray.intrinsics.default
+    const y = xray.caches.predeserialize.get(x) || new Set()
+    xray.caches.deserialize.set(x, y)
+    for (const entry of x.$set) { y.add(xray.deserialize(entry)) }
+    if (x.props) Object.keys(x.props).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x.props[key]) })
+    return y
+  }
+
+  predeserialize (x, xray) {
+    const { Set } = xray.intrinsics.default
+    return new Set()
+  }
+
+  isSet (x, xray) {
+    if (typeof x !== 'object' || !x) return false
+    if (getPrototypeCount(x) !== 2) return false // Set, Object
+    return xray.intrinsics.allowed.some(intrinsics => x instanceof intrinsics.Set)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Map scanner
+// -----------------------------------------------------------------------------------------------
+
+class MapScanner {
+  scan (x, xray) {
+    if (this.isMap(x, xray)) {
+      xray.checkOwner(x)
+      xray.caches.scanned.add(x)
+      for (const entry of x) xray.scan(entry)
+      if (xray.replaceToken) {
+        const { Map } = xray.intrinsics.default
+        const newMap = new Map()
+        for (const [key, val] of x) newMap.set(xray.scanAndReplace(key), xray.scanAndReplace(val))
+        x.clear()
+        for (const [key, val] of newMap) { x.set(key, val) }
+      } else for (const entry of x) { xray.scan(entry) }
+      Object.keys(x).forEach(key => {
+        xray.scan(key)
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
+      return true
+    }
+  }
+
+  cloneable (x, xray) {
+    if (!this.isMap(x, xray)) return
+    xray.caches.cloneable.set(x, true) // Preassume cloneable for circular refs
+    for (const [key, val] of x) {
+      if (!xray.cloneable(key)) return false
+      if (!xray.cloneable(val)) return false
+    }
+    return !Object.keys(x).some(key => !xray.cloneable(key) || !xray.cloneable(x[key]))
+  }
+
+  serializable (x, xray) {
+    if (!this.isMap(x, xray)) return
+    xray.caches.serializable.set(x, true) // Preassume serializable for circular refs
+    for (const [key, val] of x) {
+      if (!xray.serializable(key)) return false
+      if (!xray.serializable(val)) return false
+    }
+    return !Object.keys(x).some(key => !xray.serializable(key) || !xray.serializable(x[key]))
+  }
+
+  deserializable (x, xray) {
+    if (typeof x !== 'object' || !x || typeof x.$map === 'undefined') return
+    if (!Array.isArray(x.$map)) return false
+    if (typeof x.props !== 'undefined' && (typeof x.props !== 'object' || !x.props)) return false
+    xray.caches.deserializable.set(x, true) // Preassume deserializable for circular refs
+    for (const entry of x.$map) {
+      if (!Array.isArray(entry) || entry.length !== 2) return false
+      if (!xray.deserializable(entry[0])) return false
+      if (!xray.deserializable(entry[1])) return false
+    }
+    if (x.props) {
+      return !Object.keys(x.props).some(key =>
+        !xray.deserializable(key) || !xray.deserializable(x.props[key]))
+    }
+    return true
+  }
+
+  clone (x, xray) {
+    const { Map } = xray.intrinsics.default
+    const y = new Map()
+    xray.caches.clone.set(x, y)
+    for (const [key, val] of x) { y.set(xray.clone(key), xray.clone(val)) }
+    Object.keys(x).forEach(key => { y[xray.clone(key)] = xray.clone(x[key]) })
+    return y
+  }
+
+  serialize (x, xray) {
+    const { Object, Array } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    y.$map = Array.from([])
+    xray.caches.serialize.set(x, y)
+    for (const entry of x) y.$map.push(xray.serialize(entry))
+    if (Object.keys(x).length) {
+      y.props = Object.create(Object.prototype)
+      Object.keys(x).forEach(key => { y.props[xray.serialize(key)] = xray.serialize(x[key]) })
+    }
+    return y
+  }
+
+  deserialize (x, xray) {
+    const { Map } = xray.intrinsics.default
+    const y = xray.caches.predeserialize.get(x) || new Map()
+    xray.caches.deserialize.set(x, y)
+    for (const [key, val] of x.$map) { y.set(xray.deserialize(key), xray.deserialize(val)) }
+    if (x.props) Object.keys(x.props).forEach(key => { y[xray.deserialize(key)] = xray.deserialize(x.props[key]) })
+    return y
+  }
+
+  predeserialize (x, xray) {
+    const { Map } = xray.intrinsics.default
+    return new Map()
+  }
+
+  isMap (x, xray) {
+    if (typeof x !== 'object' || !x) return false
+    if (getPrototypeCount(x) !== 2) return false // Map, Object
+    return xray.intrinsics.allowed.some(intrinsics => x instanceof intrinsics.Map)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Arbitrary classes
+// ------------------------------------------------------------------------------------------------
+
+class ArbitraryObjectScanner {
+  constructor () {
+    this.basicObjectScanner = new BasicObjectScanner()
+  }
+
+  scan (x, xray) {
+    if (this.isArbitraryObject(x, xray)) {
+      xray.checkOwner(x)
+      xray.caches.scanned.add(x)
+      Object.keys(x).forEach(key => {
+        xray.scan(key)
+        if (xray.replaceToken) {
+          x[key] = xray.scanAndReplace(x[key])
+        } else xray.scan(x[key])
+      })
+      const newConstructor = xray.scanAndReplace(x.constructor)
+      if (newConstructor !== x.constructor) Object.setPrototypeOf(x, newConstructor)
+      xray.refs.add(x.type)
+      return true
+    }
+
+    if (typeof x === 'object' && x && typeof x.$arbob !== 'undefined') {
+      xray.refs.add(x.type)
+      return xray.scan(x.$arbob)
+    }
+  }
+
+  cloneable (x, xray) {
+    if (!this.isArbitraryObject(x, xray)) return
+    return this.basicObjectScanner.cloneable(Object.assign({}, x), xray)
+  }
+
+  serializable (x, xray) {
+    if (!this.isArbitraryObject(x, xray)) return
+    return this.basicObjectScanner.serializable(Object.assign({}, x), xray)
+  }
+
+  deserializable (x, xray) {
+    if (typeof x !== 'object' || !x || typeof x.$arbob === 'undefined') return
+    if (typeof x.$arbob !== 'object' || !x.$arbob) return false
+    if (typeof x.type !== 'string') return false
+    return true
+  }
+
+  clone (x, xray) {
+    if (!xray.cloneCode) throw new Error(`No code cloner available to clone ${display(x)}`)
+    const clone = this.basicObjectScanner.clone(Object.assign({}, x), xray)
+    const sandbox = xray.cloneCode(x.constructor)
+    Object.setPrototypeOf(clone, sandbox.prototype)
+    return clone
+  }
+
+  serialize (x, xray) {
+    if (!xray.saveToken) throw new Error(`No token saver available to serialize ${display(x)}`)
+    const { Object } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    y.$arbob = this.basicObjectScanner.serialize(Object.assign({}, x), xray)
+    y.type = xray.saveToken(x.constructor)
+    if (typeof y.type !== 'string') throw new Error(`Saved type location must be a string: ${y.type}`)
+    return y
+  }
+
+  deserialize (x, xray) {
+    if (!xray.loadToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
+    const { Object } = xray.intrinsics.default
+    const obj = xray.caches.predeserialize.get(x) || Object.create(Object.prototype)
+    Object.assign(obj, this.basicObjectScanner.deserialize(x.$arbob, xray))
+    const type = xray.loadToken(x.type)
+    Object.setPrototypeOf(obj, type.prototype)
+    return obj
+  }
+
+  predeserialize (x, xray) {
+    const { Object } = xray.intrinsics.default
+    return Object.create(Object.prototype)
+  }
+
+  isArbitraryObject (x, xray) {
+    if (typeof x !== 'object' || !x) return false
+    if (Protocol.isToken(x)) return false
+    if (!deployable(x.constructor, xray)) return false
+    if (Protocol.isToken(x.constructor)) {
+      xray.tokens.add(x.constructor)
+    } else {
+      xray.deployables.add(x.constructor)
+    }
+    return true
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Duplicate object scanner
+// ------------------------------------------------------------------------------------------------
+
+class DedupScanner {
+  constructor () {
+    this.topLevel = true
+    this.dups = null
+    this.checkingDeserializability = false
+    this.deserializingDups = false
+    this.deserializingMaster = false
+  }
+
+  scan (x, xray) { }
+  cloneable (x, xray) { }
+
+  serializable (x, xray) {
+    const topLevel = this.topLevel
+    this.topLevel = false
+    try {
+      if (topLevel) return xray.serializable(x, xray)
+    } finally {
+      this.topLevel = topLevel
+    }
+  }
+
+  deserializable (x, xray) {
+    const topLevel = this.topLevel
+    this.topLevel = false
+    try {
+      if (topLevel) {
+        if (typeof x !== 'object' || !x || typeof x.$dedup === 'undefined') return
+        if (!Array.isArray(x.dups)) return false
+        this.dups = x.dups
+        try {
+          this.checkingDeserializability = true
+          return xray.deserializable(x.$dedup) && xray.deserializable(x.dups)
+        } finally {
+          this.checkingDeserializability = false
+          this.dups = null
+        }
+      } else {
+        if (this.checkingDeserializability || this.deserializingDups || this.deserializingMaster) {
+          if (typeof x !== 'object' || !x || typeof x.$dup === 'undefined') return
+          if (typeof x.$dup !== 'number') return false
+          if (!Number.isInteger(x.$dup) || x.$dup < 0 || x.$dup >= this.dups.length) return false
+          return true
+        }
+      }
+    } finally {
+      this.topLevel = topLevel
+    }
+  }
+
+  clone (x, xray) { }
+
+  serialize (x, xray) {
+    const topLevel = this.topLevel
+    this.topLevel = false
+    try {
+      if (topLevel) return this.dedup(x, xray)
+    } finally {
+      this.topLevel = topLevel
+    }
+  }
+
+  deserialize (x, xray) {
+    const topLevel = this.topLevel
+    this.topLevel = false
+    try {
+      if (topLevel) {
+        if (typeof x !== 'object' || !x || typeof x.$dedup === 'undefined') return
+
+        this.dups = x.dups
+
+        // Predeserialize each dup to put objects in the cache
+        this.dups = this.dups.map(dup => xray.predeserialize(dup))
+
+        // Deserialize each dup
+        try {
+          this.deserializingDups = true
+          this.dups = x.dups.map(dup => xray.deserialize(dup))
+        } finally {
+          this.deserializingDups = false
+        }
+
+        // Deserialize the master object
+        try {
+          this.deserializingMaster = true
+          return xray.deserialize(x.$dedup)
+        } finally {
+          this.deserializingMaster = false
+        }
+      } else {
+        // If we are deserializing any dups, replace them with our known set
+        if (this.deserializingDups || this.deserializingMaster) {
+          return this.dups[x.$dup]
+        }
+      }
+    } finally {
+      this.topLevel = topLevel
+    }
+  }
+
+  predeserialize (x, xray) { }
+
+  dedup (x, xray) {
+    const serialized = xray.serialize(x)
+
+    const { Object, Array } = xray.intrinsics.default
+
+    const seen = new Set()
+    const indexes = new Map()
+    function detectDups (x) {
+      if (typeof x !== 'object' || !x) return
+      if (seen.has(x)) {
+        if (!indexes.has(x)) indexes.set(x, indexes.size)
+      } else {
+        seen.add(x)
+        Object.keys(x).forEach(key => detectDups(x[key]))
+      }
+    }
+
+    detectDups(serialized)
+
+    if (!indexes.size) return serialized
+
+    function replaceDups (x) {
+      if (typeof x !== 'object' || !x) return x
+      if (indexes.has(x)) {
+        const y = Object.create(Object.prototype)
+        y.$dup = indexes.get(x)
+        return y
+      } else {
+        Object.keys(x).forEach(key => { x[key] = replaceDups(x[key]) })
+        return x
+      }
+    }
+
+    const value = replaceDups(serialized)
+    const dups = Array.from(indexes.keys())
+
+    dups.forEach(dup => {
+      Object.keys(dup).forEach(key => { dup[key] = replaceDups(dup[key]) })
+    })
+
+    const y = Object.create(Object.prototype)
+    y.$dedup = value
+    y.dups = dups
+    return y
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Code detector
+// -----------------------------------------------------------------------------------------------
+
+class DeployableScanner {
+  scan (x, xray) {
+    if (deployable(x, xray)) {
+      xray.checkOwner(x)
+      xray.deployables.add(x)
+      if (xray.deepScanTokens) {
+        xray.caches.scanned.add(x)
+        Object.keys(x).forEach(key => {
+          xray.scan(key)
+          if (xray.replaceToken) {
+            x[key] = xray.scanAndReplace(x[key])
+          } else xray.scan(x[key])
+        })
+      }
+      return true
+    }
+  }
+
+  cloneable (x, xray) {
+    if (deployable(x, xray)) {
+      xray.deployables.add(x)
+      return true
+    }
+  }
+
+  serializable (x, xray) {
+    // We never serialize deployables. They must be tokens when serialized.
+  }
+
+  deserializable (x, xray) {
+    // We never deserialize deployables. They become tokens when serialized.
+  }
+
+  clone (x, xray) {
+    if (!xray.cloneCode) throw new Error(`No code cloner available to clone ${display(x)}`)
+    return xray.cloneCode(x)
+  }
+
+  serialize (x, xray) {
+    // We never serialize deployables. They become tokens when serialized.
+  }
+
+  deserialize (x, xray) {
+    // We never deserialize deployables. They become tokens when serialized.
+  }
+
+  predeserialize (x, xray) {
+    // We never deserialize deployables. They become tokens when serialized.
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Token detector
+// -----------------------------------------------------------------------------------------------
+
+class TokenScanner {
+  scan (x, xray) {
+    if (Protocol.isToken(x)) {
+      xray.tokens.add(x)
+      if (xray.deepScanTokens) {
+        xray.caches.scanned.add(x)
+
+        JigControl.disableProxy(() => {
+          Object.keys(x).forEach(key => {
+            xray.scan(key)
+            // Berries are frozen and their inner assets cannot be replaced
+            if (xray.replaceToken && !(x instanceof Berry)) {
+              x[key] = xray.scanAndReplace(x[key])
+            } else {
+              xray.scan(x[key])
+            }
+          })
+        })
+      }
+      return true
+    }
+
+    if (typeof x === 'object' && x && typeof x.$ref !== 'undefined') {
+      if (typeof x.$ref !== 'string') return false
+      xray.refs.add(x.$ref)
+      return true
+    }
+  }
+
+  cloneable (x, xray) {
+    if (Protocol.isToken(x)) {
+      xray.tokens.add(x)
+      return true
+    }
+
+    if (typeof x === 'object' && x && typeof x.$ref !== 'undefined') {
+      if (typeof x.$ref !== 'string') return false
+      xray.refs.add(x.$ref)
+      return true
+    }
+  }
+
+  serializable (x, xray) {
+    if (Protocol.isToken(x)) {
+      xray.tokens.add(x)
+      return true
+    }
+  }
+
+  deserializable (x, xray) {
+    if (typeof x !== 'object' || !x || typeof x.$ref === 'undefined') return
+    if (typeof x.$ref !== 'string') return false
+    xray.refs.add(x.$ref)
+    return true
+  }
+
+  clone (x, xray) {
+    // Clone is often used to provide safe sandboxing, but all tokens are safely sandboxed
+    return x
+  }
+
+  serialize (x, xray) {
+    if (!xray.saveToken) throw new Error(`No token saver available to serialize ${display(x)}`)
+    const { Object } = xray.intrinsics.default
+    const y = Object.create(Object.prototype)
+    y.$ref = xray.saveToken(x)
+    if (typeof y.$ref !== 'string') throw new Error(`Saved token location must be a string: ${y.$ref}`)
+    return y
+  }
+
+  deserialize (x, xray) {
+    if (!xray.loadToken) throw new Error(`No token restorer available to deserialize ${display(x)}`)
+    return xray.loadToken(x.$ref)
+  }
+
+  predeserialize (x, xray) { }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Helper functions
+// ------------------------------------------------------------------------------------------------
+
+function getPrototypeCount (x) {
+  let count = 0
+  x = Object.getPrototypeOf(x)
+  while (x) { x = Object.getPrototypeOf(x); count++ }
+  return count
+}
+
+function deployable (x, xray) {
+  if (typeof x !== 'function') return false
+  if (display(x).indexOf('[native code]') !== -1) return false
+  if (xray.intrinsics.types.has(x)) return false
+  return true
+}
+
+// ------------------------------------------------------------------------------------------------
+// Jig Checkpoint
+// ------------------------------------------------------------------------------------------------
+
+class Checkpoint {
+  constructor (x, code, owner) {
+    this.x = x
+    this.refs = []
+
+    this.xray = new Xray()
+      .allowDeployables()
+      .allowTokens()
+      .restrictOwner(owner)
+      .useIntrinsics(code.intrinsics)
+      .useTokenSaver(token => { this.refs.push(token); return (this.refs.length - 1).toString() })
+      .useTokenLoader(ref => this.refs[parseInt(ref, 10)])
+
+    // Note: We should scan and deploy in one pass
+    const obj = x instanceof Jig ? Object.assign({}, x) : x
+    this.xray.scan(obj)
+    this.xray.deployables.forEach(deployable => code.deploy(deployable))
+    this.serialized = this.xray.serialize(obj)
+  }
+
+  restore () {
+    if (!('restored' in this)) {
+      this.restored = this.xray.deserialize(this.serialized)
+    }
+    return this.restored
+  }
+
+  restoreInPlace () {
+    JigControl.disableProxy(() => {
+      Object.keys(this.x).forEach(key => delete this.x[key])
+      Object.assign(this.x, this.restore())
+    })
+  }
+
+  equals (other) {
+    const deepEqual = (a, b) => {
+      if (typeof a !== typeof b) return false
+      if (typeof a === 'object' && typeof b === 'object') {
+        if (Object.keys(a).length !== Object.keys(b).length) return false
+        return Object.keys(a).every(key => deepEqual(a[key], b[key]))
+      }
+      return a === b
+    }
+
+    if (!deepEqual(this.serialized, other.serialized)) return false
+    if (this.refs.length !== other.refs.length) return false
+    return this.refs.every((ref, n) => this.refs[n] === other.refs[n])
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+Xray.Scanner = Scanner
+Xray.Checkpoint = Checkpoint
+
+module.exports = Xray
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6).Buffer))
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Context = __webpack_require__(8)
+
+const BerryControl = {
+  protocol: undefined,
+  location: undefined
+}
+
+// Note: This is a good way to learn the Jig class
+class Berry {
+  constructor (...args) {
+    const run = Context.activeRunInstance()
+
+    // Sandbox the berry
+    if (!run.code.isSandbox(this.constructor)) {
+      run.transaction.begin()
+      try {
+        const T = run.code.deploy(this.constructor)
+        return new T(...args)
+      } finally { run.transaction.end() }
+    }
+
+    // Check the berry is property derived (no constructors)
+    const childClasses = []
+    let type = this.constructor
+    while (type !== Berry) {
+      childClasses.push(type)
+      type = Object.getPrototypeOf(type)
+    }
+
+    if (childClasses.length === 0) { throw new Error('Berry must be extended') }
+
+    const constructorRegex = /\s+constructor\s*\(/
+    if (childClasses.some(type => constructorRegex.test(type.toString()))) {
+      throw new Error('Berry must use init() instead of constructor()')
+    }
+
+    // Check that the protocol matches
+    if (!BerryControl.protocol || BerryControl.protocol !== this.constructor.protocol) {
+      throw new Error('Must only create Berry from its protocol')
+    }
+
+    // Run the init
+    this.init(...args)
+
+    // Validate the location
+    if (typeof this.location !== 'undefined') {
+      throw new Error('Berry init() must not set a location')
+    }
+
+    if (!BerryControl.location) throw new Error('Must only pluck one berry at a time')
+    this.location = BerryControl.location
+    BerryControl.location = undefined
+
+    // Free the object so there are no more changes
+    Context.deepFreeze(this)
+  }
+
+  init () { }
+
+  static [Symbol.hasInstance] (target) {
+    const run = Context.activeRunInstance()
+
+    // check if the target has a location. this will be false for this.constructor.prototype.
+    if (typeof target !== 'object' || !('location' in target)) return false
+
+    // find the sandboxed version of this class because thats what instances will be
+    let T = run.code.getInstalled(this)
+    if (!T) {
+      const net = Context.networkSuffix(run.blockchain.network)
+      T = run.code.getInstalled(this[`origin${net}`])
+      if (!T) return false
+    }
+
+    // check if this class's prototype is in the prototype chain of the target
+    let type = Object.getPrototypeOf(target)
+    while (type) {
+      if (type === T.prototype) return true
+      type = Object.getPrototypeOf(type)
+    }
+
+    return false
+  }
+}
+
+// This should be overridden in each child class
+Berry.protocol = undefined
+
+module.exports = { Berry, BerryControl }
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Context = __webpack_require__(8)
+
+// ------------------------------------------------------------------------------------------------
+// UniqueMap
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * A Map that guarantees token keys are unique. The API is intended to be the same as the built-in
+ * Map so that this can be a drop-in replacement in sandboxed code.
+
+ * For a given entry, there are 4 cases to consider:
+ *    1) Deployed tokens
+ *    2) Undeployed tokens
+ *    3) Deployable code currently undeployed
+ *    4) Everything else
+ */
+class UniqueMap {
+  constructor (iterable) {
+    const priv = {
+      undeployed: new Set(), // Undeployed tokens without an origin
+      deployed: new Map(), // Origin -> Token
+      map: new Map()
+    }
+    Context.uniquePrivates.set(this, priv)
+    if (iterable) { for (const [x, y] of iterable) this.set(x, y) }
+  }
+
+  clear () {
+    const priv = Context.uniquePrivates.get(this)
+    priv.undeployed.clear()
+    priv.deployed.clear()
+    priv.map.clear()
+  }
+
+  _getUniqueKey (x) {
+    const priv = Context.uniquePrivates.get(this)
+
+    const inconsistentWorldview = () => {
+      const hint = 'Hint: Try syncing the relevant tokens before use.'
+      const reason = 'Found two tokens with the same origin at different locations.'
+      const message = 'Inconsistent worldview'
+      throw new Error(`${message}\n\n${reason}\n\n${hint}`)
+    }
+
+    if (Context.Protocol.isToken(x)) {
+      const xOrigin = Context.Protocol.getOrigin(x)
+      const xLocation = Context.Protocol.getLocation(x)
+      const deployed = !!Context.Location.parse(xOrigin).txid
+
+      if (deployed) {
+        // Case 1: Deployed token
+
+        // Was this token previously in our undeployed set? If so, update it.
+        for (const y of priv.undeployed) {
+          if (xOrigin === y.origin) {
+            const yLocation = Context.Protocol.getLocation(y)
+            if (xLocation !== yLocation) inconsistentWorldview()
+            priv.undeployed.delete(y)
+            priv.deployed.set(xOrigin, y)
+            return y
+          }
+        }
+
+        // Have we already seen a token at this origin? If so, use that one.
+        const y = priv.deployed.get(xOrigin)
+        if (y) {
+          const yLocation = Context.Protocol.getLocation(y)
+          if (xLocation !== yLocation) inconsistentWorldview()
+          return y
+        }
+
+        // First time seeing a token at this origin. Remember it.
+        priv.deployed.set(xOrigin, x)
+        return x
+      } else {
+        // Case 2: Undeployed token
+        priv.undeployed.add(x)
+        return x
+      }
+    } else if (Context.Protocol.isDeployable(x)) {
+      // Case 3: Undeployed code
+      priv.undeployed.add(x)
+      return x
+    } else {
+      // Case 4: Everything else
+      return x
+    }
+  }
+
+  delete (x) {
+    const key = this._getUniqueKey(x)
+    const priv = Context.uniquePrivates.get(this)
+    priv.undeployed.delete(key)
+    priv.deployed.delete(key)
+    return priv.map.delete(key)
+  }
+
+  get (x) { return Context.uniquePrivates.get(this).map.get(this._getUniqueKey(x)) }
+  set (x, y) { Context.uniquePrivates.get(this).map.set(this._getUniqueKey(x), y); return this }
+  has (x) { return Context.uniquePrivates.get(this).map.has(this._getUniqueKey(x)) }
+  get size () { return Context.uniquePrivates.get(this).map.size }
+  get [Symbol.species] () { return UniqueMap }
+  entries () { return Context.uniquePrivates.get(this).map.entries() }
+  keys () { return Context.uniquePrivates.get(this).map.keys() }
+  forEach (callback, thisArg) { return Context.uniquePrivates.get(this).map.forEach(callback, thisArg) }
+  values () { return Context.uniquePrivates.get(this).map.values() }
+  [Symbol.iterator] () { return Context.uniquePrivates.get(this).map[Symbol.iterator]() }
+}
+
+// ------------------------------------------------------------------------------------------------
+// UniqueSet
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * A Set that guarantees tokens are unique. The API is intended to be the same as the built-in
+ * Set so that this can be a drop-in replacement in sandboxed code.
+ */
+class UniqueSet {
+  constructor (iterable) {
+    Context.uniquePrivates.set(this, new Context.UniqueMap())
+    if (iterable) { for (const x of iterable) this.add(x) }
+  }
+
+  get size () { return Context.uniquePrivates.get(this).size }
+  get [Symbol.species] () { return UniqueSet }
+  add (x) { Context.uniquePrivates.get(this).set(x, x); return this }
+  clear () { Context.uniquePrivates.get(this).clear() }
+  delete (x) { return Context.uniquePrivates.get(this).delete(x) }
+  entries () { return Context.uniquePrivates.get(this).entries() }
+  forEach (callback, thisArg) { return Context.uniquePrivates.get(this).forEach(x => callback.call(thisArg, x)) }
+  has (x) { return Context.uniquePrivates.get(this).has(x) }
+  values () { return Context.uniquePrivates.get(this).values() }
+  [Symbol.iterator] () { return Context.uniquePrivates.get(this).keys() }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { UniqueMap, UniqueSet }
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports) {
+
+/**
+ * intrinsics.js
+ *
+ * Helpers for the known built-in objects in JavaScript
+ */
+
+// See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
+const intrinsicNames = [
+  // Global functions
+  'console',
+  'eval',
+  'isFinite',
+  'isNaN',
+  'parseFloat',
+  'parseInt',
+  'decodeURI',
+  'decodeURIComponent',
+  'encodeURI',
+  'encodeURIComponent',
+  'escape',
+
+  // Fundamental objects
+  'Object',
+  'Function',
+  'Boolean',
+  'Symbol',
+  'Error',
+  'EvalError',
+  'RangeError',
+  'ReferenceError',
+  'SyntaxError',
+  'TypeError',
+  'URIError',
+
+  // Numbers and dates
+  'Number',
+  'BigInt',
+  'Math',
+  'Date',
+
+  // Text processing
+  'String',
+  'RegExp',
+
+  // Indexed collections
+  'Array',
+  'Int8Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Int16Array',
+  'Uint16Array',
+  'Int32Array',
+  'Uint32Array',
+  'Float32Array',
+  'Float64Array',
+  'BigInt64Array',
+  'BigUint64Array',
+
+  // Keyed collections
+  'Map',
+  'Set',
+  'WeakMap',
+  'WeakSet',
+
+  // Structured data
+  'ArrayBuffer',
+  'DataView',
+  'JSON',
+
+  // Control abstraction objects
+  'Promise',
+  'Generator',
+  'GeneratorFunction',
+  'AsyncFunction',
+
+  // Reflection
+  'Reflect',
+  'Proxy',
+
+  // Internationalization
+  'Intl',
+
+  // WebAssembly
+  'WebAssembly'
+]
+
+// Returns an object with the built-in intrinsics in this environment
+const getIntrinsics = () => {
+  let code = 'const x = {};'
+  intrinsicNames.forEach(name => { code += `x.${name}=typeof ${name}!=='undefined'?${name}:undefined;` })
+  code += 'return x'
+  return new Function(code)() // eslint-disable-line
+}
+
+const globalIntrinsics = getIntrinsics()
+
+// ------------------------------------------------------------------------------------------------
+// Intrinsics
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Manages known intrinsics
+ */
+class Intrinsics {
+  constructor () {
+    this.default = null
+    this.allowed = []
+    this.types = new Set()
+    this.use(globalIntrinsics)
+  }
+
+  set (intrinsics) {
+    this.default = null
+    this.allowed = []
+    this.types = new Set()
+    this.use(intrinsics)
+    return this
+  }
+
+  allow (intrinsics) {
+    this.allowed.push(intrinsics)
+    Object.keys(intrinsics).forEach(name => this.types.add(intrinsics[name]))
+    return this
+  }
+
+  use (intrinsics) {
+    this.allow(intrinsics)
+    this.default = intrinsics
+    return this
+  }
+}
+
+Intrinsics.defaultIntrinsics = new Intrinsics()
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
+
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * protocol.js
+ *
+ * Manager for token protocols are supported by Run
+ */
+
+const bsv = __webpack_require__(2)
+const { Jig, JigControl } = __webpack_require__(3)
+const { Berry, BerryControl } = __webpack_require__(10)
+const Location = __webpack_require__(4)
+const util = __webpack_require__(0)
+
+// ------------------------------------------------------------------------------------------------
+// Protocol manager
+// ------------------------------------------------------------------------------------------------
+
+// A modified version of the txo format form unwriter
+// Source: https://github.com/interplanaria/txo/blob/master/index.js
+var txToTxo = function (tx, options) {
+  const gene = new bsv.Transaction(tx)
+  const t = gene.toObject()
+  const inputs = []
+  const outputs = []
+  if (gene.inputs) {
+    gene.inputs.forEach(function (input, inputIndex) {
+      if (input.script) {
+        const xput = { i: inputIndex, seq: input.sequenceNumber }
+        input.script.chunks.forEach(function (c, chunkIndex) {
+          if (c.buf) {
+            if (c.buf.byteLength >= 1000000) {
+              xput['xlb' + chunkIndex] = c.buf.toString('base64')
+            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
+              xput['lb' + chunkIndex] = c.buf.toString('base64')
+            } else {
+              xput['b' + chunkIndex] = c.buf.toString('base64')
+            }
+            if (options && options.h && options.h > 0) {
+              xput['h' + chunkIndex] = c.buf.toString('hex')
+            }
+          } else {
+            if (typeof c.opcodenum !== 'undefined') {
+              xput['b' + chunkIndex] = {
+                op: c.opcodenum
+              }
+            } else {
+              xput['b' + chunkIndex] = c
+            }
+          }
+        })
+        const sender = {
+          h: input.prevTxId.toString('hex'),
+          i: input.outputIndex
+        }
+        const address = input.script.toAddress(bsv.Networks.livenet).toString()
+        if (address && address.length > 0) {
+          sender.a = address
+        }
+        xput.e = sender
+        inputs.push(xput)
+      }
+    })
+  }
+  if (gene.outputs) {
+    gene.outputs.forEach(function (output, outputIndex) {
+      if (output.script) {
+        const xput = { i: outputIndex }
+        output.script.chunks.forEach(function (c, chunkIndex) {
+          if (c.buf) {
+            if (c.buf.byteLength >= 1000000) {
+              xput['xlb' + chunkIndex] = c.buf.toString('base64')
+              xput['xls' + chunkIndex] = c.buf.toString('utf8')
+            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
+              xput['lb' + chunkIndex] = c.buf.toString('base64')
+              xput['ls' + chunkIndex] = c.buf.toString('utf8')
+            } else {
+              xput['b' + chunkIndex] = c.buf.toString('base64')
+              xput['s' + chunkIndex] = c.buf.toString('utf8')
+            }
+            if (options && options.h && options.h > 0) {
+              xput['h' + chunkIndex] = c.buf.toString('hex')
+            }
+          } else {
+            if (typeof c.opcodenum !== 'undefined') {
+              xput['b' + chunkIndex] = {
+                op: c.opcodenum
+              }
+            } else {
+              xput['b' + chunkIndex] = c
+            }
+          }
+        })
+        const receiver = {
+          v: output.satoshis,
+          i: outputIndex
+        }
+        const address = output.script.toAddress(bsv.Networks.livenet).toString()
+        if (address && address.length > 0) {
+          receiver.a = address
+        }
+        xput.e = receiver
+        outputs.push(xput)
+      }
+    })
+  }
+  const r = {
+    tx: { h: t.hash },
+    in: inputs,
+    out: outputs,
+    lock: t.nLockTime
+  }
+  // confirmations
+  if (options && options.confirmations) {
+    r.confirmations = options.confirmations
+  }
+  return r
+}
+
+class Protocol {
+  static async pluckBerry (location, blockchain, code, protocol) {
+    // TODO: Make fetch and pluck secure, as well as txo above
+    const fetch = async x => txToTxo(await blockchain.fetch(x))
+    const pluck = x => this.pluckBerry(x, blockchain, code)
+
+    try {
+      // TODO: Allow undeployed, with bad locations
+      const sandboxedProtocol = code.installBerryProtocol(protocol)
+
+      BerryControl.protocol = sandboxedProtocol
+      if (Location.parse(sandboxedProtocol.location).error) {
+        BerryControl.location = Location.build({ error: `${protocol.name} protocol not deployed` })
+      } else {
+        BerryControl.location = Location.build({ location: sandboxedProtocol.location, innerLocation: location })
+      }
+
+      const berry = await sandboxedProtocol.pluck(location, fetch, pluck)
+
+      if (!berry) throw new Error(`Failed to load berry using ${protocol.name}: ${location}`)
+
+      return berry
+    } finally {
+      BerryControl.protocol = undefined
+      BerryControl.location = undefined
+    }
+  }
+
+  static isToken (x) {
+    switch (typeof x) {
+      case 'object': return x && (x instanceof Jig || x instanceof Berry)
+      case 'function': {
+        if (!!x.origin && !!x.location && !!x.owner) return true
+        const net = util.networkSuffix(util.activeRunInstance().blockchain.network)
+        return !!x[`origin${net}`] && !!x[`location${net}`] && !!x[`owner${net}`]
+      }
+      default: return false
+    }
+  }
+
+  static isDeployable (x) {
+    if (typeof x !== 'function') return false
+    return x.toString().indexOf('[native code]') === -1
+  }
+
+  static getLocation (x) {
+    const location = JigControl.disableProxy(() => x.location)
+    Location.parse(location)
+    return location
+  }
+
+  static getOrigin (x) {
+    if (x && x instanceof Berry) return Protocol.getLocation(x)
+    const origin = JigControl.disableProxy(() => x.origin)
+    Location.parse(origin)
+    return origin
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Berry protocol plucker
+// ------------------------------------------------------------------------------------------------
+
+class BerryProtocol {
+  // Static to keep stateless
+  // Location is defined by the protocol
+  static async pluck (location, fetch, pluck) {
+    // Fetch tx
+    // Parse
+    // Return Berry
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+Protocol.BerryProtocol = BerryProtocol
+
+module.exports = Protocol
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || new Function("return this")();
+} catch (e) {
+	// This works if the window reference is available
+	if (typeof window === "object") g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
 
 /***/ }),
 /* 15 */
@@ -5792,9 +5816,9 @@ function isnan (val) {
  */
 
 const ses = __webpack_require__(31)
-const { getIntrinsics, intrinsicNames, Intrinsics } = __webpack_require__(10)
-const Context = __webpack_require__(6)
-const { UniqueSet, UniqueMap } = __webpack_require__(9)
+const { getIntrinsics, intrinsicNames, Intrinsics } = __webpack_require__(12)
+const Context = __webpack_require__(8)
+const { UniqueSet, UniqueMap } = __webpack_require__(11)
 
 // ------------------------------------------------------------------------------------------------
 // Evaluator
@@ -6028,7 +6052,7 @@ Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
 
 module.exports = Evaluator
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14)))
 
 /***/ }),
 /* 16 */
@@ -6043,12 +6067,12 @@ module.exports = Evaluator
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
 const { JigControl } = __webpack_require__(3)
-const { Owner } = __webpack_require__(11)
-const { Berry } = __webpack_require__(8)
+const { Owner } = __webpack_require__(7)
+const { Berry } = __webpack_require__(10)
 const Location = __webpack_require__(4)
-const Protocol = __webpack_require__(12)
-const { UniqueSet } = __webpack_require__(9)
-const Xray = __webpack_require__(7)
+const Protocol = __webpack_require__(13)
+const { UniqueSet } = __webpack_require__(11)
+const Xray = __webpack_require__(9)
 
 // ------------------------------------------------------------------------------------------------
 // Transaction
@@ -6628,6 +6652,7 @@ class ProtoTransaction {
 
     this.begin()
     try {
+      if (typeof owner === 'object') run.deploy(owner.constructor)
       this.code.push({ type, sandbox, deps, props, success, error, owner })
       const tempLocation = `_d${this.code.length - 1}`
       type.owner = sandbox.owner = owner // TODO: Sandbox owner
@@ -6742,7 +6767,6 @@ class ProtoTransaction {
     const { blockchain, syncer } = run
 
     const net = util.networkSuffix(blockchain.network)
-    const bsvNetwork = util.bsvNetwork(blockchain.network)
 
     // build the read references array, checking for different locations of the same jig
     const spentJigs = this.inputs.filter(jig => jig.origin[0] !== '_')
@@ -6877,8 +6901,8 @@ class ProtoTransaction {
       const vout = parseInt(spentLocations[index].slice(66))
       const before = this.before.get(jig)
       const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, before.restore().satoshis)
-      const pubkey = new bsv.PublicKey(before.restore().owner, { network: bsvNetwork })
-      const script = bsv.Script.buildPublicKeyHashOut(pubkey)
+      const scriptBuffer = util.getOwnerScript(before.restore().owner).toBuffer()
+      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
       const utxo = { txid, vout, script, satoshis }
       tx.from(utxo)
     })
@@ -6886,14 +6910,16 @@ class ProtoTransaction {
     // Build run outputs first by adding code then by adding jigs
 
     this.code.forEach(def => {
-      const script = new bsv.Script(util.getOwnerScript(def.owner).getBuffer())
+      const scriptBuffer = util.getOwnerScript(def.owner).toBuffer()
+      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
       const satoshis = bsv.Transaction.DUST_AMOUNT
       tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
     })
 
     this.outputs.forEach(jig => {
       const restored = this.after.get(jig).restore()
-      const script = new bsv.Script(util.getOwnerScript(restored.owner).getBuffer())
+      const scriptBuffer = util.getOwnerScript(restored.owner).toBuffer()
+      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
       const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, restored.satoshis)
       tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
     })
@@ -6907,7 +6933,7 @@ class ProtoTransaction {
 
 module.exports = { ProtoTransaction, Transaction }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6).Buffer))
 
 /***/ }),
 /* 17 */
@@ -6957,11 +6983,11 @@ class Blockchain {
   async fetch (txid, force) { throw new Error('Not implemented') }
 
   /**
-   * Queries the utxos for an address
-   * @param {string} address Address string
+   * Queries the utxos for a particular output script
+   * @param {string} query Address, public key, or script hash
    * @returns {Array<{txid, vout, script, satoshis}>}
    */
-  async utxos (address) { throw new Error('Not implemented') }
+  async utxos (query) { throw new Error('Not implemented') }
 }
 
 Blockchain.isBlockchain = blockchain => {
@@ -7936,9 +7962,9 @@ module.exports = expect
 const util = __webpack_require__(0)
 const Evaluator = __webpack_require__(15)
 const { Jig, JigControl } = __webpack_require__(3)
-const { Berry, BerryControl } = __webpack_require__(8)
-const Xray = __webpack_require__(7)
-const Context = __webpack_require__(6)
+const { Berry, BerryControl } = __webpack_require__(10)
+const Xray = __webpack_require__(9)
+const Context = __webpack_require__(8)
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -8082,8 +8108,6 @@ class Code {
         .useCodeCloner(x => this.getInstalled(x))
 
       const staticProps = Object.assign({}, type)
-      stringProps.forEach(name => { delete staticProps[name] })
-
       try {
         xray.scan(staticProps)
       } catch (e) {
@@ -8132,6 +8156,7 @@ class Code {
         }
 
         const actionProps = Object.assign({}, staticProps)
+        stringProps.forEach(name => { delete actionProps[name] })
         delete actionProps.deps
         const tempLocation = run.transaction.storeCode(type, sandbox, realdeps, actionProps, success, error)
 
@@ -8177,7 +8202,7 @@ class Code {
     // make sure the owner matches the output's address
     // TODO: Move this to transaction
     const hex1 = tx.outputs[vout].script.toHex()
-    const hex2 = Buffer.from(util.getOwnerScript(def.owner).getBuffer()).toString('hex')
+    const hex2 = Buffer.from(util.getOwnerScript(def.owner).toBuffer()).toString('hex')
     if (hex1 !== hex2) throw new Error(`bad def owner: ${location}`)
 
     const env = { }
@@ -8329,7 +8354,7 @@ class Code {
 
 module.exports = Code
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6).Buffer))
 
 /***/ }),
 /* 28 */
@@ -12714,8 +12739,8 @@ exports.createContext = Script.createContext = function (context) {
 
 const { ProtoTransaction } = __webpack_require__(16)
 const { JigControl } = __webpack_require__(3)
-const { Owner } = __webpack_require__(11)
-const Xray = __webpack_require__(7)
+const { Owner } = __webpack_require__(7)
+const Xray = __webpack_require__(9)
 const util = __webpack_require__(0)
 const Location = __webpack_require__(4)
 
@@ -14236,13 +14261,16 @@ module.exports = function spread(callback) {
 /* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/**
+/* WEBPACK VAR INJECTION */(function(Buffer) {/**
  * mockchain.js
  *
  * In-memory Blockchain implementation
  */
 
-const { Address, Transaction } = __webpack_require__(2)
+const bsv = __webpack_require__(2)
+const { Address, PublicKey, Transaction, Script } = bsv
+const sha256 = bsv.crypto.Hash.sha256
+const { PubKeyScript } = __webpack_require__(7)
 
 module.exports = class Mockchain {
   constructor (options = {}) {
@@ -14254,7 +14282,7 @@ module.exports = class Mockchain {
     this.network = 'mock'
     this.transactions = new Map() // txid -> Transaction
     this.utxosByLocation = new Map() // Map<txid_oN, utxo>
-    this.utxosByAddress = new Map() // address -> Set<location>
+    this.utxosByScriptHash = new Map() // scriptHash -> Set<location>
     this.mempool = new Set() // Set<Transaction>
     this.mempoolChainLimit = 25
     this.blockHeight = -1
@@ -14292,9 +14320,10 @@ module.exports = class Mockchain {
       const prevTxId = input.prevTxId.toString('hex')
       const location = `${prevTxId}_o${input.outputIndex}`
       const prevTx = this.transactions.get(prevTxId)
-      const address = prevTx.outputs[input.outputIndex].script.toAddress('testnet').toString()
+      const script = prevTx.outputs[input.outputIndex].script
+      const scriptHash = sha256(script.toBuffer()).toString('hex')
       this.utxosByLocation.delete(location)
-      this.utxosByAddress.get(address).delete(location)
+      this.utxosByScriptHash.get(scriptHash).delete(location)
     })
 
     // Add the transaction to the mockchain
@@ -14318,10 +14347,10 @@ module.exports = class Mockchain {
       const utxo = { txid: tx.hash, vout, script: output.script, satoshis: output.satoshis }
       const location = `${tx.hash}_o${vout}`
       this.utxosByLocation.set(location, utxo)
-      const address = output.script.toAddress('testnet').toString()
-      const addressUtxos = this.utxosByAddress.get(address) || new Set()
-      addressUtxos.add(location)
-      this.utxosByAddress.set(address, addressUtxos)
+      const scriptHash = sha256(output.script.toBuffer()).toString('hex')
+      const utxos = this.utxosByScriptHash.get(scriptHash) || new Set()
+      utxos.add(location)
+      this.utxosByScriptHash.set(scriptHash, utxos)
     })
   }
 
@@ -14331,11 +14360,30 @@ module.exports = class Mockchain {
     return tx
   }
 
-  async utxos (address) {
-    const addr = new Address(address, 'testnet').toString()
-    const addressUtxos = this.utxosByAddress.get(addr)
-    if (!addressUtxos) return []
-    return Array.from(addressUtxos).map(location => this.utxosByLocation.get(location))
+  async utxos (query) {
+    let scriptHash = query
+    // See if query is an address
+    try {
+      const addr = new Address(query, 'testnet')
+      const script = Script.fromAddress(addr)
+      scriptHash = sha256(script.toBuffer()).toString('hex')
+    } catch (e) {
+      // See if query is a pubkey
+      try {
+        const pubkey = new PublicKey(query, { network: 'testnet' })
+        const script = Buffer.from(new PubKeyScript(pubkey).toBuffer())
+        scriptHash = sha256(script.toBuffer()).toString('hex')
+      } catch (e) {
+        // Check that it is a valid scripthash
+        if (typeof query !== 'string' || !query.length || !/[0-9a-zA-Z]+/.test(query)) {
+          throw new Error(`Bad query string: ${query}`)
+        }
+      }
+    }
+
+    const utxos = this.utxosByScriptHash.get(scriptHash)
+    if (!utxos) return []
+    return Array.from(utxos).map(location => this.utxosByLocation.get(location))
   }
 
   fund (address, satoshis) {
@@ -14350,9 +14398,11 @@ module.exports = class Mockchain {
     const utxo = { txid: tx.hash, vout: 1, script: output.script, satoshis: output.satoshis }
     const location = `${tx.hash}_o1`
     this.utxosByLocation.set(location, utxo)
-    const addressUtxos = this.utxosByAddress.get(address.toString()) || new Set()
-    addressUtxos.add(location)
-    this.utxosByAddress.set(address.toString(), addressUtxos)
+    const script = Script.fromAddress(address)
+    const scriptHash = sha256(script.toBuffer()).toString('hex')
+    const utxos = this.utxosByScriptHash.get(scriptHash) || new Set()
+    utxos.add(location)
+    this.utxosByScriptHash.set(scriptHash, utxos)
   }
 
   block () {
@@ -14372,6 +14422,7 @@ module.exports = class Mockchain {
   }
 }
 
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(6).Buffer))
 
 /***/ }),
 /* 54 */
