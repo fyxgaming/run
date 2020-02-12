@@ -11,7 +11,7 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run, unobfuscate, createRun } = require('./helpers')
-const runBlockchainTestSuite = require('./blockchain')
+const runBlockchainTestSuite = require('./blockchain-suite')
 
 describe('Mockchain', () => {
   const run = createRun({ blockchain: new Run.Mockchain() })
