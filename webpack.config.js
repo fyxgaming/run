@@ -114,7 +114,7 @@ const propertiesToObfuscate = [
   // mockchain.js
   'transactions',
   'utxosByLocation',
-  'utxosByAddress',
+  'utxosByScriptHash',
   'blockHeight',
   'installs',
 
