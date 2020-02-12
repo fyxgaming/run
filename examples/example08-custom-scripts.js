@@ -1,5 +1,6 @@
 const bsv = require('bsv')
 const Run = require('../dist/run.node.min')
+const { Owner } = Run
 
 class SumScript {
     toBytes() {
@@ -13,8 +14,19 @@ class MathProblem extends Jig {
     claim(owner) { this.owner = owner }
 }
 
+class MathSolver extends Owner {
+    getOwner() {
+        return new SumScript()
+    }
+
+    async sign(tx) {
+        return tx
+    }
+}
+
 async function main() {
-    const run = new Run({ network: 'mock' })
+    const owner = new MathSolver()
+    const run = new Run({ network: 'mock', owner })
 
     const problemScript = new SumScript()
     const mathProblem = new MathProblem(problemScript)

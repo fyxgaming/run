@@ -4384,7 +4384,7 @@ class Transaction {
     this.blockchain = run.blockchain
     this.state = run.state
     try {
-      this.owner = run.owner.getOwner() // TODO
+      this.owner = run.owner.getOwner()
     } catch (e) { this.owner = null }
     this.code = run.code
     this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this)) // current proto-transaction
@@ -6655,7 +6655,9 @@ class Code {
   constructor (options = {}) {
     this.installs = new Map() // Type | Location | Sandbox -> Sandbox
     this.evaluator = new Evaluator({ logger: options.logger, sandbox: options.sandbox })
+    this.logger = options.logger
     this.intrinsics = this.evaluator.intrinsics
+    this.pending = new Set()
     this.installJig()
     this.installBerry()
   }
@@ -6709,7 +6711,11 @@ class Code {
     return { props, refs }
   }
 
+  // TODO: This should include partial installs
   deploy (type, options = {}) {
+    if (this.pending.has(type)) return
+    if (this.logger) this.logger.info('Deploying', type.name)
+
     // short-circut deployment at Jig and Berry because this class already deployed it
     if (type === this.Jig || type === Jig) return this.Jig
     if (type === this.Berry || type === Berry) return this.Berry
@@ -6832,7 +6838,13 @@ class Code {
         const actionProps = Object.assign({}, staticProps)
         stringProps.forEach(name => { delete actionProps[name] })
         delete actionProps.deps
-        const tempLocation = run.transaction.storeCode(type, sandbox, realdeps, actionProps, success, error)
+
+        let tempLocation = null
+        try {
+          this.pending.add(type)
+          tempLocation = run.transaction.storeCode(type, sandbox, realdeps,
+            actionProps, success, error)
+        } finally { this.pending.delete(type) }
 
         type[`origin${net}`] = type[`location${net}`] = tempLocation
         sandbox[`origin${net}`] = sandbox[`location${net}`] = tempLocation
