@@ -19,23 +19,23 @@ const { AddressScript, PubKeyScript } = Run
 
 describe('AddressScript', () => {
   it('should create buffer for valid addresses', () => {
-    new AddressScript('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').toBuffer() // eslint-disable-line
-    new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').toBuffer() // eslint-disable-line
+    new AddressScript('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').toBytes() // eslint-disable-line
+    new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').toBytes() // eslint-disable-line
   })
 
   it('throws if bad address', () => {
-    expect(() => new AddressScript().toBuffer()).to.throw('Address is not a string')
-    expect(() => new AddressScript([]).toBuffer()).to.throw('Address is not a string')
-    expect(() => new AddressScript('3P14159f73E4gFr7JterCCQh9QjiTjiZrG').toBuffer()).to.throw('Address may only be a P2PKH type')
-    expect(() => new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9n').toBuffer()).to.throw('Address may only be a P2PKH type')
-    expect(() => new AddressScript('@').toBuffer()).to.throw('Invalid character in address')
+    expect(() => new AddressScript().toBytes()).to.throw('Address is not a string')
+    expect(() => new AddressScript([]).toBytes()).to.throw('Address is not a string')
+    expect(() => new AddressScript('3P14159f73E4gFr7JterCCQh9QjiTjiZrG').toBytes()).to.throw('Address may only be a P2PKH type')
+    expect(() => new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9n').toBytes()).to.throw('Address may only be a P2PKH type')
+    expect(() => new AddressScript('@').toBytes()).to.throw('Invalid character in address')
   })
 
   it('should correctly return P2PKH buffer', () => {
     const addr = '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
     const script = bsv.Script.fromAddress(addr)
     const buffer1 = new Uint8Array(script.toBuffer())
-    const buffer2 = new AddressScript(addr).toBuffer()
+    const buffer2 = new AddressScript(addr).toBytes()
     expect(buffer1).to.deep.equal(buffer2)
   })
 })
@@ -46,17 +46,17 @@ describe('AddressScript', () => {
 
 describe('PubKeyScript', () => {
   it('throws if bad pubkey', () => {
-    expect(() => new PubKeyScript().toBuffer()).to.throw('Pubkey is not a string')
-    expect(() => new PubKeyScript([]).toBuffer()).to.throw('Pubkey is not a string')
-    expect(() => new PubKeyScript('abcde').toBuffer()).to.throw('Pubkey has bad length')
-    expect(() => new PubKeyScript('@$').toBuffer()).to.throw('Invalid pubkey hex')
+    expect(() => new PubKeyScript().toBytes()).to.throw('Pubkey is not a string')
+    expect(() => new PubKeyScript([]).toBytes()).to.throw('Pubkey is not a string')
+    expect(() => new PubKeyScript('abcde').toBytes()).to.throw('Pubkey has bad length')
+    expect(() => new PubKeyScript('@$').toBytes()).to.throw('Invalid pubkey hex')
   })
 
   it('should correctly return P2PH buffer', () => {
     const pubkey = new bsv.PrivateKey().publicKey
     const script = bsv.Script.buildPublicKeyOut(pubkey)
     const buffer1 = new Uint8Array(script.toBuffer())
-    const buffer2 = new PubKeyScript(pubkey.toString()).toBuffer()
+    const buffer2 = new PubKeyScript(pubkey.toString()).toBytes()
     expect(buffer1).to.deep.equal(buffer2)
   })
 })
@@ -71,48 +71,54 @@ describe('Owner', () => {
       const privkey = new bsv.PrivateKey('testnet')
       const run = createRun({ owner: privkey })
       expect(run.owner.privkey).to.equal(privkey.toString())
-      expect(run.owner.getOwner()).to.equal(privkey.publicKey.toString())
+      expect(run.owner.pubkey).to.equal(privkey.publicKey.toString())
       expect(run.owner.address).to.equal(privkey.toAddress().toString())
+      expect(run.owner.getOwner()).to.equal(privkey.toAddress().toString())
     })
 
     it('should support creating from string private key on mainnet', () => {
       const privkey = new bsv.PrivateKey('mainnet')
       const run = createRun({ network: 'main', owner: privkey.toString() })
       expect(run.owner.privkey).to.equal(privkey.toString())
-      expect(run.owner.getOwner()).to.equal(privkey.publicKey.toString())
+      expect(run.owner.pubkey).to.equal(privkey.publicKey.toString())
       expect(run.owner.address).to.equal(privkey.toAddress().toString())
+      expect(run.owner.getOwner()).to.equal(privkey.toAddress().toString())
     })
 
     it('should support creating from bsv public key on mainnet', () => {
       const pubkey = new bsv.PrivateKey('mainnet').publicKey
       const run = createRun({ network: 'main', owner: pubkey })
       expect(run.owner.privkey).to.equal(undefined)
-      expect(run.owner.getOwner()).to.equal(pubkey.toString())
+      expect(run.owner.pubkey).to.equal(pubkey.toString())
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
+      expect(run.owner.getOwner()).to.equal(pubkey.toAddress().toString())
     })
 
     it('should support creating from string public key on mocknet', () => {
       const pubkey = new bsv.PrivateKey('testnet').publicKey
       const run = createRun({ network: 'mock', owner: pubkey.toString() })
       expect(run.owner.privkey).to.equal(undefined)
-      expect(run.owner.getOwner()).to.equal(pubkey.toString())
+      expect(run.owner.pubkey).to.equal(pubkey.toString())
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
+      expect(run.owner.getOwner()).to.equal(pubkey.toAddress().toString())
     })
 
     it('should support creating from bsv address on stn', () => {
       const address = new bsv.PrivateKey('testnet').toAddress()
       const run = createRun({ network: 'stn', owner: address })
       expect(run.owner.privkey).to.equal(undefined)
-      expect(run.owner.getOwner()).to.equal(undefined)
+      expect(run.owner.pubkey).to.equal(undefined)
       expect(run.owner.address).to.equal(address.toString())
+      expect(run.owner.getOwner()).to.equal(address.toString())
     })
 
     it('should support creating from string address on mainnet', () => {
       const address = new bsv.PrivateKey('livenet').toAddress()
       const run = createRun({ network: 'main', owner: address.toString() })
       expect(run.owner.privkey).to.equal(undefined)
-      expect(run.owner.getOwner()).to.equal(undefined)
+      expect(run.owner.pubkey).to.equal(undefined)
       expect(run.owner.address).to.equal(address.toString())
+      expect(run.owner.getOwner()).to.equal(address.toString())
     })
 
     it('should throw if bad owner', () => {
