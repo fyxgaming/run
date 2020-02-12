@@ -4,8 +4,8 @@ const { Owner } = Run
 
 class SumScript {
     toBytes() {
-        // OP_ADD 2 OP_EQUALVERIFY
-        return new Uint8Array([0x93, 0x02, 0x88])
+        // OP_ADD OP_2 OP_EQUALVERIFY
+        return new Uint8Array([0x93, 0x52, 0x87])
     }
 }
 
@@ -27,8 +27,8 @@ class Solver extends Owner {
         tx.inputs.forEach(input => {
             const pkscript = input.output.script.toBuffer().toString('hex')
             if (pkscript === pattern) {
-                input.script.add(1)
-                input.script.add(1)
+                input.script.add(bsv.Opcode.OP_1)
+                input.script.add(bsv.Opcode.OP_1)
             }
         })
 
@@ -44,14 +44,12 @@ async function main() {
     const problem = new Problem(script)
     await problem.sync()
 
-    console.log(problem)
-
     const solver = new Solver()
     const student = new Run({ network: 'mock', owner: solver })
     problem.solve()
     await problem.sync()
 
-    console.log(problem)
+    console.log('Custom Script Solved:', problem.solved)
 }
 
 main().catch(e => console.error(e))
