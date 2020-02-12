@@ -359,6 +359,8 @@ describe('Run', () => {
     })
 
     it('should reuse state cache', async () => {
+      const networks = ['main', 'test']
+
       async function timeLoad (network, location) {
         const run = createRun({ network })
         const before = new Date()
@@ -366,14 +368,17 @@ describe('Run', () => {
         return new Date() - before
       }
 
-      const testLocation = '7d96e1638074471796c6981b12239865b0daeff24ea72fee207338cf2d388ffd_o1'
-      const mainLocation = 'a0dd3999349d0cdd116a1a607eb07e5e394355484af3ba7a7a5babe0c2efc5ca_o1'
+      for (const network of networks) {
+        const run = createRun({ network })
+        class A extends Jig {}
+        const a = new A()
+        await a.sync()
+        const location = a.location
+        run.deactivate()
 
-      expect(await timeLoad('test', testLocation) > 1000).to.equal(true)
-      expect(await timeLoad('test', testLocation) > 1000).to.equal(false)
-
-      expect(await timeLoad('main', mainLocation) > 1000).to.equal(true)
-      expect(await timeLoad('main', mainLocation) > 1000).to.equal(false)
+        expect(await timeLoad(network, location) > 1000).to.equal(true)
+        expect(await timeLoad(network, location) > 1000).to.equal(false)
+      }
     }).timeout(30000)
 
     it.skip('should fail if reuse jigs across code instances', () => {
