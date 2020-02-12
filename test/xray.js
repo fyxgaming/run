@@ -2,10 +2,10 @@ const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run, createRun } = require('./helpers')
-const { Evaluator, _util, Xray, Intrinsics } = Run
+const { _util, Xray, Intrinsics } = Run
 const { display } = _util
 
-createRun()
+const run = createRun()
 
 // ------------------------------------------------------------------------------------------------
 // Test vector class
@@ -442,7 +442,7 @@ function addTestVectors (intrinsics, testIntrinsics) {
   addTestVector(/^abc/).unscannable().uncloneable().unserializable().undeserializable()
 
   // Unknown intrinsics
-  const sandboxIntrinsics = new Evaluator().intrinsics.allowed[1]
+  const sandboxIntrinsics = run.code.evaluator.intrinsics.allowed[1]
   addTestVector(new sandboxIntrinsics.Uint8Array()).unscannable().uncloneable().unserializable().undeserializable()
   addTestVector(new sandboxIntrinsics.Set()).unscannable().uncloneable().unserializable().undeserializable()
   addTestVector(new sandboxIntrinsics.Map()).unscannable().uncloneable().unserializable().undeserializable()
@@ -490,7 +490,7 @@ function addTestVectors (intrinsics, testIntrinsics) {
   // Port existing classes over
 }
 
-const evaluator = new Evaluator()
+const evaluator = run.code.evaluator
 
 const globalIntrinsics = new Intrinsics()
 addTestVectors(globalIntrinsics, globalIntrinsics.allowed[0])

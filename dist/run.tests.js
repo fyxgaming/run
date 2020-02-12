@@ -206,9 +206,9 @@ function createRun (options = { }) {
   const network = options.network || 'mock'
   const blockchain = network !== 'mock' ? 'star' : undefined
   const purse = network === 'mock' ? undefined : testPurses[network][0]
-  const sandbox = 'sandbox' in options ? options.sandbox :  false
+  options.sandbox = 'sandbox' in options ? options.sandbox :  false
     ? undefined : true
-  const run = new Run(Object.assign({ network, purse, sandbox, logger: null, blockchain }, options))
+  const run = new Run(Object.assign({ network, purse, logger: null, blockchain }, options))
   return run
 }
 
@@ -8209,7 +8209,7 @@ describe('Run', () => {
 
     describe('blockchain', () => {
       it('should create default blockchain', () => {
-        const run = new Run()
+        const run = createRun({ network: 'main' })
         expect(run.blockchain instanceof Run.BlockchainServer).to.equal(true)
         expect(run.blockchain.network).to.equal('main')
         expect(run.blockchain.api.name).to.equal('star')
@@ -8278,7 +8278,7 @@ describe('Run', () => {
 
     describe('sandbox', () => {
       it('should default to sandbox enabled', () => {
-        expect(new Run({ network: 'mock' }).code.evaluator.sandbox).to.equal(true)
+        expect(createRun({ network: 'mock' }).code.evaluator.sandbox).to.equal(true)
         class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()
       })
@@ -11168,10 +11168,10 @@ describe('util', () => {
 const { describe, it } = __webpack_require__(1)
 const { expect } = __webpack_require__(0)
 const { Run, createRun } = __webpack_require__(2)
-const { Evaluator, _util, Xray, Intrinsics } = Run
+const { _util, Xray, Intrinsics } = Run
 const { display } = _util
 
-createRun()
+const run = createRun()
 
 // ------------------------------------------------------------------------------------------------
 // Test vector class
@@ -11608,7 +11608,7 @@ function addTestVectors (intrinsics, testIntrinsics) {
   addTestVector(/^abc/).unscannable().uncloneable().unserializable().undeserializable()
 
   // Unknown intrinsics
-  const sandboxIntrinsics = new Evaluator().intrinsics.allowed[1]
+  const sandboxIntrinsics = run.code.evaluator.intrinsics.allowed[1]
   addTestVector(new sandboxIntrinsics.Uint8Array()).unscannable().uncloneable().unserializable().undeserializable()
   addTestVector(new sandboxIntrinsics.Set()).unscannable().uncloneable().unserializable().undeserializable()
   addTestVector(new sandboxIntrinsics.Map()).unscannable().uncloneable().unserializable().undeserializable()
@@ -11656,7 +11656,7 @@ function addTestVectors (intrinsics, testIntrinsics) {
   // Port existing classes over
 }
 
-const evaluator = new Evaluator()
+const evaluator = run.code.evaluator
 
 const globalIntrinsics = new Intrinsics()
 addTestVectors(globalIntrinsics, globalIntrinsics.allowed[0])

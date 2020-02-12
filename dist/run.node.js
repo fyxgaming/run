@@ -6993,8 +6993,8 @@ class Code {
     if (prev) return [prev, null]
     const code = util.getNormalizedSourceCode(type)
     const willSandbox = this.evaluator.willSandbox(code)
-    const [result, globals] = this.evaluator.evaluate(code, env)
-    return [!willSandbox && type ? type : result, globals]
+    if (!willSandbox) return [type, {}]
+    return this.evaluator.evaluate(code, env)
   }
 
   activate (network) {

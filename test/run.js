@@ -50,7 +50,7 @@ describe('Run', () => {
 
     describe('blockchain', () => {
       it('should create default blockchain', () => {
-        const run = new Run()
+        const run = createRun({ network: 'main' })
         expect(run.blockchain instanceof Run.BlockchainServer).to.equal(true)
         expect(run.blockchain.network).to.equal('main')
         expect(run.blockchain.api.name).to.equal('star')
@@ -119,7 +119,7 @@ describe('Run', () => {
 
     describe('sandbox', () => {
       it('should default to sandbox enabled', () => {
-        expect(new Run({ network: 'mock' }).code.evaluator.sandbox).to.equal(true)
+        expect(createRun({ network: 'mock' }).code.evaluator.sandbox).to.equal(true)
         class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()
       })
