@@ -1274,13 +1274,12 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it.only('should throw if set to address on another network', async () => {
+    it('should throw if set to address on another network', async () => {
       class A extends Jig { send (addr) { this.owner = addr } }
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
       const addr = new PrivateKey('mainnet').toAddress().toString()
-      a.send(addr)
-      await expect(a.sync()).to.be.rejectedWith('hello')
+      expect(() => a.send(addr)).to.throw('Invalid owner')
     })
 
     it('should throw if delete owner', () => {

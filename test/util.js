@@ -47,9 +47,10 @@ describe('util', () => {
 
   describe('ownerScript', () => {
     it('should support valid owners on different networks', () => {
-      const networks = ['mainnet', 'testnet']
-      for (const network of networks) {
-        const privkey = new bsv.PrivateKey(network)
+      const networks = [['main', 'mainnet'], ['test', 'testnet']]
+      for (const [network, bsvNetwork] of networks) {
+        createRun({ network })
+        const privkey = new bsv.PrivateKey(bsvNetwork)
         const pubkey = privkey.publicKey.toString()
         const addr = privkey.toAddress().toString()
         const bytes = new AddressScript(addr).toBytes()
