@@ -9,19 +9,29 @@ class SumScript {
     }
 }
 
-class MathProblem extends Jig {
+class Problem extends Jig {
     init(problem) { this.owner = problem }
     solve() { this.solved = true }
 }
 
-class MathSolver extends Owner {
+class Solver extends Owner {
     getOwner() {
         return new SumScript()
     }
 
     async sign(tx) {
-        // Find the input that has the SumScript
-        // Write the signature [1, 1]
+        const pattern = Buffer.from(new SumScript().toBytes()).toString('hex')
+
+        // Find inputs that match the SumScript pattern
+        // Then write the "signature" [1, 1]
+        tx.inputs.forEach(input => {
+            const pkscript = input.output.script.toBuffer().toString('hex')
+            if (pkscript === pattern) {
+                input.script.add(1)
+                input.script.add(1)
+            }
+        })
+
         return tx
     }
 }
@@ -30,18 +40,18 @@ async function main() {
     const teacher = new Run({ network: 'mock' })
 
     // Create a math problem. What numbers sum to 2? Spend the output to answer.
-    const problemScript = new SumScript()
-    const mathProblem = new MathProblem(problemScript)
-    await mathProblem.sync()
+    const script = new SumScript()
+    const problem = new Problem(script)
+    await problem.sync()
 
-    console.log(mathProblem)
+    console.log(problem)
 
-    const solver = new MathSolver()
+    const solver = new Solver()
     const student = new Run({ network: 'mock', owner: solver })
-    mathProblem.solve()
-    await mathProblem.sync()
+    problem.solve()
+    await problem.sync()
 
-    console.log(mathProblem)
+    console.log(problem)
 }
 
 main().catch(e => console.error(e))
