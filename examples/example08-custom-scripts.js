@@ -4,8 +4,8 @@ const { Owner } = Run
 
 class SumScript {
     toBytes() {
-        // OP_ADD OP_2 OP_EQUALVERIFY
-        return new Uint8Array([0x93, 0x52, 0x87])
+        // OP_1 OP_ADD OP_2 OP_EQUAL
+        return new Uint8Array([0x51, 0x93, 0x52, 0x87])
     }
 }
 
@@ -23,11 +23,10 @@ class Solver extends Owner {
         const pattern = Buffer.from(new SumScript().toBytes()).toString('hex')
 
         // Find inputs that match the SumScript pattern
-        // Then write the "signature" [1, 1]
+        // Then write the "signature" OP_1
         tx.inputs.forEach(input => {
             const pkscript = input.output.script.toBuffer().toString('hex')
             if (pkscript === pattern) {
-                input.script.add(bsv.Opcode.OP_1)
                 input.script.add(bsv.Opcode.OP_1)
             }
         })

@@ -1767,11 +1767,11 @@ function setupBsvLibrary (network) {
   // using the bsv library's interpreter.
   bsv.Transaction.Input.prototype.clearSignatures = () => {}
   bsv.Transaction.Input.prototype.getSignatures = () => []
-  bsv.Transaction.Input.prototype.isFullySigned = function() {
+  bsv.Transaction.Input.prototype.isFullySigned = function () {
     const interpreter = new bsv.Script.Interpreter()
     return interpreter.verify(this.script, this.output.script)
   }
-  bsv.Transaction.Input.prototype.isValidSignature = function() {
+  bsv.Transaction.Input.prototype.isValidSignature = function () {
     const interpreter = new bsv.Script.Interpreter()
     return interpreter.verify(this.script, this.output.script)
   }
