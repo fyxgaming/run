@@ -6081,6 +6081,14 @@ describe('Jig', () => {
       expectNoAction()
     })
 
+    it('should throw if set to address on another network', async () => {
+      class A extends Jig { send (addr) { this.owner = addr } }
+      const a = await new A().sync()
+      expectAction(a, 'init', [], [], [a], [])
+      const addr = new PrivateKey('mainnet').toAddress().toString()
+      expect(() => a.send(addr)).to.throw('Invalid owner')
+    })
+
     it('should throw if delete owner', () => {
       class A extends Jig { f () { delete this.owner }}
       const a = new A()
@@ -7656,7 +7664,7 @@ const chai = __webpack_require__(0)
 const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Jig, Run, createRun, hookPay } = __webpack_require__(2)
+const { Jig, Run, createRun, hookPay, deploy } = __webpack_require__(2)
 const { AddressScript, PubKeyScript } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -7684,6 +7692,10 @@ describe('AddressScript', () => {
     const buffer2 = new AddressScript(addr).toBytes()
     expect(buffer1).to.deep.equal(buffer2)
   })
+
+  it.skip('should deploy', async () => {
+    await deploy(AddressScript)
+  }).timeout(30000)
 })
 
 // ------------------------------------------------------------------------------------------------
@@ -7705,6 +7717,10 @@ describe('PubKeyScript', () => {
     const buffer2 = new PubKeyScript(pubkey.toString()).toBytes()
     expect(buffer1).to.deep.equal(buffer2)
   })
+
+  it.skip('should deploy', async () => {
+    await deploy(PubKeyScript)
+  }).timeout(30000)
 })
 
 // ------------------------------------------------------------------------------------------------
@@ -10710,9 +10726,10 @@ describe('util', () => {
 
   describe('ownerScript', () => {
     it('should support valid owners on different networks', () => {
-      const networks = ['mainnet', 'testnet']
-      for (const network of networks) {
-        const privkey = new bsv.PrivateKey(network)
+      const networks = [['main', 'mainnet'], ['test', 'testnet']]
+      for (const [network, bsvNetwork] of networks) {
+        createRun({ network })
+        const privkey = new bsv.PrivateKey(bsvNetwork)
         const pubkey = privkey.publicKey.toString()
         const addr = privkey.toAddress().toString()
         const bytes = new AddressScript(addr).toBytes()
