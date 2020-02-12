@@ -201,6 +201,9 @@ describe('util', () => {
       expect(deployable(class A { })).to.equal(true)
       expect(deployable(class A extends B { })).to.equal(true)
       expect(deployable(function f () {})).to.equal(true)
+      expect(deployable(() => {})).to.equal(true)
+      expect(deployable(function () { })).to.equal(true)
+      expect(deployable(class {})).to.equal(true)
     })
 
     it('should return false for non-functions', () => {
@@ -214,12 +217,6 @@ describe('util', () => {
       expect(deployable(Array)).to.equal(false)
       expect(deployable(Uint8Array)).to.equal(false)
       expect(deployable(Math.sin)).to.equal(false)
-    })
-
-    it('should return false for anonymous types', () => {
-      expect(deployable(() => {})).to.equal(false)
-      expect(deployable(function () { })).to.equal(false)
-      expect(deployable(class {})).to.equal(false)
     })
   })
 
