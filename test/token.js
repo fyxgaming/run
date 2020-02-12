@@ -57,47 +57,47 @@ describe('Token', () => {
 
   describe('send', () => {
     it('should support sending full amount', () => {
-      const pubkey = new bsv.PrivateKey().publicKey.toString()
+      const address = new bsv.PrivateKey().toAddress().toString()
       const token = new TestToken(100)
-      expect(token.send(pubkey)).to.equal(null)
-      expect(token.owner).to.equal(pubkey)
+      expect(token.send(address)).to.equal(null)
+      expect(token.owner).to.equal(address)
       expect(token.amount).to.equal(100)
     })
 
     it('should support sending partial amount', () => {
-      const pubkey = new bsv.PrivateKey().publicKey.toString()
+      const address = new bsv.PrivateKey().toAddress().toString()
       const token = new TestToken(100)
-      const change = token.send(pubkey, 30)
+      const change = token.send(address, 30)
       expect(change).to.be.instanceOf(TestToken)
-      expect(change.owner).to.equal(run.owner.pubkey)
+      expect(change.owner).to.equal(run.owner.address)
       expect(change.amount).to.equal(70)
-      expect(token.owner).to.equal(pubkey)
+      expect(token.owner).to.equal(address)
       expect(token.amount).to.equal(30)
     })
 
     it('should throw if send too much', () => {
-      const pubkey = new bsv.PrivateKey().publicKey.toString()
+      const address = new bsv.PrivateKey().toAddress().toString()
       const token = new TestToken(100)
-      expect(() => token.send(pubkey, 101)).to.throw('not enough funds')
+      expect(() => token.send(address, 101)).to.throw('not enough funds')
     })
 
     it('should throw if send bad amount', () => {
-      const pubkey = new bsv.PrivateKey().publicKey.toString()
+      const address = new bsv.PrivateKey().toAddress().toString()
       const token = new TestToken(100)
-      expect(() => token.send(pubkey, {})).to.throw('amount is not a number')
-      expect(() => token.send(pubkey, '1')).to.throw('amount is not a number')
-      expect(() => token.send(pubkey, 0)).to.throw('amount must be positive')
-      expect(() => token.send(pubkey, -1)).to.throw('amount must be positive')
-      expect(() => token.send(pubkey, Number.MAX_SAFE_INTEGER + 1)).to.throw('amount too large')
-      expect(() => token.send(pubkey, 1.5)).to.throw('amount must be an integer')
-      expect(() => token.send(pubkey, Infinity)).to.throw('Infinity cannot be serialized')
-      expect(() => token.send(pubkey, NaN)).to.throw('NaN cannot be serialized')
+      expect(() => token.send(address, {})).to.throw('amount is not a number')
+      expect(() => token.send(address, '1')).to.throw('amount is not a number')
+      expect(() => token.send(address, 0)).to.throw('amount must be positive')
+      expect(() => token.send(address, -1)).to.throw('amount must be positive')
+      expect(() => token.send(address, Number.MAX_SAFE_INTEGER + 1)).to.throw('amount too large')
+      expect(() => token.send(address, 1.5)).to.throw('amount must be an integer')
+      expect(() => token.send(address, Infinity)).to.throw('Infinity cannot be serialized')
+      expect(() => token.send(address, NaN)).to.throw('NaN cannot be serialized')
     })
 
     it('should throw if send to bad owner', () => {
       const token = new TestToken(100)
-      expect(() => token.send(10)).to.throw('owner must be a pubkey string')
-      expect(() => token.send('abc', 10)).to.throw('owner is not a valid public key')
+      expect(() => token.send(10)).to.throw('Invalid owner: 10')
+      expect(() => token.send('abc', 10)).to.throw('Invalid owner: abc')
     })
   })
 
@@ -108,11 +108,11 @@ describe('Token', () => {
       const c = TestToken.combine(a, b)
       expect(c).to.be.instanceOf(TestToken)
       expect(c.amount).to.equal(100)
-      expect(c.owner).to.equal(run.owner.pubkey)
+      expect(c.owner).to.equal(run.owner.address)
       expect(a.amount).to.equal(0)
-      expect(a.owner).not.to.equal(run.owner.pubkey)
+      expect(a.owner).not.to.equal(run.owner.address)
       expect(b.amount).to.equal(0)
-      expect(b.owner).not.to.equal(run.owner.pubkey)
+      expect(b.owner).not.to.equal(run.owner.address)
     })
 
     it('should support combining many tokens', () => {
@@ -121,10 +121,10 @@ describe('Token', () => {
       const combined = TestToken.combine(...tokens)
       expect(combined).to.be.instanceOf(TestToken)
       expect(combined.amount).to.equal(10)
-      expect(combined.owner).to.equal(run.owner.pubkey)
+      expect(combined.owner).to.equal(run.owner.address)
       tokens.forEach(token => {
         expect(token.amount).to.equal(0)
-        expect(token.owner).not.to.equal(run.owner.pubkey)
+        expect(token.owner).not.to.equal(run.owner.address)
       })
     })
 
@@ -142,8 +142,8 @@ describe('Token', () => {
     it('should throw if combine different owners without signatures', async () => {
       const a = new TestToken(1)
       const b = new TestToken(2)
-      const pubkey = new bsv.PrivateKey().publicKey.toString()
-      b.send(pubkey)
+      const address = new bsv.PrivateKey().toAddress().toString()
+      b.send(address)
       await expect(TestToken.combine(a, b).sync()).to.be.rejectedWith('Signature missing for TestToken')
     })
 
