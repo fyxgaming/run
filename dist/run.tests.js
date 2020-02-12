@@ -4813,6 +4813,8 @@ describe('Jig', () => {
       expect(run.code.installs.has(A)).to.equal(true)
       await run.sync()
       expect(A.origin.length).to.equal(67)
+      console.log(a)
+      console.log(A)
     })
 
     it('throws if not extended', () => {
@@ -7638,19 +7640,34 @@ const chaiAsPromised = __webpack_require__(4)
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Jig, Run, createRun, hookPay } = __webpack_require__(2)
-const { Address } = Run
+const { AddressScript, PubKeyScript } = Run
 
 // ------------------------------------------------------------------------------------------------
-// Address tests
+// AddressScript tests
 // ------------------------------------------------------------------------------------------------
 
-describe('Address', () => {
+describe('AddressScript', () => {
   it('throws if bad address', () => {
     // const x = Array.from(Buffer.from('00291D4797C2817F6247481E261A3CCB35C24E38AB59C1ACEA', 'hex'))
     // console.log(x)
-    new Address('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').getBuffer() // eslint-disable-line
-    new Address('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').getBuffer() // eslint-disable-line
+    new AddressScript('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').getBuffer() // eslint-disable-line
+    new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').getBuffer() // eslint-disable-line
     // console.log(new Address('%').getBuffer())
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// PubKeyScript tests
+// ------------------------------------------------------------------------------------------------
+
+describe('PubKeyScript', () => {
+  it('throws if bad address', () => {
+    const pubkey = new bsv.PrivateKey().publicKey.toString()
+    const pubkeyBuf = new Uint8Array(new bsv.PublicKey(pubkey).toBuffer())
+    const script = new PubKeyScript(pubkey).getBuffer()
+    expect(script.length).to.equal(34)
+    expect(script.slice(0, 33)).to.deep.equal(pubkeyBuf)
+    expect(script[33]).to.equal(172)
   })
 })
 
@@ -10607,9 +10624,10 @@ const bsv = __webpack_require__(3)
 const { describe, it } = __webpack_require__(1)
 const { expect } = __webpack_require__(0)
 const { Run, createRun } = __webpack_require__(2)
+const { AddressScript, PubKeyScript } = Run
 const {
-  checkOwner,
   checkSatoshis,
+  getOwnerScript,
   getNormalizedSourceCode,
   deployable,
   checkRunTransaction,
@@ -10643,19 +10661,27 @@ describe('util', () => {
     })
   })
 
-  describe('checkOwner', () => {
+  describe('getOwnerScript', () => {
     it('should support valid owners on different networks', () => {
-      expect(() => checkOwner(new bsv.PrivateKey('mainnet').publicKey.toString())).not.to.throw()
-      expect(() => checkOwner(new bsv.PrivateKey('testnet').publicKey.toString())).not.to.throw()
+      const mainnet = new bsv.PrivateKey('mainnet')
+      const testnet = new bsv.PrivateKey('testnet')
+      expect(() => getOwnerScript(mainnet.publicKey.toString())).not.to.throw()
+      expect(() => getOwnerScript(testnet.publicKey.toString())).not.to.throw()
+      expect(() => getOwnerScript(testnet.publicKey.toAddress().toString())).not.to.throw()
+      expect(() => getOwnerScript(testnet.publicKey.toAddress().toString())).not.to.throw()
+      expect(() => getOwnerScript(new PubKeyScript(mainnet.publicKey.toString()))).not.to.throw()
+      expect(() => getOwnerScript(new PubKeyScript(testnet.publicKey.toString()))).not.to.throw()
+      expect(() => getOwnerScript(new AddressScript(mainnet.publicKey.toAddress().toString()))).not.to.throw()
+      expect(() => getOwnerScript(new AddressScript(testnet.publicKey.toAddress().toString()))).not.to.throw()
     })
 
     it('should throw if bad owner', () => {
-      expect(() => checkOwner()).to.throw('owner must be a pubkey string')
-      expect(() => checkOwner(123)).to.throw('owner must be a pubkey string')
-      expect(() => checkOwner('hello')).to.throw('owner is not a valid public key')
-      expect(() => checkOwner(new bsv.PrivateKey())).to.throw('owner must be a pubkey string')
-      expect(() => checkOwner(new bsv.PrivateKey().publicKey)).to.throw('owner must be a pubkey string')
-      expect(() => checkOwner([new bsv.PrivateKey().publicKey.toString()])).to.throw('owner must be a pubkey string')
+      expect(() => getOwnerScript()).to.throw('owner must be a pubkey string')
+      expect(() => getOwnerScript(123)).to.throw('owner must be a pubkey string')
+      expect(() => getOwnerScript('hello')).to.throw('owner is not a valid public key')
+      expect(() => getOwnerScript(new bsv.PrivateKey())).to.throw('owner must be a pubkey string')
+      expect(() => getOwnerScript(new bsv.PrivateKey().publicKey)).to.throw('owner must be a pubkey string')
+      expect(() => getOwnerScript([new bsv.PrivateKey().publicKey.toString()])).to.throw('owner must be a pubkey string')
     })
   })
 

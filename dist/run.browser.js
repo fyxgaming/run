@@ -120,12 +120,33 @@ function checkSatoshis (satoshis) {
 }
 
 /**
- * Checks that the owner of a Jig is a valid public key. Public keys are not network-specific.
+ * Returns the Script object version of this owner, or throws an error
  */
-function checkOwner (owner) {
-  if (typeof owner !== 'string') throw new Error('owner must be a pubkey string')
-  try { new bsv.PublicKey(owner) } // eslint-disable-line
-  catch (e) { throw new Error(`owner is not a valid public key\n\n${e}`) }
+function getOwnerScript (owner) {
+  // Have to include here, because owner also requires util
+  const { AddressScript, PubKeyScript } = __webpack_require__(11)
+
+  if (typeof owner === 'string') {
+    // Try parsing it as a public key
+    try {
+      new bsv.PublicKey(owner) // eslint-disable-line
+      return new PubKeyScript(owner)
+    } catch (e) { }
+
+    // Try parsing it as an address
+    try {
+      new bsv.Address(owner) // eslint-disable-line
+      return new AddressScript(owner)
+    } catch (e) { }
+  }
+
+  // Check if it is a custom owner
+  if (typeof owner === 'object' && owner && typeof owner.getBuffer === 'function') {
+    owner.getBuffer()
+    return owner
+  }
+
+  throw new Error(`Invalid owner: ${owner}`)
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -337,8 +358,8 @@ class SerialTaskQueue {
 module.exports = {
   PROTOCOL_VERSION,
 
-  checkOwner,
   checkSatoshis,
+  getOwnerScript,
 
   checkRunTransaction,
   extractRunData,
@@ -1089,7 +1110,7 @@ class Jig {
         }
 
         if (parentIsAJig) {
-          Context.checkOwner(original.owner)
+          Context.getOwnerScript(original.owner)
           Context.checkSatoshis(original.satoshis)
         }
 
@@ -1481,19 +1502,19 @@ module.exports = Location
 
 const bsv = __webpack_require__(2)
 const Code = __webpack_require__(27)
-const Evaluator = __webpack_require__(14)
+const Evaluator = __webpack_require__(15)
 const Syncer = __webpack_require__(33)
 const { Transaction } = __webpack_require__(16)
 const util = __webpack_require__(0)
 const { Pay, Purse } = __webpack_require__(34)
-const { Address, PubKey, Sign, Owner, AddressOwner } = __webpack_require__(13)
+const { AddressScript, PubKeyScript, Sign, Owner, BasicOwner } = __webpack_require__(11)
 const { Blockchain, BlockchainServer } = __webpack_require__(17)
 const Mockchain = __webpack_require__(53)
 const { State, StateCache } = __webpack_require__(54)
 const { PrivateKey } = bsv
 const { Jig } = __webpack_require__(3)
 const { Berry } = __webpack_require__(8)
-const Protocol = __webpack_require__(11)
+const Protocol = __webpack_require__(12)
 const Token = __webpack_require__(55)
 const expect = __webpack_require__(26)
 const Location = __webpack_require__(4)
@@ -1670,11 +1691,12 @@ function parseState (state) {
 
 function parseOwner (owner, network, logger, run) {
   switch (typeof owner) {
+    case 'undefined':
     case 'string':
     case 'object':
-    case 'undefined':
-      return new AddressOwner(owner, network)
-    default: throw new Error(`Option 'owner' must be a valid key or address. Received: ${owner}`)
+      if (owner && owner instanceof Owner) return owner
+      return new BasicOwner(owner, network)
+    default: throw new Error(`Option 'owner' must be a valid key, address, or Owner instance. Received: ${owner}`)
   }
 }
 
@@ -1772,11 +1794,11 @@ Run.State = State
 Run.StateCache = StateCache
 Run.Xray = Xray
 
-Run.Address = Address
-Run.PubKey = PubKey
+Run.AddressScript = AddressScript
+Run.PubKeyScript = PubKeyScript
 Run.Sign = Sign
 Run.Owner = Owner
-Run.AddressOwner = AddressOwner
+Run.BasicOwner = BasicOwner
 
 Run.Jig = Jig
 Run.Berry = Berry
@@ -1790,7 +1812,7 @@ global.Token = Token
 
 module.exports = Run
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(12)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13)))
 
 /***/ }),
 /* 6 */
@@ -1805,11 +1827,11 @@ class Context {
   static get Checkpoint () { return __webpack_require__(7).Checkpoint }
   static activeRunInstance () { return __webpack_require__(0).activeRunInstance() }
   static deployable (x) { return __webpack_require__(0).deployable(x) }
-  static checkOwner (x) { return __webpack_require__(0).checkOwner(x) }
   static checkSatoshis (x) { return __webpack_require__(0).checkSatoshis(x) }
+  static getOwnerScript (x) { return __webpack_require__(0).getOwnerScript(x) }
   static networkSuffix (x) { return __webpack_require__(0).networkSuffix(x) }
   static get Location () { return __webpack_require__(4) }
-  static get Protocol () { return __webpack_require__(11) }
+  static get Protocol () { return __webpack_require__(12) }
   static get uniquePrivates () { return uniquePrivates }
   static get UniqueSet () { return __webpack_require__(9).UniqueSet }
   static get UniqueMap () { return __webpack_require__(9).UniqueMap }
@@ -1846,7 +1868,7 @@ module.exports = Context
 // So Objects and arrays are acceptible from without.
 // Document scanner API
 
-const Protocol = __webpack_require__(11)
+const Protocol = __webpack_require__(12)
 const { display } = __webpack_require__(0)
 const { Jig, JigControl } = __webpack_require__(3)
 const { Berry } = __webpack_require__(8)
@@ -3036,7 +3058,7 @@ Xray.Checkpoint = Checkpoint
 
 module.exports = Xray
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(15).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14).Buffer))
 
 /***/ }),
 /* 8 */
@@ -3424,6 +3446,322 @@ module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
+ * owner.js
+ *
+ * Owner API that manages jigs and signs transactions
+ */
+
+const bsv = __webpack_require__(2)
+const util = __webpack_require__(0)
+
+// ------------------------------------------------------------------------------------------------
+// Script API
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * API that all custom scripts need to implement to become jig owners
+ */
+class Script {
+  /**
+   * Calculates a buffer for the script. This should be calculated on-demand.
+   * @returns {Uint8Array} Uint8Array script
+   */
+  getBuffer () {
+    throw new Error('Not implemented')
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// P2PKH Script
+// ------------------------------------------------------------------------------------------------
+
+class AddressScript {
+  constructor (address) {
+    this.address = address
+  }
+
+  getBuffer () {
+    // Based on https://gist.github.com/diafygi/90a3e80ca1c2793220e5/
+    const A = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+    var d = [] // the array for storing the stream of decoded bytes
+    var b = [] // the result byte array that will be returned
+    var i // the iterator variable for the base58 string
+    var j // the iterator variable for the byte array (d)
+    var c // the carry amount variable that is used to overflow from the current byte to the next byte
+    var n // a temporary placeholder variable for the current byte
+    const s = this.address
+    for (i in s) { // loop through each base58 character in the input string
+      j = 0 // reset the byte iterator
+      c = A.indexOf(s[i]) // set the initial carry amount equal to the current base58 digit
+      if (c < 0) throw new Error(`Invalid base58 char: ${s[i]}`) // see if each char is base 58
+      if (!(c || b.length ^ i)) b.push(0) // prepend the result array with a zero if the base58 digit is zero and non-zero characters haven't been seen yet (to ensure correct decode length)
+      while (j in d || c) { // start looping through the bytes until there are no more bytes and no carry amount
+        n = d[j] // set the placeholder for the current byte
+        n = n ? n * 58 + c : c // shift the current byte 58 units and add the carry amount (or just add the carry amount if this is a new byte)
+        c = n >> 8 // find the new carry amount (1-byte shift of current byte value)
+        d[j] = n % 256 // reset the current byte to the remainder (the carry amount will pass on the overflow)
+        j++ // iterate to the next byte
+      }
+    }
+    while (j--) { b.push(d[j]) } // since the byte array is backwards, loop through it in reverse order, and append
+    if (b.length < 6) throw new Error(`Base58 check string too short: ${b.length}`)
+    // TODO: Verify the checksum. To do this, we need an onchain sha256.
+    if (b[0] !== 0 && b[0] !== 111) throw new Error('P2SH addresses are not supported')
+    const hash160 = b.slice(1, b.length - 4)
+    const script = [118, 169, ...hash160, 135, 172] // OP_DUP OP_HASH160 <PKH> OP_EQUAL OP_CHECKSIG
+    return new Uint8Array(script)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// P2PKH Script
+// ------------------------------------------------------------------------------------------------
+
+class PubKeyScript {
+  constructor (pubkey) {
+    // Check if string
+    this.pubkey = pubkey
+  }
+
+  getBuffer () {
+    const H = '0123456789abcdef'.split('')
+    const s = this.pubkey.toLowerCase()
+    const pk = []
+    if (s.length % 2 !== 0) throw new Error(`Invalid pubkey length: ${s.length}`)
+    for (let i = 0; i < s.length; i += 2) {
+      const h1 = H.indexOf(s[i])
+      const h2 = H.indexOf(s[i + 1])
+      if (h1 === -1 || h2 === -1) throw new Error(`Invalid pubkey hex: ${s}`)
+      pk.push(h1 * 16 + h2)
+    }
+    const script = [...pk, 172] // <PK> OP_CHECKSIG
+    return new Uint8Array(script)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Sign API
+// ------------------------------------------------------------------------------------------------
+
+class Sign {
+  /**
+   * Returns an owner script that is used for new jigs
+   * @returns {string|Script} New owner script, address, or pubkey
+   */
+  getOwner () {
+    throw new Error('Not implemented')
+  }
+
+  /**
+   * Signs run tokens inputs
+   *
+   * In a server, maybe it loads the tx to see what it's signing
+   * @param {bsv.Transaction} tx Transaction to sign
+   * @returns {bsv.Transaction} Signed transaction
+   */
+  async sign (tx) {
+    throw new Error('Not implemented')
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Owner wrapper to private syncing and tracking
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Base owner class that may be derived from to track jigs and code
+ */
+class Owner extends Sign {
+  constructor () {
+    super()
+
+    // Each asset should only be stored once. If we have an origin, prefer it
+    this.assets = new Map() // origin|Jig|Class|Function -> Jig|Class|Function
+  }
+
+  get run () { return util.activeRunInstance() }
+  get logger () { return util.activeRunInstance().logger }
+
+  get jigs () {
+    try {
+      return Array.from(this.assets.values())
+        .filter(asset => asset instanceof this.run.constructor.Jig)
+    } catch (e) {
+      if (this.logger) this.logger.error(`Bad asset found in owner. Removing.\n\n${e}`)
+      this.removeBadAssets()
+      return this.jigs
+    }
+  }
+
+  get code () {
+    try {
+      return Array.from(this.assets.values())
+        .filter(asset => !(asset instanceof this.run.constructor.Jig))
+    } catch (e) {
+      if (this.logger) this.logger.error(`Bad asset found in owner. Removing.\n\n${e}`)
+      this.removeBadAssets()
+      return this.code
+    }
+  }
+
+  removeBadAssets () {
+    let uselessVar = true
+    const toRemove = []
+    for (const [key, asset] of this.assets) {
+      try {
+        // If a asset failed to deploy, then it will have ! in its origin and throw here
+        const isJig = asset instanceof this.run.constructor.Jig
+        // We need to do something with the result to keep it from being minified away.
+        uselessVar = uselessVar ? !isJig : isJig
+      } catch (e) {
+        toRemove.push(key)
+      }
+    }
+    toRemove.forEach(key => this.assets.delete(key))
+  }
+
+  async sync () {
+    // Post any pending transactions
+    await this.run.syncer.sync()
+
+    // Query the latest jigs and code, but only have one query at a time
+    if (!this.query) {
+      this.query = new Promise((resolve, reject) => {
+        this.queryLatest()
+          .then(() => { this.query = null; resolve() })
+          .catch(e => { this.query = null; reject(e) })
+      })
+    }
+    return this.query
+  }
+
+  async queryLatest () {
+    const queryString = this.address ? this.address
+      : bsv.crypto.Hash.sha256(this.getScript()).toString('hex') // script hash
+    const newUtxos = await this.run.blockchain.utxos(queryString)
+
+    // Create a new asset set initially comprised of all pending assets, since they won't
+    // be in the utxos, and also a map of our non-pending jigs to their present
+    // locations so we don't reload them.
+    const newAssets = new Map()
+    const locationMap = new Map()
+    for (const [key, asset] of this.assets) {
+      if (typeof key !== 'string') newAssets.set(key, asset)
+      try { locationMap.set(asset.location, asset) } catch (e) { }
+    }
+
+    // load each new utxo, and if we come across a jig we already know, re-use it
+    for (const utxo of newUtxos) {
+      const location = `${utxo.txid}_o${utxo.vout}`
+      const prevAsset = locationMap.get(location)
+      if (prevAsset) {
+        newAssets.delete(prevAsset)
+        newAssets.set(location, prevAsset)
+        continue
+      }
+      try {
+        const asset = await this.run.load(location)
+        newAssets.set(asset.origin, asset)
+      } catch (e) {
+        if (this.logger) this.logger.error(`Failed to load owner location ${location}\n\n${e.toString()}`)
+      }
+    }
+
+    this.assets = newAssets
+  }
+
+  update (asset) {
+    this.assets.delete(asset)
+    try {
+      // TODO: Update this
+      if (asset.owner === this.pubkey) {
+        try {
+          if (typeof asset.origin === 'undefined') throw new Error()
+          if (asset.origin.startsWith('_')) throw new Error()
+          this.assets.set(asset.origin, asset)
+        } catch (e) { this.assets.set(asset, asset) }
+      } else {
+        try { this.assets.delete(asset.origin) } catch (e) { }
+      }
+    } catch (e) { }
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Owner implementation based on a key or address
+// ------------------------------------------------------------------------------------------------
+
+class BasicOwner extends Owner {
+  constructor (keyOrAddress, network) {
+    super()
+
+    const bsvNetwork = util.bsvNetwork(network)
+    keyOrAddress = keyOrAddress || new bsv.PrivateKey(bsvNetwork)
+
+    // Try creating the private key on mainnet and testnet
+    try {
+      const bsvPrivateKey = new bsv.PrivateKey(keyOrAddress, bsvNetwork)
+      if (bsvPrivateKey.toString() !== keyOrAddress.toString()) throw new Error()
+      return this.setupFromPrivateKey(bsvPrivateKey)
+    } catch (e) {
+      if (e.message === 'Private key network mismatch') throw e
+    }
+
+    // Try creating from a public key
+    try {
+      return this.setupFromPublicKey(new bsv.PublicKey(keyOrAddress, { network: bsvNetwork }))
+    } catch (e) { }
+
+    // Try creating from an address
+    try {
+      return this.setupFromAddress(new bsv.Address(keyOrAddress, bsvNetwork))
+    } catch (e) {
+      if (e.message === 'Address has mismatched network type.') throw e
+    }
+
+    throw new Error(`bad owner key or address: ${keyOrAddress}`)
+  }
+
+  setupFromPrivateKey (bsvPrivateKey) {
+    this.bsvPrivateKey = bsvPrivateKey
+    this.privkey = bsvPrivateKey.toString()
+    return this.setupFromPublicKey(bsvPrivateKey.publicKey)
+  }
+
+  setupFromPublicKey (bsvPublicKey) {
+    this.bsvPublicKey = bsvPublicKey
+    this.pubkey = bsvPublicKey.toString()
+    return this.setupFromAddress(bsvPublicKey.toAddress())
+  }
+
+  setupFromAddress (bsvAddress) {
+    this.bsvAddress = bsvAddress
+    this.address = bsvAddress.toString()
+    return this
+  }
+
+  getOwner () {
+    // return new AddressScript(this.address)
+    return this.address
+  }
+
+  async sign (tx) {
+    if (!this.bsvPrivateKey) throw new Error('Cannot sign. Owner does not have a private key declared.')
+    tx.sign(this.bsvPrivateKey)
+    return tx
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { Script, AddressScript, PubKeyScript, Sign, Owner, BasicOwner }
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
  * protocol.js
  *
  * Manager for token protocols are supported by Run
@@ -3621,7 +3959,7 @@ module.exports = Protocol
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports) {
 
 var g;
@@ -3647,560 +3985,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * owner.js
- *
- * Owner API that manages jigs and signs transactions
- */
-
-const bsv = __webpack_require__(2)
-const util = __webpack_require__(0)
-
-// ------------------------------------------------------------------------------------------------
-// Script API
-// ------------------------------------------------------------------------------------------------
-
-/**
- * API that all custom scripts need to implement to become jig owners
- */
-class Script {
-  /**
-   * Calculates a buffer for the script. This should be calculated on-demand.
-   * @returns {Uint8Array} Uint8Array script
-   */
-  getBuffer () {
-    throw new Error('Not implemented')
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// P2PKH Script
-// ------------------------------------------------------------------------------------------------
-
-class Address {
-  constructor (address) {
-    this.address = address
-  }
-
-  getBuffer () {
-    // Based on https://gist.github.com/diafygi/90a3e80ca1c2793220e5/
-    const A = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-    var d = [] // the array for storing the stream of decoded bytes
-    var b = [] // the result byte array that will be returned
-    var i // the iterator variable for the base58 string
-    var j // the iterator variable for the byte array (d)
-    var c // the carry amount variable that is used to overflow from the current byte to the next byte
-    var n // a temporary placeholder variable for the current byte
-    const s = this.address
-    for (i in s) { // loop through each base58 character in the input string
-      j = 0 // reset the byte iterator
-      c = A.indexOf(s[i]) // set the initial carry amount equal to the current base58 digit
-      if (c < 0) throw new Error(`Invalid base58 char: ${s[i]}`) // see if each char is base 58
-      if (!(c || b.length ^ i)) b.push(0) // prepend the result array with a zero if the base58 digit is zero and non-zero characters haven't been seen yet (to ensure correct decode length)
-      while (j in d || c) { // start looping through the bytes until there are no more bytes and no carry amount
-        n = d[j] // set the placeholder for the current byte
-        n = n ? n * 58 + c : c // shift the current byte 58 units and add the carry amount (or just add the carry amount if this is a new byte)
-        c = n >> 8 // find the new carry amount (1-byte shift of current byte value)
-        d[j] = n % 256 // reset the current byte to the remainder (the carry amount will pass on the overflow)
-        j++ // iterate to the next byte
-      }
-    }
-    while (j--) { b.push(d[j]) } // since the byte array is backwards, loop through it in reverse order, and append
-    if (b.length < 6) throw new Error(`Base58 check string too short: ${b.length}`)
-    // TODO: Verify the checksum. To do this, we need an onchain sha256.
-    if (b[0] !== 0 && b[0] !== 111) throw new Error('P2SH addresses are not supported')
-    const hash160 = b.slice(1, b.length - 4)
-    const script = [118, 169, ...hash160, 135, 172] // OP_DUP OP_HASH160 <PKH> OP_EQUAL OP_CHECKSIG
-    return new Uint8Array(script)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// P2PKH Script
-// ------------------------------------------------------------------------------------------------
-
-class PubKey {
-  constructor (pubkey) {
-    // Check if string
-    this.pubkey = pubkey
-  }
-
-  getBuffer () {
-    // TODO
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Sign API
-// ------------------------------------------------------------------------------------------------
-
-class Sign {
-  /**
-   * Returns an owner script that is used for new jigs
-   * @returns {Script} New owner script
-   */
-  getScript () {
-    throw new Error('Not implemented')
-  }
-
-  /**
-   * Signs run tokens inputs
-   *
-   * In a server, maybe it loads the tx to see what it's signing
-   * @param {bsv.Transaction} tx Transaction to sign
-   * @returns {bsv.Transaction} Signed transaction
-   */
-  async sign (tx) {
-    throw new Error('Not implemented')
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Owner wrapper to private syncing and tracking
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Base owner class that may be derived from to track jigs and code
- */
-class Owner extends Sign {
-  constructor () {
-    super()
-
-    // Each asset should only be stored once. If we have an origin, prefer it
-    this.assets = new Map() // origin|Jig|Class|Function -> Jig|Class|Function
-  }
-
-  get run () { return util.activeRunInstance() }
-  get logger () { return util.activeRunInstance().logger }
-
-  get jigs () {
-    try {
-      return Array.from(this.assets.values())
-        .filter(asset => asset instanceof this.run.constructor.Jig)
-    } catch (e) {
-      if (this.logger) this.logger.error(`Bad asset found in owner. Removing.\n\n${e}`)
-      this.removeBadAssets()
-      return this.jigs
-    }
-  }
-
-  get code () {
-    try {
-      return Array.from(this.assets.values())
-        .filter(asset => !(asset instanceof this.run.constructor.Jig))
-    } catch (e) {
-      if (this.logger) this.logger.error(`Bad asset found in owner. Removing.\n\n${e}`)
-      this.removeBadAssets()
-      return this.code
-    }
-  }
-
-  removeBadAssets () {
-    let uselessVar = true
-    const toRemove = []
-    for (const [key, asset] of this.assets) {
-      try {
-        // If a asset failed to deploy, then it will have ! in its origin and throw here
-        const isJig = asset instanceof this.run.constructor.Jig
-        // We need to do something with the result to keep it from being minified away.
-        uselessVar = uselessVar ? !isJig : isJig
-      } catch (e) {
-        toRemove.push(key)
-      }
-    }
-    toRemove.forEach(key => this.assets.delete(key))
-  }
-
-  async sync () {
-    // Post any pending transactions
-    await this.run.syncer.sync()
-
-    // Query the latest jigs and code, but only have one query at a time
-    if (!this.query) {
-      this.query = new Promise((resolve, reject) => {
-        this.queryLatest()
-          .then(() => { this.query = null; resolve() })
-          .catch(e => { this.query = null; reject(e) })
-      })
-    }
-    return this.query
-  }
-
-  async queryLatest () {
-    const queryString = this.address ? this.address
-      : bsv.crypto.Hash.sha256(this.getScript()).toString('hex') // script hash
-    const newUtxos = await this.run.blockchain.utxos(queryString)
-
-    // Create a new asset set initially comprised of all pending assets, since they won't
-    // be in the utxos, and also a map of our non-pending jigs to their present
-    // locations so we don't reload them.
-    const newAssets = new Map()
-    const locationMap = new Map()
-    for (const [key, asset] of this.assets) {
-      if (typeof key !== 'string') newAssets.set(key, asset)
-      try { locationMap.set(asset.location, asset) } catch (e) { }
-    }
-
-    // load each new utxo, and if we come across a jig we already know, re-use it
-    for (const utxo of newUtxos) {
-      const location = `${utxo.txid}_o${utxo.vout}`
-      const prevAsset = locationMap.get(location)
-      if (prevAsset) {
-        newAssets.delete(prevAsset)
-        newAssets.set(location, prevAsset)
-        continue
-      }
-      try {
-        const asset = await this.run.load(location)
-        newAssets.set(asset.origin, asset)
-      } catch (e) {
-        if (this.logger) this.logger.error(`Failed to load owner location ${location}\n\n${e.toString()}`)
-      }
-    }
-
-    this.assets = newAssets
-  }
-
-  update (asset) {
-    this.assets.delete(asset)
-    try {
-      if (asset.owner === this.pubkey) {
-        try {
-          if (typeof asset.origin === 'undefined') throw new Error()
-          if (asset.origin.startsWith('_')) throw new Error()
-          this.assets.set(asset.origin, asset)
-        } catch (e) { this.assets.set(asset, asset) }
-      } else {
-        try { this.assets.delete(asset.origin) } catch (e) { }
-      }
-    } catch (e) { }
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// P2PKH owner class
-// ------------------------------------------------------------------------------------------------
-
-class AddressOwner extends Owner {
-  constructor (keyOrAddress, network) {
-    super()
-
-    const bsvNetwork = util.bsvNetwork(network)
-    keyOrAddress = keyOrAddress || new bsv.PrivateKey(bsvNetwork)
-
-    // Try creating the private key on mainnet and testnet
-    try {
-      const bsvPrivateKey = new bsv.PrivateKey(keyOrAddress, bsvNetwork)
-      if (bsvPrivateKey.toString() !== keyOrAddress.toString()) throw new Error()
-      return this.setupFromPrivateKey(bsvPrivateKey)
-    } catch (e) {
-      if (e.message === 'Private key network mismatch') throw e
-    }
-
-    // Try creating from a public key
-    try {
-      return this.setupFromPublicKey(new bsv.PublicKey(keyOrAddress, { network: bsvNetwork }))
-    } catch (e) { }
-
-    // Try creating from an address
-    try {
-      return this.setupFromAddress(new bsv.Address(keyOrAddress, bsvNetwork))
-    } catch (e) {
-      if (e.message === 'Address has mismatched network type.') throw e
-    }
-
-    throw new Error(`bad owner key or address: ${keyOrAddress}`)
-  }
-
-  setupFromPrivateKey (bsvPrivateKey) {
-    this.bsvPrivateKey = bsvPrivateKey
-    this.privkey = bsvPrivateKey.toString()
-    return this.setupFromPublicKey(bsvPrivateKey.publicKey)
-  }
-
-  setupFromPublicKey (bsvPublicKey) {
-    this.bsvPublicKey = bsvPublicKey
-    this.pubkey = bsvPublicKey.toString()
-    return this.setupFromAddress(bsvPublicKey.toAddress())
-  }
-
-  setupFromAddress (bsvAddress) {
-    this.bsvAddress = bsvAddress
-    this.address = bsvAddress.toString()
-    this.addressScript = new Address(this.address)
-    return this
-  }
-
-  getScript () {
-    return this.addressScript
-  }
-
-  async sign (tx) {
-    if (!this.bsvPrivateKey) throw new Error('Cannot sign. Owner does not have a private key declared.')
-    tx.sign(this.bsvPrivateKey)
-    return tx
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-module.exports = { Script, Address, PubKey, Sign, Owner, AddressOwner }
-
-
-/***/ }),
 /* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(global) {/**
- * evaluator.js
- *
- * The evaluator runs arbitrary code in a secure sandbox
- */
-
-const ses = __webpack_require__(28)
-const { getIntrinsics, intrinsicNames, Intrinsics } = __webpack_require__(10)
-const Context = __webpack_require__(6)
-const { UniqueSet, UniqueMap } = __webpack_require__(9)
-
-// ------------------------------------------------------------------------------------------------
-// Evaluator
-// ------------------------------------------------------------------------------------------------
-
-class Evaluator {
-  constructor (options = {}) {
-    this.sandbox = typeof options.sandbox !== 'undefined' ? options.sandbox : true
-    this.logger = typeof options.logger !== 'undefined' ? options.logger : null
-
-    // The realms-shim requires a body for sandboxing. If it doesn't exist, create one.
-    if (typeof window !== 'undefined' && !window.document.body) {
-      window.document.body = document.createElement('body')
-    }
-
-    this.sandboxEvaluator = new SESEvaluator()
-    this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
-
-    if (this.willSandbox(UniqueSet.toString())) {
-      this.UniqueSet = this.sandboxEvaluator.evaluate(UniqueSet.toString(), { Context })[0]
-    } else {
-      this.UniqueSet = UniqueSet
-    }
-
-    if (this.willSandbox(UniqueMap.toString())) {
-      this.UniqueMap = this.sandboxEvaluator.evaluate(UniqueMap.toString(), { Context })[0]
-    } else {
-      this.UniqueMap = UniqueMap
-    }
-
-    this.uniqueEnv = { Set: this.UniqueSet, Map: this.UniqueMap }
-
-    const custom = Object.assign({}, this.sandboxEvaluator.intrinsics, this.uniqueEnv)
-    this.intrinsics = new Intrinsics().allow(this.sandboxEvaluator.intrinsics).use(custom)
-  }
-
-  evaluate (code, env) {
-    if (this.logger) this.logger.info(`Evaluating code starting with: "${code.slice(0, 20)}"`)
-    if (this.willSandbox(code)) {
-      return this.sandboxEvaluator.evaluate(code, Object.assign({}, this.uniqueEnv, env))
-    } else {
-      // Don't replace Set and Map when using the global evaluator
-      return this.globalEvaluator.evaluate(code, Object.assign({}, env))
-    }
-  }
-
-  willSandbox (code) {
-    if (typeof this.sandbox === 'boolean') return this.sandbox
-    const nameRegex = /^(function|class)\s+([a-zA-Z0-9_$]+)/
-    const match = code.match(nameRegex)
-    return match ? this.sandbox.test(match[2]) : false
-  }
-
-  activate () { this.globalEvaluator.activate() }
-  deactivate () { this.globalEvaluator.deactivate() }
-}
-
-// ------------------------------------------------------------------------------------------------
-// SESEvaluator
-// ------------------------------------------------------------------------------------------------
-
-// Non-deterministic globals will be banned
-const nonDeterministicGlobals = [
-  'Date',
-  'Math',
-  'eval',
-  'XMLHttpRequest',
-  'FileReader',
-  'WebSocket',
-  'setTimeout',
-  'setInterval'
-]
-
-/**
- * Secure sandboxer for arbitrary code
- */
-class SESEvaluator {
-  constructor () {
-    this.realm = ses.makeSESRootRealm()
-
-    // Keep track of common intrinsics shared between realms. The SES realm creates
-    // these, and we just evaluate a list of them and store them here.
-    this.intrinsics = this.realm.evaluate(`(${getIntrinsics.toString()})()`, { intrinsicNames })
-
-    // We also overwrite console so that console.log in sandboxed code is relogged outside
-    const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
-    this.intrinsics.console = this.realm.evaluate(consoleCode, { c: console })
-  }
-
-  evaluate (code, env = {}) {
-    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
-    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
-    if ('$globals' in env) throw new Error('Environment must not contain $globals')
-
-    // Create the globals object in the SES realm so it doesn't expose ours
-    const $globals = this.realm.evaluate('({})')
-
-    // Disable each non-deterministic global
-    env = Object.assign({}, env)
-    nonDeterministicGlobals.forEach(key => {
-      if (!(key in env)) env[key] = undefined
-    })
-
-    // Create the real env we'll use
-    env = Object.assign({}, this.intrinsics, env, { $globals })
-
-    // When a function is anonymous, it will be named the variable it is assigned. We give it
-    // a friendly anonymous name to distinguish it from named classes and functions.
-    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
-
-    // Execute the code in strict mode.
-    const script = `with($globals){'use strict';const ${anon}=${code};${anon}}`
-    const result = this.realm.evaluate(script, env)
-
-    return [result, $globals]
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// GlobalEvaluator
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Evaluates code using dependences that are set as globals. This is quite dangerous, but we
- * only use it when sandbox=false, which is intended for testing code coverage and debugging.
- */
-class GlobalEvaluator {
-  constructor (options = {}) {
-    this.logger = options.logger
-    this.activated = true
-    // We will save the prior globals before overriding them so they can be reverted.
-    // This will also store our globals when we deactivate so we can re-activate them.
-    this.savedGlobalDescriptors = {}
-  }
-
-  evaluate (code, env = {}) {
-    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
-    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
-    if ('$globals' in env) throw new Error('Environment must not contain $globals')
-
-    // When a function is anonymous, it will be named the variable it is assigned. We give it
-    // a friendly anonymous name to distinguish it from named classes and functions.
-    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
-
-    // Set each env as a global
-    const options = { configurable: true, enumerable: true, writable: true }
-    Object.keys(env).forEach(key => this.setGlobalDescriptor(key, Object.assign({}, options, { value: env[key] })))
-
-    // Turn the code into an object
-    const result = eval(`const ${anon} = ${code}; ${anon}`) // eslint-disable-line
-
-    // Wrap global sets so that we update savedGlobalDescriptors
-    const wrappedGlobal = new Proxy(global, {
-      set: (target, prop, value) => {
-        this.setGlobalDescriptor(prop, Object.assign({}, options, { value }))
-        return true
-      },
-      defineProperty: (target, prop, descriptor) => {
-        this.setGlobalDescriptor(prop, descriptor)
-        return true
-      }
-    })
-
-    return [result, wrappedGlobal]
-  }
-
-  setGlobalDescriptor (key, descriptor) {
-    // Save the previous global the first time we override it. Future overrides
-    // will throw a warning because now there are two values at the global scope.
-    const priorDescriptor = Object.getOwnPropertyDescriptor(global, key)
-
-    if (!(key in this.savedGlobalDescriptors)) {
-      this.savedGlobalDescriptors[key] = priorDescriptor
-    } else if (!sameDescriptors(descriptor, priorDescriptor)) {
-      if (this.logger) {
-        const warning = 'There might be bugs with sandboxing disabled'
-        const reason = `Two different values were set at the global scope for ${key}`
-        this.logger.warn(`${warning}\n\n${reason}`)
-      }
-    }
-
-    Object.defineProperty(global, key, descriptor)
-  }
-
-  activate () {
-    if (this.activated) return
-    this.swapSavedGlobals()
-    this.activated = true
-  }
-
-  deactivate () {
-    if (!this.activated) return
-    this.swapSavedGlobals()
-    this.activated = false
-  }
-
-  swapSavedGlobals () {
-    const swappedGlobalDescriptors = {}
-
-    Object.keys(this.savedGlobalDescriptors).forEach(key => {
-      swappedGlobalDescriptors[key] = Object.getOwnPropertyDescriptor(global, key)
-
-      if (typeof this.savedGlobalDescriptors[key] === 'undefined') {
-        delete global[key]
-      } else {
-        Object.defineProperty(global, key, this.savedGlobalDescriptors[key])
-      }
-    })
-
-    this.savedGlobalDescriptors = swappedGlobalDescriptors
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Helper methods
-// ------------------------------------------------------------------------------------------------
-
-function sameDescriptors (a, b) {
-  if (typeof a !== typeof b) return false
-  const aKeys = Array.from(Object.keys(a))
-  const bKeys = Array.from(Object.keys(b))
-  if (aKeys.length !== bKeys.length) return false
-  return !aKeys.some(key => a[key] !== b[key])
-}
-
-// ------------------------------------------------------------------------------------------------
-
-Evaluator.SESEvaluator = SESEvaluator
-Evaluator.GlobalEvaluator = GlobalEvaluator
-Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
-
-module.exports = Evaluator
-
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(12)))
-
-/***/ }),
-/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4214,9 +3999,9 @@ module.exports = Evaluator
 
 
 
-var base64 = __webpack_require__(30)
-var ieee754 = __webpack_require__(31)
-var isArray = __webpack_require__(32)
+var base64 = __webpack_require__(28)
+var ieee754 = __webpack_require__(29)
+var isArray = __webpack_require__(30)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -5994,7 +5779,256 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(12)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13)))
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {/**
+ * evaluator.js
+ *
+ * The evaluator runs arbitrary code in a secure sandbox
+ */
+
+const ses = __webpack_require__(31)
+const { getIntrinsics, intrinsicNames, Intrinsics } = __webpack_require__(10)
+const Context = __webpack_require__(6)
+const { UniqueSet, UniqueMap } = __webpack_require__(9)
+
+// ------------------------------------------------------------------------------------------------
+// Evaluator
+// ------------------------------------------------------------------------------------------------
+
+class Evaluator {
+  constructor (options = {}) {
+    this.sandbox = typeof options.sandbox !== 'undefined' ? options.sandbox : true
+    this.logger = typeof options.logger !== 'undefined' ? options.logger : null
+
+    // The realms-shim requires a body for sandboxing. If it doesn't exist, create one.
+    if (typeof window !== 'undefined' && !window.document.body) {
+      window.document.body = document.createElement('body')
+    }
+
+    this.sandboxEvaluator = new SESEvaluator()
+    this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
+
+    if (this.willSandbox(UniqueSet.toString())) {
+      this.UniqueSet = this.sandboxEvaluator.evaluate(UniqueSet.toString(), { Context })[0]
+    } else {
+      this.UniqueSet = UniqueSet
+    }
+
+    if (this.willSandbox(UniqueMap.toString())) {
+      this.UniqueMap = this.sandboxEvaluator.evaluate(UniqueMap.toString(), { Context })[0]
+    } else {
+      this.UniqueMap = UniqueMap
+    }
+
+    this.uniqueEnv = { Set: this.UniqueSet, Map: this.UniqueMap }
+
+    const custom = Object.assign({}, this.sandboxEvaluator.intrinsics, this.uniqueEnv)
+    this.intrinsics = new Intrinsics().allow(this.sandboxEvaluator.intrinsics).use(custom)
+  }
+
+  evaluate (code, env) {
+    if (this.logger) this.logger.info(`Evaluating code starting with: "${code.slice(0, 20)}"`)
+    if (this.willSandbox(code)) {
+      return this.sandboxEvaluator.evaluate(code, Object.assign({}, this.uniqueEnv, env))
+    } else {
+      // Don't replace Set and Map when using the global evaluator
+      return this.globalEvaluator.evaluate(code, Object.assign({}, env))
+    }
+  }
+
+  willSandbox (code) {
+    if (typeof this.sandbox === 'boolean') return this.sandbox
+    const nameRegex = /^(function|class)\s+([a-zA-Z0-9_$]+)/
+    const match = code.match(nameRegex)
+    return match ? this.sandbox.test(match[2]) : false
+  }
+
+  activate () { this.globalEvaluator.activate() }
+  deactivate () { this.globalEvaluator.deactivate() }
+}
+
+// ------------------------------------------------------------------------------------------------
+// SESEvaluator
+// ------------------------------------------------------------------------------------------------
+
+// Non-deterministic globals will be banned
+const nonDeterministicGlobals = [
+  'Date',
+  'Math',
+  'eval',
+  'XMLHttpRequest',
+  'FileReader',
+  'WebSocket',
+  'setTimeout',
+  'setInterval'
+]
+
+/**
+ * Secure sandboxer for arbitrary code
+ */
+class SESEvaluator {
+  constructor () {
+    this.realm = ses.makeSESRootRealm()
+
+    // Keep track of common intrinsics shared between realms. The SES realm creates
+    // these, and we just evaluate a list of them and store them here.
+    this.intrinsics = this.realm.evaluate(`(${getIntrinsics.toString()})()`, { intrinsicNames })
+
+    // We also overwrite console so that console.log in sandboxed code is relogged outside
+    const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
+    this.intrinsics.console = this.realm.evaluate(consoleCode, { c: console })
+  }
+
+  evaluate (code, env = {}) {
+    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
+    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
+    if ('$globals' in env) throw new Error('Environment must not contain $globals')
+
+    // Create the globals object in the SES realm so it doesn't expose ours
+    const $globals = this.realm.evaluate('({})')
+
+    // Disable each non-deterministic global
+    env = Object.assign({}, env)
+    nonDeterministicGlobals.forEach(key => {
+      if (!(key in env)) env[key] = undefined
+    })
+
+    // Create the real env we'll use
+    env = Object.assign({}, this.intrinsics, env, { $globals })
+
+    // When a function is anonymous, it will be named the variable it is assigned. We give it
+    // a friendly anonymous name to distinguish it from named classes and functions.
+    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
+
+    // Execute the code in strict mode.
+    const script = `with($globals){'use strict';const ${anon}=${code};${anon}}`
+    const result = this.realm.evaluate(script, env)
+
+    return [result, $globals]
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// GlobalEvaluator
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Evaluates code using dependences that are set as globals. This is quite dangerous, but we
+ * only use it when sandbox=false, which is intended for testing code coverage and debugging.
+ */
+class GlobalEvaluator {
+  constructor (options = {}) {
+    this.logger = options.logger
+    this.activated = true
+    // We will save the prior globals before overriding them so they can be reverted.
+    // This will also store our globals when we deactivate so we can re-activate them.
+    this.savedGlobalDescriptors = {}
+  }
+
+  evaluate (code, env = {}) {
+    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
+    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
+    if ('$globals' in env) throw new Error('Environment must not contain $globals')
+
+    // When a function is anonymous, it will be named the variable it is assigned. We give it
+    // a friendly anonymous name to distinguish it from named classes and functions.
+    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
+
+    // Set each env as a global
+    const options = { configurable: true, enumerable: true, writable: true }
+    Object.keys(env).forEach(key => this.setGlobalDescriptor(key, Object.assign({}, options, { value: env[key] })))
+
+    // Turn the code into an object
+    const result = eval(`const ${anon} = ${code}; ${anon}`) // eslint-disable-line
+
+    // Wrap global sets so that we update savedGlobalDescriptors
+    const wrappedGlobal = new Proxy(global, {
+      set: (target, prop, value) => {
+        this.setGlobalDescriptor(prop, Object.assign({}, options, { value }))
+        return true
+      },
+      defineProperty: (target, prop, descriptor) => {
+        this.setGlobalDescriptor(prop, descriptor)
+        return true
+      }
+    })
+
+    return [result, wrappedGlobal]
+  }
+
+  setGlobalDescriptor (key, descriptor) {
+    // Save the previous global the first time we override it. Future overrides
+    // will throw a warning because now there are two values at the global scope.
+    const priorDescriptor = Object.getOwnPropertyDescriptor(global, key)
+
+    if (!(key in this.savedGlobalDescriptors)) {
+      this.savedGlobalDescriptors[key] = priorDescriptor
+    } else if (!sameDescriptors(descriptor, priorDescriptor)) {
+      if (this.logger) {
+        const warning = 'There might be bugs with sandboxing disabled'
+        const reason = `Two different values were set at the global scope for ${key}`
+        this.logger.warn(`${warning}\n\n${reason}`)
+      }
+    }
+
+    Object.defineProperty(global, key, descriptor)
+  }
+
+  activate () {
+    if (this.activated) return
+    this.swapSavedGlobals()
+    this.activated = true
+  }
+
+  deactivate () {
+    if (!this.activated) return
+    this.swapSavedGlobals()
+    this.activated = false
+  }
+
+  swapSavedGlobals () {
+    const swappedGlobalDescriptors = {}
+
+    Object.keys(this.savedGlobalDescriptors).forEach(key => {
+      swappedGlobalDescriptors[key] = Object.getOwnPropertyDescriptor(global, key)
+
+      if (typeof this.savedGlobalDescriptors[key] === 'undefined') {
+        delete global[key]
+      } else {
+        Object.defineProperty(global, key, this.savedGlobalDescriptors[key])
+      }
+    })
+
+    this.savedGlobalDescriptors = swappedGlobalDescriptors
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Helper methods
+// ------------------------------------------------------------------------------------------------
+
+function sameDescriptors (a, b) {
+  if (typeof a !== typeof b) return false
+  const aKeys = Array.from(Object.keys(a))
+  const bKeys = Array.from(Object.keys(b))
+  if (aKeys.length !== bKeys.length) return false
+  return !aKeys.some(key => a[key] !== b[key])
+}
+
+// ------------------------------------------------------------------------------------------------
+
+Evaluator.SESEvaluator = SESEvaluator
+Evaluator.GlobalEvaluator = GlobalEvaluator
+Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
+
+module.exports = Evaluator
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13)))
 
 /***/ }),
 /* 16 */
@@ -6009,10 +6043,10 @@ function isnan (val) {
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
 const { JigControl } = __webpack_require__(3)
-const { Owner } = __webpack_require__(13)
+const { Owner } = __webpack_require__(11)
 const { Berry } = __webpack_require__(8)
 const Location = __webpack_require__(4)
-const Protocol = __webpack_require__(11)
+const Protocol = __webpack_require__(12)
 const { UniqueSet } = __webpack_require__(9)
 const Xray = __webpack_require__(7)
 
@@ -6030,7 +6064,7 @@ class Transaction {
     this.blockchain = run.blockchain
     this.state = run.state
     try {
-      this.owner = run.owner.getScript() // TODO
+      this.owner = run.owner.getOwner() // TODO
     } catch (e) { this.owner = null }
     this.code = run.code
     this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this)) // current proto-transaction
@@ -6479,9 +6513,9 @@ class ProtoTransaction {
     })
     this.outputs.forEach((o, n) => {
       const index = 1 + data.code.length + n
-      const addr = new bsv.PublicKey(o.owner, { network: bsvNetwork }).toAddress().toString()
-      const addr2 = tx.outputs[index].script.toAddress(bsvNetwork).toString()
-      if (addr !== addr2) throw new Error(`bad owner on output ${index}`)
+      const hex1 = Buffer.from(util.getOwnerScript(o.owner).toBuffer()).toString('hex')
+      const hex2 = tx.outputs[index].script.toHex()
+      if (hex1 !== hex2) throw new Error(`bad owner on output ${index}`)
       if (tx.outputs[index].satoshis < Math.max(o.satoshis, bsv.Transaction.DUST_AMOUNT)) {
         throw new Error(`bad satoshis on output ${index}`)
       }
@@ -6852,14 +6886,14 @@ class ProtoTransaction {
     // Build run outputs first by adding code then by adding jigs
 
     this.code.forEach(def => {
-      const script = new bsv.Script(def.owner.getBuffer())
+      const script = new bsv.Script(util.getOwnerScript(def.owner).getBuffer())
       const satoshis = bsv.Transaction.DUST_AMOUNT
       tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
     })
 
     this.outputs.forEach(jig => {
       const restored = this.after.get(jig).restore()
-      const script = new bsv.Script(restored.owner.getBuffer())
+      const script = new bsv.Script(util.getOwnerScript(restored.owner).getBuffer())
       const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, restored.satoshis)
       tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
     })
@@ -6873,7 +6907,7 @@ class ProtoTransaction {
 
 module.exports = { ProtoTransaction, Transaction }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(15).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14).Buffer))
 
 /***/ }),
 /* 17 */
@@ -7893,15 +7927,14 @@ module.exports = expect
 /* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/**
+/* WEBPACK VAR INJECTION */(function(Buffer) {/**
  * code.js
  *
  * Functionality related to loading, deploying, and running arbitrary code.
  */
 
-const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
-const Evaluator = __webpack_require__(14)
+const Evaluator = __webpack_require__(15)
 const { Jig, JigControl } = __webpack_require__(3)
 const { Berry, BerryControl } = __webpack_require__(8)
 const Xray = __webpack_require__(7)
@@ -8142,9 +8175,10 @@ class Code {
     const vout = parseInt(location.slice(66))
 
     // make sure the owner matches the output's address
-    const addr1 = tx.outputs[vout].script.toAddress(bsvNetwork).toString()
-    const addr2 = new bsv.PublicKey(def.owner, bsvNetwork).toAddress().toString()
-    if (addr1 !== addr2) throw new Error(`bad def owner: ${location}`)
+    // TODO: Move this to transaction
+    const hex1 = tx.outputs[vout].script.toHex()
+    const hex2 = Buffer.from(util.getOwnerScript(def.owner).getBuffer()).toString('hex')
+    if (hex1 !== hex2) throw new Error(`bad def owner: ${location}`)
 
     const env = { }
 
@@ -8295,9 +8329,270 @@ class Code {
 
 module.exports = Code
 
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14).Buffer))
 
 /***/ }),
 /* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+exports.byteLength = byteLength
+exports.toByteArray = toByteArray
+exports.fromByteArray = fromByteArray
+
+var lookup = []
+var revLookup = []
+var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
+
+var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+for (var i = 0, len = code.length; i < len; ++i) {
+  lookup[i] = code[i]
+  revLookup[code.charCodeAt(i)] = i
+}
+
+// Support decoding URL-safe base64 strings, as Node.js does.
+// See: https://en.wikipedia.org/wiki/Base64#URL_applications
+revLookup['-'.charCodeAt(0)] = 62
+revLookup['_'.charCodeAt(0)] = 63
+
+function getLens (b64) {
+  var len = b64.length
+
+  if (len % 4 > 0) {
+    throw new Error('Invalid string. Length must be a multiple of 4')
+  }
+
+  // Trim off extra bytes after placeholder bytes are found
+  // See: https://github.com/beatgammit/base64-js/issues/42
+  var validLen = b64.indexOf('=')
+  if (validLen === -1) validLen = len
+
+  var placeHoldersLen = validLen === len
+    ? 0
+    : 4 - (validLen % 4)
+
+  return [validLen, placeHoldersLen]
+}
+
+// base64 is 4/3 + up to two characters of the original data
+function byteLength (b64) {
+  var lens = getLens(b64)
+  var validLen = lens[0]
+  var placeHoldersLen = lens[1]
+  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
+}
+
+function _byteLength (b64, validLen, placeHoldersLen) {
+  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
+}
+
+function toByteArray (b64) {
+  var tmp
+  var lens = getLens(b64)
+  var validLen = lens[0]
+  var placeHoldersLen = lens[1]
+
+  var arr = new Arr(_byteLength(b64, validLen, placeHoldersLen))
+
+  var curByte = 0
+
+  // if there are placeholders, only get up to the last complete 4 chars
+  var len = placeHoldersLen > 0
+    ? validLen - 4
+    : validLen
+
+  var i
+  for (i = 0; i < len; i += 4) {
+    tmp =
+      (revLookup[b64.charCodeAt(i)] << 18) |
+      (revLookup[b64.charCodeAt(i + 1)] << 12) |
+      (revLookup[b64.charCodeAt(i + 2)] << 6) |
+      revLookup[b64.charCodeAt(i + 3)]
+    arr[curByte++] = (tmp >> 16) & 0xFF
+    arr[curByte++] = (tmp >> 8) & 0xFF
+    arr[curByte++] = tmp & 0xFF
+  }
+
+  if (placeHoldersLen === 2) {
+    tmp =
+      (revLookup[b64.charCodeAt(i)] << 2) |
+      (revLookup[b64.charCodeAt(i + 1)] >> 4)
+    arr[curByte++] = tmp & 0xFF
+  }
+
+  if (placeHoldersLen === 1) {
+    tmp =
+      (revLookup[b64.charCodeAt(i)] << 10) |
+      (revLookup[b64.charCodeAt(i + 1)] << 4) |
+      (revLookup[b64.charCodeAt(i + 2)] >> 2)
+    arr[curByte++] = (tmp >> 8) & 0xFF
+    arr[curByte++] = tmp & 0xFF
+  }
+
+  return arr
+}
+
+function tripletToBase64 (num) {
+  return lookup[num >> 18 & 0x3F] +
+    lookup[num >> 12 & 0x3F] +
+    lookup[num >> 6 & 0x3F] +
+    lookup[num & 0x3F]
+}
+
+function encodeChunk (uint8, start, end) {
+  var tmp
+  var output = []
+  for (var i = start; i < end; i += 3) {
+    tmp =
+      ((uint8[i] << 16) & 0xFF0000) +
+      ((uint8[i + 1] << 8) & 0xFF00) +
+      (uint8[i + 2] & 0xFF)
+    output.push(tripletToBase64(tmp))
+  }
+  return output.join('')
+}
+
+function fromByteArray (uint8) {
+  var tmp
+  var len = uint8.length
+  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
+  var parts = []
+  var maxChunkLength = 16383 // must be multiple of 3
+
+  // go through the array every three bytes, we'll deal with trailing stuff later
+  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
+    parts.push(encodeChunk(
+      uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)
+    ))
+  }
+
+  // pad the end with zeros, but make sure to not forget the extra bytes
+  if (extraBytes === 1) {
+    tmp = uint8[len - 1]
+    parts.push(
+      lookup[tmp >> 2] +
+      lookup[(tmp << 4) & 0x3F] +
+      '=='
+    )
+  } else if (extraBytes === 2) {
+    tmp = (uint8[len - 2] << 8) + uint8[len - 1]
+    parts.push(
+      lookup[tmp >> 10] +
+      lookup[(tmp >> 4) & 0x3F] +
+      lookup[(tmp << 2) & 0x3F] +
+      '='
+    )
+  }
+
+  return parts.join('')
+}
+
+
+/***/ }),
+/* 29 */
+/***/ (function(module, exports) {
+
+exports.read = function (buffer, offset, isLE, mLen, nBytes) {
+  var e, m
+  var eLen = (nBytes * 8) - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var nBits = -7
+  var i = isLE ? (nBytes - 1) : 0
+  var d = isLE ? -1 : 1
+  var s = buffer[offset + i]
+
+  i += d
+
+  e = s & ((1 << (-nBits)) - 1)
+  s >>= (-nBits)
+  nBits += eLen
+  for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) {}
+
+  m = e & ((1 << (-nBits)) - 1)
+  e >>= (-nBits)
+  nBits += mLen
+  for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) {}
+
+  if (e === 0) {
+    e = 1 - eBias
+  } else if (e === eMax) {
+    return m ? NaN : ((s ? -1 : 1) * Infinity)
+  } else {
+    m = m + Math.pow(2, mLen)
+    e = e - eBias
+  }
+  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
+}
+
+exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
+  var e, m, c
+  var eLen = (nBytes * 8) - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
+  var i = isLE ? 0 : (nBytes - 1)
+  var d = isLE ? 1 : -1
+  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
+
+  value = Math.abs(value)
+
+  if (isNaN(value) || value === Infinity) {
+    m = isNaN(value) ? 1 : 0
+    e = eMax
+  } else {
+    e = Math.floor(Math.log(value) / Math.LN2)
+    if (value * (c = Math.pow(2, -e)) < 1) {
+      e--
+      c *= 2
+    }
+    if (e + eBias >= 1) {
+      value += rt / c
+    } else {
+      value += rt * Math.pow(2, 1 - eBias)
+    }
+    if (value * c >= 2) {
+      e++
+      c /= 2
+    }
+
+    if (e + eBias >= eMax) {
+      m = 0
+      e = eMax
+    } else if (e + eBias >= 1) {
+      m = ((value * c) - 1) * Math.pow(2, mLen)
+      e = e + eBias
+    } else {
+      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
+      e = 0
+    }
+  }
+
+  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
+
+  e = (e << mLen) | m
+  eLen += mLen
+  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
+
+  buffer[offset + i - d] |= s * 128
+}
+
+
+/***/ }),
+/* 30 */
+/***/ (function(module, exports) {
+
+var toString = {}.toString;
+
+module.exports = Array.isArray || function (arr) {
+  return toString.call(arr) == '[object Array]';
+};
+
+
+/***/ }),
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (global, factory) {
@@ -8970,7 +9265,7 @@ module.exports = Code
     }
 
     // eslint-disable-next-line global-require
-    const vm = __webpack_require__(29);
+    const vm = __webpack_require__(32);
 
     // Use unsafeGlobalEvalSrc to ensure we get the right 'this'.
     const unsafeGlobal = vm.runInNewContext(unsafeGlobalEvalSrc);
@@ -12253,7 +12548,7 @@ You probably want a Compartment instead, like:
 
 
 /***/ }),
-/* 29 */
+/* 32 */
 /***/ (function(module, exports) {
 
 var indexOf = function (xs, item) {
@@ -12408,266 +12703,6 @@ exports.createContext = Script.createContext = function (context) {
 
 
 /***/ }),
-/* 30 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-exports.byteLength = byteLength
-exports.toByteArray = toByteArray
-exports.fromByteArray = fromByteArray
-
-var lookup = []
-var revLookup = []
-var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
-
-var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-for (var i = 0, len = code.length; i < len; ++i) {
-  lookup[i] = code[i]
-  revLookup[code.charCodeAt(i)] = i
-}
-
-// Support decoding URL-safe base64 strings, as Node.js does.
-// See: https://en.wikipedia.org/wiki/Base64#URL_applications
-revLookup['-'.charCodeAt(0)] = 62
-revLookup['_'.charCodeAt(0)] = 63
-
-function getLens (b64) {
-  var len = b64.length
-
-  if (len % 4 > 0) {
-    throw new Error('Invalid string. Length must be a multiple of 4')
-  }
-
-  // Trim off extra bytes after placeholder bytes are found
-  // See: https://github.com/beatgammit/base64-js/issues/42
-  var validLen = b64.indexOf('=')
-  if (validLen === -1) validLen = len
-
-  var placeHoldersLen = validLen === len
-    ? 0
-    : 4 - (validLen % 4)
-
-  return [validLen, placeHoldersLen]
-}
-
-// base64 is 4/3 + up to two characters of the original data
-function byteLength (b64) {
-  var lens = getLens(b64)
-  var validLen = lens[0]
-  var placeHoldersLen = lens[1]
-  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
-}
-
-function _byteLength (b64, validLen, placeHoldersLen) {
-  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
-}
-
-function toByteArray (b64) {
-  var tmp
-  var lens = getLens(b64)
-  var validLen = lens[0]
-  var placeHoldersLen = lens[1]
-
-  var arr = new Arr(_byteLength(b64, validLen, placeHoldersLen))
-
-  var curByte = 0
-
-  // if there are placeholders, only get up to the last complete 4 chars
-  var len = placeHoldersLen > 0
-    ? validLen - 4
-    : validLen
-
-  var i
-  for (i = 0; i < len; i += 4) {
-    tmp =
-      (revLookup[b64.charCodeAt(i)] << 18) |
-      (revLookup[b64.charCodeAt(i + 1)] << 12) |
-      (revLookup[b64.charCodeAt(i + 2)] << 6) |
-      revLookup[b64.charCodeAt(i + 3)]
-    arr[curByte++] = (tmp >> 16) & 0xFF
-    arr[curByte++] = (tmp >> 8) & 0xFF
-    arr[curByte++] = tmp & 0xFF
-  }
-
-  if (placeHoldersLen === 2) {
-    tmp =
-      (revLookup[b64.charCodeAt(i)] << 2) |
-      (revLookup[b64.charCodeAt(i + 1)] >> 4)
-    arr[curByte++] = tmp & 0xFF
-  }
-
-  if (placeHoldersLen === 1) {
-    tmp =
-      (revLookup[b64.charCodeAt(i)] << 10) |
-      (revLookup[b64.charCodeAt(i + 1)] << 4) |
-      (revLookup[b64.charCodeAt(i + 2)] >> 2)
-    arr[curByte++] = (tmp >> 8) & 0xFF
-    arr[curByte++] = tmp & 0xFF
-  }
-
-  return arr
-}
-
-function tripletToBase64 (num) {
-  return lookup[num >> 18 & 0x3F] +
-    lookup[num >> 12 & 0x3F] +
-    lookup[num >> 6 & 0x3F] +
-    lookup[num & 0x3F]
-}
-
-function encodeChunk (uint8, start, end) {
-  var tmp
-  var output = []
-  for (var i = start; i < end; i += 3) {
-    tmp =
-      ((uint8[i] << 16) & 0xFF0000) +
-      ((uint8[i + 1] << 8) & 0xFF00) +
-      (uint8[i + 2] & 0xFF)
-    output.push(tripletToBase64(tmp))
-  }
-  return output.join('')
-}
-
-function fromByteArray (uint8) {
-  var tmp
-  var len = uint8.length
-  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
-  var parts = []
-  var maxChunkLength = 16383 // must be multiple of 3
-
-  // go through the array every three bytes, we'll deal with trailing stuff later
-  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
-    parts.push(encodeChunk(
-      uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)
-    ))
-  }
-
-  // pad the end with zeros, but make sure to not forget the extra bytes
-  if (extraBytes === 1) {
-    tmp = uint8[len - 1]
-    parts.push(
-      lookup[tmp >> 2] +
-      lookup[(tmp << 4) & 0x3F] +
-      '=='
-    )
-  } else if (extraBytes === 2) {
-    tmp = (uint8[len - 2] << 8) + uint8[len - 1]
-    parts.push(
-      lookup[tmp >> 10] +
-      lookup[(tmp >> 4) & 0x3F] +
-      lookup[(tmp << 2) & 0x3F] +
-      '='
-    )
-  }
-
-  return parts.join('')
-}
-
-
-/***/ }),
-/* 31 */
-/***/ (function(module, exports) {
-
-exports.read = function (buffer, offset, isLE, mLen, nBytes) {
-  var e, m
-  var eLen = (nBytes * 8) - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var nBits = -7
-  var i = isLE ? (nBytes - 1) : 0
-  var d = isLE ? -1 : 1
-  var s = buffer[offset + i]
-
-  i += d
-
-  e = s & ((1 << (-nBits)) - 1)
-  s >>= (-nBits)
-  nBits += eLen
-  for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) {}
-
-  m = e & ((1 << (-nBits)) - 1)
-  e >>= (-nBits)
-  nBits += mLen
-  for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) {}
-
-  if (e === 0) {
-    e = 1 - eBias
-  } else if (e === eMax) {
-    return m ? NaN : ((s ? -1 : 1) * Infinity)
-  } else {
-    m = m + Math.pow(2, mLen)
-    e = e - eBias
-  }
-  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
-}
-
-exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
-  var e, m, c
-  var eLen = (nBytes * 8) - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
-  var i = isLE ? 0 : (nBytes - 1)
-  var d = isLE ? 1 : -1
-  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
-
-  value = Math.abs(value)
-
-  if (isNaN(value) || value === Infinity) {
-    m = isNaN(value) ? 1 : 0
-    e = eMax
-  } else {
-    e = Math.floor(Math.log(value) / Math.LN2)
-    if (value * (c = Math.pow(2, -e)) < 1) {
-      e--
-      c *= 2
-    }
-    if (e + eBias >= 1) {
-      value += rt / c
-    } else {
-      value += rt * Math.pow(2, 1 - eBias)
-    }
-    if (value * c >= 2) {
-      e++
-      c /= 2
-    }
-
-    if (e + eBias >= eMax) {
-      m = 0
-      e = eMax
-    } else if (e + eBias >= 1) {
-      m = ((value * c) - 1) * Math.pow(2, mLen)
-      e = e + eBias
-    } else {
-      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
-      e = 0
-    }
-  }
-
-  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
-
-  e = (e << mLen) | m
-  eLen += mLen
-  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
-
-  buffer[offset + i - d] |= s * 128
-}
-
-
-/***/ }),
-/* 32 */
-/***/ (function(module, exports) {
-
-var toString = {}.toString;
-
-module.exports = Array.isArray || function (arr) {
-  return toString.call(arr) == '[object Array]';
-};
-
-
-/***/ }),
 /* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -12679,7 +12714,7 @@ module.exports = Array.isArray || function (arr) {
 
 const { ProtoTransaction } = __webpack_require__(16)
 const { JigControl } = __webpack_require__(3)
-const { Owner } = __webpack_require__(13)
+const { Owner } = __webpack_require__(11)
 const Xray = __webpack_require__(7)
 const util = __webpack_require__(0)
 const Location = __webpack_require__(4)
