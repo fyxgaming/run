@@ -11,7 +11,7 @@ const { Run, createRun } = require('./helpers')
 const { AddressScript, PubKeyScript } = Run
 const {
   checkSatoshis,
-  getOwnerScript,
+  ownerScript,
   getNormalizedSourceCode,
   deployable,
   checkRunTransaction,
@@ -45,27 +45,28 @@ describe('util', () => {
     })
   })
 
-  describe('getOwnerScript', () => {
+  describe('ownerScript', () => {
     it('should support valid owners on different networks', () => {
-      const mainnet = new bsv.PrivateKey('mainnet')
-      const testnet = new bsv.PrivateKey('testnet')
-      expect(() => getOwnerScript(mainnet.publicKey.toString())).not.to.throw()
-      expect(() => getOwnerScript(testnet.publicKey.toString())).not.to.throw()
-      expect(() => getOwnerScript(testnet.publicKey.toAddress().toString())).not.to.throw()
-      expect(() => getOwnerScript(testnet.publicKey.toAddress().toString())).not.to.throw()
-      expect(() => getOwnerScript(new PubKeyScript(mainnet.publicKey.toString()))).not.to.throw()
-      expect(() => getOwnerScript(new PubKeyScript(testnet.publicKey.toString()))).not.to.throw()
-      expect(() => getOwnerScript(new AddressScript(mainnet.publicKey.toAddress().toString()))).not.to.throw()
-      expect(() => getOwnerScript(new AddressScript(testnet.publicKey.toAddress().toString()))).not.to.throw()
+      const networks = ['mainnet', 'testnet']
+      for (const network of networks) {
+        const privkey = new bsv.PrivateKey(network)
+        const pubkey = privkey.publicKey.toString()
+        const addr = privkey.toAddress().toString()
+        const bytes = new AddressScript(addr).toBytes()
+        expect(ownerScript(pubkey).toBytes()).to.deep.equal(bytes)
+        expect(ownerScript(addr).toBytes()).to.deep.equal(bytes)
+        expect(ownerScript(new PubKeyScript(pubkey)).toBytes()).to.deep.equal(new PubKeyScript(pubkey).toBytes())
+        expect(ownerScript(new AddressScript(addr)).toBytes()).to.deep.equal(bytes)
+      }
     })
 
     it('should throw if bad owner', () => {
-      expect(() => getOwnerScript()).to.throw('Invalid owner: undefined')
-      expect(() => getOwnerScript(123)).to.throw('Invalid owner: 123')
-      expect(() => getOwnerScript('hello')).to.throw('Invalid owner: hello')
-      expect(() => getOwnerScript(new bsv.PrivateKey())).to.throw('Invalid owner')
-      expect(() => getOwnerScript(new bsv.PrivateKey().publicKey)).to.throw('Invalid owner')
-      expect(() => getOwnerScript([new bsv.PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
+      expect(() => ownerScript()).to.throw('Invalid owner: undefined')
+      expect(() => ownerScript(123)).to.throw('Invalid owner: 123')
+      expect(() => ownerScript('hello')).to.throw('Invalid owner: hello')
+      expect(() => ownerScript(new bsv.PrivateKey())).to.throw('Invalid owner')
+      expect(() => ownerScript(new bsv.PrivateKey().publicKey)).to.throw('Invalid owner')
+      expect(() => ownerScript([new bsv.PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
     })
   })
 

@@ -122,15 +122,20 @@ function checkSatoshis (satoshis) {
 /**
  * Returns the Script object version of this owner, or throws an error
  */
-function getOwnerScript (owner) {
+function ownerScript (owner) {
   // Have to include here, because owner also requires util
-  const { AddressScript, PubKeyScript } = __webpack_require__(7)
+  const { AddressScript } = __webpack_require__(7)
 
   if (typeof owner === 'string') {
     // Try parsing it as a public key
     try {
-      new bsv.PublicKey(owner) // eslint-disable-line
-      return new PubKeyScript(owner)
+      // Public key owners are converted into address scripts because
+      // the public APIs more frequently support P2PKH UTXO queries and
+      // we want as much compatibility as posible for the common use case.
+      // Public key owners enable encryption that isn't possible with
+      // address owners, no matter how the UTXO is represented.
+      const pubkey = new bsv.PublicKey(owner)
+      return new AddressScript(pubkey.toAddress().toString())
     } catch (e) { }
 
     // Try parsing it as an address
@@ -359,7 +364,7 @@ module.exports = {
   PROTOCOL_VERSION,
 
   checkSatoshis,
-  getOwnerScript,
+  ownerScript,
 
   checkRunTransaction,
   extractRunData,
@@ -1110,7 +1115,7 @@ class Jig {
         }
 
         if (parentIsAJig) {
-          Context.getOwnerScript(original.owner)
+          Context.ownerScript(original.owner)
           Context.checkSatoshis(original.satoshis)
         }
 
@@ -3965,7 +3970,7 @@ class Context {
   static activeRunInstance () { return __webpack_require__(0).activeRunInstance() }
   static deployable (x) { return __webpack_require__(0).deployable(x) }
   static checkSatoshis (x) { return __webpack_require__(0).checkSatoshis(x) }
-  static getOwnerScript (x) { return __webpack_require__(0).getOwnerScript(x) }
+  static ownerScript (x) { return __webpack_require__(0).ownerScript(x) }
   static networkSuffix (x) { return __webpack_require__(0).networkSuffix(x) }
   static get Location () { return __webpack_require__(4) }
   static get Protocol () { return __webpack_require__(13) }
@@ -6537,7 +6542,7 @@ class ProtoTransaction {
     })
     this.outputs.forEach((o, n) => {
       const index = 1 + data.code.length + n
-      const hex1 = Buffer.from(util.getOwnerScript(o.owner).toBytes()).toString('hex')
+      const hex1 = Buffer.from(util.ownerScript(o.owner).toBytes()).toString('hex')
       const hex2 = tx.outputs[index].script.toHex()
       if (hex1 !== hex2) throw new Error(`bad owner on output ${index}`)
       if (tx.outputs[index].satoshis < Math.max(o.satoshis, bsv.Transaction.DUST_AMOUNT)) {
@@ -6901,7 +6906,7 @@ class ProtoTransaction {
       const vout = parseInt(spentLocations[index].slice(66))
       const before = this.before.get(jig)
       const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, before.restore().satoshis)
-      const scriptBuffer = util.getOwnerScript(before.restore().owner).toBytes()
+      const scriptBuffer = util.ownerScript(before.restore().owner).toBytes()
       const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
       const utxo = { txid, vout, script, satoshis }
       tx.from(utxo)
@@ -6910,7 +6915,7 @@ class ProtoTransaction {
     // Build run outputs first by adding code then by adding jigs
 
     this.code.forEach(def => {
-      const scriptBuffer = util.getOwnerScript(def.owner).toBytes()
+      const scriptBuffer = util.ownerScript(def.owner).toBytes()
       const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
       const satoshis = bsv.Transaction.DUST_AMOUNT
       tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
@@ -6918,7 +6923,7 @@ class ProtoTransaction {
 
     this.outputs.forEach(jig => {
       const restored = this.after.get(jig).restore()
-      const scriptBuffer = util.getOwnerScript(restored.owner).toBytes()
+      const scriptBuffer = util.ownerScript(restored.owner).toBytes()
       const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
       const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, restored.satoshis)
       tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
@@ -8202,7 +8207,7 @@ class Code {
     // make sure the owner matches the output's address
     // TODO: Move this to transaction
     const hex1 = tx.outputs[vout].script.toHex()
-    const hex2 = Buffer.from(util.getOwnerScript(def.owner).toBytes()).toString('hex')
+    const hex2 = Buffer.from(util.ownerScript(def.owner).toBytes()).toString('hex')
     if (hex1 !== hex2) throw new Error(`bad def owner: ${location}`)
 
     const env = { }

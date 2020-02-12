@@ -6045,7 +6045,7 @@ describe('Jig', () => {
       class A extends Jig { init () { this.ownerAtInit = this.owner }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [a])
-      expect(a.ownerAtInit).to.equal(run.owner.pubkey)
+      expect(a.ownerAtInit).to.equal(run.owner.getOwner())
     })
 
     it('should be assigned to creator', async () => {
@@ -7665,23 +7665,23 @@ const { AddressScript, PubKeyScript } = Run
 
 describe('AddressScript', () => {
   it('should create buffer for valid addresses', () => {
-    new AddressScript('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').toBuffer() // eslint-disable-line
-    new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').toBuffer() // eslint-disable-line
+    new AddressScript('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').toBytes() // eslint-disable-line
+    new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').toBytes() // eslint-disable-line
   })
 
   it('throws if bad address', () => {
-    expect(() => new AddressScript().toBuffer()).to.throw('Address is not a string')
-    expect(() => new AddressScript([]).toBuffer()).to.throw('Address is not a string')
-    expect(() => new AddressScript('3P14159f73E4gFr7JterCCQh9QjiTjiZrG').toBuffer()).to.throw('Address may only be a P2PKH type')
-    expect(() => new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9n').toBuffer()).to.throw('Address may only be a P2PKH type')
-    expect(() => new AddressScript('@').toBuffer()).to.throw('Invalid character in address')
+    expect(() => new AddressScript().toBytes()).to.throw('Address is not a string')
+    expect(() => new AddressScript([]).toBytes()).to.throw('Address is not a string')
+    expect(() => new AddressScript('3P14159f73E4gFr7JterCCQh9QjiTjiZrG').toBytes()).to.throw('Address may only be a P2PKH type')
+    expect(() => new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9n').toBytes()).to.throw('Address may only be a P2PKH type')
+    expect(() => new AddressScript('@').toBytes()).to.throw('Invalid character in address')
   })
 
   it('should correctly return P2PKH buffer', () => {
     const addr = '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
     const script = bsv.Script.fromAddress(addr)
     const buffer1 = new Uint8Array(script.toBuffer())
-    const buffer2 = new AddressScript(addr).toBuffer()
+    const buffer2 = new AddressScript(addr).toBytes()
     expect(buffer1).to.deep.equal(buffer2)
   })
 })
@@ -7692,17 +7692,17 @@ describe('AddressScript', () => {
 
 describe('PubKeyScript', () => {
   it('throws if bad pubkey', () => {
-    expect(() => new PubKeyScript().toBuffer()).to.throw('Pubkey is not a string')
-    expect(() => new PubKeyScript([]).toBuffer()).to.throw('Pubkey is not a string')
-    expect(() => new PubKeyScript('abcde').toBuffer()).to.throw('Pubkey has bad length')
-    expect(() => new PubKeyScript('@$').toBuffer()).to.throw('Invalid pubkey hex')
+    expect(() => new PubKeyScript().toBytes()).to.throw('Pubkey is not a string')
+    expect(() => new PubKeyScript([]).toBytes()).to.throw('Pubkey is not a string')
+    expect(() => new PubKeyScript('abcde').toBytes()).to.throw('Pubkey has bad length')
+    expect(() => new PubKeyScript('@$').toBytes()).to.throw('Invalid pubkey hex')
   })
 
   it('should correctly return P2PH buffer', () => {
     const pubkey = new bsv.PrivateKey().publicKey
     const script = bsv.Script.buildPublicKeyOut(pubkey)
     const buffer1 = new Uint8Array(script.toBuffer())
-    const buffer2 = new PubKeyScript(pubkey.toString()).toBuffer()
+    const buffer2 = new PubKeyScript(pubkey.toString()).toBytes()
     expect(buffer1).to.deep.equal(buffer2)
   })
 })
@@ -7719,6 +7719,7 @@ describe('Owner', () => {
       expect(run.owner.privkey).to.equal(privkey.toString())
       expect(run.owner.pubkey).to.equal(privkey.publicKey.toString())
       expect(run.owner.address).to.equal(privkey.toAddress().toString())
+      expect(run.owner.getOwner()).to.equal(privkey.toAddress().toString())
     })
 
     it('should support creating from string private key on mainnet', () => {
@@ -7727,6 +7728,7 @@ describe('Owner', () => {
       expect(run.owner.privkey).to.equal(privkey.toString())
       expect(run.owner.pubkey).to.equal(privkey.publicKey.toString())
       expect(run.owner.address).to.equal(privkey.toAddress().toString())
+      expect(run.owner.getOwner()).to.equal(privkey.toAddress().toString())
     })
 
     it('should support creating from bsv public key on mainnet', () => {
@@ -7735,6 +7737,7 @@ describe('Owner', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(pubkey.toString())
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
+      expect(run.owner.getOwner()).to.equal(pubkey.toAddress().toString())
     })
 
     it('should support creating from string public key on mocknet', () => {
@@ -7743,6 +7746,7 @@ describe('Owner', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(pubkey.toString())
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
+      expect(run.owner.getOwner()).to.equal(pubkey.toAddress().toString())
     })
 
     it('should support creating from bsv address on stn', () => {
@@ -7751,6 +7755,7 @@ describe('Owner', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(undefined)
       expect(run.owner.address).to.equal(address.toString())
+      expect(run.owner.getOwner()).to.equal(address.toString())
     })
 
     it('should support creating from string address on mainnet', () => {
@@ -7759,6 +7764,7 @@ describe('Owner', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(undefined)
       expect(run.owner.address).to.equal(address.toString())
+      expect(run.owner.getOwner()).to.equal(address.toString())
     })
 
     it('should throw if bad owner', () => {
@@ -7864,7 +7870,7 @@ describe('Owner', () => {
       const run = createRun()
       class A extends Jig {}
       const a = await new A().sync()
-      const run2 = createRun({ blockchain: run.blockchain, owner: run.owner.pubkey })
+      const run2 = createRun({ blockchain: run.blockchain, owner: run.owner.getOwner() })
       await run2.sync()
       expect(run2.owner.privkey).to.equal(undefined)
       expect(run2.owner.jigs).to.deep.equal([a])
@@ -8496,6 +8502,8 @@ describe('Run', () => {
     })
 
     it('should reuse state cache', async () => {
+      const networks = ['main', 'test']
+
       async function timeLoad (network, location) {
         const run = createRun({ network })
         const before = new Date()
@@ -8503,14 +8511,17 @@ describe('Run', () => {
         return new Date() - before
       }
 
-      const testLocation = '7d96e1638074471796c6981b12239865b0daeff24ea72fee207338cf2d388ffd_o1'
-      const mainLocation = 'a0dd3999349d0cdd116a1a607eb07e5e394355484af3ba7a7a5babe0c2efc5ca_o1'
+      for (const network of networks) {
+        const run = createRun({ network })
+        class A extends Jig {}
+        const a = new A()
+        await a.sync()
+        const location = a.location
+        run.deactivate()
 
-      expect(await timeLoad('test', testLocation) > 1000).to.equal(true)
-      expect(await timeLoad('test', testLocation) > 1000).to.equal(false)
-
-      expect(await timeLoad('main', mainLocation) > 1000).to.equal(true)
-      expect(await timeLoad('main', mainLocation) > 1000).to.equal(false)
+        expect(await timeLoad(network, location) > 1000).to.equal(true)
+        expect(await timeLoad(network, location) > 1000).to.equal(false)
+      }
     }).timeout(30000)
 
     it.skip('should fail if reuse jigs across code instances', () => {
@@ -8838,47 +8849,47 @@ describe('Token', () => {
 
   describe('send', () => {
     it('should support sending full amount', () => {
-      const pubkey = new bsv.PrivateKey().publicKey.toString()
+      const address = new bsv.PrivateKey().toAddress().toString()
       const token = new TestToken(100)
-      expect(token.send(pubkey)).to.equal(null)
-      expect(token.owner).to.equal(pubkey)
+      expect(token.send(address)).to.equal(null)
+      expect(token.owner).to.equal(address)
       expect(token.amount).to.equal(100)
     })
 
     it('should support sending partial amount', () => {
-      const pubkey = new bsv.PrivateKey().publicKey.toString()
+      const address = new bsv.PrivateKey().toAddress().toString()
       const token = new TestToken(100)
-      const change = token.send(pubkey, 30)
+      const change = token.send(address, 30)
       expect(change).to.be.instanceOf(TestToken)
-      expect(change.owner).to.equal(run.owner.pubkey)
+      expect(change.owner).to.equal(run.owner.address)
       expect(change.amount).to.equal(70)
-      expect(token.owner).to.equal(pubkey)
+      expect(token.owner).to.equal(address)
       expect(token.amount).to.equal(30)
     })
 
     it('should throw if send too much', () => {
-      const pubkey = new bsv.PrivateKey().publicKey.toString()
+      const address = new bsv.PrivateKey().toAddress().toString()
       const token = new TestToken(100)
-      expect(() => token.send(pubkey, 101)).to.throw('not enough funds')
+      expect(() => token.send(address, 101)).to.throw('not enough funds')
     })
 
     it('should throw if send bad amount', () => {
-      const pubkey = new bsv.PrivateKey().publicKey.toString()
+      const address = new bsv.PrivateKey().toAddress().toString()
       const token = new TestToken(100)
-      expect(() => token.send(pubkey, {})).to.throw('amount is not a number')
-      expect(() => token.send(pubkey, '1')).to.throw('amount is not a number')
-      expect(() => token.send(pubkey, 0)).to.throw('amount must be positive')
-      expect(() => token.send(pubkey, -1)).to.throw('amount must be positive')
-      expect(() => token.send(pubkey, Number.MAX_SAFE_INTEGER + 1)).to.throw('amount too large')
-      expect(() => token.send(pubkey, 1.5)).to.throw('amount must be an integer')
-      expect(() => token.send(pubkey, Infinity)).to.throw('Infinity cannot be serialized')
-      expect(() => token.send(pubkey, NaN)).to.throw('NaN cannot be serialized')
+      expect(() => token.send(address, {})).to.throw('amount is not a number')
+      expect(() => token.send(address, '1')).to.throw('amount is not a number')
+      expect(() => token.send(address, 0)).to.throw('amount must be positive')
+      expect(() => token.send(address, -1)).to.throw('amount must be positive')
+      expect(() => token.send(address, Number.MAX_SAFE_INTEGER + 1)).to.throw('amount too large')
+      expect(() => token.send(address, 1.5)).to.throw('amount must be an integer')
+      expect(() => token.send(address, Infinity)).to.throw('Infinity cannot be serialized')
+      expect(() => token.send(address, NaN)).to.throw('NaN cannot be serialized')
     })
 
     it('should throw if send to bad owner', () => {
       const token = new TestToken(100)
-      expect(() => token.send(10)).to.throw('owner must be a pubkey string')
-      expect(() => token.send('abc', 10)).to.throw('owner is not a valid public key')
+      expect(() => token.send(10)).to.throw('Invalid owner: 10')
+      expect(() => token.send('abc', 10)).to.throw('Invalid owner: abc')
     })
   })
 
@@ -8889,11 +8900,11 @@ describe('Token', () => {
       const c = TestToken.combine(a, b)
       expect(c).to.be.instanceOf(TestToken)
       expect(c.amount).to.equal(100)
-      expect(c.owner).to.equal(run.owner.pubkey)
+      expect(c.owner).to.equal(run.owner.address)
       expect(a.amount).to.equal(0)
-      expect(a.owner).not.to.equal(run.owner.pubkey)
+      expect(a.owner).not.to.equal(run.owner.address)
       expect(b.amount).to.equal(0)
-      expect(b.owner).not.to.equal(run.owner.pubkey)
+      expect(b.owner).not.to.equal(run.owner.address)
     })
 
     it('should support combining many tokens', () => {
@@ -8902,10 +8913,10 @@ describe('Token', () => {
       const combined = TestToken.combine(...tokens)
       expect(combined).to.be.instanceOf(TestToken)
       expect(combined.amount).to.equal(10)
-      expect(combined.owner).to.equal(run.owner.pubkey)
+      expect(combined.owner).to.equal(run.owner.address)
       tokens.forEach(token => {
         expect(token.amount).to.equal(0)
-        expect(token.owner).not.to.equal(run.owner.pubkey)
+        expect(token.owner).not.to.equal(run.owner.address)
       })
     })
 
@@ -8923,8 +8934,8 @@ describe('Token', () => {
     it('should throw if combine different owners without signatures', async () => {
       const a = new TestToken(1)
       const b = new TestToken(2)
-      const pubkey = new bsv.PrivateKey().publicKey.toString()
-      b.send(pubkey)
+      const address = new bsv.PrivateKey().toAddress().toString()
+      b.send(address)
       await expect(TestToken.combine(a, b).sync()).to.be.rejectedWith('Signature missing for TestToken')
     })
 
@@ -9008,7 +9019,7 @@ const { extractRunData, encryptRunData, decryptRunData } = Run._util
 
 describe('Transaction', () => {
   const run = createRun()
-  const owner = run.owner.pubkey
+  const owner = run.owner.getOwner()
   beforeEach(() => run.activate())
   beforeEach(() => run.blockchain.block())
   afterEach(() => run.transaction.rollback())
@@ -9082,8 +9093,8 @@ describe('Transaction', () => {
       expect(tx.outputs.length).to.equal(3)
       const runData = extractRunData(tx)
       expect(runData).to.deep.equal({
-        code: [{ text: A.toString(), owner: run.owner.pubkey }],
-        actions: [{ target: '_o1', method: 'init', args: [], creator: run.owner.pubkey }],
+        code: [{ text: A.toString(), owner: run.owner.getOwner() }],
+        actions: [{ target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() }],
         jigs: 1
       })
     })
@@ -9228,7 +9239,7 @@ describe('Transaction', () => {
 
   describe('publish', () => {
     const run = createRun({ app: 'biz', blockchain: new Run.Mockchain() })
-    const owner = run.owner.pubkey
+    const owner = run.owner.address
     let tx = null; let data = null
     const origBroadcast = run.blockchain.broadcast.bind(run.blockchain)
     run.blockchain.broadcast = async txn => {
@@ -9253,13 +9264,13 @@ describe('Transaction', () => {
     })
 
     it('should corretly set owners on code and jig outputs', async () => {
-      const pubkey = new bsv.PrivateKey().toPublicKey()
+      const address = new bsv.PrivateKey().toAddress()
       class A extends Jig { f (owner) { this.owner = owner; return this } }
       const a = await new A().sync()
       expect(tx.outputs[1].script.toAddress().toString()).to.equal(run.owner.address)
       expect(tx.outputs[2].script.toAddress().toString()).to.equal(run.owner.address)
-      await a.f(pubkey.toString()).sync()
-      expect(tx.outputs[1].script.toAddress().toString()).to.equal(pubkey.toAddress().toString())
+      await a.f(address.toString()).sync()
+      expect(tx.outputs[1].script.toAddress().toString()).to.equal(address.toString())
     })
 
     it('should correctly set satoshis on code and jig outputs', async () => {
@@ -9291,7 +9302,7 @@ describe('Transaction', () => {
       await new A().sync() // eslint-disable-line
       expect(data.code).to.deep.equal([])
       const target = `${a.origin.slice(0, 64)}_o1`
-      expect(data.actions).to.deep.equal([{ target, method: 'init', args: [], creator: run.owner.pubkey }])
+      expect(data.actions).to.deep.equal([{ target, method: 'init', args: [], creator: run.owner.getOwner() }])
       expect(data.jigs).to.equal(1)
     })
 
@@ -9303,8 +9314,8 @@ describe('Transaction', () => {
       await run.transaction.end().sync()
       expect(data.code).to.deep.equal([{ text: A.toString(), owner }])
       expect(data.actions).to.deep.equal([
-        { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey },
-        { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey }
+        { target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() },
+        { target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() }
       ])
       expect(data.jigs).to.equal(2)
     })
@@ -9321,8 +9332,8 @@ describe('Transaction', () => {
         { text: B.toString(), owner }
       ])
       expect(data.actions).to.deep.equal([
-        { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey },
-        { target: '_o2', method: 'init', args: [], creator: run.owner.pubkey }
+        { target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() },
+        { target: '_o2', method: 'init', args: [], creator: run.owner.getOwner() }
       ])
       expect(data.jigs).to.equal(2)
     })
@@ -9330,7 +9341,7 @@ describe('Transaction', () => {
     it('should support basic jig args', async () => {
       class A extends Jig { init (a, b) { this.a = a; this.b = b }}
       await new A(1, { a: 'a' }).sync() // eslint-disable-line
-      expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args: [1, { a: 'a' }], creator: run.owner.pubkey }])
+      expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args: [1, { a: 'a' }], creator: run.owner.getOwner() }])
     })
 
     it('should support passing jigs as args', async () => {
@@ -9370,7 +9381,7 @@ describe('Transaction', () => {
       const a = await new A(A).sync()
       const args = [{ $ref: '_o1' }]
       expect(data.code).to.deep.equal([{ text: A.toString(), owner }])
-      expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args, creator: run.owner.pubkey }])
+      expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args, creator: run.owner.getOwner() }])
       expect(data.jigs).to.equal(1)
       await a.set(B).sync()
       expect(data.code).to.deep.equal([{ text: B.toString(), owner }])
@@ -9396,7 +9407,7 @@ describe('Transaction', () => {
         { text: B.toString(), owner }
       ])
       expect(data.actions).to.deep.equal([
-        { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey },
+        { target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() },
         { target: '_o3', method: 'set', args: [{ $ref: '_o2' }] }
       ])
       expect(data.jigs).to.equal(1)
@@ -9411,7 +9422,7 @@ describe('Transaction', () => {
       a.f(3)
       await run.transaction.end().sync()
       expect(data.actions).to.deep.equal([
-        { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey },
+        { target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() },
         { target: '_o2', method: 'f', args: [1] },
         { target: '_o2', method: 'f', args: [2] },
         { target: '_o2', method: 'f', args: [3] }
@@ -9502,7 +9513,7 @@ describe('Transaction', () => {
     it('should load new jig', async () => {
       class A extends Jig { init (n) { this.n = n }}
       const code = [{ text: A.toString(), owner }]
-      const actions = [{ target: '_o1', method: 'init', args: [3], creator: run.owner.pubkey }]
+      const actions = [{ target: '_o1', method: 'init', args: [3], creator: run.owner.address }]
       const txid = await build(code, actions, [], null, 1)
       const a = await run.load(txid + '_o2')
       expect(a.n).to.equal(3)
@@ -9536,9 +9547,9 @@ describe('Transaction', () => {
       class B extends Jig { init () { this.n = 1 }}
       class A extends Jig { init (b) { this.n = b.n + 1 } }
       const code = [{ text: B.toString(), owner }, { text: A.toString(), owner }]
-      const action1 = { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey }
+      const action1 = { target: '_o1', method: 'init', args: [], creator: run.owner.address }
       const args = [{ $ref: '_o3' }]
-      const actions = [action1, { target: '_o2', method: 'init', args, creator: run.owner.pubkey }]
+      const actions = [action1, { target: '_o2', method: 'init', args, creator: run.owner.address }]
       const txid = await build(code, actions, [], null, 2)
       const b = await run.load(txid + '_o3')
       const a = await run.load(txid + '_o4')
@@ -9566,7 +9577,7 @@ describe('Transaction', () => {
       class A extends Jig { send (to) { this.owner = to } }
       const a = await new A().sync()
       const privkey = new bsv.PrivateKey('testnet')
-      const actions = [{ target: '_i0', method: 'send', args: [`${privkey.publicKey.toString()}`] }]
+      const actions = [{ target: '_i0', method: 'send', args: [`${privkey.toAddress().toString()}`] }]
       const txid = await build([], actions, [a.location], privkey.toAddress().toString(), 1)
       await run.load(txid + '_o1')
     })
@@ -9683,7 +9694,7 @@ describe('Transaction', () => {
         const b = await new B().sync()
         const code = [{ text: A.toString(), owner }]
         const args = [{ $ref: `${b.location}` }]
-        const actions = [{ target: '_o1', method: 'init', args, creator: run.owner.pubkey }]
+        const actions = [{ target: '_o1', method: 'init', args, creator: run.owner.address }]
         const txid = await build(code, actions, [], null, 2)
         await expect(run.load(txid + '_o3')).to.be.rejectedWith() // TODO: check error
       })
@@ -9705,7 +9716,7 @@ describe('Transaction', () => {
         const b = await new B().sync()
         const code = [{ text: A.toString(), owner }]
         const args = [{ $ref: '_i0' }]
-        const actions = [{ target: '_o1', method: 'init', args, creator: run.owner.pubkey }]
+        const actions = [{ target: '_o1', method: 'init', args, creator: run.owner.address }]
         const txid = await build(code, actions, [b.location], null, 2, [], 2)
         await expect(run.load(txid + '_o2')).to.be.rejectedWith() // TODO: check error
       })
@@ -9732,7 +9743,7 @@ describe('Transaction', () => {
       it('should throw if missing input in batch', async () => {
         class A extends Jig { f (b) { this.n = b.n + 1 } }
         const code = [{ text: A.toString(), owner }]
-        const action1 = { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey }
+        const action1 = { target: '_o1', method: 'init', args: [], creator: run.owner.address }
         const args = [{ $ref: '_i0' }]
         const actions = [action1, { target: '_i1', method: 'f', args }]
         const txid = await build(code, actions, [], null, 2)
@@ -9743,9 +9754,9 @@ describe('Transaction', () => {
         class B extends Jig { }
         class A extends Jig { init (b) { this.n = b.n } }
         const code = [{ text: B.toString(), owner }, { text: A.toString(), owner }]
-        const action1 = { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey }
+        const action1 = { target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() }
         const args = [{ $ref: '_o3' }]
-        const actions = [action1, { target: '_o2', method: 'init', args, creator: run.owner.pubkey }]
+        const actions = [action1, { target: '_o2', method: 'init', args, creator: run.owner.getOwner() }]
         const txid = await build(code, actions, [], null, 1, 2)
         await expect(run.load(txid + '_o4')).to.be.rejectedWith() // TODO: check error
       })
@@ -9770,7 +9781,7 @@ describe('Transaction', () => {
       })
 
       it('should throw if missing target', async () => {
-        const actions = [{ target: '_o1`', method: 'init', args: '[]', creator: run.owner.pubkey }]
+        const actions = [{ target: '_o1`', method: 'init', args: '[]', creator: run.owner.getOwner() }]
         const txid = await build([], actions, [], null, 1)
         await expect(run.load(txid + '_o1')).to.be.rejectedWith('missing target _o1')
       })
@@ -10663,7 +10674,7 @@ const { Run, createRun } = __webpack_require__(2)
 const { AddressScript, PubKeyScript } = Run
 const {
   checkSatoshis,
-  getOwnerScript,
+  ownerScript,
   getNormalizedSourceCode,
   deployable,
   checkRunTransaction,
@@ -10697,27 +10708,28 @@ describe('util', () => {
     })
   })
 
-  describe('getOwnerScript', () => {
+  describe('ownerScript', () => {
     it('should support valid owners on different networks', () => {
-      const mainnet = new bsv.PrivateKey('mainnet')
-      const testnet = new bsv.PrivateKey('testnet')
-      expect(() => getOwnerScript(mainnet.publicKey.toString())).not.to.throw()
-      expect(() => getOwnerScript(testnet.publicKey.toString())).not.to.throw()
-      expect(() => getOwnerScript(testnet.publicKey.toAddress().toString())).not.to.throw()
-      expect(() => getOwnerScript(testnet.publicKey.toAddress().toString())).not.to.throw()
-      expect(() => getOwnerScript(new PubKeyScript(mainnet.publicKey.toString()))).not.to.throw()
-      expect(() => getOwnerScript(new PubKeyScript(testnet.publicKey.toString()))).not.to.throw()
-      expect(() => getOwnerScript(new AddressScript(mainnet.publicKey.toAddress().toString()))).not.to.throw()
-      expect(() => getOwnerScript(new AddressScript(testnet.publicKey.toAddress().toString()))).not.to.throw()
+      const networks = ['mainnet', 'testnet']
+      for (const network of networks) {
+        const privkey = new bsv.PrivateKey(network)
+        const pubkey = privkey.publicKey.toString()
+        const addr = privkey.toAddress().toString()
+        const bytes = new AddressScript(addr).toBytes()
+        expect(ownerScript(pubkey).toBytes()).to.deep.equal(bytes)
+        expect(ownerScript(addr).toBytes()).to.deep.equal(bytes)
+        expect(ownerScript(new PubKeyScript(pubkey)).toBytes()).to.deep.equal(new PubKeyScript(pubkey).toBytes())
+        expect(ownerScript(new AddressScript(addr)).toBytes()).to.deep.equal(bytes)
+      }
     })
 
     it('should throw if bad owner', () => {
-      expect(() => getOwnerScript()).to.throw('Invalid owner: undefined')
-      expect(() => getOwnerScript(123)).to.throw('Invalid owner: 123')
-      expect(() => getOwnerScript('hello')).to.throw('Invalid owner: hello')
-      expect(() => getOwnerScript(new bsv.PrivateKey())).to.throw('Invalid owner')
-      expect(() => getOwnerScript(new bsv.PrivateKey().publicKey)).to.throw('Invalid owner')
-      expect(() => getOwnerScript([new bsv.PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
+      expect(() => ownerScript()).to.throw('Invalid owner: undefined')
+      expect(() => ownerScript(123)).to.throw('Invalid owner: 123')
+      expect(() => ownerScript('hello')).to.throw('Invalid owner: hello')
+      expect(() => ownerScript(new bsv.PrivateKey())).to.throw('Invalid owner')
+      expect(() => ownerScript(new bsv.PrivateKey().publicKey)).to.throw('Invalid owner')
+      expect(() => ownerScript([new bsv.PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
     })
   })
 
@@ -10756,8 +10768,10 @@ describe('util', () => {
     it('should throw if bad protocol version', () => {
       const tx1 = buildRunTransaction('run', [0x00, Run.protocol], {}, 'buildSafeDataOut', true, 0)
       expect(() => checkRunTransaction(tx1)).to.throw(`Unsupported run protocol in tx: ${tx1.hash}`)
-      const tx2 = buildRunTransaction('run', [0x02], {}, 'buildSafeDataOut', true, 0)
+      const tx2 = buildRunTransaction('run', [0x01], {}, 'buildSafeDataOut', true, 0)
       expect(() => checkRunTransaction(tx2)).to.throw(`Unsupported run protocol in tx: ${tx2.hash}`)
+      const tx3 = buildRunTransaction('run', [0x03], {}, 'buildSafeDataOut', true, 0)
+      expect(() => checkRunTransaction(tx3)).to.throw(`Unsupported run protocol in tx: ${tx3.hash}`)
     })
 
     it('should throw if not op_false op_return', () => {
@@ -10853,6 +10867,9 @@ describe('util', () => {
       expect(deployable(class A { })).to.equal(true)
       expect(deployable(class A extends B { })).to.equal(true)
       expect(deployable(function f () {})).to.equal(true)
+      expect(deployable(() => {})).to.equal(true)
+      expect(deployable(function () { })).to.equal(true)
+      expect(deployable(class {})).to.equal(true)
     })
 
     it('should return false for non-functions', () => {
@@ -10866,12 +10883,6 @@ describe('util', () => {
       expect(deployable(Array)).to.equal(false)
       expect(deployable(Uint8Array)).to.equal(false)
       expect(deployable(Math.sin)).to.equal(false)
-    })
-
-    it('should return false for anonymous types', () => {
-      expect(deployable(() => {})).to.equal(false)
-      expect(deployable(function () { })).to.equal(false)
-      expect(deployable(class {})).to.equal(false)
     })
   })
 
