@@ -10,7 +10,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Jig, Run, createRun, hookPay } = require('./helpers')
+const { Jig, Run, createRun, hookPay, deploy } = require('./helpers')
 const { AddressScript, PubKeyScript } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -38,6 +38,10 @@ describe('AddressScript', () => {
     const buffer2 = new AddressScript(addr).toBytes()
     expect(buffer1).to.deep.equal(buffer2)
   })
+
+  it.skip('should deploy', async () => {
+    await deploy(AddressScript)
+  }).timeout(30000)
 })
 
 // ------------------------------------------------------------------------------------------------
@@ -59,6 +63,10 @@ describe('PubKeyScript', () => {
     const buffer2 = new PubKeyScript(pubkey.toString()).toBytes()
     expect(buffer1).to.deep.equal(buffer2)
   })
+
+  it.skip('should deploy', async () => {
+    await deploy(PubKeyScript)
+  }).timeout(30000)
 })
 
 // ------------------------------------------------------------------------------------------------
