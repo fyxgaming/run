@@ -17,27 +17,25 @@ const { AddressScript, PubKeyScript } = Run
 // AddressScript tests
 // ------------------------------------------------------------------------------------------------
 
-// TODO: getBuffer -> toBuffer
-
 describe('AddressScript', () => {
   it('should create buffer for valid addresses', () => {
-    new AddressScript('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').getBuffer() // eslint-disable-line
-    new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').getBuffer() // eslint-disable-line
+    new AddressScript('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').toBuffer() // eslint-disable-line
+    new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').toBuffer() // eslint-disable-line
   })
 
   it('throws if bad address', () => {
-    expect(() => new AddressScript().getBuffer()).to.throw('Address is not a string')
-    expect(() => new AddressScript([]).getBuffer()).to.throw('Address is not a string')
-    expect(() => new AddressScript('3P14159f73E4gFr7JterCCQh9QjiTjiZrG').getBuffer()).to.throw('Address may only be a P2PKH type')
-    expect(() => new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9n').getBuffer()).to.throw('Address may only be a P2PKH type')
-    expect(() => new AddressScript('@').getBuffer()).to.throw('Invalid character in address')
+    expect(() => new AddressScript().toBuffer()).to.throw('Address is not a string')
+    expect(() => new AddressScript([]).toBuffer()).to.throw('Address is not a string')
+    expect(() => new AddressScript('3P14159f73E4gFr7JterCCQh9QjiTjiZrG').toBuffer()).to.throw('Address may only be a P2PKH type')
+    expect(() => new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9n').toBuffer()).to.throw('Address may only be a P2PKH type')
+    expect(() => new AddressScript('@').toBuffer()).to.throw('Invalid character in address')
   })
 
   it('should correctly return P2PKH buffer', () => {
     const addr = '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
     const script = bsv.Script.fromAddress(addr)
     const buffer1 = new Uint8Array(script.toBuffer())
-    const buffer2 = new AddressScript(addr).getBuffer()
+    const buffer2 = new AddressScript(addr).toBuffer()
     expect(buffer1).to.deep.equal(buffer2)
   })
 })
@@ -48,17 +46,17 @@ describe('AddressScript', () => {
 
 describe('PubKeyScript', () => {
   it('throws if bad pubkey', () => {
-    expect(() => new PubKeyScript().getBuffer()).to.throw('Pubkey is not a string')
-    expect(() => new PubKeyScript([]).getBuffer()).to.throw('Pubkey is not a string')
-    expect(() => new PubKeyScript('abcde').getBuffer()).to.throw('Pubkey has bad length')
-    expect(() => new PubKeyScript('@$').getBuffer()).to.throw('Invalid pubkey hex')
+    expect(() => new PubKeyScript().toBuffer()).to.throw('Pubkey is not a string')
+    expect(() => new PubKeyScript([]).toBuffer()).to.throw('Pubkey is not a string')
+    expect(() => new PubKeyScript('abcde').toBuffer()).to.throw('Pubkey has bad length')
+    expect(() => new PubKeyScript('@$').toBuffer()).to.throw('Invalid pubkey hex')
   })
 
   it('should correctly return P2PH buffer', () => {
     const pubkey = new bsv.PrivateKey().publicKey
     const script = bsv.Script.buildPublicKeyOut(pubkey)
     const buffer1 = new Uint8Array(script.toBuffer())
-    const buffer2 = new PubKeyScript(pubkey.toString()).getBuffer()
+    const buffer2 = new PubKeyScript(pubkey.toString()).toBuffer()
     expect(buffer1).to.deep.equal(buffer2)
   })
 })
