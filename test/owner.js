@@ -71,7 +71,7 @@ describe('Owner', () => {
       const privkey = new bsv.PrivateKey('testnet')
       const run = createRun({ owner: privkey })
       expect(run.owner.privkey).to.equal(privkey.toString())
-      expect(run.owner.pubkey).to.equal(privkey.publicKey.toString())
+      expect(run.owner.getOwner()).to.equal(privkey.publicKey.toString())
       expect(run.owner.address).to.equal(privkey.toAddress().toString())
     })
 
@@ -79,7 +79,7 @@ describe('Owner', () => {
       const privkey = new bsv.PrivateKey('mainnet')
       const run = createRun({ network: 'main', owner: privkey.toString() })
       expect(run.owner.privkey).to.equal(privkey.toString())
-      expect(run.owner.pubkey).to.equal(privkey.publicKey.toString())
+      expect(run.owner.getOwner()).to.equal(privkey.publicKey.toString())
       expect(run.owner.address).to.equal(privkey.toAddress().toString())
     })
 
@@ -87,7 +87,7 @@ describe('Owner', () => {
       const pubkey = new bsv.PrivateKey('mainnet').publicKey
       const run = createRun({ network: 'main', owner: pubkey })
       expect(run.owner.privkey).to.equal(undefined)
-      expect(run.owner.pubkey).to.equal(pubkey.toString())
+      expect(run.owner.getOwner()).to.equal(pubkey.toString())
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
     })
 
@@ -95,7 +95,7 @@ describe('Owner', () => {
       const pubkey = new bsv.PrivateKey('testnet').publicKey
       const run = createRun({ network: 'mock', owner: pubkey.toString() })
       expect(run.owner.privkey).to.equal(undefined)
-      expect(run.owner.pubkey).to.equal(pubkey.toString())
+      expect(run.owner.getOwner()).to.equal(pubkey.toString())
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
     })
 
@@ -103,7 +103,7 @@ describe('Owner', () => {
       const address = new bsv.PrivateKey('testnet').toAddress()
       const run = createRun({ network: 'stn', owner: address })
       expect(run.owner.privkey).to.equal(undefined)
-      expect(run.owner.pubkey).to.equal(undefined)
+      expect(run.owner.getOwner()).to.equal(undefined)
       expect(run.owner.address).to.equal(address.toString())
     })
 
@@ -111,7 +111,7 @@ describe('Owner', () => {
       const address = new bsv.PrivateKey('livenet').toAddress()
       const run = createRun({ network: 'main', owner: address.toString() })
       expect(run.owner.privkey).to.equal(undefined)
-      expect(run.owner.pubkey).to.equal(undefined)
+      expect(run.owner.getOwner()).to.equal(undefined)
       expect(run.owner.address).to.equal(address.toString())
     })
 
@@ -218,7 +218,7 @@ describe('Owner', () => {
       const run = createRun()
       class A extends Jig {}
       const a = await new A().sync()
-      const run2 = createRun({ blockchain: run.blockchain, owner: run.owner.pubkey })
+      const run2 = createRun({ blockchain: run.blockchain, owner: run.owner.getOwner() })
       await run2.sync()
       expect(run2.owner.privkey).to.equal(undefined)
       expect(run2.owner.jigs).to.deep.equal([a])

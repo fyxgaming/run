@@ -15,7 +15,7 @@ const { extractRunData, encryptRunData, decryptRunData } = Run._util
 
 describe('Transaction', () => {
   const run = createRun()
-  const owner = run.owner.pubkey
+  const owner = run.owner.getOwner()
   beforeEach(() => run.activate())
   beforeEach(() => run.blockchain.block())
   afterEach(() => run.transaction.rollback())
@@ -89,8 +89,8 @@ describe('Transaction', () => {
       expect(tx.outputs.length).to.equal(3)
       const runData = extractRunData(tx)
       expect(runData).to.deep.equal({
-        code: [{ text: A.toString(), owner: run.owner.pubkey }],
-        actions: [{ target: '_o1', method: 'init', args: [], creator: run.owner.pubkey }],
+        code: [{ text: A.toString(), owner: run.owner.getOwner() }],
+        actions: [{ target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() }],
         jigs: 1
       })
     })
@@ -235,7 +235,7 @@ describe('Transaction', () => {
 
   describe('publish', () => {
     const run = createRun({ app: 'biz', blockchain: new Run.Mockchain() })
-    const owner = run.owner.pubkey
+    const owner = run.owner.address
     let tx = null; let data = null
     const origBroadcast = run.blockchain.broadcast.bind(run.blockchain)
     run.blockchain.broadcast = async txn => {
@@ -260,13 +260,13 @@ describe('Transaction', () => {
     })
 
     it('should corretly set owners on code and jig outputs', async () => {
-      const pubkey = new bsv.PrivateKey().toPublicKey()
+      const address = new bsv.PrivateKey().toAddress()
       class A extends Jig { f (owner) { this.owner = owner; return this } }
       const a = await new A().sync()
       expect(tx.outputs[1].script.toAddress().toString()).to.equal(run.owner.address)
       expect(tx.outputs[2].script.toAddress().toString()).to.equal(run.owner.address)
-      await a.f(pubkey.toString()).sync()
-      expect(tx.outputs[1].script.toAddress().toString()).to.equal(pubkey.toAddress().toString())
+      await a.f(address.toString()).sync()
+      expect(tx.outputs[1].script.toAddress().toString()).to.equal(address.toString())
     })
 
     it('should correctly set satoshis on code and jig outputs', async () => {
@@ -298,7 +298,7 @@ describe('Transaction', () => {
       await new A().sync() // eslint-disable-line
       expect(data.code).to.deep.equal([])
       const target = `${a.origin.slice(0, 64)}_o1`
-      expect(data.actions).to.deep.equal([{ target, method: 'init', args: [], creator: run.owner.pubkey }])
+      expect(data.actions).to.deep.equal([{ target, method: 'init', args: [], creator: run.owner.getOwner() }])
       expect(data.jigs).to.equal(1)
     })
 
@@ -310,8 +310,8 @@ describe('Transaction', () => {
       await run.transaction.end().sync()
       expect(data.code).to.deep.equal([{ text: A.toString(), owner }])
       expect(data.actions).to.deep.equal([
-        { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey },
-        { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey }
+        { target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() },
+        { target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() }
       ])
       expect(data.jigs).to.equal(2)
     })
@@ -328,8 +328,8 @@ describe('Transaction', () => {
         { text: B.toString(), owner }
       ])
       expect(data.actions).to.deep.equal([
-        { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey },
-        { target: '_o2', method: 'init', args: [], creator: run.owner.pubkey }
+        { target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() },
+        { target: '_o2', method: 'init', args: [], creator: run.owner.getOwner() }
       ])
       expect(data.jigs).to.equal(2)
     })
@@ -337,7 +337,7 @@ describe('Transaction', () => {
     it('should support basic jig args', async () => {
       class A extends Jig { init (a, b) { this.a = a; this.b = b }}
       await new A(1, { a: 'a' }).sync() // eslint-disable-line
-      expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args: [1, { a: 'a' }], creator: run.owner.pubkey }])
+      expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args: [1, { a: 'a' }], creator: run.owner.getOwner() }])
     })
 
     it('should support passing jigs as args', async () => {
@@ -377,7 +377,7 @@ describe('Transaction', () => {
       const a = await new A(A).sync()
       const args = [{ $ref: '_o1' }]
       expect(data.code).to.deep.equal([{ text: A.toString(), owner }])
-      expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args, creator: run.owner.pubkey }])
+      expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args, creator: run.owner.getOwner() }])
       expect(data.jigs).to.equal(1)
       await a.set(B).sync()
       expect(data.code).to.deep.equal([{ text: B.toString(), owner }])
@@ -403,7 +403,7 @@ describe('Transaction', () => {
         { text: B.toString(), owner }
       ])
       expect(data.actions).to.deep.equal([
-        { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey },
+        { target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() },
         { target: '_o3', method: 'set', args: [{ $ref: '_o2' }] }
       ])
       expect(data.jigs).to.equal(1)
@@ -418,7 +418,7 @@ describe('Transaction', () => {
       a.f(3)
       await run.transaction.end().sync()
       expect(data.actions).to.deep.equal([
-        { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey },
+        { target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() },
         { target: '_o2', method: 'f', args: [1] },
         { target: '_o2', method: 'f', args: [2] },
         { target: '_o2', method: 'f', args: [3] }
@@ -509,7 +509,7 @@ describe('Transaction', () => {
     it('should load new jig', async () => {
       class A extends Jig { init (n) { this.n = n }}
       const code = [{ text: A.toString(), owner }]
-      const actions = [{ target: '_o1', method: 'init', args: [3], creator: run.owner.pubkey }]
+      const actions = [{ target: '_o1', method: 'init', args: [3], creator: run.owner.address }]
       const txid = await build(code, actions, [], null, 1)
       const a = await run.load(txid + '_o2')
       expect(a.n).to.equal(3)
@@ -543,9 +543,9 @@ describe('Transaction', () => {
       class B extends Jig { init () { this.n = 1 }}
       class A extends Jig { init (b) { this.n = b.n + 1 } }
       const code = [{ text: B.toString(), owner }, { text: A.toString(), owner }]
-      const action1 = { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey }
+      const action1 = { target: '_o1', method: 'init', args: [], creator: run.owner.address }
       const args = [{ $ref: '_o3' }]
-      const actions = [action1, { target: '_o2', method: 'init', args, creator: run.owner.pubkey }]
+      const actions = [action1, { target: '_o2', method: 'init', args, creator: run.owner.address }]
       const txid = await build(code, actions, [], null, 2)
       const b = await run.load(txid + '_o3')
       const a = await run.load(txid + '_o4')
@@ -573,7 +573,7 @@ describe('Transaction', () => {
       class A extends Jig { send (to) { this.owner = to } }
       const a = await new A().sync()
       const privkey = new bsv.PrivateKey('testnet')
-      const actions = [{ target: '_i0', method: 'send', args: [`${privkey.publicKey.toString()}`] }]
+      const actions = [{ target: '_i0', method: 'send', args: [`${privkey.toAddress().toString()}`] }]
       const txid = await build([], actions, [a.location], privkey.toAddress().toString(), 1)
       await run.load(txid + '_o1')
     })
@@ -690,7 +690,7 @@ describe('Transaction', () => {
         const b = await new B().sync()
         const code = [{ text: A.toString(), owner }]
         const args = [{ $ref: `${b.location}` }]
-        const actions = [{ target: '_o1', method: 'init', args, creator: run.owner.pubkey }]
+        const actions = [{ target: '_o1', method: 'init', args, creator: run.owner.address }]
         const txid = await build(code, actions, [], null, 2)
         await expect(run.load(txid + '_o3')).to.be.rejectedWith() // TODO: check error
       })
@@ -712,7 +712,7 @@ describe('Transaction', () => {
         const b = await new B().sync()
         const code = [{ text: A.toString(), owner }]
         const args = [{ $ref: '_i0' }]
-        const actions = [{ target: '_o1', method: 'init', args, creator: run.owner.pubkey }]
+        const actions = [{ target: '_o1', method: 'init', args, creator: run.owner.address }]
         const txid = await build(code, actions, [b.location], null, 2, [], 2)
         await expect(run.load(txid + '_o2')).to.be.rejectedWith() // TODO: check error
       })
@@ -739,7 +739,7 @@ describe('Transaction', () => {
       it('should throw if missing input in batch', async () => {
         class A extends Jig { f (b) { this.n = b.n + 1 } }
         const code = [{ text: A.toString(), owner }]
-        const action1 = { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey }
+        const action1 = { target: '_o1', method: 'init', args: [], creator: run.owner.address }
         const args = [{ $ref: '_i0' }]
         const actions = [action1, { target: '_i1', method: 'f', args }]
         const txid = await build(code, actions, [], null, 2)
@@ -750,9 +750,9 @@ describe('Transaction', () => {
         class B extends Jig { }
         class A extends Jig { init (b) { this.n = b.n } }
         const code = [{ text: B.toString(), owner }, { text: A.toString(), owner }]
-        const action1 = { target: '_o1', method: 'init', args: [], creator: run.owner.pubkey }
+        const action1 = { target: '_o1', method: 'init', args: [], creator: run.owner.getOwner() }
         const args = [{ $ref: '_o3' }]
-        const actions = [action1, { target: '_o2', method: 'init', args, creator: run.owner.pubkey }]
+        const actions = [action1, { target: '_o2', method: 'init', args, creator: run.owner.getOwner() }]
         const txid = await build(code, actions, [], null, 1, 2)
         await expect(run.load(txid + '_o4')).to.be.rejectedWith() // TODO: check error
       })
@@ -777,7 +777,7 @@ describe('Transaction', () => {
       })
 
       it('should throw if missing target', async () => {
-        const actions = [{ target: '_o1`', method: 'init', args: '[]', creator: run.owner.pubkey }]
+        const actions = [{ target: '_o1`', method: 'init', args: '[]', creator: run.owner.getOwner() }]
         const txid = await build([], actions, [], null, 1)
         await expect(run.load(txid + '_o1')).to.be.rejectedWith('missing target _o1')
       })
