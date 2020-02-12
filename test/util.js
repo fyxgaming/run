@@ -104,8 +104,10 @@ describe('util', () => {
     it('should throw if bad protocol version', () => {
       const tx1 = buildRunTransaction('run', [0x00, Run.protocol], {}, 'buildSafeDataOut', true, 0)
       expect(() => checkRunTransaction(tx1)).to.throw(`Unsupported run protocol in tx: ${tx1.hash}`)
-      const tx2 = buildRunTransaction('run', [0x02], {}, 'buildSafeDataOut', true, 0)
+      const tx2 = buildRunTransaction('run', [0x01], {}, 'buildSafeDataOut', true, 0)
       expect(() => checkRunTransaction(tx2)).to.throw(`Unsupported run protocol in tx: ${tx2.hash}`)
+      const tx3 = buildRunTransaction('run', [0x03], {}, 'buildSafeDataOut', true, 0)
+      expect(() => checkRunTransaction(tx3)).to.throw(`Unsupported run protocol in tx: ${tx3.hash}`)
     })
 
     it('should throw if not op_false op_return', () => {
