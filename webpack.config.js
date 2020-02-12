@@ -228,7 +228,9 @@ const dontObfuscate = [
   'Berry',
   'BerryControl',
   'Token',
-  'expect'
+  'expect',
+  'AddressScript',
+  'PubKeyScript'
 ]
 
 const browser = {
