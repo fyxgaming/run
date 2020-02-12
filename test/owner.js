@@ -18,12 +18,24 @@ const { AddressScript, PubKeyScript } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('AddressScript', () => {
-  it('throws if bad address', () => {
-    // const x = Array.from(Buffer.from('00291D4797C2817F6247481E261A3CCB35C24E38AB59C1ACEA', 'hex'))
-    // console.log(x)
+  it('does not throw for valid addresses', () => {
     new AddressScript('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').getBuffer() // eslint-disable-line
     new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').getBuffer() // eslint-disable-line
-    // console.log(new Address('%').getBuffer())
+  })
+
+  it('throws if bad address', () => {
+    expect(() => new AddressScript().getBuffer()).to.throw('Address is not a string')
+    expect(() => new AddressScript([]).getBuffer()).to.throw('Address is not a string')
+    expect(() => new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9n').getBuffer()).to.throw('Address may only be a P2PKH type')
+    expect(() => new AddressScript('@').getBuffer()).to.throw('Invalid character in address')
+  })
+
+  it('should correctly return P2PKH buffer', () => {
+    const addr = '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
+    const script = bsv.Script.fromAddress(new bsv.Address(addr, 'mainnet'))
+    const buffer1 = new Uint8Array(script.toBuffer())
+    const buffer2 = new AddressScript(addr).getBuffer()
+    expect(buffer1).to.deep.equal(buffer2)
   })
 })
 
@@ -31,12 +43,12 @@ describe('AddressScript', () => {
 // PubKeyScript tests
 // ------------------------------------------------------------------------------------------------
 
-describe('PubKeyScript', () => {
+describe.only('PubKeyScript', () => {
   it('throws if bad address', () => {
     const pubkey = new bsv.PrivateKey().publicKey.toString()
     const pubkeyBuf = new Uint8Array(new bsv.PublicKey(pubkey).toBuffer())
     const script = new PubKeyScript(pubkey).getBuffer()
-    expect(script.length).to.equal(34)
+    expect(script.length).to.equal(35)
     expect(script.slice(0, 33)).to.deep.equal(pubkeyBuf)
     expect(script[33]).to.equal(172)
   })
