@@ -126,7 +126,7 @@ describe('Owner', () => {
   })
 
   describe('code', () => {
-    it.only('should update with code deployed', async () => {
+    it('should update with code deployed', async () => {
       const run = createRun()
       class A extends Jig { set (x) { this.x = x }}
       run.deploy(A)
