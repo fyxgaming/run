@@ -10711,13 +10711,13 @@ describe('util', () => {
       expect(() => getOwnerScript(new AddressScript(testnet.publicKey.toAddress().toString()))).not.to.throw()
     })
 
-    it.only('should throw if bad owner', () => {
+    it('should throw if bad owner', () => {
       expect(() => getOwnerScript()).to.throw('Invalid owner: undefined')
       expect(() => getOwnerScript(123)).to.throw('Invalid owner: 123')
       expect(() => getOwnerScript('hello')).to.throw('Invalid owner: hello')
-      expect(() => getOwnerScript(new bsv.PrivateKey())).to.throw('owner must be a pubkey string')
-      expect(() => getOwnerScript(new bsv.PrivateKey().publicKey)).to.throw('owner must be a pubkey string')
-      expect(() => getOwnerScript([new bsv.PrivateKey().publicKey.toString()])).to.throw('owner must be a pubkey string')
+      expect(() => getOwnerScript(new bsv.PrivateKey())).to.throw('Invalid owner')
+      expect(() => getOwnerScript(new bsv.PrivateKey().publicKey)).to.throw('Invalid owner')
+      expect(() => getOwnerScript([new bsv.PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
     })
   })
 

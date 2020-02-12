@@ -141,8 +141,8 @@ function getOwnerScript (owner) {
   }
 
   // Check if it is a custom owner
-  if (typeof owner === 'object' && owner && typeof owner.toBuffer === 'function') {
-    owner.toBuffer()
+  if (typeof owner === 'object' && owner && typeof owner.toBytes === 'function') {
+    owner.toBytes()
     return owner
   }
 
@@ -3633,10 +3633,10 @@ const util = __webpack_require__(0)
  */
 class Script {
   /**
-   * Calculates a buffer for the script. This should be calculated on-demand.
+   * Calculates the bytes for this script. This should be calculated on-demand.
    * @returns {Uint8Array} Uint8Array script
    */
-  toBuffer () {
+  toBytes () {
     throw new Error('Not implemented')
   }
 }
@@ -3651,7 +3651,7 @@ class AddressScript {
     this.address = address
   }
 
-  toBuffer () {
+  toBytes () {
     // Based on https://gist.github.com/diafygi/90a3e80ca1c2793220e5/
     const A = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
     var d = [] // the array for storing the stream of decoded bytes
@@ -3694,7 +3694,7 @@ class PubKeyScript {
     this.pubkey = pubkey
   }
 
-  toBuffer () {
+  toBytes () {
     const H = '0123456789abcdef'.split('')
     const s = this.pubkey.toLowerCase()
     const pk = []
@@ -3812,7 +3812,7 @@ class Owner extends Sign {
     // If owner is not an address of pubkey string, then it's a script object
     // We'll query the UTXOs by script hash in this case.
     if (typeof query === 'object') {
-      const script = query.toBuffer()
+      const script = query.toBytes()
       const scriptHash = bsv.crypto.Hash.sha256(Buffer.from(script))
       query = scriptHash.toString('hex')
     }
@@ -3873,8 +3873,8 @@ class Owner extends Sign {
     if (typeof x !== typeof y) return false
     if (typeof x === 'string') return x === y
     if (typeof x !== 'object' || !x) return false
-    const xbuf = Buffer.from(x.toBuffer())
-    const ybuf = Buffer.from(y.toBuffer())
+    const xbuf = Buffer.from(x.toBytes())
+    const ybuf = Buffer.from(y.toBytes())
     const z = xbuf.toString('hex') === ybuf.toString('hex')
     return z
   }
@@ -6537,7 +6537,7 @@ class ProtoTransaction {
     })
     this.outputs.forEach((o, n) => {
       const index = 1 + data.code.length + n
-      const hex1 = Buffer.from(util.getOwnerScript(o.owner).toBuffer()).toString('hex')
+      const hex1 = Buffer.from(util.getOwnerScript(o.owner).toBytes()).toString('hex')
       const hex2 = tx.outputs[index].script.toHex()
       if (hex1 !== hex2) throw new Error(`bad owner on output ${index}`)
       if (tx.outputs[index].satoshis < Math.max(o.satoshis, bsv.Transaction.DUST_AMOUNT)) {
@@ -6901,7 +6901,7 @@ class ProtoTransaction {
       const vout = parseInt(spentLocations[index].slice(66))
       const before = this.before.get(jig)
       const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, before.restore().satoshis)
-      const scriptBuffer = util.getOwnerScript(before.restore().owner).toBuffer()
+      const scriptBuffer = util.getOwnerScript(before.restore().owner).toBytes()
       const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
       const utxo = { txid, vout, script, satoshis }
       tx.from(utxo)
@@ -6910,7 +6910,7 @@ class ProtoTransaction {
     // Build run outputs first by adding code then by adding jigs
 
     this.code.forEach(def => {
-      const scriptBuffer = util.getOwnerScript(def.owner).toBuffer()
+      const scriptBuffer = util.getOwnerScript(def.owner).toBytes()
       const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
       const satoshis = bsv.Transaction.DUST_AMOUNT
       tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
@@ -6918,7 +6918,7 @@ class ProtoTransaction {
 
     this.outputs.forEach(jig => {
       const restored = this.after.get(jig).restore()
-      const scriptBuffer = util.getOwnerScript(restored.owner).toBuffer()
+      const scriptBuffer = util.getOwnerScript(restored.owner).toBytes()
       const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
       const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, restored.satoshis)
       tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
@@ -8202,7 +8202,7 @@ class Code {
     // make sure the owner matches the output's address
     // TODO: Move this to transaction
     const hex1 = tx.outputs[vout].script.toHex()
-    const hex2 = Buffer.from(util.getOwnerScript(def.owner).toBuffer()).toString('hex')
+    const hex2 = Buffer.from(util.getOwnerScript(def.owner).toBytes()).toString('hex')
     if (hex1 !== hex2) throw new Error(`bad def owner: ${location}`)
 
     const env = { }
