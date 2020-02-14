@@ -224,6 +224,18 @@ describe('Purse', () => {
       const tx2 = await run.purse.pay(new bsv.Transaction().to(address, 100))
       expect(tx2.outputs.length).to.equal(21)
     })
+
+    it('should still have a change output when splits is lower than number of utxos', async () => {
+      const address = new bsv.PrivateKey().toAddress()
+      const run = createRun()
+      const tx = await run.purse.pay(new bsv.Transaction().to(address, 100))
+      await run.blockchain.broadcast(tx)
+      expect(tx.outputs.length).to.equal(11)
+      run.purse.splits = 5
+      const tx2 = await run.purse.pay(new bsv.Transaction().to(address, 100))
+      expect(tx2.outputs.length).to.equal(2)
+      expect(tx2.getFee() < 1000).to.equal(true)
+    })
   })
 
   describe('balance', () => {
