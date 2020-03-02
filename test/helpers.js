@@ -102,7 +102,7 @@ Run = unobfuscate(Run)
 
 function createRun (options = { }) {
   const network = options.network || 'mock'
-  const blockchain = network !== 'mock' ? 'star' : undefined
+  const blockchain = network !== 'mock' ? 'run' : undefined
   const purse = network === 'mock' ? undefined : testPurses[network][0]
   options.sandbox = 'sandbox' in options ? options.sandbox : TEST_MODE === 'cover'
     ? /^((?!Jig|Berry|Token|expect|UniqueSet|UniqueMap|AddressScript|PubKeyScript).)*$/ : true
@@ -152,7 +152,7 @@ function expectNoAction () {
 }
 
 async function deploy (Class) {
-  const app = 'Star ▸ Library'
+  const app = 'Run ▸ Library'
   const networks = [['test', 'Testnet'], ['main', 'Mainnet']]
 
   let properties = ''

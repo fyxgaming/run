@@ -105,8 +105,8 @@ describe('BlockchainServer', () => {
     })
 
     describe('api', () => {
-      it('should default to star api', () => {
-        expect(unobfuscate(new BlockchainServer()).api.name).to.equal('star')
+      it('should default to run api', () => {
+        expect(unobfuscate(new BlockchainServer()).api.name).to.equal('run')
       })
 
       it('should throw for bad api', () => {
@@ -261,10 +261,10 @@ const errors = {
   missingInput: 'Missing inputs'
 }
 
-const apis = { Star: 'star', BitIndex: 'bitindex', WhatsOnChain: 'whatsonchain' }
+const apis = { Run: 'run', BitIndex: 'bitindex', WhatsOnChain: 'whatsonchain' }
 const networks = ['main', 'test']
-const supportsSpentTxIdInBlocks = { Star: true, BitIndex: true, WhatsOnChain: false }
-const supportsSpentTxIdInMempool = { Star: true, BitIndex: true, WhatsOnChain: false }
+const supportsSpentTxIdInBlocks = { Run: true, BitIndex: true, WhatsOnChain: false }
+const supportsSpentTxIdInMempool = { Run: true, BitIndex: true, WhatsOnChain: false }
 
 // Iterate networks first, then APIs, so that we can reuse the caches when possible
 networks.forEach(network => {

@@ -1543,7 +1543,7 @@ class Run {
    * @param {boolean|RegExp=} options.sandbox Whether to put code in a secure sandbox. Default is true.
    * @param {object=} options.logger Console-like logger object. Default will log warnings and errors.
    * @param {string=} options.app App string to differentiate transaction. Defaults to empty.
-   * @param {Blockchain|string=} options.blockchain Blockchain API or one of 'star', 'bitindex', or 'whatsonchain'
+   * @param {Blockchain|string=} options.blockchain Blockchain API or one of 'run', 'bitindex', or 'whatsonchain'
    * @param {string=} options.network One of 'main', 'test', 'stn', or 'mock'
    * @param {State=} options.state State provider, which may be null
    * @param {string=} options.owner Private key or address string
@@ -7383,16 +7383,16 @@ function jsonToTx (json) {
 // REST APIs
 // ------------------------------------------------------------------------------------------------
 
-const starApiHost = 'https://api.star.store'
+const runApiHost = 'https://api.run.network'
 
 const apis = [
   {
-    name: 'star',
-    broadcastUrl: network => `${starApiHost}/v1/${network}/tx`,
+    name: 'run',
+    broadcastUrl: network => `${runApiHost}/v1/${network}/tx`,
     broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
-    fetchUrl: (network, txid) => `${starApiHost}/v1/${network}/tx/${txid}`,
+    fetchUrl: (network, txid) => `${runApiHost}/v1/${network}/tx/${txid}`,
     fetchResp: data => jsonToTx(data),
-    utxosUrl: (network, address) => `${starApiHost}/v1/${network}/utxos/${address.toString()}`,
+    utxosUrl: (network, address) => `${runApiHost}/v1/${network}/utxos/${address.toString()}`,
     utxosResp: (data, address) => typeof data === 'string' ? JSON.parse(data) : data
   },
   {
@@ -13171,7 +13171,7 @@ class Pay {
 
 /**
  * Local wallet that implements the Pay API
- * 
+ *
  * It will automatically split UTXOs to avoid the mempool chain limit. However, by design, it will
  * not consolidate UTXOs back together to lower the number of splits. That has to be done outside
  * of the purse. So splits should be thought of as minimum splits.

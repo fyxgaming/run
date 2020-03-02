@@ -53,7 +53,7 @@ describe('Run', () => {
         const run = createRun({ network: 'main' })
         expect(run.blockchain instanceof Run.BlockchainServer).to.equal(true)
         expect(run.blockchain.network).to.equal('main')
-        expect(run.blockchain.api.name).to.equal('star')
+        expect(run.blockchain.api.name).to.equal('run')
       })
 
       it('should support creating mockchain', () => {

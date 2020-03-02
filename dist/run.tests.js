@@ -204,7 +204,7 @@ Run = unobfuscate(Run)
 
 function createRun (options = { }) {
   const network = options.network || 'mock'
-  const blockchain = network !== 'mock' ? 'star' : undefined
+  const blockchain = network !== 'mock' ? 'run' : undefined
   const purse = network === 'mock' ? undefined : testPurses[network][0]
   options.sandbox = 'sandbox' in options ? options.sandbox :  false
     ? undefined : true
@@ -254,7 +254,7 @@ function expectNoAction () {
 }
 
 async function deploy (Class) {
-  const app = 'Star ▸ Library'
+  const app = 'Run ▸ Library'
   const networks = [['test', 'Testnet'], ['main', 'Mainnet']]
 
   let properties = ''
@@ -3370,8 +3370,8 @@ describe('BlockchainServer', () => {
     })
 
     describe('api', () => {
-      it('should default to star api', () => {
-        expect(unobfuscate(new BlockchainServer()).api.name).to.equal('star')
+      it('should default to run api', () => {
+        expect(unobfuscate(new BlockchainServer()).api.name).to.equal('run')
       })
 
       it('should throw for bad api', () => {
@@ -3526,10 +3526,10 @@ const errors = {
   missingInput: 'Missing inputs'
 }
 
-const apis = { Star: 'star', BitIndex: 'bitindex', WhatsOnChain: 'whatsonchain' }
+const apis = { Run: 'run', BitIndex: 'bitindex', WhatsOnChain: 'whatsonchain' }
 const networks = ['main', 'test']
-const supportsSpentTxIdInBlocks = { Star: true, BitIndex: true, WhatsOnChain: false }
-const supportsSpentTxIdInMempool = { Star: true, BitIndex: true, WhatsOnChain: false }
+const supportsSpentTxIdInBlocks = { Run: true, BitIndex: true, WhatsOnChain: false }
+const supportsSpentTxIdInMempool = { Run: true, BitIndex: true, WhatsOnChain: false }
 
 // Iterate networks first, then APIs, so that we can reuse the caches when possible
 networks.forEach(network => {
@@ -8224,7 +8224,7 @@ describe('Run', () => {
         const run = createRun({ network: 'main' })
         expect(run.blockchain instanceof Run.BlockchainServer).to.equal(true)
         expect(run.blockchain.network).to.equal('main')
-        expect(run.blockchain.api.name).to.equal('star')
+        expect(run.blockchain.api.name).to.equal('run')
       })
 
       it('should support creating mockchain', () => {
