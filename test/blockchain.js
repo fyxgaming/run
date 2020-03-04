@@ -224,28 +224,32 @@ describe('BlockchainServerCache', () => {
 // sample transactions with spent outputs in mined blocks on each network
 const sampleTransactions = {
   main: {
-    txid: 'afc557ef2970af0b5fb8bc1a70a320af425c7a45ca5d40eac78475109563c5f8',
-    blockhash: '000000000000000005609907e3092b92882c522fffb0705c73e91ddc3a6941ed',
-    blocktime: 1556620117,
-    time: 1556620117000,
-    minConfirmations: 15000,
+    txid: '8b580cd23c2d2cb0236b888a977a19153eaa9f5ff50b40876699738e747e87ef',
+    blockhash: '0000000000000000013cd2f234ed8048b58f04e1c3e739be5c1b44518f3f52ce',
+    blocktime: 1583296480,
+    time: 1583296480000,
+    minConfirmations: 3,
     vout: [{
-      spentTxId: '26fb663eeb8d3cd407276b045a8d71da9f625ef3dca66f51cb047d97a8cad3a6',
+      spentTxId: 'd1506c004f263e351cf0884407bf7665979c45b63266311eb414e6c2682536f5',
       spentIndex: 0,
-      spentHeight: 580333
-    }]
+      spentHeight: 624716
+    }],
+    outputIndex: 0,
+    outputPrivkey: 'L3qpvEdCa4h7qxuJ1xqQwNQV2dfDR8YB57awpcbnBpoyGMAZEGLq'
   },
   test: {
-    txid: 'acf2d978febb09e3a0d5817f180b19df675a0e95f75a2a1efeec739ebff865a7',
-    blockhash: '00000000000001ffaf368388b7ac954a562bd76fe39f6e114b171655273a38a7',
-    blocktime: 1556695666,
-    time: 1556695666000,
-    minConfirmations: 18000,
+    txid: '883bcccba28ca185b4d20b90f344f32f7fd9e273f962f661a48cea0849609443',
+    blockhash: '00000000a95abd6a8d6fed34c0fb07b9ef5c51daa9832a43db98b63d52d8394c',
+    blocktime: 1583295191,
+    time: 1583295191000,
+    minConfirmations: 3,
     vout: [{
-      spentTxId: '806444d15f416477b00b6bbd937c02ff3c8f8c5e09dae28425c87a8a0ef58af0',
+      spentTxId: '4350cf2aac66a2b3aef840af70f4fcfddcd85ccc3cb0e3aa62febb2cbfa91e53',
       spentIndex: 0,
-      spentHeight: 1298618
-    }]
+      spentHeight: 1351192
+    }],
+    outputIndex: 0,
+    outputPrivkey: 'cT7uSf2Q4nFDWoqQtSBaKHnQsuWVdcvxZMiuCs3nkwYh94xctaFg'
   },
   stn: {
     txid: 'a40ee613c5982d6b39d2425368eb2375f49b38a45b457bd72db4ec666d96d4c6'
@@ -258,7 +262,8 @@ const errors = {
   feeTooLow: 'tx fee too low',
   notFullySigned: 'tx not fully signed',
   duplicateInput: /transaction input [0-9]* duplicate input/,
-  missingInput: 'Missing inputs'
+  missingInput: 'Missing inputs',
+  mempoolConflict: 'txn-mempool-conflict'
 }
 
 const apis = { Run: 'run', BitIndex: 'bitindex', WhatsOnChain: 'whatsonchain' }
@@ -271,11 +276,19 @@ networks.forEach(network => {
   Object.keys(apis).forEach(api => {
     describe(`${api} (${network})`, function () {
       const run = createRun({ network, blockchain: apis[api] })
+
       beforeEach(() => run.activate())
+
       this.timeout(30000)
-      runBlockchainTestSuite(run.blockchain, run.purse.bsvPrivateKey,
-        sampleTransactions[network], supportsSpentTxIdInBlocks[api],
-        supportsSpentTxIdInMempool[api], 1000 /* indexingLatency */, errors)
+
+      runBlockchainTestSuite(
+        run.blockchain,
+        run.purse.bsvPrivateKey,
+        sampleTransactions[network],
+        supportsSpentTxIdInBlocks[api],
+        supportsSpentTxIdInMempool[api],
+        1000 /* indexingLatency */,
+        errors)
     })
   })
 })

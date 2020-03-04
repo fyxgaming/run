@@ -24,12 +24,15 @@ describe('Mockchain', () => {
     feeTooLow: 'tx fee too low',
     notFullySigned: 'tx not fully signed',
     duplicateInput: 'transaction input 1 duplicate input',
-    missingInput: 'tx input 0 missing or spent'
+    missingInput: 'Missing inputs',
+    mempoolConflict: 'txn-mempool-conflict'
   }
 
   const sampleTx = {
     txid: tx.hash,
-    time: tx.time
+    time: tx.time,
+    outputIndex: 1,
+    outputPrivkey: run.purse.privkey
   }
 
   // generate a spending transaction so that we have spentTxId
@@ -51,9 +54,14 @@ describe('Mockchain', () => {
     ]
   })
 
-  runBlockchainTestSuite(run.blockchain, run.purse.bsvPrivateKey, sampleTx,
-    true /* supportsSpentTxIdInBlocks */, true /* supportsSpentTxIdInMempool */,
-    0 /* indexingLatency */, errors)
+  runBlockchainTestSuite(
+    run.blockchain,
+    run.purse.bsvPrivateKey,
+    sampleTx,
+    true /* supportsSpentTxIdInBlocks */,
+    true /* supportsSpentTxIdInMempool */,
+    0 /* indexingLatency */,
+    errors)
 
   describe('block', () => {
     it('should update block heights', async () => {

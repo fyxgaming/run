@@ -312,7 +312,7 @@ describe('Jig', () => {
       await a2.sync()
       run.activate()
       a.set(2)
-      await expect(a.sync()).to.be.rejectedWith('tx input 0 missing or spent')
+      await expect(a.sync()).to.be.rejectedWith('txn-mempool-conflict')
       expect(a.x).to.equal(1)
     })
 
@@ -1503,40 +1503,15 @@ describe('Jig', () => {
       run.purse.pay = oldPay
     })
 
-    // TODO:
-    // Document: Mockchain error codes are meant to be similar to Bitcoin SV to use locally
-    // Fix mockchain errors
-    // Test on mockchain
-    // Test on main chain
-
-    it.only('should throw if already spent', async () => {
-      // Do on mocknet
-
-      // const owner = 'cQHdiezXuLXK5fdP9QqKXwzPYp2FsGhzDhvw9eFvcQi3tkPP4bgJ'
-      // const origin = '7a6e6d9ff635b9944676659e029cb633e3ef4ddd04d057ba7abacd18526a6f0c_o2'
-      // const run = createRun({ network: 'test', owner })
-      // const a = await run.load(origin)
-      // a.set(2)
-      // await a.sync()
-      // console.log(a)
-
-      // Test a mempool conflict with a jig
+    it('should throw if already spent', async () => {
       class Store extends Jig { set (x) { this.x = x } }
       const a = new Store()
       a.set(1)
       await a.sync()
       const a2 = await run.load(a.origin)
       a2.set(2)
-      await a2.sync()
-      // console.log(a.origin)
-      // console.log(run.owner.privkey)
-
-      // Test a mempool conflict with code
-
-      // Test a mempool conflict with a payment
-
-      // Test a missing inputs with a jig
-    }).timeout(10000)
+      await expect(a2.sync()).to.be.rejectedWith('[jig Store] was spent in another transaction')
+    })
 
     it('should throw if owner signature is missing', async () => {
       class A extends Jig {
