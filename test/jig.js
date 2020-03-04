@@ -1486,13 +1486,14 @@ describe('Jig', () => {
     })
 
     it('should throw if transaction is unpaid', async () => {
-      class A extends Jig { set (x) { this.x = x } }
-      const a = await new A().sync()
+      class Store extends Jig { set (x) { this.x = x } }
+      const a = new Store()
+      await a.sync()
       const oldPay = run.purse.pay
       run.purse.pay = async (tx) => { return tx }
-      const a2 = new A()
+      const b = new Store()
       // test when just init, no inputs
-      expectAction(a2, 'init', [], [], [a2], [])
+      expectAction(b, 'init', [], [], [b], [])
       const suggestion = 'Hint: Is the purse funded to pay for this transaction?'
       await expect(run.sync()).to.be.rejectedWith(`Broadcast failed, tx has no inputs\n\n${suggestion}`)
       // test with a spend, pre-existing inputs
@@ -1501,6 +1502,41 @@ describe('Jig', () => {
       await expect(run.sync()).to.be.rejectedWith(`Broadcast failed, tx fee too low\n\n${suggestion}`)
       run.purse.pay = oldPay
     })
+
+    // TODO:
+    // Document: Mockchain error codes are meant to be similar to Bitcoin SV to use locally
+    // Fix mockchain errors
+    // Test on mockchain
+    // Test on main chain
+
+    it.only('should throw if already spent', async () => {
+      // Do on mocknet
+
+      // const owner = 'cQHdiezXuLXK5fdP9QqKXwzPYp2FsGhzDhvw9eFvcQi3tkPP4bgJ'
+      // const origin = '7a6e6d9ff635b9944676659e029cb633e3ef4ddd04d057ba7abacd18526a6f0c_o2'
+      // const run = createRun({ network: 'test', owner })
+      // const a = await run.load(origin)
+      // a.set(2)
+      // await a.sync()
+      // console.log(a)
+
+      // Test a mempool conflict with a jig
+      class Store extends Jig { set (x) { this.x = x } }
+      const a = new Store()
+      a.set(1)
+      await a.sync()
+      const a2 = await run.load(a.origin)
+      a2.set(2)
+      await a2.sync()
+      // console.log(a.origin)
+      // console.log(run.owner.privkey)
+
+      // Test a mempool conflict with code
+
+      // Test a mempool conflict with a payment
+
+      // Test a missing inputs with a jig
+    }).timeout(10000)
 
     it('should throw if owner signature is missing', async () => {
       class A extends Jig {
