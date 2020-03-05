@@ -5330,10 +5330,10 @@ class BlockchainServer {
     this.logger = parseLogger(options.logger)
     this.api = parseApi(options.api)
     this.cache = parseCache(options.lastBlockchain, this.network)
-    this.axios = axios.create({
-      timeout: parseTimeout(options.timeout),
-      headers: { 'Accept-Encoding': 'gzip' } // Run and BitIndex use this
-    })
+    const axiosOptions = { timeout: parseTimeout(options.timeout) }
+    // Run and BitIndex gzip responses, but this is only needed in node. In browser, it errors.
+    if (typeof window === 'undefined') axiosOptions.headers = { 'Accept-Encoding': 'gzip' }
+    this.axios = axios.create(axiosOptions)
     this.bsvNetwork = util.bsvNetwork(this.network)
     this.requests = new Map() // txid|address -> Array<Function>
   }
@@ -11230,11 +11230,47 @@ owner: ${spentJigs[i].owner}`)
     try {
       await this.blockchain.broadcast(tx)
     } catch (e) {
+      const eString = e.toString()
       let message = `Broadcast failed, ${e.message}`
 
-      if (e.toString().indexOf('tx has no inputs') !== -1 || e.toString().indexOf('tx fee too low') !== -1) {
+      // These errors are hints that the transaction is unpaid for
+      if (eString.indexOf('tx has no inputs') !== -1 || eString.indexOf('tx fee too low') !== -1) {
         const suggestion = 'Hint: Is the purse funded to pay for this transaction?'
         message = `${message}\n\n${suggestion}`
+      }
+
+      // These errors are hints that an input was already spent
+      if (eString.indexOf('Missing inputs') !== -1 || eString.indexOf('txn-mempool-conflict') !== -1) {
+        // Figure out which input was spent
+        for (const input of tx.inputs) {
+          const prevTxId = input.prevTxId.toString('hex')
+          let prevTx = null
+          try { prevTx = await this.run.blockchain.fetch(prevTxId, true) } catch (e) { continue }
+          const prevOutput = prevTx.outputs[input.outputIndex]
+
+          if (prevOutput.spentTxId) {
+            const prevLocation = `${prevTxId}_o${input.outputIndex}`
+            const type = util.outputType(prevTx, input.outputIndex)
+
+            let typeString = 'Payment'
+            switch (type) {
+              case 'code':
+                try {
+                  typeString = (await this.run.load(prevLocation)).name
+                } catch (e) { typeString = 'Code' }
+                break
+              case 'jig':
+                try {
+                  typeString = `${await this.run.load(prevLocation)}`
+                } catch (e) { typeString = 'Jig' }
+                break
+            }
+
+            message = `${message}\n\n${typeString} was spent in another transaction\n`
+            message = `${message}\nLocation: ${prevLocation}`
+            message = `${message}\nSpending Tx: ${prevOutput.spentTxId}`
+          }
+        }
       }
 
       throw new Error(message)
@@ -13561,6 +13597,7 @@ module.exports = class Mockchain {
     this.utxosByLocation = new Map() // Map<txid_oN, utxo>
     this.utxosByScriptHash = new Map() // scriptHash -> Set<location>
     this.mempool = new Set() // Set<Transaction>
+    this.mempoolSpends = new Set() // Set<txid_oN>
     this.mempoolChainLimit = 25
     this.blockHeight = -1
   }
@@ -13577,7 +13614,9 @@ module.exports = class Mockchain {
     const spentLocations = new Set()
     tx.inputs.forEach((input, vin) => {
       const location = `${input.prevTxId.toString('hex')}_o${input.outputIndex}`
-      if (!this.utxosByLocation.has(location)) throw new Error(`tx input ${vin} missing or spent`)
+      if (!this.utxosByLocation.has(location)) {
+        throw new Error(this.mempoolSpends.has(location) ? 'txn-mempool-conflict' : 'Missing inputs')
+      }
       if (spentLocations.has(location)) throw new Error(`already spent input ${vin}`)
       spentLocations.add(location)
     })
@@ -13617,6 +13656,7 @@ module.exports = class Mockchain {
       output.spentTxId = tx.hash
       output.spentIndex = vin
       output.spentHeight = -1
+      this.mempoolSpends.add(`${i.prevTxId.toString('hex')}_o${i.outputIndex}`)
     })
 
     // Add each output to our utxo set
@@ -13696,6 +13736,7 @@ module.exports = class Mockchain {
     }
 
     this.mempool = new Set()
+    this.mempoolSpends.clear()
   }
 }
 
