@@ -221,8 +221,8 @@ const obfuscatePlugin = {
 const dontObfuscate = [
   'intrinsicNames',
   'Context',
-  'UniqueSet',
-  'UniqueMap',
+  'FriendlySet',
+  'FriendlyMap',
   'Jig',
   'JigControl',
   'Berry',

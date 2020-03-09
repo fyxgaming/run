@@ -1580,7 +1580,7 @@ describe('Jig', () => {
       })
     })
 
-    it('should use unique set', async () => {
+    it('should use friendly set', async () => {
       class B extends Jig {}
       class A extends Jig {
         init () { this.set = new Set() }
@@ -1598,7 +1598,7 @@ describe('Jig', () => {
       await run.load(a.location)
     })
 
-    it('should use unique map', async () => {
+    it('should use friendly map', async () => {
       class B extends Jig {}
       class A extends Jig {
         init () { this.map = new Map() }
