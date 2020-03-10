@@ -29,7 +29,7 @@ async function main() {
     // Town acquires some gold
     // ------------------------------------------------------------------------
 
-    const townRun = new Run({ network: 'mock', blockchain: dragonRun.blockchain })
+    const townRun = new Run({ network: 'mock' })
 
     const gold = new Gold()
 

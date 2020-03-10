@@ -42,7 +42,7 @@ class Invoice extends Jig {
 // user would have their own machines, but we want to simulate
 // an invoice transaction within a single program.
 const companyRun = new Run({ network: 'mock' })
-const customerRun = new Run({ network: 'mock', blockchain: companyRun.blockchain })
+const customerRun = new Run({ network: 'mock' })
 
 
 let invoice = null

@@ -10,7 +10,7 @@ const bsv = require('bsv')
 const { Token } = Run
 
 const aliceRun = new Run({ network: 'mock' })
-const bobRun = new Run({ network: 'mock', blockchain: aliceRun.blockchain })
+const bobRun = new Run({ network: 'mock' })
 const bob = bobRun.owner.pubkey.toString()
 
 async function main() {
