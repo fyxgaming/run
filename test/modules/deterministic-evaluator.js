@@ -5,6 +5,8 @@
  */
 
 const { describe, it } = require('mocha')
+const { Run } = require('../helpers')
+const { DeterministicEvaluator } = Run.modules
 
 // ------------------------------------------------------------------------------------------------
 // DeterministicEvaluator
@@ -12,8 +14,8 @@ const { describe, it } = require('mocha')
 
 describe('DeterministicEvaluator', () => {
   describe('constructor', () => {
-    it('test', () => {
-      // Todo
+    it('should create without params', () => {
+      new DeterministicEvaluator() // eslint-disable-line
     })
   })
 
