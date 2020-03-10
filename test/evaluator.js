@@ -17,7 +17,7 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
   describe('evaluate parameters', () => {
     it('should evaluate named function', () => {
       const evaluator = createEvaluator()
-      const [f] = evaluator.evaluate('function f() { return 1 }')
+      const f = evaluator.evaluate('function f() { return 1 }').result
       expect(typeof f).to.equal('function')
       expect(f.name).to.equal('f')
       expect(f()).to.equal(1)
@@ -27,12 +27,12 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
     it('should evaluate anonymous function', () => {
       const evaluator = createEvaluator()
 
-      const [f] = evaluator.evaluate('function () { return "123" }')
+      const f = evaluator.evaluate('function () { return "123" }').result
       expect(typeof f).to.equal('function')
       expect(f.name).to.equal('anonymousFunction')
       expect(f()).to.equal('123')
 
-      const [g] = evaluator.evaluate('() => { return [] }')
+      const g = evaluator.evaluate('() => { return [] }').result
       expect(typeof g).to.equal('function')
       expect(g.name).to.equal('anonymousFunction')
       expect(g()).to.deep.equal([])
@@ -42,7 +42,7 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
 
     it('should evaluate named class', () => {
       const evaluator = createEvaluator()
-      const [T] = evaluator.evaluate('class A { }')
+      const T = evaluator.evaluate('class A { }').result
       expect(typeof T).to.equal('function')
       expect(T.name).to.equal('A')
       destroyEvaluator(evaluator)
@@ -50,7 +50,7 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
 
     it('should evaluate anonymous class', () => {
       const evaluator = createEvaluator()
-      const [T] = evaluator.evaluate('class { }')
+      const T = evaluator.evaluate('class { }').result
       expect(typeof T).to.equal('function')
       expect(T.name).to.equal('AnonymousClass')
       destroyEvaluator(evaluator)
@@ -89,29 +89,29 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
   describe('environment', () => {
     it('should place environment parent class in scope', () => {
       const evaluator = createEvaluator()
-      const [A] = evaluator.evaluate('class A {}')
+      const A = evaluator.evaluate('class A {}').result
       evaluator.evaluate('class B extends A {}', { A })
       destroyEvaluator(evaluator)
     })
 
     it('should place environment constant in scope', () => {
       const evaluator = createEvaluator()
-      const [f] = evaluator.evaluate('function f() { return CONSTANT }', { CONSTANT: 5 })
+      const f = evaluator.evaluate('function f() { return CONSTANT }', { CONSTANT: 5 }).result
       expect(f()).to.equal(5)
       destroyEvaluator(evaluator)
     })
 
     it('should place environment function in scope', () => {
       const evaluator = createEvaluator()
-      const [f] = evaluator.evaluate('function f() { return 1 }')
-      const [g] = evaluator.evaluate('function g() { return f() + 1 }', { f })
+      const f = evaluator.evaluate('function f() { return 1 }').result
+      const g = evaluator.evaluate('function g() { return f() + 1 }', { f }).result
       expect(g()).to.equal(2)
       destroyEvaluator(evaluator)
     })
 
     it('should place environment related class in scope', () => {
       const evaluator = createEvaluator()
-      const [Z] = evaluator.evaluate('class Z {}')
+      const Z = evaluator.evaluate('class Z {}').result
       evaluator.evaluate('class Y { constructor() { this.a = new Z() } }', { Z })
       destroyEvaluator(evaluator)
     })
@@ -124,7 +124,7 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
 
     it('should throw if called function is not in environment', () => {
       const evaluator = createEvaluator()
-      const [f] = evaluator.evaluate('function f() { return missingFunction() }')
+      const f = evaluator.evaluate('function f() { return missingFunction() }').result
       expect(() => f()).to.throw('missingFunction is not defined')
       destroyEvaluator(evaluator)
     })
@@ -133,8 +133,8 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
       const evaluator = createEvaluator()
       intrinsicNames.forEach(name => {
         if (typeof global[name] === 'undefined') return
-        const intrinsic1 = evaluator.evaluate(`function f() { return ${name} }`)[0]()
-        const intrinsic2 = evaluator.evaluate(`function f() { return ${name} }`)[0]()
+        const intrinsic1 = evaluator.evaluate(`function f() { return ${name} }`).result()
+        const intrinsic2 = evaluator.evaluate(`function f() { return ${name} }`).result()
         expect(intrinsic1).to.equal(intrinsic2)
       })
       destroyEvaluator(evaluator)
@@ -144,7 +144,7 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
   describe('globals', () => {
     it('should support setting related classes', () => {
       const evaluator = createEvaluator()
-      const [A, globals] = evaluator.evaluate('class A { createB() { return new B() } }')
+      const { result: A, globals } = evaluator.evaluate('class A { createB() { return new B() } }')
       globals.B = class B { }
       expect(() => new A().createB()).not.to.throw()
       destroyEvaluator(evaluator)
@@ -152,7 +152,7 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
 
     it('should support setting related functions', () => {
       const evaluator = createEvaluator()
-      const [f, globals] = evaluator.evaluate('function f () { return g() }')
+      const { result: f, globals } = evaluator.evaluate('function f () { return g() }')
       globals.g = function g () { return 3 }
       expect(f()).to.equal(3)
       destroyEvaluator(evaluator)
@@ -160,7 +160,7 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
 
     it('should support setting related constants', () => {
       const evaluator = createEvaluator()
-      const [f, globals] = evaluator.evaluate('function f () { return NUM }')
+      const { result: f, globals } = evaluator.evaluate('function f () { return NUM }')
       globals.NUM = 42
       expect(f()).to.equal(42)
       destroyEvaluator(evaluator)
@@ -168,7 +168,7 @@ function runEvaluatorTestSuite (createEvaluator, destroyEvaluator) {
 
     it('should support setting getters ', () => {
       const evaluator = createEvaluator()
-      const [f, globals] = evaluator.evaluate('function f () { return someValue }')
+      const { result: f, globals } = evaluator.evaluate('function f () { return someValue }')
       Object.defineProperty(globals, 'someValue', { configurable: true, get: () => 4 })
       expect(f()).to.equal(4)
       destroyEvaluator(evaluator)
@@ -210,7 +210,7 @@ describe('Evaluator', () => {
   it('should support deactivate and activate', () => {
     function f () { return g } // eslint-disable-line
     const evaluator = new Run.Evaluator({ sandbox: false })
-    const f2 = evaluator.evaluate(f.toString(), { g: 2 })[0]
+    const f2 = evaluator.evaluate(f.toString(), { g: 2 }).result
     expect(f2()).to.equal(2)
     evaluator.deactivate()
     expect(() => f2()).to.throw()
@@ -227,13 +227,14 @@ describe('SESEvaluator', () => {
   it('should ban non-deterministic globals', () => {
     const evaluator = createEvaluator()
     Run.Evaluator.nonDeterministicGlobals.forEach(key => {
-      expect(!!evaluator.evaluate(key)[0]).to.equal(false)
+      expect(!!evaluator.evaluate(key).result).to.equal(false)
     })
   })
 
   it('should prevent access to the global scope', () => {
     const evaluator = createEvaluator()
-    expect(evaluator.evaluate('typeof window === "undefined" && typeof global === "undefined"')[0]).to.equal(true)
+    const { result } = evaluator.evaluate('typeof window === "undefined" && typeof global === "undefined"')
+    expect(result).to.equal(true)
   })
 })
 
@@ -256,8 +257,8 @@ describe('GlobalEvaluator', () => {
     let warned = false
     const logger = { warn: () => { warned = true } }
     const evaluator = createEvaluator({ logger })
-    const globals1 = evaluator.evaluate('function f() { }')[1]
-    const globals2 = evaluator.evaluate('function f() { }')[1]
+    const globals1 = evaluator.evaluate('function f() { }').globals
+    const globals2 = evaluator.evaluate('function f() { }').globals
     Object.defineProperty(globals1, 'globalToSetTwice', { configurable: true, value: 1 })
     Object.defineProperty(globals2, 'globalToSetTwice', { configurable: true, value: 2 })
     expect(warned).to.equal(true)
@@ -266,7 +267,7 @@ describe('GlobalEvaluator', () => {
 
   it('should correctly deactivate globals', () => {
     const evaluator = createEvaluator()
-    const globals = evaluator.evaluate('1', { x: 1 })[1]
+    const { globals } = evaluator.evaluate('1', { x: 1 })
     globals.y = 2
     expect(x).to.equal(1) // eslint-disable-line
     expect(y).to.equal(2) // eslint-disable-line
