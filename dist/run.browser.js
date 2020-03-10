@@ -396,7 +396,7 @@ module.exports = {
 "use strict";
 
 
-var bind = __webpack_require__(18);
+var bind = __webpack_require__(19);
 var isBuffer = __webpack_require__(37);
 
 /*global toString:true*/
@@ -1690,14 +1690,14 @@ module.exports = Location
  */
 
 const bsv = __webpack_require__(2)
-const Code = __webpack_require__(27)
+const Code = __webpack_require__(28)
 const Evaluator = __webpack_require__(15)
 const Syncer = __webpack_require__(33)
-const { Transaction } = __webpack_require__(16)
+const { Transaction } = __webpack_require__(17)
 const util = __webpack_require__(0)
 const { Pay, Purse } = __webpack_require__(34)
 const { AddressScript, PubKeyScript, Sign, Owner, BasicOwner } = __webpack_require__(8)
-const { Blockchain, BlockchainServer } = __webpack_require__(17)
+const { Blockchain, BlockchainServer } = __webpack_require__(18)
 const Mockchain = __webpack_require__(53)
 const { State, StateCache } = __webpack_require__(54)
 const { PrivateKey } = bsv
@@ -1705,11 +1705,13 @@ const { Jig } = __webpack_require__(4)
 const { Berry } = __webpack_require__(11)
 const Protocol = __webpack_require__(9)
 const Token = __webpack_require__(55)
-const expect = __webpack_require__(26)
+const expect = __webpack_require__(27)
 const Location = __webpack_require__(5)
 const { FriendlySet, FriendlyMap } = __webpack_require__(3)
 const { Intrinsics } = __webpack_require__(12)
 const Xray = __webpack_require__(10)
+
+const DeterministicEvaluator = __webpack_require__(56)
 
 // ------------------------------------------------------------------------------------------------
 // Primary Run class
@@ -2012,6 +2014,10 @@ Run.Sign = Sign
 Run.Owner = Owner
 Run.BasicOwner = BasicOwner
 
+Run.modules = {
+  DeterministicEvaluator
+}
+
 Run.Jig = Jig
 Run.Berry = Berry
 Run.Token = Token
@@ -2041,9 +2047,9 @@ module.exports = Run
 
 
 
-var base64 = __webpack_require__(28)
-var ieee754 = __webpack_require__(29)
-var isArray = __webpack_require__(30)
+var base64 = __webpack_require__(29)
+var ieee754 = __webpack_require__(30)
+var isArray = __webpack_require__(31)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -5898,7 +5904,7 @@ module.exports = Context
  * The evaluator runs arbitrary code in a secure sandbox
  */
 
-const ses = __webpack_require__(31)
+const ses = __webpack_require__(16)
 const { getIntrinsics, intrinsicNames, Intrinsics } = __webpack_require__(12)
 const { FriendlySet, FriendlyMap, createSandboxedFriendlyMap, createSandboxedFriendlySet } = __webpack_require__(3)
 
@@ -5937,7 +5943,7 @@ class Evaluator {
     this.intrinsics = new Intrinsics().allow(this.sandboxEvaluator.intrinsics).use(custom)
   }
 
-  evaluate (code, env) {
+  evaluate (code, env = {}) {
     if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
     if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
     if ('$globals' in env) throw new Error('Environment must not contain $globals')
@@ -6142,2586 +6148,6 @@ module.exports = Evaluator
 
 /***/ }),
 /* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(Buffer) {/**
- * transaction.js
- *
- * Transaction API for inspecting and building bitcoin transactions
- */
-
-const bsv = __webpack_require__(2)
-const util = __webpack_require__(0)
-const { JigControl } = __webpack_require__(4)
-const { Owner } = __webpack_require__(8)
-const { Berry } = __webpack_require__(11)
-const Location = __webpack_require__(5)
-const Protocol = __webpack_require__(9)
-const { FriendlySet } = __webpack_require__(3)
-const Xray = __webpack_require__(10)
-
-// ------------------------------------------------------------------------------------------------
-// Transaction
-// ------------------------------------------------------------------------------------------------
-
-/**
- * The main transaction API used by run
- */
-class Transaction {
-  constructor (run) {
-    this.run = run
-    this.syncer = run.syncer
-    this.blockchain = run.blockchain
-    this.state = run.state
-    try {
-      this.owner = run.owner.getOwner()
-    } catch (e) { this.owner = null }
-    this.code = run.code
-    this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this)) // current proto-transaction
-  }
-
-  begin () { this.protoTx.begin(); return this.run }
-
-  end () { this.protoTx.end(); return this.run }
-
-  onReadyForPublish () {
-    this.syncer.publish(this.protoTx)
-    this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this))
-  }
-
-  export () {
-    if (this.syncer.queued.length > 0) {
-      // TODO: Only have to check if referenced jigs are in the queue
-      throw new Error('must not have any queued transactions before exporting')
-    }
-
-    if (this.protoTx.beginCount === 0) {
-      const suggestion = 'Hint: A transaction must first be created using begin() or loaded using import().'
-      throw new Error(`No transaction in progress\n\n${suggestion}`)
-    }
-
-    return this.protoTx.buildBsvTransaction(this.run).tx
-  }
-
-  import (tx) { return this.protoTx.import(tx, this.run, false) }
-
-  rollback () { this.protoTx.rollback(this.syncer.lastPosted, this.run, false, 'intentional rollback') }
-
-  async sign () { await this.protoTx.sign(this.run) }
-
-  async pay () { await this.protoTx.pay(this.run) }
-
-  // get inputs () {
-  // TODO: filtering by inputs is broken
-  // return this.protoTx.inputs
-  // .filter(input => input.origin !== '_')
-  // .map(input => this.protoTx.proxies.get(input))
-  // }
-
-  // get outputs () {
-  // return this.protoTx.outputs.map(output => this.protoTx.proxies.get(output))
-  // }
-
-  get actions () {
-    return this.protoTx.actions.map(action => {
-      return {
-        target: this.protoTx.proxies.get(action.target),
-        method: action.method,
-        args: action.args
-      }
-    })
-  }
-
-  storeCode (type, sandbox, deps, props, success, error) {
-    return this.protoTx.storeCode(type, sandbox, deps, props, success, error,
-      this.owner, this.code, this.run)
-  }
-
-  storeAction (target, method, args, inputs, outputs, reads, before, after, proxies, run) {
-    this.protoTx.storeAction(target, method, args, inputs, outputs, reads, before, after, proxies, this.run)
-  }
-
-  /**
-   * Loads a jig or class at a particular location
-   *
-   * location is a string
-   *
-   * cachedRefs stores a map from locations to jigs/classes loaded by load()
-   * from the state cache. load() will trigger additional loads recursively.
-   * both jigs and classes may have references to other jigs and other classes,
-   * and we don't want to load these multiple times. especially when they refer
-   * to each other cyclically as that could cause infinite loops.
-   */
-  async load (location, options = {}) {
-    if (this.run.logger) this.run.logger.info('Loading', location)
-
-    // If there's a custom protocol, use it
-    if (options.protocol) {
-      return Protocol.pluckBerry(location, this.blockchain, this.code, options.protocol)
-    }
-
-    // Either load a run token, or a berry, depending on if there's a protocol in location
-    const loc = Location.parse(location)
-
-    if (!loc.innerLocation) {
-      return this.loadRunToken(location, options)
-    } else {
-      const protocol = await this.load(loc.location, options)
-      return Protocol.pluckBerry(loc.innerLocation, this.blockchain, this.code, protocol)
-    }
-  }
-
-  async loadRunToken (location, options = {}) {
-    const cachedRefs = options.cachedRefs || new Map()
-
-    // --------------------------------------------------------------------------------------------
-    // CHECK THE CACHE
-    // --------------------------------------------------------------------------------------------
-
-    // check the code cache so we only have to download code once
-    const cachedCode = this.code.getInstalled(location)
-    if (cachedCode) return cachedCode
-
-    if (options.partiallyInstalledCode && options.partiallyInstalledCode.has(location)) {
-      return options.partiallyInstalledCode.get(location)
-    }
-
-    const loc = Location.parse(location)
-    if (loc.error || loc.innerLocation || loc.vref || loc.tempTxid) throw new Error(`Bad location: ${location}`)
-    const { txid, vout, vin } = loc
-
-    // TODO: do we want to support loading locations with inputs?
-    // The transaction test "update class property jig in initializer" uses this
-    if (typeof vin !== 'undefined') {
-      const tx = await this.blockchain.fetch(txid)
-      const prevTxId = tx.inputs[vin].prevTxId.toString('hex')
-      return this.load(`${prevTxId}_o${tx.inputs[vin].outputIndex}`, { cachedRefs })
-    }
-
-    // check the state cache so we only have to load each jig once
-    const cachedState = await this.state.get(location)
-    if (cachedState) {
-      // Make sure the cached state is valid
-      if (typeof cachedState.type !== 'string' || typeof cachedState.state !== 'object') {
-        const hint = 'Hint: Could the state cache be corrupted?'
-        throw new Error(`Cached state is missing a valid type and/or state property\n\n${JSON.stringify(cachedState)}\n\n${hint}`)
-      }
-
-      // Deserialize from a cached state, first by finding all inner tokens and loading them,
-      // and then deserializing
-      const fullLocation = loc => (loc.startsWith('_') ? `${location.slice(0, 64)}${loc}` : loc)
-      const tokenLoader = ref => cachedRefs.get(fullLocation(ref))
-
-      const xray = new Xray()
-        .allowTokens()
-        .useIntrinsics(this.run.code.intrinsics)
-        .useTokenLoader(tokenLoader)
-
-      try {
-        JigControl.blankSlate = true
-
-        // Create the new instance as a blank slate
-        const typeLocation = cachedState.type.startsWith('_') ? location.slice(0, 64) + cachedState.type : cachedState.type
-        const T = await this.load(typeLocation)
-        const instance = new T()
-        cachedRefs.set(location, instance)
-
-        // Load all dependencies
-        xray.scan(cachedState.state)
-        for (const ref of xray.refs) {
-          const fullLoc = fullLocation(ref)
-          if (cachedRefs.has(fullLoc)) continue
-          const token = await this.load(fullLoc, { cachedRefs })
-          if (!cachedRefs.has(fullLoc)) cachedRefs.set(fullLoc, token)
-        }
-
-        // Deserialize and inject our state
-        JigControl.disableProxy(() => {
-          Object.assign(instance, xray.deserialize(cachedState.state))
-          instance.origin = instance.origin || location
-          instance.location = instance.location || location
-        })
-
-        return instance
-      } finally { JigControl.blankSlate = false }
-    }
-
-    // --------------------------------------------------------------------------------------------
-    // LOAD THE TRANSACTION, AND THEN THE JIGS OR CODE
-    // --------------------------------------------------------------------------------------------
-
-    // load all the jigs for this transaction, and return the selected
-    const protoTx = new ProtoTransaction()
-    const tx = await this.blockchain.fetch(txid)
-    await protoTx.import(tx, this.run, null, true, vout, options.partiallyInstalledCode)
-
-    // if a definition, install
-    if (vout > 0 && vout < protoTx.code.length + 1) {
-      return this.code.getInstalled(location) || options.partiallyInstalledCode.get(location)
-    }
-
-    // otherwise, a jig. get the jig.
-    const proxies = protoTx.outputs.map(o => protoTx.proxies.get(o))
-    const jigProxies = new Array(1 + protoTx.code.length).concat(proxies)
-    // TODO: Notify shruggr if these error message change
-    if (typeof jigProxies[vout] === 'undefined') throw new Error('not a jig output')
-    return jigProxies[vout]
-  }
-
-  setProtoTxAndCreator (protoTx, creator) {
-    const old = { protoTx: this.protoTx, creator: this.owner }
-    this.protoTx = protoTx
-    this.owner = creator
-    return old
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// ProtoTransaction
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Proto-transaction: A temporary structure Run uses to build transactions. This structure
- * has every action and definition that will go into the real transaction, but stored using
- * references to the actual objects instead of location strings. Run turns the proto-transaction
- * into a real transaction by converting all references into location strings. This is necessary
- * when there are queued proto-transactions and the locations may not be known yet.
- */
-class ProtoTransaction {
-  constructor (onReadyForPublish) {
-    this.onReadyForPublish = onReadyForPublish
-    this.reset()
-  }
-
-  reset () {
-    this.code = [] // Code definitions as types
-    this.actions = [] // Jig updates
-
-    this.before = new Map() // state of all updated jigs before (Target->{json,refs})
-    this.after = new Map() // state of all updated jigs after (Target->{json,refs})
-
-    this.inputs = [] // Targets spent (which may not be tx inputs if created within a batch)
-    this.outputs = [] // Targets outputted
-    this.reads = new Set() // All targets read
-    this.proxies = new Map() // Target->Proxy
-    this.locations = new Map() // Prior location for jigs (Origin->Location)
-
-    this.beginCount = 0 // begin() depth, that is decremented for each end()
-    this.imported = false
-  }
-
-  async import (tx, run, preexistingJig, immutable, vout, cache) {
-    if (this.code.length || this.code.actions || this.beginCount) {
-      throw new Error('transaction already in progress. cannot import.')
-    }
-
-    for (let i = 0; i < tx.inputs.length; i++) {
-      const input = tx.inputs[i]
-      if (!input.output) {
-        const prevTx = await run.blockchain.fetch(input.prevTxId.toString('hex'))
-        const output = prevTx.outputs[input.outputIndex]
-        if (output.script.isPublicKeyHashOut()) {
-          input.output = prevTx.outputs[input.outputIndex]
-          Reflect.setPrototypeOf(input, bsv.Transaction.Input.PublicKeyHash.prototype)
-        } else throw new Error(`Unsupported script type at input ${i}`)
-      }
-    }
-
-    this.beginCount = 1
-    this.imported = true
-
-    const data = util.extractRunData(tx)
-    const bsvNetwork = util.bsvNetwork(run.blockchain.network)
-
-    // install all code definitions first
-    // TODO: should we be installing this now, or after import is done? need actions list...
-    // TODO: Load should not be triggering other loads like this does. This makes it
-    // harder parallelize safely. We need some atomicity, which could be a protoTx loading
-    // for a tx.
-    let index = 1
-    const loadedCode = []
-    for (const def of data.code) {
-      const location = `${tx.hash}_o${index++}`
-      loadedCode.push(await run.code.installFromTx(def, location, tx, run, bsvNetwork, cache))
-    }
-
-    if (vout && vout > 0 && vout < 1 + data.code.length) {
-      // TODO: Fix this hack ... to just make the early out code work
-      this.code = new Array(data.code.length)
-      return
-    }
-
-    // load jig and class references used in args and reads
-    const refs = new Map()
-    if (data.refs) data.refs.forEach(ref => refs.set(ref, ref))
-
-    const xray = new Xray()
-      .allowTokens()
-      .useIntrinsics(run.code.intrinsics)
-
-    for (const action of data.actions) {
-      const addRef = id => {
-        if (id[0] !== '_') { refs.set(id, id) }
-        if (id[1] === 'i') {
-          const txin = tx.inputs[parseInt(id.slice(2))]
-          refs.set(id, `${txin.prevTxId.toString('hex')}_o${txin.outputIndex}`)
-        }
-      }
-
-      if (action.target && action.method !== 'init') addRef(action.target)
-
-      xray.scan(action.args)
-      xray.refs.forEach(ref => addRef(ref))
-    }
-
-    // make sure all of the refs we read are recent
-    for (const [, value] of refs) {
-      const refTx = await run.blockchain.fetch(value.slice(0, 64))
-      const vout = parseInt(value.slice(66))
-      if (typeof refTx.outputs[vout].spentTxId === 'undefined') {
-        throw new Error('Cannot check if read is stale. Blockchain API does not support spentTxId.')
-      }
-      if (refTx.outputs[vout].spentTxId === null) continue
-      const spentTx = await run.blockchain.fetch(refTx.outputs[vout].spentTxId)
-      if (spentTx.time <= tx.time && spentTx.time >= refTx.time &&
-        (tx.time - refTx.time) > 2 * 60 * 60 * 1000 && tx.hash !== spentTx.hash) {
-        throw new Error(`${value} is stale. Aborting.`)
-      }
-    }
-
-    // load the refs
-    // TODO: make sure the target is recent when saved
-    // TODO: would be better to do in parallel if possible...but Code is duplicated sometimes (why?)
-    for (const [refId, refLocation] of refs) {
-      if (preexistingJig && refLocation === preexistingJig.location) {
-        refs.set(refId, preexistingJig)
-      } else {
-        try {
-          refs.set(refId, await run.transaction.load(refLocation))
-        } catch (e) {
-          run.logger.error(e)
-          throw new Error(`Error loading ref ${refId} at ${refLocation}\n\n${e}`)
-        }
-      }
-    }
-
-    if (preexistingJig) {
-      refs.set(preexistingJig.location, preexistingJig)
-    }
-
-    /*
-    // Also load all inputs to spend (do we need to do this? These dedups?
-    for (let vin = 0; vin < tx.inputs.length; vin++) {
-      const input = tx.inputs[vin]
-      try {
-        const location = `${input.prevTxId.toString('hex')}_o${input.outputIndex}`
-        if (preexistingJig && location === preexistingJig.location) {
-          refs.set()
-        }
-        const refId = `_i${vin}`
-        const jig = await run.transaction.load(location)
-        refs.set(refId, jig)
-      } catch (e) { }
-    }
-    */
-
-    // dedupInnerRefs puts any internal objects in their referenced states using known references
-    // ensuring that double-references refer to the same objects
-    const dedupInnerRefs = jig => {
-      const { Jig } = __webpack_require__(6)
-
-      const tokenReplacer = token => {
-        if (token instanceof Jig && token !== jig) {
-          return Array.from(refs.values()).find(ref => ref.origin === token.origin)
-        }
-      }
-
-      const xray = new Xray()
-        .allowTokens()
-        .deeplyScanTokens()
-        .useTokenReplacer(tokenReplacer)
-        .useIntrinsics(run.code.intrinsics)
-
-      JigControl.disableProxy(() => xray.scan(jig))
-    }
-
-    // update the refs themselves with themselves
-    for (const ref of refs.values()) dedupInnerRefs(ref)
-
-    for (const action of data.actions) {
-      // Deserialize the arguments
-      const args = JigControl.disableProxy(() => {
-        const tokenLoader = ref => {
-          if (ref[0] !== '_' || ref[1] === 'i') {
-            const token = refs.get(ref)
-            if (!token) throw new Error(`Unexpected ref ${ref}`)
-            return token
-          }
-          if (ref[1] === 'r') {
-            const token = refs.get(data.refs[parseInt(ref.slice(2))])
-            if (!token) throw new Error(`Unexpected ref ${ref}`)
-            return token
-          }
-          if (ref[1] !== 'o') throw new Error(`Unexpected ref ${ref}`)
-          const vout = parseInt(ref.slice(2)) - 1
-          if (vout < data.code.length) return loadedCode[vout]
-          return this.proxies.get(this.outputs[vout - data.code.length])
-        }
-
-        const xray = new Xray()
-          .allowTokens()
-          .useTokenLoader(tokenLoader)
-          .useIntrinsics(run.code.intrinsics)
-
-        return xray.deserialize(action.args)
-      })
-
-      if (action.method === 'init') {
-        if (action.target[0] === '_') {
-          const vout = parseInt(action.target.slice(2))
-          if (vout <= 0 || vout >= data.code.length + 1) throw new Error(`missing target ${action.target}`)
-        }
-
-        const loc = action.target[0] === '_' ? tx.hash + action.target : action.target
-        const T = await run.transaction.load(loc)
-
-        const oldSettings = run.transaction.setProtoTxAndCreator(this, action.creator)
-
-        try {
-          new T(...args)  // eslint-disable-line
-        } finally {
-          run.transaction.setProtoTxAndCreator(oldSettings.protoTx, oldSettings.creator)
-        }
-      } else {
-        const subject = refs.get(action.target) ||
-          this.proxies.get(this.outputs[parseInt(action.target.slice(2)) - 1 - data.code.length])
-        dedupInnerRefs(subject)
-        if (typeof subject === 'undefined') throw new Error(`target ${action.target} missing`)
-
-        const oldSettings = run.transaction.setProtoTxAndCreator(this, null)
-
-        try {
-          subject[action.method](...args)
-        } catch (e) {
-          throw new Error(`unexpected exception in ${action.method}\n\n${e}`)
-        } finally {
-          run.transaction.setProtoTxAndCreator(oldSettings.protoTx, oldSettings.creator)
-        }
-      }
-    }
-
-    // TODO: use buildBsvTransaction here to compare?
-
-    const spentJigs = this.inputs.filter(i => i.origin[0] !== '_')
-    if (data.jigs !== this.outputs.length) throw new Error('bad number of jigs')
-    if (tx.inputs.length < spentJigs.length) throw new Error('not enough inputs')
-    if (tx.outputs.length < data.code.length + data.jigs + 1) throw new Error('not enough outputs')
-    spentJigs.forEach((i, n) => {
-      const location = `${tx.inputs[n].prevTxId.toString('hex')}_o${tx.inputs[n].outputIndex}`
-      const location2 = this.locations.get(i.origin) || i.location
-      if (location !== location2) throw new Error(`bad input ${n}`)
-    })
-    this.outputs.forEach((o, n) => {
-      const index = 1 + data.code.length + n
-      const hex1 = Buffer.from(util.ownerScript(o.owner).toBytes()).toString('hex')
-      const hex2 = tx.outputs[index].script.toHex()
-      if (hex1 !== hex2) throw new Error(`bad owner on output ${index}`)
-      if (tx.outputs[index].satoshis < Math.max(o.satoshis, bsv.Transaction.DUST_AMOUNT)) {
-        throw new Error(`bad satoshis on output ${index}`)
-      }
-    })
-
-    if (immutable) {
-      this.outputs.forEach(o => {
-        const oid = `${tx.hash}_o${1 + data.code.length + parseInt(o.location.slice(2))}`
-        if (o.origin[0] === '_') o.origin = oid
-        if (o.location[0] === '_') o.location = oid
-      })
-    }
-
-    // cache all of the loaded jigs
-    const proxies = this.outputs.map(o => this.proxies.get(o))
-    const jigProxies = new Array(1 + data.code.length).concat(proxies)
-    const net = util.networkSuffix(run.blockchain.network)
-    for (let vout = 0; vout < jigProxies.length; vout++) {
-      if (!jigProxies[vout]) continue
-      const jigLocation = `${tx.hash.slice(0, 64)}_o${vout}`
-
-      // Serialize the state of the jig into a local reference form
-      const serialized = JigControl.disableProxy(() => {
-        const tokenSaver = token =>
-          token.location.startsWith(tx.hash) ? token.location.slice(64) : token.location
-
-        const xray = new Xray()
-          .allowTokens()
-          .useIntrinsics(run.code.intrinsics)
-          .useTokenSaver(tokenSaver)
-
-        const obj = Object.assign({}, jigProxies[vout])
-
-        if (obj.origin.startsWith(tx.hash) || obj.origin.startsWith('_')) delete obj.origin
-        if (obj.location.startsWith(tx.hash) || obj.location.startsWith('_')) delete obj.location
-
-        return xray.serialize(obj)
-      })
-
-      let type = jigProxies[vout].constructor[`origin${net}`]
-      if (type.startsWith(tx.hash)) type = type.slice(64)
-
-      const cachedState = { type, state: serialized }
-      await run.state.set(jigLocation, cachedState)
-    }
-
-    // clear the code, and load it directly from the transaction
-    this.code = []
-    data.code.forEach((code, index) => {
-      const location = `${tx.hash}_o${index + 1}`
-      const type = run.code.getInstalled(location)
-      this.storeCode(type, type, {}, run.code.extractProps(type).props, () => {}, () => {}, code.owner, run.code, run)
-    })
-
-    const spentLocations = spentJigs.map(jig => this.locations.get(jig.origin) || jig.location)
-    this.cachedTx = { tx, refs: data.refs || [], spentJigs, spentLocations }
-  }
-
-  begin () { this.beginCount++ }
-
-  end () {
-    if (this.beginCount === 0) throw new Error('end transaction without begin')
-    if (--this.beginCount === 0 && this.onReadyForPublish && (this.code.length || this.actions.length)) {
-      this.onReadyForPublish()
-    }
-  }
-
-  rollback (lastPosted, run, error, unhandled) {
-    delete this.cachedTx
-
-    // notify the definition. this will undo the location/origin to allow a retry.
-    this.code.forEach(def => def.error())
-
-    // notify the owner. this may remove it from its list.
-    this.code.forEach(def => { if (run.owner instanceof Owner) run.owner.update(def.sandbox) })
-
-    // revert the state of each jig
-    this.outputs.forEach(jig => {
-      // if the jig was never deployed, or if there was an unhandled error leading to this
-      // rollback, then make this jig permanently unusable by setting a bad origin.
-      if (jig.origin[0] === '_' || unhandled) {
-        const err = `!${jig.origin[0] === '_' ? 'Deploy failed'
-          : 'A previous update failed'}\n\n${error}`
-        // TODO: log the error here
-        Object.keys(jig).forEach(key => delete jig[key])
-        jig.origin = jig.location = err
-        return
-      }
-
-      // if this jig was already reverted, continue
-      if (jig.location[0] !== '_') return
-
-      // revert the state of the jig to its state before this transaction
-      const origin = jig.origin
-      this.before.get(jig).restoreInPlace()
-      jig.origin = origin
-      jig.location = lastPosted.get(origin)
-
-      // TODO: Deserialize saved state
-    })
-
-    // notify the owner of jig rollbacks
-    this.outputs.forEach(jig => { if (run.owner instanceof Owner) run.owner.update(jig) })
-
-    this.reset()
-  }
-
-  storeCode (type, sandbox, deps, props, success, error, owner, code, run) {
-    delete this.cachedTx
-
-    this.begin()
-    try {
-      if (typeof owner === 'object') run.deploy(owner.constructor)
-      this.code.push({ type, sandbox, deps, props, success, error, owner })
-      const tempLocation = `_d${this.code.length - 1}`
-      type.owner = sandbox.owner = owner // TODO: Sandbox owner
-      if (run.owner instanceof Owner) run.owner.update(code.getInstalled(type))
-      return tempLocation
-    } finally { this.end() }
-  }
-
-  storeAction (target, method, args, inputs, outputs, reads, before, after, proxies, run) {
-    delete this.cachedTx
-
-    this.begin()
-
-    try {
-      // ------------------------------------------------------------------------------------------
-      // CHECK FOR MULTIPLE DIFFERENT JIG REFERENCES
-      // ------------------------------------------------------------------------------------------
-
-      // This doesn't cover the case of undeployed locations. We must run this again in publish.
-      // Also, inner references that aren't read aren't checked, but this isn't a problem because
-      // the user can 'sync' these up to their latest state before they read them in the future.
-
-      const pickups = new FriendlySet([target])
-      inputs.forEach(jig => pickups.add(jig))
-      outputs.forEach(jig => pickups.add(jig))
-      reads.forEach(jig => pickups.add(jig))
-
-      // ------------------------------------------------------------------------------------------
-      // STORE NEW BEFORE STATES AND ALL AFTER STATES FOR JIGS IN THE PROTO TRANSACTION
-      // ------------------------------------------------------------------------------------------
-
-      before.forEach((checkpoint, target) => {
-        this.before.set(target, this.before.get(target) || checkpoint)
-      })
-
-      after.forEach((checkpoint, target) => { this.after.set(target, checkpoint) })
-
-      // ------------------------------------------------------------------------------------------
-      // ADD INPUTS TO THE PROTO TRANSACTION
-      // ------------------------------------------------------------------------------------------
-
-      inputs.forEach(newTarget => {
-        const isDifferentInstance = currTarget => util.sameJig(newTarget, currTarget) &&
-          currTarget.location !== newTarget.location
-        if (this.inputs.some(isDifferentInstance)) {
-          throw new Error('different instances of the same jig')
-        }
-
-        if (!this.inputs.some(currTarget => util.sameJig(newTarget, currTarget))) {
-          this.inputs.push(newTarget)
-        }
-      })
-
-      // ------------------------------------------------------------------------------------------
-      // ADD OUTPUTS TO THE PROTO TRANSACTION AND SET TEMP LOCATIONS
-      // ------------------------------------------------------------------------------------------
-
-      outputs.forEach(jig => {
-        const index = this.outputs.findIndex(previousJig => util.sameJig(jig, previousJig))
-
-        if (index !== -1) {
-          jig.location = `_o${index}`
-          jig.origin = jig.origin || jig.location
-          return
-        }
-
-        this.outputs.push(jig)
-
-        const updating = jig => (jig.origin && jig.origin[0] !== '_' && jig.location &&
-          jig.location[0] !== '_' && !this.locations.has(jig.origin))
-
-        if (updating(jig)) this.locations.set(jig.origin, jig.location)
-
-        jig.location = `_o${this.outputs.length - 1}`
-        jig.origin = jig.origin || jig.location
-      })
-
-      // ------------------------------------------------------------------------------------------
-      // REMEMBER READS AND PROXIES FOR LATER
-      // ------------------------------------------------------------------------------------------
-
-      reads.forEach(proxy => this.reads.add(proxy))
-
-      proxies.forEach((v, k) => this.proxies.set(k, v))
-
-      // ------------------------------------------------------------------------------------------
-      // STORE THE ACTION IN THE PROTO TRANSACTION
-      // ------------------------------------------------------------------------------------------
-
-      const creator = before.get(target).restore().owner
-
-      this.actions.push({ target, method, creator, args, inputs, outputs, reads })
-    } finally { this.end() }
-
-    // Notify the owner of each output they may care about
-    outputs.forEach(target => { if (run.owner instanceof Owner) run.owner.update(proxies.get(target)) })
-  }
-
-  async pay (run) {
-    if (!this.cachedTx) this.buildBsvTransaction(run)
-    return run.purse.pay(this.cachedTx.tx)
-  }
-
-  async sign (run) {
-    if (!this.cachedTx) this.buildBsvTransaction(run)
-    return run.owner.sign(this.cachedTx.tx)
-  }
-
-  buildBsvTransaction (run) {
-    if (this.cachedTx) return this.cachedTx
-
-    const { blockchain, syncer } = run
-
-    const net = util.networkSuffix(blockchain.network)
-
-    // build the read references array, checking for different locations of the same jig
-    const spentJigs = this.inputs.filter(jig => jig.origin[0] !== '_')
-    const readRefs = new Map()
-    this.reads.forEach(jig => {
-      if (spentJigs.includes(jig) || this.outputs.includes(jig)) return
-      const location = syncer.lastPosted.get(jig.origin) ||
-        this.locations.get(jig.origin) || jig.location
-      const prevLocation = readRefs.get(jig.origin)
-      if (prevLocation && prevLocation !== location) {
-        throw new Error(`read different locations of same jig ${jig.origin}`)
-      }
-      readRefs.set(jig.origin, location)
-    })
-    const refs = Array.from(readRefs.values())
-
-    // Jig arguments, class props, and code need to be turned into token references
-    const { Jig } = __webpack_require__(6)
-    const tokenSaver = token => {
-      if (token instanceof Jig) {
-        // find the jig if it is a proxy. it may not be a proxy if it wasn't used, but then
-        // we won't have trouble reading origin/location. (TODO: is this true? might be queued)
-        let target = token
-        const targets = Array.from(this.proxies.entries())
-          .filter(([pk, pv]) => pv === target).map(([pk, pv]) => pk)
-        if (targets.length) { target = targets[0] }
-
-        // if the jig is an input, use it
-        const inputIndex = spentJigs.findIndex(i => util.sameJig(i, target))
-        if (inputIndex !== -1) return `_i${inputIndex}`
-
-        // if the jig is an output, use it
-        const outputIndex = this.outputs.findIndex(o => util.sameJig(o, target))
-        if (outputIndex !== -1) return `_o${1 + this.code.length + outputIndex}`
-
-        // if the jig is a read reference, use it
-        const refIndex = refs.indexOf(readRefs.get(target.origin))
-        if (refIndex !== -1) return `_r${refIndex}`
-
-        // otherwise, use the actual location
-        return syncer.lastPosted.get(target.origin) || target.location
-      }
-
-      if (util.deployable(token)) {
-        return token[`location${net}`][0] === '_'
-          ? `_o${parseInt(token[`location${net}`].slice(2)) + 1}`
-          : token[`location${net}`]
-      }
-
-      if (token instanceof Berry) {
-        const error = Location.parse(token.location).error
-        if (error) throw new Error(`Cannot serialize berry: ${error}`)
-        return token.location
-      }
-    }
-
-    const xray = new Xray()
-      .allowTokens()
-      .useIntrinsics(run.code.intrinsics)
-      .useTokenSaver(tokenSaver)
-
-    // build each action
-    const actions = this.actions.map(action => {
-      const { method } = action
-
-      const args = xray.serialize(action.args)
-
-      // if init, this is a special case. find the definition and owner.
-      if (method === 'init') {
-        const targetLocation = action.target.constructor[`origin${net}`] ||
-            action.target.constructor[`location${net}`]
-        const target = targetLocation[0] === '_' ? `_o${1 + parseInt(targetLocation.slice(2))}` : targetLocation
-        return { target, method, args, creator: xray.serialize(action.creator) }
-      }
-
-      // if the jig has an input, use it
-      const inputIndex = spentJigs.findIndex(i => util.sameJig(i, action.target))
-      if (inputIndex !== -1) return { target: `_i${inputIndex}`, method, args }
-
-      // if the jig has an output, use it (example: created within the transaction)
-      const outputIndex = this.outputs.findIndex(o => util.sameJig(o, action.target))
-      if (outputIndex !== -1) return { target: `_o${1 + this.code.length + outputIndex}`, method, args }
-
-      // the target was not updated in the transaction
-      const target = action.target.location[0] !== '_' ? action.target.location
-        : syncer.lastPosted.get(action.target.origin)
-      return { target, method, args }
-    })
-
-    // Build each definition
-    const code = this.code.map(def => {
-      // Turn dependencies into references
-      const fixloc = id => id[0] === '_' ? `_o${1 + parseInt(id.slice(2))}` : id
-      const depsArr = Object.entries(def.deps).map(([k, v]) => ({ [k]: fixloc(v[`location${net}`]) }))
-      const deps = depsArr.length ? Object.assign(...depsArr) : undefined
-
-      // Serialize class props
-      const props = Object.keys(def.props).length ? xray.serialize(def.props) : undefined
-
-      return { text: util.getNormalizedSourceCode(def.type), deps, props, owner: def.owner }
-    })
-
-    // Calculate hashes for each output
-    // this.outputs.forEach(output => {
-    // console.log(output)
-    // })
-    // Maybe origin and location are removed, to make it deterministic
-    // Origin is kept. If __, then removed. But what if 3 are pending? Maybe always remove origin.
-    // But then how does state get reconstructed? Location is assigned. Sure. But what origin?
-    // How do you know it was the original to put it on? What about refs that haven't been posted yet?
-    // This is a bit of a problem. No it isn't. We know origin when we post. Not before. You don't
-    // have pending stuff at this time. Include origin, if it's there. References will always be past
-    // refs.
-
-    // build our json payload
-    const data = { code, actions, jigs: this.outputs.length, refs: refs.length ? refs : undefined }
-
-    const encrypted = util.encryptRunData(data)
-    const prefix = Buffer.from('run', 'utf8')
-    const protocolVersion = Buffer.from([util.PROTOCOL_VERSION], 'hex')
-    const appId = Buffer.from(run.app, 'utf8')
-    const payload = Buffer.from(encrypted, 'utf8')
-    const debugInfo = Buffer.from('r11r', 'utf8')
-    const script = bsv.Script.buildSafeDataOut([prefix, protocolVersion, appId, payload, debugInfo])
-    const tx = new bsv.Transaction().addOutput(new bsv.Transaction.Output({ script, satoshis: 0 }))
-
-    // build inputs
-    const spentLocations = spentJigs.map(jig => syncer.lastPosted.get(jig.origin) ||
-      this.locations.get(jig.origin) || jig.location)
-    spentJigs.forEach((jig, index) => {
-      const txid = spentLocations[index].slice(0, 64)
-      const vout = parseInt(spentLocations[index].slice(66))
-      const before = this.before.get(jig)
-      const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, before.restore().satoshis)
-      const scriptBuffer = util.ownerScript(before.restore().owner).toBytes()
-      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
-      const utxo = { txid, vout, script, satoshis }
-      tx.from(utxo)
-    })
-
-    // Build run outputs first by adding code then by adding jigs
-
-    this.code.forEach(def => {
-      const scriptBuffer = util.ownerScript(def.owner).toBytes()
-      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
-      const satoshis = bsv.Transaction.DUST_AMOUNT
-      tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
-    })
-
-    this.outputs.forEach(jig => {
-      const restored = this.after.get(jig).restore()
-      const scriptBuffer = util.ownerScript(restored.owner).toBytes()
-      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
-      const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, restored.satoshis)
-      tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
-    })
-
-    this.cachedTx = { tx, refs, spentJigs, spentLocations }
-    return this.cachedTx
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-module.exports = { ProtoTransaction, Transaction }
-
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7).Buffer))
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * blockchain.js
- *
- * Blockchain API and its default REST implementation
- */
-
-const { Address, Script, Transaction } = __webpack_require__(2)
-const axios = __webpack_require__(35)
-const util = __webpack_require__(0)
-
-// ------------------------------------------------------------------------------------------------
-// Blockchain API
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Generic Blockchain API that Run uses to interface with the blockchain
- */
-class Blockchain {
-  /**
-   * @returns {string} Network string, one of 'main', 'test', 'stn', or 'mock'
-   */
-  get network () { throw new Error('Not implemented') }
-
-  /**
-   * Submits a transaction to the network
-   * @param {bsv.Transaction} tx Transaction to broadcast
-   */
-  async broadcast (tx) { throw new Error('Not implemented') }
-
-  /**
-   * Queries the network for a transaction
-   * @param {string} txid Transaction id hex string
-   * @param {boolean} force Whether to force-refresh the transaction, and never use the cache
-   * @returns {bsv.Transaction} Transaction with additional metadata including:
-   * - `time` {number} Time in milliseconds for acceptance into a block or mempool
-   * - `confirmations` {number} Number of confirmations, 0 for mempool
-   * - `blockhash` {string} Hash of block this tx was included in
-   * - `blockheight` {string} Height of block this tx was included in
-   * - `blocktime` {number} Time in milliseconds the block was published
-   * - `vout` {Array<{spentTxId, spentIndex, spentHeight}>} Output spend information`
-   */
-  async fetch (txid, force) { throw new Error('Not implemented') }
-
-  /**
-   * Queries the utxos for a particular output script
-   * @param {string} query Address, public key, or script hash
-   * @returns {Array<{txid, vout, script, satoshis}>}
-   */
-  async utxos (query) { throw new Error('Not implemented') }
-}
-
-Blockchain.isBlockchain = blockchain => {
-  if (typeof blockchain !== 'object' || !blockchain) return false
-  if (typeof blockchain.broadcast !== 'function') return false
-  if (typeof blockchain.fetch !== 'function') return false
-  if (typeof blockchain.utxos !== 'function') return false
-  if (typeof blockchain.network !== 'string') return false
-  return true
-}
-
-// ------------------------------------------------------------------------------------------------
-// BlockchainServer
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Implements the Blockchain API using a network service
- */
-class BlockchainServer {
-  constructor (options = {}) {
-    this.network = parseNetwork(options.network)
-    this.logger = parseLogger(options.logger)
-    this.api = parseApi(options.api)
-    this.cache = parseCache(options.lastBlockchain, this.network)
-    const axiosOptions = { timeout: parseTimeout(options.timeout) }
-    // Run and BitIndex gzip responses, but this is only needed in node. In browser, it errors.
-    if (typeof window === 'undefined') axiosOptions.headers = { 'Accept-Encoding': 'gzip' }
-    this.axios = axios.create(axiosOptions)
-    this.bsvNetwork = util.bsvNetwork(this.network)
-    this.requests = new Map() // txid|address -> Array<Function>
-  }
-
-  async broadcast (tx) {
-    // Verify the tx locally. It is faster to find problems here than to wait for a server response.
-    if (tx.inputs.length === 0) throw new Error('tx has no inputs')
-    if (tx.outputs.length === 0) throw new Error('tx has no outputs')
-    if (tx.getFee() < tx.toBuffer().length) throw new Error('tx fee too low')
-    if (tx.verify() !== true) throw new Error(tx.verify())
-    if (tx.isFullySigned() !== true) throw new Error('tx not fully signed')
-
-    // Set properties on the tx that run expects
-    tx.time = Date.now()
-    tx.confirmations = 0
-    tx.outputs.forEach(o => { o.spentTxId = null; o.spentIndex = null; o.spentHeight = null })
-
-    // Broadcast the transaction
-    await this._post(this.api.broadcastUrl(this.network), this.api.broadcastData(tx))
-
-    // Cache the transaction for later fetches and also put in our sent list so that
-    // we can correct UTXOs returned for the server.
-    this.cache.broadcasted(tx)
-  }
-
-  async fetch (txid, force = false) {
-    // Check the cache for this transaction if we are not force-refreshing the transaction
-    const cached = this.cache.get(txid)
-    if (!force && cached) return cached
-
-    // If we already are fetching this transaction, then piggy-back on the response
-    const prior = this.requests.get(txid)
-    if (prior) return new Promise((resolve, reject) => prior.push({ resolve, reject }))
-
-    // Otherwise, create a new promise list for this request
-    this.requests.set(txid, [])
-
-    try {
-      // Fetch the transaction by its txid
-      const data = (await this._get(this.api.fetchUrl(this.network, txid))).data
-      const tx = this.api.fetchResp(data)
-
-      // If we have a local cached copy, make sure the spent data is up-to-date
-      if (cached) {
-        for (let vout = 0; vout < tx.outputs.length; vout++) {
-          tx.outputs[vout].spentTxId = tx.outputs[vout].spentTxId || cached.outputs[vout].spentTxId
-          tx.outputs[vout].spentIndex = tx.outputs[vout].spentIndex || cached.outputs[vout].spentIndex
-          tx.outputs[vout].spentHeight = tx.outputs[vout].spentHeight || cached.outputs[vout].spentHeight
-        }
-      }
-
-      // Cache it
-      this.cache.fetched(tx)
-
-      // If there is other code waiting for this result, resolve their promises now
-      this.requests.get(txid).forEach(promise => promise.resolve(tx))
-
-      return tx
-    } catch (e) {
-      // If the request fails, notify all other code that is waiting for this request
-      this.requests.get(txid).forEach(promise => promise.reject(e))
-
-      throw e
-    } finally {
-      // Whether fetch succeeds or fails, remove all callbacks for this request
-      this.requests.delete(txid)
-    }
-  }
-
-  async utxos (query) {
-    // Whether we are passed a bsv.Address or a string, convert it to a string.
-    // If we are passed a pubkey or Script, then we don't support this yet.
-    let address = null
-    try {
-      address = new Address(query, this.bsvNetwork).toString()
-    } catch (e) {
-      throw new Error('Non-address utxo queries are not supported by this blockchain API')
-    }
-
-    // If we are already querying the utxos for this address, piggy-back on that request
-    const prior = this.requests.get(address)
-    if (prior) return new Promise((resolve, reject) => prior.push({ resolve, reject }))
-
-    // Create a new promise list for other code to piggy-back on
-    this.requests.set(address, [])
-
-    try {
-      // Query the utxos
-      const data = (await this._get(this.api.utxosUrl(this.network, address))).data
-      const utxos = this.api.utxosResp(data, address)
-      if (!Array.isArray(utxos)) {
-        throw new Error(`Received invalid utxos for ${address}\n\n: Type: ${typeof utxos}\n\nNetwork: ${this.network}`)
-      }
-
-      // In case the utxos from the server have any duplicates, dedup them
-      const dedupedUtxos = this.dedupUtxos(utxos)
-
-      // The server may not index utxos right away. update the utxos with our own broadcasted txns
-      const correctedUtxos = this.cache.correctForServerUtxoIndexingDelay(dedupedUtxos, address)
-
-      // Notify all other code that was also waiting for this request
-      this.requests.get(address).forEach(o => o.resolve(correctedUtxos))
-
-      return correctedUtxos
-    } catch (e) {
-      // Notify all other code that this request failed
-      this.requests.get(address).forEach(o => o.reject(e))
-
-      throw e
-    } finally {
-      // Whether we succeeded or failed, remove the promises for this request
-      this.requests.delete(address)
-    }
-  }
-
-  dedupUtxos (utxos) {
-    // In case the server has a bug, run must be able to handle duplicate utxos returned. If we
-    // don't dedup, then later we will create a transaction with more than one of the same input.
-    const locations = new Set()
-    return utxos.filter(utxo => {
-      const location = `${utxo.txid}_o${utxo.vout}`
-      if (!locations.has(location)) {
-        locations.add(location)
-        return true
-      } else {
-        if (this.logger) this.logger.warn(`Duplicate utxo returned from server: ${location}`)
-        return false
-      }
-    })
-  }
-
-  async _post (url, data) {
-    if (this.logger) this.logger.info(`POST ${url}`)
-    return call(this.axios.post(url, data))
-  }
-
-  async _get (url) {
-    if (this.logger) this.logger.info(`GET ${url}`)
-    return call(this.axios.get(url))
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Parameter validation
-// ------------------------------------------------------------------------------------------------
-
-function parseNetwork (network) {
-  if (network === 'main' || network === 'test' || network === 'stn') return network
-  switch (typeof network) {
-    case 'string': throw new Error(`Unknown network: ${network}`)
-    case 'undefined': return 'main'
-    default: throw new Error(`Invalid network: ${network}`)
-  }
-}
-
-function parseLogger (logger) {
-  switch (typeof logger) {
-    case 'object': return logger
-    case 'undefined': return null
-    default: throw new Error(`Invalid logger: ${logger}`)
-  }
-}
-
-function parseTimeout (timeout) {
-  switch (typeof timeout) {
-    case 'number':
-      if (Number.isNaN(timeout) || timeout < 0) throw new Error(`Invalid timeout: ${timeout}`)
-      return timeout
-    case 'undefined': return 10000
-    default: throw new Error(`Invalid timeout: ${timeout}`)
-  }
-}
-
-function parseApi (api) {
-  switch (typeof api) {
-    case 'string': {
-      const apiData = apis.find(apiData => apiData.name === api)
-      if (!apiData) throw new Error(`Unknown blockchain API: ${api}`)
-      return apiData
-    }
-    case 'object':
-      if (!api) throw new Error(`Invalid blockchain API: ${api}`)
-      return api
-    case 'undefined': return apis[0]
-    default: throw new Error(`Invalid blockchain API: ${api}`)
-  }
-}
-
-function parseCache (lastBlockchain, network) {
-  // Copy the cache from the last blockchain if possible to save round trips
-  if (lastBlockchain && lastBlockchain instanceof BlockchainServer &&
-    lastBlockchain.network === network) {
-    return lastBlockchain.cache
-  }
-  return new BlockchainServerCache()
-}
-
-// ------------------------------------------------------------------------------------------------
-// BlockchainServerCache
-// ------------------------------------------------------------------------------------------------
-
-class BlockchainServerCache {
-  constructor () {
-    this.transactions = new Map() // txid -> tx
-    this.broadcasts = [] // Array<Transaction>
-    this.size = 10000
-    this.expiration = 10 * 60 * 1000
-    this.indexingDelay = 10 * 1000
-  }
-
-  get (txid) {
-    const tx = this.transactions.get(txid)
-    if (!tx) return
-
-    // If the transaction is expired, remove it
-    const expired = Date.now() - tx.fetchedTime > this.expiration
-    if (expired) {
-      this.transactions.delete(txid)
-      return
-    }
-
-    // Bump the transaction to the top and return it
-    this.transactions.delete(txid)
-    this.transactions.set(txid, tx)
-    return tx
-  }
-
-  fetched (tx) {
-    tx.fetchedTime = Date.now()
-
-    this.transactions.set(tx.hash, tx)
-
-    // If the cache is full, remove the oldest transaction
-    if (this.transactions.size > this.size) {
-      const oldest = this.transactions.keys().next().value
-      this.transactions.delete(oldest)
-    }
-  }
-
-  broadcasted (tx) {
-    this.fetched(tx)
-
-    // Remove all transactions from our broadcast past the indexing delay
-    const now = Date.now()
-    this.broadcasts = this.broadcasts.filter(tx => now - tx.time < this.indexingDelay)
-
-    this.broadcasts.push(tx)
-
-    // Update our known transactions with spent info
-    tx.inputs.forEach((input, vin) => {
-      const spent = this.transactions.get(input.prevTxId.toString('hex'))
-      if (spent) {
-        spent.outputs[input.outputIndex].spentTxId = tx.hash
-        spent.outputs[input.outputIndex].spentIndex = vin
-        spent.outputs[input.outputIndex].spentHeight = -1
-      }
-    })
-  }
-
-  correctForServerUtxoIndexingDelay (utxos, address) {
-    // First remove all expired txns from our broadcast cache
-    const now = Date.now()
-    this.broadcasts = this.broadcasts.filter(tx => now - tx.time < this.indexingDelay)
-
-    // Add all utxos from our broadcast cache for this address that aren't already there
-    this.broadcasts.forEach(tx => {
-      tx.outputs.forEach((output, vout) => {
-        if (output.script.toAddress(this.bsvNetwork).toString() === address &&
-              !utxos.some(utxo => utxo.txid === tx.hash && utxo.vout === vout)) {
-          utxos.push({ txid: tx.hash, vout, script: output.script, satoshis: output.satoshis })
-        }
-      })
-    })
-
-    // Remove all utxos that we know are spent because they are in our broadcast cache
-    this.broadcasts.forEach(tx => {
-      const inputSpendsUtxo = (input, utxo) =>
-        input.prevTxId.toString('hex') === utxo.txid &&
-        input.outputIndex === utxo.vout
-
-      utxos = utxos.filter(utxo => !tx.inputs.some(input => inputSpendsUtxo(input, utxo)))
-    })
-
-    return utxos
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Helper methods
-// ------------------------------------------------------------------------------------------------
-
-async function call (promise) {
-  try { return await promise } catch (e) {
-    const { config: c, response: r } = e
-    if (c && c.url && r && r.data) {
-      const message = r.data.message ? (r.data.message.message || r.data.message) : r.data
-      const reason = r.data.name && message ? `${r.data.name}: ${message}` : r.data.name || message
-      throw new Error(`${reason}\n\n${c.method.toUpperCase()} ${c.url}`)
-    } else { throw e }
-  }
-}
-
-function jsonToTx (json) {
-  if (typeof json !== 'object') throw new Error(`JSON returned is invalid or not an object: ${json}`)
-  const tx = new Transaction(json.hex || json.rawtx)
-  tx.time = json.time * 1000 || Date.now()
-  if (json.blockhash && json.blockhash.length) tx.blockhash = json.blockhash
-  if (json.blocktime) tx.blocktime = json.blocktime
-  if (json.blockheight) tx.blockheight = json.blockheight
-  if (typeof json.confirmations !== 'undefined') tx.confirmations = json.confirmations
-  if (json.vout) {
-    json.vout.forEach((output, n) => {
-      if (typeof output.spentTxId !== 'undefined') tx.outputs[n].spentTxId = output.spentTxId
-      if (typeof output.spentIndex !== 'undefined') tx.outputs[n].spentIndex = output.spentIndex
-      if (typeof output.spentHeight !== 'undefined') tx.outputs[n].spentHeight = output.spentHeight
-    })
-  }
-  return tx
-}
-
-// ------------------------------------------------------------------------------------------------
-// REST APIs
-// ------------------------------------------------------------------------------------------------
-
-const runApiHost = 'https://api.run.network'
-
-const apis = [
-  {
-    name: 'run',
-    broadcastUrl: network => `${runApiHost}/v1/${network}/tx`,
-    broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
-    fetchUrl: (network, txid) => `${runApiHost}/v1/${network}/tx/${txid}`,
-    fetchResp: data => jsonToTx(data),
-    utxosUrl: (network, address) => `${runApiHost}/v1/${network}/utxos/${address.toString()}`,
-    utxosResp: (data, address) => typeof data === 'string' ? JSON.parse(data) : data
-  },
-  {
-    name: 'bitindex',
-    broadcastUrl: network => `https://api.bitindex.network/api/v3/${network}/tx/send`,
-    broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
-    fetchUrl: (network, txid) => `https://api.bitindex.network/api/v3/${network}/tx/${txid}`,
-    fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
-    utxosUrl: (network, address) => `https://api.bitindex.network/api/v3/${network}/addr/${address.toString()}/utxo`,
-    utxosResp: (data, address) => data.map(o => { return Object.assign({}, o, { script: new Script(o.scriptPubKey) }) })
-  },
-  {
-    name: 'whatsonchain',
-    broadcastUrl: network => `https://api.whatsonchain.com/v1/bsv/${network}/tx/raw`,
-    broadcastData: tx => { return { txhex: tx.toBuffer().toString('hex') } },
-    fetchUrl: (network, txid) => `https://api.whatsonchain.com/v1/bsv/${network}/tx/hash/${txid}`,
-    fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
-    utxosUrl: (network, address) => `https://api.whatsonchain.com/v1/bsv/${network}/address/${address.toString()}/unspent`,
-    utxosResp: (data, address) => data.map(o => {
-      return { txid: o.tx_hash, vout: o.tx_pos, satoshis: o.value, script: Script.fromAddress(address) }
-    })
-  }
-]
-
-// ------------------------------------------------------------------------------------------------
-
-BlockchainServer.Cache = BlockchainServerCache
-
-module.exports = { Blockchain, BlockchainServer }
-
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function bind(fn, thisArg) {
-  return function wrap() {
-    var args = new Array(arguments.length);
-    for (var i = 0; i < args.length; i++) {
-      args[i] = arguments[i];
-    }
-    return fn.apply(thisArg, args);
-  };
-};
-
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(1);
-
-function encode(val) {
-  return encodeURIComponent(val).
-    replace(/%40/gi, '@').
-    replace(/%3A/gi, ':').
-    replace(/%24/g, '$').
-    replace(/%2C/gi, ',').
-    replace(/%20/g, '+').
-    replace(/%5B/gi, '[').
-    replace(/%5D/gi, ']');
-}
-
-/**
- * Build a URL by appending params to the end
- *
- * @param {string} url The base of the url (e.g., http://www.google.com)
- * @param {object} [params] The params to be appended
- * @returns {string} The formatted url
- */
-module.exports = function buildURL(url, params, paramsSerializer) {
-  /*eslint no-param-reassign:0*/
-  if (!params) {
-    return url;
-  }
-
-  var serializedParams;
-  if (paramsSerializer) {
-    serializedParams = paramsSerializer(params);
-  } else if (utils.isURLSearchParams(params)) {
-    serializedParams = params.toString();
-  } else {
-    var parts = [];
-
-    utils.forEach(params, function serialize(val, key) {
-      if (val === null || typeof val === 'undefined') {
-        return;
-      }
-
-      if (utils.isArray(val)) {
-        key = key + '[]';
-      } else {
-        val = [val];
-      }
-
-      utils.forEach(val, function parseValue(v) {
-        if (utils.isDate(v)) {
-          v = v.toISOString();
-        } else if (utils.isObject(v)) {
-          v = JSON.stringify(v);
-        }
-        parts.push(encode(key) + '=' + encode(v));
-      });
-    });
-
-    serializedParams = parts.join('&');
-  }
-
-  if (serializedParams) {
-    var hashmarkIndex = url.indexOf('#');
-    if (hashmarkIndex !== -1) {
-      url = url.slice(0, hashmarkIndex);
-    }
-
-    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
-  }
-
-  return url;
-};
-
-
-/***/ }),
-/* 20 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function isCancel(value) {
-  return !!(value && value.__CANCEL__);
-};
-
-
-/***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
-
-var utils = __webpack_require__(1);
-var normalizeHeaderName = __webpack_require__(43);
-
-var DEFAULT_CONTENT_TYPE = {
-  'Content-Type': 'application/x-www-form-urlencoded'
-};
-
-function setContentTypeIfUnset(headers, value) {
-  if (!utils.isUndefined(headers) && utils.isUndefined(headers['Content-Type'])) {
-    headers['Content-Type'] = value;
-  }
-}
-
-function getDefaultAdapter() {
-  var adapter;
-  // Only Node.JS has a process variable that is of [[Class]] process
-  if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
-    // For node use HTTP adapter
-    adapter = __webpack_require__(22);
-  } else if (typeof XMLHttpRequest !== 'undefined') {
-    // For browsers use XHR adapter
-    adapter = __webpack_require__(22);
-  }
-  return adapter;
-}
-
-var defaults = {
-  adapter: getDefaultAdapter(),
-
-  transformRequest: [function transformRequest(data, headers) {
-    normalizeHeaderName(headers, 'Accept');
-    normalizeHeaderName(headers, 'Content-Type');
-    if (utils.isFormData(data) ||
-      utils.isArrayBuffer(data) ||
-      utils.isBuffer(data) ||
-      utils.isStream(data) ||
-      utils.isFile(data) ||
-      utils.isBlob(data)
-    ) {
-      return data;
-    }
-    if (utils.isArrayBufferView(data)) {
-      return data.buffer;
-    }
-    if (utils.isURLSearchParams(data)) {
-      setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
-      return data.toString();
-    }
-    if (utils.isObject(data)) {
-      setContentTypeIfUnset(headers, 'application/json;charset=utf-8');
-      return JSON.stringify(data);
-    }
-    return data;
-  }],
-
-  transformResponse: [function transformResponse(data) {
-    /*eslint no-param-reassign:0*/
-    if (typeof data === 'string') {
-      try {
-        data = JSON.parse(data);
-      } catch (e) { /* Ignore */ }
-    }
-    return data;
-  }],
-
-  /**
-   * A timeout in milliseconds to abort a request. If set to 0 (default) a
-   * timeout is not created.
-   */
-  timeout: 0,
-
-  xsrfCookieName: 'XSRF-TOKEN',
-  xsrfHeaderName: 'X-XSRF-TOKEN',
-
-  maxContentLength: -1,
-
-  validateStatus: function validateStatus(status) {
-    return status >= 200 && status < 300;
-  }
-};
-
-defaults.headers = {
-  common: {
-    'Accept': 'application/json, text/plain, */*'
-  }
-};
-
-utils.forEach(['delete', 'get', 'head'], function forEachMethodNoData(method) {
-  defaults.headers[method] = {};
-});
-
-utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
-  defaults.headers[method] = utils.merge(DEFAULT_CONTENT_TYPE);
-});
-
-module.exports = defaults;
-
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(42)))
-
-/***/ }),
-/* 22 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(1);
-var settle = __webpack_require__(44);
-var buildURL = __webpack_require__(19);
-var parseHeaders = __webpack_require__(46);
-var isURLSameOrigin = __webpack_require__(47);
-var createError = __webpack_require__(23);
-
-module.exports = function xhrAdapter(config) {
-  return new Promise(function dispatchXhrRequest(resolve, reject) {
-    var requestData = config.data;
-    var requestHeaders = config.headers;
-
-    if (utils.isFormData(requestData)) {
-      delete requestHeaders['Content-Type']; // Let the browser set it
-    }
-
-    var request = new XMLHttpRequest();
-
-    // HTTP basic authentication
-    if (config.auth) {
-      var username = config.auth.username || '';
-      var password = config.auth.password || '';
-      requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
-    }
-
-    request.open(config.method.toUpperCase(), buildURL(config.url, config.params, config.paramsSerializer), true);
-
-    // Set the request timeout in MS
-    request.timeout = config.timeout;
-
-    // Listen for ready state
-    request.onreadystatechange = function handleLoad() {
-      if (!request || request.readyState !== 4) {
-        return;
-      }
-
-      // The request errored out and we didn't get a response, this will be
-      // handled by onerror instead
-      // With one exception: request that using file: protocol, most browsers
-      // will return status as 0 even though it's a successful request
-      if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
-        return;
-      }
-
-      // Prepare the response
-      var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
-      var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
-      var response = {
-        data: responseData,
-        status: request.status,
-        statusText: request.statusText,
-        headers: responseHeaders,
-        config: config,
-        request: request
-      };
-
-      settle(resolve, reject, response);
-
-      // Clean up request
-      request = null;
-    };
-
-    // Handle browser request cancellation (as opposed to a manual cancellation)
-    request.onabort = function handleAbort() {
-      if (!request) {
-        return;
-      }
-
-      reject(createError('Request aborted', config, 'ECONNABORTED', request));
-
-      // Clean up request
-      request = null;
-    };
-
-    // Handle low level network errors
-    request.onerror = function handleError() {
-      // Real errors are hidden from us by the browser
-      // onerror should only fire if it's a network error
-      reject(createError('Network Error', config, null, request));
-
-      // Clean up request
-      request = null;
-    };
-
-    // Handle timeout
-    request.ontimeout = function handleTimeout() {
-      reject(createError('timeout of ' + config.timeout + 'ms exceeded', config, 'ECONNABORTED',
-        request));
-
-      // Clean up request
-      request = null;
-    };
-
-    // Add xsrf header
-    // This is only done if running in a standard browser environment.
-    // Specifically not if we're in a web worker, or react-native.
-    if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(48);
-
-      // Add xsrf header
-      var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
-        cookies.read(config.xsrfCookieName) :
-        undefined;
-
-      if (xsrfValue) {
-        requestHeaders[config.xsrfHeaderName] = xsrfValue;
-      }
-    }
-
-    // Add headers to the request
-    if ('setRequestHeader' in request) {
-      utils.forEach(requestHeaders, function setRequestHeader(val, key) {
-        if (typeof requestData === 'undefined' && key.toLowerCase() === 'content-type') {
-          // Remove Content-Type if data is undefined
-          delete requestHeaders[key];
-        } else {
-          // Otherwise add header to the request
-          request.setRequestHeader(key, val);
-        }
-      });
-    }
-
-    // Add withCredentials to request if needed
-    if (config.withCredentials) {
-      request.withCredentials = true;
-    }
-
-    // Add responseType to request if needed
-    if (config.responseType) {
-      try {
-        request.responseType = config.responseType;
-      } catch (e) {
-        // Expected DOMException thrown by browsers not compatible XMLHttpRequest Level 2.
-        // But, this can be suppressed for 'json' type as it can be parsed by default 'transformResponse' function.
-        if (config.responseType !== 'json') {
-          throw e;
-        }
-      }
-    }
-
-    // Handle progress if needed
-    if (typeof config.onDownloadProgress === 'function') {
-      request.addEventListener('progress', config.onDownloadProgress);
-    }
-
-    // Not all browsers support upload events
-    if (typeof config.onUploadProgress === 'function' && request.upload) {
-      request.upload.addEventListener('progress', config.onUploadProgress);
-    }
-
-    if (config.cancelToken) {
-      // Handle cancellation
-      config.cancelToken.promise.then(function onCanceled(cancel) {
-        if (!request) {
-          return;
-        }
-
-        request.abort();
-        reject(cancel);
-        // Clean up request
-        request = null;
-      });
-    }
-
-    if (requestData === undefined) {
-      requestData = null;
-    }
-
-    // Send the request
-    request.send(requestData);
-  });
-};
-
-
-/***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var enhanceError = __webpack_require__(45);
-
-/**
- * Create an Error with the specified message, config, error code, request and response.
- *
- * @param {string} message The error message.
- * @param {Object} config The config.
- * @param {string} [code] The error code (for example, 'ECONNABORTED').
- * @param {Object} [request] The request.
- * @param {Object} [response] The response.
- * @returns {Error} The created error.
- */
-module.exports = function createError(message, config, code, request, response) {
-  var error = new Error(message);
-  return enhanceError(error, config, code, request, response);
-};
-
-
-/***/ }),
-/* 24 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(1);
-
-/**
- * Config-specific merge-function which creates a new config-object
- * by merging two configuration objects together.
- *
- * @param {Object} config1
- * @param {Object} config2
- * @returns {Object} New object resulting from merging config2 to config1
- */
-module.exports = function mergeConfig(config1, config2) {
-  // eslint-disable-next-line no-param-reassign
-  config2 = config2 || {};
-  var config = {};
-
-  utils.forEach(['url', 'method', 'params', 'data'], function valueFromConfig2(prop) {
-    if (typeof config2[prop] !== 'undefined') {
-      config[prop] = config2[prop];
-    }
-  });
-
-  utils.forEach(['headers', 'auth', 'proxy'], function mergeDeepProperties(prop) {
-    if (utils.isObject(config2[prop])) {
-      config[prop] = utils.deepMerge(config1[prop], config2[prop]);
-    } else if (typeof config2[prop] !== 'undefined') {
-      config[prop] = config2[prop];
-    } else if (utils.isObject(config1[prop])) {
-      config[prop] = utils.deepMerge(config1[prop]);
-    } else if (typeof config1[prop] !== 'undefined') {
-      config[prop] = config1[prop];
-    }
-  });
-
-  utils.forEach([
-    'baseURL', 'transformRequest', 'transformResponse', 'paramsSerializer',
-    'timeout', 'withCredentials', 'adapter', 'responseType', 'xsrfCookieName',
-    'xsrfHeaderName', 'onUploadProgress', 'onDownloadProgress', 'maxContentLength',
-    'validateStatus', 'maxRedirects', 'httpAgent', 'httpsAgent', 'cancelToken',
-    'socketPath'
-  ], function defaultToConfig2(prop) {
-    if (typeof config2[prop] !== 'undefined') {
-      config[prop] = config2[prop];
-    } else if (typeof config1[prop] !== 'undefined') {
-      config[prop] = config1[prop];
-    }
-  });
-
-  return config;
-};
-
-
-/***/ }),
-/* 25 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/**
- * A `Cancel` is an object that is thrown when an operation is canceled.
- *
- * @class
- * @param {string=} message The message.
- */
-function Cancel(message) {
-  this.message = message;
-}
-
-Cancel.prototype.toString = function toString() {
-  return 'Cancel' + (this.message ? ': ' + this.message : '');
-};
-
-Cancel.prototype.__CANCEL__ = true;
-
-module.exports = Cancel;
-
-
-/***/ }),
-/* 26 */
-/***/ (function(module, exports) {
-
-/**
- * expect.js
- *
- * Expect API for parameter checking in jigs
- */
-
-function expect (subject) {
-  let negated = false
-
-  const stringify = x => {
-    if (typeof x !== 'object' || !x) return x
-    try { return JSON.stringify(x) } catch (e) { return x.toString() }
-  }
-
-  function check (condition, conditionString, message) {
-    if (negated ? condition : !condition) {
-      throw new Error(message || `expected value${negated ? ' not' : ''} to be ${conditionString} but was ${stringify(subject)}`)
-    }
-  }
-
-  function deepEqual (a, b) {
-    if (typeof a !== typeof b) return false
-    if (typeof a === 'object' && typeof b === 'object') {
-      if (Object.keys(a).length !== Object.keys(b).length) return false
-      return Object.keys(a).every(key => deepEqual(a[key], b[key]))
-    }
-    return a === b
-  }
-
-  return {
-    get not () { negated = !negated; return this },
-
-    toBe: (value, message) => check(subject === value, `${stringify(value)}`, message),
-    toEqual: (value, message) => check(deepEqual(subject, value), `equal to ${stringify(value)}`, message),
-    toBeInstanceOf: (Class, message) => check(subject && subject instanceof Class, `an instance of ${Class.name}`, message),
-
-    toBeDefined: message => check(typeof subject !== 'undefined', 'defined', message),
-    toBeNull: message => check(subject === null, 'null', message),
-
-    toBeNumber: message => check(typeof subject === 'number', 'a number', message),
-    toBeInteger: message => check(Number.isInteger(subject), 'an integer', message),
-    toBeLessThan: (value, message) => check(subject < value && typeof subject === 'number' && typeof value === 'number', `less than ${value}`, message),
-    toBeLessThanOrEqualTo: (value, message) => check(subject <= value && typeof subject === 'number' && typeof value === 'number', `less than or equal to ${value}`, message),
-    toBeGreaterThan: (value, message) => check(subject > value && typeof subject === 'number' && typeof value === 'number', `greater than ${value}`, message),
-    toBeGreaterThanOrEqualTo: (value, message) => check(subject >= value && typeof subject === 'number' && typeof value === 'number', `greater than or equal to ${value}`, message),
-
-    toBeBoolean: message => check(typeof subject === 'boolean', 'a boolean', message),
-    toBeString: message => check(typeof subject === 'string', 'a string', message),
-    toBeObject: message => check(subject && typeof subject === 'object', 'an object', message),
-    toBeArray: message => check(Array.isArray(subject), 'an array', message),
-
-    toBeClass: message => check(typeof subject === 'function' && subject.toString().startsWith('class'), 'a class', message),
-    toBeFunction: message => check(typeof subject === 'function' && !subject.toString().startsWith('class'), 'a function', message)
-  }
-}
-
-expect.originTestnet = '7de95149eab7aa4e72a8c4fd48c65b64890c6c0e15d5f3f6029230684d206849_o1'
-expect.locationTestnet = '7de95149eab7aa4e72a8c4fd48c65b64890c6c0e15d5f3f6029230684d206849_o1'
-expect.ownerTestnet = 'mh1E75czUcmdngvL1sM4tEjbDPfPRvgVzd'
-expect.originMainnet = '305dfd9f228bdc291c50d128a1c014c60515029d628558e7bf24609888ab2c88_o1'
-expect.locationMainnet = '305dfd9f228bdc291c50d128a1c014c60515029d628558e7bf24609888ab2c88_o1'
-expect.ownerMainnet = '19BGNm4NL1imjjJMH2n91RN6LWJmZUMWSK'
-
-module.exports = expect
-
-
-/***/ }),
-/* 27 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(Buffer) {/**
- * code.js
- *
- * Functionality related to loading, deploying, and running arbitrary code.
- */
-
-const util = __webpack_require__(0)
-const Evaluator = __webpack_require__(15)
-const { Jig, JigControl } = __webpack_require__(4)
-const { Berry, BerryControl } = __webpack_require__(11)
-const Xray = __webpack_require__(10)
-const Context = __webpack_require__(14)
-
-// ------------------------------------------------------------------------------------------------
-// Code
-// ------------------------------------------------------------------------------------------------
-
-const stringProps = ['origin', 'location', 'originMainnet', 'locationMainnet', 'originTestnet',
-  'locationTestnet', 'originStn', 'locationStn', 'originMocknet', 'locationMocknet',
-  'owner', 'ownerMainnet', 'ownerTestnet', 'ownerStn', 'ownerMocknet']
-
-/**
-   * Code repository, sandboxer, installer, and deployer
-   */
-class Code {
-  constructor (options = {}) {
-    this.installs = new Map() // Type | Location | Sandbox -> Sandbox
-    this.evaluator = new Evaluator({ logger: options.logger, sandbox: options.sandbox })
-    this.logger = options.logger
-    this.intrinsics = this.evaluator.intrinsics
-    this.pending = new Set()
-    this.installJig()
-    this.installBerry()
-  }
-
-  isSandbox (type) {
-    const sandbox = this.installs.get(type)
-    return sandbox && type === sandbox
-  }
-
-  getInstalled (typeOrLocation) {
-    if (this.isSandbox(typeOrLocation)) return typeOrLocation
-    return this.installs.get(typeOrLocation)
-  }
-
-  // Install loads code into a sandbox and makes it available to use
-  // It does not deploy the code. It does however check that the code
-  // is deployable. The main purpose is to install berry protocols for
-  // use on mainnet and testnet without deploying the protocol to the chain.
-  installBerryProtocol (type) {
-    // Make sure the presets are there
-    return this.deploy(type, { dontDeploy: true })
-  }
-
-  extractProps (type) {
-    // Determine which properties to extract
-    const skipProps = ['deps', ...stringProps]
-    const classProps = Object.keys(type)
-    const propNames = classProps.filter(key => !skipProps.includes(key))
-
-    // Create an object with just these properties
-    const props = {}
-    propNames.forEach(name => { props[name] = type[name] })
-
-    // Check that these properties are serializable
-    const xray = new Xray()
-      .allowTokens()
-      .allowDeployables()
-      .useIntrinsics(this.intrinsics)
-
-    try {
-      xray.scan(props)
-    } catch (e) {
-      throw new Error(`A static property of ${type.name} is not supported\n\n${e}`)
-    }
-
-    // Save the any deployables and tokens
-    const refs = []
-    xray.deployables.forEach(deployable => refs.push(deployable))
-    xray.tokens.forEach(token => refs.push(token))
-
-    return { props, refs }
-  }
-
-  // TODO: This should include partial installs
-  deploy (type, options = {}) {
-    if (this.pending.has(type)) return
-    if (this.logger) this.logger.info('Deploying', type.name)
-
-    // short-circut deployment at Jig and Berry because this class already deployed it
-    if (type === this.Jig || type === Jig) return this.Jig
-    if (type === this.Berry || type === Berry) return this.Berry
-
-    // check that this code can be deployed
-    if (!util.deployable(type)) throw new Error(`${type} is not deployable`)
-
-    // if this type was already deployed on this network, don't deploy again
-    const pre = this.installs.get(type)
-    const run = util.activeRunInstance()
-    const net = util.networkSuffix(run.blockchain.network)
-    if (pre && Object.keys(pre).includes(`origin${net}`) &&
-      Object.keys(pre).includes(`location${net}`)) return pre
-
-    // TODO: Add test, and make sure this works
-    const classProps = Object.keys(type)
-    if (classProps.includes(`location${net}`)) {
-      const preByLoc = this.installs.get(type[`location${net}`])
-      if (preByLoc) return preByLoc
-    }
-
-    // check the class properties. classProps are props specifically on this code, not a parent
-    const isBasicObject = (o) => Object.getPrototypeOf(Object.getPrototypeOf(o)) === null
-    if (classProps.includes('deps') && !isBasicObject(type.deps)) throw new Error('deps must be an object')
-    const notAString = s => classProps.includes(s) && typeof type[s] !== 'string'
-    stringProps.forEach(s => { if (notAString(s)) throw new Error(`${s} must be a string: ${type[s]}`) })
-
-    run.transaction.begin()
-    try {
-      // create env, the globals in the sandbox. this will just be the parent.
-      const env = {}
-
-      // make sure the parent does not conflict with whats set in deps
-      // realdeps is type.deps with its parent if not there
-      const parentClass = Object.getPrototypeOf(type)
-      const realdeps = classProps.includes('deps') ? Object.assign({}, type.deps) : {}
-      const SandboxObject = this.evaluator.intrinsics.default.Object
-      if (parentClass !== Object.getPrototypeOf(Object) &&
-        parentClass !== SandboxObject.getPrototypeOf(SandboxObject)) {
-        env[parentClass.name] = this.deploy(parentClass, options)
-        if (realdeps[parentClass.name]) {
-          const currentSandbox = this.getInstalled(realdeps[parentClass.name])
-          if (currentSandbox !== env[parentClass.name]) {
-            throw new Error(`unexpected parent dependency ${parentClass.name}`)
-          }
-        }
-        if (!(parentClass.name in realdeps) &&
-          parentClass !== this.installs.get(Jig) &&
-          parentClass !== Jig &&
-          parentClass !== this.installs.get(Berry) &&
-          parentClass !== Berry) {
-          realdeps[parentClass.name] = parentClass
-        }
-      }
-
-      // If the parent the child, return its location and don't install anything
-      const pre2 = this.installs.get(type)
-      if (pre2 && Object.keys(pre2).includes(`origin${net}`) &&
-        Object.keys(pre2).includes(`location${net}`)) return pre2
-
-      const { result: sandbox, globals: sandboxGlobal } = this.sandboxType(type, env)
-      this.installs.set(type, sandbox)
-      this.installs.set(sandbox, sandbox)
-
-      // Deploy any code found in the static properties
-      const xray = new Xray()
-        .allowTokens()
-        .allowDeployables()
-        .useIntrinsics(this.intrinsics)
-        .useCodeCloner(x => this.getInstalled(x))
-
-      const staticProps = Object.assign({}, type)
-      try {
-        xray.scan(staticProps)
-      } catch (e) {
-        throw new Error(`A static property of ${type.name} is not supported\n\n${e}`)
-      }
-
-      // If location is already set for the network, assume correct and don't reupload
-      const hasPresets = classProps.includes(`origin${net}`) || classProps.includes(`location${net}`)
-      if (hasPresets) {
-        if (classProps.includes(`origin${net}`)) {
-          sandbox[`origin${net}`] = sandbox.origin = type.origin = type[`origin${net}`]
-        }
-        sandbox[`location${net}`] = sandbox.location = type.location = type[`location${net}`] || type.origin
-        sandbox[`owner${net}`] = sandbox.owner = type.owner = type[`owner${net}`]
-
-        this.installs.set(sandbox[`location${net}`], sandbox)
-      } else if (options.dontDeploy) {
-        // Berry protocols
-        const location = '!Not deployed'
-        sandbox[`origin${net}`] = sandbox.origin = type.origin = type[`origin${net}`] = location
-        sandbox[`location${net}`] = sandbox.location = type.location = type[`location${net}`] || type.origin
-        sandbox[`owner${net}`] = sandbox.owner = type.owner = type[`owner${net}`] = null
-      } else {
-        // Location is not set. use a temporary location and deploy
-
-        const currentNetwork = run.blockchain.network
-        const success = (location) => {
-          // if different network, primary origin and location will be set by that run instance
-          if (run.blockchain.network === currentNetwork) {
-            type.origin = type.location = sandbox.origin = sandbox.location = location
-            type.owner = sandbox.owner = type[`owner${net}`]
-          }
-          sandbox[`origin${net}`] = sandbox[`location${net}`] = location
-          type[`origin${net}`] = type[`location${net}`] = location
-          this.installs.set(location, sandbox)
-        }
-        const error = () => {
-          if (run.blockchain.network === currentNetwork) {
-            delete type.origin; delete type.location
-            delete sandbox.origin; delete sandbox.location
-            delete type.owner; delete sandbox.owner
-          }
-          delete type[`origin${net}`]; delete type[`location${net}`]
-          delete sandbox[`origin${net}`]; delete sandbox[`location${net}`]
-          delete type[`owner${net}`]; delete sandbox[`owner${net}`]
-        }
-
-        const actionProps = Object.assign({}, staticProps)
-        stringProps.forEach(name => { delete actionProps[name] })
-        delete actionProps.deps
-
-        let tempLocation = null
-        try {
-          this.pending.add(type)
-          tempLocation = run.transaction.storeCode(type, sandbox, realdeps,
-            actionProps, success, error)
-        } finally { this.pending.delete(type) }
-
-        type[`origin${net}`] = type[`location${net}`] = tempLocation
-        sandbox[`origin${net}`] = sandbox[`location${net}`] = tempLocation
-        type[`owner${net}`] = sandbox[`owner${net}`] = type.owner
-      }
-
-      // Deploy each deployable
-      xray.deployables.forEach(x => this.deploy(x, options))
-
-      // Create a safe clone of the static properties for the sandbox
-      try {
-        const safeStaticProps = xray.clone(staticProps)
-        Object.assign(sandbox, safeStaticProps)
-      } catch (e) {
-        throw new Error(`A static property of ${type.name} cannot be sandboxed\n\n${e}`)
-      }
-
-      // Set dependencies now as sandbox globals. We've delayed this to enable circular deps.
-      if (sandboxGlobal) {
-        Object.entries(realdeps).forEach(([name, dep]) => {
-          if (dep === parentClass || dep === env[parentClass.name]) return
-          sandboxGlobal[name] = this.deploy(dep, options)
-        })
-      }
-
-      return sandbox
-    } finally {
-      run.transaction.end()
-    }
-  }
-
-  async installFromTx (def, location, tx, run, bsvNetwork, partiallyInstalledCode = new Map()) {
-    // if we have this location already, return it
-    if (this.installs.has(location)) return this.installs.get(location)
-    if (partiallyInstalledCode.has(location)) return partiallyInstalledCode.get(location)
-
-    // parse the location
-    const txid = location.slice(0, 64)
-    const vout = parseInt(location.slice(66))
-
-    // make sure the owner matches the output's address
-    // TODO: Move this to transaction
-    const hex1 = tx.outputs[vout].script.toHex()
-    const hex2 = Buffer.from(util.ownerScript(def.owner).toBytes()).toString('hex')
-    if (hex1 !== hex2) throw new Error(`bad def owner: ${location}`)
-
-    const env = { }
-
-    // Create a promise so that other dependencies can refer to this load
-    // instead of loading themselves
-    let partialInstallResolve = null; let partialInstallReject = null
-    const partialInstall = new Promise((resolve, reject) => {
-      partialInstallResolve = resolve
-      partialInstallReject = reject
-    })
-    partiallyInstalledCode.set(location, partialInstall)
-
-    try {
-      const parentClassRegex = /^class \w* extends (\w*)[\s]*{/
-      let parentName = null
-      if (parentClassRegex.test(def.text)) {
-        parentName = def.text.match(parentClassRegex)[1]
-        let parentLocation = (def.deps || {})[parentName]
-        if (parentName === 'Jig' && typeof parentLocation === 'undefined') {
-          env.Jig = this.Jig
-        } else if (parentName === 'Berry' && typeof parentLocation === 'undefined') {
-          env.Berry = this.Berry
-        } else {
-          if (parentLocation.startsWith('_')) { parentLocation = tx.hash + parentLocation }
-          env[parentName] = await run.transaction.load(parentLocation, { partiallyInstalledCode })
-        }
-      }
-
-      const { result: sandbox, globals: sandboxGlobal } = this.evaluator.evaluate(def.text, env)
-      sandbox.origin = sandbox.location = location
-      sandbox.owner = def.owner
-      const net = util.networkSuffix(run.blockchain.network)
-      sandbox[`origin${net}`] = sandbox[`location${net}`] = location
-      sandbox[`owner${net}`] = def.owner
-      partialInstallResolve(sandbox)
-
-      if (sandboxGlobal) {
-        const promises = Object.entries(def.deps || {}).map(([name, dep]) => {
-          if (name === parentName) return
-          const location = dep.startsWith('_') ? tx.hash + dep : dep
-          return run.transaction.load(location, { partiallyInstalledCode }).then(T => {
-            sandboxGlobal[name] = T
-          })
-        })
-        await Promise.all(promises)
-      }
-
-      // set all of the dependencies to their sandboxed versions
-      if (def.deps) {
-        sandbox.deps = {}
-        Object.keys(def.deps).forEach(name => {
-          sandbox.deps[name] = sandboxGlobal[name] || env[name]
-        })
-      }
-
-      // Hydrate class prop tokens and apply them to the sandbox
-      if (def.props) {
-        const tokens = new Map()
-        const tokenLoader = ref => tokens.get(ref)
-
-        const xray = new Xray()
-          .allowTokens()
-          .useIntrinsics(this.intrinsics)
-          .useTokenLoader(tokenLoader)
-
-        xray.scan(def.props)
-
-        const fullLocation = loc => ((loc[1] === 'i' || loc[1] === 'o') ? txid + loc : loc)
-        const loadRef = ref => run.transaction.load(fullLocation(ref), { partiallyInstalledCode })
-          .then(token => tokens.set(ref, token))
-        await Promise.all(Array.from(xray.refs).map(ref => loadRef(ref)))
-
-        const classProps = xray.deserialize(def.props)
-
-        Object.assign(sandbox, classProps)
-      }
-
-      partiallyInstalledCode.delete(location)
-
-      // Safety check. We should be able to remove over time.
-      if (this.installs.has(location)) {
-        const hint = 'This is an internal Run bug. Please report it to the library developers.'
-        throw new Error(`Code installed twice for ${location}\n\n${hint}.`)
-      }
-
-      this.installs.set(location, sandbox)
-      this.installs.set(sandbox, sandbox)
-
-      return sandbox
-    } catch (e) {
-      partialInstallReject(e)
-      throw e
-    }
-  }
-
-  installJig () {
-    // Jigs don't use FriendlySet and FriendlyMap, because it makes
-    const env = { JigControl, Context, Set, Map }
-    this.Jig = this.sandboxType(Jig, env).result
-    this.installs.set(Jig, this.Jig)
-    this.installs.set(this.Jig, this.Jig)
-  }
-
-  installBerry () {
-    const env = { BerryControl, Context }
-    this.Berry = this.sandboxType(Berry, env).result
-    this.installs.set(Berry, this.Berry)
-    this.installs.set(this.Berry, this.Berry)
-  }
-
-  sandboxType (type, env) {
-    const prev = this.installs.get(type)
-    if (prev) return [prev, null]
-    const code = util.getNormalizedSourceCode(type)
-    const willSandbox = this.evaluator.willSandbox(code)
-    if (!willSandbox) return [type, {}]
-    return this.evaluator.evaluate(code, env)
-  }
-
-  activate (network) {
-    const net = util.networkSuffix(network)
-
-    this.installs.forEach((v, k) => {
-      if (typeof k === 'string') return // location
-      if (typeof k[`origin${net}`] !== 'undefined') {
-        k.origin = k[`origin${net}`]
-        v.origin = k[`origin${net}`]
-      } else { delete k.origin; delete v.origin }
-      if (typeof k[`location${net}`] !== 'undefined') {
-        k.location = k[`location${net}`]
-        v.location = k[`location${net}`]
-      } else { delete k.location; delete v.location }
-      if (typeof k[`owner${net}`] !== 'undefined') {
-        k.owner = k[`owner${net}`]
-        v.owner = k[`owner${net}`]
-      } else { delete k.owner; delete v.owner }
-    })
-
-    this.evaluator.activate()
-  }
-
-  deactivate () {
-    this.evaluator.deactivate()
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-module.exports = Code
-
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7).Buffer))
-
-/***/ }),
-/* 28 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-exports.byteLength = byteLength
-exports.toByteArray = toByteArray
-exports.fromByteArray = fromByteArray
-
-var lookup = []
-var revLookup = []
-var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
-
-var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-for (var i = 0, len = code.length; i < len; ++i) {
-  lookup[i] = code[i]
-  revLookup[code.charCodeAt(i)] = i
-}
-
-// Support decoding URL-safe base64 strings, as Node.js does.
-// See: https://en.wikipedia.org/wiki/Base64#URL_applications
-revLookup['-'.charCodeAt(0)] = 62
-revLookup['_'.charCodeAt(0)] = 63
-
-function getLens (b64) {
-  var len = b64.length
-
-  if (len % 4 > 0) {
-    throw new Error('Invalid string. Length must be a multiple of 4')
-  }
-
-  // Trim off extra bytes after placeholder bytes are found
-  // See: https://github.com/beatgammit/base64-js/issues/42
-  var validLen = b64.indexOf('=')
-  if (validLen === -1) validLen = len
-
-  var placeHoldersLen = validLen === len
-    ? 0
-    : 4 - (validLen % 4)
-
-  return [validLen, placeHoldersLen]
-}
-
-// base64 is 4/3 + up to two characters of the original data
-function byteLength (b64) {
-  var lens = getLens(b64)
-  var validLen = lens[0]
-  var placeHoldersLen = lens[1]
-  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
-}
-
-function _byteLength (b64, validLen, placeHoldersLen) {
-  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
-}
-
-function toByteArray (b64) {
-  var tmp
-  var lens = getLens(b64)
-  var validLen = lens[0]
-  var placeHoldersLen = lens[1]
-
-  var arr = new Arr(_byteLength(b64, validLen, placeHoldersLen))
-
-  var curByte = 0
-
-  // if there are placeholders, only get up to the last complete 4 chars
-  var len = placeHoldersLen > 0
-    ? validLen - 4
-    : validLen
-
-  var i
-  for (i = 0; i < len; i += 4) {
-    tmp =
-      (revLookup[b64.charCodeAt(i)] << 18) |
-      (revLookup[b64.charCodeAt(i + 1)] << 12) |
-      (revLookup[b64.charCodeAt(i + 2)] << 6) |
-      revLookup[b64.charCodeAt(i + 3)]
-    arr[curByte++] = (tmp >> 16) & 0xFF
-    arr[curByte++] = (tmp >> 8) & 0xFF
-    arr[curByte++] = tmp & 0xFF
-  }
-
-  if (placeHoldersLen === 2) {
-    tmp =
-      (revLookup[b64.charCodeAt(i)] << 2) |
-      (revLookup[b64.charCodeAt(i + 1)] >> 4)
-    arr[curByte++] = tmp & 0xFF
-  }
-
-  if (placeHoldersLen === 1) {
-    tmp =
-      (revLookup[b64.charCodeAt(i)] << 10) |
-      (revLookup[b64.charCodeAt(i + 1)] << 4) |
-      (revLookup[b64.charCodeAt(i + 2)] >> 2)
-    arr[curByte++] = (tmp >> 8) & 0xFF
-    arr[curByte++] = tmp & 0xFF
-  }
-
-  return arr
-}
-
-function tripletToBase64 (num) {
-  return lookup[num >> 18 & 0x3F] +
-    lookup[num >> 12 & 0x3F] +
-    lookup[num >> 6 & 0x3F] +
-    lookup[num & 0x3F]
-}
-
-function encodeChunk (uint8, start, end) {
-  var tmp
-  var output = []
-  for (var i = start; i < end; i += 3) {
-    tmp =
-      ((uint8[i] << 16) & 0xFF0000) +
-      ((uint8[i + 1] << 8) & 0xFF00) +
-      (uint8[i + 2] & 0xFF)
-    output.push(tripletToBase64(tmp))
-  }
-  return output.join('')
-}
-
-function fromByteArray (uint8) {
-  var tmp
-  var len = uint8.length
-  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
-  var parts = []
-  var maxChunkLength = 16383 // must be multiple of 3
-
-  // go through the array every three bytes, we'll deal with trailing stuff later
-  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
-    parts.push(encodeChunk(
-      uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)
-    ))
-  }
-
-  // pad the end with zeros, but make sure to not forget the extra bytes
-  if (extraBytes === 1) {
-    tmp = uint8[len - 1]
-    parts.push(
-      lookup[tmp >> 2] +
-      lookup[(tmp << 4) & 0x3F] +
-      '=='
-    )
-  } else if (extraBytes === 2) {
-    tmp = (uint8[len - 2] << 8) + uint8[len - 1]
-    parts.push(
-      lookup[tmp >> 10] +
-      lookup[(tmp >> 4) & 0x3F] +
-      lookup[(tmp << 2) & 0x3F] +
-      '='
-    )
-  }
-
-  return parts.join('')
-}
-
-
-/***/ }),
-/* 29 */
-/***/ (function(module, exports) {
-
-exports.read = function (buffer, offset, isLE, mLen, nBytes) {
-  var e, m
-  var eLen = (nBytes * 8) - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var nBits = -7
-  var i = isLE ? (nBytes - 1) : 0
-  var d = isLE ? -1 : 1
-  var s = buffer[offset + i]
-
-  i += d
-
-  e = s & ((1 << (-nBits)) - 1)
-  s >>= (-nBits)
-  nBits += eLen
-  for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) {}
-
-  m = e & ((1 << (-nBits)) - 1)
-  e >>= (-nBits)
-  nBits += mLen
-  for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) {}
-
-  if (e === 0) {
-    e = 1 - eBias
-  } else if (e === eMax) {
-    return m ? NaN : ((s ? -1 : 1) * Infinity)
-  } else {
-    m = m + Math.pow(2, mLen)
-    e = e - eBias
-  }
-  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
-}
-
-exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
-  var e, m, c
-  var eLen = (nBytes * 8) - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
-  var i = isLE ? 0 : (nBytes - 1)
-  var d = isLE ? 1 : -1
-  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
-
-  value = Math.abs(value)
-
-  if (isNaN(value) || value === Infinity) {
-    m = isNaN(value) ? 1 : 0
-    e = eMax
-  } else {
-    e = Math.floor(Math.log(value) / Math.LN2)
-    if (value * (c = Math.pow(2, -e)) < 1) {
-      e--
-      c *= 2
-    }
-    if (e + eBias >= 1) {
-      value += rt / c
-    } else {
-      value += rt * Math.pow(2, 1 - eBias)
-    }
-    if (value * c >= 2) {
-      e++
-      c /= 2
-    }
-
-    if (e + eBias >= eMax) {
-      m = 0
-      e = eMax
-    } else if (e + eBias >= 1) {
-      m = ((value * c) - 1) * Math.pow(2, mLen)
-      e = e + eBias
-    } else {
-      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
-      e = 0
-    }
-  }
-
-  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
-
-  e = (e << mLen) | m
-  eLen += mLen
-  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
-
-  buffer[offset + i - d] |= s * 128
-}
-
-
-/***/ }),
-/* 30 */
-/***/ (function(module, exports) {
-
-var toString = {}.toString;
-
-module.exports = Array.isArray || function (arr) {
-  return toString.call(arr) == '[object Array]';
-};
-
-
-/***/ }),
-/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (global, factory) {
@@ -12677,6 +10103,2586 @@ You probably want a Compartment instead, like:
 
 
 /***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(Buffer) {/**
+ * transaction.js
+ *
+ * Transaction API for inspecting and building bitcoin transactions
+ */
+
+const bsv = __webpack_require__(2)
+const util = __webpack_require__(0)
+const { JigControl } = __webpack_require__(4)
+const { Owner } = __webpack_require__(8)
+const { Berry } = __webpack_require__(11)
+const Location = __webpack_require__(5)
+const Protocol = __webpack_require__(9)
+const { FriendlySet } = __webpack_require__(3)
+const Xray = __webpack_require__(10)
+
+// ------------------------------------------------------------------------------------------------
+// Transaction
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * The main transaction API used by run
+ */
+class Transaction {
+  constructor (run) {
+    this.run = run
+    this.syncer = run.syncer
+    this.blockchain = run.blockchain
+    this.state = run.state
+    try {
+      this.owner = run.owner.getOwner()
+    } catch (e) { this.owner = null }
+    this.code = run.code
+    this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this)) // current proto-transaction
+  }
+
+  begin () { this.protoTx.begin(); return this.run }
+
+  end () { this.protoTx.end(); return this.run }
+
+  onReadyForPublish () {
+    this.syncer.publish(this.protoTx)
+    this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this))
+  }
+
+  export () {
+    if (this.syncer.queued.length > 0) {
+      // TODO: Only have to check if referenced jigs are in the queue
+      throw new Error('must not have any queued transactions before exporting')
+    }
+
+    if (this.protoTx.beginCount === 0) {
+      const suggestion = 'Hint: A transaction must first be created using begin() or loaded using import().'
+      throw new Error(`No transaction in progress\n\n${suggestion}`)
+    }
+
+    return this.protoTx.buildBsvTransaction(this.run).tx
+  }
+
+  import (tx) { return this.protoTx.import(tx, this.run, false) }
+
+  rollback () { this.protoTx.rollback(this.syncer.lastPosted, this.run, false, 'intentional rollback') }
+
+  async sign () { await this.protoTx.sign(this.run) }
+
+  async pay () { await this.protoTx.pay(this.run) }
+
+  // get inputs () {
+  // TODO: filtering by inputs is broken
+  // return this.protoTx.inputs
+  // .filter(input => input.origin !== '_')
+  // .map(input => this.protoTx.proxies.get(input))
+  // }
+
+  // get outputs () {
+  // return this.protoTx.outputs.map(output => this.protoTx.proxies.get(output))
+  // }
+
+  get actions () {
+    return this.protoTx.actions.map(action => {
+      return {
+        target: this.protoTx.proxies.get(action.target),
+        method: action.method,
+        args: action.args
+      }
+    })
+  }
+
+  storeCode (type, sandbox, deps, props, success, error) {
+    return this.protoTx.storeCode(type, sandbox, deps, props, success, error,
+      this.owner, this.code, this.run)
+  }
+
+  storeAction (target, method, args, inputs, outputs, reads, before, after, proxies, run) {
+    this.protoTx.storeAction(target, method, args, inputs, outputs, reads, before, after, proxies, this.run)
+  }
+
+  /**
+   * Loads a jig or class at a particular location
+   *
+   * location is a string
+   *
+   * cachedRefs stores a map from locations to jigs/classes loaded by load()
+   * from the state cache. load() will trigger additional loads recursively.
+   * both jigs and classes may have references to other jigs and other classes,
+   * and we don't want to load these multiple times. especially when they refer
+   * to each other cyclically as that could cause infinite loops.
+   */
+  async load (location, options = {}) {
+    if (this.run.logger) this.run.logger.info('Loading', location)
+
+    // If there's a custom protocol, use it
+    if (options.protocol) {
+      return Protocol.pluckBerry(location, this.blockchain, this.code, options.protocol)
+    }
+
+    // Either load a run token, or a berry, depending on if there's a protocol in location
+    const loc = Location.parse(location)
+
+    if (!loc.innerLocation) {
+      return this.loadRunToken(location, options)
+    } else {
+      const protocol = await this.load(loc.location, options)
+      return Protocol.pluckBerry(loc.innerLocation, this.blockchain, this.code, protocol)
+    }
+  }
+
+  async loadRunToken (location, options = {}) {
+    const cachedRefs = options.cachedRefs || new Map()
+
+    // --------------------------------------------------------------------------------------------
+    // CHECK THE CACHE
+    // --------------------------------------------------------------------------------------------
+
+    // check the code cache so we only have to download code once
+    const cachedCode = this.code.getInstalled(location)
+    if (cachedCode) return cachedCode
+
+    if (options.partiallyInstalledCode && options.partiallyInstalledCode.has(location)) {
+      return options.partiallyInstalledCode.get(location)
+    }
+
+    const loc = Location.parse(location)
+    if (loc.error || loc.innerLocation || loc.vref || loc.tempTxid) throw new Error(`Bad location: ${location}`)
+    const { txid, vout, vin } = loc
+
+    // TODO: do we want to support loading locations with inputs?
+    // The transaction test "update class property jig in initializer" uses this
+    if (typeof vin !== 'undefined') {
+      const tx = await this.blockchain.fetch(txid)
+      const prevTxId = tx.inputs[vin].prevTxId.toString('hex')
+      return this.load(`${prevTxId}_o${tx.inputs[vin].outputIndex}`, { cachedRefs })
+    }
+
+    // check the state cache so we only have to load each jig once
+    const cachedState = await this.state.get(location)
+    if (cachedState) {
+      // Make sure the cached state is valid
+      if (typeof cachedState.type !== 'string' || typeof cachedState.state !== 'object') {
+        const hint = 'Hint: Could the state cache be corrupted?'
+        throw new Error(`Cached state is missing a valid type and/or state property\n\n${JSON.stringify(cachedState)}\n\n${hint}`)
+      }
+
+      // Deserialize from a cached state, first by finding all inner tokens and loading them,
+      // and then deserializing
+      const fullLocation = loc => (loc.startsWith('_') ? `${location.slice(0, 64)}${loc}` : loc)
+      const tokenLoader = ref => cachedRefs.get(fullLocation(ref))
+
+      const xray = new Xray()
+        .allowTokens()
+        .useIntrinsics(this.run.code.intrinsics)
+        .useTokenLoader(tokenLoader)
+
+      try {
+        JigControl.blankSlate = true
+
+        // Create the new instance as a blank slate
+        const typeLocation = cachedState.type.startsWith('_') ? location.slice(0, 64) + cachedState.type : cachedState.type
+        const T = await this.load(typeLocation)
+        const instance = new T()
+        cachedRefs.set(location, instance)
+
+        // Load all dependencies
+        xray.scan(cachedState.state)
+        for (const ref of xray.refs) {
+          const fullLoc = fullLocation(ref)
+          if (cachedRefs.has(fullLoc)) continue
+          const token = await this.load(fullLoc, { cachedRefs })
+          if (!cachedRefs.has(fullLoc)) cachedRefs.set(fullLoc, token)
+        }
+
+        // Deserialize and inject our state
+        JigControl.disableProxy(() => {
+          Object.assign(instance, xray.deserialize(cachedState.state))
+          instance.origin = instance.origin || location
+          instance.location = instance.location || location
+        })
+
+        return instance
+      } finally { JigControl.blankSlate = false }
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // LOAD THE TRANSACTION, AND THEN THE JIGS OR CODE
+    // --------------------------------------------------------------------------------------------
+
+    // load all the jigs for this transaction, and return the selected
+    const protoTx = new ProtoTransaction()
+    const tx = await this.blockchain.fetch(txid)
+    await protoTx.import(tx, this.run, null, true, vout, options.partiallyInstalledCode)
+
+    // if a definition, install
+    if (vout > 0 && vout < protoTx.code.length + 1) {
+      return this.code.getInstalled(location) || options.partiallyInstalledCode.get(location)
+    }
+
+    // otherwise, a jig. get the jig.
+    const proxies = protoTx.outputs.map(o => protoTx.proxies.get(o))
+    const jigProxies = new Array(1 + protoTx.code.length).concat(proxies)
+    // TODO: Notify shruggr if these error message change
+    if (typeof jigProxies[vout] === 'undefined') throw new Error('not a jig output')
+    return jigProxies[vout]
+  }
+
+  setProtoTxAndCreator (protoTx, creator) {
+    const old = { protoTx: this.protoTx, creator: this.owner }
+    this.protoTx = protoTx
+    this.owner = creator
+    return old
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// ProtoTransaction
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Proto-transaction: A temporary structure Run uses to build transactions. This structure
+ * has every action and definition that will go into the real transaction, but stored using
+ * references to the actual objects instead of location strings. Run turns the proto-transaction
+ * into a real transaction by converting all references into location strings. This is necessary
+ * when there are queued proto-transactions and the locations may not be known yet.
+ */
+class ProtoTransaction {
+  constructor (onReadyForPublish) {
+    this.onReadyForPublish = onReadyForPublish
+    this.reset()
+  }
+
+  reset () {
+    this.code = [] // Code definitions as types
+    this.actions = [] // Jig updates
+
+    this.before = new Map() // state of all updated jigs before (Target->{json,refs})
+    this.after = new Map() // state of all updated jigs after (Target->{json,refs})
+
+    this.inputs = [] // Targets spent (which may not be tx inputs if created within a batch)
+    this.outputs = [] // Targets outputted
+    this.reads = new Set() // All targets read
+    this.proxies = new Map() // Target->Proxy
+    this.locations = new Map() // Prior location for jigs (Origin->Location)
+
+    this.beginCount = 0 // begin() depth, that is decremented for each end()
+    this.imported = false
+  }
+
+  async import (tx, run, preexistingJig, immutable, vout, cache) {
+    if (this.code.length || this.code.actions || this.beginCount) {
+      throw new Error('transaction already in progress. cannot import.')
+    }
+
+    for (let i = 0; i < tx.inputs.length; i++) {
+      const input = tx.inputs[i]
+      if (!input.output) {
+        const prevTx = await run.blockchain.fetch(input.prevTxId.toString('hex'))
+        const output = prevTx.outputs[input.outputIndex]
+        if (output.script.isPublicKeyHashOut()) {
+          input.output = prevTx.outputs[input.outputIndex]
+          Reflect.setPrototypeOf(input, bsv.Transaction.Input.PublicKeyHash.prototype)
+        } else throw new Error(`Unsupported script type at input ${i}`)
+      }
+    }
+
+    this.beginCount = 1
+    this.imported = true
+
+    const data = util.extractRunData(tx)
+    const bsvNetwork = util.bsvNetwork(run.blockchain.network)
+
+    // install all code definitions first
+    // TODO: should we be installing this now, or after import is done? need actions list...
+    // TODO: Load should not be triggering other loads like this does. This makes it
+    // harder parallelize safely. We need some atomicity, which could be a protoTx loading
+    // for a tx.
+    let index = 1
+    const loadedCode = []
+    for (const def of data.code) {
+      const location = `${tx.hash}_o${index++}`
+      loadedCode.push(await run.code.installFromTx(def, location, tx, run, bsvNetwork, cache))
+    }
+
+    if (vout && vout > 0 && vout < 1 + data.code.length) {
+      // TODO: Fix this hack ... to just make the early out code work
+      this.code = new Array(data.code.length)
+      return
+    }
+
+    // load jig and class references used in args and reads
+    const refs = new Map()
+    if (data.refs) data.refs.forEach(ref => refs.set(ref, ref))
+
+    const xray = new Xray()
+      .allowTokens()
+      .useIntrinsics(run.code.intrinsics)
+
+    for (const action of data.actions) {
+      const addRef = id => {
+        if (id[0] !== '_') { refs.set(id, id) }
+        if (id[1] === 'i') {
+          const txin = tx.inputs[parseInt(id.slice(2))]
+          refs.set(id, `${txin.prevTxId.toString('hex')}_o${txin.outputIndex}`)
+        }
+      }
+
+      if (action.target && action.method !== 'init') addRef(action.target)
+
+      xray.scan(action.args)
+      xray.refs.forEach(ref => addRef(ref))
+    }
+
+    // make sure all of the refs we read are recent
+    for (const [, value] of refs) {
+      const refTx = await run.blockchain.fetch(value.slice(0, 64))
+      const vout = parseInt(value.slice(66))
+      if (typeof refTx.outputs[vout].spentTxId === 'undefined') {
+        throw new Error('Cannot check if read is stale. Blockchain API does not support spentTxId.')
+      }
+      if (refTx.outputs[vout].spentTxId === null) continue
+      const spentTx = await run.blockchain.fetch(refTx.outputs[vout].spentTxId)
+      if (spentTx.time <= tx.time && spentTx.time >= refTx.time &&
+        (tx.time - refTx.time) > 2 * 60 * 60 * 1000 && tx.hash !== spentTx.hash) {
+        throw new Error(`${value} is stale. Aborting.`)
+      }
+    }
+
+    // load the refs
+    // TODO: make sure the target is recent when saved
+    // TODO: would be better to do in parallel if possible...but Code is duplicated sometimes (why?)
+    for (const [refId, refLocation] of refs) {
+      if (preexistingJig && refLocation === preexistingJig.location) {
+        refs.set(refId, preexistingJig)
+      } else {
+        try {
+          refs.set(refId, await run.transaction.load(refLocation))
+        } catch (e) {
+          run.logger.error(e)
+          throw new Error(`Error loading ref ${refId} at ${refLocation}\n\n${e}`)
+        }
+      }
+    }
+
+    if (preexistingJig) {
+      refs.set(preexistingJig.location, preexistingJig)
+    }
+
+    /*
+    // Also load all inputs to spend (do we need to do this? These dedups?
+    for (let vin = 0; vin < tx.inputs.length; vin++) {
+      const input = tx.inputs[vin]
+      try {
+        const location = `${input.prevTxId.toString('hex')}_o${input.outputIndex}`
+        if (preexistingJig && location === preexistingJig.location) {
+          refs.set()
+        }
+        const refId = `_i${vin}`
+        const jig = await run.transaction.load(location)
+        refs.set(refId, jig)
+      } catch (e) { }
+    }
+    */
+
+    // dedupInnerRefs puts any internal objects in their referenced states using known references
+    // ensuring that double-references refer to the same objects
+    const dedupInnerRefs = jig => {
+      const { Jig } = __webpack_require__(6)
+
+      const tokenReplacer = token => {
+        if (token instanceof Jig && token !== jig) {
+          return Array.from(refs.values()).find(ref => ref.origin === token.origin)
+        }
+      }
+
+      const xray = new Xray()
+        .allowTokens()
+        .deeplyScanTokens()
+        .useTokenReplacer(tokenReplacer)
+        .useIntrinsics(run.code.intrinsics)
+
+      JigControl.disableProxy(() => xray.scan(jig))
+    }
+
+    // update the refs themselves with themselves
+    for (const ref of refs.values()) dedupInnerRefs(ref)
+
+    for (const action of data.actions) {
+      // Deserialize the arguments
+      const args = JigControl.disableProxy(() => {
+        const tokenLoader = ref => {
+          if (ref[0] !== '_' || ref[1] === 'i') {
+            const token = refs.get(ref)
+            if (!token) throw new Error(`Unexpected ref ${ref}`)
+            return token
+          }
+          if (ref[1] === 'r') {
+            const token = refs.get(data.refs[parseInt(ref.slice(2))])
+            if (!token) throw new Error(`Unexpected ref ${ref}`)
+            return token
+          }
+          if (ref[1] !== 'o') throw new Error(`Unexpected ref ${ref}`)
+          const vout = parseInt(ref.slice(2)) - 1
+          if (vout < data.code.length) return loadedCode[vout]
+          return this.proxies.get(this.outputs[vout - data.code.length])
+        }
+
+        const xray = new Xray()
+          .allowTokens()
+          .useTokenLoader(tokenLoader)
+          .useIntrinsics(run.code.intrinsics)
+
+        return xray.deserialize(action.args)
+      })
+
+      if (action.method === 'init') {
+        if (action.target[0] === '_') {
+          const vout = parseInt(action.target.slice(2))
+          if (vout <= 0 || vout >= data.code.length + 1) throw new Error(`missing target ${action.target}`)
+        }
+
+        const loc = action.target[0] === '_' ? tx.hash + action.target : action.target
+        const T = await run.transaction.load(loc)
+
+        const oldSettings = run.transaction.setProtoTxAndCreator(this, action.creator)
+
+        try {
+          new T(...args)  // eslint-disable-line
+        } finally {
+          run.transaction.setProtoTxAndCreator(oldSettings.protoTx, oldSettings.creator)
+        }
+      } else {
+        const subject = refs.get(action.target) ||
+          this.proxies.get(this.outputs[parseInt(action.target.slice(2)) - 1 - data.code.length])
+        dedupInnerRefs(subject)
+        if (typeof subject === 'undefined') throw new Error(`target ${action.target} missing`)
+
+        const oldSettings = run.transaction.setProtoTxAndCreator(this, null)
+
+        try {
+          subject[action.method](...args)
+        } catch (e) {
+          throw new Error(`unexpected exception in ${action.method}\n\n${e}`)
+        } finally {
+          run.transaction.setProtoTxAndCreator(oldSettings.protoTx, oldSettings.creator)
+        }
+      }
+    }
+
+    // TODO: use buildBsvTransaction here to compare?
+
+    const spentJigs = this.inputs.filter(i => i.origin[0] !== '_')
+    if (data.jigs !== this.outputs.length) throw new Error('bad number of jigs')
+    if (tx.inputs.length < spentJigs.length) throw new Error('not enough inputs')
+    if (tx.outputs.length < data.code.length + data.jigs + 1) throw new Error('not enough outputs')
+    spentJigs.forEach((i, n) => {
+      const location = `${tx.inputs[n].prevTxId.toString('hex')}_o${tx.inputs[n].outputIndex}`
+      const location2 = this.locations.get(i.origin) || i.location
+      if (location !== location2) throw new Error(`bad input ${n}`)
+    })
+    this.outputs.forEach((o, n) => {
+      const index = 1 + data.code.length + n
+      const hex1 = Buffer.from(util.ownerScript(o.owner).toBytes()).toString('hex')
+      const hex2 = tx.outputs[index].script.toHex()
+      if (hex1 !== hex2) throw new Error(`bad owner on output ${index}`)
+      if (tx.outputs[index].satoshis < Math.max(o.satoshis, bsv.Transaction.DUST_AMOUNT)) {
+        throw new Error(`bad satoshis on output ${index}`)
+      }
+    })
+
+    if (immutable) {
+      this.outputs.forEach(o => {
+        const oid = `${tx.hash}_o${1 + data.code.length + parseInt(o.location.slice(2))}`
+        if (o.origin[0] === '_') o.origin = oid
+        if (o.location[0] === '_') o.location = oid
+      })
+    }
+
+    // cache all of the loaded jigs
+    const proxies = this.outputs.map(o => this.proxies.get(o))
+    const jigProxies = new Array(1 + data.code.length).concat(proxies)
+    const net = util.networkSuffix(run.blockchain.network)
+    for (let vout = 0; vout < jigProxies.length; vout++) {
+      if (!jigProxies[vout]) continue
+      const jigLocation = `${tx.hash.slice(0, 64)}_o${vout}`
+
+      // Serialize the state of the jig into a local reference form
+      const serialized = JigControl.disableProxy(() => {
+        const tokenSaver = token =>
+          token.location.startsWith(tx.hash) ? token.location.slice(64) : token.location
+
+        const xray = new Xray()
+          .allowTokens()
+          .useIntrinsics(run.code.intrinsics)
+          .useTokenSaver(tokenSaver)
+
+        const obj = Object.assign({}, jigProxies[vout])
+
+        if (obj.origin.startsWith(tx.hash) || obj.origin.startsWith('_')) delete obj.origin
+        if (obj.location.startsWith(tx.hash) || obj.location.startsWith('_')) delete obj.location
+
+        return xray.serialize(obj)
+      })
+
+      let type = jigProxies[vout].constructor[`origin${net}`]
+      if (type.startsWith(tx.hash)) type = type.slice(64)
+
+      const cachedState = { type, state: serialized }
+      await run.state.set(jigLocation, cachedState)
+    }
+
+    // clear the code, and load it directly from the transaction
+    this.code = []
+    data.code.forEach((code, index) => {
+      const location = `${tx.hash}_o${index + 1}`
+      const type = run.code.getInstalled(location)
+      this.storeCode(type, type, {}, run.code.extractProps(type).props, () => {}, () => {}, code.owner, run.code, run)
+    })
+
+    const spentLocations = spentJigs.map(jig => this.locations.get(jig.origin) || jig.location)
+    this.cachedTx = { tx, refs: data.refs || [], spentJigs, spentLocations }
+  }
+
+  begin () { this.beginCount++ }
+
+  end () {
+    if (this.beginCount === 0) throw new Error('end transaction without begin')
+    if (--this.beginCount === 0 && this.onReadyForPublish && (this.code.length || this.actions.length)) {
+      this.onReadyForPublish()
+    }
+  }
+
+  rollback (lastPosted, run, error, unhandled) {
+    delete this.cachedTx
+
+    // notify the definition. this will undo the location/origin to allow a retry.
+    this.code.forEach(def => def.error())
+
+    // notify the owner. this may remove it from its list.
+    this.code.forEach(def => { if (run.owner instanceof Owner) run.owner.update(def.sandbox) })
+
+    // revert the state of each jig
+    this.outputs.forEach(jig => {
+      // if the jig was never deployed, or if there was an unhandled error leading to this
+      // rollback, then make this jig permanently unusable by setting a bad origin.
+      if (jig.origin[0] === '_' || unhandled) {
+        const err = `!${jig.origin[0] === '_' ? 'Deploy failed'
+          : 'A previous update failed'}\n\n${error}`
+        // TODO: log the error here
+        Object.keys(jig).forEach(key => delete jig[key])
+        jig.origin = jig.location = err
+        return
+      }
+
+      // if this jig was already reverted, continue
+      if (jig.location[0] !== '_') return
+
+      // revert the state of the jig to its state before this transaction
+      const origin = jig.origin
+      this.before.get(jig).restoreInPlace()
+      jig.origin = origin
+      jig.location = lastPosted.get(origin)
+
+      // TODO: Deserialize saved state
+    })
+
+    // notify the owner of jig rollbacks
+    this.outputs.forEach(jig => { if (run.owner instanceof Owner) run.owner.update(jig) })
+
+    this.reset()
+  }
+
+  storeCode (type, sandbox, deps, props, success, error, owner, code, run) {
+    delete this.cachedTx
+
+    this.begin()
+    try {
+      if (typeof owner === 'object') run.deploy(owner.constructor)
+      this.code.push({ type, sandbox, deps, props, success, error, owner })
+      const tempLocation = `_d${this.code.length - 1}`
+      type.owner = sandbox.owner = owner // TODO: Sandbox owner
+      if (run.owner instanceof Owner) run.owner.update(code.getInstalled(type))
+      return tempLocation
+    } finally { this.end() }
+  }
+
+  storeAction (target, method, args, inputs, outputs, reads, before, after, proxies, run) {
+    delete this.cachedTx
+
+    this.begin()
+
+    try {
+      // ------------------------------------------------------------------------------------------
+      // CHECK FOR MULTIPLE DIFFERENT JIG REFERENCES
+      // ------------------------------------------------------------------------------------------
+
+      // This doesn't cover the case of undeployed locations. We must run this again in publish.
+      // Also, inner references that aren't read aren't checked, but this isn't a problem because
+      // the user can 'sync' these up to their latest state before they read them in the future.
+
+      const pickups = new FriendlySet([target])
+      inputs.forEach(jig => pickups.add(jig))
+      outputs.forEach(jig => pickups.add(jig))
+      reads.forEach(jig => pickups.add(jig))
+
+      // ------------------------------------------------------------------------------------------
+      // STORE NEW BEFORE STATES AND ALL AFTER STATES FOR JIGS IN THE PROTO TRANSACTION
+      // ------------------------------------------------------------------------------------------
+
+      before.forEach((checkpoint, target) => {
+        this.before.set(target, this.before.get(target) || checkpoint)
+      })
+
+      after.forEach((checkpoint, target) => { this.after.set(target, checkpoint) })
+
+      // ------------------------------------------------------------------------------------------
+      // ADD INPUTS TO THE PROTO TRANSACTION
+      // ------------------------------------------------------------------------------------------
+
+      inputs.forEach(newTarget => {
+        const isDifferentInstance = currTarget => util.sameJig(newTarget, currTarget) &&
+          currTarget.location !== newTarget.location
+        if (this.inputs.some(isDifferentInstance)) {
+          throw new Error('different instances of the same jig')
+        }
+
+        if (!this.inputs.some(currTarget => util.sameJig(newTarget, currTarget))) {
+          this.inputs.push(newTarget)
+        }
+      })
+
+      // ------------------------------------------------------------------------------------------
+      // ADD OUTPUTS TO THE PROTO TRANSACTION AND SET TEMP LOCATIONS
+      // ------------------------------------------------------------------------------------------
+
+      outputs.forEach(jig => {
+        const index = this.outputs.findIndex(previousJig => util.sameJig(jig, previousJig))
+
+        if (index !== -1) {
+          jig.location = `_o${index}`
+          jig.origin = jig.origin || jig.location
+          return
+        }
+
+        this.outputs.push(jig)
+
+        const updating = jig => (jig.origin && jig.origin[0] !== '_' && jig.location &&
+          jig.location[0] !== '_' && !this.locations.has(jig.origin))
+
+        if (updating(jig)) this.locations.set(jig.origin, jig.location)
+
+        jig.location = `_o${this.outputs.length - 1}`
+        jig.origin = jig.origin || jig.location
+      })
+
+      // ------------------------------------------------------------------------------------------
+      // REMEMBER READS AND PROXIES FOR LATER
+      // ------------------------------------------------------------------------------------------
+
+      reads.forEach(proxy => this.reads.add(proxy))
+
+      proxies.forEach((v, k) => this.proxies.set(k, v))
+
+      // ------------------------------------------------------------------------------------------
+      // STORE THE ACTION IN THE PROTO TRANSACTION
+      // ------------------------------------------------------------------------------------------
+
+      const creator = before.get(target).restore().owner
+
+      this.actions.push({ target, method, creator, args, inputs, outputs, reads })
+    } finally { this.end() }
+
+    // Notify the owner of each output they may care about
+    outputs.forEach(target => { if (run.owner instanceof Owner) run.owner.update(proxies.get(target)) })
+  }
+
+  async pay (run) {
+    if (!this.cachedTx) this.buildBsvTransaction(run)
+    return run.purse.pay(this.cachedTx.tx)
+  }
+
+  async sign (run) {
+    if (!this.cachedTx) this.buildBsvTransaction(run)
+    return run.owner.sign(this.cachedTx.tx)
+  }
+
+  buildBsvTransaction (run) {
+    if (this.cachedTx) return this.cachedTx
+
+    const { blockchain, syncer } = run
+
+    const net = util.networkSuffix(blockchain.network)
+
+    // build the read references array, checking for different locations of the same jig
+    const spentJigs = this.inputs.filter(jig => jig.origin[0] !== '_')
+    const readRefs = new Map()
+    this.reads.forEach(jig => {
+      if (spentJigs.includes(jig) || this.outputs.includes(jig)) return
+      const location = syncer.lastPosted.get(jig.origin) ||
+        this.locations.get(jig.origin) || jig.location
+      const prevLocation = readRefs.get(jig.origin)
+      if (prevLocation && prevLocation !== location) {
+        throw new Error(`read different locations of same jig ${jig.origin}`)
+      }
+      readRefs.set(jig.origin, location)
+    })
+    const refs = Array.from(readRefs.values())
+
+    // Jig arguments, class props, and code need to be turned into token references
+    const { Jig } = __webpack_require__(6)
+    const tokenSaver = token => {
+      if (token instanceof Jig) {
+        // find the jig if it is a proxy. it may not be a proxy if it wasn't used, but then
+        // we won't have trouble reading origin/location. (TODO: is this true? might be queued)
+        let target = token
+        const targets = Array.from(this.proxies.entries())
+          .filter(([pk, pv]) => pv === target).map(([pk, pv]) => pk)
+        if (targets.length) { target = targets[0] }
+
+        // if the jig is an input, use it
+        const inputIndex = spentJigs.findIndex(i => util.sameJig(i, target))
+        if (inputIndex !== -1) return `_i${inputIndex}`
+
+        // if the jig is an output, use it
+        const outputIndex = this.outputs.findIndex(o => util.sameJig(o, target))
+        if (outputIndex !== -1) return `_o${1 + this.code.length + outputIndex}`
+
+        // if the jig is a read reference, use it
+        const refIndex = refs.indexOf(readRefs.get(target.origin))
+        if (refIndex !== -1) return `_r${refIndex}`
+
+        // otherwise, use the actual location
+        return syncer.lastPosted.get(target.origin) || target.location
+      }
+
+      if (util.deployable(token)) {
+        return token[`location${net}`][0] === '_'
+          ? `_o${parseInt(token[`location${net}`].slice(2)) + 1}`
+          : token[`location${net}`]
+      }
+
+      if (token instanceof Berry) {
+        const error = Location.parse(token.location).error
+        if (error) throw new Error(`Cannot serialize berry: ${error}`)
+        return token.location
+      }
+    }
+
+    const xray = new Xray()
+      .allowTokens()
+      .useIntrinsics(run.code.intrinsics)
+      .useTokenSaver(tokenSaver)
+
+    // build each action
+    const actions = this.actions.map(action => {
+      const { method } = action
+
+      const args = xray.serialize(action.args)
+
+      // if init, this is a special case. find the definition and owner.
+      if (method === 'init') {
+        const targetLocation = action.target.constructor[`origin${net}`] ||
+            action.target.constructor[`location${net}`]
+        const target = targetLocation[0] === '_' ? `_o${1 + parseInt(targetLocation.slice(2))}` : targetLocation
+        return { target, method, args, creator: xray.serialize(action.creator) }
+      }
+
+      // if the jig has an input, use it
+      const inputIndex = spentJigs.findIndex(i => util.sameJig(i, action.target))
+      if (inputIndex !== -1) return { target: `_i${inputIndex}`, method, args }
+
+      // if the jig has an output, use it (example: created within the transaction)
+      const outputIndex = this.outputs.findIndex(o => util.sameJig(o, action.target))
+      if (outputIndex !== -1) return { target: `_o${1 + this.code.length + outputIndex}`, method, args }
+
+      // the target was not updated in the transaction
+      const target = action.target.location[0] !== '_' ? action.target.location
+        : syncer.lastPosted.get(action.target.origin)
+      return { target, method, args }
+    })
+
+    // Build each definition
+    const code = this.code.map(def => {
+      // Turn dependencies into references
+      const fixloc = id => id[0] === '_' ? `_o${1 + parseInt(id.slice(2))}` : id
+      const depsArr = Object.entries(def.deps).map(([k, v]) => ({ [k]: fixloc(v[`location${net}`]) }))
+      const deps = depsArr.length ? Object.assign(...depsArr) : undefined
+
+      // Serialize class props
+      const props = Object.keys(def.props).length ? xray.serialize(def.props) : undefined
+
+      return { text: util.getNormalizedSourceCode(def.type), deps, props, owner: def.owner }
+    })
+
+    // Calculate hashes for each output
+    // this.outputs.forEach(output => {
+    // console.log(output)
+    // })
+    // Maybe origin and location are removed, to make it deterministic
+    // Origin is kept. If __, then removed. But what if 3 are pending? Maybe always remove origin.
+    // But then how does state get reconstructed? Location is assigned. Sure. But what origin?
+    // How do you know it was the original to put it on? What about refs that haven't been posted yet?
+    // This is a bit of a problem. No it isn't. We know origin when we post. Not before. You don't
+    // have pending stuff at this time. Include origin, if it's there. References will always be past
+    // refs.
+
+    // build our json payload
+    const data = { code, actions, jigs: this.outputs.length, refs: refs.length ? refs : undefined }
+
+    const encrypted = util.encryptRunData(data)
+    const prefix = Buffer.from('run', 'utf8')
+    const protocolVersion = Buffer.from([util.PROTOCOL_VERSION], 'hex')
+    const appId = Buffer.from(run.app, 'utf8')
+    const payload = Buffer.from(encrypted, 'utf8')
+    const debugInfo = Buffer.from('r11r', 'utf8')
+    const script = bsv.Script.buildSafeDataOut([prefix, protocolVersion, appId, payload, debugInfo])
+    const tx = new bsv.Transaction().addOutput(new bsv.Transaction.Output({ script, satoshis: 0 }))
+
+    // build inputs
+    const spentLocations = spentJigs.map(jig => syncer.lastPosted.get(jig.origin) ||
+      this.locations.get(jig.origin) || jig.location)
+    spentJigs.forEach((jig, index) => {
+      const txid = spentLocations[index].slice(0, 64)
+      const vout = parseInt(spentLocations[index].slice(66))
+      const before = this.before.get(jig)
+      const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, before.restore().satoshis)
+      const scriptBuffer = util.ownerScript(before.restore().owner).toBytes()
+      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
+      const utxo = { txid, vout, script, satoshis }
+      tx.from(utxo)
+    })
+
+    // Build run outputs first by adding code then by adding jigs
+
+    this.code.forEach(def => {
+      const scriptBuffer = util.ownerScript(def.owner).toBytes()
+      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
+      const satoshis = bsv.Transaction.DUST_AMOUNT
+      tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
+    })
+
+    this.outputs.forEach(jig => {
+      const restored = this.after.get(jig).restore()
+      const scriptBuffer = util.ownerScript(restored.owner).toBytes()
+      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
+      const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, restored.satoshis)
+      tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
+    })
+
+    this.cachedTx = { tx, refs, spentJigs, spentLocations }
+    return this.cachedTx
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { ProtoTransaction, Transaction }
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7).Buffer))
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * blockchain.js
+ *
+ * Blockchain API and its default REST implementation
+ */
+
+const { Address, Script, Transaction } = __webpack_require__(2)
+const axios = __webpack_require__(35)
+const util = __webpack_require__(0)
+
+// ------------------------------------------------------------------------------------------------
+// Blockchain API
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Generic Blockchain API that Run uses to interface with the blockchain
+ */
+class Blockchain {
+  /**
+   * @returns {string} Network string, one of 'main', 'test', 'stn', or 'mock'
+   */
+  get network () { throw new Error('Not implemented') }
+
+  /**
+   * Submits a transaction to the network
+   * @param {bsv.Transaction} tx Transaction to broadcast
+   */
+  async broadcast (tx) { throw new Error('Not implemented') }
+
+  /**
+   * Queries the network for a transaction
+   * @param {string} txid Transaction id hex string
+   * @param {boolean} force Whether to force-refresh the transaction, and never use the cache
+   * @returns {bsv.Transaction} Transaction with additional metadata including:
+   * - `time` {number} Time in milliseconds for acceptance into a block or mempool
+   * - `confirmations` {number} Number of confirmations, 0 for mempool
+   * - `blockhash` {string} Hash of block this tx was included in
+   * - `blockheight` {string} Height of block this tx was included in
+   * - `blocktime` {number} Time in milliseconds the block was published
+   * - `vout` {Array<{spentTxId, spentIndex, spentHeight}>} Output spend information`
+   */
+  async fetch (txid, force) { throw new Error('Not implemented') }
+
+  /**
+   * Queries the utxos for a particular output script
+   * @param {string} query Address, public key, or script hash
+   * @returns {Array<{txid, vout, script, satoshis}>}
+   */
+  async utxos (query) { throw new Error('Not implemented') }
+}
+
+Blockchain.isBlockchain = blockchain => {
+  if (typeof blockchain !== 'object' || !blockchain) return false
+  if (typeof blockchain.broadcast !== 'function') return false
+  if (typeof blockchain.fetch !== 'function') return false
+  if (typeof blockchain.utxos !== 'function') return false
+  if (typeof blockchain.network !== 'string') return false
+  return true
+}
+
+// ------------------------------------------------------------------------------------------------
+// BlockchainServer
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Implements the Blockchain API using a network service
+ */
+class BlockchainServer {
+  constructor (options = {}) {
+    this.network = parseNetwork(options.network)
+    this.logger = parseLogger(options.logger)
+    this.api = parseApi(options.api)
+    this.cache = parseCache(options.lastBlockchain, this.network)
+    const axiosOptions = { timeout: parseTimeout(options.timeout) }
+    // Run and BitIndex gzip responses, but this is only needed in node. In browser, it errors.
+    if (typeof window === 'undefined') axiosOptions.headers = { 'Accept-Encoding': 'gzip' }
+    this.axios = axios.create(axiosOptions)
+    this.bsvNetwork = util.bsvNetwork(this.network)
+    this.requests = new Map() // txid|address -> Array<Function>
+  }
+
+  async broadcast (tx) {
+    // Verify the tx locally. It is faster to find problems here than to wait for a server response.
+    if (tx.inputs.length === 0) throw new Error('tx has no inputs')
+    if (tx.outputs.length === 0) throw new Error('tx has no outputs')
+    if (tx.getFee() < tx.toBuffer().length) throw new Error('tx fee too low')
+    if (tx.verify() !== true) throw new Error(tx.verify())
+    if (tx.isFullySigned() !== true) throw new Error('tx not fully signed')
+
+    // Set properties on the tx that run expects
+    tx.time = Date.now()
+    tx.confirmations = 0
+    tx.outputs.forEach(o => { o.spentTxId = null; o.spentIndex = null; o.spentHeight = null })
+
+    // Broadcast the transaction
+    await this._post(this.api.broadcastUrl(this.network), this.api.broadcastData(tx))
+
+    // Cache the transaction for later fetches and also put in our sent list so that
+    // we can correct UTXOs returned for the server.
+    this.cache.broadcasted(tx)
+  }
+
+  async fetch (txid, force = false) {
+    // Check the cache for this transaction if we are not force-refreshing the transaction
+    const cached = this.cache.get(txid)
+    if (!force && cached) return cached
+
+    // If we already are fetching this transaction, then piggy-back on the response
+    const prior = this.requests.get(txid)
+    if (prior) return new Promise((resolve, reject) => prior.push({ resolve, reject }))
+
+    // Otherwise, create a new promise list for this request
+    this.requests.set(txid, [])
+
+    try {
+      // Fetch the transaction by its txid
+      const data = (await this._get(this.api.fetchUrl(this.network, txid))).data
+      const tx = this.api.fetchResp(data)
+
+      // If we have a local cached copy, make sure the spent data is up-to-date
+      if (cached) {
+        for (let vout = 0; vout < tx.outputs.length; vout++) {
+          tx.outputs[vout].spentTxId = tx.outputs[vout].spentTxId || cached.outputs[vout].spentTxId
+          tx.outputs[vout].spentIndex = tx.outputs[vout].spentIndex || cached.outputs[vout].spentIndex
+          tx.outputs[vout].spentHeight = tx.outputs[vout].spentHeight || cached.outputs[vout].spentHeight
+        }
+      }
+
+      // Cache it
+      this.cache.fetched(tx)
+
+      // If there is other code waiting for this result, resolve their promises now
+      this.requests.get(txid).forEach(promise => promise.resolve(tx))
+
+      return tx
+    } catch (e) {
+      // If the request fails, notify all other code that is waiting for this request
+      this.requests.get(txid).forEach(promise => promise.reject(e))
+
+      throw e
+    } finally {
+      // Whether fetch succeeds or fails, remove all callbacks for this request
+      this.requests.delete(txid)
+    }
+  }
+
+  async utxos (query) {
+    // Whether we are passed a bsv.Address or a string, convert it to a string.
+    // If we are passed a pubkey or Script, then we don't support this yet.
+    let address = null
+    try {
+      address = new Address(query, this.bsvNetwork).toString()
+    } catch (e) {
+      throw new Error('Non-address utxo queries are not supported by this blockchain API')
+    }
+
+    // If we are already querying the utxos for this address, piggy-back on that request
+    const prior = this.requests.get(address)
+    if (prior) return new Promise((resolve, reject) => prior.push({ resolve, reject }))
+
+    // Create a new promise list for other code to piggy-back on
+    this.requests.set(address, [])
+
+    try {
+      // Query the utxos
+      const data = (await this._get(this.api.utxosUrl(this.network, address))).data
+      const utxos = this.api.utxosResp(data, address)
+      if (!Array.isArray(utxos)) {
+        throw new Error(`Received invalid utxos for ${address}\n\n: Type: ${typeof utxos}\n\nNetwork: ${this.network}`)
+      }
+
+      // In case the utxos from the server have any duplicates, dedup them
+      const dedupedUtxos = this.dedupUtxos(utxos)
+
+      // The server may not index utxos right away. update the utxos with our own broadcasted txns
+      const correctedUtxos = this.cache.correctForServerUtxoIndexingDelay(dedupedUtxos, address)
+
+      // Notify all other code that was also waiting for this request
+      this.requests.get(address).forEach(o => o.resolve(correctedUtxos))
+
+      return correctedUtxos
+    } catch (e) {
+      // Notify all other code that this request failed
+      this.requests.get(address).forEach(o => o.reject(e))
+
+      throw e
+    } finally {
+      // Whether we succeeded or failed, remove the promises for this request
+      this.requests.delete(address)
+    }
+  }
+
+  dedupUtxos (utxos) {
+    // In case the server has a bug, run must be able to handle duplicate utxos returned. If we
+    // don't dedup, then later we will create a transaction with more than one of the same input.
+    const locations = new Set()
+    return utxos.filter(utxo => {
+      const location = `${utxo.txid}_o${utxo.vout}`
+      if (!locations.has(location)) {
+        locations.add(location)
+        return true
+      } else {
+        if (this.logger) this.logger.warn(`Duplicate utxo returned from server: ${location}`)
+        return false
+      }
+    })
+  }
+
+  async _post (url, data) {
+    if (this.logger) this.logger.info(`POST ${url}`)
+    return call(this.axios.post(url, data))
+  }
+
+  async _get (url) {
+    if (this.logger) this.logger.info(`GET ${url}`)
+    return call(this.axios.get(url))
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Parameter validation
+// ------------------------------------------------------------------------------------------------
+
+function parseNetwork (network) {
+  if (network === 'main' || network === 'test' || network === 'stn') return network
+  switch (typeof network) {
+    case 'string': throw new Error(`Unknown network: ${network}`)
+    case 'undefined': return 'main'
+    default: throw new Error(`Invalid network: ${network}`)
+  }
+}
+
+function parseLogger (logger) {
+  switch (typeof logger) {
+    case 'object': return logger
+    case 'undefined': return null
+    default: throw new Error(`Invalid logger: ${logger}`)
+  }
+}
+
+function parseTimeout (timeout) {
+  switch (typeof timeout) {
+    case 'number':
+      if (Number.isNaN(timeout) || timeout < 0) throw new Error(`Invalid timeout: ${timeout}`)
+      return timeout
+    case 'undefined': return 10000
+    default: throw new Error(`Invalid timeout: ${timeout}`)
+  }
+}
+
+function parseApi (api) {
+  switch (typeof api) {
+    case 'string': {
+      const apiData = apis.find(apiData => apiData.name === api)
+      if (!apiData) throw new Error(`Unknown blockchain API: ${api}`)
+      return apiData
+    }
+    case 'object':
+      if (!api) throw new Error(`Invalid blockchain API: ${api}`)
+      return api
+    case 'undefined': return apis[0]
+    default: throw new Error(`Invalid blockchain API: ${api}`)
+  }
+}
+
+function parseCache (lastBlockchain, network) {
+  // Copy the cache from the last blockchain if possible to save round trips
+  if (lastBlockchain && lastBlockchain instanceof BlockchainServer &&
+    lastBlockchain.network === network) {
+    return lastBlockchain.cache
+  }
+  return new BlockchainServerCache()
+}
+
+// ------------------------------------------------------------------------------------------------
+// BlockchainServerCache
+// ------------------------------------------------------------------------------------------------
+
+class BlockchainServerCache {
+  constructor () {
+    this.transactions = new Map() // txid -> tx
+    this.broadcasts = [] // Array<Transaction>
+    this.size = 10000
+    this.expiration = 10 * 60 * 1000
+    this.indexingDelay = 10 * 1000
+  }
+
+  get (txid) {
+    const tx = this.transactions.get(txid)
+    if (!tx) return
+
+    // If the transaction is expired, remove it
+    const expired = Date.now() - tx.fetchedTime > this.expiration
+    if (expired) {
+      this.transactions.delete(txid)
+      return
+    }
+
+    // Bump the transaction to the top and return it
+    this.transactions.delete(txid)
+    this.transactions.set(txid, tx)
+    return tx
+  }
+
+  fetched (tx) {
+    tx.fetchedTime = Date.now()
+
+    this.transactions.set(tx.hash, tx)
+
+    // If the cache is full, remove the oldest transaction
+    if (this.transactions.size > this.size) {
+      const oldest = this.transactions.keys().next().value
+      this.transactions.delete(oldest)
+    }
+  }
+
+  broadcasted (tx) {
+    this.fetched(tx)
+
+    // Remove all transactions from our broadcast past the indexing delay
+    const now = Date.now()
+    this.broadcasts = this.broadcasts.filter(tx => now - tx.time < this.indexingDelay)
+
+    this.broadcasts.push(tx)
+
+    // Update our known transactions with spent info
+    tx.inputs.forEach((input, vin) => {
+      const spent = this.transactions.get(input.prevTxId.toString('hex'))
+      if (spent) {
+        spent.outputs[input.outputIndex].spentTxId = tx.hash
+        spent.outputs[input.outputIndex].spentIndex = vin
+        spent.outputs[input.outputIndex].spentHeight = -1
+      }
+    })
+  }
+
+  correctForServerUtxoIndexingDelay (utxos, address) {
+    // First remove all expired txns from our broadcast cache
+    const now = Date.now()
+    this.broadcasts = this.broadcasts.filter(tx => now - tx.time < this.indexingDelay)
+
+    // Add all utxos from our broadcast cache for this address that aren't already there
+    this.broadcasts.forEach(tx => {
+      tx.outputs.forEach((output, vout) => {
+        if (output.script.toAddress(this.bsvNetwork).toString() === address &&
+              !utxos.some(utxo => utxo.txid === tx.hash && utxo.vout === vout)) {
+          utxos.push({ txid: tx.hash, vout, script: output.script, satoshis: output.satoshis })
+        }
+      })
+    })
+
+    // Remove all utxos that we know are spent because they are in our broadcast cache
+    this.broadcasts.forEach(tx => {
+      const inputSpendsUtxo = (input, utxo) =>
+        input.prevTxId.toString('hex') === utxo.txid &&
+        input.outputIndex === utxo.vout
+
+      utxos = utxos.filter(utxo => !tx.inputs.some(input => inputSpendsUtxo(input, utxo)))
+    })
+
+    return utxos
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Helper methods
+// ------------------------------------------------------------------------------------------------
+
+async function call (promise) {
+  try { return await promise } catch (e) {
+    const { config: c, response: r } = e
+    if (c && c.url && r && r.data) {
+      const message = r.data.message ? (r.data.message.message || r.data.message) : r.data
+      const reason = r.data.name && message ? `${r.data.name}: ${message}` : r.data.name || message
+      throw new Error(`${reason}\n\n${c.method.toUpperCase()} ${c.url}`)
+    } else { throw e }
+  }
+}
+
+function jsonToTx (json) {
+  if (typeof json !== 'object') throw new Error(`JSON returned is invalid or not an object: ${json}`)
+  const tx = new Transaction(json.hex || json.rawtx)
+  tx.time = json.time * 1000 || Date.now()
+  if (json.blockhash && json.blockhash.length) tx.blockhash = json.blockhash
+  if (json.blocktime) tx.blocktime = json.blocktime
+  if (json.blockheight) tx.blockheight = json.blockheight
+  if (typeof json.confirmations !== 'undefined') tx.confirmations = json.confirmations
+  if (json.vout) {
+    json.vout.forEach((output, n) => {
+      if (typeof output.spentTxId !== 'undefined') tx.outputs[n].spentTxId = output.spentTxId
+      if (typeof output.spentIndex !== 'undefined') tx.outputs[n].spentIndex = output.spentIndex
+      if (typeof output.spentHeight !== 'undefined') tx.outputs[n].spentHeight = output.spentHeight
+    })
+  }
+  return tx
+}
+
+// ------------------------------------------------------------------------------------------------
+// REST APIs
+// ------------------------------------------------------------------------------------------------
+
+const runApiHost = 'https://api.run.network'
+
+const apis = [
+  {
+    name: 'run',
+    broadcastUrl: network => `${runApiHost}/v1/${network}/tx`,
+    broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
+    fetchUrl: (network, txid) => `${runApiHost}/v1/${network}/tx/${txid}`,
+    fetchResp: data => jsonToTx(data),
+    utxosUrl: (network, address) => `${runApiHost}/v1/${network}/utxos/${address.toString()}`,
+    utxosResp: (data, address) => typeof data === 'string' ? JSON.parse(data) : data
+  },
+  {
+    name: 'bitindex',
+    broadcastUrl: network => `https://api.bitindex.network/api/v3/${network}/tx/send`,
+    broadcastData: tx => { return { rawtx: tx.toBuffer().toString('hex') } },
+    fetchUrl: (network, txid) => `https://api.bitindex.network/api/v3/${network}/tx/${txid}`,
+    fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
+    utxosUrl: (network, address) => `https://api.bitindex.network/api/v3/${network}/addr/${address.toString()}/utxo`,
+    utxosResp: (data, address) => data.map(o => { return Object.assign({}, o, { script: new Script(o.scriptPubKey) }) })
+  },
+  {
+    name: 'whatsonchain',
+    broadcastUrl: network => `https://api.whatsonchain.com/v1/bsv/${network}/tx/raw`,
+    broadcastData: tx => { return { txhex: tx.toBuffer().toString('hex') } },
+    fetchUrl: (network, txid) => `https://api.whatsonchain.com/v1/bsv/${network}/tx/hash/${txid}`,
+    fetchResp: data => { const ret = jsonToTx(data); ret.confirmations = ret.confirmations || 0; return ret },
+    utxosUrl: (network, address) => `https://api.whatsonchain.com/v1/bsv/${network}/address/${address.toString()}/unspent`,
+    utxosResp: (data, address) => data.map(o => {
+      return { txid: o.tx_hash, vout: o.tx_pos, satoshis: o.value, script: Script.fromAddress(address) }
+    })
+  }
+]
+
+// ------------------------------------------------------------------------------------------------
+
+BlockchainServer.Cache = BlockchainServerCache
+
+module.exports = { Blockchain, BlockchainServer }
+
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function bind(fn, thisArg) {
+  return function wrap() {
+    var args = new Array(arguments.length);
+    for (var i = 0; i < args.length; i++) {
+      args[i] = arguments[i];
+    }
+    return fn.apply(thisArg, args);
+  };
+};
+
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(1);
+
+function encode(val) {
+  return encodeURIComponent(val).
+    replace(/%40/gi, '@').
+    replace(/%3A/gi, ':').
+    replace(/%24/g, '$').
+    replace(/%2C/gi, ',').
+    replace(/%20/g, '+').
+    replace(/%5B/gi, '[').
+    replace(/%5D/gi, ']');
+}
+
+/**
+ * Build a URL by appending params to the end
+ *
+ * @param {string} url The base of the url (e.g., http://www.google.com)
+ * @param {object} [params] The params to be appended
+ * @returns {string} The formatted url
+ */
+module.exports = function buildURL(url, params, paramsSerializer) {
+  /*eslint no-param-reassign:0*/
+  if (!params) {
+    return url;
+  }
+
+  var serializedParams;
+  if (paramsSerializer) {
+    serializedParams = paramsSerializer(params);
+  } else if (utils.isURLSearchParams(params)) {
+    serializedParams = params.toString();
+  } else {
+    var parts = [];
+
+    utils.forEach(params, function serialize(val, key) {
+      if (val === null || typeof val === 'undefined') {
+        return;
+      }
+
+      if (utils.isArray(val)) {
+        key = key + '[]';
+      } else {
+        val = [val];
+      }
+
+      utils.forEach(val, function parseValue(v) {
+        if (utils.isDate(v)) {
+          v = v.toISOString();
+        } else if (utils.isObject(v)) {
+          v = JSON.stringify(v);
+        }
+        parts.push(encode(key) + '=' + encode(v));
+      });
+    });
+
+    serializedParams = parts.join('&');
+  }
+
+  if (serializedParams) {
+    var hashmarkIndex = url.indexOf('#');
+    if (hashmarkIndex !== -1) {
+      url = url.slice(0, hashmarkIndex);
+    }
+
+    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
+  }
+
+  return url;
+};
+
+
+/***/ }),
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function isCancel(value) {
+  return !!(value && value.__CANCEL__);
+};
+
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+var utils = __webpack_require__(1);
+var normalizeHeaderName = __webpack_require__(43);
+
+var DEFAULT_CONTENT_TYPE = {
+  'Content-Type': 'application/x-www-form-urlencoded'
+};
+
+function setContentTypeIfUnset(headers, value) {
+  if (!utils.isUndefined(headers) && utils.isUndefined(headers['Content-Type'])) {
+    headers['Content-Type'] = value;
+  }
+}
+
+function getDefaultAdapter() {
+  var adapter;
+  // Only Node.JS has a process variable that is of [[Class]] process
+  if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
+    // For node use HTTP adapter
+    adapter = __webpack_require__(23);
+  } else if (typeof XMLHttpRequest !== 'undefined') {
+    // For browsers use XHR adapter
+    adapter = __webpack_require__(23);
+  }
+  return adapter;
+}
+
+var defaults = {
+  adapter: getDefaultAdapter(),
+
+  transformRequest: [function transformRequest(data, headers) {
+    normalizeHeaderName(headers, 'Accept');
+    normalizeHeaderName(headers, 'Content-Type');
+    if (utils.isFormData(data) ||
+      utils.isArrayBuffer(data) ||
+      utils.isBuffer(data) ||
+      utils.isStream(data) ||
+      utils.isFile(data) ||
+      utils.isBlob(data)
+    ) {
+      return data;
+    }
+    if (utils.isArrayBufferView(data)) {
+      return data.buffer;
+    }
+    if (utils.isURLSearchParams(data)) {
+      setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
+      return data.toString();
+    }
+    if (utils.isObject(data)) {
+      setContentTypeIfUnset(headers, 'application/json;charset=utf-8');
+      return JSON.stringify(data);
+    }
+    return data;
+  }],
+
+  transformResponse: [function transformResponse(data) {
+    /*eslint no-param-reassign:0*/
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data);
+      } catch (e) { /* Ignore */ }
+    }
+    return data;
+  }],
+
+  /**
+   * A timeout in milliseconds to abort a request. If set to 0 (default) a
+   * timeout is not created.
+   */
+  timeout: 0,
+
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
+
+  maxContentLength: -1,
+
+  validateStatus: function validateStatus(status) {
+    return status >= 200 && status < 300;
+  }
+};
+
+defaults.headers = {
+  common: {
+    'Accept': 'application/json, text/plain, */*'
+  }
+};
+
+utils.forEach(['delete', 'get', 'head'], function forEachMethodNoData(method) {
+  defaults.headers[method] = {};
+});
+
+utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
+  defaults.headers[method] = utils.merge(DEFAULT_CONTENT_TYPE);
+});
+
+module.exports = defaults;
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(42)))
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(1);
+var settle = __webpack_require__(44);
+var buildURL = __webpack_require__(20);
+var parseHeaders = __webpack_require__(46);
+var isURLSameOrigin = __webpack_require__(47);
+var createError = __webpack_require__(24);
+
+module.exports = function xhrAdapter(config) {
+  return new Promise(function dispatchXhrRequest(resolve, reject) {
+    var requestData = config.data;
+    var requestHeaders = config.headers;
+
+    if (utils.isFormData(requestData)) {
+      delete requestHeaders['Content-Type']; // Let the browser set it
+    }
+
+    var request = new XMLHttpRequest();
+
+    // HTTP basic authentication
+    if (config.auth) {
+      var username = config.auth.username || '';
+      var password = config.auth.password || '';
+      requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
+    }
+
+    request.open(config.method.toUpperCase(), buildURL(config.url, config.params, config.paramsSerializer), true);
+
+    // Set the request timeout in MS
+    request.timeout = config.timeout;
+
+    // Listen for ready state
+    request.onreadystatechange = function handleLoad() {
+      if (!request || request.readyState !== 4) {
+        return;
+      }
+
+      // The request errored out and we didn't get a response, this will be
+      // handled by onerror instead
+      // With one exception: request that using file: protocol, most browsers
+      // will return status as 0 even though it's a successful request
+      if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
+        return;
+      }
+
+      // Prepare the response
+      var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
+      var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
+      var response = {
+        data: responseData,
+        status: request.status,
+        statusText: request.statusText,
+        headers: responseHeaders,
+        config: config,
+        request: request
+      };
+
+      settle(resolve, reject, response);
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle browser request cancellation (as opposed to a manual cancellation)
+    request.onabort = function handleAbort() {
+      if (!request) {
+        return;
+      }
+
+      reject(createError('Request aborted', config, 'ECONNABORTED', request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle low level network errors
+    request.onerror = function handleError() {
+      // Real errors are hidden from us by the browser
+      // onerror should only fire if it's a network error
+      reject(createError('Network Error', config, null, request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle timeout
+    request.ontimeout = function handleTimeout() {
+      reject(createError('timeout of ' + config.timeout + 'ms exceeded', config, 'ECONNABORTED',
+        request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Add xsrf header
+    // This is only done if running in a standard browser environment.
+    // Specifically not if we're in a web worker, or react-native.
+    if (utils.isStandardBrowserEnv()) {
+      var cookies = __webpack_require__(48);
+
+      // Add xsrf header
+      var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
+        cookies.read(config.xsrfCookieName) :
+        undefined;
+
+      if (xsrfValue) {
+        requestHeaders[config.xsrfHeaderName] = xsrfValue;
+      }
+    }
+
+    // Add headers to the request
+    if ('setRequestHeader' in request) {
+      utils.forEach(requestHeaders, function setRequestHeader(val, key) {
+        if (typeof requestData === 'undefined' && key.toLowerCase() === 'content-type') {
+          // Remove Content-Type if data is undefined
+          delete requestHeaders[key];
+        } else {
+          // Otherwise add header to the request
+          request.setRequestHeader(key, val);
+        }
+      });
+    }
+
+    // Add withCredentials to request if needed
+    if (config.withCredentials) {
+      request.withCredentials = true;
+    }
+
+    // Add responseType to request if needed
+    if (config.responseType) {
+      try {
+        request.responseType = config.responseType;
+      } catch (e) {
+        // Expected DOMException thrown by browsers not compatible XMLHttpRequest Level 2.
+        // But, this can be suppressed for 'json' type as it can be parsed by default 'transformResponse' function.
+        if (config.responseType !== 'json') {
+          throw e;
+        }
+      }
+    }
+
+    // Handle progress if needed
+    if (typeof config.onDownloadProgress === 'function') {
+      request.addEventListener('progress', config.onDownloadProgress);
+    }
+
+    // Not all browsers support upload events
+    if (typeof config.onUploadProgress === 'function' && request.upload) {
+      request.upload.addEventListener('progress', config.onUploadProgress);
+    }
+
+    if (config.cancelToken) {
+      // Handle cancellation
+      config.cancelToken.promise.then(function onCanceled(cancel) {
+        if (!request) {
+          return;
+        }
+
+        request.abort();
+        reject(cancel);
+        // Clean up request
+        request = null;
+      });
+    }
+
+    if (requestData === undefined) {
+      requestData = null;
+    }
+
+    // Send the request
+    request.send(requestData);
+  });
+};
+
+
+/***/ }),
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var enhanceError = __webpack_require__(45);
+
+/**
+ * Create an Error with the specified message, config, error code, request and response.
+ *
+ * @param {string} message The error message.
+ * @param {Object} config The config.
+ * @param {string} [code] The error code (for example, 'ECONNABORTED').
+ * @param {Object} [request] The request.
+ * @param {Object} [response] The response.
+ * @returns {Error} The created error.
+ */
+module.exports = function createError(message, config, code, request, response) {
+  var error = new Error(message);
+  return enhanceError(error, config, code, request, response);
+};
+
+
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(1);
+
+/**
+ * Config-specific merge-function which creates a new config-object
+ * by merging two configuration objects together.
+ *
+ * @param {Object} config1
+ * @param {Object} config2
+ * @returns {Object} New object resulting from merging config2 to config1
+ */
+module.exports = function mergeConfig(config1, config2) {
+  // eslint-disable-next-line no-param-reassign
+  config2 = config2 || {};
+  var config = {};
+
+  utils.forEach(['url', 'method', 'params', 'data'], function valueFromConfig2(prop) {
+    if (typeof config2[prop] !== 'undefined') {
+      config[prop] = config2[prop];
+    }
+  });
+
+  utils.forEach(['headers', 'auth', 'proxy'], function mergeDeepProperties(prop) {
+    if (utils.isObject(config2[prop])) {
+      config[prop] = utils.deepMerge(config1[prop], config2[prop]);
+    } else if (typeof config2[prop] !== 'undefined') {
+      config[prop] = config2[prop];
+    } else if (utils.isObject(config1[prop])) {
+      config[prop] = utils.deepMerge(config1[prop]);
+    } else if (typeof config1[prop] !== 'undefined') {
+      config[prop] = config1[prop];
+    }
+  });
+
+  utils.forEach([
+    'baseURL', 'transformRequest', 'transformResponse', 'paramsSerializer',
+    'timeout', 'withCredentials', 'adapter', 'responseType', 'xsrfCookieName',
+    'xsrfHeaderName', 'onUploadProgress', 'onDownloadProgress', 'maxContentLength',
+    'validateStatus', 'maxRedirects', 'httpAgent', 'httpsAgent', 'cancelToken',
+    'socketPath'
+  ], function defaultToConfig2(prop) {
+    if (typeof config2[prop] !== 'undefined') {
+      config[prop] = config2[prop];
+    } else if (typeof config1[prop] !== 'undefined') {
+      config[prop] = config1[prop];
+    }
+  });
+
+  return config;
+};
+
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * A `Cancel` is an object that is thrown when an operation is canceled.
+ *
+ * @class
+ * @param {string=} message The message.
+ */
+function Cancel(message) {
+  this.message = message;
+}
+
+Cancel.prototype.toString = function toString() {
+  return 'Cancel' + (this.message ? ': ' + this.message : '');
+};
+
+Cancel.prototype.__CANCEL__ = true;
+
+module.exports = Cancel;
+
+
+/***/ }),
+/* 27 */
+/***/ (function(module, exports) {
+
+/**
+ * expect.js
+ *
+ * Expect API for parameter checking in jigs
+ */
+
+function expect (subject) {
+  let negated = false
+
+  const stringify = x => {
+    if (typeof x !== 'object' || !x) return x
+    try { return JSON.stringify(x) } catch (e) { return x.toString() }
+  }
+
+  function check (condition, conditionString, message) {
+    if (negated ? condition : !condition) {
+      throw new Error(message || `expected value${negated ? ' not' : ''} to be ${conditionString} but was ${stringify(subject)}`)
+    }
+  }
+
+  function deepEqual (a, b) {
+    if (typeof a !== typeof b) return false
+    if (typeof a === 'object' && typeof b === 'object') {
+      if (Object.keys(a).length !== Object.keys(b).length) return false
+      return Object.keys(a).every(key => deepEqual(a[key], b[key]))
+    }
+    return a === b
+  }
+
+  return {
+    get not () { negated = !negated; return this },
+
+    toBe: (value, message) => check(subject === value, `${stringify(value)}`, message),
+    toEqual: (value, message) => check(deepEqual(subject, value), `equal to ${stringify(value)}`, message),
+    toBeInstanceOf: (Class, message) => check(subject && subject instanceof Class, `an instance of ${Class.name}`, message),
+
+    toBeDefined: message => check(typeof subject !== 'undefined', 'defined', message),
+    toBeNull: message => check(subject === null, 'null', message),
+
+    toBeNumber: message => check(typeof subject === 'number', 'a number', message),
+    toBeInteger: message => check(Number.isInteger(subject), 'an integer', message),
+    toBeLessThan: (value, message) => check(subject < value && typeof subject === 'number' && typeof value === 'number', `less than ${value}`, message),
+    toBeLessThanOrEqualTo: (value, message) => check(subject <= value && typeof subject === 'number' && typeof value === 'number', `less than or equal to ${value}`, message),
+    toBeGreaterThan: (value, message) => check(subject > value && typeof subject === 'number' && typeof value === 'number', `greater than ${value}`, message),
+    toBeGreaterThanOrEqualTo: (value, message) => check(subject >= value && typeof subject === 'number' && typeof value === 'number', `greater than or equal to ${value}`, message),
+
+    toBeBoolean: message => check(typeof subject === 'boolean', 'a boolean', message),
+    toBeString: message => check(typeof subject === 'string', 'a string', message),
+    toBeObject: message => check(subject && typeof subject === 'object', 'an object', message),
+    toBeArray: message => check(Array.isArray(subject), 'an array', message),
+
+    toBeClass: message => check(typeof subject === 'function' && subject.toString().startsWith('class'), 'a class', message),
+    toBeFunction: message => check(typeof subject === 'function' && !subject.toString().startsWith('class'), 'a function', message)
+  }
+}
+
+expect.originTestnet = '7de95149eab7aa4e72a8c4fd48c65b64890c6c0e15d5f3f6029230684d206849_o1'
+expect.locationTestnet = '7de95149eab7aa4e72a8c4fd48c65b64890c6c0e15d5f3f6029230684d206849_o1'
+expect.ownerTestnet = 'mh1E75czUcmdngvL1sM4tEjbDPfPRvgVzd'
+expect.originMainnet = '305dfd9f228bdc291c50d128a1c014c60515029d628558e7bf24609888ab2c88_o1'
+expect.locationMainnet = '305dfd9f228bdc291c50d128a1c014c60515029d628558e7bf24609888ab2c88_o1'
+expect.ownerMainnet = '19BGNm4NL1imjjJMH2n91RN6LWJmZUMWSK'
+
+module.exports = expect
+
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(Buffer) {/**
+ * code.js
+ *
+ * Functionality related to loading, deploying, and running arbitrary code.
+ */
+
+const util = __webpack_require__(0)
+const Evaluator = __webpack_require__(15)
+const { Jig, JigControl } = __webpack_require__(4)
+const { Berry, BerryControl } = __webpack_require__(11)
+const Xray = __webpack_require__(10)
+const Context = __webpack_require__(14)
+
+// ------------------------------------------------------------------------------------------------
+// Code
+// ------------------------------------------------------------------------------------------------
+
+const stringProps = ['origin', 'location', 'originMainnet', 'locationMainnet', 'originTestnet',
+  'locationTestnet', 'originStn', 'locationStn', 'originMocknet', 'locationMocknet',
+  'owner', 'ownerMainnet', 'ownerTestnet', 'ownerStn', 'ownerMocknet']
+
+/**
+   * Code repository, sandboxer, installer, and deployer
+   */
+class Code {
+  constructor (options = {}) {
+    this.installs = new Map() // Type | Location | Sandbox -> Sandbox
+    this.evaluator = new Evaluator({ logger: options.logger, sandbox: options.sandbox })
+    this.logger = options.logger
+    this.intrinsics = this.evaluator.intrinsics
+    this.pending = new Set()
+    this.installJig()
+    this.installBerry()
+  }
+
+  isSandbox (type) {
+    const sandbox = this.installs.get(type)
+    return sandbox && type === sandbox
+  }
+
+  getInstalled (typeOrLocation) {
+    if (this.isSandbox(typeOrLocation)) return typeOrLocation
+    return this.installs.get(typeOrLocation)
+  }
+
+  // Install loads code into a sandbox and makes it available to use
+  // It does not deploy the code. It does however check that the code
+  // is deployable. The main purpose is to install berry protocols for
+  // use on mainnet and testnet without deploying the protocol to the chain.
+  installBerryProtocol (type) {
+    // Make sure the presets are there
+    return this.deploy(type, { dontDeploy: true })
+  }
+
+  extractProps (type) {
+    // Determine which properties to extract
+    const skipProps = ['deps', ...stringProps]
+    const classProps = Object.keys(type)
+    const propNames = classProps.filter(key => !skipProps.includes(key))
+
+    // Create an object with just these properties
+    const props = {}
+    propNames.forEach(name => { props[name] = type[name] })
+
+    // Check that these properties are serializable
+    const xray = new Xray()
+      .allowTokens()
+      .allowDeployables()
+      .useIntrinsics(this.intrinsics)
+
+    try {
+      xray.scan(props)
+    } catch (e) {
+      throw new Error(`A static property of ${type.name} is not supported\n\n${e}`)
+    }
+
+    // Save the any deployables and tokens
+    const refs = []
+    xray.deployables.forEach(deployable => refs.push(deployable))
+    xray.tokens.forEach(token => refs.push(token))
+
+    return { props, refs }
+  }
+
+  // TODO: This should include partial installs
+  deploy (type, options = {}) {
+    if (this.pending.has(type)) return
+    if (this.logger) this.logger.info('Deploying', type.name)
+
+    // short-circut deployment at Jig and Berry because this class already deployed it
+    if (type === this.Jig || type === Jig) return this.Jig
+    if (type === this.Berry || type === Berry) return this.Berry
+
+    // check that this code can be deployed
+    if (!util.deployable(type)) throw new Error(`${type} is not deployable`)
+
+    // if this type was already deployed on this network, don't deploy again
+    const pre = this.installs.get(type)
+    const run = util.activeRunInstance()
+    const net = util.networkSuffix(run.blockchain.network)
+    if (pre && Object.keys(pre).includes(`origin${net}`) &&
+      Object.keys(pre).includes(`location${net}`)) return pre
+
+    // TODO: Add test, and make sure this works
+    const classProps = Object.keys(type)
+    if (classProps.includes(`location${net}`)) {
+      const preByLoc = this.installs.get(type[`location${net}`])
+      if (preByLoc) return preByLoc
+    }
+
+    // check the class properties. classProps are props specifically on this code, not a parent
+    const isBasicObject = (o) => Object.getPrototypeOf(Object.getPrototypeOf(o)) === null
+    if (classProps.includes('deps') && !isBasicObject(type.deps)) throw new Error('deps must be an object')
+    const notAString = s => classProps.includes(s) && typeof type[s] !== 'string'
+    stringProps.forEach(s => { if (notAString(s)) throw new Error(`${s} must be a string: ${type[s]}`) })
+
+    run.transaction.begin()
+    try {
+      // create env, the globals in the sandbox. this will just be the parent.
+      const env = {}
+
+      // make sure the parent does not conflict with whats set in deps
+      // realdeps is type.deps with its parent if not there
+      const parentClass = Object.getPrototypeOf(type)
+      const realdeps = classProps.includes('deps') ? Object.assign({}, type.deps) : {}
+      const SandboxObject = this.evaluator.intrinsics.default.Object
+      if (parentClass !== Object.getPrototypeOf(Object) &&
+        parentClass !== SandboxObject.getPrototypeOf(SandboxObject)) {
+        env[parentClass.name] = this.deploy(parentClass, options)
+        if (realdeps[parentClass.name]) {
+          const currentSandbox = this.getInstalled(realdeps[parentClass.name])
+          if (currentSandbox !== env[parentClass.name]) {
+            throw new Error(`unexpected parent dependency ${parentClass.name}`)
+          }
+        }
+        if (!(parentClass.name in realdeps) &&
+          parentClass !== this.installs.get(Jig) &&
+          parentClass !== Jig &&
+          parentClass !== this.installs.get(Berry) &&
+          parentClass !== Berry) {
+          realdeps[parentClass.name] = parentClass
+        }
+      }
+
+      // If the parent the child, return its location and don't install anything
+      const pre2 = this.installs.get(type)
+      if (pre2 && Object.keys(pre2).includes(`origin${net}`) &&
+        Object.keys(pre2).includes(`location${net}`)) return pre2
+
+      const { result: sandbox, globals: sandboxGlobal } = this.sandboxType(type, env)
+      this.installs.set(type, sandbox)
+      this.installs.set(sandbox, sandbox)
+
+      // Deploy any code found in the static properties
+      const xray = new Xray()
+        .allowTokens()
+        .allowDeployables()
+        .useIntrinsics(this.intrinsics)
+        .useCodeCloner(x => this.getInstalled(x))
+
+      const staticProps = Object.assign({}, type)
+      try {
+        xray.scan(staticProps)
+      } catch (e) {
+        throw new Error(`A static property of ${type.name} is not supported\n\n${e}`)
+      }
+
+      // If location is already set for the network, assume correct and don't reupload
+      const hasPresets = classProps.includes(`origin${net}`) || classProps.includes(`location${net}`)
+      if (hasPresets) {
+        if (classProps.includes(`origin${net}`)) {
+          sandbox[`origin${net}`] = sandbox.origin = type.origin = type[`origin${net}`]
+        }
+        sandbox[`location${net}`] = sandbox.location = type.location = type[`location${net}`] || type.origin
+        sandbox[`owner${net}`] = sandbox.owner = type.owner = type[`owner${net}`]
+
+        this.installs.set(sandbox[`location${net}`], sandbox)
+      } else if (options.dontDeploy) {
+        // Berry protocols
+        const location = '!Not deployed'
+        sandbox[`origin${net}`] = sandbox.origin = type.origin = type[`origin${net}`] = location
+        sandbox[`location${net}`] = sandbox.location = type.location = type[`location${net}`] || type.origin
+        sandbox[`owner${net}`] = sandbox.owner = type.owner = type[`owner${net}`] = null
+      } else {
+        // Location is not set. use a temporary location and deploy
+
+        const currentNetwork = run.blockchain.network
+        const success = (location) => {
+          // if different network, primary origin and location will be set by that run instance
+          if (run.blockchain.network === currentNetwork) {
+            type.origin = type.location = sandbox.origin = sandbox.location = location
+            type.owner = sandbox.owner = type[`owner${net}`]
+          }
+          sandbox[`origin${net}`] = sandbox[`location${net}`] = location
+          type[`origin${net}`] = type[`location${net}`] = location
+          this.installs.set(location, sandbox)
+        }
+        const error = () => {
+          if (run.blockchain.network === currentNetwork) {
+            delete type.origin; delete type.location
+            delete sandbox.origin; delete sandbox.location
+            delete type.owner; delete sandbox.owner
+          }
+          delete type[`origin${net}`]; delete type[`location${net}`]
+          delete sandbox[`origin${net}`]; delete sandbox[`location${net}`]
+          delete type[`owner${net}`]; delete sandbox[`owner${net}`]
+        }
+
+        const actionProps = Object.assign({}, staticProps)
+        stringProps.forEach(name => { delete actionProps[name] })
+        delete actionProps.deps
+
+        let tempLocation = null
+        try {
+          this.pending.add(type)
+          tempLocation = run.transaction.storeCode(type, sandbox, realdeps,
+            actionProps, success, error)
+        } finally { this.pending.delete(type) }
+
+        type[`origin${net}`] = type[`location${net}`] = tempLocation
+        sandbox[`origin${net}`] = sandbox[`location${net}`] = tempLocation
+        type[`owner${net}`] = sandbox[`owner${net}`] = type.owner
+      }
+
+      // Deploy each deployable
+      xray.deployables.forEach(x => this.deploy(x, options))
+
+      // Create a safe clone of the static properties for the sandbox
+      try {
+        const safeStaticProps = xray.clone(staticProps)
+        Object.assign(sandbox, safeStaticProps)
+      } catch (e) {
+        throw new Error(`A static property of ${type.name} cannot be sandboxed\n\n${e}`)
+      }
+
+      // Set dependencies now as sandbox globals. We've delayed this to enable circular deps.
+      if (sandboxGlobal) {
+        Object.entries(realdeps).forEach(([name, dep]) => {
+          if (dep === parentClass || dep === env[parentClass.name]) return
+          sandboxGlobal[name] = this.deploy(dep, options)
+        })
+      }
+
+      return sandbox
+    } finally {
+      run.transaction.end()
+    }
+  }
+
+  async installFromTx (def, location, tx, run, bsvNetwork, partiallyInstalledCode = new Map()) {
+    // if we have this location already, return it
+    if (this.installs.has(location)) return this.installs.get(location)
+    if (partiallyInstalledCode.has(location)) return partiallyInstalledCode.get(location)
+
+    // parse the location
+    const txid = location.slice(0, 64)
+    const vout = parseInt(location.slice(66))
+
+    // make sure the owner matches the output's address
+    // TODO: Move this to transaction
+    const hex1 = tx.outputs[vout].script.toHex()
+    const hex2 = Buffer.from(util.ownerScript(def.owner).toBytes()).toString('hex')
+    if (hex1 !== hex2) throw new Error(`bad def owner: ${location}`)
+
+    const env = { }
+
+    // Create a promise so that other dependencies can refer to this load
+    // instead of loading themselves
+    let partialInstallResolve = null; let partialInstallReject = null
+    const partialInstall = new Promise((resolve, reject) => {
+      partialInstallResolve = resolve
+      partialInstallReject = reject
+    })
+    partiallyInstalledCode.set(location, partialInstall)
+
+    try {
+      const parentClassRegex = /^class \w* extends (\w*)[\s]*{/
+      let parentName = null
+      if (parentClassRegex.test(def.text)) {
+        parentName = def.text.match(parentClassRegex)[1]
+        let parentLocation = (def.deps || {})[parentName]
+        if (parentName === 'Jig' && typeof parentLocation === 'undefined') {
+          env.Jig = this.Jig
+        } else if (parentName === 'Berry' && typeof parentLocation === 'undefined') {
+          env.Berry = this.Berry
+        } else {
+          if (parentLocation.startsWith('_')) { parentLocation = tx.hash + parentLocation }
+          env[parentName] = await run.transaction.load(parentLocation, { partiallyInstalledCode })
+        }
+      }
+
+      const { result: sandbox, globals: sandboxGlobal } = this.evaluator.evaluate(def.text, env)
+      sandbox.origin = sandbox.location = location
+      sandbox.owner = def.owner
+      const net = util.networkSuffix(run.blockchain.network)
+      sandbox[`origin${net}`] = sandbox[`location${net}`] = location
+      sandbox[`owner${net}`] = def.owner
+      partialInstallResolve(sandbox)
+
+      if (sandboxGlobal) {
+        const promises = Object.entries(def.deps || {}).map(([name, dep]) => {
+          if (name === parentName) return
+          const location = dep.startsWith('_') ? tx.hash + dep : dep
+          return run.transaction.load(location, { partiallyInstalledCode }).then(T => {
+            sandboxGlobal[name] = T
+          })
+        })
+        await Promise.all(promises)
+      }
+
+      // set all of the dependencies to their sandboxed versions
+      if (def.deps) {
+        sandbox.deps = {}
+        Object.keys(def.deps).forEach(name => {
+          sandbox.deps[name] = sandboxGlobal[name] || env[name]
+        })
+      }
+
+      // Hydrate class prop tokens and apply them to the sandbox
+      if (def.props) {
+        const tokens = new Map()
+        const tokenLoader = ref => tokens.get(ref)
+
+        const xray = new Xray()
+          .allowTokens()
+          .useIntrinsics(this.intrinsics)
+          .useTokenLoader(tokenLoader)
+
+        xray.scan(def.props)
+
+        const fullLocation = loc => ((loc[1] === 'i' || loc[1] === 'o') ? txid + loc : loc)
+        const loadRef = ref => run.transaction.load(fullLocation(ref), { partiallyInstalledCode })
+          .then(token => tokens.set(ref, token))
+        await Promise.all(Array.from(xray.refs).map(ref => loadRef(ref)))
+
+        const classProps = xray.deserialize(def.props)
+
+        Object.assign(sandbox, classProps)
+      }
+
+      partiallyInstalledCode.delete(location)
+
+      // Safety check. We should be able to remove over time.
+      if (this.installs.has(location)) {
+        const hint = 'This is an internal Run bug. Please report it to the library developers.'
+        throw new Error(`Code installed twice for ${location}\n\n${hint}.`)
+      }
+
+      this.installs.set(location, sandbox)
+      this.installs.set(sandbox, sandbox)
+
+      return sandbox
+    } catch (e) {
+      partialInstallReject(e)
+      throw e
+    }
+  }
+
+  installJig () {
+    // Jigs don't use FriendlySet and FriendlyMap, because it makes
+    const env = { JigControl, Context, Set, Map }
+    this.Jig = this.sandboxType(Jig, env).result
+    this.installs.set(Jig, this.Jig)
+    this.installs.set(this.Jig, this.Jig)
+  }
+
+  installBerry () {
+    const env = { BerryControl, Context }
+    this.Berry = this.sandboxType(Berry, env).result
+    this.installs.set(Berry, this.Berry)
+    this.installs.set(this.Berry, this.Berry)
+  }
+
+  sandboxType (type, env) {
+    const prev = this.installs.get(type)
+    if (prev) return [prev, null]
+    const code = util.getNormalizedSourceCode(type)
+    const willSandbox = this.evaluator.willSandbox(code)
+    if (!willSandbox) return [type, {}]
+    return this.evaluator.evaluate(code, env)
+  }
+
+  activate (network) {
+    const net = util.networkSuffix(network)
+
+    this.installs.forEach((v, k) => {
+      if (typeof k === 'string') return // location
+      if (typeof k[`origin${net}`] !== 'undefined') {
+        k.origin = k[`origin${net}`]
+        v.origin = k[`origin${net}`]
+      } else { delete k.origin; delete v.origin }
+      if (typeof k[`location${net}`] !== 'undefined') {
+        k.location = k[`location${net}`]
+        v.location = k[`location${net}`]
+      } else { delete k.location; delete v.location }
+      if (typeof k[`owner${net}`] !== 'undefined') {
+        k.owner = k[`owner${net}`]
+        v.owner = k[`owner${net}`]
+      } else { delete k.owner; delete v.owner }
+    })
+
+    this.evaluator.activate()
+  }
+
+  deactivate () {
+    this.evaluator.deactivate()
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = Code
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7).Buffer))
+
+/***/ }),
+/* 29 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+exports.byteLength = byteLength
+exports.toByteArray = toByteArray
+exports.fromByteArray = fromByteArray
+
+var lookup = []
+var revLookup = []
+var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
+
+var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+for (var i = 0, len = code.length; i < len; ++i) {
+  lookup[i] = code[i]
+  revLookup[code.charCodeAt(i)] = i
+}
+
+// Support decoding URL-safe base64 strings, as Node.js does.
+// See: https://en.wikipedia.org/wiki/Base64#URL_applications
+revLookup['-'.charCodeAt(0)] = 62
+revLookup['_'.charCodeAt(0)] = 63
+
+function getLens (b64) {
+  var len = b64.length
+
+  if (len % 4 > 0) {
+    throw new Error('Invalid string. Length must be a multiple of 4')
+  }
+
+  // Trim off extra bytes after placeholder bytes are found
+  // See: https://github.com/beatgammit/base64-js/issues/42
+  var validLen = b64.indexOf('=')
+  if (validLen === -1) validLen = len
+
+  var placeHoldersLen = validLen === len
+    ? 0
+    : 4 - (validLen % 4)
+
+  return [validLen, placeHoldersLen]
+}
+
+// base64 is 4/3 + up to two characters of the original data
+function byteLength (b64) {
+  var lens = getLens(b64)
+  var validLen = lens[0]
+  var placeHoldersLen = lens[1]
+  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
+}
+
+function _byteLength (b64, validLen, placeHoldersLen) {
+  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
+}
+
+function toByteArray (b64) {
+  var tmp
+  var lens = getLens(b64)
+  var validLen = lens[0]
+  var placeHoldersLen = lens[1]
+
+  var arr = new Arr(_byteLength(b64, validLen, placeHoldersLen))
+
+  var curByte = 0
+
+  // if there are placeholders, only get up to the last complete 4 chars
+  var len = placeHoldersLen > 0
+    ? validLen - 4
+    : validLen
+
+  var i
+  for (i = 0; i < len; i += 4) {
+    tmp =
+      (revLookup[b64.charCodeAt(i)] << 18) |
+      (revLookup[b64.charCodeAt(i + 1)] << 12) |
+      (revLookup[b64.charCodeAt(i + 2)] << 6) |
+      revLookup[b64.charCodeAt(i + 3)]
+    arr[curByte++] = (tmp >> 16) & 0xFF
+    arr[curByte++] = (tmp >> 8) & 0xFF
+    arr[curByte++] = tmp & 0xFF
+  }
+
+  if (placeHoldersLen === 2) {
+    tmp =
+      (revLookup[b64.charCodeAt(i)] << 2) |
+      (revLookup[b64.charCodeAt(i + 1)] >> 4)
+    arr[curByte++] = tmp & 0xFF
+  }
+
+  if (placeHoldersLen === 1) {
+    tmp =
+      (revLookup[b64.charCodeAt(i)] << 10) |
+      (revLookup[b64.charCodeAt(i + 1)] << 4) |
+      (revLookup[b64.charCodeAt(i + 2)] >> 2)
+    arr[curByte++] = (tmp >> 8) & 0xFF
+    arr[curByte++] = tmp & 0xFF
+  }
+
+  return arr
+}
+
+function tripletToBase64 (num) {
+  return lookup[num >> 18 & 0x3F] +
+    lookup[num >> 12 & 0x3F] +
+    lookup[num >> 6 & 0x3F] +
+    lookup[num & 0x3F]
+}
+
+function encodeChunk (uint8, start, end) {
+  var tmp
+  var output = []
+  for (var i = start; i < end; i += 3) {
+    tmp =
+      ((uint8[i] << 16) & 0xFF0000) +
+      ((uint8[i + 1] << 8) & 0xFF00) +
+      (uint8[i + 2] & 0xFF)
+    output.push(tripletToBase64(tmp))
+  }
+  return output.join('')
+}
+
+function fromByteArray (uint8) {
+  var tmp
+  var len = uint8.length
+  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
+  var parts = []
+  var maxChunkLength = 16383 // must be multiple of 3
+
+  // go through the array every three bytes, we'll deal with trailing stuff later
+  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
+    parts.push(encodeChunk(
+      uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)
+    ))
+  }
+
+  // pad the end with zeros, but make sure to not forget the extra bytes
+  if (extraBytes === 1) {
+    tmp = uint8[len - 1]
+    parts.push(
+      lookup[tmp >> 2] +
+      lookup[(tmp << 4) & 0x3F] +
+      '=='
+    )
+  } else if (extraBytes === 2) {
+    tmp = (uint8[len - 2] << 8) + uint8[len - 1]
+    parts.push(
+      lookup[tmp >> 10] +
+      lookup[(tmp >> 4) & 0x3F] +
+      lookup[(tmp << 2) & 0x3F] +
+      '='
+    )
+  }
+
+  return parts.join('')
+}
+
+
+/***/ }),
+/* 30 */
+/***/ (function(module, exports) {
+
+exports.read = function (buffer, offset, isLE, mLen, nBytes) {
+  var e, m
+  var eLen = (nBytes * 8) - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var nBits = -7
+  var i = isLE ? (nBytes - 1) : 0
+  var d = isLE ? -1 : 1
+  var s = buffer[offset + i]
+
+  i += d
+
+  e = s & ((1 << (-nBits)) - 1)
+  s >>= (-nBits)
+  nBits += eLen
+  for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) {}
+
+  m = e & ((1 << (-nBits)) - 1)
+  e >>= (-nBits)
+  nBits += mLen
+  for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) {}
+
+  if (e === 0) {
+    e = 1 - eBias
+  } else if (e === eMax) {
+    return m ? NaN : ((s ? -1 : 1) * Infinity)
+  } else {
+    m = m + Math.pow(2, mLen)
+    e = e - eBias
+  }
+  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
+}
+
+exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
+  var e, m, c
+  var eLen = (nBytes * 8) - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
+  var i = isLE ? 0 : (nBytes - 1)
+  var d = isLE ? 1 : -1
+  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
+
+  value = Math.abs(value)
+
+  if (isNaN(value) || value === Infinity) {
+    m = isNaN(value) ? 1 : 0
+    e = eMax
+  } else {
+    e = Math.floor(Math.log(value) / Math.LN2)
+    if (value * (c = Math.pow(2, -e)) < 1) {
+      e--
+      c *= 2
+    }
+    if (e + eBias >= 1) {
+      value += rt / c
+    } else {
+      value += rt * Math.pow(2, 1 - eBias)
+    }
+    if (value * c >= 2) {
+      e++
+      c /= 2
+    }
+
+    if (e + eBias >= eMax) {
+      m = 0
+      e = eMax
+    } else if (e + eBias >= 1) {
+      m = ((value * c) - 1) * Math.pow(2, mLen)
+      e = e + eBias
+    } else {
+      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
+      e = 0
+    }
+  }
+
+  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
+
+  e = (e << mLen) | m
+  eLen += mLen
+  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
+
+  buffer[offset + i - d] |= s * 128
+}
+
+
+/***/ }),
+/* 31 */
+/***/ (function(module, exports) {
+
+var toString = {}.toString;
+
+module.exports = Array.isArray || function (arr) {
+  return toString.call(arr) == '[object Array]';
+};
+
+
+/***/ }),
 /* 32 */
 /***/ (function(module, exports) {
 
@@ -12841,7 +12847,7 @@ exports.createContext = Script.createContext = function (context) {
  * Enqueues transactions and syncs jigs
  */
 
-const { ProtoTransaction } = __webpack_require__(16)
+const { ProtoTransaction } = __webpack_require__(17)
 const { JigControl } = __webpack_require__(4)
 const { Owner } = __webpack_require__(8)
 const Xray = __webpack_require__(10)
@@ -13224,7 +13230,7 @@ owner: ${spentJigs[i].owner}`)
 
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
-const { Blockchain } = __webpack_require__(17)
+const { Blockchain } = __webpack_require__(18)
 
 // ------------------------------------------------------------------------------------------------
 // Pay API
@@ -13438,10 +13444,10 @@ module.exports = __webpack_require__(36);
 
 
 var utils = __webpack_require__(1);
-var bind = __webpack_require__(18);
+var bind = __webpack_require__(19);
 var Axios = __webpack_require__(38);
-var mergeConfig = __webpack_require__(24);
-var defaults = __webpack_require__(21);
+var mergeConfig = __webpack_require__(25);
+var defaults = __webpack_require__(22);
 
 /**
  * Create an instance of Axios
@@ -13474,9 +13480,9 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(25);
+axios.Cancel = __webpack_require__(26);
 axios.CancelToken = __webpack_require__(51);
-axios.isCancel = __webpack_require__(20);
+axios.isCancel = __webpack_require__(21);
 
 // Expose all/spread
 axios.all = function all(promises) {
@@ -13515,10 +13521,10 @@ module.exports = function isBuffer (obj) {
 
 
 var utils = __webpack_require__(1);
-var buildURL = __webpack_require__(19);
+var buildURL = __webpack_require__(20);
 var InterceptorManager = __webpack_require__(39);
 var dispatchRequest = __webpack_require__(40);
-var mergeConfig = __webpack_require__(24);
+var mergeConfig = __webpack_require__(25);
 
 /**
  * Create a new instance of Axios
@@ -13668,8 +13674,8 @@ module.exports = InterceptorManager;
 
 var utils = __webpack_require__(1);
 var transformData = __webpack_require__(41);
-var isCancel = __webpack_require__(20);
-var defaults = __webpack_require__(21);
+var isCancel = __webpack_require__(21);
+var defaults = __webpack_require__(22);
 var isAbsoluteURL = __webpack_require__(49);
 var combineURLs = __webpack_require__(50);
 
@@ -13995,7 +14001,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 "use strict";
 
 
-var createError = __webpack_require__(23);
+var createError = __webpack_require__(24);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -14313,7 +14319,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 "use strict";
 
 
-var Cancel = __webpack_require__(25);
+var Cancel = __webpack_require__(26);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -14719,7 +14725,7 @@ module.exports = { State, StateCache }
  */
 
 const { Jig } = __webpack_require__(4)
-const expect = __webpack_require__(26)
+const expect = __webpack_require__(27)
 
 class Token extends Jig {
   init (amount, _tokenToDecrease, _tokensToCombine) {
@@ -14812,6 +14818,97 @@ Token.locationMainnet = 'de7b99b2a30cd02d8592a77c9938ff740ea0e1e26b79a8582cc3691
 Token.ownerMainnet = '1D4X6N11SoheTRGEM8kKTKnxmzh5bB9kqS'
 
 module.exports = Token
+
+
+/***/ }),
+/* 56 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * evaluator.js
+ *
+ * Default implementation of the Evaluator API
+ */
+
+const ses = __webpack_require__(16)
+
+// ------------------------------------------------------------------------------------------------
+// DeterministicEvaluator
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * An evaluator that deterministically evaluates code the same in every environment.
+ *
+ * It turns off non-deterministic intrinsics, like Math.random and Date. It also uses SES to
+ * create a secure subset of JavaScript that is the same in every environment.
+ */
+class DeterministicEvaluator {
+  constructor () {
+    this.realm = ses.makeSESRootRealm()
+
+    // We override console so that console.log in sandboxed code is relogged outside
+    const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
+    this.console = this.realm.evaluate(consoleCode, { c: console })
+
+    // The realms-shim requires a body for sandboxing. If it doesn't exist, create one.
+    if (typeof window !== 'undefined' && !window.document.body) {
+      window.document.body = document.createElement('body')
+    }
+  }
+
+  evaluate (code, environment = {}) {
+    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
+    if (typeof environment !== 'object') throw new Error(`Environment must be an object. Received: ${environment}`)
+
+    const environmentCopy = Object.assign({}, environment)
+
+    // Disable each non-deterministic intrinsic
+    DeterministicEvaluator.nonDeterministicIntrinsics.forEach(key => {
+      if (!(key in environment)) environmentCopy[key] = undefined
+    })
+
+    // Create the globals object in the SES realm so it doesn't expose ours
+    const globals = this.realm.evaluate('({})')
+
+    // Get a unique name for the globals that is not used in our environment
+    const globalsName = this.findUnusedNameForGlobals(environment)
+
+    // Set the globals in our environment
+    environmentCopy[globalsName] = globals
+
+    // Execute the code in strict mode
+    const script = `with(${globalsName}){'use strict';${code}}`
+    const result = this.realm.evaluate(script, environmentCopy)
+
+    return { result, globals }
+  }
+
+  findUnusedNameForGlobals (environment) {
+    let num = 0
+    while (true) {
+      const name = `$globals${num++}`
+      if (!(name in environment)) return name
+    }
+  }
+}
+
+/**
+ * Non-deterministic globals that will be banned
+ */
+DeterministicEvaluator.nonDeterministicIntrinsics = [
+  'Date',
+  'Math',
+  'eval',
+  'XMLHttpRequest',
+  'FileReader',
+  'WebSocket',
+  'setTimeout',
+  'setInterval'
+]
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = DeterministicEvaluator
 
 
 /***/ })
