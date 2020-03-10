@@ -1,20 +1,24 @@
-## Running tests
+## Running Tests
+
+### Node Testing
 
 To run all tests locally:
 
     npm run test
 
-This will compile the node build automatically and use it in the tests.
+This will compile the node build and run all tests on it.
 
-### Browser testing
+### Browser Testing
 
-To run tests in a headless Chrome browser:
+To test the browser build:
 
     npm run test:browser
 
-You may also open `./test/browser.html` in any web browser to run all tests.
+This will run the tests on a headless version of Chrome.
 
-### Developer testing
+To test other browser, open `./test/browser.html` in any web browser.
+
+### Developer Testing
 
 During development, it is often useful to lint and test together using an uncompiled build. To do that:
 
@@ -26,7 +30,7 @@ You may optionally pass a path to limit testing to just that module:
 
 This applies to `test:dev`, `test`, and `test:cover`.
 
-### Code coverage
+### Code Coverage
 
 To run testing with code coverage:
 
