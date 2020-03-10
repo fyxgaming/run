@@ -20,7 +20,7 @@ To test with other browsers, open `./test/browser.html` in any web browser.
 
 ### Developer Testing
 
-During development, it is often useful to lint and test together using an uncompiled build. To do that:
+During development, you may find it useful to lint and test together using an uncompiled build:
 
     npm run test:dev
 
@@ -28,7 +28,7 @@ You may optionally pass a path to limit testing to just that module:
 
     npm run test:dev ./test/jig.js
 
-This applies to `test:dev`, `test`, and `test:cover`.
+This path argument also applies to `test:dev`, `test`, and `test:cover`.
 
 ### Code Coverage
 
