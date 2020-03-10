@@ -20,7 +20,7 @@ To test with other browsers, open `./test/browser.html` in any web browser.
 
 ### As a Developer
 
-During development, you may find it useful to lint and test together using an uncompiled build:
+During development, you may find it useful to lint and test together on the original source:
 
     npm run test:dev
 
