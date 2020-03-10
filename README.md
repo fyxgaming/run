@@ -32,7 +32,7 @@ This path argument also applies to `test:dev`, `test`, and `test:cover`.
 
 ### Code Coverage
 
-To run testing with code coverage:
+To calculate the code coverage:
 
     npm run test:cover
 
