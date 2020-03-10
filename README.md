@@ -14,9 +14,9 @@ To test the browser build:
 
     npm run test:browser
 
-This will run the tests on a headless version of Chrome.
+This will run the tests in a headless version of Chrome.
 
-To test other browser, open `./test/browser.html` in any web browser.
+To test with other browsers, open `./test/browser.html` in any web browser.
 
 ### Developer Testing
 
