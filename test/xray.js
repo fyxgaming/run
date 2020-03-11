@@ -442,7 +442,7 @@ function addTestVectors (intrinsics, testIntrinsics) {
   addTestVector(/^abc/).unscannable().uncloneable().unserializable().undeserializable()
 
   // Unknown intrinsics
-  const sandboxIntrinsics = run.code.evaluator.intrinsics.allowed[1]
+  const sandboxIntrinsics = run.code.intrinsics.allowed[1]
   addTestVector(new sandboxIntrinsics.Uint8Array()).unscannable().uncloneable().unserializable().undeserializable()
   addTestVector(new sandboxIntrinsics.Set()).unscannable().uncloneable().unserializable().undeserializable()
   addTestVector(new sandboxIntrinsics.Map()).unscannable().uncloneable().unserializable().undeserializable()
