@@ -1267,12 +1267,19 @@ class Jig {
         // Internal methods do not need a checkpoint
         const argsCheckpoint = parentIsAJig ? new Context.Checkpoint(args, run.code, proxy) : null
 
+<<<<<<< HEAD
         JigControl.disableProxy(() => {
           if (!JigControl.before.has(original)) {
             const checkpoint = new Context.Checkpoint(original, run.code, proxy)
             JigControl.before.set(original, checkpoint)
           }
         })
+=======
+Run.version =  false ? undefined : "0.4.11"
+Run.protocol = util.PROTOCOL_VERSION
+Run._util = util
+Run.instance = null
+>>>>>>> 9c9416e... Bump build
 
         JigControl.reads = reads
 
@@ -13342,7 +13349,10 @@ class Purse {
     }
 
     // Make sure we have enough utxos
-    if (satoshisSpentTotal <= satoshisRequired + 50) throw new Error('Not enough funds')
+    if (satoshisSpentTotal <= satoshisRequired + 50) {
+      const info = `Required ${satoshisRequired + 50} satoshis, ${satoshisSpentTotal} available in ${this.address}`
+      throw new Error(`Not enough funds\n\n${info}`)
+    }
 
     // The the number of splits is less than our current utxos, then we still need a change
     if (numOutputsToCreate < 1) numOutputsToCreate = 1
