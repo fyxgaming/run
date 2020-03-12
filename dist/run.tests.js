@@ -8057,11 +8057,11 @@ describe('Purse', () => {
         expect(new Purse({ blockchain: run.blockchain, feePerKb: 1.5 }).feePerKb).to.equal(1.5)
         expect(new Purse({ blockchain: run.blockchain, feePerKb: 1000 }).feePerKb).to.equal(1000)
         expect(new Purse({ blockchain: run.blockchain, feePerKb: Number.MAX_SAFE_INTEGER }).feePerKb).to.equal(Number.MAX_SAFE_INTEGER)
+        expect(new Purse({ blockchain: run.blockchain, feePerKb: 0 }).feePerKb).to.equal(0)
       })
 
       it('should throw if pass in invalid feePerKb', () => {
-        expect(() => new Purse({ blockchain: run.blockchain, feePerKb: 0 }).feePerKb).to.throw('Option feePerKb must be at least 1: 0')
-        expect(() => new Purse({ blockchain: run.blockchain, feePerKb: -1 })).to.throw('Option feePerKb must be at least 1: -1')
+        expect(() => new Purse({ blockchain: run.blockchain, feePerKb: -1 })).to.throw('Option feePerKb must be non-negative: -1')
         expect(() => new Purse({ blockchain: run.blockchain, feePerKb: NaN })).to.throw('Option feePerKb must be finite: NaN')
         expect(() => new Purse({ blockchain: run.blockchain, feePerKb: Number.POSITIVE_INFINITY })).to.throw('Option feePerKb must be finite: Infinity')
         expect(() => new Purse({ blockchain: run.blockchain, feePerKb: false })).to.throw('Invalid feePerKb option: false')
@@ -8100,7 +8100,7 @@ describe('Purse', () => {
 
   describe('feePerKb', () => {
     it('should throw if set invalid value', () => {
-      expect(() => { run.purse.feePerKb = -1 }).to.throw('Option feePerKb must be at least 1: -1')
+      expect(() => { run.purse.feePerKb = -1 }).to.throw('Option feePerKb must be non-negative: -1')
     })
   })
 
@@ -8343,18 +8343,18 @@ describe('Run', () => {
 
     describe('sandbox', () => {
       it('should default to sandbox enabled', () => {
-        expect(createRun({ network: 'mock' }).code.evaluator.sandbox).to.equal(true)
+        expect(createRun({ network: 'mock' }).code.sandbox).to.equal(true)
         class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()
       })
 
       it('should support enabling sandbox', () => {
-        expect(createRun({ sandbox: true }).code.evaluator.sandbox).to.equal(true)
+        expect(createRun({ sandbox: true }).code.sandbox).to.equal(true)
       })
 
       it('should support disabling sandbox', () => {
         const run = createRun({ network: 'mock', sandbox: false })
-        expect(run.code.evaluator.sandbox).to.equal(false)
+        expect(run.code.sandbox).to.equal(false)
         class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).not.to.throw()
         run.deactivate()
@@ -8362,7 +8362,7 @@ describe('Run', () => {
 
       it('should support RegExp sandbox', () => {
         const run = createRun({ network: 'mock', sandbox: /A/ })
-        expect(run.code.evaluator.sandbox instanceof RegExp).to.equal(true)
+        expect(run.code.sandbox instanceof RegExp).to.equal(true)
         class A extends Jig { init () { this.version = Run.version } }
         class B extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()
@@ -8623,11 +8623,7 @@ describe('Run', () => {
 /* 26 */
 /***/ (function(module) {
 
-<<<<<<< HEAD
 module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.5.0\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"nyc\":{\"exclude\":[\"**/intrinsics.js\",\"**/test/**/*.js\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"ses\":\"github:runonbitcoin/ses\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
-=======
-module.exports = JSON.parse("{\"name\":\"run\",\"repository\":\"git://github.com/runonbitcoin/run.git\",\"version\":\"0.4.11\",\"description\":\"Run JavaScript library\",\"main\":\"lib/index.js\",\"scripts\":{\"lint\":\"standard --fix\",\"build\":\"webpack\",\"test\":\"npm run build && TEST_MODE=dist mocha\",\"test:dev\":\"npm run lint && TEST_MODE=lib mocha\",\"test:cover\":\"TEST_MODE=cover nyc mocha\",\"test:browser\":\"npm run build && mocha-headless-chrome -f ./test/browser.html -t 600000\"},\"standard\":{\"globals\":[\"RUN_VERSION\",\"TEST_MODE\",\"caller\"],\"ignore\":[\"dist/**\",\"examples/**\"]},\"dependencies\":{\"axios\":\"0.19.0\",\"bsv\":\"1.2.0\",\"ses\":\"github:runonbitcoin/ses\",\"terser-webpack-plugin\":\"2.3.1\",\"webpack\":\"4.41.5\",\"webpack-cli\":\"3.3.10\"},\"devDependencies\":{\"chai\":\"^4.2.0\",\"chai-as-promised\":\"^7.1.1\",\"mocha\":\"^6.2.2\",\"mocha-headless-chrome\":\"^2.0.3\",\"nyc\":\"^15.0.0\",\"standard\":\"^14.3.1\"}}");
->>>>>>> 9c9416e... Bump build
 
 /***/ }),
 /* 27 */
@@ -11677,7 +11673,7 @@ function addTestVectors (intrinsics, testIntrinsics) {
   addTestVector(/^abc/).unscannable().uncloneable().unserializable().undeserializable()
 
   // Unknown intrinsics
-  const sandboxIntrinsics = run.code.evaluator.intrinsics.allowed[1]
+  const sandboxIntrinsics = run.code.intrinsics.allowed[1]
   addTestVector(new sandboxIntrinsics.Uint8Array()).unscannable().uncloneable().unserializable().undeserializable()
   addTestVector(new sandboxIntrinsics.Set()).unscannable().uncloneable().unserializable().undeserializable()
   addTestVector(new sandboxIntrinsics.Map()).unscannable().uncloneable().unserializable().undeserializable()

@@ -103,11 +103,11 @@ describe('Purse', () => {
         expect(new Purse({ blockchain: run.blockchain, feePerKb: 1.5 }).feePerKb).to.equal(1.5)
         expect(new Purse({ blockchain: run.blockchain, feePerKb: 1000 }).feePerKb).to.equal(1000)
         expect(new Purse({ blockchain: run.blockchain, feePerKb: Number.MAX_SAFE_INTEGER }).feePerKb).to.equal(Number.MAX_SAFE_INTEGER)
+        expect(new Purse({ blockchain: run.blockchain, feePerKb: 0 }).feePerKb).to.equal(0)
       })
 
       it('should throw if pass in invalid feePerKb', () => {
-        expect(() => new Purse({ blockchain: run.blockchain, feePerKb: 0 }).feePerKb).to.throw('Option feePerKb must be at least 1: 0')
-        expect(() => new Purse({ blockchain: run.blockchain, feePerKb: -1 })).to.throw('Option feePerKb must be at least 1: -1')
+        expect(() => new Purse({ blockchain: run.blockchain, feePerKb: -1 })).to.throw('Option feePerKb must be non-negative: -1')
         expect(() => new Purse({ blockchain: run.blockchain, feePerKb: NaN })).to.throw('Option feePerKb must be finite: NaN')
         expect(() => new Purse({ blockchain: run.blockchain, feePerKb: Number.POSITIVE_INFINITY })).to.throw('Option feePerKb must be finite: Infinity')
         expect(() => new Purse({ blockchain: run.blockchain, feePerKb: false })).to.throw('Invalid feePerKb option: false')
@@ -146,7 +146,7 @@ describe('Purse', () => {
 
   describe('feePerKb', () => {
     it('should throw if set invalid value', () => {
-      expect(() => { run.purse.feePerKb = -1 }).to.throw('Option feePerKb must be at least 1: -1')
+      expect(() => { run.purse.feePerKb = -1 }).to.throw('Option feePerKb must be non-negative: -1')
     })
   })
 
