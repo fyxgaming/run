@@ -13552,15 +13552,17 @@ class Purse {
     // and how many outputs we'll have, we can calculate how big the outputs need to be, and
     // then add the outputs for real to the transaction.
 
+    tx.feePerKb(this.feePerKb)
+
     const baseSatoshisRequired = Math.max(1000, tx._estimateFee() + tx._getOutputAmount())
+
+    if (!baseSatoshisRequired) return tx
 
     let satoshisRequired = baseSatoshisRequired
     let satoshisAddedInUtxos = 0
     let satoshisSpentTotal = tx._getInputAmount()
     let numUtxosSpent = 0
     let numOutputsToCreate = 0
-
-    tx.feePerKb(this.feePerKb)
 
     for (const utxo of utxos) {
       tx.from(utxo)
