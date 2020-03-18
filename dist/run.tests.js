@@ -5600,7 +5600,7 @@ describe('Jig', () => {
       await expect(run.sync()).to.be.rejectedWith(`read different locations of same jig ${a.origin}`)
     })
 
-    it.only('should throw if write difference instances of the same jig', async () => {
+    it('should throw if write difference locations of the same jig', async () => {
       class Store extends Jig { set (x) { this.x = x } }
       class Setter extends Jig { set (a, x) { a.set(x) } }
       const a = new Store()
@@ -5612,7 +5612,20 @@ describe('Jig', () => {
       await a2.sync()
       run.transaction.begin()
       b.set(a, 3)
-      b.set(a2, 3)
+      expect(() => b.set(a2, 3)).to.throw('Different location for [jig Store] found in set()')
+      run.transaction.rollback()
+    })
+
+    it('should throw if write difference instances but same location of the same jig', async () => {
+      class Store extends Jig { set (x) { this.x = x } }
+      class Setter extends Jig { set (a, x) { a.set(x) } }
+      const a = new Store()
+      const b = new Setter()
+      a.set(1)
+      await a.sync()
+      const a2 = await run.load(a.location)
+      run.transaction.begin()
+      b.set(a, 2)
       expect(() => b.set(a2, 3)).to.throw('Different location for [jig Store] found in set()')
       run.transaction.rollback()
     })

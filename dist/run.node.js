@@ -902,11 +902,11 @@ function internal (x) {
 // ------------------------------------------------------------------------------------------------
 
 function createSandboxedFriendlyMap (evaluator) {
-  return evaluator.evaluate(FriendlyMap.toString(), { internal }).result
+  return evaluator.evaluate(FriendlyMap.toString(), { internal, friendlyKey }).result
 }
 
 function createSandboxedFriendlySet (evaluator) {
-  return evaluator.evaluate(FriendlySet.toString(), { internal, FriendlyMap }).result
+  return evaluator.evaluate(FriendlySet.toString(), { internal, FriendlyMap, friendlyKey }).result
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -914,6 +914,7 @@ function createSandboxedFriendlySet (evaluator) {
 module.exports = {
   FriendlyMap,
   FriendlySet,
+  friendlyKey,
   createSandboxedFriendlyMap,
   createSandboxedFriendlySet
 }
@@ -1924,7 +1925,8 @@ function parseCode (code, sandbox, logger) {
       break
     case 'undefined': {
       if (Run.instance) {
-        const sameSandbox = Run.instance.code.sandbox.toString() === sandbox.toString()
+        // const sameSandbox = Run.instance.code.sandbox.toString() === sandbox.toString()
+        const sameSandbox = Run.instance.code.evaluator.sandbox.toString() === sandbox.toString()
 
         if (sameSandbox) return Run.instance.code
 
@@ -1933,8 +1935,9 @@ function parseCode (code, sandbox, logger) {
         Run.instance.code.deactivate()
       }
       // const evaluator = new DeterministicEvaluator({ logger })
-      const evaluator = new Evaluator({ logger, sandbox })
-      return new Code({ evaluator, sandbox, logger })
+      // return new Code({ evaluator, sandbox, logger })
+      // const evaluator = new Evaluator({ logger, sandbox })
+      return new Code({ sandbox, logger })
     }
   }
   throw new Error('Option \'code\' must be an instance of Code')
@@ -8847,12 +8850,15 @@ class ProtoTransaction {
           currTarget.location !== newTarget.location
         if (this.inputs.some(isDifferentInstance)) {
           const differentInstance = this.inputs.find(isDifferentInstance)
-          const differentLocation = this.stateBefore.get(differentInstance).json.location
+          const differentLocation = this.before.get(differentInstance).serialized.location
           const line1 = `origin: ${newTarget.origin}`
-          const line2 = `location1: ${differentLocation}`
-          const line3 = `location2: ${newTarget.location}`
-          const info = `${line1}\n${line2}\n${line3}`
-          const hint = `Hint: Try syncing all instances of this jig before calling ${method}`
+          const line2 = `1st location (after update): ${differentInstance.location}`
+          const line3 = `1st location (before update): ${differentLocation}`
+          const line4 = `2nd location: ${newTarget.location}`
+          const info = `${line1}\n${line2}\n${line3}\n${line4}`
+          const hint = differentLocation === newTarget.location
+            ? 'Hint: Multiple dfferent up-to-date instances of this jig were found. Try updating without the batch.'
+            : `Hint: Try syncing all instances of this jig before calling ${method}`
           const description = `Different location for ${differentInstance} found in ${method}()`
           throw new Error(`${description}\n\n${info}\n\n${hint}`)
         }
