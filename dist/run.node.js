@@ -96,7 +96,7 @@ module.exports =
  */
 
 const bsv = __webpack_require__(2)
-const { Intrinsics } = __webpack_require__(7)
+const { Intrinsics } = __webpack_require__(11)
 
 // ------------------------------------------------------------------------------------------------
 // JIG CHECKS
@@ -124,7 +124,7 @@ function checkSatoshis (satoshis) {
  */
 function ownerScript (owner) {
   // Have to include here, because owner also requires util
-  const { AddressScript } = __webpack_require__(8)
+  const { AddressScript } = __webpack_require__(7)
 
   if (typeof owner === 'string') {
     // Try parsing it as a public key
@@ -396,7 +396,7 @@ module.exports = {
 "use strict";
 
 
-var bind = __webpack_require__(18);
+var bind = __webpack_require__(19);
 var isBuffer = __webpack_require__(39);
 
 /*global toString:true*/
@@ -746,7 +746,7 @@ module.exports = require("bsv");
  * Data structures that are safe for working with pickups. We call them friendly data structures.
  */
 
-const Protocol = __webpack_require__(10)
+const Protocol = __webpack_require__(8)
 const Location = __webpack_require__(5)
 
 // ------------------------------------------------------------------------------------------------
@@ -1690,25 +1690,26 @@ module.exports = Location
  */
 
 const bsv = __webpack_require__(2)
-const Code = __webpack_require__(31)
-const Syncer = __webpack_require__(32)
-const Evaluator = __webpack_require__(33)
-const { Transaction } = __webpack_require__(15)
+// const Code = require('./kernel/code')
+const Code = __webpack_require__(32)
+const Syncer = __webpack_require__(35)
+const Evaluator = __webpack_require__(15)
+const { Transaction } = __webpack_require__(17)
 const util = __webpack_require__(0)
 const { Pay, Purse } = __webpack_require__(36)
-const { AddressScript, PubKeyScript, Sign, Owner, BasicOwner } = __webpack_require__(8)
-const { Blockchain, BlockchainServer } = __webpack_require__(17)
+const { AddressScript, PubKeyScript, Sign, Owner, BasicOwner } = __webpack_require__(7)
+const { Blockchain, BlockchainServer } = __webpack_require__(18)
 const Mockchain = __webpack_require__(67)
 const { State, StateCache } = __webpack_require__(68)
 const { PrivateKey } = bsv
 const { Jig } = __webpack_require__(4)
-const { Berry } = __webpack_require__(11)
-const Protocol = __webpack_require__(10)
+const { Berry } = __webpack_require__(10)
+const Protocol = __webpack_require__(8)
 const Token = __webpack_require__(69)
-const expect = __webpack_require__(30)
+const expect = __webpack_require__(31)
 const Location = __webpack_require__(5)
 const { FriendlySet, FriendlyMap } = __webpack_require__(3)
-const { Intrinsics } = __webpack_require__(7)
+const { Intrinsics } = __webpack_require__(11)
 const Xray = __webpack_require__(9)
 
 const DeterministicEvaluator = __webpack_require__(70)
@@ -1931,7 +1932,8 @@ function parseCode (code, sandbox, logger) {
         // so that we start from a clean slate. This makes our unit tests more reliable.
         Run.instance.code.deactivate()
       }
-      const evaluator = new DeterministicEvaluator({ logger })
+      // const evaluator = new DeterministicEvaluator({ logger })
+      const evaluator = new Evaluator({ logger, sandbox })
       return new Code({ evaluator, sandbox, logger })
     }
   }
@@ -2047,149 +2049,6 @@ module.exports = Run
 
 /***/ }),
 /* 7 */
-/***/ (function(module, exports) {
-
-/**
- * intrinsics.js
- *
- * Helpers for the known built-in objects in JavaScript
- */
-
-// See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
-const intrinsicNames = [
-  // Global functions
-  'console',
-  'eval',
-  'isFinite',
-  'isNaN',
-  'parseFloat',
-  'parseInt',
-  'decodeURI',
-  'decodeURIComponent',
-  'encodeURI',
-  'encodeURIComponent',
-  'escape',
-
-  // Fundamental objects
-  'Object',
-  'Function',
-  'Boolean',
-  'Symbol',
-  'Error',
-  'EvalError',
-  'RangeError',
-  'ReferenceError',
-  'SyntaxError',
-  'TypeError',
-  'URIError',
-
-  // Numbers and dates
-  'Number',
-  'BigInt',
-  'Math',
-  'Date',
-
-  // Text processing
-  'String',
-  'RegExp',
-
-  // Indexed collections
-  'Array',
-  'Int8Array',
-  'Uint8Array',
-  'Uint8ClampedArray',
-  'Int16Array',
-  'Uint16Array',
-  'Int32Array',
-  'Uint32Array',
-  'Float32Array',
-  'Float64Array',
-  'BigInt64Array',
-  'BigUint64Array',
-
-  // Keyed collections
-  'Map',
-  'Set',
-  'WeakMap',
-  'WeakSet',
-
-  // Structured data
-  'ArrayBuffer',
-  'DataView',
-  'JSON',
-
-  // Control abstraction objects
-  'Promise',
-  'Generator',
-  'GeneratorFunction',
-  'AsyncFunction',
-
-  // Reflection
-  'Reflect',
-  'Proxy',
-
-  // Internationalization
-  'Intl',
-
-  // WebAssembly
-  'WebAssembly'
-]
-
-// Returns an object with the built-in intrinsics in this environment
-const getIntrinsics = () => {
-  let code = 'const x = {};'
-  intrinsicNames.forEach(name => { code += `x.${name}=typeof ${name}!=='undefined'?${name}:undefined;` })
-  code += 'return x'
-  return new Function(code)() // eslint-disable-line
-}
-
-const globalIntrinsics = getIntrinsics()
-
-// ------------------------------------------------------------------------------------------------
-// Intrinsics
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Manages known intrinsics
- */
-class Intrinsics {
-  constructor () {
-    this.default = null
-    this.allowed = []
-    this.types = new Set()
-    this.use(globalIntrinsics)
-  }
-
-  set (intrinsics) {
-    this.default = null
-    this.allowed = []
-    this.types = new Set()
-    this.use(intrinsics)
-    return this
-  }
-
-  allow (intrinsics) {
-    this.allowed.push(intrinsics)
-    Object.keys(intrinsics).forEach(name => this.types.add(intrinsics[name]))
-    return this
-  }
-
-  use (intrinsics) {
-    this.allow(intrinsics)
-    this.default = intrinsics
-    return this
-  }
-}
-
-Intrinsics.defaultIntrinsics = new Intrinsics()
-
-// ------------------------------------------------------------------------------------------------
-
-module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
-
-
-/***/ }),
-/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -2542,6 +2401,207 @@ module.exports = { Script, AddressScript, PubKeyScript, Sign, Owner, BasicOwner 
 
 
 /***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * protocol.js
+ *
+ * Manager for token protocols are supported by Run
+ */
+
+const bsv = __webpack_require__(2)
+const { Jig, JigControl } = __webpack_require__(4)
+const { Berry, BerryControl } = __webpack_require__(10)
+const Location = __webpack_require__(5)
+const util = __webpack_require__(0)
+
+// ------------------------------------------------------------------------------------------------
+// Protocol manager
+// ------------------------------------------------------------------------------------------------
+
+// A modified version of the txo format form unwriter
+// Source: https://github.com/interplanaria/txo/blob/master/index.js
+var txToTxo = function (tx, options) {
+  const gene = new bsv.Transaction(tx)
+  const t = gene.toObject()
+  const inputs = []
+  const outputs = []
+  if (gene.inputs) {
+    gene.inputs.forEach(function (input, inputIndex) {
+      if (input.script) {
+        const xput = { i: inputIndex, seq: input.sequenceNumber }
+        input.script.chunks.forEach(function (c, chunkIndex) {
+          if (c.buf) {
+            if (c.buf.byteLength >= 1000000) {
+              xput['xlb' + chunkIndex] = c.buf.toString('base64')
+            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
+              xput['lb' + chunkIndex] = c.buf.toString('base64')
+            } else {
+              xput['b' + chunkIndex] = c.buf.toString('base64')
+            }
+            if (options && options.h && options.h > 0) {
+              xput['h' + chunkIndex] = c.buf.toString('hex')
+            }
+          } else {
+            if (typeof c.opcodenum !== 'undefined') {
+              xput['b' + chunkIndex] = {
+                op: c.opcodenum
+              }
+            } else {
+              xput['b' + chunkIndex] = c
+            }
+          }
+        })
+        const sender = {
+          h: input.prevTxId.toString('hex'),
+          i: input.outputIndex
+        }
+        const address = input.script.toAddress(bsv.Networks.livenet).toString()
+        if (address && address.length > 0) {
+          sender.a = address
+        }
+        xput.e = sender
+        inputs.push(xput)
+      }
+    })
+  }
+  if (gene.outputs) {
+    gene.outputs.forEach(function (output, outputIndex) {
+      if (output.script) {
+        const xput = { i: outputIndex }
+        output.script.chunks.forEach(function (c, chunkIndex) {
+          if (c.buf) {
+            if (c.buf.byteLength >= 1000000) {
+              xput['xlb' + chunkIndex] = c.buf.toString('base64')
+              xput['xls' + chunkIndex] = c.buf.toString('utf8')
+            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
+              xput['lb' + chunkIndex] = c.buf.toString('base64')
+              xput['ls' + chunkIndex] = c.buf.toString('utf8')
+            } else {
+              xput['b' + chunkIndex] = c.buf.toString('base64')
+              xput['s' + chunkIndex] = c.buf.toString('utf8')
+            }
+            if (options && options.h && options.h > 0) {
+              xput['h' + chunkIndex] = c.buf.toString('hex')
+            }
+          } else {
+            if (typeof c.opcodenum !== 'undefined') {
+              xput['b' + chunkIndex] = {
+                op: c.opcodenum
+              }
+            } else {
+              xput['b' + chunkIndex] = c
+            }
+          }
+        })
+        const receiver = {
+          v: output.satoshis,
+          i: outputIndex
+        }
+        const address = output.script.toAddress(bsv.Networks.livenet).toString()
+        if (address && address.length > 0) {
+          receiver.a = address
+        }
+        xput.e = receiver
+        outputs.push(xput)
+      }
+    })
+  }
+  const r = {
+    tx: { h: t.hash },
+    in: inputs,
+    out: outputs,
+    lock: t.nLockTime
+  }
+  // confirmations
+  if (options && options.confirmations) {
+    r.confirmations = options.confirmations
+  }
+  return r
+}
+
+class Protocol {
+  static async pluckBerry (location, blockchain, code, protocol) {
+    // TODO: Make fetch and pluck secure, as well as txo above
+    const fetch = async x => txToTxo(await blockchain.fetch(x))
+    const pluck = x => this.pluckBerry(x, blockchain, code)
+
+    try {
+      // TODO: Allow undeployed, with bad locations
+      const sandboxedProtocol = code.installBerryProtocol(protocol)
+
+      BerryControl.protocol = sandboxedProtocol
+      if (Location.parse(sandboxedProtocol.location).error) {
+        BerryControl.location = Location.build({ error: `${protocol.name} protocol not deployed` })
+      } else {
+        BerryControl.location = Location.build({ location: sandboxedProtocol.location, innerLocation: location })
+      }
+
+      const berry = await sandboxedProtocol.pluck(location, fetch, pluck)
+
+      if (!berry) throw new Error(`Failed to load berry using ${protocol.name}: ${location}`)
+
+      return berry
+    } finally {
+      BerryControl.protocol = undefined
+      BerryControl.location = undefined
+    }
+  }
+
+  static isPickup (x) {
+    switch (typeof x) {
+      case 'object': return x && (x instanceof Jig || x instanceof Berry)
+      case 'function': {
+        if (!!x.origin && !!x.location && !!x.owner) return true
+        const net = util.networkSuffix(util.activeRunInstance().blockchain.network)
+        return !!x[`origin${net}`] && !!x[`location${net}`] && !!x[`owner${net}`]
+      }
+      default: return false
+    }
+  }
+
+  static isDeployable (x) {
+    if (typeof x !== 'function') return false
+    return x.toString().indexOf('[native code]') === -1
+  }
+
+  static getLocation (x) {
+    const location = JigControl.disableProxy(() => x.location)
+    Location.parse(location)
+    return location
+  }
+
+  static getOrigin (x) {
+    if (x && x instanceof Berry) return Protocol.getLocation(x)
+    const origin = JigControl.disableProxy(() => x.origin)
+    Location.parse(origin)
+    return origin
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Berry protocol plucker
+// ------------------------------------------------------------------------------------------------
+
+class BerryProtocol {
+  // Static to keep stateless
+  // Location is defined by the protocol
+  static async pluck (location, fetch, pluck) {
+    // Fetch tx
+    // Parse
+    // Return Berry
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+Protocol.BerryProtocol = BerryProtocol
+
+module.exports = Protocol
+
+
+/***/ }),
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2564,11 +2624,11 @@ module.exports = { Script, AddressScript, PubKeyScript, Sign, Owner, BasicOwner 
 // So Objects and arrays are acceptible from without.
 // Document scanner API
 
-const Protocol = __webpack_require__(10)
+const Protocol = __webpack_require__(8)
 const { display } = __webpack_require__(0)
 const { Jig, JigControl } = __webpack_require__(4)
-const { Berry } = __webpack_require__(11)
-const { Intrinsics } = __webpack_require__(7)
+const { Berry } = __webpack_require__(10)
+const { Intrinsics } = __webpack_require__(11)
 
 // ------------------------------------------------------------------------------------------------
 // Xray
@@ -3759,207 +3819,6 @@ module.exports = Xray
 /* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/**
- * protocol.js
- *
- * Manager for token protocols are supported by Run
- */
-
-const bsv = __webpack_require__(2)
-const { Jig, JigControl } = __webpack_require__(4)
-const { Berry, BerryControl } = __webpack_require__(11)
-const Location = __webpack_require__(5)
-const util = __webpack_require__(0)
-
-// ------------------------------------------------------------------------------------------------
-// Protocol manager
-// ------------------------------------------------------------------------------------------------
-
-// A modified version of the txo format form unwriter
-// Source: https://github.com/interplanaria/txo/blob/master/index.js
-var txToTxo = function (tx, options) {
-  const gene = new bsv.Transaction(tx)
-  const t = gene.toObject()
-  const inputs = []
-  const outputs = []
-  if (gene.inputs) {
-    gene.inputs.forEach(function (input, inputIndex) {
-      if (input.script) {
-        const xput = { i: inputIndex, seq: input.sequenceNumber }
-        input.script.chunks.forEach(function (c, chunkIndex) {
-          if (c.buf) {
-            if (c.buf.byteLength >= 1000000) {
-              xput['xlb' + chunkIndex] = c.buf.toString('base64')
-            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
-              xput['lb' + chunkIndex] = c.buf.toString('base64')
-            } else {
-              xput['b' + chunkIndex] = c.buf.toString('base64')
-            }
-            if (options && options.h && options.h > 0) {
-              xput['h' + chunkIndex] = c.buf.toString('hex')
-            }
-          } else {
-            if (typeof c.opcodenum !== 'undefined') {
-              xput['b' + chunkIndex] = {
-                op: c.opcodenum
-              }
-            } else {
-              xput['b' + chunkIndex] = c
-            }
-          }
-        })
-        const sender = {
-          h: input.prevTxId.toString('hex'),
-          i: input.outputIndex
-        }
-        const address = input.script.toAddress(bsv.Networks.livenet).toString()
-        if (address && address.length > 0) {
-          sender.a = address
-        }
-        xput.e = sender
-        inputs.push(xput)
-      }
-    })
-  }
-  if (gene.outputs) {
-    gene.outputs.forEach(function (output, outputIndex) {
-      if (output.script) {
-        const xput = { i: outputIndex }
-        output.script.chunks.forEach(function (c, chunkIndex) {
-          if (c.buf) {
-            if (c.buf.byteLength >= 1000000) {
-              xput['xlb' + chunkIndex] = c.buf.toString('base64')
-              xput['xls' + chunkIndex] = c.buf.toString('utf8')
-            } else if (c.buf.byteLength >= 512 && c.buf.byteLength < 1000000) {
-              xput['lb' + chunkIndex] = c.buf.toString('base64')
-              xput['ls' + chunkIndex] = c.buf.toString('utf8')
-            } else {
-              xput['b' + chunkIndex] = c.buf.toString('base64')
-              xput['s' + chunkIndex] = c.buf.toString('utf8')
-            }
-            if (options && options.h && options.h > 0) {
-              xput['h' + chunkIndex] = c.buf.toString('hex')
-            }
-          } else {
-            if (typeof c.opcodenum !== 'undefined') {
-              xput['b' + chunkIndex] = {
-                op: c.opcodenum
-              }
-            } else {
-              xput['b' + chunkIndex] = c
-            }
-          }
-        })
-        const receiver = {
-          v: output.satoshis,
-          i: outputIndex
-        }
-        const address = output.script.toAddress(bsv.Networks.livenet).toString()
-        if (address && address.length > 0) {
-          receiver.a = address
-        }
-        xput.e = receiver
-        outputs.push(xput)
-      }
-    })
-  }
-  const r = {
-    tx: { h: t.hash },
-    in: inputs,
-    out: outputs,
-    lock: t.nLockTime
-  }
-  // confirmations
-  if (options && options.confirmations) {
-    r.confirmations = options.confirmations
-  }
-  return r
-}
-
-class Protocol {
-  static async pluckBerry (location, blockchain, code, protocol) {
-    // TODO: Make fetch and pluck secure, as well as txo above
-    const fetch = async x => txToTxo(await blockchain.fetch(x))
-    const pluck = x => this.pluckBerry(x, blockchain, code)
-
-    try {
-      // TODO: Allow undeployed, with bad locations
-      const sandboxedProtocol = code.installBerryProtocol(protocol)
-
-      BerryControl.protocol = sandboxedProtocol
-      if (Location.parse(sandboxedProtocol.location).error) {
-        BerryControl.location = Location.build({ error: `${protocol.name} protocol not deployed` })
-      } else {
-        BerryControl.location = Location.build({ location: sandboxedProtocol.location, innerLocation: location })
-      }
-
-      const berry = await sandboxedProtocol.pluck(location, fetch, pluck)
-
-      if (!berry) throw new Error(`Failed to load berry using ${protocol.name}: ${location}`)
-
-      return berry
-    } finally {
-      BerryControl.protocol = undefined
-      BerryControl.location = undefined
-    }
-  }
-
-  static isPickup (x) {
-    switch (typeof x) {
-      case 'object': return x && (x instanceof Jig || x instanceof Berry)
-      case 'function': {
-        if (!!x.origin && !!x.location && !!x.owner) return true
-        const net = util.networkSuffix(util.activeRunInstance().blockchain.network)
-        return !!x[`origin${net}`] && !!x[`location${net}`] && !!x[`owner${net}`]
-      }
-      default: return false
-    }
-  }
-
-  static isDeployable (x) {
-    if (typeof x !== 'function') return false
-    return x.toString().indexOf('[native code]') === -1
-  }
-
-  static getLocation (x) {
-    const location = JigControl.disableProxy(() => x.location)
-    Location.parse(location)
-    return location
-  }
-
-  static getOrigin (x) {
-    if (x && x instanceof Berry) return Protocol.getLocation(x)
-    const origin = JigControl.disableProxy(() => x.origin)
-    Location.parse(origin)
-    return origin
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Berry protocol plucker
-// ------------------------------------------------------------------------------------------------
-
-class BerryProtocol {
-  // Static to keep stateless
-  // Location is defined by the protocol
-  static async pluck (location, fetch, pluck) {
-    // Fetch tx
-    // Parse
-    // Return Berry
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-Protocol.BerryProtocol = BerryProtocol
-
-module.exports = Protocol
-
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
 const Context = __webpack_require__(12)
 
 const BerryControl = {
@@ -4051,6 +3910,149 @@ module.exports = { Berry, BerryControl }
 
 
 /***/ }),
+/* 11 */
+/***/ (function(module, exports) {
+
+/**
+ * intrinsics.js
+ *
+ * Helpers for the known built-in objects in JavaScript
+ */
+
+// See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
+const intrinsicNames = [
+  // Global functions
+  'console',
+  'eval',
+  'isFinite',
+  'isNaN',
+  'parseFloat',
+  'parseInt',
+  'decodeURI',
+  'decodeURIComponent',
+  'encodeURI',
+  'encodeURIComponent',
+  'escape',
+
+  // Fundamental objects
+  'Object',
+  'Function',
+  'Boolean',
+  'Symbol',
+  'Error',
+  'EvalError',
+  'RangeError',
+  'ReferenceError',
+  'SyntaxError',
+  'TypeError',
+  'URIError',
+
+  // Numbers and dates
+  'Number',
+  'BigInt',
+  'Math',
+  'Date',
+
+  // Text processing
+  'String',
+  'RegExp',
+
+  // Indexed collections
+  'Array',
+  'Int8Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Int16Array',
+  'Uint16Array',
+  'Int32Array',
+  'Uint32Array',
+  'Float32Array',
+  'Float64Array',
+  'BigInt64Array',
+  'BigUint64Array',
+
+  // Keyed collections
+  'Map',
+  'Set',
+  'WeakMap',
+  'WeakSet',
+
+  // Structured data
+  'ArrayBuffer',
+  'DataView',
+  'JSON',
+
+  // Control abstraction objects
+  'Promise',
+  'Generator',
+  'GeneratorFunction',
+  'AsyncFunction',
+
+  // Reflection
+  'Reflect',
+  'Proxy',
+
+  // Internationalization
+  'Intl',
+
+  // WebAssembly
+  'WebAssembly'
+]
+
+// Returns an object with the built-in intrinsics in this environment
+const getIntrinsics = () => {
+  let code = 'const x = {};'
+  intrinsicNames.forEach(name => { code += `x.${name}=typeof ${name}!=='undefined'?${name}:undefined;` })
+  code += 'return x'
+  return new Function(code)() // eslint-disable-line
+}
+
+const globalIntrinsics = getIntrinsics()
+
+// ------------------------------------------------------------------------------------------------
+// Intrinsics
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Manages known intrinsics
+ */
+class Intrinsics {
+  constructor () {
+    this.default = null
+    this.allowed = []
+    this.types = new Set()
+    this.use(globalIntrinsics)
+  }
+
+  set (intrinsics) {
+    this.default = null
+    this.allowed = []
+    this.types = new Set()
+    this.use(intrinsics)
+    return this
+  }
+
+  allow (intrinsics) {
+    this.allowed.push(intrinsics)
+    Object.keys(intrinsics).forEach(name => this.types.add(intrinsics[name]))
+    return this
+  }
+
+  use (intrinsics) {
+    this.allow(intrinsics)
+    this.default = intrinsics
+    return this
+  }
+}
+
+Intrinsics.defaultIntrinsics = new Intrinsics()
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { getIntrinsics, intrinsicNames, globalIntrinsics, Intrinsics }
+
+
+/***/ }),
 /* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -4066,7 +4068,7 @@ class Context {
   static ownerScript (x) { return __webpack_require__(0).ownerScript(x) }
   static networkSuffix (x) { return __webpack_require__(0).networkSuffix(x) }
   static get Location () { return __webpack_require__(5) }
-  static get Protocol () { return __webpack_require__(10) }
+  static get Protocol () { return __webpack_require__(8) }
 
   static get FriendlySet () { return __webpack_require__(3).FriendlySet }
   static get FriendlyMap () { return __webpack_require__(3).FriendlyMap }
@@ -4167,7 +4169,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 "use strict";
 
 
-var enhanceError = __webpack_require__(22);
+var enhanceError = __webpack_require__(23);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -4190,879 +4192,250 @@ module.exports = function createError(message, config, code, request, response) 
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
- * transaction.js
+ * evaluator.js
  *
- * Transaction API for inspecting and building bitcoin transactions
+ * The evaluator runs arbitrary code in a secure sandbox
  */
 
-const bsv = __webpack_require__(2)
-const util = __webpack_require__(0)
-const { JigControl } = __webpack_require__(4)
-const { Owner } = __webpack_require__(8)
-const { Berry } = __webpack_require__(11)
-const Location = __webpack_require__(5)
-const Protocol = __webpack_require__(10)
-const { FriendlySet } = __webpack_require__(3)
-const Xray = __webpack_require__(9)
+const ses = __webpack_require__(16)
+const { getIntrinsics, intrinsicNames, Intrinsics } = __webpack_require__(11)
+const { FriendlySet, FriendlyMap, createSandboxedFriendlyMap, createSandboxedFriendlySet } = __webpack_require__(3)
 
 // ------------------------------------------------------------------------------------------------
-// Transaction
+// Evaluator
 // ------------------------------------------------------------------------------------------------
 
-/**
- * The main transaction API used by run
- */
-class Transaction {
-  constructor (run) {
-    this.run = run
-    this.syncer = run.syncer
-    this.blockchain = run.blockchain
-    this.state = run.state
-    try {
-      this.owner = run.owner.getOwner()
-    } catch (e) { this.owner = null }
-    this.code = run.code
-    this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this)) // current proto-transaction
-  }
+class Evaluator {
+  constructor (options = {}) {
+    this.sandbox = typeof options.sandbox !== 'undefined' ? options.sandbox : true
+    this.logger = typeof options.logger !== 'undefined' ? options.logger : null
 
-  begin () { this.protoTx.begin(); return this.run }
-
-  end () { this.protoTx.end(); return this.run }
-
-  onReadyForPublish () {
-    this.syncer.publish(this.protoTx)
-    this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this))
-  }
-
-  export () {
-    if (this.syncer.queued.length > 0) {
-      // TODO: Only have to check if referenced jigs are in the queue
-      throw new Error('must not have any queued transactions before exporting')
+    // The realms-shim requires a body for sandboxing. If it doesn't exist, create one.
+    if (typeof window !== 'undefined' && !window.document.body) {
+      window.document.body = document.createElement('body')
     }
 
-    if (this.protoTx.beginCount === 0) {
-      const suggestion = 'Hint: A transaction must first be created using begin() or loaded using import().'
-      throw new Error(`No transaction in progress\n\n${suggestion}`)
-    }
+    this.sandboxEvaluator = new SESEvaluator()
+    this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
 
-    return this.protoTx.buildBsvTransaction(this.run).tx
-  }
-
-  import (tx) { return this.protoTx.import(tx, this.run, false) }
-
-  rollback () { this.protoTx.rollback(this.syncer.lastPosted, this.run, false, 'intentional rollback') }
-
-  async sign () { await this.protoTx.sign(this.run) }
-
-  async pay () { await this.protoTx.pay(this.run) }
-
-  // get inputs () {
-  // TODO: filtering by inputs is broken
-  // return this.protoTx.inputs
-  // .filter(input => input.origin !== '_')
-  // .map(input => this.protoTx.proxies.get(input))
-  // }
-
-  // get outputs () {
-  // return this.protoTx.outputs.map(output => this.protoTx.proxies.get(output))
-  // }
-
-  get actions () {
-    return this.protoTx.actions.map(action => {
-      return {
-        target: this.protoTx.proxies.get(action.target),
-        method: action.method,
-        args: action.args
-      }
-    })
-  }
-
-  storeCode (type, sandbox, deps, props, success, error) {
-    return this.protoTx.storeCode(type, sandbox, deps, props, success, error,
-      this.owner, this.code, this.run)
-  }
-
-  storeAction (target, method, args, inputs, outputs, reads, before, after, proxies, run) {
-    this.protoTx.storeAction(target, method, args, inputs, outputs, reads, before, after, proxies, this.run)
-  }
-
-  /**
-   * Loads a jig or class at a particular location
-   *
-   * location is a string
-   *
-   * cachedRefs stores a map from locations to jigs/classes loaded by load()
-   * from the state cache. load() will trigger additional loads recursively.
-   * both jigs and classes may have references to other jigs and other classes,
-   * and we don't want to load these multiple times. especially when they refer
-   * to each other cyclically as that could cause infinite loops.
-   */
-  async load (location, options = {}) {
-    if (this.run.logger) this.run.logger.info('Loading', location)
-
-    // If there's a custom protocol, use it
-    if (options.protocol) {
-      return Protocol.pluckBerry(location, this.blockchain, this.code, options.protocol)
-    }
-
-    // Either load a run token, or a berry, depending on if there's a protocol in location
-    const loc = Location.parse(location)
-
-    if (!loc.innerLocation) {
-      return this.loadRunToken(location, options)
+    if (this.willSandbox(FriendlySet.toString())) {
+      this.FriendlySet = createSandboxedFriendlySet(this.sandboxEvaluator)
     } else {
-      const protocol = await this.load(loc.location, options)
-      return Protocol.pluckBerry(loc.innerLocation, this.blockchain, this.code, protocol)
+      this.FriendlySet = FriendlySet
+    }
+
+    if (this.willSandbox(FriendlyMap.toString())) {
+      this.FriendlyMap = createSandboxedFriendlyMap(this.sandboxEvaluator)
+    } else {
+      this.FriendlyMap = FriendlyMap
+    }
+
+    this.friendlyEnv = { Set: this.FriendlySet, Map: this.FriendlyMap }
+
+    const custom = Object.assign({}, this.sandboxEvaluator.intrinsics, this.friendlyEnv)
+    this.intrinsics = new Intrinsics().allow(this.sandboxEvaluator.intrinsics).use(custom)
+  }
+
+  evaluate (code, env = {}) {
+    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
+    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
+    if ('$globals' in env) throw new Error('Environment must not contain $globals')
+
+    if (this.logger) this.logger.info(`Evaluating code starting with: "${code.slice(0, 20)}"`)
+    if (this.willSandbox(code)) {
+      return this.sandboxEvaluator.evaluate(code, Object.assign({}, this.friendlyEnv, env))
+    } else {
+    // Don't replace Set and Map when using the global evaluator
+      return this.globalEvaluator.evaluate(code, Object.assign({}, env))
     }
   }
 
-  async loadRunToken (location, options = {}) {
-    const cachedRefs = options.cachedRefs || new Map()
-
-    // --------------------------------------------------------------------------------------------
-    // CHECK THE CACHE
-    // --------------------------------------------------------------------------------------------
-
-    // check the code cache so we only have to download code once
-    const cachedCode = this.code.getInstalled(location)
-    if (cachedCode) return cachedCode
-
-    if (options.partiallyInstalledCode && options.partiallyInstalledCode.has(location)) {
-      return options.partiallyInstalledCode.get(location)
-    }
-
-    const loc = Location.parse(location)
-    if (loc.error || loc.innerLocation || loc.vref || loc.tempTxid) throw new Error(`Bad location: ${location}`)
-    const { txid, vout, vin } = loc
-
-    // TODO: do we want to support loading locations with inputs?
-    // The transaction test "update class property jig in initializer" uses this
-    if (typeof vin !== 'undefined') {
-      const tx = await this.blockchain.fetch(txid)
-      const prevTxId = tx.inputs[vin].prevTxId.toString('hex')
-      return this.load(`${prevTxId}_o${tx.inputs[vin].outputIndex}`, { cachedRefs })
-    }
-
-    // check the state cache so we only have to load each jig once
-    const cachedState = await this.state.get(location)
-    if (cachedState) {
-      // Make sure the cached state is valid
-      if (typeof cachedState.type !== 'string' || typeof cachedState.state !== 'object') {
-        const hint = 'Hint: Could the state cache be corrupted?'
-        throw new Error(`Cached state is missing a valid type and/or state property\n\n${JSON.stringify(cachedState)}\n\n${hint}`)
-      }
-
-      // Deserialize from a cached state, first by finding all inner tokens and loading them,
-      // and then deserializing
-      const fullLocation = loc => (loc.startsWith('_') ? `${location.slice(0, 64)}${loc}` : loc)
-      const tokenLoader = ref => cachedRefs.get(fullLocation(ref))
-
-      const xray = new Xray()
-        .allowTokens()
-        .useIntrinsics(this.run.code.intrinsics)
-        .useTokenLoader(tokenLoader)
-
-      try {
-        JigControl.blankSlate = true
-
-        // Create the new instance as a blank slate
-        const typeLocation = cachedState.type.startsWith('_') ? location.slice(0, 64) + cachedState.type : cachedState.type
-        const T = await this.load(typeLocation)
-        const instance = new T()
-        cachedRefs.set(location, instance)
-
-        // Load all dependencies
-        xray.scan(cachedState.state)
-        for (const ref of xray.refs) {
-          const fullLoc = fullLocation(ref)
-          if (cachedRefs.has(fullLoc)) continue
-          const token = await this.load(fullLoc, { cachedRefs })
-          if (!cachedRefs.has(fullLoc)) cachedRefs.set(fullLoc, token)
-        }
-
-        // Deserialize and inject our state
-        JigControl.disableProxy(() => {
-          Object.assign(instance, xray.deserialize(cachedState.state))
-          instance.origin = instance.origin || location
-          instance.location = instance.location || location
-        })
-
-        return instance
-      } finally { JigControl.blankSlate = false }
-    }
-
-    // --------------------------------------------------------------------------------------------
-    // LOAD THE TRANSACTION, AND THEN THE JIGS OR CODE
-    // --------------------------------------------------------------------------------------------
-
-    // load all the jigs for this transaction, and return the selected
-    const protoTx = new ProtoTransaction()
-    const tx = await this.blockchain.fetch(txid)
-    await protoTx.import(tx, this.run, null, true, vout, options.partiallyInstalledCode)
-
-    // if a definition, install
-    if (vout > 0 && vout < protoTx.code.length + 1) {
-      return this.code.getInstalled(location) || options.partiallyInstalledCode.get(location)
-    }
-
-    // otherwise, a jig. get the jig.
-    const proxies = protoTx.outputs.map(o => protoTx.proxies.get(o))
-    const jigProxies = new Array(1 + protoTx.code.length).concat(proxies)
-    // TODO: Notify shruggr if these error message change
-    if (typeof jigProxies[vout] === 'undefined') throw new Error('not a jig output')
-    return jigProxies[vout]
+  willSandbox (code) {
+    if (typeof this.sandbox === 'boolean') return this.sandbox
+    const nameRegex = /^(function|class)\s+([a-zA-Z0-9_$]+)/
+    const match = code.match(nameRegex)
+    return match ? this.sandbox.test(match[2]) : false
   }
 
-  setProtoTxAndCreator (protoTx, creator) {
-    const old = { protoTx: this.protoTx, creator: this.owner }
-    this.protoTx = protoTx
-    this.owner = creator
-    return old
+  activate () { this.globalEvaluator.activate() }
+  deactivate () { this.globalEvaluator.deactivate() }
+}
+
+// ------------------------------------------------------------------------------------------------
+// SESEvaluator
+// ------------------------------------------------------------------------------------------------
+
+// Non-deterministic globals will be banned
+const nonDeterministicGlobals = [
+  'Date',
+  'Math',
+  'eval',
+  'XMLHttpRequest',
+  'FileReader',
+  'WebSocket',
+  'setTimeout',
+  'setInterval'
+]
+
+/**
+ * Secure sandboxer for arbitrary code
+ */
+class SESEvaluator {
+  constructor () {
+    this.realm = ses.makeSESRootRealm()
+
+    // Keep track of common intrinsics shared between realms. The SES realm creates
+    // these, and we just evaluate a list of them and store them here.
+    this.intrinsics = this.realm.evaluate(`(${getIntrinsics.toString()})()`, { intrinsicNames })
+
+    // We also overwrite console so that console.log in sandboxed code is relogged outside
+    const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
+    this.intrinsics.console = this.realm.evaluate(consoleCode, { c: console })
+  }
+
+  evaluate (code, env = {}) {
+    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
+    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
+    if ('$globals' in env) throw new Error('Environment must not contain $globals')
+
+    // Create the globals object in the SES realm so it doesn't expose ours
+    const $globals = this.realm.evaluate('({})')
+
+    // Disable each non-deterministic global
+    env = Object.assign({}, env)
+    nonDeterministicGlobals.forEach(key => {
+      if (!(key in env)) env[key] = undefined
+    })
+
+    // Create the real env we'll use
+    env = Object.assign({}, this.intrinsics, env, { $globals })
+
+    // When a function is anonymous, it will be named the variable it is assigned. We give it
+    // a friendly anonymous name to distinguish it from named classes and functions.
+    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
+
+    // Execute the code in strict mode.
+    const script = `with($globals){'use strict';const ${anon}=${code};${anon}}`
+    const result = this.realm.evaluate(script, env)
+
+    return { result, globals: $globals }
   }
 }
 
 // ------------------------------------------------------------------------------------------------
-// ProtoTransaction
+// GlobalEvaluator
 // ------------------------------------------------------------------------------------------------
 
 /**
- * Proto-transaction: A temporary structure Run uses to build transactions. This structure
- * has every action and definition that will go into the real transaction, but stored using
- * references to the actual objects instead of location strings. Run turns the proto-transaction
- * into a real transaction by converting all references into location strings. This is necessary
- * when there are queued proto-transactions and the locations may not be known yet.
+ * Evaluates code using dependences that are set as globals. This is quite dangerous, but we
+ * only use it when sandbox=false, which is intended for testing code coverage and debugging.
  */
-class ProtoTransaction {
-  constructor (onReadyForPublish) {
-    this.onReadyForPublish = onReadyForPublish
-    this.reset()
+class GlobalEvaluator {
+  constructor (options = {}) {
+    this.logger = options.logger
+    this.activated = true
+    // We will save the prior globals before overriding them so they can be reverted.
+    // This will also store our globals when we deactivate so we can re-activate them.
+    this.savedGlobalDescriptors = {}
   }
 
-  reset () {
-    this.code = [] // Code definitions as types
-    this.actions = [] // Jig updates
+  evaluate (code, env = {}) {
+    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
+    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
+    if ('$globals' in env) throw new Error('Environment must not contain $globals')
 
-    this.before = new Map() // state of all updated jigs before (Target->{json,refs})
-    this.after = new Map() // state of all updated jigs after (Target->{json,refs})
+    // When a function is anonymous, it will be named the variable it is assigned. We give it
+    // a friendly anonymous name to distinguish it from named classes and functions.
+    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
 
-    this.inputs = [] // Targets spent (which may not be tx inputs if created within a batch)
-    this.outputs = [] // Targets outputted
-    this.reads = new Set() // All targets read
-    this.proxies = new Map() // Target->Proxy
-    this.locations = new Map() // Prior location for jigs (Origin->Location)
+    // Set each env as a global
+    const options = { configurable: true, enumerable: true, writable: true }
+    Object.keys(env).forEach(key => this.setGlobalDescriptor(key, Object.assign({}, options, { value: env[key] })))
 
-    this.beginCount = 0 // begin() depth, that is decremented for each end()
-    this.imported = false
+    // Turn the code into an object
+    const result = eval(`const ${anon} = ${code}; ${anon}`) // eslint-disable-line
+
+    // Wrap global sets so that we update savedGlobalDescriptors
+    const wrappedGlobal = new Proxy(global, {
+      set: (target, prop, value) => {
+        this.setGlobalDescriptor(prop, Object.assign({}, options, { value }))
+        return true
+      },
+      defineProperty: (target, prop, descriptor) => {
+        this.setGlobalDescriptor(prop, descriptor)
+        return true
+      }
+    })
+
+    return { result, globals: wrappedGlobal }
   }
 
-  async import (tx, run, preexistingJig, immutable, vout, cache) {
-    if (this.code.length || this.code.actions || this.beginCount) {
-      throw new Error('transaction already in progress. cannot import.')
-    }
+  setGlobalDescriptor (key, descriptor) {
+    // Save the previous global the first time we override it. Future overrides
+    // will throw a warning because now there are two values at the global scope.
+    const priorDescriptor = Object.getOwnPropertyDescriptor(global, key)
 
-    for (let i = 0; i < tx.inputs.length; i++) {
-      const input = tx.inputs[i]
-      if (!input.output) {
-        const prevTx = await run.blockchain.fetch(input.prevTxId.toString('hex'))
-        const output = prevTx.outputs[input.outputIndex]
-        if (output.script.isPublicKeyHashOut()) {
-          input.output = prevTx.outputs[input.outputIndex]
-          Reflect.setPrototypeOf(input, bsv.Transaction.Input.PublicKeyHash.prototype)
-        } else throw new Error(`Unsupported script type at input ${i}`)
+    if (!(key in this.savedGlobalDescriptors)) {
+      this.savedGlobalDescriptors[key] = priorDescriptor
+    } else if (!sameDescriptors(descriptor, priorDescriptor)) {
+      if (this.logger) {
+        const warning = 'There might be bugs with sandboxing disabled'
+        const reason = `Two different values were set at the global scope for ${key}`
+        this.logger.warn(`${warning}\n\n${reason}`)
       }
     }
 
-    this.beginCount = 1
-    this.imported = true
+    Object.defineProperty(global, key, descriptor)
+  }
 
-    const data = util.extractRunData(tx)
-    const bsvNetwork = util.bsvNetwork(run.blockchain.network)
+  activate () {
+    if (this.activated) return
+    this.swapSavedGlobals()
+    this.activated = true
+  }
 
-    // install all code definitions first
-    // TODO: should we be installing this now, or after import is done? need actions list...
-    // TODO: Load should not be triggering other loads like this does. This makes it
-    // harder parallelize safely. We need some atomicity, which could be a protoTx loading
-    // for a tx.
-    let index = 1
-    const loadedCode = []
-    for (const def of data.code) {
-      const location = `${tx.hash}_o${index++}`
-      loadedCode.push(await run.code.installFromTx(def, location, tx, run, bsvNetwork, cache))
-    }
+  deactivate () {
+    if (!this.activated) return
+    this.swapSavedGlobals()
+    this.activated = false
+  }
 
-    if (vout && vout > 0 && vout < 1 + data.code.length) {
-      // TODO: Fix this hack ... to just make the early out code work
-      this.code = new Array(data.code.length)
-      return
-    }
+  swapSavedGlobals () {
+    const swappedGlobalDescriptors = {}
 
-    // load jig and class references used in args and reads
-    const refs = new Map()
-    if (data.refs) data.refs.forEach(ref => refs.set(ref, ref))
+    Object.keys(this.savedGlobalDescriptors).forEach(key => {
+      swappedGlobalDescriptors[key] = Object.getOwnPropertyDescriptor(global, key)
 
-    const xray = new Xray()
-      .allowTokens()
-      .useIntrinsics(run.code.intrinsics)
-
-    for (const action of data.actions) {
-      const addRef = id => {
-        if (id[0] !== '_') { refs.set(id, id) }
-        if (id[1] === 'i') {
-          const txin = tx.inputs[parseInt(id.slice(2))]
-          refs.set(id, `${txin.prevTxId.toString('hex')}_o${txin.outputIndex}`)
-        }
-      }
-
-      if (action.target && action.method !== 'init') addRef(action.target)
-
-      xray.scan(action.args)
-      xray.refs.forEach(ref => addRef(ref))
-    }
-
-    // make sure all of the refs we read are recent
-    for (const [, value] of refs) {
-      const refTx = await run.blockchain.fetch(value.slice(0, 64))
-      const vout = parseInt(value.slice(66))
-      if (typeof refTx.outputs[vout].spentTxId === 'undefined') {
-        throw new Error('Cannot check if read is stale. Blockchain API does not support spentTxId.')
-      }
-      if (refTx.outputs[vout].spentTxId === null) continue
-      const spentTx = await run.blockchain.fetch(refTx.outputs[vout].spentTxId)
-      if (spentTx.time <= tx.time && spentTx.time >= refTx.time &&
-        (tx.time - refTx.time) > 2 * 60 * 60 * 1000 && tx.hash !== spentTx.hash) {
-        throw new Error(`${value} is stale. Aborting.`)
-      }
-    }
-
-    // load the refs
-    // TODO: make sure the target is recent when saved
-    // TODO: would be better to do in parallel if possible...but Code is duplicated sometimes (why?)
-    for (const [refId, refLocation] of refs) {
-      if (preexistingJig && refLocation === preexistingJig.location) {
-        refs.set(refId, preexistingJig)
+      if (typeof this.savedGlobalDescriptors[key] === 'undefined') {
+        delete global[key]
       } else {
-        try {
-          refs.set(refId, await run.transaction.load(refLocation))
-        } catch (e) {
-          run.logger.error(e)
-          throw new Error(`Error loading ref ${refId} at ${refLocation}\n\n${e}`)
-        }
-      }
-    }
-
-    if (preexistingJig) {
-      refs.set(preexistingJig.location, preexistingJig)
-    }
-
-    /*
-    // Also load all inputs to spend (do we need to do this? These dedups?
-    for (let vin = 0; vin < tx.inputs.length; vin++) {
-      const input = tx.inputs[vin]
-      try {
-        const location = `${input.prevTxId.toString('hex')}_o${input.outputIndex}`
-        if (preexistingJig && location === preexistingJig.location) {
-          refs.set()
-        }
-        const refId = `_i${vin}`
-        const jig = await run.transaction.load(location)
-        refs.set(refId, jig)
-      } catch (e) { }
-    }
-    */
-
-    // dedupInnerRefs puts any internal objects in their referenced states using known references
-    // ensuring that double-references refer to the same objects
-    const dedupInnerRefs = jig => {
-      const { Jig } = __webpack_require__(6)
-
-      const tokenReplacer = token => {
-        if (token instanceof Jig && token !== jig) {
-          return Array.from(refs.values()).find(ref => ref.origin === token.origin)
-        }
-      }
-
-      const xray = new Xray()
-        .allowTokens()
-        .deeplyScanTokens()
-        .useTokenReplacer(tokenReplacer)
-        .useIntrinsics(run.code.intrinsics)
-
-      JigControl.disableProxy(() => xray.scan(jig))
-    }
-
-    // update the refs themselves with themselves
-    for (const ref of refs.values()) dedupInnerRefs(ref)
-
-    for (const action of data.actions) {
-      // Deserialize the arguments
-      const args = JigControl.disableProxy(() => {
-        const tokenLoader = ref => {
-          if (ref[0] !== '_' || ref[1] === 'i') {
-            const token = refs.get(ref)
-            if (!token) throw new Error(`Unexpected ref ${ref}`)
-            return token
-          }
-          if (ref[1] === 'r') {
-            const token = refs.get(data.refs[parseInt(ref.slice(2))])
-            if (!token) throw new Error(`Unexpected ref ${ref}`)
-            return token
-          }
-          if (ref[1] !== 'o') throw new Error(`Unexpected ref ${ref}`)
-          const vout = parseInt(ref.slice(2)) - 1
-          if (vout < data.code.length) return loadedCode[vout]
-          return this.proxies.get(this.outputs[vout - data.code.length])
-        }
-
-        const xray = new Xray()
-          .allowTokens()
-          .useTokenLoader(tokenLoader)
-          .useIntrinsics(run.code.intrinsics)
-
-        return xray.deserialize(action.args)
-      })
-
-      if (action.method === 'init') {
-        if (action.target[0] === '_') {
-          const vout = parseInt(action.target.slice(2))
-          if (vout <= 0 || vout >= data.code.length + 1) throw new Error(`missing target ${action.target}`)
-        }
-
-        const loc = action.target[0] === '_' ? tx.hash + action.target : action.target
-        const T = await run.transaction.load(loc)
-
-        const oldSettings = run.transaction.setProtoTxAndCreator(this, action.creator)
-
-        try {
-          new T(...args)  // eslint-disable-line
-        } finally {
-          run.transaction.setProtoTxAndCreator(oldSettings.protoTx, oldSettings.creator)
-        }
-      } else {
-        const subject = refs.get(action.target) ||
-          this.proxies.get(this.outputs[parseInt(action.target.slice(2)) - 1 - data.code.length])
-        dedupInnerRefs(subject)
-        if (typeof subject === 'undefined') throw new Error(`target ${action.target} missing`)
-
-        const oldSettings = run.transaction.setProtoTxAndCreator(this, null)
-
-        try {
-          subject[action.method](...args)
-        } catch (e) {
-          throw new Error(`unexpected exception in ${action.method}\n\n${e}`)
-        } finally {
-          run.transaction.setProtoTxAndCreator(oldSettings.protoTx, oldSettings.creator)
-        }
-      }
-    }
-
-    // TODO: use buildBsvTransaction here to compare?
-
-    const spentJigs = this.inputs.filter(i => i.origin[0] !== '_')
-    if (data.jigs !== this.outputs.length) throw new Error('bad number of jigs')
-    if (tx.inputs.length < spentJigs.length) throw new Error('not enough inputs')
-    if (tx.outputs.length < data.code.length + data.jigs + 1) throw new Error('not enough outputs')
-    spentJigs.forEach((i, n) => {
-      const location = `${tx.inputs[n].prevTxId.toString('hex')}_o${tx.inputs[n].outputIndex}`
-      const location2 = this.locations.get(i.origin) || i.location
-      if (location !== location2) throw new Error(`bad input ${n}`)
-    })
-    this.outputs.forEach((o, n) => {
-      const index = 1 + data.code.length + n
-      const hex1 = Buffer.from(util.ownerScript(o.owner).toBytes()).toString('hex')
-      const hex2 = tx.outputs[index].script.toHex()
-      if (hex1 !== hex2) throw new Error(`bad owner on output ${index}`)
-      if (tx.outputs[index].satoshis < Math.max(o.satoshis, bsv.Transaction.DUST_AMOUNT)) {
-        throw new Error(`bad satoshis on output ${index}`)
+        Object.defineProperty(global, key, this.savedGlobalDescriptors[key])
       }
     })
 
-    if (immutable) {
-      this.outputs.forEach(o => {
-        const oid = `${tx.hash}_o${1 + data.code.length + parseInt(o.location.slice(2))}`
-        if (o.origin[0] === '_') o.origin = oid
-        if (o.location[0] === '_') o.location = oid
-      })
-    }
-
-    // cache all of the loaded jigs
-    const proxies = this.outputs.map(o => this.proxies.get(o))
-    const jigProxies = new Array(1 + data.code.length).concat(proxies)
-    const net = util.networkSuffix(run.blockchain.network)
-    for (let vout = 0; vout < jigProxies.length; vout++) {
-      if (!jigProxies[vout]) continue
-      const jigLocation = `${tx.hash.slice(0, 64)}_o${vout}`
-
-      // Serialize the state of the jig into a local reference form
-      const serialized = JigControl.disableProxy(() => {
-        const tokenSaver = token =>
-          token.location.startsWith(tx.hash) ? token.location.slice(64) : token.location
-
-        const xray = new Xray()
-          .allowTokens()
-          .useIntrinsics(run.code.intrinsics)
-          .useTokenSaver(tokenSaver)
-
-        const obj = Object.assign({}, jigProxies[vout])
-
-        if (obj.origin.startsWith(tx.hash) || obj.origin.startsWith('_')) delete obj.origin
-        if (obj.location.startsWith(tx.hash) || obj.location.startsWith('_')) delete obj.location
-
-        return xray.serialize(obj)
-      })
-
-      let type = jigProxies[vout].constructor[`origin${net}`]
-      if (type.startsWith(tx.hash)) type = type.slice(64)
-
-      const cachedState = { type, state: serialized }
-      await run.state.set(jigLocation, cachedState)
-    }
-
-    // clear the code, and load it directly from the transaction
-    this.code = []
-    data.code.forEach((code, index) => {
-      const location = `${tx.hash}_o${index + 1}`
-      const type = run.code.getInstalled(location)
-      this.storeCode(type, type, {}, run.code.extractProps(type).props, () => {}, () => {}, code.owner, run.code, run)
-    })
-
-    const spentLocations = spentJigs.map(jig => this.locations.get(jig.origin) || jig.location)
-    this.cachedTx = { tx, refs: data.refs || [], spentJigs, spentLocations }
-  }
-
-  begin () { this.beginCount++ }
-
-  end () {
-    if (this.beginCount === 0) throw new Error('end transaction without begin')
-    if (--this.beginCount === 0 && this.onReadyForPublish && (this.code.length || this.actions.length)) {
-      this.onReadyForPublish()
-    }
-  }
-
-  rollback (lastPosted, run, error, unhandled) {
-    delete this.cachedTx
-
-    // notify the definition. this will undo the location/origin to allow a retry.
-    this.code.forEach(def => def.error())
-
-    // notify the owner. this may remove it from its list.
-    this.code.forEach(def => { if (run.owner instanceof Owner) run.owner.update(def.sandbox) })
-
-    // revert the state of each jig
-    this.outputs.forEach(jig => {
-      // if the jig was never deployed, or if there was an unhandled error leading to this
-      // rollback, then make this jig permanently unusable by setting a bad origin.
-      if (jig.origin[0] === '_' || unhandled) {
-        const err = `!${jig.origin[0] === '_' ? 'Deploy failed'
-          : 'A previous update failed'}\n\n${error}`
-        // TODO: log the error here
-        Object.keys(jig).forEach(key => delete jig[key])
-        jig.origin = jig.location = err
-        return
-      }
-
-      // if this jig was already reverted, continue
-      if (jig.location[0] !== '_') return
-
-      // revert the state of the jig to its state before this transaction
-      const origin = jig.origin
-      this.before.get(jig).restoreInPlace()
-      jig.origin = origin
-      jig.location = lastPosted.get(origin)
-
-      // TODO: Deserialize saved state
-    })
-
-    // notify the owner of jig rollbacks
-    this.outputs.forEach(jig => { if (run.owner instanceof Owner) run.owner.update(jig) })
-
-    this.reset()
-  }
-
-  storeCode (type, sandbox, deps, props, success, error, owner, code, run) {
-    delete this.cachedTx
-
-    this.begin()
-    try {
-      if (typeof owner === 'object') run.deploy(owner.constructor)
-      this.code.push({ type, sandbox, deps, props, success, error, owner })
-      const tempLocation = `_d${this.code.length - 1}`
-      type.owner = sandbox.owner = owner // TODO: Sandbox owner
-      if (run.owner instanceof Owner) run.owner.update(code.getInstalled(type))
-      return tempLocation
-    } finally { this.end() }
-  }
-
-  storeAction (target, method, args, inputs, outputs, reads, before, after, proxies, run) {
-    delete this.cachedTx
-
-    this.begin()
-
-    try {
-      // ------------------------------------------------------------------------------------------
-      // CHECK FOR MULTIPLE DIFFERENT JIG REFERENCES
-      // ------------------------------------------------------------------------------------------
-
-      // This doesn't cover the case of undeployed locations. We must run this again in publish.
-      // Also, inner references that aren't read aren't checked, but this isn't a problem because
-      // the user can 'sync' these up to their latest state before they read them in the future.
-
-      const pickups = new FriendlySet([target])
-      inputs.forEach(jig => pickups.add(jig))
-      outputs.forEach(jig => pickups.add(jig))
-      reads.forEach(jig => pickups.add(jig))
-
-      // ------------------------------------------------------------------------------------------
-      // STORE NEW BEFORE STATES AND ALL AFTER STATES FOR JIGS IN THE PROTO TRANSACTION
-      // ------------------------------------------------------------------------------------------
-
-      before.forEach((checkpoint, target) => {
-        this.before.set(target, this.before.get(target) || checkpoint)
-      })
-
-      after.forEach((checkpoint, target) => { this.after.set(target, checkpoint) })
-
-      // ------------------------------------------------------------------------------------------
-      // ADD INPUTS TO THE PROTO TRANSACTION
-      // ------------------------------------------------------------------------------------------
-
-      inputs.forEach(newTarget => {
-        const isDifferentInstance = currTarget => util.sameJig(newTarget, currTarget) &&
-          currTarget.location !== newTarget.location
-        if (this.inputs.some(isDifferentInstance)) {
-          throw new Error('different instances of the same jig')
-        }
-
-        if (!this.inputs.some(currTarget => util.sameJig(newTarget, currTarget))) {
-          this.inputs.push(newTarget)
-        }
-      })
-
-      // ------------------------------------------------------------------------------------------
-      // ADD OUTPUTS TO THE PROTO TRANSACTION AND SET TEMP LOCATIONS
-      // ------------------------------------------------------------------------------------------
-
-      outputs.forEach(jig => {
-        const index = this.outputs.findIndex(previousJig => util.sameJig(jig, previousJig))
-
-        if (index !== -1) {
-          jig.location = `_o${index}`
-          jig.origin = jig.origin || jig.location
-          return
-        }
-
-        this.outputs.push(jig)
-
-        const updating = jig => (jig.origin && jig.origin[0] !== '_' && jig.location &&
-          jig.location[0] !== '_' && !this.locations.has(jig.origin))
-
-        if (updating(jig)) this.locations.set(jig.origin, jig.location)
-
-        jig.location = `_o${this.outputs.length - 1}`
-        jig.origin = jig.origin || jig.location
-      })
-
-      // ------------------------------------------------------------------------------------------
-      // REMEMBER READS AND PROXIES FOR LATER
-      // ------------------------------------------------------------------------------------------
-
-      reads.forEach(proxy => this.reads.add(proxy))
-
-      proxies.forEach((v, k) => this.proxies.set(k, v))
-
-      // ------------------------------------------------------------------------------------------
-      // STORE THE ACTION IN THE PROTO TRANSACTION
-      // ------------------------------------------------------------------------------------------
-
-      const creator = before.get(target).restore().owner
-
-      this.actions.push({ target, method, creator, args, inputs, outputs, reads })
-    } finally { this.end() }
-
-    // Notify the owner of each output they may care about
-    outputs.forEach(target => { if (run.owner instanceof Owner) run.owner.update(proxies.get(target)) })
-  }
-
-  async pay (run) {
-    if (!this.cachedTx) this.buildBsvTransaction(run)
-    return run.purse.pay(this.cachedTx.tx)
-  }
-
-  async sign (run) {
-    if (!this.cachedTx) this.buildBsvTransaction(run)
-    return run.owner.sign(this.cachedTx.tx)
-  }
-
-  buildBsvTransaction (run) {
-    if (this.cachedTx) return this.cachedTx
-
-    const { blockchain, syncer } = run
-
-    const net = util.networkSuffix(blockchain.network)
-
-    // build the read references array, checking for different locations of the same jig
-    const spentJigs = this.inputs.filter(jig => jig.origin[0] !== '_')
-    const readRefs = new Map()
-    this.reads.forEach(jig => {
-      if (spentJigs.includes(jig) || this.outputs.includes(jig)) return
-      const location = syncer.lastPosted.get(jig.origin) ||
-        this.locations.get(jig.origin) || jig.location
-      const prevLocation = readRefs.get(jig.origin)
-      if (prevLocation && prevLocation !== location) {
-        throw new Error(`read different locations of same jig ${jig.origin}`)
-      }
-      readRefs.set(jig.origin, location)
-    })
-    const refs = Array.from(readRefs.values())
-
-    // Jig arguments, class props, and code need to be turned into token references
-    const { Jig } = __webpack_require__(6)
-    const tokenSaver = token => {
-      if (token instanceof Jig) {
-        // find the jig if it is a proxy. it may not be a proxy if it wasn't used, but then
-        // we won't have trouble reading origin/location. (TODO: is this true? might be queued)
-        let target = token
-        const targets = Array.from(this.proxies.entries())
-          .filter(([pk, pv]) => pv === target).map(([pk, pv]) => pk)
-        if (targets.length) { target = targets[0] }
-
-        // if the jig is an input, use it
-        const inputIndex = spentJigs.findIndex(i => util.sameJig(i, target))
-        if (inputIndex !== -1) return `_i${inputIndex}`
-
-        // if the jig is an output, use it
-        const outputIndex = this.outputs.findIndex(o => util.sameJig(o, target))
-        if (outputIndex !== -1) return `_o${1 + this.code.length + outputIndex}`
-
-        // if the jig is a read reference, use it
-        const refIndex = refs.indexOf(readRefs.get(target.origin))
-        if (refIndex !== -1) return `_r${refIndex}`
-
-        // otherwise, use the actual location
-        return syncer.lastPosted.get(target.origin) || target.location
-      }
-
-      if (util.deployable(token)) {
-        return token[`location${net}`][0] === '_'
-          ? `_o${parseInt(token[`location${net}`].slice(2)) + 1}`
-          : token[`location${net}`]
-      }
-
-      if (token instanceof Berry) {
-        const error = Location.parse(token.location).error
-        if (error) throw new Error(`Cannot serialize berry: ${error}`)
-        return token.location
-      }
-    }
-
-    const xray = new Xray()
-      .allowTokens()
-      .useIntrinsics(run.code.intrinsics)
-      .useTokenSaver(tokenSaver)
-
-    // build each action
-    const actions = this.actions.map(action => {
-      const { method } = action
-
-      const args = xray.serialize(action.args)
-
-      // if init, this is a special case. find the definition and owner.
-      if (method === 'init') {
-        const targetLocation = action.target.constructor[`origin${net}`] ||
-            action.target.constructor[`location${net}`]
-        const target = targetLocation[0] === '_' ? `_o${1 + parseInt(targetLocation.slice(2))}` : targetLocation
-        return { target, method, args, creator: xray.serialize(action.creator) }
-      }
-
-      // if the jig has an input, use it
-      const inputIndex = spentJigs.findIndex(i => util.sameJig(i, action.target))
-      if (inputIndex !== -1) return { target: `_i${inputIndex}`, method, args }
-
-      // if the jig has an output, use it (example: created within the transaction)
-      const outputIndex = this.outputs.findIndex(o => util.sameJig(o, action.target))
-      if (outputIndex !== -1) return { target: `_o${1 + this.code.length + outputIndex}`, method, args }
-
-      // the target was not updated in the transaction
-      const target = action.target.location[0] !== '_' ? action.target.location
-        : syncer.lastPosted.get(action.target.origin)
-      return { target, method, args }
-    })
-
-    // Build each definition
-    const code = this.code.map(def => {
-      // Turn dependencies into references
-      const fixloc = id => id[0] === '_' ? `_o${1 + parseInt(id.slice(2))}` : id
-      const depsArr = Object.entries(def.deps).map(([k, v]) => ({ [k]: fixloc(v[`location${net}`]) }))
-      const deps = depsArr.length ? Object.assign(...depsArr) : undefined
-
-      // Serialize class props
-      const props = Object.keys(def.props).length ? xray.serialize(def.props) : undefined
-
-      return { text: util.getNormalizedSourceCode(def.type), deps, props, owner: def.owner }
-    })
-
-    // Calculate hashes for each output
-    // this.outputs.forEach(output => {
-    // console.log(output)
-    // })
-    // Maybe origin and location are removed, to make it deterministic
-    // Origin is kept. If __, then removed. But what if 3 are pending? Maybe always remove origin.
-    // But then how does state get reconstructed? Location is assigned. Sure. But what origin?
-    // How do you know it was the original to put it on? What about refs that haven't been posted yet?
-    // This is a bit of a problem. No it isn't. We know origin when we post. Not before. You don't
-    // have pending stuff at this time. Include origin, if it's there. References will always be past
-    // refs.
-
-    // build our json payload
-    const data = { code, actions, jigs: this.outputs.length, refs: refs.length ? refs : undefined }
-
-    const encrypted = util.encryptRunData(data)
-    const prefix = Buffer.from('run', 'utf8')
-    const protocolVersion = Buffer.from([util.PROTOCOL_VERSION], 'hex')
-    const appId = Buffer.from(run.app, 'utf8')
-    const payload = Buffer.from(encrypted, 'utf8')
-    const debugInfo = Buffer.from('r11r', 'utf8')
-    const script = bsv.Script.buildSafeDataOut([prefix, protocolVersion, appId, payload, debugInfo])
-    const tx = new bsv.Transaction().addOutput(new bsv.Transaction.Output({ script, satoshis: 0 }))
-
-    // build inputs
-    const spentLocations = spentJigs.map(jig => syncer.lastPosted.get(jig.origin) ||
-      this.locations.get(jig.origin) || jig.location)
-    spentJigs.forEach((jig, index) => {
-      const txid = spentLocations[index].slice(0, 64)
-      const vout = parseInt(spentLocations[index].slice(66))
-      const before = this.before.get(jig)
-      const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, before.restore().satoshis)
-      const scriptBuffer = util.ownerScript(before.restore().owner).toBytes()
-      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
-      const utxo = { txid, vout, script, satoshis }
-      tx.from(utxo)
-    })
-
-    // Build run outputs first by adding code then by adding jigs
-
-    this.code.forEach(def => {
-      const scriptBuffer = util.ownerScript(def.owner).toBytes()
-      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
-      const satoshis = bsv.Transaction.DUST_AMOUNT
-      tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
-    })
-
-    this.outputs.forEach(jig => {
-      const restored = this.after.get(jig).restore()
-      const scriptBuffer = util.ownerScript(restored.owner).toBytes()
-      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
-      const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, restored.satoshis)
-      tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
-    })
-
-    this.cachedTx = { tx, refs, spentJigs, spentLocations }
-    return this.cachedTx
+    this.savedGlobalDescriptors = swappedGlobalDescriptors
   }
 }
 
 // ------------------------------------------------------------------------------------------------
+// Helper methods
+// ------------------------------------------------------------------------------------------------
 
-module.exports = { ProtoTransaction, Transaction }
+function sameDescriptors (a, b) {
+  if (typeof a !== typeof b) return false
+  const aKeys = Array.from(Object.keys(a))
+  const bKeys = Array.from(Object.keys(b))
+  if (aKeys.length !== bKeys.length) return false
+  return !aKeys.some(key => a[key] !== b[key])
+}
+
+// ------------------------------------------------------------------------------------------------
+
+Evaluator.SESEvaluator = SESEvaluator
+Evaluator.GlobalEvaluator = GlobalEvaluator
+Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
+
+module.exports = Evaluator
 
 
 /***/ }),
@@ -5074,7 +4447,7 @@ module.exports = { ProtoTransaction, Transaction }
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var makeHardener = _interopDefault(__webpack_require__(34));
+var makeHardener = _interopDefault(__webpack_require__(33));
 
 // we'd like to abandon, but we can't, so just scream and break a lot of
 // stuff. However, since we aren't really aborting the process, be careful to
@@ -5741,7 +5114,7 @@ function createNewUnsafeGlobalForNode() {
   }
 
   // eslint-disable-next-line global-require
-  const vm = __webpack_require__(35);
+  const vm = __webpack_require__(34);
 
   // Use unsafeGlobalEvalSrc to ensure we get the right 'this'.
   const unsafeGlobal = vm.runInNewContext(unsafeGlobalEvalSrc);
@@ -8834,6 +8207,894 @@ module.exports = SES;
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
+ * transaction.js
+ *
+ * Transaction API for inspecting and building bitcoin transactions
+ */
+
+const bsv = __webpack_require__(2)
+const util = __webpack_require__(0)
+const { JigControl } = __webpack_require__(4)
+const { Owner } = __webpack_require__(7)
+const { Berry } = __webpack_require__(10)
+const Location = __webpack_require__(5)
+const Protocol = __webpack_require__(8)
+const { FriendlySet } = __webpack_require__(3)
+const Xray = __webpack_require__(9)
+
+// ------------------------------------------------------------------------------------------------
+// Transaction
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * The main transaction API used by run
+ */
+class Transaction {
+  constructor (run) {
+    this.run = run
+    this.syncer = run.syncer
+    this.blockchain = run.blockchain
+    this.state = run.state
+    try {
+      this.owner = run.owner.getOwner()
+    } catch (e) { this.owner = null }
+    this.code = run.code
+    this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this)) // current proto-transaction
+  }
+
+  begin () { this.protoTx.begin(); return this.run }
+
+  end () { this.protoTx.end(); return this.run }
+
+  onReadyForPublish () {
+    this.syncer.publish(this.protoTx)
+    this.protoTx = new ProtoTransaction(this.onReadyForPublish.bind(this))
+  }
+
+  export () {
+    if (this.syncer.queued.length > 0) {
+      // TODO: Only have to check if referenced jigs are in the queue
+      throw new Error('must not have any queued transactions before exporting')
+    }
+
+    if (this.protoTx.beginCount === 0) {
+      const suggestion = 'Hint: A transaction must first be created using begin() or loaded using import().'
+      throw new Error(`No transaction in progress\n\n${suggestion}`)
+    }
+
+    return this.protoTx.buildBsvTransaction(this.run).tx
+  }
+
+  import (tx) { return this.protoTx.import(tx, this.run, false) }
+
+  rollback () { this.protoTx.rollback(this.syncer.lastPosted, this.run, false, 'intentional rollback') }
+
+  async sign () { await this.protoTx.sign(this.run) }
+
+  async pay () { await this.protoTx.pay(this.run) }
+
+  // get inputs () {
+  // TODO: filtering by inputs is broken
+  // return this.protoTx.inputs
+  // .filter(input => input.origin !== '_')
+  // .map(input => this.protoTx.proxies.get(input))
+  // }
+
+  // get outputs () {
+  // return this.protoTx.outputs.map(output => this.protoTx.proxies.get(output))
+  // }
+
+  get actions () {
+    return this.protoTx.actions.map(action => {
+      return {
+        target: this.protoTx.proxies.get(action.target),
+        method: action.method,
+        args: action.args
+      }
+    })
+  }
+
+  storeCode (type, sandbox, deps, props, success, error) {
+    return this.protoTx.storeCode(type, sandbox, deps, props, success, error,
+      this.owner, this.code, this.run)
+  }
+
+  storeAction (target, method, args, inputs, outputs, reads, before, after, proxies, run) {
+    this.protoTx.storeAction(target, method, args, inputs, outputs, reads, before, after, proxies, this.run)
+  }
+
+  /**
+   * Loads a jig or class at a particular location
+   *
+   * location is a string
+   *
+   * cachedRefs stores a map from locations to jigs/classes loaded by load()
+   * from the state cache. load() will trigger additional loads recursively.
+   * both jigs and classes may have references to other jigs and other classes,
+   * and we don't want to load these multiple times. especially when they refer
+   * to each other cyclically as that could cause infinite loops.
+   */
+  async load (location, options = {}) {
+    if (this.run.logger) this.run.logger.info('Loading', location)
+
+    // If there's a custom protocol, use it
+    if (options.protocol) {
+      return Protocol.pluckBerry(location, this.blockchain, this.code, options.protocol)
+    }
+
+    // Either load a run token, or a berry, depending on if there's a protocol in location
+    const loc = Location.parse(location)
+
+    if (!loc.innerLocation) {
+      return this.loadRunToken(location, options)
+    } else {
+      const protocol = await this.load(loc.location, options)
+      return Protocol.pluckBerry(loc.innerLocation, this.blockchain, this.code, protocol)
+    }
+  }
+
+  async loadRunToken (location, options = {}) {
+    const cachedRefs = options.cachedRefs || new Map()
+
+    // --------------------------------------------------------------------------------------------
+    // CHECK THE CACHE
+    // --------------------------------------------------------------------------------------------
+
+    // check the code cache so we only have to download code once
+    const cachedCode = this.code.getInstalled(location)
+    if (cachedCode) return cachedCode
+
+    if (options.partiallyInstalledCode && options.partiallyInstalledCode.has(location)) {
+      return options.partiallyInstalledCode.get(location)
+    }
+
+    const loc = Location.parse(location)
+    if (loc.error || loc.innerLocation || loc.vref || loc.tempTxid) throw new Error(`Bad location: ${location}`)
+    const { txid, vout, vin } = loc
+
+    // TODO: do we want to support loading locations with inputs?
+    // The transaction test "update class property jig in initializer" uses this
+    if (typeof vin !== 'undefined') {
+      const tx = await this.blockchain.fetch(txid)
+      const prevTxId = tx.inputs[vin].prevTxId.toString('hex')
+      return this.load(`${prevTxId}_o${tx.inputs[vin].outputIndex}`, { cachedRefs })
+    }
+
+    // check the state cache so we only have to load each jig once
+    const cachedState = await this.state.get(location)
+    if (cachedState) {
+      // Make sure the cached state is valid
+      if (typeof cachedState.type !== 'string' || typeof cachedState.state !== 'object') {
+        const hint = 'Hint: Could the state cache be corrupted?'
+        throw new Error(`Cached state is missing a valid type and/or state property\n\n${JSON.stringify(cachedState)}\n\n${hint}`)
+      }
+
+      // Deserialize from a cached state, first by finding all inner tokens and loading them,
+      // and then deserializing
+      const fullLocation = loc => (loc.startsWith('_') ? `${location.slice(0, 64)}${loc}` : loc)
+      const tokenLoader = ref => cachedRefs.get(fullLocation(ref))
+
+      const xray = new Xray()
+        .allowTokens()
+        .useIntrinsics(this.run.code.intrinsics)
+        .useTokenLoader(tokenLoader)
+
+      try {
+        JigControl.blankSlate = true
+
+        // Create the new instance as a blank slate
+        const typeLocation = cachedState.type.startsWith('_') ? location.slice(0, 64) + cachedState.type : cachedState.type
+        const T = await this.load(typeLocation)
+        const instance = new T()
+        cachedRefs.set(location, instance)
+
+        // Load all dependencies
+        xray.scan(cachedState.state)
+        for (const ref of xray.refs) {
+          const fullLoc = fullLocation(ref)
+          if (cachedRefs.has(fullLoc)) continue
+          const token = await this.load(fullLoc, { cachedRefs })
+          if (!cachedRefs.has(fullLoc)) cachedRefs.set(fullLoc, token)
+        }
+
+        // Deserialize and inject our state
+        JigControl.disableProxy(() => {
+          Object.assign(instance, xray.deserialize(cachedState.state))
+          instance.origin = instance.origin || location
+          instance.location = instance.location || location
+        })
+
+        return instance
+      } finally { JigControl.blankSlate = false }
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // LOAD THE TRANSACTION, AND THEN THE JIGS OR CODE
+    // --------------------------------------------------------------------------------------------
+
+    // load all the jigs for this transaction, and return the selected
+    const protoTx = new ProtoTransaction()
+    const tx = await this.blockchain.fetch(txid)
+    await protoTx.import(tx, this.run, null, true, vout, options.partiallyInstalledCode)
+
+    // if a definition, install
+    if (vout > 0 && vout < protoTx.code.length + 1) {
+      return this.code.getInstalled(location) || options.partiallyInstalledCode.get(location)
+    }
+
+    // otherwise, a jig. get the jig.
+    const proxies = protoTx.outputs.map(o => protoTx.proxies.get(o))
+    const jigProxies = new Array(1 + protoTx.code.length).concat(proxies)
+    // TODO: Notify shruggr if these error message change
+    if (typeof jigProxies[vout] === 'undefined') throw new Error('not a jig output')
+    return jigProxies[vout]
+  }
+
+  setProtoTxAndCreator (protoTx, creator) {
+    const old = { protoTx: this.protoTx, creator: this.owner }
+    this.protoTx = protoTx
+    this.owner = creator
+    return old
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// ProtoTransaction
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Proto-transaction: A temporary structure Run uses to build transactions. This structure
+ * has every action and definition that will go into the real transaction, but stored using
+ * references to the actual objects instead of location strings. Run turns the proto-transaction
+ * into a real transaction by converting all references into location strings. This is necessary
+ * when there are queued proto-transactions and the locations may not be known yet.
+ */
+class ProtoTransaction {
+  constructor (onReadyForPublish) {
+    this.onReadyForPublish = onReadyForPublish
+    this.reset()
+  }
+
+  reset () {
+    this.code = [] // Code definitions as types
+    this.actions = [] // Jig updates
+
+    this.before = new Map() // state of all updated jigs before (Target->{json,refs})
+    this.after = new Map() // state of all updated jigs after (Target->{json,refs})
+
+    this.inputs = [] // Targets spent (which may not be tx inputs if created within a batch)
+    this.outputs = [] // Targets outputted
+    this.reads = new Set() // All targets read
+    this.proxies = new Map() // Target->Proxy
+    this.locations = new Map() // Prior location for jigs (Origin->Location)
+
+    this.beginCount = 0 // begin() depth, that is decremented for each end()
+    this.imported = false
+  }
+
+  async import (tx, run, preexistingJig, immutable, vout, cache) {
+    if (this.code.length || this.code.actions || this.beginCount) {
+      throw new Error('transaction already in progress. cannot import.')
+    }
+
+    for (let i = 0; i < tx.inputs.length; i++) {
+      const input = tx.inputs[i]
+      if (!input.output) {
+        const prevTx = await run.blockchain.fetch(input.prevTxId.toString('hex'))
+        const output = prevTx.outputs[input.outputIndex]
+        if (output.script.isPublicKeyHashOut()) {
+          input.output = prevTx.outputs[input.outputIndex]
+          Reflect.setPrototypeOf(input, bsv.Transaction.Input.PublicKeyHash.prototype)
+        } else throw new Error(`Unsupported script type at input ${i}`)
+      }
+    }
+
+    this.beginCount = 1
+    this.imported = true
+
+    const data = util.extractRunData(tx)
+    const bsvNetwork = util.bsvNetwork(run.blockchain.network)
+
+    // install all code definitions first
+    // TODO: should we be installing this now, or after import is done? need actions list...
+    // TODO: Load should not be triggering other loads like this does. This makes it
+    // harder parallelize safely. We need some atomicity, which could be a protoTx loading
+    // for a tx.
+    let index = 1
+    const loadedCode = []
+    for (const def of data.code) {
+      const location = `${tx.hash}_o${index++}`
+      loadedCode.push(await run.code.installFromTx(def, location, tx, run, bsvNetwork, cache))
+    }
+
+    if (vout && vout > 0 && vout < 1 + data.code.length) {
+      // TODO: Fix this hack ... to just make the early out code work
+      this.code = new Array(data.code.length)
+      return
+    }
+
+    // load jig and class references used in args and reads
+    const refs = new Map()
+    if (data.refs) data.refs.forEach(ref => refs.set(ref, ref))
+
+    const xray = new Xray()
+      .allowTokens()
+      .useIntrinsics(run.code.intrinsics)
+
+    for (const action of data.actions) {
+      const addRef = id => {
+        if (id[0] !== '_') { refs.set(id, id) }
+        if (id[1] === 'i') {
+          const txin = tx.inputs[parseInt(id.slice(2))]
+          refs.set(id, `${txin.prevTxId.toString('hex')}_o${txin.outputIndex}`)
+        }
+      }
+
+      if (action.target && action.method !== 'init') addRef(action.target)
+
+      xray.scan(action.args)
+      xray.refs.forEach(ref => addRef(ref))
+    }
+
+    // make sure all of the refs we read are recent
+    for (const [, value] of refs) {
+      const refTx = await run.blockchain.fetch(value.slice(0, 64))
+      const vout = parseInt(value.slice(66))
+      if (typeof refTx.outputs[vout].spentTxId === 'undefined') {
+        throw new Error('Cannot check if read is stale. Blockchain API does not support spentTxId.')
+      }
+      if (refTx.outputs[vout].spentTxId === null) continue
+      const spentTx = await run.blockchain.fetch(refTx.outputs[vout].spentTxId)
+      if (spentTx.time <= tx.time && spentTx.time >= refTx.time &&
+        (tx.time - refTx.time) > 2 * 60 * 60 * 1000 && tx.hash !== spentTx.hash) {
+        throw new Error(`${value} is stale. Aborting.`)
+      }
+    }
+
+    // load the refs
+    // TODO: make sure the target is recent when saved
+    // TODO: would be better to do in parallel if possible...but Code is duplicated sometimes (why?)
+    for (const [refId, refLocation] of refs) {
+      if (preexistingJig && refLocation === preexistingJig.location) {
+        refs.set(refId, preexistingJig)
+      } else {
+        try {
+          refs.set(refId, await run.transaction.load(refLocation))
+        } catch (e) {
+          run.logger.error(e)
+          throw new Error(`Error loading ref ${refId} at ${refLocation}\n\n${e}`)
+        }
+      }
+    }
+
+    if (preexistingJig) {
+      refs.set(preexistingJig.location, preexistingJig)
+    }
+
+    /*
+    // Also load all inputs to spend (do we need to do this? These dedups?
+    for (let vin = 0; vin < tx.inputs.length; vin++) {
+      const input = tx.inputs[vin]
+      try {
+        const location = `${input.prevTxId.toString('hex')}_o${input.outputIndex}`
+        if (preexistingJig && location === preexistingJig.location) {
+          refs.set()
+        }
+        const refId = `_i${vin}`
+        const jig = await run.transaction.load(location)
+        refs.set(refId, jig)
+      } catch (e) { }
+    }
+    */
+
+    // dedupInnerRefs puts any internal objects in their referenced states using known references
+    // ensuring that double-references refer to the same objects
+    const dedupInnerRefs = jig => {
+      const { Jig } = __webpack_require__(6)
+
+      const tokenReplacer = token => {
+        if (token instanceof Jig && token !== jig) {
+          return Array.from(refs.values()).find(ref => ref.origin === token.origin)
+        }
+      }
+
+      const xray = new Xray()
+        .allowTokens()
+        .deeplyScanTokens()
+        .useTokenReplacer(tokenReplacer)
+        .useIntrinsics(run.code.intrinsics)
+
+      JigControl.disableProxy(() => xray.scan(jig))
+    }
+
+    // update the refs themselves with themselves
+    for (const ref of refs.values()) dedupInnerRefs(ref)
+
+    for (const action of data.actions) {
+      // Deserialize the arguments
+      const args = JigControl.disableProxy(() => {
+        const tokenLoader = ref => {
+          if (ref[0] !== '_' || ref[1] === 'i') {
+            const token = refs.get(ref)
+            if (!token) throw new Error(`Unexpected ref ${ref}`)
+            return token
+          }
+          if (ref[1] === 'r') {
+            const token = refs.get(data.refs[parseInt(ref.slice(2))])
+            if (!token) throw new Error(`Unexpected ref ${ref}`)
+            return token
+          }
+          if (ref[1] !== 'o') throw new Error(`Unexpected ref ${ref}`)
+          const vout = parseInt(ref.slice(2)) - 1
+          if (vout < data.code.length) return loadedCode[vout]
+          return this.proxies.get(this.outputs[vout - data.code.length])
+        }
+
+        const xray = new Xray()
+          .allowTokens()
+          .useTokenLoader(tokenLoader)
+          .useIntrinsics(run.code.intrinsics)
+
+        return xray.deserialize(action.args)
+      })
+
+      if (action.method === 'init') {
+        if (action.target[0] === '_') {
+          const vout = parseInt(action.target.slice(2))
+          if (vout <= 0 || vout >= data.code.length + 1) throw new Error(`missing target ${action.target}`)
+        }
+
+        const loc = action.target[0] === '_' ? tx.hash + action.target : action.target
+        const T = await run.transaction.load(loc)
+
+        const oldSettings = run.transaction.setProtoTxAndCreator(this, action.creator)
+
+        try {
+          new T(...args)  // eslint-disable-line
+        } finally {
+          run.transaction.setProtoTxAndCreator(oldSettings.protoTx, oldSettings.creator)
+        }
+      } else {
+        const subject = refs.get(action.target) ||
+          this.proxies.get(this.outputs[parseInt(action.target.slice(2)) - 1 - data.code.length])
+        dedupInnerRefs(subject)
+        if (typeof subject === 'undefined') throw new Error(`target ${action.target} missing`)
+
+        const oldSettings = run.transaction.setProtoTxAndCreator(this, null)
+
+        try {
+          subject[action.method](...args)
+        } catch (e) {
+          throw new Error(`unexpected exception in ${action.method}\n\n${e}`)
+        } finally {
+          run.transaction.setProtoTxAndCreator(oldSettings.protoTx, oldSettings.creator)
+        }
+      }
+    }
+
+    // TODO: use buildBsvTransaction here to compare?
+
+    const spentJigs = this.inputs.filter(i => i.origin[0] !== '_')
+    if (data.jigs !== this.outputs.length) throw new Error('bad number of jigs')
+    if (tx.inputs.length < spentJigs.length) throw new Error('not enough inputs')
+    if (tx.outputs.length < data.code.length + data.jigs + 1) throw new Error('not enough outputs')
+    spentJigs.forEach((i, n) => {
+      const location = `${tx.inputs[n].prevTxId.toString('hex')}_o${tx.inputs[n].outputIndex}`
+      const location2 = this.locations.get(i.origin) || i.location
+      if (location !== location2) throw new Error(`bad input ${n}`)
+    })
+    this.outputs.forEach((o, n) => {
+      const index = 1 + data.code.length + n
+      const hex1 = Buffer.from(util.ownerScript(o.owner).toBytes()).toString('hex')
+      const hex2 = tx.outputs[index].script.toHex()
+      if (hex1 !== hex2) throw new Error(`bad owner on output ${index}`)
+      if (tx.outputs[index].satoshis < Math.max(o.satoshis, bsv.Transaction.DUST_AMOUNT)) {
+        throw new Error(`bad satoshis on output ${index}`)
+      }
+    })
+
+    if (immutable) {
+      this.outputs.forEach(o => {
+        const oid = `${tx.hash}_o${1 + data.code.length + parseInt(o.location.slice(2))}`
+        if (o.origin[0] === '_') o.origin = oid
+        if (o.location[0] === '_') o.location = oid
+      })
+    }
+
+    // cache all of the loaded jigs
+    const proxies = this.outputs.map(o => this.proxies.get(o))
+    const jigProxies = new Array(1 + data.code.length).concat(proxies)
+    const net = util.networkSuffix(run.blockchain.network)
+    for (let vout = 0; vout < jigProxies.length; vout++) {
+      if (!jigProxies[vout]) continue
+      const jigLocation = `${tx.hash.slice(0, 64)}_o${vout}`
+
+      // Serialize the state of the jig into a local reference form
+      const serialized = JigControl.disableProxy(() => {
+        const tokenSaver = token =>
+          token.location.startsWith(tx.hash) ? token.location.slice(64) : token.location
+
+        const xray = new Xray()
+          .allowTokens()
+          .useIntrinsics(run.code.intrinsics)
+          .useTokenSaver(tokenSaver)
+
+        const obj = Object.assign({}, jigProxies[vout])
+
+        if (obj.origin.startsWith(tx.hash) || obj.origin.startsWith('_')) delete obj.origin
+        if (obj.location.startsWith(tx.hash) || obj.location.startsWith('_')) delete obj.location
+
+        return xray.serialize(obj)
+      })
+
+      let type = jigProxies[vout].constructor[`origin${net}`]
+      if (type.startsWith(tx.hash)) type = type.slice(64)
+
+      const cachedState = { type, state: serialized }
+      await run.state.set(jigLocation, cachedState)
+    }
+
+    // clear the code, and load it directly from the transaction
+    this.code = []
+    data.code.forEach((code, index) => {
+      const location = `${tx.hash}_o${index + 1}`
+      const type = run.code.getInstalled(location)
+      this.storeCode(type, type, {}, run.code.extractProps(type).props, () => {}, () => {}, code.owner, run.code, run)
+    })
+
+    const spentLocations = spentJigs.map(jig => this.locations.get(jig.origin) || jig.location)
+    this.cachedTx = { tx, refs: data.refs || [], spentJigs, spentLocations }
+  }
+
+  begin () { this.beginCount++ }
+
+  end () {
+    if (this.beginCount === 0) throw new Error('end transaction without begin')
+    if (--this.beginCount === 0 && this.onReadyForPublish && (this.code.length || this.actions.length)) {
+      this.onReadyForPublish()
+    }
+  }
+
+  rollback (lastPosted, run, error, unhandled) {
+    delete this.cachedTx
+
+    // notify the definition. this will undo the location/origin to allow a retry.
+    this.code.forEach(def => def.error())
+
+    // notify the owner. this may remove it from its list.
+    this.code.forEach(def => { if (run.owner instanceof Owner) run.owner.update(def.sandbox) })
+
+    // revert the state of each jig
+    this.outputs.forEach(jig => {
+      // if the jig was never deployed, or if there was an unhandled error leading to this
+      // rollback, then make this jig permanently unusable by setting a bad origin.
+      if (jig.origin[0] === '_' || unhandled) {
+        const err = `!${jig.origin[0] === '_' ? 'Deploy failed'
+          : 'A previous update failed'}\n\n${error}`
+        // TODO: log the error here
+        Object.keys(jig).forEach(key => delete jig[key])
+        jig.origin = jig.location = err
+        return
+      }
+
+      // if this jig was already reverted, continue
+      if (jig.location[0] !== '_') return
+
+      // revert the state of the jig to its state before this transaction
+      const origin = jig.origin
+      this.before.get(jig).restoreInPlace()
+      jig.origin = origin
+      jig.location = lastPosted.get(origin)
+
+      // TODO: Deserialize saved state
+    })
+
+    // notify the owner of jig rollbacks
+    this.outputs.forEach(jig => { if (run.owner instanceof Owner) run.owner.update(jig) })
+
+    this.reset()
+  }
+
+  storeCode (type, sandbox, deps, props, success, error, owner, code, run) {
+    delete this.cachedTx
+
+    this.begin()
+    try {
+      if (typeof owner === 'object') run.deploy(owner.constructor)
+      this.code.push({ type, sandbox, deps, props, success, error, owner })
+      const tempLocation = `_d${this.code.length - 1}`
+      type.owner = sandbox.owner = owner // TODO: Sandbox owner
+      if (run.owner instanceof Owner) run.owner.update(code.getInstalled(type))
+      return tempLocation
+    } finally { this.end() }
+  }
+
+  storeAction (target, method, args, inputs, outputs, reads, before, after, proxies, run) {
+    delete this.cachedTx
+
+    this.begin()
+
+    try {
+      // ------------------------------------------------------------------------------------------
+      // CHECK FOR MULTIPLE DIFFERENT JIG REFERENCES
+      // ------------------------------------------------------------------------------------------
+
+      // This doesn't cover the case of undeployed locations. We must run this again in publish.
+      // Also, inner references that aren't read aren't checked, but this isn't a problem because
+      // the user can 'sync' these up to their latest state before they read them in the future.
+
+      const pickups = new FriendlySet([target])
+      inputs.forEach(jig => pickups.add(jig))
+      outputs.forEach(jig => pickups.add(jig))
+      reads.forEach(jig => pickups.add(jig))
+
+      // ------------------------------------------------------------------------------------------
+      // STORE NEW BEFORE STATES AND ALL AFTER STATES FOR JIGS IN THE PROTO TRANSACTION
+      // ------------------------------------------------------------------------------------------
+
+      before.forEach((checkpoint, target) => {
+        this.before.set(target, this.before.get(target) || checkpoint)
+      })
+
+      after.forEach((checkpoint, target) => { this.after.set(target, checkpoint) })
+
+      // ------------------------------------------------------------------------------------------
+      // ADD INPUTS TO THE PROTO TRANSACTION
+      // ------------------------------------------------------------------------------------------
+
+      inputs.forEach(newTarget => {
+        const isDifferentInstance = currTarget => util.sameJig(newTarget, currTarget) &&
+          currTarget.location !== newTarget.location
+        if (this.inputs.some(isDifferentInstance)) {
+          const differentInstance = this.inputs.find(isDifferentInstance)
+          const differentLocation = this.stateBefore.get(differentInstance).json.location
+          const line1 = `origin: ${newTarget.origin}`
+          const line2 = `location1: ${differentLocation}`
+          const line3 = `location2: ${newTarget.location}`
+          const info = `${line1}\n${line2}\n${line3}`
+          const hint = `Hint: Try syncing all instances of this jig before calling ${method}`
+          const description = `Different location for ${differentInstance} found in ${method}()`
+          throw new Error(`${description}\n\n${info}\n\n${hint}`)
+        }
+
+        if (!this.inputs.some(currTarget => util.sameJig(newTarget, currTarget))) {
+          this.inputs.push(newTarget)
+        }
+      })
+
+      // ------------------------------------------------------------------------------------------
+      // ADD OUTPUTS TO THE PROTO TRANSACTION AND SET TEMP LOCATIONS
+      // ------------------------------------------------------------------------------------------
+
+      outputs.forEach(jig => {
+        const index = this.outputs.findIndex(previousJig => util.sameJig(jig, previousJig))
+
+        if (index !== -1) {
+          jig.location = `_o${index}`
+          jig.origin = jig.origin || jig.location
+          return
+        }
+
+        this.outputs.push(jig)
+
+        const updating = jig => (jig.origin && jig.origin[0] !== '_' && jig.location &&
+          jig.location[0] !== '_' && !this.locations.has(jig.origin))
+
+        if (updating(jig)) this.locations.set(jig.origin, jig.location)
+
+        jig.location = `_o${this.outputs.length - 1}`
+        jig.origin = jig.origin || jig.location
+      })
+
+      // ------------------------------------------------------------------------------------------
+      // REMEMBER READS AND PROXIES FOR LATER
+      // ------------------------------------------------------------------------------------------
+
+      reads.forEach(proxy => this.reads.add(proxy))
+
+      proxies.forEach((v, k) => this.proxies.set(k, v))
+
+      // ------------------------------------------------------------------------------------------
+      // STORE THE ACTION IN THE PROTO TRANSACTION
+      // ------------------------------------------------------------------------------------------
+
+      const creator = before.get(target).restore().owner
+
+      this.actions.push({ target, method, creator, args, inputs, outputs, reads })
+    } finally { this.end() }
+
+    // Notify the owner of each output they may care about
+    outputs.forEach(target => { if (run.owner instanceof Owner) run.owner.update(proxies.get(target)) })
+  }
+
+  async pay (run) {
+    if (!this.cachedTx) this.buildBsvTransaction(run)
+    return run.purse.pay(this.cachedTx.tx)
+  }
+
+  async sign (run) {
+    if (!this.cachedTx) this.buildBsvTransaction(run)
+    return run.owner.sign(this.cachedTx.tx)
+  }
+
+  buildBsvTransaction (run) {
+    if (this.cachedTx) return this.cachedTx
+
+    const { blockchain, syncer } = run
+
+    const net = util.networkSuffix(blockchain.network)
+
+    // build the read references array, checking for different locations of the same jig
+    const spentJigs = this.inputs.filter(jig => jig.origin[0] !== '_')
+    const readRefs = new Map()
+    this.reads.forEach(jig => {
+      if (spentJigs.includes(jig) || this.outputs.includes(jig)) return
+      const location = syncer.lastPosted.get(jig.origin) ||
+        this.locations.get(jig.origin) || jig.location
+      const prevLocation = readRefs.get(jig.origin)
+      if (prevLocation && prevLocation !== location) {
+        throw new Error(`read different locations of same jig ${jig.origin}`)
+      }
+      readRefs.set(jig.origin, location)
+    })
+    const refs = Array.from(readRefs.values())
+
+    // Jig arguments, class props, and code need to be turned into token references
+    const { Jig } = __webpack_require__(6)
+    const tokenSaver = token => {
+      if (token instanceof Jig) {
+        // find the jig if it is a proxy. it may not be a proxy if it wasn't used, but then
+        // we won't have trouble reading origin/location. (TODO: is this true? might be queued)
+        let target = token
+        const targets = Array.from(this.proxies.entries())
+          .filter(([pk, pv]) => pv === target).map(([pk, pv]) => pk)
+        if (targets.length) { target = targets[0] }
+
+        // if the jig is an input, use it
+        const inputIndex = spentJigs.findIndex(i => util.sameJig(i, target))
+        if (inputIndex !== -1) return `_i${inputIndex}`
+
+        // if the jig is an output, use it
+        const outputIndex = this.outputs.findIndex(o => util.sameJig(o, target))
+        if (outputIndex !== -1) return `_o${1 + this.code.length + outputIndex}`
+
+        // if the jig is a read reference, use it
+        const refIndex = refs.indexOf(readRefs.get(target.origin))
+        if (refIndex !== -1) return `_r${refIndex}`
+
+        // otherwise, use the actual location
+        return syncer.lastPosted.get(target.origin) || target.location
+      }
+
+      if (util.deployable(token)) {
+        return token[`location${net}`][0] === '_'
+          ? `_o${parseInt(token[`location${net}`].slice(2)) + 1}`
+          : token[`location${net}`]
+      }
+
+      if (token instanceof Berry) {
+        const error = Location.parse(token.location).error
+        if (error) throw new Error(`Cannot serialize berry: ${error}`)
+        return token.location
+      }
+    }
+
+    const xray = new Xray()
+      .allowTokens()
+      .useIntrinsics(run.code.intrinsics)
+      .useTokenSaver(tokenSaver)
+
+    // build each action
+    const actions = this.actions.map(action => {
+      const { method } = action
+
+      const args = xray.serialize(action.args)
+
+      // if init, this is a special case. find the definition and owner.
+      if (method === 'init') {
+        const targetLocation = action.target.constructor[`origin${net}`] ||
+            action.target.constructor[`location${net}`]
+        const target = targetLocation[0] === '_' ? `_o${1 + parseInt(targetLocation.slice(2))}` : targetLocation
+        return { target, method, args, creator: xray.serialize(action.creator) }
+      }
+
+      // if the jig has an input, use it
+      const inputIndex = spentJigs.findIndex(i => util.sameJig(i, action.target))
+      if (inputIndex !== -1) return { target: `_i${inputIndex}`, method, args }
+
+      // if the jig has an output, use it (example: created within the transaction)
+      const outputIndex = this.outputs.findIndex(o => util.sameJig(o, action.target))
+      if (outputIndex !== -1) return { target: `_o${1 + this.code.length + outputIndex}`, method, args }
+
+      // the target was not updated in the transaction
+      const target = action.target.location[0] !== '_' ? action.target.location
+        : syncer.lastPosted.get(action.target.origin)
+      return { target, method, args }
+    })
+
+    // Build each definition
+    const code = this.code.map(def => {
+      // Turn dependencies into references
+      const fixloc = id => id[0] === '_' ? `_o${1 + parseInt(id.slice(2))}` : id
+      const depsArr = Object.entries(def.deps).map(([k, v]) => ({ [k]: fixloc(v[`location${net}`]) }))
+      const deps = depsArr.length ? Object.assign(...depsArr) : undefined
+
+      // Serialize class props
+      const props = Object.keys(def.props).length ? xray.serialize(def.props) : undefined
+
+      return { text: util.getNormalizedSourceCode(def.type), deps, props, owner: def.owner }
+    })
+
+    // Calculate hashes for each output
+    // this.outputs.forEach(output => {
+    // console.log(output)
+    // })
+    // Maybe origin and location are removed, to make it deterministic
+    // Origin is kept. If __, then removed. But what if 3 are pending? Maybe always remove origin.
+    // But then how does state get reconstructed? Location is assigned. Sure. But what origin?
+    // How do you know it was the original to put it on? What about refs that haven't been posted yet?
+    // This is a bit of a problem. No it isn't. We know origin when we post. Not before. You don't
+    // have pending stuff at this time. Include origin, if it's there. References will always be past
+    // refs.
+
+    // build our json payload
+    const data = { code, actions, jigs: this.outputs.length, refs: refs.length ? refs : undefined }
+
+    const encrypted = util.encryptRunData(data)
+    const prefix = Buffer.from('run', 'utf8')
+    const protocolVersion = Buffer.from([util.PROTOCOL_VERSION], 'hex')
+    const appId = Buffer.from(run.app, 'utf8')
+    const payload = Buffer.from(encrypted, 'utf8')
+    const debugInfo = Buffer.from('r11r', 'utf8')
+    const script = bsv.Script.buildSafeDataOut([prefix, protocolVersion, appId, payload, debugInfo])
+    const tx = new bsv.Transaction().addOutput(new bsv.Transaction.Output({ script, satoshis: 0 }))
+
+    // build inputs
+    const spentLocations = spentJigs.map(jig => syncer.lastPosted.get(jig.origin) ||
+      this.locations.get(jig.origin) || jig.location)
+    spentJigs.forEach((jig, index) => {
+      const txid = spentLocations[index].slice(0, 64)
+      const vout = parseInt(spentLocations[index].slice(66))
+      const before = this.before.get(jig)
+      const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, before.restore().satoshis)
+      const scriptBuffer = util.ownerScript(before.restore().owner).toBytes()
+      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
+      const utxo = { txid, vout, script, satoshis }
+      tx.from(utxo)
+    })
+
+    // Build run outputs first by adding code then by adding jigs
+
+    this.code.forEach(def => {
+      const scriptBuffer = util.ownerScript(def.owner).toBytes()
+      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
+      const satoshis = bsv.Transaction.DUST_AMOUNT
+      tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
+    })
+
+    this.outputs.forEach(jig => {
+      const restored = this.after.get(jig).restore()
+      const scriptBuffer = util.ownerScript(restored.owner).toBytes()
+      const script = bsv.Script.fromBuffer(Buffer.from(scriptBuffer))
+      const satoshis = Math.max(bsv.Transaction.DUST_AMOUNT, restored.satoshis)
+      tx.addOutput(new bsv.Transaction.Output({ script, satoshis }))
+    })
+
+    this.cachedTx = { tx, refs, spentJigs, spentLocations }
+    return this.cachedTx
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { ProtoTransaction, Transaction }
+
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
  * blockchain.js
  *
  * Blockchain API and its default REST implementation
@@ -9276,7 +9537,7 @@ module.exports = { Blockchain, BlockchainServer }
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9294,7 +9555,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9306,7 +9567,7 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9411,7 +9672,7 @@ module.exports = defaults;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9443,7 +9704,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9492,24 +9753,24 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports) {
 
 module.exports = require("http");
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports) {
 
 module.exports = require("https");
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var url = __webpack_require__(26);
-var http = __webpack_require__(23);
-var https = __webpack_require__(24);
+var url = __webpack_require__(27);
+var http = __webpack_require__(24);
+var https = __webpack_require__(25);
 var assert = __webpack_require__(46);
 var Writable = __webpack_require__(47).Writable;
 var debug = __webpack_require__(48)("follow-redirects");
@@ -9832,13 +10093,13 @@ module.exports.wrap = wrap;
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports) {
 
 module.exports = require("url");
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
@@ -10069,7 +10330,7 @@ function coerce(val) {
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10127,7 +10388,7 @@ module.exports = function mergeConfig(config1, config2) {
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10153,7 +10414,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports) {
 
 /**
@@ -10223,7 +10484,7 @@ module.exports = expect
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -10233,12 +10494,11 @@ module.exports = expect
  */
 
 const util = __webpack_require__(0)
+const Evaluator = __webpack_require__(15)
 const { Jig, JigControl } = __webpack_require__(4)
-const { Berry, BerryControl } = __webpack_require__(11)
+const { Berry, BerryControl } = __webpack_require__(10)
 const Xray = __webpack_require__(9)
 const Context = __webpack_require__(12)
-const { getIntrinsics, intrinsicNames, Intrinsics } = __webpack_require__(7)
-const { FriendlySet, FriendlyMap, createSandboxedFriendlyMap, createSandboxedFriendlySet } = __webpack_require__(3)
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -10253,42 +10513,13 @@ const stringProps = ['origin', 'location', 'originMainnet', 'locationMainnet', '
    */
 class Code {
   constructor (options = {}) {
-    this.evaluator = options.evaluator
-    this.sandbox = options.sandbox
-    this.logger = options.logger
     this.installs = new Map() // Type | Location | Sandbox -> Sandbox
+    this.evaluator = new Evaluator({ logger: options.logger, sandbox: options.sandbox })
+    this.logger = options.logger
+    this.intrinsics = this.evaluator.intrinsics
     this.pending = new Set()
-
     this.installJig()
     this.installBerry()
-
-    if (this.willSandbox(FriendlySet.toString())) {
-      this.FriendlySet = createSandboxedFriendlySet(this.sandboxEvaluator)
-    } else {
-      this.FriendlySet = FriendlySet
-    }
-
-    if (this.willSandbox(FriendlyMap.toString())) {
-      this.FriendlyMap = createSandboxedFriendlyMap(this.sandboxEvaluator)
-    } else {
-      this.FriendlyMap = FriendlyMap
-    }
-
-    this.friendlyEnv = { Set: this.FriendlySet, Map: this.FriendlyMap }
-
-    // Keep track of common intrinsics shared between realms. The SES realm creates
-    // these, and we just evaluate a list of them and store them here.
-    this.evaluatorIntrinsics = this.evaluator.evaluate(`(${getIntrinsics.toString()})()`, { intrinsicNames })
-
-    const custom = Object.assign({}, this.evaluatorIntrinsics, this.friendlyEnv)
-    this.intrinsics = new Intrinsics().allow(this.sandboxEvaluator.intrinsics).use(custom)
-  }
-
-  willSandbox (code) {
-    if (typeof this.sandbox === 'boolean') return this.sandbox
-    const nameRegex = /^(function|class)\s+([a-zA-Z0-9_$]+)/
-    const match = code.match(nameRegex)
-    return match ? this.sandbox.test(match[2]) : false
   }
 
   isSandbox (type) {
@@ -10340,16 +10571,6 @@ class Code {
     return { props, refs }
   }
 
-  evaluateDefinition (code, environment) {
-    // When a function is anonymous, it will be named the variable it is assigned. We give it
-    // a friendly anonymous name to distinguish it from named classes and functions.
-    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
-
-    // Execute the code using the anonymous name if necessary
-    const script = `const ${anon}=${code};${anon}`
-    return this.evaluator.evaluate(script, environment)
-  }
-
   // TODO: This should include partial installs
   deploy (type, options = {}) {
     if (this.pending.has(type)) return
@@ -10391,7 +10612,7 @@ class Code {
       // realdeps is type.deps with its parent if not there
       const parentClass = Object.getPrototypeOf(type)
       const realdeps = classProps.includes('deps') ? Object.assign({}, type.deps) : {}
-      const SandboxObject = this.intrinsics.default.Object
+      const SandboxObject = this.evaluator.intrinsics.default.Object
       if (parentClass !== Object.getPrototypeOf(Object) &&
         parentClass !== SandboxObject.getPrototypeOf(SandboxObject)) {
         env[parentClass.name] = this.deploy(parentClass, options)
@@ -10557,7 +10778,7 @@ class Code {
         }
       }
 
-      const { result: sandbox, globals: sandboxGlobal } = this.evaluateDefinition(def.text, env)
+      const { result: sandbox, globals: sandboxGlobal } = this.evaluator.evaluate(def.text, env)
       sandbox.origin = sandbox.location = location
       sandbox.owner = def.owner
       const net = util.networkSuffix(run.blockchain.network)
@@ -10643,9 +10864,9 @@ class Code {
     const prev = this.installs.get(type)
     if (prev) return [prev, null]
     const code = util.getNormalizedSourceCode(type)
-    const willSandbox = this.willSandbox(code)
+    const willSandbox = this.evaluator.willSandbox(code)
     if (!willSandbox) return [type, {}]
-    return this.evaluateDefinition(code, env)
+    return this.evaluator.evaluate(code, env)
   }
 
   activate (network) {
@@ -10666,6 +10887,12 @@ class Code {
         v.owner = k[`owner${net}`]
       } else { delete k.owner; delete v.owner }
     })
+
+    this.evaluator.activate()
+  }
+
+  deactivate () {
+    this.evaluator.deactivate()
   }
 }
 
@@ -10675,7 +10902,215 @@ module.exports = Code
 
 
 /***/ }),
-/* 32 */
+/* 33 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+// Adapted from SES/Caja - Copyright (C) 2011 Google Inc.
+// Copyright (C) 2018 Agoric
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// based upon:
+// https://github.com/google/caja/blob/master/src/com/google/caja/ses/startSES.js
+// https://github.com/google/caja/blob/master/src/com/google/caja/ses/repairES5.js
+// then copied from proposal-frozen-realms deep-freeze.js
+// then copied from SES/src/bundle/deepFreeze.js
+
+/**
+ * @typedef HardenerOptions
+ * @type {object}
+ * @property {WeakSet=} fringeSet WeakSet to use for the fringeSet
+ * @property {Function=} naivePrepareObject Call with object before hardening
+ */
+
+/**
+ * Create a `harden` function.
+ *
+ * @param {Iterable} initialFringe Objects considered already hardened
+ * @param {HardenerOptions=} options Options for creation
+ */
+function makeHardener(initialFringe, options = {}) {
+  const { freeze, getOwnPropertyDescriptors, getPrototypeOf } = Object;
+  const { ownKeys } = Reflect;
+
+  // Objects that we won't freeze, either because we've frozen them already,
+  // or they were one of the initial roots (terminals). These objects form
+  // the "fringe" of the hardened object graph.
+  let { fringeSet } = options;
+  if (fringeSet) {
+    if (
+      typeof fringeSet.add !== 'function' ||
+      typeof fringeSet.has !== 'function'
+    ) {
+      throw new TypeError(
+        `options.fringeSet must have add() and has() methods`,
+      );
+    }
+
+    // Populate the supplied fringeSet with our initialFringe.
+    if (initialFringe) {
+      for (const fringe of initialFringe) {
+        fringeSet.add(fringe);
+      }
+    }
+  } else {
+    // Use a new empty fringe.
+    fringeSet = new WeakSet(initialFringe);
+  }
+
+  const naivePrepareObject = options && options.naivePrepareObject;
+
+  function harden(root) {
+    const toFreeze = new Set();
+    const prototypes = new Map();
+    const paths = new WeakMap();
+
+    // If val is something we should be freezing but aren't yet,
+    // add it to toFreeze.
+    function enqueue(val, path) {
+      if (Object(val) !== val) {
+        // ignore primitives
+        return;
+      }
+      const type = typeof val;
+      if (type !== 'object' && type !== 'function') {
+        // future proof: break until someone figures out what it should do
+        throw new TypeError(`Unexpected typeof: ${type}`);
+      }
+      if (fringeSet.has(val) || toFreeze.has(val)) {
+        // Ignore if this is an exit, or we've already visited it
+        return;
+      }
+      // console.log(`adding ${val} to toFreeze`, val);
+      toFreeze.add(val);
+      paths.set(val, path);
+    }
+
+    function freezeAndTraverse(obj) {
+      // Apply the naive preparer if they specified one.
+      if (naivePrepareObject) {
+        naivePrepareObject(obj);
+      }
+
+      // Now freeze the object to ensure reactive
+      // objects such as proxies won't add properties
+      // during traversal, before they get frozen.
+
+      // Object are verified before being enqueued,
+      // therefore this is a valid candidate.
+      // Throws if this fails (strict mode).
+      freeze(obj);
+
+      // we rely upon certain commitments of Object.freeze and proxies here
+
+      // get stable/immutable outbound links before a Proxy has a chance to do
+      // something sneaky.
+      const proto = getPrototypeOf(obj);
+      const descs = getOwnPropertyDescriptors(obj);
+      const path = paths.get(obj) || 'unknown';
+
+      // console.log(`adding ${proto} to prototypes under ${path}`);
+      if (proto !== null && !prototypes.has(proto)) {
+        prototypes.set(proto, path);
+        paths.set(proto, `${path}.__proto__`);
+      }
+
+      ownKeys(descs).forEach(name => {
+        const pathname = `${path}.${String(name)}`;
+        // todo uncurried form
+        // todo: getOwnPropertyDescriptors is guaranteed to return well-formed
+        // descriptors, but they still inherit from Object.prototype. If
+        // someone has poisoned Object.prototype to add 'value' or 'get'
+        // properties, then a simple 'if ("value" in desc)' or 'desc.value'
+        // test could be confused. We use hasOwnProperty to be sure about
+        // whether 'value' is present or not, which tells us for sure that this
+        // is a data property.
+        const desc = descs[name];
+        if ('value' in desc) {
+          // todo uncurried form
+          enqueue(desc.value, `${pathname}`);
+        } else {
+          enqueue(desc.get, `${pathname}(get)`);
+          enqueue(desc.set, `${pathname}(set)`);
+        }
+      });
+    }
+
+    function dequeue() {
+      // New values added before forEach() has finished will be visited.
+      toFreeze.forEach(freezeAndTraverse); // todo curried forEach
+    }
+
+    function checkPrototypes() {
+      prototypes.forEach((path, p) => {
+        if (!(toFreeze.has(p) || fringeSet.has(p))) {
+          // all reachable properties have already been frozen by this point
+          let msg;
+          try {
+            msg = `prototype ${p} of ${path} is not already in the fringeSet`;
+          } catch (e) {
+            // `${(async _=>_).__proto__}` fails in most engines
+            msg =
+              'a prototype of something is not already in the fringeset (and .toString failed)';
+            try {
+              console.log(msg);
+              console.log('the prototype:', p);
+              console.log('of something:', path);
+            } catch (_e) {
+              // console.log might be missing in restrictive SES realms
+            }
+          }
+          throw new TypeError(msg);
+        }
+      });
+    }
+
+    function commit() {
+      // todo curried forEach
+      // we capture the real WeakSet.prototype.add above, in case someone
+      // changes it. The two-argument form of forEach passes the second
+      // argument as the 'this' binding, so we add to the correct set.
+      toFreeze.forEach(fringeSet.add, fringeSet);
+    }
+
+    enqueue(root);
+    dequeue();
+    // console.log("fringeSet", fringeSet);
+    // console.log("prototype set:", prototypes);
+    // console.log("toFreeze set:", toFreeze);
+    checkPrototypes();
+    commit();
+
+    return root;
+  }
+
+  return harden;
+}
+
+module.exports = makeHardener;
+
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports) {
+
+module.exports = require("vm");
+
+/***/ }),
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -10684,9 +11119,9 @@ module.exports = Code
  * Enqueues transactions and syncs jigs
  */
 
-const { ProtoTransaction } = __webpack_require__(15)
+const { ProtoTransaction } = __webpack_require__(17)
 const { JigControl } = __webpack_require__(4)
-const { Owner } = __webpack_require__(8)
+const { Owner } = __webpack_require__(7)
 const Xray = __webpack_require__(9)
 const util = __webpack_require__(0)
 const Location = __webpack_require__(5)
@@ -11056,465 +11491,6 @@ owner: ${spentJigs[i].owner}`)
 
 
 /***/ }),
-/* 33 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * evaluator.js
- *
- * The evaluator runs arbitrary code in a secure sandbox
- */
-
-const ses = __webpack_require__(16)
-const { getIntrinsics, intrinsicNames, Intrinsics } = __webpack_require__(7)
-const { FriendlySet, FriendlyMap, createSandboxedFriendlyMap, createSandboxedFriendlySet } = __webpack_require__(3)
-
-// ------------------------------------------------------------------------------------------------
-// Evaluator
-// ------------------------------------------------------------------------------------------------
-
-class Evaluator {
-  constructor (options = {}) {
-    this.sandbox = typeof options.sandbox !== 'undefined' ? options.sandbox : true
-    this.logger = typeof options.logger !== 'undefined' ? options.logger : null
-
-    // The realms-shim requires a body for sandboxing. If it doesn't exist, create one.
-    if (typeof window !== 'undefined' && !window.document.body) {
-      window.document.body = document.createElement('body')
-    }
-
-    this.sandboxEvaluator = new SESEvaluator()
-    this.globalEvaluator = new GlobalEvaluator({ logger: this.logger })
-
-    if (this.willSandbox(FriendlySet.toString())) {
-      this.FriendlySet = createSandboxedFriendlySet(this.sandboxEvaluator)
-    } else {
-      this.FriendlySet = FriendlySet
-    }
-
-    if (this.willSandbox(FriendlyMap.toString())) {
-      this.FriendlyMap = createSandboxedFriendlyMap(this.sandboxEvaluator)
-    } else {
-      this.FriendlyMap = FriendlyMap
-    }
-
-    this.friendlyEnv = { Set: this.FriendlySet, Map: this.FriendlyMap }
-
-    const custom = Object.assign({}, this.sandboxEvaluator.intrinsics, this.friendlyEnv)
-    this.intrinsics = new Intrinsics().allow(this.sandboxEvaluator.intrinsics).use(custom)
-  }
-
-  evaluate (code, env = {}) {
-    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
-    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
-    if ('$globals' in env) throw new Error('Environment must not contain $globals')
-
-    if (this.logger) this.logger.info(`Evaluating code starting with: "${code.slice(0, 20)}"`)
-    if (this.willSandbox(code)) {
-      return this.sandboxEvaluator.evaluate(code, Object.assign({}, this.friendlyEnv, env))
-    } else {
-      // Don't replace Set and Map when using the global evaluator
-      return this.globalEvaluator.evaluate(code, Object.assign({}, env))
-    }
-  }
-
-  willSandbox (code) {
-    if (typeof this.sandbox === 'boolean') return this.sandbox
-    const nameRegex = /^(function|class)\s+([a-zA-Z0-9_$]+)/
-    const match = code.match(nameRegex)
-    return match ? this.sandbox.test(match[2]) : false
-  }
-
-  activate () { this.globalEvaluator.activate() }
-  deactivate () { this.globalEvaluator.deactivate() }
-}
-
-// ------------------------------------------------------------------------------------------------
-// SESEvaluator
-// ------------------------------------------------------------------------------------------------
-
-// Non-deterministic globals will be banned
-const nonDeterministicGlobals = [
-  'Date',
-  'Math',
-  'eval',
-  'XMLHttpRequest',
-  'FileReader',
-  'WebSocket',
-  'setTimeout',
-  'setInterval'
-]
-
-/**
- * Secure sandboxer for arbitrary code
- */
-class SESEvaluator {
-  constructor () {
-    this.realm = ses.makeSESRootRealm()
-
-    // Keep track of common intrinsics shared between realms. The SES realm creates
-    // these, and we just evaluate a list of them and store them here.
-    this.intrinsics = this.realm.evaluate(`(${getIntrinsics.toString()})()`, { intrinsicNames })
-
-    // We also overwrite console so that console.log in sandboxed code is relogged outside
-    const consoleCode = 'Object.assign(...Object.entries(c).map(([k, f]) => ({ [k]: (...a) => f(...a) })))'
-    this.intrinsics.console = this.realm.evaluate(consoleCode, { c: console })
-  }
-
-  evaluate (code, env = {}) {
-    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
-    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
-    if ('$globals' in env) throw new Error('Environment must not contain $globals')
-
-    // Create the globals object in the SES realm so it doesn't expose ours
-    const $globals = this.realm.evaluate('({})')
-
-    // Disable each non-deterministic global
-    env = Object.assign({}, env)
-    nonDeterministicGlobals.forEach(key => {
-      if (!(key in env)) env[key] = undefined
-    })
-
-    // Create the real env we'll use
-    env = Object.assign({}, this.intrinsics, env, { $globals })
-
-    // When a function is anonymous, it will be named the variable it is assigned. We give it
-    // a friendly anonymous name to distinguish it from named classes and functions.
-    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
-
-    // Execute the code in strict mode.
-    const script = `with($globals){'use strict';const ${anon}=${code};${anon}}`
-    const result = this.realm.evaluate(script, env)
-
-    return { result, globals: $globals }
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// GlobalEvaluator
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Evaluates code using dependences that are set as globals. This is quite dangerous, but we
- * only use it when sandbox=false, which is intended for testing code coverage and debugging.
- */
-class GlobalEvaluator {
-  constructor (options = {}) {
-    this.logger = options.logger
-    this.activated = true
-    // We will save the prior globals before overriding them so they can be reverted.
-    // This will also store our globals when we deactivate so we can re-activate them.
-    this.savedGlobalDescriptors = {}
-  }
-
-  evaluate (code, env = {}) {
-    if (typeof code !== 'string') throw new Error(`Code must be a string. Received: ${code}`)
-    if (typeof env !== 'object') throw new Error(`Environment must be an object. Received: ${env}`)
-    if ('$globals' in env) throw new Error('Environment must not contain $globals')
-
-    // When a function is anonymous, it will be named the variable it is assigned. We give it
-    // a friendly anonymous name to distinguish it from named classes and functions.
-    const anon = code.startsWith('class') ? 'AnonymousClass' : 'anonymousFunction'
-
-    // Set each env as a global
-    const options = { configurable: true, enumerable: true, writable: true }
-    Object.keys(env).forEach(key => this.setGlobalDescriptor(key, Object.assign({}, options, { value: env[key] })))
-
-    // Turn the code into an object
-    const result = eval(`const ${anon} = ${code}; ${anon}`) // eslint-disable-line
-
-    // Wrap global sets so that we update savedGlobalDescriptors
-    const wrappedGlobal = new Proxy(global, {
-      set: (target, prop, value) => {
-        this.setGlobalDescriptor(prop, Object.assign({}, options, { value }))
-        return true
-      },
-      defineProperty: (target, prop, descriptor) => {
-        this.setGlobalDescriptor(prop, descriptor)
-        return true
-      }
-    })
-
-    return { result, globals: wrappedGlobal }
-  }
-
-  setGlobalDescriptor (key, descriptor) {
-    // Save the previous global the first time we override it. Future overrides
-    // will throw a warning because now there are two values at the global scope.
-    const priorDescriptor = Object.getOwnPropertyDescriptor(global, key)
-
-    if (!(key in this.savedGlobalDescriptors)) {
-      this.savedGlobalDescriptors[key] = priorDescriptor
-    } else if (!sameDescriptors(descriptor, priorDescriptor)) {
-      if (this.logger) {
-        const warning = 'There might be bugs with sandboxing disabled'
-        const reason = `Two different values were set at the global scope for ${key}`
-        this.logger.warn(`${warning}\n\n${reason}`)
-      }
-    }
-
-    Object.defineProperty(global, key, descriptor)
-  }
-
-  activate () {
-    if (this.activated) return
-    this.swapSavedGlobals()
-    this.activated = true
-  }
-
-  deactivate () {
-    if (!this.activated) return
-    this.swapSavedGlobals()
-    this.activated = false
-  }
-
-  swapSavedGlobals () {
-    const swappedGlobalDescriptors = {}
-
-    Object.keys(this.savedGlobalDescriptors).forEach(key => {
-      swappedGlobalDescriptors[key] = Object.getOwnPropertyDescriptor(global, key)
-
-      if (typeof this.savedGlobalDescriptors[key] === 'undefined') {
-        delete global[key]
-      } else {
-        Object.defineProperty(global, key, this.savedGlobalDescriptors[key])
-      }
-    })
-
-    this.savedGlobalDescriptors = swappedGlobalDescriptors
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-// Helper methods
-// ------------------------------------------------------------------------------------------------
-
-function sameDescriptors (a, b) {
-  if (typeof a !== typeof b) return false
-  const aKeys = Array.from(Object.keys(a))
-  const bKeys = Array.from(Object.keys(b))
-  if (aKeys.length !== bKeys.length) return false
-  return !aKeys.some(key => a[key] !== b[key])
-}
-
-// ------------------------------------------------------------------------------------------------
-
-Evaluator.SESEvaluator = SESEvaluator
-Evaluator.GlobalEvaluator = GlobalEvaluator
-Evaluator.nonDeterministicGlobals = nonDeterministicGlobals
-
-module.exports = Evaluator
-
-
-/***/ }),
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-// Adapted from SES/Caja - Copyright (C) 2011 Google Inc.
-// Copyright (C) 2018 Agoric
-
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-// based upon:
-// https://github.com/google/caja/blob/master/src/com/google/caja/ses/startSES.js
-// https://github.com/google/caja/blob/master/src/com/google/caja/ses/repairES5.js
-// then copied from proposal-frozen-realms deep-freeze.js
-// then copied from SES/src/bundle/deepFreeze.js
-
-/**
- * @typedef HardenerOptions
- * @type {object}
- * @property {WeakSet=} fringeSet WeakSet to use for the fringeSet
- * @property {Function=} naivePrepareObject Call with object before hardening
- */
-
-/**
- * Create a `harden` function.
- *
- * @param {Iterable} initialFringe Objects considered already hardened
- * @param {HardenerOptions=} options Options for creation
- */
-function makeHardener(initialFringe, options = {}) {
-  const { freeze, getOwnPropertyDescriptors, getPrototypeOf } = Object;
-  const { ownKeys } = Reflect;
-
-  // Objects that we won't freeze, either because we've frozen them already,
-  // or they were one of the initial roots (terminals). These objects form
-  // the "fringe" of the hardened object graph.
-  let { fringeSet } = options;
-  if (fringeSet) {
-    if (
-      typeof fringeSet.add !== 'function' ||
-      typeof fringeSet.has !== 'function'
-    ) {
-      throw new TypeError(
-        `options.fringeSet must have add() and has() methods`,
-      );
-    }
-
-    // Populate the supplied fringeSet with our initialFringe.
-    if (initialFringe) {
-      for (const fringe of initialFringe) {
-        fringeSet.add(fringe);
-      }
-    }
-  } else {
-    // Use a new empty fringe.
-    fringeSet = new WeakSet(initialFringe);
-  }
-
-  const naivePrepareObject = options && options.naivePrepareObject;
-
-  function harden(root) {
-    const toFreeze = new Set();
-    const prototypes = new Map();
-    const paths = new WeakMap();
-
-    // If val is something we should be freezing but aren't yet,
-    // add it to toFreeze.
-    function enqueue(val, path) {
-      if (Object(val) !== val) {
-        // ignore primitives
-        return;
-      }
-      const type = typeof val;
-      if (type !== 'object' && type !== 'function') {
-        // future proof: break until someone figures out what it should do
-        throw new TypeError(`Unexpected typeof: ${type}`);
-      }
-      if (fringeSet.has(val) || toFreeze.has(val)) {
-        // Ignore if this is an exit, or we've already visited it
-        return;
-      }
-      // console.log(`adding ${val} to toFreeze`, val);
-      toFreeze.add(val);
-      paths.set(val, path);
-    }
-
-    function freezeAndTraverse(obj) {
-      // Apply the naive preparer if they specified one.
-      if (naivePrepareObject) {
-        naivePrepareObject(obj);
-      }
-
-      // Now freeze the object to ensure reactive
-      // objects such as proxies won't add properties
-      // during traversal, before they get frozen.
-
-      // Object are verified before being enqueued,
-      // therefore this is a valid candidate.
-      // Throws if this fails (strict mode).
-      freeze(obj);
-
-      // we rely upon certain commitments of Object.freeze and proxies here
-
-      // get stable/immutable outbound links before a Proxy has a chance to do
-      // something sneaky.
-      const proto = getPrototypeOf(obj);
-      const descs = getOwnPropertyDescriptors(obj);
-      const path = paths.get(obj) || 'unknown';
-
-      // console.log(`adding ${proto} to prototypes under ${path}`);
-      if (proto !== null && !prototypes.has(proto)) {
-        prototypes.set(proto, path);
-        paths.set(proto, `${path}.__proto__`);
-      }
-
-      ownKeys(descs).forEach(name => {
-        const pathname = `${path}.${String(name)}`;
-        // todo uncurried form
-        // todo: getOwnPropertyDescriptors is guaranteed to return well-formed
-        // descriptors, but they still inherit from Object.prototype. If
-        // someone has poisoned Object.prototype to add 'value' or 'get'
-        // properties, then a simple 'if ("value" in desc)' or 'desc.value'
-        // test could be confused. We use hasOwnProperty to be sure about
-        // whether 'value' is present or not, which tells us for sure that this
-        // is a data property.
-        const desc = descs[name];
-        if ('value' in desc) {
-          // todo uncurried form
-          enqueue(desc.value, `${pathname}`);
-        } else {
-          enqueue(desc.get, `${pathname}(get)`);
-          enqueue(desc.set, `${pathname}(set)`);
-        }
-      });
-    }
-
-    function dequeue() {
-      // New values added before forEach() has finished will be visited.
-      toFreeze.forEach(freezeAndTraverse); // todo curried forEach
-    }
-
-    function checkPrototypes() {
-      prototypes.forEach((path, p) => {
-        if (!(toFreeze.has(p) || fringeSet.has(p))) {
-          // all reachable properties have already been frozen by this point
-          let msg;
-          try {
-            msg = `prototype ${p} of ${path} is not already in the fringeSet`;
-          } catch (e) {
-            // `${(async _=>_).__proto__}` fails in most engines
-            msg =
-              'a prototype of something is not already in the fringeset (and .toString failed)';
-            try {
-              console.log(msg);
-              console.log('the prototype:', p);
-              console.log('of something:', path);
-            } catch (_e) {
-              // console.log might be missing in restrictive SES realms
-            }
-          }
-          throw new TypeError(msg);
-        }
-      });
-    }
-
-    function commit() {
-      // todo curried forEach
-      // we capture the real WeakSet.prototype.add above, in case someone
-      // changes it. The two-argument form of forEach passes the second
-      // argument as the 'this' binding, so we add to the correct set.
-      toFreeze.forEach(fringeSet.add, fringeSet);
-    }
-
-    enqueue(root);
-    dequeue();
-    // console.log("fringeSet", fringeSet);
-    // console.log("prototype set:", prototypes);
-    // console.log("toFreeze set:", toFreeze);
-    checkPrototypes();
-    commit();
-
-    return root;
-  }
-
-  return harden;
-}
-
-module.exports = makeHardener;
-
-
-/***/ }),
-/* 35 */
-/***/ (function(module, exports) {
-
-module.exports = require("vm");
-
-/***/ }),
 /* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -11526,7 +11502,7 @@ module.exports = require("vm");
 
 const bsv = __webpack_require__(2)
 const util = __webpack_require__(0)
-const { Blockchain } = __webpack_require__(17)
+const { Blockchain } = __webpack_require__(18)
 
 // ------------------------------------------------------------------------------------------------
 // Pay API
@@ -11745,10 +11721,10 @@ module.exports = __webpack_require__(38);
 
 
 var utils = __webpack_require__(1);
-var bind = __webpack_require__(18);
+var bind = __webpack_require__(19);
 var Axios = __webpack_require__(40);
-var mergeConfig = __webpack_require__(28);
-var defaults = __webpack_require__(20);
+var mergeConfig = __webpack_require__(29);
+var defaults = __webpack_require__(21);
 
 /**
  * Create an instance of Axios
@@ -11781,9 +11757,9 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(29);
+axios.Cancel = __webpack_require__(30);
 axios.CancelToken = __webpack_require__(65);
-axios.isCancel = __webpack_require__(19);
+axios.isCancel = __webpack_require__(20);
 
 // Expose all/spread
 axios.all = function all(promises) {
@@ -11825,7 +11801,7 @@ var utils = __webpack_require__(1);
 var buildURL = __webpack_require__(13);
 var InterceptorManager = __webpack_require__(41);
 var dispatchRequest = __webpack_require__(42);
-var mergeConfig = __webpack_require__(28);
+var mergeConfig = __webpack_require__(29);
 
 /**
  * Create a new instance of Axios
@@ -11975,8 +11951,8 @@ module.exports = InterceptorManager;
 
 var utils = __webpack_require__(1);
 var transformData = __webpack_require__(43);
-var isCancel = __webpack_require__(19);
-var defaults = __webpack_require__(20);
+var isCancel = __webpack_require__(20);
+var defaults = __webpack_require__(21);
 var isAbsoluteURL = __webpack_require__(63);
 var combineURLs = __webpack_require__(64);
 
@@ -12113,17 +12089,17 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 var utils = __webpack_require__(1);
-var settle = __webpack_require__(21);
+var settle = __webpack_require__(22);
 var buildURL = __webpack_require__(13);
-var http = __webpack_require__(23);
-var https = __webpack_require__(24);
-var httpFollow = __webpack_require__(25).http;
-var httpsFollow = __webpack_require__(25).https;
-var url = __webpack_require__(26);
+var http = __webpack_require__(24);
+var https = __webpack_require__(25);
+var httpFollow = __webpack_require__(26).http;
+var httpsFollow = __webpack_require__(26).https;
+var url = __webpack_require__(27);
 var zlib = __webpack_require__(57);
 var pkg = __webpack_require__(58);
 var createError = __webpack_require__(14);
-var enhanceError = __webpack_require__(22);
+var enhanceError = __webpack_require__(23);
 
 var isHttps = /https:?/;
 
@@ -12425,7 +12401,7 @@ if (typeof process === 'undefined' || process.type === 'renderer') {
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __webpack_require__(27);
+exports = module.exports = __webpack_require__(28);
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
@@ -12791,7 +12767,7 @@ var util = __webpack_require__(53);
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __webpack_require__(27);
+exports = module.exports = __webpack_require__(28);
 exports.init = init;
 exports.log = log;
 exports.formatArgs = formatArgs;
@@ -13154,7 +13130,7 @@ module.exports = require("zlib");
 /* 58 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"_from\":\"axios@0.19.0\",\"_id\":\"axios@0.19.0\",\"_inBundle\":false,\"_integrity\":\"sha512-1uvKqKQta3KBxIz14F2v06AEHZ/dIoeKfbTRkK1E5oqjDnuEerLmYTgJB5AiQZHJcljpg1TuRzdjDR06qNk0DQ==\",\"_location\":\"/axios\",\"_phantomChildren\":{},\"_requested\":{\"type\":\"version\",\"registry\":true,\"raw\":\"axios@0.19.0\",\"name\":\"axios\",\"escapedName\":\"axios\",\"rawSpec\":\"0.19.0\",\"saveSpec\":null,\"fetchSpec\":\"0.19.0\"},\"_requiredBy\":[\"/\"],\"_resolved\":\"https://registry.npmjs.org/axios/-/axios-0.19.0.tgz\",\"_shasum\":\"8e09bff3d9122e133f7b8101c8fbdd00ed3d2ab8\",\"_spec\":\"axios@0.19.0\",\"_where\":\"/home/brenton/code/runonbitcoin/run\",\"author\":{\"name\":\"Matt Zabriskie\"},\"browser\":{\"./lib/adapters/http.js\":\"./lib/adapters/xhr.js\"},\"bugs\":{\"url\":\"https://github.com/axios/axios/issues\"},\"bundleDependencies\":false,\"bundlesize\":[{\"path\":\"./dist/axios.min.js\",\"threshold\":\"5kB\"}],\"dependencies\":{\"follow-redirects\":\"1.5.10\",\"is-buffer\":\"^2.0.2\"},\"deprecated\":false,\"description\":\"Promise based HTTP client for the browser and node.js\",\"devDependencies\":{\"bundlesize\":\"^0.17.0\",\"coveralls\":\"^3.0.0\",\"es6-promise\":\"^4.2.4\",\"grunt\":\"^1.0.2\",\"grunt-banner\":\"^0.6.0\",\"grunt-cli\":\"^1.2.0\",\"grunt-contrib-clean\":\"^1.1.0\",\"grunt-contrib-watch\":\"^1.0.0\",\"grunt-eslint\":\"^20.1.0\",\"grunt-karma\":\"^2.0.0\",\"grunt-mocha-test\":\"^0.13.3\",\"grunt-ts\":\"^6.0.0-beta.19\",\"grunt-webpack\":\"^1.0.18\",\"istanbul-instrumenter-loader\":\"^1.0.0\",\"jasmine-core\":\"^2.4.1\",\"karma\":\"^1.3.0\",\"karma-chrome-launcher\":\"^2.2.0\",\"karma-coverage\":\"^1.1.1\",\"karma-firefox-launcher\":\"^1.1.0\",\"karma-jasmine\":\"^1.1.1\",\"karma-jasmine-ajax\":\"^0.1.13\",\"karma-opera-launcher\":\"^1.0.0\",\"karma-safari-launcher\":\"^1.0.0\",\"karma-sauce-launcher\":\"^1.2.0\",\"karma-sinon\":\"^1.0.5\",\"karma-sourcemap-loader\":\"^0.3.7\",\"karma-webpack\":\"^1.7.0\",\"load-grunt-tasks\":\"^3.5.2\",\"minimist\":\"^1.2.0\",\"mocha\":\"^5.2.0\",\"sinon\":\"^4.5.0\",\"typescript\":\"^2.8.1\",\"url-search-params\":\"^0.10.0\",\"webpack\":\"^1.13.1\",\"webpack-dev-server\":\"^1.14.1\"},\"homepage\":\"https://github.com/axios/axios\",\"keywords\":[\"xhr\",\"http\",\"ajax\",\"promise\",\"node\"],\"license\":\"MIT\",\"main\":\"index.js\",\"name\":\"axios\",\"repository\":{\"type\":\"git\",\"url\":\"git+https://github.com/axios/axios.git\"},\"scripts\":{\"build\":\"NODE_ENV=production grunt build\",\"coveralls\":\"cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js\",\"examples\":\"node ./examples/server.js\",\"fix\":\"eslint --fix lib/**/*.js\",\"postversion\":\"git push && git push --tags\",\"preversion\":\"npm test\",\"start\":\"node ./sandbox/server.js\",\"test\":\"grunt test && bundlesize\",\"version\":\"npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json\"},\"typings\":\"./index.d.ts\",\"version\":\"0.19.0\"}");
+module.exports = JSON.parse("{\"_args\":[[\"axios@0.19.0\",\"/home/brenton/code/runsoft/sdk/run\"]],\"_from\":\"axios@0.19.0\",\"_id\":\"axios@0.19.0\",\"_inBundle\":false,\"_integrity\":\"sha512-1uvKqKQta3KBxIz14F2v06AEHZ/dIoeKfbTRkK1E5oqjDnuEerLmYTgJB5AiQZHJcljpg1TuRzdjDR06qNk0DQ==\",\"_location\":\"/axios\",\"_phantomChildren\":{},\"_requested\":{\"type\":\"version\",\"registry\":true,\"raw\":\"axios@0.19.0\",\"name\":\"axios\",\"escapedName\":\"axios\",\"rawSpec\":\"0.19.0\",\"saveSpec\":null,\"fetchSpec\":\"0.19.0\"},\"_requiredBy\":[\"/\"],\"_resolved\":\"https://registry.npmjs.org/axios/-/axios-0.19.0.tgz\",\"_spec\":\"0.19.0\",\"_where\":\"/home/brenton/code/runsoft/sdk/run\",\"author\":{\"name\":\"Matt Zabriskie\"},\"browser\":{\"./lib/adapters/http.js\":\"./lib/adapters/xhr.js\"},\"bugs\":{\"url\":\"https://github.com/axios/axios/issues\"},\"bundlesize\":[{\"path\":\"./dist/axios.min.js\",\"threshold\":\"5kB\"}],\"dependencies\":{\"follow-redirects\":\"1.5.10\",\"is-buffer\":\"^2.0.2\"},\"description\":\"Promise based HTTP client for the browser and node.js\",\"devDependencies\":{\"bundlesize\":\"^0.17.0\",\"coveralls\":\"^3.0.0\",\"es6-promise\":\"^4.2.4\",\"grunt\":\"^1.0.2\",\"grunt-banner\":\"^0.6.0\",\"grunt-cli\":\"^1.2.0\",\"grunt-contrib-clean\":\"^1.1.0\",\"grunt-contrib-watch\":\"^1.0.0\",\"grunt-eslint\":\"^20.1.0\",\"grunt-karma\":\"^2.0.0\",\"grunt-mocha-test\":\"^0.13.3\",\"grunt-ts\":\"^6.0.0-beta.19\",\"grunt-webpack\":\"^1.0.18\",\"istanbul-instrumenter-loader\":\"^1.0.0\",\"jasmine-core\":\"^2.4.1\",\"karma\":\"^1.3.0\",\"karma-chrome-launcher\":\"^2.2.0\",\"karma-coverage\":\"^1.1.1\",\"karma-firefox-launcher\":\"^1.1.0\",\"karma-jasmine\":\"^1.1.1\",\"karma-jasmine-ajax\":\"^0.1.13\",\"karma-opera-launcher\":\"^1.0.0\",\"karma-safari-launcher\":\"^1.0.0\",\"karma-sauce-launcher\":\"^1.2.0\",\"karma-sinon\":\"^1.0.5\",\"karma-sourcemap-loader\":\"^0.3.7\",\"karma-webpack\":\"^1.7.0\",\"load-grunt-tasks\":\"^3.5.2\",\"minimist\":\"^1.2.0\",\"mocha\":\"^5.2.0\",\"sinon\":\"^4.5.0\",\"typescript\":\"^2.8.1\",\"url-search-params\":\"^0.10.0\",\"webpack\":\"^1.13.1\",\"webpack-dev-server\":\"^1.14.1\"},\"homepage\":\"https://github.com/axios/axios\",\"keywords\":[\"xhr\",\"http\",\"ajax\",\"promise\",\"node\"],\"license\":\"MIT\",\"main\":\"index.js\",\"name\":\"axios\",\"repository\":{\"type\":\"git\",\"url\":\"git+https://github.com/axios/axios.git\"},\"scripts\":{\"build\":\"NODE_ENV=production grunt build\",\"coveralls\":\"cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js\",\"examples\":\"node ./examples/server.js\",\"fix\":\"eslint --fix lib/**/*.js\",\"postversion\":\"git push && git push --tags\",\"preversion\":\"npm test\",\"start\":\"node ./sandbox/server.js\",\"test\":\"grunt test && bundlesize\",\"version\":\"npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json\"},\"typings\":\"./index.d.ts\",\"version\":\"0.19.0\"}");
 
 /***/ }),
 /* 59 */
@@ -13164,7 +13140,7 @@ module.exports = JSON.parse("{\"_from\":\"axios@0.19.0\",\"_id\":\"axios@0.19.0\
 
 
 var utils = __webpack_require__(1);
-var settle = __webpack_require__(21);
+var settle = __webpack_require__(22);
 var buildURL = __webpack_require__(13);
 var parseHeaders = __webpack_require__(60);
 var isURLSameOrigin = __webpack_require__(61);
@@ -13581,7 +13557,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 "use strict";
 
 
-var Cancel = __webpack_require__(29);
+var Cancel = __webpack_require__(30);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -13685,7 +13661,7 @@ module.exports = function spread(callback) {
 const bsv = __webpack_require__(2)
 const { Address, PublicKey, Transaction, Script } = bsv
 const sha256 = bsv.crypto.Hash.sha256
-const { PubKeyScript } = __webpack_require__(8)
+const { PubKeyScript } = __webpack_require__(7)
 
 module.exports = class Mockchain {
   constructor (options = {}) {
@@ -13986,7 +13962,7 @@ module.exports = { State, StateCache }
  */
 
 const { Jig } = __webpack_require__(4)
-const expect = __webpack_require__(30)
+const expect = __webpack_require__(31)
 
 class Token extends Jig {
   init (amount, _tokenToDecrease, _tokensToCombine) {
