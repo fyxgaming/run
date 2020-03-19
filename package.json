@@ -22,7 +22,7 @@
     "bump": "npm version patch && git push --follow-tags && npm publish"
   },
   "dependencies": {
-    "sandbox": "^0.1.1"
+    "@runonbitcoin/sandbox": "^0.1.2"
   },
   "devDependencies": {
     "chai": "^4.2.0",
