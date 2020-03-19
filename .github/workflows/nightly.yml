@@ -92,10 +92,10 @@ jobs:
         file: coverage/lcov.info
 
     - name: Test Node with Performance
-      run: env PERF=true npm run test:node
+      run: env PERF=1 npm run test:node
 
-    - name: Test Firefox
-      run: env BROWSER=firefox npm run test:browser
+    - name: Test Firefox with Performance
+      run: env BROWSER=firefox env PERF=1 npm run test:browser
 
     - name: Test Chrome
       run: env BROWSER=chrome npm run test:browser
