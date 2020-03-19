@@ -22,7 +22,7 @@ const { Mockchain } = Run.module
   const address = privkey.toAddress()
   const script = Script.fromAddress(address).toBuffer()
   const scriptHash = crypto.Hash.sha256(script).toString('hex')
-  mockchain.fund(address, 100000)
+  mockchain.fund(address, 100000000)
 
 // ------------------------------------------------------------------------------------------------
 // Mockchain Functional Tests
@@ -77,29 +77,30 @@ if (perf) {
       await mockchain.broadcast(tx)
       expect(new Date() - start < 30).to.equal(true)
     })
-  })
-}
 
-/*
     it('should support fast fetches', async () => {
-      let utxo = (await run.blockchain.utxos(run.purse.address))[0]
+      let utxo = (await mockchain.utxos(scriptHash))[0]
       const earlyTxid = utxo.txid
       const measures = []
       for (let i = 0; i < 1000; i++) {
-        const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
+        const tx = new Transaction().from(utxo).change(address).sign(privkey)
         utxo = { txid: tx.hash, vout: 0, script: tx.outputs[0].script, satoshis: tx.outputs[0].satoshis }
-        await run.blockchain.broadcast(tx)
+        await mockchain.broadcast(tx)
         const before = new Date()
-        await run.blockchain.fetch(tx.hash)
-        await run.blockchain.fetch(earlyTxid)
+        await mockchain.fetch(tx.hash)
+        await mockchain.fetch(earlyTxid)
         measures.push(new Date() - before)
-        run.blockchain.block()
+        mockchain.block()
       }
       const start = measures.slice(0, 3).reduce((a, b) => a + b, 0) / 3
       const end = measures.slice(measures.length - 3).reduce((a, b) => a + b, 0) / 3
       expect(start < 10).to.equal(true)
       expect(end < 10).to.equal(true)
     }).timeout(30000)
+  })
+}
+
+/*
 
     it('should support fast utxo queries', async () => {
       // Generate 10 private keys and fund their addresses

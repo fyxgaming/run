@@ -7,6 +7,7 @@
 const webpack = require('webpack')
 const path = require('path')
 const fs = require('fs')
+const { execSync } = require('child_process')
 const glob = require('glob')
 const pkg = require('./package')
 
@@ -24,7 +25,14 @@ const config = new webpack.DefinePlugin({ VERSION: JSON.stringify(pkg.version) }
 // Initialization
 // ------------------------------------------------------------------------------------------------
 
+// Create dist folder
 if (!fs.existsSync(dist)) fs.mkdirSync(dist)
+
+// Copy the browser build of the bsv library
+if (!fs.existsSync('./dist/bsv.browser.min.js')) {
+  execSync('npm explore bsv -- npm run build-bsv')
+  fs.copyFileSync(require.resolve('bsv/bsv.min.js'), './dist/bsv.browser.min.js')
+}
 
 // ------------------------------------------------------------------------------------------------
 // Browser Minified
