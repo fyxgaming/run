@@ -14,16 +14,21 @@ const { lib: Run, perf } = require('../config')
 const { Mockchain } = Run.module
 
 // ------------------------------------------------------------------------------------------------
+// Globals
+// ------------------------------------------------------------------------------------------------
+
+  const mockchain = new Mockchain()
+  const privkey = new PrivateKey('testnet')
+  const address = privkey.toAddress()
+  const script = Script.fromAddress(address).toBuffer()
+  const scriptHash = crypto.Hash.sha256(script).toString('hex')
+  mockchain.fund(address, 100000)
+
+// ------------------------------------------------------------------------------------------------
 // Mockchain Functional Tests
 // ------------------------------------------------------------------------------------------------
 
 describe('Mockchain', () => {
-  const mockchain = new Mockchain()
-  const privkey = new PrivateKey('testnet')
-  const address = privkey.toAddress().toString()
-  const scriptHash = crypto.Hash.sha256(Script.fromAddress(address).toBuffer()).toString('hex')
-  mockchain.fund(address, 100000)
-
   describe('block', () => {
     it('should set blockheight on tx', async () => {
       const utxo = (await mockchain.utxos(scriptHash))[0]
@@ -63,17 +68,19 @@ describe('Mockchain', () => {
 // Mockchain Performance Tests
 // ------------------------------------------------------------------------------------------------
 
-/*
 if (perf) {
   describe('Mockchain Performance', () => {
     it('should support fast broadcsts', async () => {
-      const utxo = (await run.blockchain.utxos(run.purse.address))[0]
+      const utxo = (await mockchain.utxos(scriptHash))[0]
       const start = new Date()
-      const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
-      await run.blockchain.broadcast(tx)
-      expect(new Date() - start < 200).to.equal(true)
+      const tx = new Transaction().from(utxo).change(address).sign(privkey)
+      await mockchain.broadcast(tx)
+      expect(new Date() - start < 30).to.equal(true)
     })
+  })
+}
 
+/*
     it('should support fast fetches', async () => {
       let utxo = (await run.blockchain.utxos(run.purse.address))[0]
       const earlyTxid = utxo.txid
