@@ -44,28 +44,26 @@ describe('Mockchain', () => {
       expect(prevtx.outputs[utxo.vout].spentHeight).to.equal(mockchain.height)
     })
 
-    /*
     it('should respect 25 chain limit', async () => {
       for (let i = 0; i < 25; i++) {
-        const utxo = (await run.blockchain.utxos(run.purse.address))[0]
-        const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
-        await run.blockchain.broadcast(tx)
+        const utxo = (await mockchain.utxos(scriptHash))[0]
+        const tx = new Transaction().from(utxo).change(address).sign(privkey)
+        await mockchain.broadcast(tx)
       }
-      const utxo = (await run.blockchain.utxos(run.purse.address))[0]
-      const tx = new Transaction().from(utxo).change(run.purse.bsvAddress).sign(run.purse.bsvPrivateKey)
-      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith('too-long-mempool-chain')
-      run.blockchain.block()
-      await run.blockchain.broadcast(tx)
+      const utxo = (await mockchain.utxos(scriptHash))[0]
+      const tx = new Transaction().from(utxo).change(address).sign(privkey)
+      await expect(mockchain.broadcast(tx)).to.be.rejectedWith('too-long-mempool-chain')
+      mockchain.block()
+      await mockchain.broadcast(tx)
     })
-    */
   })
 })
-/*
 
 // ------------------------------------------------------------------------------------------------
 // Mockchain Performance Tests
 // ------------------------------------------------------------------------------------------------
 
+/*
 if (perf) {
   describe('Mockchain Performance', () => {
     it('should support fast broadcsts', async () => {
