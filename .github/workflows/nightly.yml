@@ -1,0 +1,138 @@
+# Exhaustive tests run once every night
+#
+#   - Lint (Linux)
+#   - Cover (Linux)
+#   - Firefox (Linux, Mac, Win)
+#   - Chrome (Linux, Mac, Win)
+#   - Safari (Mac)
+#   - Edge (Win, Mac)
+#   - Node 10 (Linux)
+#   - Node 12 (Mac, Win)
+
+name: Nightly Suite
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  mac_tests:
+    name: Mac Tests
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Cache Dependencies
+      id: cache-node-modules
+      uses: actions/cache@v1
+      with:
+        path: node_modules
+        key: v1-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      run: |
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+        npm ci
+
+    - name: Test Node
+      run: npm run test:node
+
+    - name: Test Safari
+      run: env BROWSER=safari npm run test:browser
+
+    - name: Test Edge
+      run: env BROWSER=MicrosoftEdge npm run test:browser
+      shell: bash
+
+    - name: Test Firefox
+      run: env BROWSER=firefox npm run test:browser
+      shell: bash
+
+    - name: Test Chrome
+      run: env BROWSER=chrome npm run test:browser
+      shell: bash
+
+  linux_tests:
+    name: Linux Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup Node 10
+      uses: actions/setup-node@v1
+      with:
+        node-version: '10.x'
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Cache Dependencies
+      id: cache-node-modules
+      uses: actions/cache@v1
+      with:
+        path: node_modules
+        key: v1-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      run: |
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+        npm ci
+
+    - name: Lint
+      run: npx standard
+
+    - name: Collect Coverage
+      run: npm run test:cover
+
+    - name: Publish Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: coverage/lcov.info
+
+    - name: Test Node with Performance
+      run: env PERF=true npm run test:node
+
+    - name: Test Firefox
+      run: env BROWSER=firefox npm run test:browser
+
+    - name: Test Chrome
+      run: env BROWSER=chrome npm run test:browser
+
+  windows_tests:
+    name: Windows Tests
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Cache Dependencies
+      id: cache-node-modules
+      uses: actions/cache@v1
+      with:
+        path: node_modules
+        key: v1-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      run: |
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+        npm ci
+      shell: bash
+
+    - name: Test Node
+      run: npm run test:node
+      shell: bash
+
+    - name: Test Edge
+      run: env BROWSER=MicrosoftEdge npm run test:browser
+      shell: bash
+
+    - name: Test Firefox
+      run: env BROWSER=firefox npm run test:browser
+      shell: bash
+
+    - name: Test Chrome
+      run: env BROWSER=chrome npm run test:browser
+      shell: bash

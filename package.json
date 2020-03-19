@@ -1,0 +1,34 @@
+{
+  "name": "starter",
+  "version": "0.1.5",
+  "description": "Starter project for Javascript libraries",
+  "main": "lib/index.js",
+  "files": [
+    "dist/**.min.js",
+    "lib"
+  ],
+  "repository": "git://github.com/runonbitcoin/starter.git",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@runonbitcoin"
+  },
+  "scripts": {
+    "lint": "standard --fix",
+    "build": "webpack",
+    "test": "env LIB=lib mocha",
+    "test:cover": "env LIB=lib nyc -r=text -r=lcovonly -x=test/** mocha",
+    "test:node": "webpack && env LIB=dist/starter.node.min mocha",
+    "test:browser": "node test/browser",
+    "version": "webpack && standard && npm test",
+    "bump": "npm version patch && git push --follow-tags && npm publish"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "glob": "^7.1.6",
+    "mocha": "^7.1.0",
+    "nyc": "^15.0.0",
+    "selenium-webdriver": "^4.0.0-alpha.7",
+    "standard": "^14.3.3",
+    "webpack": "^4.42.0",
+    "webpack-cli": "^3.3.11"
+  }
+}
