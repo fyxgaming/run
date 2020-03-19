@@ -1,13 +1,13 @@
 {
-  "name": "starter",
-  "version": "0.1.5",
-  "description": "Starter project for Javascript libraries",
+  "name": "run",
+  "version": "0.5.0",
+  "description": "Run Javascript library",
   "main": "lib/index.js",
   "files": [
     "dist/**.min.js",
     "lib"
   ],
-  "repository": "git://github.com/runonbitcoin/starter.git",
+  "repository": "git://github.com/runonbitcoin/run.git",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/@runonbitcoin"
   },
@@ -16,7 +16,7 @@
     "build": "webpack",
     "test": "env LIB=lib mocha",
     "test:cover": "env LIB=lib nyc -r=text -r=lcovonly -x=test/** mocha",
-    "test:node": "webpack && env LIB=dist/starter.node.min mocha",
+    "test:node": "webpack && env LIB=dist/run.node.min mocha",
     "test:browser": "node test/browser",
     "version": "webpack && standard && npm test",
     "bump": "npm version patch && git push --follow-tags && npm publish"
