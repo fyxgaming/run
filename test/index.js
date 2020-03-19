@@ -4,5 +4,4 @@
  * Master list of test modules
  */
 
-require('./adder')
-require('./performance')
+require('./module/mockchain')
