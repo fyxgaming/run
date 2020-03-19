@@ -6,7 +6,9 @@
 
 const path = require('path')
 
-const lib = process.env.LIB ? require(path.join(process.cwd(), process.env.LIB)) : require('target')
+const Run = process.env.LIB ? require(path.join(process.cwd(), process.env.LIB)) : require('target')
 const perf = process.env.PERF ? JSON.parse(process.env.PERF) : false
 
-module.exports = { lib, perf }
+Run.defaults.network = 'mock'
+
+module.exports = { Run, perf }

@@ -10,7 +10,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { lib: Run, perf } = require('../config')
+const { Run, perf } = require('../config')
 const { Mockchain } = Run.module
 
 // ------------------------------------------------------------------------------------------------
