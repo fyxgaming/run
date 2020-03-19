@@ -37,6 +37,9 @@ const browserMin = {
     path: dist,
     library
   },
+  externals: {
+    bsv: 'bsv'
+  },
   plugins: [config],
   stats: 'errors-only'
 }
