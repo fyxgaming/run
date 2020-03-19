@@ -12,5 +12,5 @@
 - `env BROWSER=safari npm run test:browser` - Test the minified browser build on Safari
 - `npm run test:cover` - Collect code coverage
 - `npm run test test/adder.js` - Run just the adder tests
-- `env PERF=1 npm run test` - Run performance tests
+- `env PERF=1 npm run test` - Test library with performance tests
 - `npm run bump` - Create a new patch release
