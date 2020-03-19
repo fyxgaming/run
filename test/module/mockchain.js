@@ -34,13 +34,15 @@ describe('Mockchain', () => {
       expect(tx.blockheight).to.equal(mockchain.height)
     })
 
-      // expect(tx.outputs[0].spentHeight).to.equal(null)
-
-      // for (let i = 0; i < txns.length; i++) {
-      // expect(txns[i].blockHeight).to.equal(run.blockchain.blockHeight)
-      // expect(txns[i].outputs[0].spentHeight).to.equal(i < txns.length - 1
-      // ? run.blockchain.blockHeight : null)
-      // }
+    it('should spent spentHeight on outputs', async () => {
+      const utxo = (await mockchain.utxos(scriptHash))[0]
+      const tx = new Transaction().from(utxo).change(address).sign(privkey)
+      await mockchain.broadcast(tx)
+      const prevtx = await mockchain.fetch(utxo.txid)
+      expect(prevtx.outputs[utxo.vout].spentHeight).to.equal(-1)
+      mockchain.block()
+      expect(prevtx.outputs[utxo.vout].spentHeight).to.equal(mockchain.height)
+    })
 
     /*
     it('should respect 25 chain limit', async () => {
