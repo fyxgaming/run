@@ -20,8 +20,7 @@ const { Mockchain } = Run.module
 const mockchain = new Mockchain()
 const privkey = new PrivateKey('testnet')
 const address = privkey.toAddress()
-const script = Script.fromAddress(address).toBuffer()
-const scriptHash = crypto.Hash.sha256(script).toString('hex')
+const script = Script.fromAddress(address)
 mockchain.fund(address, 100000000)
 
 // ------------------------------------------------------------------------------------------------
@@ -31,7 +30,7 @@ mockchain.fund(address, 100000000)
 describe('Mockchain', () => {
   describe('block', () => {
     it('should set blockheight on tx', async () => {
-      const utxo = (await mockchain.utxos(scriptHash))[0]
+      const utxo = (await mockchain.utxos(script))[0]
       const tx = new Transaction().from(utxo).change(address).sign(privkey)
       await mockchain.broadcast(tx)
       expect(tx.blockheight).to.equal(-1)
@@ -40,7 +39,7 @@ describe('Mockchain', () => {
     })
 
     it('should spent spentHeight on outputs', async () => {
-      const utxo = (await mockchain.utxos(scriptHash))[0]
+      const utxo = (await mockchain.utxos(script))[0]
       const tx = new Transaction().from(utxo).change(address).sign(privkey)
       await mockchain.broadcast(tx)
       const prevtx = await mockchain.fetch(utxo.txid)
@@ -51,11 +50,11 @@ describe('Mockchain', () => {
 
     it('should respect 25 chain limit', async () => {
       for (let i = 0; i < 25; i++) {
-        const utxo = (await mockchain.utxos(scriptHash))[0]
+        const utxo = (await mockchain.utxos(script))[0]
         const tx = new Transaction().from(utxo).change(address).sign(privkey)
         await mockchain.broadcast(tx)
       }
-      const utxo = (await mockchain.utxos(scriptHash))[0]
+      const utxo = (await mockchain.utxos(script))[0]
       const tx = new Transaction().from(utxo).change(address).sign(privkey)
       await expect(mockchain.broadcast(tx)).to.be.rejectedWith('too-long-mempool-chain')
       mockchain.block()
@@ -103,15 +102,14 @@ if (perf) {
       const privateKeys = []
       for (let i = 0; i < 10; i++) { privateKeys.push(new PrivateKey('testnet')) }
       const addresses = privateKeys.map(privateKey => privateKey.toAddress())
-      const scriptHashes = addresses.map(address => Script.fromAddress(address))
-        .map(script => crypto.Hash.sha256(script.toBuffer()).toString('hex'))
+      const scripts = addresses.map(address => Script.fromAddress(address))
       addresses.forEach(address => mockchain.fund(address, 100000))
 
       // Send from each address to the next, 1000 times
       const measures = []
       for (let i = 0; i < 1000; i++) {
         const before = new Date()
-        const utxos = await mockchain.utxos(scriptHashes[i % 10])
+        const utxos = await mockchain.utxos(scripts[i % 10])
         measures.push(new Date() - before)
         const tx = new Transaction().from(utxos).to(addresses[(i + 1) % 10], 1000)
           .change(addresses[i % 10]).sign(privateKeys[i % 10])
