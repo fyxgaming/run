@@ -4,7 +4,7 @@
  * Tests specific to lib/module/mockchain.js
  */
 
-const { PrivateKey, Transaction, Script, crypto } = require('bsv')
+const { PrivateKey, Transaction, Script } = require('bsv')
 const { describe, it } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
