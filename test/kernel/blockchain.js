@@ -6,7 +6,7 @@
 
 const bsv = require('bsv')
 const { describe, it } = require('mocha')
-const { Run } = require('./config')
+const { Run } = require('../config')
 
 const run = new Run()
 const { purse, blockchain } = run
