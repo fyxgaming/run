@@ -108,7 +108,7 @@ if (!entries.length) throw new Error(`No test files found: ${patterns}`)
 const browserTests = {
   entry: entries,
   output: { filename: `${name}.browser.tests.js`, path: dist },
-  externals: { mocha: 'Mocha', chai: 'chai', target: library },
+  externals: { mocha: 'Mocha', chai: 'chai', bsv: 'bsv', target: library },
   optimization: { minimize: false },
   plugins: [new webpack.EnvironmentPlugin(process.env)],
   stats: 'errors-only'

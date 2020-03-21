@@ -70,7 +70,7 @@ describe('Mockchain', () => {
 if (perf) {
   describe('Mockchain Performance', () => {
     it('should support fast broadcsts', async () => {
-      const utxo = (await mockchain.utxos(scriptHash))[0]
+      const utxo = (await mockchain.utxos(script))[0]
       const start = new Date()
       const tx = new Transaction().from(utxo).change(address).sign(privkey)
       await mockchain.broadcast(tx)
@@ -78,7 +78,7 @@ if (perf) {
     })
 
     it('should support fast fetches', async () => {
-      let utxo = (await mockchain.utxos(scriptHash))[0]
+      let utxo = (await mockchain.utxos(script))[0]
       const earlyTxid = utxo.txid
       const measures = []
       for (let i = 0; i < 1000; i++) {
