@@ -115,13 +115,13 @@ describe('Blockchain', () => {
       await Promise.all(requests)
     })
 
-  /*
     it('should throw if nonexistant', async () => {
       const bad = '0000000000000000000000000000000000000000000000000000000000000000'
       const requests = [bad, bad, bad].map(txid => blockchain.fetch(txid))
       await expect(Promise.all(requests)).to.be.rejectedWith()
     })
 
+  /*
     it('should set spent information for transaction in mempool and unspent', async () => {
       const tx = await payFor(new bsv.Transaction(), privateKey, blockchain)
       await blockchain.broadcast(tx)
