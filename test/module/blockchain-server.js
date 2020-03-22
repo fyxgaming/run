@@ -4,6 +4,7 @@
  * Tests for lib/module/blockchain-server.js
  */
 
+const { PrivateKey, Script } = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
@@ -87,14 +88,13 @@ describe('BlockchainServer', () => {
   })
 
   describe('utxos', () => {
-    /*
     it('should correct for server returning duplicates', async () => {
-      const address = bsv.PrivateKey('mainnet').toAddress().toString()
+      const address = PrivateKey('mainnet').toAddress().toString()
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
-      const api = unobfuscate({ })
+      const api = {}
       api.utxosUrl = (network, address) => 'https://api.run.network/v1/main/status'
       api.utxosResp = (data, address) => {
-        const utxo = { txid, vout: 0, satoshis: 0, script: new bsv.Script() }
+        const utxo = { txid, vout: 0, satoshis: 0, script: new Script() }
         return [utxo, utxo]
       }
       function warn (warning) { this.lastWarning = warning }
@@ -105,6 +105,7 @@ describe('BlockchainServer', () => {
       expect(logger.lastWarning).to.equal(`Duplicate utxo returned from server: ${txid}_o0`)
     }).timeout(30000)
 
+    /*
     it('should throw if API is down', async () => {
       const api = unobfuscate({ })
       api.utxosUrl = (network, address) => 'bad-url'
