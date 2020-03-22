@@ -57,15 +57,15 @@ describe('Blockchain', () => {
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.missingInputs)
     })
 
-    /*
     it('should throw if mempool conflict', async () => {
-      const utxos = await blockchain.utxos(address)
-      const tx1 = new bsv.Transaction().from(utxos).change(address).sign(privateKey)
+      const utxos = await blockchain.utxos(purse.address)
+      const tx1 = new bsv.Transaction().from(utxos).change(purse.address).sign(purse.bsvPrivateKey)
+      const tx2 = new bsv.Transaction().from(utxos).addSafeData('123').sign(purse.bsvPrivateKey)
       await blockchain.broadcast(tx1)
-      const tx2 = new bsv.Transaction().from(utxos).change(new bsv.PrivateKey().toAddress()).sign(privateKey)
       await expect(blockchain.broadcast(tx2)).to.be.rejectedWith(errors.mempoolConflict)
     })
 
+    /*
     it('should throw if no inputs', async () => {
       const tx = new bsv.Transaction().to(address, 100)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.noInputs)
