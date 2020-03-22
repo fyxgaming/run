@@ -137,28 +137,19 @@ describe('Blockchain', async () => {
       expect(tx3.confirmations).to.equal(0)
     })
 
-  /*
-    it('should set spent information for transaction in mempool and spent', async () => {
-      const tx = await payFor(new bsv.Transaction(), privateKey, blockchain)
+    it('should set spent information for spent tx in mempool', async () => {
+      const tx = await purse.pay(new bsv.Transaction())
       await blockchain.broadcast(tx)
       function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
-      if (blockchain instanceof BlockchainServer) {
-        await sleep(indexingLatency)
-        blockchain.cache.transactions.clear()
-      }
+      await sleep(indexingLatency)
       const firstInput = tx.inputs[0]
-      const prev = await blockchain.fetch(firstInput.prevTxId.toString('hex'))
-      if (supportsSpentTxIdInMempool) {
-        expect(prev.outputs[firstInput.outputIndex].spentTxId).to.equal(tx.hash)
-        expect(prev.outputs[firstInput.outputIndex].spentIndex).to.equal(0)
-        expect(prev.outputs[firstInput.outputIndex].spentHeight).to.equal(-1)
-      } else {
-        expect(prev.outputs[firstInput.outputIndex].spentTxId).to.equal(undefined)
-        expect(prev.outputs[firstInput.outputIndex].spentIndex).to.equal(undefined)
-        expect(prev.outputs[firstInput.outputIndex].spentHeight).to.equal(undefined)
-      }
+      const prev = await blockchain.fetch(firstInput.prevTxId.toString('hex'), true)
+      expect(prev.outputs[firstInput.outputIndex].spentTxId).to.be.oneOf([undefined, tx.hash])
+      expect(prev.outputs[firstInput.outputIndex].spentIndex).to.be.oneOf([undefined, 0])
+      expect(prev.outputs[firstInput.outputIndex].spentHeight).to.be.oneOf([undefined, -1])
     })
 
+  /*
     it('should set spent information for transaction in block and spent', async () => {
       const tx = await blockchain.fetch(sampleTx.txid)
       for (let i = 0; i < sampleTx.vout.length; i++) {
