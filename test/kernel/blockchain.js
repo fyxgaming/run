@@ -101,14 +101,15 @@ describe('Blockchain', () => {
       expect(tx.hash).to.equal(preexisting.txid)
     })
 
-  /*
     it('should set time', async () => {
-      const tx = await blockchain.fetch(sampleTx.txid)
+      const tx = await blockchain.fetch(preexisting.txid)
       expect(tx.time).not.to.equal(undefined)
       expect(tx.time > new Date('January 3, 2009')).to.equal(true)
       expect(tx.time <= Date.now()).to.equal(true)
+      expect(tx.time).to.equal(preexisting.time)
     })
 
+  /*
     it('should cache repeated calls', async () => {
       const requests = []
       for (let i = 0; i < 100; i++) requests.push(blockchain.fetch(sampleTx.txid))
@@ -182,7 +183,6 @@ describe('Blockchain', () => {
           expect(tx.outputs[0].spentHeight).to.equal(undefined)
         }
       }
-      expect(tx.time).to.equal(sampleTx.time)
       if (sampleTx.blockhash) {
         expect(tx.blockhash).to.equal(sampleTx.blockhash)
         expect(tx.blocktime).to.equal(sampleTx.blocktime)
