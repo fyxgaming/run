@@ -34,6 +34,7 @@ const indexingLatency = blockchain.network === 'mock' ? 0 : 1000
 
 describe('Blockchain', async () => {
   const confirmed = await getConfirmedTransaction(blockchain, purse)
+  function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
 
   describe('broadcast', () => {
     it('should support sending to self', async () => {
@@ -128,7 +129,6 @@ describe('Blockchain', async () => {
       expect(tx2.outputs[0].spentTxId).to.equal(null)
       expect(tx2.outputs[0].spentIndex).to.equal(null)
       expect(tx2.outputs[0].spentHeight).to.equal(null)
-      function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
       await sleep(indexingLatency)
       // TODO: Clear cache?
       const tx3 = await blockchain.fetch(tx.hash)
@@ -141,7 +141,6 @@ describe('Blockchain', async () => {
     it('should set spent information for spent tx in mempool', async () => {
       const tx = await purse.pay(new bsv.Transaction())
       await blockchain.broadcast(tx)
-      function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
       await sleep(indexingLatency)
       // TODO: Clear cache?
       const firstInput = tx.inputs[0]
