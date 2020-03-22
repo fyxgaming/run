@@ -82,13 +82,13 @@ describe('Blockchain', () => {
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.feeTooLow)
     })
 
-    /*
     it('should throw if not signed', async () => {
-      const utxos = await blockchain.utxos(address)
-      const tx = new bsv.Transaction().from(utxos).change(address)
+      const utxo = (await blockchain.utxos(purse.address))[0]
+      const tx = new bsv.Transaction().from(utxo).change(purse.address)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.notFullySigned)
     })
 
+    /*
     it('should throw if duplicate input', async () => {
       const utxos = await blockchain.utxos(address)
       const tx = new bsv.Transaction().from(utxos).from(utxos).change(address).sign(privateKey)
