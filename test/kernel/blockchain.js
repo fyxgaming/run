@@ -169,21 +169,19 @@ describe('Blockchain', () => {
       }
     })
 
-  /*
-    it('should keep spent info when force fetch', async () => {
-      const privateKey2 = new bsv.PrivateKey(privateKey.network)
+    it('should cache spent info when force fetch', async () => {
+      const privateKey2 = new bsv.PrivateKey(purse.bsvPrivateKey.network)
       const address2 = privateKey2.toAddress()
-      const tx1 = await payFor(new bsv.Transaction().to(address2, 1000).sign(privateKey), privateKey, blockchain)
+      const tx1 = await purse.pay(new bsv.Transaction().to(address2, 1000))
       await blockchain.broadcast(tx1)
       const utxo = { txid: tx1.hash, vout: 0, script: tx1.outputs[0].script, satoshis: 1000 }
-      const tx2 = (await payFor(new bsv.Transaction().from(utxo), privateKey, blockchain)).sign(privateKey2)
+      const tx2 = (await purse.pay(new bsv.Transaction().from(utxo))).sign(privateKey2)
       await blockchain.broadcast(tx2)
       const tx1b = await blockchain.fetch(tx1.hash, true)
       expect(tx1b.outputs[0].spentTxId).to.equal(tx1.outputs[0].spentTxId)
       expect(tx1b.outputs[0].spentIndex).to.equal(tx1.outputs[0].spentIndex)
       expect(tx1b.outputs[0].spentHeight).to.equal(tx1.outputs[0].spentHeight)
     })
-    */
   })
 
   describe('utxos', () => {
