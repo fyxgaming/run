@@ -58,9 +58,9 @@ describe('Blockchain', () => {
     })
 
     it('should throw if mempool conflict', async () => {
-      const utxos = await blockchain.utxos(purse.address)
-      const tx1 = new bsv.Transaction().from(utxos).change(purse.address).sign(purse.bsvPrivateKey)
-      const tx2 = new bsv.Transaction().from(utxos).addSafeData('123').sign(purse.bsvPrivateKey)
+      const utxo = (await blockchain.utxos(purse.address))[0]
+      const tx1 = new bsv.Transaction().from(utxo).change(purse.address).sign(purse.bsvPrivateKey)
+      const tx2 = new bsv.Transaction().from(utxo).addSafeData('123').sign(purse.bsvPrivateKey)
       await blockchain.broadcast(tx1)
       await expect(blockchain.broadcast(tx2)).to.be.rejectedWith(errors.mempoolConflict)
     })
