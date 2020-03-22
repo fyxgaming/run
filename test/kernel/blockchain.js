@@ -32,7 +32,6 @@ const indexingLatency = blockchain.network === 'mock' ? 0 : 1000
 let confirmed = null
 before(async () => { confirmed = await getConfirmedTransaction(blockchain, purse) })
 
-// Helper functions
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 const clearCache = () => blockchain instanceof BlockchainServer && blockchain.cache.clear()
 
@@ -185,9 +184,8 @@ describe('Blockchain', () => {
   })
 
   describe('utxos', () => {
-  /*
     it('should return utxos', async () => {
-      const utxos = await blockchain.utxos(address)
+      const utxos = await blockchain.utxos(purse.bsvAddress)
       expect(utxos.length > 0).to.equal(true)
       expect(utxos[0].txid).not.to.equal(undefined)
       expect(utxos[0].vout).not.to.equal(undefined)
@@ -195,6 +193,7 @@ describe('Blockchain', () => {
       expect(utxos[0].satoshis).not.to.equal(undefined)
     })
 
+    /*
     it('should return empty list if no utxos', async () => {
       const address = new bsv.PrivateKey(privateKey.network).toAddress()
       const utxos = await blockchain.utxos(address)
