@@ -70,13 +70,13 @@ describe('Blockchain', () => {
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.noInputs)
     })
 
-    /*
     it('should throw if no outputs', async () => {
-      const utxos = await blockchain.utxos(address)
-      const tx = new bsv.Transaction().from(utxos).sign(privateKey)
+      const utxo = (await blockchain.utxos(purse.address))[0]
+      const tx = new bsv.Transaction().from(utxo).sign(purse.bsvPrivateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.noOutputs)
     })
 
+    /*
     it('should throw if fee too low', async () => {
       const utxos = await blockchain.utxos(address)
       const tx = new bsv.Transaction().from(utxos).change(address).fee(0).sign(privateKey)
