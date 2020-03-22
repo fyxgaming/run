@@ -5,7 +5,7 @@
  */
 
 const bsv = require('bsv')
-const { describe, it, beforeEach } = require('mocha')
+const { describe, it, before } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
 
@@ -29,7 +29,7 @@ const errors = {
 const indexingLatency = blockchain.network === 'mock' ? 0 : 1000
 
 let confirmed = null
-beforeEach(async () => { confirmed = await getConfirmedTransaction(blockchain, purse) })
+before(async () => { confirmed = await getConfirmedTransaction(blockchain, purse) })
 
 function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
 
