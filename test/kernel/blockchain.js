@@ -89,7 +89,7 @@ describe('Blockchain', () => {
     })
 
     it('should throw if duplicate input', async () => {
-      const utxo = await blockchain.utxos(purse.address)
+      const utxo = (await blockchain.utxos(purse.address))[0]
       const tx = new bsv.Transaction().from(utxo).from(utxo).change(purse.address).sign(purse.bsvPrivateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.duplicateInput)
     })
