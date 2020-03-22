@@ -8,6 +8,7 @@ const bsv = require('bsv')
 const { describe, it, before } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
+const { BlockchainServer } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -31,7 +32,9 @@ const indexingLatency = blockchain.network === 'mock' ? 0 : 1000
 let confirmed = null
 before(async () => { confirmed = await getConfirmedTransaction(blockchain, purse) })
 
-function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
+// Helper functions
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+const clearCache = () => blockchain instanceof BlockchainServer && blockchain.cache.clear()
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain Tests
@@ -132,8 +135,8 @@ describe('Blockchain', () => {
       expect(tx2.outputs[0].spentIndex).to.equal(null)
       expect(tx2.outputs[0].spentHeight).to.equal(null)
       await sleep(indexingLatency)
-      // TODO: Clear cache?
-      const tx3 = await blockchain.fetch(tx.hash)
+      clearCache()
+      const tx3 = await blockchain.fetch(tx.hash, true)
       expect(tx3.outputs[0].spentTxId).to.be.oneOf([undefined, null])
       expect(tx3.outputs[0].spentIndex).to.be.oneOf([undefined, null])
       expect(tx3.outputs[0].spentHeight).to.be.oneOf([undefined, null])
@@ -144,9 +147,9 @@ describe('Blockchain', () => {
       const tx = await purse.pay(new bsv.Transaction())
       await blockchain.broadcast(tx)
       await sleep(indexingLatency)
-      // TODO: Clear cache?
+      clearCache()
       const firstInput = tx.inputs[0]
-      const prev = await blockchain.fetch(firstInput.prevTxId.toString('hex'))
+      const prev = await blockchain.fetch(firstInput.prevTxId.toString('hex'), true)
       expect(prev.outputs[firstInput.outputIndex].spentTxId).to.be.oneOf([undefined, tx.hash])
       expect(prev.outputs[firstInput.outputIndex].spentIndex).to.be.oneOf([undefined, 0])
       expect(prev.outputs[firstInput.outputIndex].spentHeight).to.be.oneOf([undefined, -1])
