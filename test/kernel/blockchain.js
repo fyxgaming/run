@@ -95,13 +95,13 @@ describe('Blockchain', () => {
     })
   })
 
-  /*
   describe('fetch', () => {
     it('should get pre-existing transaction', async () => {
-      const tx = await blockchain.fetch(sampleTx.txid)
-      expect(tx.hash).to.equal(sampleTx.txid)
+      const tx = await blockchain.fetch(preexisting.txid)
+      expect(tx.hash).to.equal(preexisting.txid)
     })
 
+  /*
     it('should set time', async () => {
       const tx = await blockchain.fetch(sampleTx.txid)
       expect(tx.time).not.to.equal(undefined)
@@ -203,9 +203,11 @@ describe('Blockchain', () => {
       expect(tx1b.outputs[0].spentIndex).to.equal(tx1.outputs[0].spentIndex)
       expect(tx1b.outputs[0].spentHeight).to.equal(tx1.outputs[0].spentHeight)
     })
+    */
   })
 
   describe('utxos', () => {
+  /*
     it('should return utxos', async () => {
       const utxos = await blockchain.utxos(address)
       expect(utxos.length > 0).to.equal(true)
@@ -240,8 +242,8 @@ describe('Blockchain', () => {
       const requests = ['z', '%', []].map(addr => blockchain.utxos(addr))
       await expect(Promise.all(requests)).to.be.rejected
     })
-  })
   */
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
