@@ -130,7 +130,8 @@ describe('Blockchain', async () => {
       expect(tx2.outputs[0].spentHeight).to.equal(null)
       function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
       await sleep(indexingLatency)
-      const tx3 = await blockchain.fetch(tx.hash, true)
+      // TODO: Clear cache?
+      const tx3 = await blockchain.fetch(tx.hash)
       expect(tx3.outputs[0].spentTxId).to.be.oneOf([undefined, null])
       expect(tx3.outputs[0].spentIndex).to.be.oneOf([undefined, null])
       expect(tx3.outputs[0].spentHeight).to.be.oneOf([undefined, null])
@@ -142,8 +143,9 @@ describe('Blockchain', async () => {
       await blockchain.broadcast(tx)
       function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
       await sleep(indexingLatency)
+      // TODO: Clear cache?
       const firstInput = tx.inputs[0]
-      const prev = await blockchain.fetch(firstInput.prevTxId.toString('hex'), true)
+      const prev = await blockchain.fetch(firstInput.prevTxId.toString('hex'))
       expect(prev.outputs[firstInput.outputIndex].spentTxId).to.be.oneOf([undefined, tx.hash])
       expect(prev.outputs[firstInput.outputIndex].spentIndex).to.be.oneOf([undefined, 0])
       expect(prev.outputs[firstInput.outputIndex].spentHeight).to.be.oneOf([undefined, -1])
