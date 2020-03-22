@@ -28,7 +28,6 @@ describe('BlockchainServer', () => {
       })
     })
 
-    /*
     describe('logger', () => {
       it('should support null loggers', () => {
         expect(new BlockchainServer({ logger: null }).logger).to.equal(null)
@@ -40,6 +39,7 @@ describe('BlockchainServer', () => {
       })
     })
 
+    /*
     describe('api', () => {
       it('should default to run api', () => {
         expect(unobfuscate(new BlockchainServer()).api.name).to.equal('run')
