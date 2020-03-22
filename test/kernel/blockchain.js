@@ -109,13 +109,13 @@ describe('Blockchain', () => {
       expect(tx.time).to.equal(preexisting.time)
     })
 
-  /*
     it('should cache repeated calls', async () => {
       const requests = []
-      for (let i = 0; i < 100; i++) requests.push(blockchain.fetch(sampleTx.txid))
+      for (let i = 0; i < 100; i++) requests.push(blockchain.fetch(preexisting.txid))
       await Promise.all(requests)
     })
 
+  /*
     it('should throw if nonexistant', async () => {
       const bad = '0000000000000000000000000000000000000000000000000000000000000000'
       const requests = [bad, bad, bad].map(txid => blockchain.fetch(txid))
