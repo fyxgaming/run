@@ -4,7 +4,7 @@
  * Tests for lib/module/blockchain-server.js
  */
 
-const { PrivateKey, Script } = require('bsv')
+const { PrivateKey, Script, Transaction } = require('bsv')
 const { describe, it } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
@@ -130,12 +130,11 @@ describe('BlockchainServer', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('BlockchainServerCache', () => {
-  /*
   describe('get', () => {
     it('should not return expired transactions', async () => {
-      const cache = unobfuscate(new BlockchainServer.Cache())
+      const cache = new BlockchainServer.Cache()
       cache.expiration = 1
-      const tx = new bsv.Transaction()
+      const tx = new Transaction()
       cache.fetched(tx)
       const sleep = ms => { return new Promise(resolve => setTimeout(resolve, ms)) }
       await sleep(10)
@@ -145,17 +144,16 @@ describe('BlockchainServerCache', () => {
 
   describe('fetched', () => {
     it('should flush oldest transcation when full', () => {
-      const cache = unobfuscate(new BlockchainServer.Cache({ size: 1 }))
+      const cache = new BlockchainServer.Cache({ size: 1 })
       cache.size = 1
-      const tx1 = new bsv.Transaction().addData('1')
-      const tx2 = new bsv.Transaction().addData('2')
+      const tx1 = new Transaction().addData('1')
+      const tx2 = new Transaction().addData('2')
       cache.fetched(tx1)
       cache.fetched(tx2)
       expect(cache.transactions.size).to.equal(1)
       expect(cache.transactions.get(tx2.hash)).to.equal(tx2)
     })
   })
-  */
 })
 
 // ------------------------------------------------------------------------------------------------
