@@ -200,11 +200,10 @@ describe('Blockchain', () => {
       expect(utxos.length).to.equal(0)
     })
 
-    /*
     it('should not return spent outputs', async () => {
-      const tx = await payFor(new Transaction(), privateKey, blockchain)
+      const tx = await purse.pay(new Transaction())
       await blockchain.broadcast(tx)
-      const utxos = await blockchain.utxos(address)
+      const utxos = await blockchain.utxos(purse.bsvAddress)
       expect(utxos.some(utxo => utxo.txid === tx.inputs[0].prevTxId.toString() &&
         utxo.vout === tx.inputs[0].outputIndex)).to.equal(false)
       expect(utxos.some(utxo => utxo.txid === tx.hash && utxo.vout === 0)).to.equal(true)
@@ -212,15 +211,14 @@ describe('Blockchain', () => {
 
     it('should cache repeated calls', async () => {
       const requests = []
-      for (let i = 0; i < 100; i++) requests.push(blockchain.utxos(address))
+      for (let i = 0; i < 100; i++) requests.push(blockchain.utxos(purse.bsvAddress))
       await Promise.all(requests)
     })
 
-    it('should throw for invalid script hash', async () => {
-      const requests = ['z', '%', []].map(addr => blockchain.utxos(addr))
+    it('should throw for invalid queries', async () => {
+      const requests = ['z', '%', [], 123, null, undefined].map(x => blockchain.utxos(x))
       await expect(Promise.all(requests)).to.be.rejected
     })
-  */
   })
 })
 
