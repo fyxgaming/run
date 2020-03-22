@@ -127,7 +127,7 @@ describe('Blockchain', () => {
       await expect(Promise.all(requests)).to.be.rejectedWith()
     })
 
-    it('should set spent information for unspent tx in mempool', async () => {
+    it('should set spent information for unspent unconfirmed tx', async () => {
       const tx = await purse.pay(new bsv.Transaction())
       await blockchain.broadcast(tx)
       const tx2 = await blockchain.fetch(tx.hash)
@@ -143,7 +143,7 @@ describe('Blockchain', () => {
       expect(tx3.confirmations).to.equal(0)
     })
 
-    it('should set spent information for spent tx in mempool', async () => {
+    it('should set spent information for spent unconfirmed tx', async () => {
       const tx = await purse.pay(new bsv.Transaction())
       await blockchain.broadcast(tx)
       await sleep(indexingLatency)
@@ -155,27 +155,21 @@ describe('Blockchain', () => {
       expect(prev.outputs[firstInput.outputIndex].spentHeight).to.be.oneOf([undefined, -1])
     })
 
-  /*
-    it('should set spent information for transaction in block and spent', async () => {
-      const tx = await blockchain.fetch(sampleTx.txid)
-      for (let i = 0; i < sampleTx.vout.length; i++) {
-        if (supportsSpentTxIdInBlocks) {
-          expect(tx.outputs[i].spentTxId).to.equal(sampleTx.vout[i].spentTxId)
-          expect(tx.outputs[i].spentIndex).to.equal(sampleTx.vout[i].spentIndex)
-          expect(tx.outputs[i].spentHeight).to.equal(sampleTx.vout[i].spentHeight)
-        } else {
-          expect(tx.outputs[0].spentTxId).to.equal(undefined)
-          expect(tx.outputs[0].spentIndex).to.equal(undefined)
-          expect(tx.outputs[0].spentHeight).to.equal(undefined)
-        }
-      }
-      if (sampleTx.blockhash) {
-        expect(tx.blockhash).to.equal(sampleTx.blockhash)
-        expect(tx.blocktime).to.equal(sampleTx.blocktime)
-        expect(tx.confirmations > sampleTx.minConfirmations).to.equal(true)
+    it('should set spent information for spent confirmed tx', async () => {
+      const tx = await blockchain.fetch(confirmed.txid)
+      confirmed.vout.forEach((output, n) => {
+        expect(tx.outputs[n].spentTxId).to.be.oneOf([undefined, output.spentTxId])
+        expect(tx.outputs[n].spentIndex).to.be.oneOf([undefined, output.spentIndex])
+        expect(tx.outputs[n].spentHeight).to.be.oneOf([undefined, output.spentHeight])
+      })
+      if (confirmed.blockhash) {
+        expect(tx.blockhash).to.equal(confirmed.blockhash)
+        expect(tx.blocktime).to.equal(confirmed.blocktime)
+        expect(tx.confirmations > confirmed.minConfirmations).to.equal(true)
       }
     })
 
+  /*
     it('should keep spent info when force fetch', async () => {
       const privateKey2 = new bsv.PrivateKey(privateKey.network)
       const address2 = privateKey2.toAddress()
@@ -239,17 +233,25 @@ describe('Blockchain', () => {
 async function getConfirmedTransaction (blockchain, purse) {
   switch (blockchain.network) {
     case 'mock': {
-      const newtx = await purse.pay(new bsv.Transaction())
-      await blockchain.broadcast(newtx)
+      const utxo1 = (await blockchain.utxos(purse.bsvAddress))[0]
+      const tx1 = new bsv.Transaction().from(utxo1).addSafeData('123').change(purse.address).sign(purse.bsvPrivateKey)
+      await blockchain.broadcast(tx1)
+
+      const utxo2 = { txid: tx1.hash, vout: 1, script: tx1.outputs[1].script, satoshis: tx1.outputs[1].satoshis }
+      const tx2 = new bsv.Transaction().from(utxo2).change(purse.address).sign(purse.bsvPrivateKey)
+      await blockchain.broadcast(tx2)
+
       blockchain.block()
-      const prevtxid = newtx.inputs[0].prevTxId.toString('hex')
-      const prevvout = newtx.inputs[0].outputIndex
-      const prevtx = await blockchain.fetch(prevtxid)
+
       return {
-        txid: prevtxid,
-        time: prevtx.time,
-        outputIndex: prevvout,
-        outputPrivkey: purse.privkey
+        txid: tx1.hash,
+        time: tx1.time,
+        outputIndex: 1,
+        outputPrivkey: purse.privkey,
+        vout: [
+          { spentTxId: null, spentIndex: null, spentHeight: null },
+          { spentTxId: tx2.hash, spentIndex: 0, spentHeight: tx2.blockheight }
+        ]
       }
     }
 
