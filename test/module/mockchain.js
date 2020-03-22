@@ -1,7 +1,7 @@
 /**
  * mockchain.js
  *
- * Tests specific to lib/module/mockchain.js
+ * Tests for lib/module/mockchain.js
  */
 
 const { PrivateKey, Transaction, Script } = require('bsv')
