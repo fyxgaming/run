@@ -8,6 +8,7 @@ const bsv = require('bsv')
 const { describe, it, before } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
+const { Transaction, Script, PrivateKey } = bsv
 const { BlockchainServer } = Run.module
 
 // ------------------------------------------------------------------------------------------------
@@ -42,12 +43,12 @@ const clearCache = () => blockchain instanceof BlockchainServer && blockchain.ca
 describe('Blockchain', () => {
   describe('broadcast', () => {
     it('should support sending to self', async () => {
-      const tx = await purse.pay(new bsv.Transaction())
+      const tx = await purse.pay(new Transaction())
       await blockchain.broadcast(tx)
     })
 
     it('should throw if input does not exist', async () => {
-      const tx = await purse.pay(new bsv.Transaction())
+      const tx = await purse.pay(new Transaction())
       tx.inputs[0].outputIndex = 999
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.missingInputs)
     })
@@ -57,45 +58,45 @@ describe('Blockchain', () => {
       const script = prevTx.outputs[confirmed.outputIndex].script
       const satoshis = prevTx.outputs[confirmed.outputIndex].satoshis
       const utxo = { txid: confirmed.txid, vout: confirmed.outputIndex, script, satoshis }
-      const tx = new bsv.Transaction().from(utxo).addSafeData('123')
+      const tx = new Transaction().from(utxo).addSafeData('123')
         .change(run.purse.address).sign(confirmed.outputPrivkey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.missingInputs)
     })
 
     it('should throw if mempool conflict', async () => {
       const utxo = (await blockchain.utxos(purse.address))[0]
-      const tx1 = new bsv.Transaction().from(utxo).change(purse.address).sign(purse.bsvPrivateKey)
-      const tx2 = new bsv.Transaction().from(utxo).addSafeData('123').sign(purse.bsvPrivateKey)
+      const tx1 = new Transaction().from(utxo).change(purse.address).sign(purse.bsvPrivateKey)
+      const tx2 = new Transaction().from(utxo).addSafeData('123').sign(purse.bsvPrivateKey)
       await blockchain.broadcast(tx1)
       await expect(blockchain.broadcast(tx2)).to.be.rejectedWith(errors.mempoolConflict)
     })
 
     it('should throw if no inputs', async () => {
-      const tx = new bsv.Transaction().to(purse.address, 100)
+      const tx = new Transaction().to(purse.address, 100)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.noInputs)
     })
 
     it('should throw if no outputs', async () => {
       const utxo = (await blockchain.utxos(purse.address))[0]
-      const tx = new bsv.Transaction().from(utxo).sign(purse.bsvPrivateKey)
+      const tx = new Transaction().from(utxo).sign(purse.bsvPrivateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.noOutputs)
     })
 
     it('should throw if fee too low', async () => {
       const utxo = (await blockchain.utxos(purse.address))[0]
-      const tx = new bsv.Transaction().from(utxo).change(purse.address).fee(0).sign(purse.bsvPrivateKey)
+      const tx = new Transaction().from(utxo).change(purse.address).fee(0).sign(purse.bsvPrivateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.feeTooLow)
     })
 
     it('should throw if not signed', async () => {
       const utxo = (await blockchain.utxos(purse.address))[0]
-      const tx = new bsv.Transaction().from(utxo).change(purse.address)
+      const tx = new Transaction().from(utxo).change(purse.address)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.notFullySigned)
     })
 
     it('should throw if duplicate input', async () => {
       const utxo = (await blockchain.utxos(purse.address))[0]
-      const tx = new bsv.Transaction().from(utxo).from(utxo).change(purse.address).sign(purse.bsvPrivateKey)
+      const tx = new Transaction().from(utxo).from(utxo).change(purse.address).sign(purse.bsvPrivateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.duplicateInput)
     })
   })
@@ -127,7 +128,7 @@ describe('Blockchain', () => {
     })
 
     it('should set spent information for unspent unconfirmed tx', async () => {
-      const tx = await purse.pay(new bsv.Transaction())
+      const tx = await purse.pay(new Transaction())
       await blockchain.broadcast(tx)
       const tx2 = await blockchain.fetch(tx.hash)
       expect(tx2.outputs[0].spentTxId).to.equal(null)
@@ -143,7 +144,7 @@ describe('Blockchain', () => {
     })
 
     it('should set spent information for spent unconfirmed tx', async () => {
-      const tx = await purse.pay(new bsv.Transaction())
+      const tx = await purse.pay(new Transaction())
       await blockchain.broadcast(tx)
       await sleep(indexingLatency)
       clearCache()
@@ -169,12 +170,12 @@ describe('Blockchain', () => {
     })
 
     it('should cache spent info when force fetch', async () => {
-      const privateKey2 = new bsv.PrivateKey(purse.bsvPrivateKey.network)
+      const privateKey2 = new PrivateKey(purse.bsvPrivateKey.network)
       const address2 = privateKey2.toAddress()
-      const tx1 = await purse.pay(new bsv.Transaction().to(address2, 1000))
+      const tx1 = await purse.pay(new Transaction().to(address2, 1000))
       await blockchain.broadcast(tx1)
       const utxo = { txid: tx1.hash, vout: 0, script: tx1.outputs[0].script, satoshis: 1000 }
-      const tx2 = (await purse.pay(new bsv.Transaction().from(utxo))).sign(privateKey2)
+      const tx2 = (await purse.pay(new Transaction().from(utxo))).sign(privateKey2)
       await blockchain.broadcast(tx2)
       const tx1b = await blockchain.fetch(tx1.hash, true)
       expect(tx1b.outputs[0].spentTxId).to.equal(tx1.outputs[0].spentTxId)
@@ -193,15 +194,15 @@ describe('Blockchain', () => {
       expect(utxos[0].satoshis).not.to.equal(undefined)
     })
 
-    /*
     it('should return empty list if no utxos', async () => {
-      const address = new bsv.PrivateKey(privateKey.network).toAddress()
-      const utxos = await blockchain.utxos(address)
+      const address = new PrivateKey(purse.bsvPrivateKey.network).toAddress()
+      const utxos = await blockchain.utxos(Script.fromAddress(address))
       expect(utxos.length).to.equal(0)
     })
 
+    /*
     it('should not return spent outputs', async () => {
-      const tx = await payFor(new bsv.Transaction(), privateKey, blockchain)
+      const tx = await payFor(new Transaction(), privateKey, blockchain)
       await blockchain.broadcast(tx)
       const utxos = await blockchain.utxos(address)
       expect(utxos.some(utxo => utxo.txid === tx.inputs[0].prevTxId.toString() &&
@@ -231,11 +232,11 @@ async function getConfirmedTransaction (blockchain, purse) {
   switch (blockchain.network) {
     case 'mock': {
       const utxo1 = (await blockchain.utxos(purse.bsvAddress))[0]
-      const tx1 = new bsv.Transaction().from(utxo1).addSafeData('123').change(purse.address).sign(purse.bsvPrivateKey)
+      const tx1 = new Transaction().from(utxo1).addSafeData('123').change(purse.address).sign(purse.bsvPrivateKey)
       await blockchain.broadcast(tx1)
 
       const utxo2 = { txid: tx1.hash, vout: 1, script: tx1.outputs[1].script, satoshis: tx1.outputs[1].satoshis }
-      const tx2 = new bsv.Transaction().from(utxo2).change(purse.address).sign(purse.bsvPrivateKey)
+      const tx2 = new Transaction().from(utxo2).change(purse.address).sign(purse.bsvPrivateKey)
       await blockchain.broadcast(tx2)
 
       blockchain.block()
