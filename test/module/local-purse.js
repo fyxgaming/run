@@ -4,6 +4,7 @@
  * Tests for lib/module/local-purse.js
  */
 
+const { PrivateKey } = require('bsv')
 const { describe, it } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
@@ -29,23 +30,21 @@ describe('Purse', () => {
         expect(run.purse.privkey).not.to.equal(new Run().purse.privkey)
       })
 
-      /*
       it('should calculate address correctly from private key', () => {
         expect(run.purse.bsvPrivateKey.toAddress().toString()).to.equal(run.purse.address)
       })
 
       it('should support passing in private key', () => {
-        const privkey = new bsv.PrivateKey()
-        const run = createRun({ purse: privkey })
+        const privkey = new PrivateKey()
+        const run = new Run({ purse: privkey })
         expect(run.purse.privkey).to.equal(privkey.toString())
         expect(run.purse.bsvPrivateKey).to.deep.equal(privkey)
       })
 
       it('should throw if private key is on wrong network', () => {
-        const purse = new bsv.PrivateKey('mainnet').toString()
-        expect(() => createRun({ purse, network: 'test' })).to.throw('Private key network mismatch')
+        const purse = new PrivateKey('mainnet').toString()
+        expect(() => new Run({ purse, network: 'test' })).to.throw('Private key network mismatch')
       })
-      */
     })
 
     describe('logger', () => {
