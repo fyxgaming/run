@@ -8,6 +8,7 @@ const bsv = require('bsv')
 const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
+const { Mockchain, BlockchainServer } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Test Config
@@ -27,13 +28,15 @@ const errors = {
 }
 
 const preexisting = getPreexistingTransaction(blockchain, purse)
+const indexingLatency = blockchain instanceof Mockchain ? 0 : 1000
+const supportsSpentTxIdInMempool = true
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain Tests
 // ------------------------------------------------------------------------------------------------
 
 describe('Blockchain', () => {
-  beforeEach(() => blockchain.network === 'mock' && blockchain.block())
+  beforeEach(() => blockchain instanceof Mockchain && blockchain.block())
 
   describe('broadcast', () => {
     it('should support sending to self', async () => {
@@ -121,9 +124,8 @@ describe('Blockchain', () => {
       await expect(Promise.all(requests)).to.be.rejectedWith()
     })
 
-  /*
-    it('should set spent information for transaction in mempool and unspent', async () => {
-      const tx = await payFor(new bsv.Transaction(), privateKey, blockchain)
+    it('should set spent information for unspent tx in mempool', async () => {
+      const tx = await purse.pay(new bsv.Transaction())
       await blockchain.broadcast(tx)
       function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
       const tx2 = await blockchain.fetch(tx.hash)
@@ -132,8 +134,8 @@ describe('Blockchain', () => {
       expect(tx2.outputs[0].spentIndex).to.equal(null)
       expect(tx2.outputs[0].spentHeight).to.equal(null)
       // check the uncached copy
+      await sleep(indexingLatency)
       if (blockchain instanceof BlockchainServer) {
-        await sleep(indexingLatency)
         blockchain.cache.transactions.clear()
       }
       const tx3 = await blockchain.fetch(tx.hash)
@@ -149,6 +151,7 @@ describe('Blockchain', () => {
       expect(tx3.confirmations).to.equal(0)
     })
 
+  /*
     it('should set spent information for transaction in mempool and spent', async () => {
       const tx = await payFor(new bsv.Transaction(), privateKey, blockchain)
       await blockchain.broadcast(tx)
