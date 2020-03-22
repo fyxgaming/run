@@ -39,10 +39,9 @@ describe('BlockchainServer', () => {
       })
     })
 
-    /*
     describe('api', () => {
       it('should default to run api', () => {
-        expect(unobfuscate(new BlockchainServer()).api.name).to.equal('run')
+        expect(new BlockchainServer().api.name).to.equal('run')
       })
 
       it('should throw for bad api', () => {
@@ -52,6 +51,7 @@ describe('BlockchainServer', () => {
       })
     })
 
+    /*
     describe('lastBlockchain', () => {
       it('should support passing different last blockchain', () => {
         const lastBlockchain = { cache: {} }
