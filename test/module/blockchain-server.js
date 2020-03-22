@@ -68,7 +68,6 @@ describe('BlockchainServer', () => {
       })
     })
 
-    /*
     describe('timeout', () => {
       it('should support custom timeouts', () => {
         expect(new BlockchainServer({ timeout: 3333 }).axios.defaults.timeout).to.equal(3333)
@@ -85,7 +84,6 @@ describe('BlockchainServer', () => {
         expect(() => new BlockchainServer({ timeout: NaN })).to.throw('Invalid timeout: NaN')
       })
     })
-    */
   })
 
   describe('utxos', () => {
