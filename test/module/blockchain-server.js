@@ -6,7 +6,10 @@
 
 const { PrivateKey, Script } = require('bsv')
 const { describe, it } = require('mocha')
-const { expect } = require('chai')
+const chai = require('chai')
+const chaiAsPromised = require('chai-as-promised')
+const { expect } = chai
+chai.use(chaiAsPromised)
 const { Run } = require('../config')
 const { BlockchainServer } = Run.module
 
@@ -89,7 +92,7 @@ describe('BlockchainServer', () => {
 
   describe('utxos', () => {
     it('should correct for server returning duplicates', async () => {
-      const address = PrivateKey('mainnet').toAddress().toString()
+      const address = new PrivateKey('mainnet').toAddress().toString()
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
       const api = {}
       api.utxosUrl = (network, address) => 'https://api.run.network/v1/main/status'
@@ -105,23 +108,20 @@ describe('BlockchainServer', () => {
       expect(logger.lastWarning).to.equal(`Duplicate utxo returned from server: ${txid}_o0`)
     }).timeout(30000)
 
-    /*
     it('should throw if API is down', async () => {
-      const api = unobfuscate({ })
+      const api = {}
       api.utxosUrl = (network, address) => 'bad-url'
       const blockchain = new BlockchainServer({ network: 'main', api })
-      const address = bsv.PrivateKey('mainnet').toAddress().toString()
+      const address = new PrivateKey('mainnet').toAddress().toString()
       const requests = [blockchain.utxos(address), blockchain.utxos(address)]
       await expect(Promise.all(requests)).to.be.rejected
     })
 
     it('should return large number of UTXOS', async () => {
-      const run = createRun({ network: 'main' })
-      const utxos = await run.blockchain.utxos('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1')
+      const blockchain = new BlockchainServer()
+      const utxos = await blockchain.utxos('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1')
       expect(utxos.length > 1220).to.equal(true)
     })
-  })
-  */
   })
 })
 
