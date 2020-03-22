@@ -5,13 +5,12 @@
  */
 
 const bsv = require('bsv')
-const { describe, it, beforeEach } = require('mocha')
+const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
-const { Mockchain, BlockchainServer } = Run.module
 
 // ------------------------------------------------------------------------------------------------
-// Test Config
+// Globals
 // ------------------------------------------------------------------------------------------------
 
 const run = new Run()
@@ -27,16 +26,14 @@ const errors = {
   mempoolConflict: 'txn-mempool-conflict'
 }
 
-const preexisting = getPreexistingTransaction(blockchain, purse)
-const indexingLatency = blockchain instanceof Mockchain ? 0 : 1000
-const supportsSpentTxIdInMempool = true
+const indexingLatency = blockchain.network === 'mock' ? 0 : 1000
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain Tests
 // ------------------------------------------------------------------------------------------------
 
-describe('Blockchain', () => {
-  beforeEach(() => blockchain instanceof Mockchain && blockchain.block())
+describe('Blockchain', async () => {
+  const confirmed = await getConfirmedTransaction(blockchain, purse)
 
   describe('broadcast', () => {
     it('should support sending to self', async () => {
@@ -51,12 +48,12 @@ describe('Blockchain', () => {
     })
 
     it('should throw if already spent in block', async () => {
-      const prevTx = await blockchain.fetch(preexisting.txid)
-      const script = prevTx.outputs[preexisting.outputIndex].script
-      const satoshis = prevTx.outputs[preexisting.outputIndex].satoshis
-      const utxo = { txid: preexisting.txid, vout: preexisting.outputIndex, script, satoshis }
+      const prevTx = await blockchain.fetch(confirmed.txid)
+      const script = prevTx.outputs[confirmed.outputIndex].script
+      const satoshis = prevTx.outputs[confirmed.outputIndex].satoshis
+      const utxo = { txid: confirmed.txid, vout: confirmed.outputIndex, script, satoshis }
       const tx = new bsv.Transaction().from(utxo).addSafeData('123')
-        .change(run.purse.address).sign(preexisting.outputPrivkey)
+        .change(run.purse.address).sign(confirmed.outputPrivkey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.missingInputs)
     })
 
@@ -100,21 +97,21 @@ describe('Blockchain', () => {
 
   describe('fetch', () => {
     it('should get pre-existing transaction', async () => {
-      const tx = await blockchain.fetch(preexisting.txid)
-      expect(tx.hash).to.equal(preexisting.txid)
+      const tx = await blockchain.fetch(confirmed.txid)
+      expect(tx.hash).to.equal(confirmed.txid)
     })
 
     it('should set time', async () => {
-      const tx = await blockchain.fetch(preexisting.txid)
+      const tx = await blockchain.fetch(confirmed.txid)
       expect(tx.time).not.to.equal(undefined)
       expect(tx.time > new Date('January 3, 2009')).to.equal(true)
       expect(tx.time <= Date.now()).to.equal(true)
-      expect(tx.time).to.equal(preexisting.time)
+      expect(tx.time).to.equal(confirmed.time)
     })
 
     it('should cache repeated calls', async () => {
       const requests = []
-      for (let i = 0; i < 100; i++) requests.push(blockchain.fetch(preexisting.txid))
+      for (let i = 0; i < 100; i++) requests.push(blockchain.fetch(confirmed.txid))
       await Promise.all(requests)
     })
 
@@ -127,27 +124,16 @@ describe('Blockchain', () => {
     it('should set spent information for unspent tx in mempool', async () => {
       const tx = await purse.pay(new bsv.Transaction())
       await blockchain.broadcast(tx)
-      function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
       const tx2 = await blockchain.fetch(tx.hash)
-      // check the cached copy
       expect(tx2.outputs[0].spentTxId).to.equal(null)
       expect(tx2.outputs[0].spentIndex).to.equal(null)
       expect(tx2.outputs[0].spentHeight).to.equal(null)
-      // check the uncached copy
+      function sleep (ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
       await sleep(indexingLatency)
-      if (blockchain instanceof BlockchainServer) {
-        blockchain.cache.transactions.clear()
-      }
-      const tx3 = await blockchain.fetch(tx.hash)
-      if (supportsSpentTxIdInMempool) {
-        expect(tx3.outputs[0].spentTxId).to.equal(null)
-        expect(tx3.outputs[0].spentIndex).to.equal(null)
-        expect(tx3.outputs[0].spentHeight).to.equal(null)
-      } else {
-        expect(tx3.outputs[0].spentTxId).to.equal(undefined)
-        expect(tx3.outputs[0].spentIndex).to.equal(undefined)
-        expect(tx3.outputs[0].spentHeight).to.equal(undefined)
-      }
+      const tx3 = await blockchain.fetch(tx.hash, true)
+      expect(tx3.outputs[0].spentTxId).to.be.oneOf([undefined, null])
+      expect(tx3.outputs[0].spentIndex).to.be.oneOf([undefined, null])
+      expect(tx3.outputs[0].spentHeight).to.be.oneOf([undefined, null])
       expect(tx3.confirmations).to.equal(0)
     })
 
@@ -253,20 +239,24 @@ describe('Blockchain', () => {
 // Pre-existing transaction
 // ------------------------------------------------------------------------------------------------
 
-function getPreexistingTransaction (blockchain, purse) {
+async function getConfirmedTransaction (blockchain, purse) {
   switch (blockchain.network) {
     case 'mock': {
-      // First mockchain tx is funded by run with the purse
-      const tx = blockchain.transactions.values().next().value
+      const newtx = await purse.pay(new bsv.Transaction())
+      await blockchain.broadcast(newtx)
+      blockchain.block()
+      const prevtxid = newtx.inputs[0].prevTxId.toString('hex')
+      const prevvout = newtx.inputs[0].outputIndex
+      const prevtx = await blockchain.fetch(prevtxid)
       return {
-        txid: tx.hash,
-        time: tx.time,
-        outputIndex: 1,
+        txid: prevtxid,
+        time: prevtx.time,
+        outputIndex: prevvout,
         outputPrivkey: purse.privkey
       }
     }
 
-    default: throw new Error(`No preexisting transaction for network: ${blockchain.network}`)
+    default: throw new Error(`No confirmed transaction for network: ${blockchain.network}`)
   }
 }
 
