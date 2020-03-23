@@ -62,11 +62,14 @@ describe('BlockchainApi', () => {
       })
 
       it('should only copy cache if same network', async () => {
-        const testnet1 = new BlockchainApi({ network: 'test' })
+        const tx = new Transaction().addData('123').lock()
+        class MockApi { async fetch (txid) { return tx } }
+        const api = new MockApi()
+        const testnet1 = new BlockchainApi({ api, network: 'test' })
         // Fill the cache with one transaction
-        await testnet1.fetch('d89f6bfb9f4373212ed18b9da5f45426d50a4676a4a684c002a4e838618cf3ee')
-        const testnet2 = new BlockchainApi({ network: 'test', lastBlockchain: testnet1 })
-        const mainnet = new BlockchainApi({ network: 'main', lastBlockchain: testnet2 })
+        await testnet1.fetch(tx.hash)
+        const testnet2 = new BlockchainApi({ network: 'test', api, lastBlockchain: testnet1 })
+        const mainnet = new BlockchainApi({ network: 'main', api, lastBlockchain: testnet2 })
         expect(testnet2.cache).to.deep.equal(testnet1.cache)
         expect(mainnet.cache).not.to.equal(testnet2.cache)
       })
