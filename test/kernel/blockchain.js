@@ -12,35 +12,19 @@ const { Transaction, Script, PrivateKey } = bsv
 const { BlockchainApi } = Run.module
 
 // ------------------------------------------------------------------------------------------------
-// Globals
-// ------------------------------------------------------------------------------------------------
-
-const run = new Run()
-const { blockchain, purse } = run
-
-const errors = {
-  noInputs: 'tx has no inputs',
-  noOutputs: 'tx has no outputs',
-  feeTooLow: 'tx fee too low',
-  notFullySigned: 'tx not fully signed',
-  duplicateInput: /transaction input [0-9]* duplicate input/,
-  missingInputs: 'Missing inputs',
-  mempoolConflict: 'txn-mempool-conflict'
-}
-
-const indexingLatency = blockchain.network === 'mock' ? 0 : 1000
-
-let confirmed = null
-before(async () => { confirmed = await getConfirmedTransaction(blockchain, purse) })
-
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-const clearCache = () => blockchain instanceof BlockchainApi && blockchain.cache.clear()
-
-// ------------------------------------------------------------------------------------------------
 // Blockchain Tests
 // ------------------------------------------------------------------------------------------------
 
 describe('Blockchain', () => {
+  const run = new Run()
+  const { blockchain, purse } = run
+
+  let TEST_DATA = null
+  before(async () => { TEST_DATA = await getTestData(blockchain, purse) })
+
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+  const clearCache = () => blockchain instanceof BlockchainApi && blockchain.cache.clear()
+
   describe('broadcast', () => {
     it('should support sending to self', async () => {
       const tx = await purse.pay(new Transaction())
@@ -50,17 +34,19 @@ describe('Blockchain', () => {
     it('should throw if input does not exist', async () => {
       const tx = await purse.pay(new Transaction())
       tx.inputs[0].outputIndex = 999
-      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.missingInputs)
+      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.missingInputs)
     })
 
     it('should throw if already spent in block', async () => {
-      const prevTx = await blockchain.fetch(confirmed.txid)
-      const script = prevTx.outputs[confirmed.outputIndex].script
-      const satoshis = prevTx.outputs[confirmed.outputIndex].satoshis
-      const utxo = { txid: confirmed.txid, vout: confirmed.outputIndex, script, satoshis }
+      const prevTx = await blockchain.fetch(TEST_DATA.confirmed.txid)
+      const txid = TEST_DATA.confirmed.txid
+      const vout = TEST_DATA.confirmed.outputIndex
+      const script = prevTx.outputs[TEST_DATA.confirmed.outputIndex].script
+      const satoshis = prevTx.outputs[TEST_DATA.confirmed.outputIndex].satoshis
+      const utxo = { txid, vout, script, satoshis }
       const tx = new Transaction().from(utxo).addSafeData('123')
-        .change(run.purse.address).sign(confirmed.outputPrivkey)
-      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.missingInputs)
+        .change(run.purse.address).sign(TEST_DATA.confirmed.outputPrivkey)
+      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.missingInputs)
     })
 
     it('should throw if mempool conflict', async () => {
@@ -68,12 +54,12 @@ describe('Blockchain', () => {
       const tx1 = new Transaction().from(utxo).change(purse.address).sign(purse.bsvPrivateKey)
       const tx2 = new Transaction().from(utxo).addSafeData('123').sign(purse.bsvPrivateKey)
       await blockchain.broadcast(tx1)
-      await expect(blockchain.broadcast(tx2)).to.be.rejectedWith(errors.mempoolConflict)
+      await expect(blockchain.broadcast(tx2)).to.be.rejectedWith(TEST_DATA.mempoolConflict)
     })
 
     it('should throw if no inputs', async () => {
       const tx = new Transaction().to(purse.address, 100)
-      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.noInputs)
+      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.noInputs)
     })
 
     it('should throw if no outputs', async () => {
@@ -85,39 +71,39 @@ describe('Blockchain', () => {
     it('should throw if fee too low', async () => {
       const utxo = (await blockchain.utxos(purse.address))[0]
       const tx = new Transaction().from(utxo).change(purse.address).fee(0).sign(purse.bsvPrivateKey)
-      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.feeTooLow)
+      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.feeTooLow)
     })
 
     it('should throw if not signed', async () => {
       const utxo = (await blockchain.utxos(purse.address))[0]
       const tx = new Transaction().from(utxo).change(purse.address)
-      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.notFullySigned)
+      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.notFullySigned)
     })
 
     it('should throw if duplicate input', async () => {
       const utxo = (await blockchain.utxos(purse.address))[0]
       const tx = new Transaction().from(utxo).from(utxo).change(purse.address).sign(purse.bsvPrivateKey)
-      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.duplicateInput)
+      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.duplicateInput)
     })
   })
 
   describe('fetch', () => {
     it('should get pre-existing transaction', async () => {
-      const tx = await blockchain.fetch(confirmed.txid)
-      expect(tx.hash).to.equal(confirmed.txid)
+      const tx = await blockchain.fetch(TEST_DATA.confirmed.txid)
+      expect(tx.hash).to.equal(TEST_DATA.confirmed.txid)
     })
 
     it('should set time', async () => {
-      const tx = await blockchain.fetch(confirmed.txid)
+      const tx = await blockchain.fetch(TEST_DATA.confirmed.txid)
       expect(tx.time).not.to.equal(undefined)
       expect(tx.time > new Date('January 3, 2009')).to.equal(true)
       expect(tx.time <= Date.now()).to.equal(true)
-      expect(tx.time).to.equal(confirmed.time)
+      expect(tx.time).to.equal(TEST_DATA.confirmed.time)
     })
 
     it('should cache repeated calls', async () => {
       const requests = []
-      for (let i = 0; i < 100; i++) requests.push(blockchain.fetch(confirmed.txid))
+      for (let i = 0; i < 100; i++) requests.push(blockchain.fetch(TEST_DATA.confirmed.txid))
       await Promise.all(requests)
     })
 
@@ -134,7 +120,7 @@ describe('Blockchain', () => {
       expect(tx2.outputs[0].spentTxId).to.equal(null)
       expect(tx2.outputs[0].spentIndex).to.equal(null)
       expect(tx2.outputs[0].spentHeight).to.equal(null)
-      await sleep(indexingLatency)
+      await sleep(TEST_DATA.indexingLatency)
       clearCache()
       const tx3 = await blockchain.fetch(tx.hash, true)
       expect(tx3.outputs[0].spentTxId).to.be.oneOf([undefined, null])
@@ -146,7 +132,7 @@ describe('Blockchain', () => {
     it('should set spent information for spent unconfirmed tx', async () => {
       const tx = await purse.pay(new Transaction())
       await blockchain.broadcast(tx)
-      await sleep(indexingLatency)
+      await sleep(TEST_DATA.indexingLatency)
       clearCache()
       const firstInput = tx.inputs[0]
       const prev = await blockchain.fetch(firstInput.prevTxId.toString('hex'), true)
@@ -156,16 +142,16 @@ describe('Blockchain', () => {
     })
 
     it('should set spent information for spent confirmed tx', async () => {
-      const tx = await blockchain.fetch(confirmed.txid)
-      confirmed.vout.forEach((output, n) => {
+      const tx = await blockchain.fetch(TEST_DATA.confirmed.txid)
+      TEST_DATA.confirmed.vout.forEach((output, n) => {
         expect(tx.outputs[n].spentTxId).to.be.oneOf([undefined, output.spentTxId])
         expect(tx.outputs[n].spentIndex).to.be.oneOf([undefined, output.spentIndex])
         expect(tx.outputs[n].spentHeight).to.be.oneOf([undefined, output.spentHeight])
       })
-      if (confirmed.blockhash) {
-        expect(tx.blockhash).to.equal(confirmed.blockhash)
-        expect(tx.blocktime).to.equal(confirmed.blocktime)
-        expect(tx.confirmations > confirmed.minConfirmations).to.equal(true)
+      if (TEST_DATA.confirmed.blockhash) {
+        expect(tx.blockhash).to.equal(TEST_DATA.confirmed.blockhash)
+        expect(tx.blocktime).to.equal(TEST_DATA.confirmed.blocktime)
+        expect(tx.confirmations > TEST_DATA.confirmed.minConfirmations).to.equal(true)
       }
     })
 
@@ -219,40 +205,71 @@ describe('Blockchain', () => {
       const requests = ['z', '%', [], 123, null, undefined].map(x => blockchain.utxos(x))
       await expect(Promise.all(requests)).to.be.rejected
     })
+
+    it.only('should return large number of UTXOS', async () => {
+      const utxos = await blockchain.utxos('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1')
+      expect(utxos.length > 1220).to.equal(true)
+    })
   })
 })
 
 // ------------------------------------------------------------------------------------------------
-// Pre-existing transaction
+// Per-network test data
 // ------------------------------------------------------------------------------------------------
 
-async function getConfirmedTransaction (blockchain, purse) {
+async function getTestData (blockchain, purse) {
   switch (blockchain.network) {
-    case 'mock': {
-      const utxo1 = (await blockchain.utxos(purse.bsvAddress))[0]
-      const tx1 = new Transaction().from(utxo1).addSafeData('123').change(purse.address).sign(purse.bsvPrivateKey)
-      await blockchain.broadcast(tx1)
-
-      const utxo2 = { txid: tx1.hash, vout: 1, script: tx1.outputs[1].script, satoshis: tx1.outputs[1].satoshis }
-      const tx2 = new Transaction().from(utxo2).change(purse.address).sign(purse.bsvPrivateKey)
-      await blockchain.broadcast(tx2)
-
-      blockchain.block()
-
-      return {
-        txid: tx1.hash,
-        time: tx1.time,
-        outputIndex: 1,
-        outputPrivkey: purse.privkey,
-        vout: [
-          { spentTxId: null, spentIndex: null, spentHeight: null },
-          { spentTxId: tx2.hash, spentIndex: 0, spentHeight: tx2.blockheight }
-        ]
-      }
-    }
-
-    default: throw new Error(`No confirmed transaction for network: ${blockchain.network}`)
+    case 'mock': return getMockNetworkTestData(blockchain, purse)
+    case 'test': return getTestNetworkTestData(blockchain, purse)
+    case 'main': return getMainNetworkTestData(blockchain, purse)
+    default: throw new Error(`No test data for network: ${blockchain.network}`)
   }
+}
+
+async function getMockNetworkTestData (blockchain, purse) {
+  const utxo1 = (await blockchain.utxos(purse.bsvAddress))[0]
+  const tx1 = new Transaction().from(utxo1).addSafeData('123').change(purse.address).sign(purse.bsvPrivateKey)
+  await blockchain.broadcast(tx1)
+
+  const utxo2 = { txid: tx1.hash, vout: 1, script: tx1.outputs[1].script, satoshis: tx1.outputs[1].satoshis }
+  const tx2 = new Transaction().from(utxo2).change(purse.address).sign(purse.bsvPrivateKey)
+  await blockchain.broadcast(tx2)
+
+  blockchain.block()
+
+  const confirmed = {
+    txid: tx1.hash,
+    time: tx1.time,
+    outputIndex: 1,
+    outputPrivkey: purse.privkey,
+    vout: [
+      { spentTxId: null, spentIndex: null, spentHeight: null },
+      { spentTxId: tx2.hash, spentIndex: 0, spentHeight: tx2.blockheight }
+    ]
+  }
+
+  const indexingLatency = 0
+
+  return { confirmed, indexingLatency, errors }
+}
+
+async function getTestNetworkTestData (blockchain, purse) {
+  // Todo
+}
+
+async function getMainNetworkTestData (blockchain, purse) {
+  // Todo
+}
+
+// Expected error strings
+const errors = {
+  noInputs: 'tx has no inputs',
+  noOutputs: 'tx has no outputs',
+  feeTooLow: 'tx fee too low',
+  notFullySigned: 'tx not fully signed',
+  duplicateInput: /transaction input [0-9]* duplicate input/,
+  missingInputs: 'Missing inputs',
+  mempoolConflict: 'txn-mempool-conflict'
 }
 
 /*

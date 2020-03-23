@@ -107,7 +107,7 @@ describe('BlockchainApi', () => {
       const utxos = await blockchain.utxos(address)
       expect(utxos.length).to.equal(1)
       expect(logger.lastWarning).to.equal(`Duplicate utxo returned from server: ${txid}_o0`)
-    }).timeout(30000)
+    })
 
     it('should throw if API is down', async () => {
       const api = {}
@@ -116,12 +116,6 @@ describe('BlockchainApi', () => {
       const address = new PrivateKey('mainnet').toAddress().toString()
       const requests = [blockchain.utxos(address), blockchain.utxos(address)]
       await expect(Promise.all(requests)).to.be.rejected
-    })
-
-    it('should return large number of UTXOS', async () => {
-      const blockchain = new BlockchainApi()
-      const utxos = await blockchain.utxos('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1')
-      expect(utxos.length > 1220).to.equal(true)
     })
   })
 })
