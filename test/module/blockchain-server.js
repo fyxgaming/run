@@ -45,7 +45,7 @@ describe('BlockchainServer', () => {
 
     describe('api', () => {
       it('should default to run api', () => {
-        expect(new BlockchainServer().api.name).to.equal('run')
+        expect(new BlockchainServer().api.constructor.name).to.equal('run')
       })
 
       it('should throw for bad api', () => {
@@ -74,11 +74,11 @@ describe('BlockchainServer', () => {
 
     describe('timeout', () => {
       it('should support custom timeouts', () => {
-        expect(new BlockchainServer({ timeout: 3333 }).axios.defaults.timeout).to.equal(3333)
+        expect(new BlockchainServer({ timeout: 3333 }).api.axios.defaults.timeout).to.equal(3333)
       })
 
       it('should default timeout to 10000', () => {
-        expect(new BlockchainServer().axios.defaults.timeout).to.equal(10000)
+        expect(new BlockchainServer().api.axios.defaults.timeout).to.equal(10000)
       })
 
       it('should throw for bad timeout', () => {
@@ -94,12 +94,13 @@ describe('BlockchainServer', () => {
     it('should correct for server returning duplicates', async () => {
       const address = new PrivateKey('mainnet').toAddress().toString()
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
-      const api = {}
-      api.utxosUrl = (network, address) => 'https://api.run.network/v1/main/status'
-      api.utxosResp = (data, address) => {
-        const utxo = { txid, vout: 0, satoshis: 0, script: new Script() }
-        return [utxo, utxo]
+      class MockApi {
+        utxos (script) {
+          const utxo = { txid, vout: 0, satoshis: 0, script: new Script() }
+          return [utxo, utxo]
+        }
       }
+      const api = new MockApi()
       function warn (warning) { this.lastWarning = warning }
       const logger = { warn, info: () => {} }
       const blockchain = new BlockchainServer({ network: 'main', api, logger })
