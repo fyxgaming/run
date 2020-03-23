@@ -127,19 +127,15 @@ describe('Purse', () => {
   })
 
   describe('splits', () => {
-    /*
     it('should throw if set invalid value', () => {
-      expect(() => { run.purse.splits = -1 }).to.throw('Option splits must be at least 1: -1')
+      expect(() => { run.purse.splits = -1 }).to.throw('splits must be at least 1: -1')
     })
-    */
   })
 
   describe('feePerKb', () => {
-    /*
     it('should throw if set invalid value', () => {
-      expect(() => { run.purse.feePerKb = -1 }).to.throw('Option feePerKb must be non-negative: -1')
+      expect(() => { run.purse.feePerKb = -1 }).to.throw('feePerKb must be non-negative: -1')
     })
-    */
   })
 
   describe('pay', () => {
