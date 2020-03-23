@@ -9,7 +9,7 @@ const { describe, it, before } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
 const { Transaction, Script, PrivateKey } = bsv
-const { BlockchainServer } = Run.module
+const { BlockchainApi } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -34,7 +34,7 @@ let confirmed = null
 before(async () => { confirmed = await getConfirmedTransaction(blockchain, purse) })
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-const clearCache = () => blockchain instanceof BlockchainServer && blockchain.cache.clear()
+const clearCache = () => blockchain instanceof BlockchainApi && blockchain.cache.clear()
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain Tests
