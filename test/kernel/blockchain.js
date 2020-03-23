@@ -33,7 +33,7 @@ describe('Blockchain', () => {
 
     it('should throw if input does not exist', async () => {
       const tx = await purse.pay(new Transaction())
-      tx.inputs[0].outputIndex = 999
+      tx.inputs[0].outputIndex = 9999
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.missingInputs)
     })
 
@@ -206,8 +206,8 @@ describe('Blockchain', () => {
       await expect(Promise.all(requests)).to.be.rejected
     })
 
-    it.only('should return large number of UTXOS', async () => {
-      const utxos = await blockchain.utxos('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1')
+    it('should return large number of UTXOS', async () => {
+      const utxos = await blockchain.utxos(TEST_DATA.lockingScriptWithManyUtxos)
       expect(utxos.length > 1220).to.equal(true)
     })
   })
@@ -250,7 +250,15 @@ async function getMockNetworkTestData (blockchain, purse) {
 
   const indexingLatency = 0
 
-  return { confirmed, indexingLatency, errors }
+  const largeTx = new Transaction()
+  const largeAddress = new PrivateKey('testnet').toAddress()
+  for (let i = 0; i < 1500; i++) largeTx.to(largeAddress, Transaction.DUST_AMOUNT)
+  const paid = await purse.pay(largeTx)
+  // await blockchain.broadcast(await purse.pay(largeTx))
+  await blockchain.broadcast(paid)
+  const lockingScriptWithManyUtxos = Script.fromAddress(largeAddress)
+
+  return { confirmed, indexingLatency, errors, lockingScriptWithManyUtxos }
 }
 
 async function getTestNetworkTestData (blockchain, purse) {
@@ -259,6 +267,7 @@ async function getTestNetworkTestData (blockchain, purse) {
 
 async function getMainNetworkTestData (blockchain, purse) {
   // Todo
+  // const utxos = await blockchain.utxos('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1')
 }
 
 // Expected error strings
