@@ -11,6 +11,7 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../config')
+const { LocalPurse } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Purse tests
@@ -44,25 +45,23 @@ describe('Purse', () => {
     })
 
     describe('logger', () => {
-      /*
       it('should support passing in valid logger', () => {
-        expect(new Purse({ blockchain: run.blockchain, logger: console }).logger).to.equal(console)
+        expect(new LocalPurse({ blockchain: run.blockchain, logger: console }).logger).to.equal(console)
       })
 
       it('should support passing in null logger', () => {
-        expect(new Purse({ blockchain: run.blockchain, logger: null }).logger).to.equal(null)
+        expect(new LocalPurse({ blockchain: run.blockchain, logger: null }).logger).to.equal(null)
       })
 
       it('should support not passing in a logger', () => {
-        expect(new Purse({ blockchain: run.blockchain }).logger).to.equal(null)
+        expect(new LocalPurse({ blockchain: run.blockchain }).logger).to.equal(null)
       })
 
       it('should throw if pass in an invalid logger', () => {
-        expect(() => new Purse({ blockchain: run.blockchain, logger: 123 })).to.throw('Invalid logger option: 123')
-        expect(() => new Purse({ blockchain: run.blockchain, logger: () => {} })).to.throw('Invalid logger option: ')
-        expect(() => new Purse({ blockchain: run.blockchain, logger: false })).to.throw('Invalid logger option: false')
+        expect(() => new LocalPurse({ blockchain: run.blockchain, logger: 123 })).to.throw('Invalid logger: 123')
+        expect(() => new LocalPurse({ blockchain: run.blockchain, logger: () => {} })).to.throw('Invalid logger: ')
+        expect(() => new LocalPurse({ blockchain: run.blockchain, logger: false })).to.throw('Invalid logger: false')
       })
-      */
     })
 
     describe('splits', () => {
