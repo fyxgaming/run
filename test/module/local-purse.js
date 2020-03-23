@@ -65,27 +65,25 @@ describe('Purse', () => {
     })
 
     describe('splits', () => {
-      /*
       it('should support passing in valid splits', () => {
-        expect(new Purse({ blockchain: run.blockchain, splits: 1 }).splits).to.equal(1)
-        expect(new Purse({ blockchain: run.blockchain, splits: 5 }).splits).to.equal(5)
-        expect(new Purse({ blockchain: run.blockchain, splits: Number.MAX_SAFE_INTEGER }).splits).to.equal(Number.MAX_SAFE_INTEGER)
+        expect(new LocalPurse({ blockchain: run.blockchain, splits: 1 }).splits).to.equal(1)
+        expect(new LocalPurse({ blockchain: run.blockchain, splits: 5 }).splits).to.equal(5)
+        expect(new LocalPurse({ blockchain: run.blockchain, splits: Number.MAX_SAFE_INTEGER }).splits).to.equal(Number.MAX_SAFE_INTEGER)
       })
 
       it('should default to 10 if not specified', () => {
-        expect(new Purse({ blockchain: run.blockchain }).splits).to.equal(10)
+        expect(new LocalPurse({ blockchain: run.blockchain }).splits).to.equal(10)
       })
 
       it('should throw if pass in invalid splits', () => {
-        expect(() => new Purse({ blockchain: run.blockchain, splits: 0 })).to.throw('Option splits must be at least 1: 0')
-        expect(() => new Purse({ blockchain: run.blockchain, splits: -1 })).to.throw('Option splits must be at least 1: -1')
-        expect(() => new Purse({ blockchain: run.blockchain, splits: 1.5 })).to.throw('Option splits must be an integer: 1.5')
-        expect(() => new Purse({ blockchain: run.blockchain, splits: NaN })).to.throw('Option splits must be an integer: NaN')
-        expect(() => new Purse({ blockchain: run.blockchain, splits: Number.POSITIVE_INFINITY })).to.throw('Option splits must be an integer: Infinity')
-        expect(() => new Purse({ blockchain: run.blockchain, splits: false })).to.throw('Invalid splits option: false')
-        expect(() => new Purse({ blockchain: run.blockchain, splits: null })).to.throw('Invalid splits option: null')
+        expect(() => new LocalPurse({ blockchain: run.blockchain, splits: 0 })).to.throw('splits must be at least 1: 0')
+        expect(() => new LocalPurse({ blockchain: run.blockchain, splits: -1 })).to.throw('splits must be at least 1: -1')
+        expect(() => new LocalPurse({ blockchain: run.blockchain, splits: 1.5 })).to.throw('splits must be an integer: 1.5')
+        expect(() => new LocalPurse({ blockchain: run.blockchain, splits: NaN })).to.throw('splits must be an integer: NaN')
+        expect(() => new LocalPurse({ blockchain: run.blockchain, splits: Number.POSITIVE_INFINITY })).to.throw('splits must be an integer: Infinity')
+        expect(() => new LocalPurse({ blockchain: run.blockchain, splits: false })).to.throw('Invalid splits: false')
+        expect(() => new LocalPurse({ blockchain: run.blockchain, splits: null })).to.throw('Invalid splits: null')
       })
-      */
     })
 
     describe('feePerKb', () => {
