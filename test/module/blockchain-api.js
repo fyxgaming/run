@@ -45,7 +45,7 @@ describe('BlockchainApi', () => {
 
     describe('api', () => {
       it('should default to run api', () => {
-        expect(new BlockchainApi().api.constructor.name).to.equal('run')
+        expect(new BlockchainApi().api.constructor.shortName).to.equal('run')
       })
 
       it('should throw for bad api', () => {
