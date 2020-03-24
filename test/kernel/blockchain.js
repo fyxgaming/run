@@ -6,7 +6,10 @@
 
 const bsv = require('bsv')
 const { describe, it, before } = require('mocha')
-const { expect } = require('chai')
+const chai = require('chai')
+const chaiAsPromised = require('chai-as-promised')
+chai.use(chaiAsPromised)
+const { expect } = chai
 const { Run } = require('../config')
 const { Transaction, Script, PrivateKey } = bsv
 const { BlockchainApi } = Run.module
@@ -285,8 +288,24 @@ async function getTestNetworkTestData (blockchain, purse) {
 }
 
 async function getMainNetworkTestData (blockchain, purse) {
-  // Todo
-  // const utxos = await blockchain.utxos('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1')
+  const confirmed = {
+    txid: '8b580cd23c2d2cb0236b888a977a19153eaa9f5ff50b40876699738e747e87ef',
+    time: 1583296480000,
+    outputIndex: 0,
+    blockhash: '0000000000000000013cd2f234ed8048b58f04e1c3e739be5c1b44518f3f52ce',
+    blocktime: 1583296480,
+    minConfirmations: 3,
+    vout: [{
+      spentTxId: 'd1506c004f263e351cf0884407bf7665979c45b63266311eb414e6c2682536f5',
+      spentIndex: 0,
+      spentHeight: 624716
+    }]
+  }
+
+  const indexingLatency = 1000
+  const lockingScriptWithManyUtxos = '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
+
+  return { confirmed, indexingLatency, errors, lockingScriptWithManyUtxos }
 }
 
 // Expected error strings
@@ -299,26 +318,5 @@ const errors = {
   missingInputs: 'Missing inputs',
   mempoolConflict: 'txn-mempool-conflict'
 }
-
-/*
-const sampleTransactions = {
-  main: {
-    txid: '8b580cd23c2d2cb0236b888a977a19153eaa9f5ff50b40876699738e747e87ef',
-    blockhash: '0000000000000000013cd2f234ed8048b58f04e1c3e739be5c1b44518f3f52ce',
-    blocktime: 1583296480,
-    time: 1583296480000,
-    minConfirmations: 3,
-    vout: [{
-      spentTxId: 'd1506c004f263e351cf0884407bf7665979c45b63266311eb414e6c2682536f5',
-      spentIndex: 0,
-      spentHeight: 624716
-    }],
-    outputIndex: 0,
-  },
-  stn: {
-    txid: 'a40ee613c5982d6b39d2425368eb2375f49b38a45b457bd72db4ec666d96d4c6'
-  }
-}
-*/
 
 // ------------------------------------------------------------------------------------------------
