@@ -38,6 +38,8 @@ jobs:
 
     - name: Collect Coverage (Mocknet)
       run: npm run test:cover
+      env:
+        PERF: 1
 
     - name: Collect Coverage (Testnet)
       run:

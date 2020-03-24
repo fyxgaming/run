@@ -82,8 +82,17 @@ jobs:
     - name: Lint
       run: npx standard
 
-    - name: Collect Coverage
+    - name: Collect Coverage (Mocknet)
       run: npm run test:cover
+      env:
+        PERF: 1
+
+    - name: Collect Coverage (Testnet)
+      run:
+        npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+      env:
+        NETWORK: test
+        PURSE: ${{ secrets.PURSE_TESTNET }}
 
     - name: Publish Coverage
       uses: codecov/codecov-action@v1
