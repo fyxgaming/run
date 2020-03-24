@@ -44,9 +44,12 @@ describe('Blockchain', () => {
       const script = prevTx.outputs[TEST_DATA.confirmed.outputIndex].script
       const satoshis = prevTx.outputs[TEST_DATA.confirmed.outputIndex].satoshis
       const utxo = { txid, vout, script, satoshis }
-      const tx = new Transaction().from(utxo).addSafeData('123')
-        .change(run.purse.address).sign(TEST_DATA.confirmed.outputPrivkey)
-      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.missingInputs)
+        const tx = new Transaction().from(utxo).addSafeData('123').change(run.purse.address)
+      const oldIsFullySigned = Transaction.prototype.isFullySigned
+      try {
+        Transaction.prototype.isFullySigned = () => true
+        await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.missingInputs)
+      } finally { Transaction.prototype.isFullySigned = oldIsFullySigned }
     })
 
     it('should throw if mempool conflict', async () => {
@@ -241,7 +244,6 @@ async function getMockNetworkTestData (blockchain, purse) {
     txid: tx1.hash,
     time: tx1.time,
     outputIndex: 1,
-    outputPrivkey: purse.privkey,
     vout: [
       { spentTxId: null, spentIndex: null, spentHeight: null },
       { spentTxId: tx2.hash, spentIndex: 0, spentHeight: tx2.blockheight }
@@ -253,16 +255,31 @@ async function getMockNetworkTestData (blockchain, purse) {
   const largeTx = new Transaction()
   const largeAddress = new PrivateKey('testnet').toAddress()
   for (let i = 0; i < 1500; i++) largeTx.to(largeAddress, Transaction.DUST_AMOUNT)
-  const paid = await purse.pay(largeTx)
-  // await blockchain.broadcast(await purse.pay(largeTx))
-  await blockchain.broadcast(paid)
+  await blockchain.broadcast(await purse.pay(largeTx))
   const lockingScriptWithManyUtxos = Script.fromAddress(largeAddress)
 
   return { confirmed, indexingLatency, errors, lockingScriptWithManyUtxos }
 }
 
 async function getTestNetworkTestData (blockchain, purse) {
-  // Todo
+  const confirmed = {
+    txid: '883bcccba28ca185b4d20b90f344f32f7fd9e273f962f661a48cea0849609443',
+    time: 1583295191000,
+    outputIndex: 0,
+    blockhash: '00000000a95abd6a8d6fed34c0fb07b9ef5c51daa9832a43db98b63d52d8394c',
+    blocktime: 1583295191,
+    minConfirmations: 3,
+    vout: [{
+      spentTxId: '4350cf2aac66a2b3aef840af70f4fcfddcd85ccc3cb0e3aa62febb2cbfa91e53',
+      spentIndex: 0,
+      spentHeight: 1351192
+    }]
+  }
+
+  const indexingLatency = 1000
+  const lockingScriptWithManyUtxos = ''
+
+  return { confirmed, indexingLatency, errors, lockingScriptWithManyUtxos }
 }
 
 async function getMainNetworkTestData (blockchain, purse) {
@@ -295,21 +312,6 @@ const sampleTransactions = {
       spentHeight: 624716
     }],
     outputIndex: 0,
-    outputPrivkey: 'L3qpvEdCa4h7qxuJ1xqQwNQV2dfDR8YB57awpcbnBpoyGMAZEGLq'
-  },
-  test: {
-    txid: '883bcccba28ca185b4d20b90f344f32f7fd9e273f962f661a48cea0849609443',
-    blockhash: '00000000a95abd6a8d6fed34c0fb07b9ef5c51daa9832a43db98b63d52d8394c',
-    blocktime: 1583295191,
-    time: 1583295191000,
-    minConfirmations: 3,
-    vout: [{
-      spentTxId: '4350cf2aac66a2b3aef840af70f4fcfddcd85ccc3cb0e3aa62febb2cbfa91e53',
-      spentIndex: 0,
-      spentHeight: 1351192
-    }],
-    outputIndex: 0,
-    outputPrivkey: 'cT7uSf2Q4nFDWoqQtSBaKHnQsuWVdcvxZMiuCs3nkwYh94xctaFg'
   },
   stn: {
     txid: 'a40ee613c5982d6b39d2425368eb2375f49b38a45b457bd72db4ec666d96d4c6'
