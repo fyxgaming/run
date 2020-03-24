@@ -277,7 +277,7 @@ async function getTestNetworkTestData (blockchain, purse) {
   }
 
   const indexingLatency = 1000
-  const lockingScriptWithManyUtxos = ''
+  const lockingScriptWithManyUtxos = 'mxAtZKePTbXJC6GkbDV5SePyHANUswfhKK'
 
   return { confirmed, indexingLatency, errors, lockingScriptWithManyUtxos }
 }
