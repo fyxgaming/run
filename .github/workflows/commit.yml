@@ -36,36 +36,8 @@ jobs:
     - name: Lint
       run: npx standard
 
-    - name: Collect Coverage (Mocknet)
-      run: npm run test:cover
-      env:
-        PERF: 1
-
-    - name: Collect Coverage (Testnet)
-      run: |
-        env API=run npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
-        env API=whatsonchain npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
-      env:
-        NETWORK: test
-        PURSE: ${{ secrets.PURSE_TESTNET }}
-
-    - name: Collect Coverage (Mainnet)
-      run: |
-        env API=run npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
-        env API=mattercloud npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
-        env API=whatsonchain npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
-      env:
-        NETWORK: main
-        PURSE: ${{ secrets.PURSE_MAINNET }}
-
     - name: Test Node
       run: npm run test:node
 
     - name: Test Browser
       run: npm run test:browser
-
-    - name: Publish Coverage
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: coverage/lcov.info

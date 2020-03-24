@@ -1,0 +1,74 @@
+# Integration tests run with every pull request
+#
+#   - Lint (Linux)
+#   - Cover (Linux)
+#   - Firefox (Linux)
+#   - Chrome (Linux)
+#   - Node 10 (Linux)
+
+name: Pull Request Suite
+
+on: pull_request
+
+jobs:
+  linux_tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup Node 10
+      uses: actions/setup-node@v1
+      with:
+        node-version: '10.x'
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Cache Dependencies
+      id: cache-node-modules
+      uses: actions/cache@v1
+      with:
+        path: node_modules
+        key: v1-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      run: |
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+        npm ci
+
+    - name: Lint
+      run: npx standard
+
+    - name: Collect Coverage (Mocknet)
+      run: npm run test:cover
+      env:
+        PERF: 1
+
+    - name: Collect Coverage (Testnet)
+      run: |
+        env API=run npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+        env API=whatsonchain npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+      env:
+        NETWORK: test
+        PURSE: ${{ secrets.PURSE_TESTNET }}
+
+    - name: Collect Coverage (Mainnet)
+      run: |
+        env API=run npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+        env API=mattercloud npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+        env API=whatsonchain npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+      env:
+        NETWORK: main
+        PURSE: ${{ secrets.PURSE_MAINNET }}
+
+    - name: Publish Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: coverage/lcov.info
+
+    - name: Test Node with Performance
+      run: env PERF=1 npm run test:node
+
+    - name: Test Browser with Performance (Chrome)
+      run: env BROWSER=chrome env PERF=1 npm run test:browser
