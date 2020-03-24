@@ -243,7 +243,7 @@ describe('Purse', () => {
       new Run({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain }) // eslint-disable-line
       class A extends Jig { init () { this.satoshis = 888 } }
       await new A().sync()
-      const utxos = await run.blockchain.utxos(run.purse.address)
+      const utxos = await run.blockchain.utxos(run.purse.script)
       const nonJigUtxos = utxos.filter(utxo => utxo.satoshis > 100000)
       const balance = nonJigUtxos.reduce((sum, utxo) => sum + utxo.satoshis, 0)
       expect(await run.purse.balance()).to.equal(balance)

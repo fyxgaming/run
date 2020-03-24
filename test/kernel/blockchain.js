@@ -58,7 +58,7 @@ describe('Blockchain', () => {
     })
 
     it('should throw if mempool conflict', async () => {
-      const utxo = (await blockchain.utxos(purse.address))[0]
+      const utxo = (await blockchain.utxos(purse.script))[0]
       const tx1 = new Transaction().from(utxo).change(purse.address).sign(purse.bsvPrivateKey)
       const tx2 = new Transaction().from(utxo).addSafeData('123').sign(purse.bsvPrivateKey)
       await blockchain.broadcast(tx1)
@@ -71,25 +71,25 @@ describe('Blockchain', () => {
     })
 
     it('should throw if no outputs', async () => {
-      const utxo = (await blockchain.utxos(purse.address))[0]
+      const utxo = (await blockchain.utxos(purse.script))[0]
       const tx = new Transaction().from(utxo).sign(purse.bsvPrivateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.noOutputs)
     })
 
     it('should throw if fee too low', async () => {
-      const utxo = (await blockchain.utxos(purse.address))[0]
+      const utxo = (await blockchain.utxos(purse.script))[0]
       const tx = new Transaction().from(utxo).change(purse.address).fee(0).sign(purse.bsvPrivateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.feeTooLow)
     })
 
     it('should throw if not signed', async () => {
-      const utxo = (await blockchain.utxos(purse.address))[0]
+      const utxo = (await blockchain.utxos(purse.script))[0]
       const tx = new Transaction().from(utxo).change(purse.address)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.notFullySigned)
     })
 
     it('should throw if duplicate input', async () => {
-      const utxo = (await blockchain.utxos(purse.address))[0]
+      const utxo = (await blockchain.utxos(purse.script))[0]
       const tx = new Transaction().from(utxo).from(utxo).change(purse.address).sign(purse.bsvPrivateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.duplicateInput)
     })
@@ -180,7 +180,7 @@ describe('Blockchain', () => {
 
   describe('utxos', () => {
     it('should return utxos', async () => {
-      const utxos = await blockchain.utxos(purse.bsvAddress)
+      const utxos = await blockchain.utxos(purse.script)
       expect(utxos.length > 0).to.equal(true)
       expect(utxos[0].txid).not.to.equal(undefined)
       expect(utxos[0].vout).not.to.equal(undefined)
@@ -197,7 +197,7 @@ describe('Blockchain', () => {
     it('should not return spent outputs', async () => {
       const tx = await purse.pay(randomTx())
       await blockchain.broadcast(tx)
-      const utxos = await blockchain.utxos(purse.bsvAddress)
+      const utxos = await blockchain.utxos(purse.script)
       expect(utxos.some(utxo => utxo.txid === tx.inputs[0].prevTxId.toString() &&
         utxo.vout === tx.inputs[0].outputIndex)).to.equal(false)
       expect(utxos.some(utxo => utxo.txid === tx.hash && utxo.vout === 1)).to.equal(true)
@@ -205,7 +205,7 @@ describe('Blockchain', () => {
 
     it('should cache repeated calls', async () => {
       const requests = []
-      for (let i = 0; i < 100; i++) requests.push(blockchain.utxos(purse.bsvAddress))
+      for (let i = 0; i < 100; i++) requests.push(blockchain.utxos(purse.script))
       await Promise.all(requests)
     })
 
@@ -235,7 +235,7 @@ async function getTestData (blockchain, purse) {
 }
 
 async function getMockNetworkTestData (blockchain, purse) {
-  const utxo1 = (await blockchain.utxos(purse.bsvAddress))[0]
+  const utxo1 = (await blockchain.utxos(purse.script))[0]
   const tx1 = new Transaction().from(utxo1).addSafeData('123').change(purse.address).sign(purse.bsvPrivateKey)
   await blockchain.broadcast(tx1)
 

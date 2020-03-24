@@ -96,6 +96,7 @@ describe('BlockchainApi', () => {
   describe('utxos', () => {
     it('should correct for server returning duplicates', async () => {
       const address = new PrivateKey('mainnet').toAddress().toString()
+      const script = Script.fromAddress(address)
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
       class MockApi {
         utxos (script) {
@@ -107,17 +108,18 @@ describe('BlockchainApi', () => {
       function warn (warning) { this.lastWarning = warning }
       const logger = { warn, info: () => {} }
       const blockchain = new BlockchainApi({ network: 'main', api, logger })
-      const utxos = await blockchain.utxos(address)
+      const utxos = await blockchain.utxos(script)
       expect(utxos.length).to.equal(1)
       expect(logger.lastWarning).to.equal(`Duplicate utxo returned from server: ${txid}_o0`)
     })
 
     it('should throw if API is down', async () => {
       const api = {}
-      api.utxosUrl = (network, address) => 'bad-url'
+      api.utxosUrl = (network, script) => 'bad-url'
       const blockchain = new BlockchainApi({ network: 'main', api })
       const address = new PrivateKey('mainnet').toAddress().toString()
-      const requests = [blockchain.utxos(address), blockchain.utxos(address)]
+      const script = Script.fromAddress(address)
+      const requests = [blockchain.utxos(script), blockchain.utxos(script)]
       await expect(Promise.all(requests)).to.be.rejected
     })
   })
