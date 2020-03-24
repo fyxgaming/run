@@ -23,8 +23,14 @@ describe('Purse', () => {
   describe('constructor', () => {
     describe('key', () => {
       it('should generate random purse if unspecified', () => {
-        expect(run.purse.bsvPrivateKey.toString()).not.to.equal(new Run().purse.bsvPrivateKey.toString())
-        expect(run.purse.privkey).not.to.equal(new Run().purse.privkey)
+        const defaultPurse = Run.defaults.purse
+        try {
+          Run.defaults.purse = undefined
+          expect(run.purse.bsvPrivateKey.toString()).not.to.equal(new Run().purse.bsvPrivateKey.toString())
+          expect(run.purse.privkey).not.to.equal(new Run().purse.privkey)
+        } finally {
+          Run.defaults.purse = defaultPurse
+        }
       })
 
       it('should calculate address correctly from private key', () => {
@@ -139,12 +145,12 @@ describe('Purse', () => {
   })
 
   describe('pay', () => {
-    it('should adds inputs and outputs', async () => {
+    it('should add inputs and outputs', async () => {
       const address = new PrivateKey().toAddress()
       const tx = new Transaction().to(address, Transaction.DUST_AMOUNT)
       const tx2 = await run.purse.pay(tx)
-      expect(tx2.inputs.length).to.equal(1)
-      expect(tx2.outputs.length).to.equal(11)
+      expect(tx2.inputs.length > 0).to.equal(true)
+      expect(tx2.outputs.length > 1).to.equal(true)
     })
 
     it('should throw if not enough funds', async () => {
@@ -206,11 +212,12 @@ describe('Purse', () => {
       const address = new PrivateKey().toAddress()
       const run = new Run()
       run.purse.splits = 1
+      const numUtxosBefore = (await run.purse.utxos()).length
       const tx = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
-      expect(tx.outputs.length).to.equal(2)
+      expect(tx.outputs.length - 1 <= numUtxosBefore).to.equal(true)
       run.purse.splits = 20
       const tx2 = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
-      expect(tx2.outputs.length).to.equal(21)
+      expect(numUtxosBefore - tx2.inputs.length + tx2.outputs.length - 1 >= 20).to.equal(true)
     })
 
     it('should still have a change output when splits is lower than number of utxos', async () => {
@@ -218,7 +225,7 @@ describe('Purse', () => {
       const run = new Run()
       const tx = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
       await run.blockchain.broadcast(tx)
-      expect(tx.outputs.length).to.equal(11)
+      expect((await run.purse.utxos()).length >= 10).to.equal(true)
       run.purse.splits = 5
       const tx2 = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
       expect(tx2.outputs.length).to.equal(2)
