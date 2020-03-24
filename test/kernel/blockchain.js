@@ -91,7 +91,7 @@ describe('Blockchain', () => {
   })
 
   describe('fetch', () => {
-    it('should get pre-existing transaction', async () => {
+    it.only('should get pre-existing transaction', async () => {
       const tx = await blockchain.fetch(TEST_DATA.confirmed.txid)
       expect(tx.hash).to.equal(TEST_DATA.confirmed.txid)
     })
