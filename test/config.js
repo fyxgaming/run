@@ -13,6 +13,6 @@ const PURSE = process.env.PURSE ? process.env.PURSE : undefined
 
 Run.defaults.network = NETWORK
 Run.defaults.purse = PURSE
-Run.defaults.logger = console
+Run.defaults.logger = undefined
 
 module.exports = { Run, PERF }

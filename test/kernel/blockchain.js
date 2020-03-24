@@ -44,7 +44,7 @@ describe('Blockchain', () => {
       const script = prevTx.outputs[TEST_DATA.confirmed.outputIndex].script
       const satoshis = prevTx.outputs[TEST_DATA.confirmed.outputIndex].satoshis
       const utxo = { txid, vout, script, satoshis }
-        const tx = new Transaction().from(utxo).addSafeData('123').change(run.purse.address)
+      const tx = new Transaction().from(utxo).addSafeData('123').change(run.purse.address)
       const oldIsFullySigned = Transaction.prototype.isFullySigned
       try {
         Transaction.prototype.isFullySigned = () => true
