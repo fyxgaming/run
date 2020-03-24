@@ -33,4 +33,4 @@ Run.defaults.api = API
 Run.defaults.apiKey = APIKEY
 Run.defaults.purse = PURSE
 
-module.exports = { Run, PERF }
+module.exports = { Run, PERF, LOGGER, NETWORK, API, APIKEY, PURSE }
