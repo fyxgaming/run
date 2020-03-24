@@ -14,4 +14,4 @@
 - `npm run test test/adder.js` - Run just the adder tests
 - `env PERF=1 npm run test` - Test library with performance tests
 - `npm run bump` - Create a new patch release
-- `env NETWORK=test env PURSE=cT7uSf2Q4nFDWoqQtSBaKHnQsuWVdcvxZMiuCs3nkwYh94xctaFg npm run test` - Run all tests on testnet
+- `env NETWORK=test env PURSE=<funded_private_key> npm run test` - Run all tests on testnet
