@@ -26,8 +26,8 @@ Run.defaults.purse = PURSE
 // Use the user's ~/.keys.json if some settings are left unspecified
 const keys = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.keys.json')).toString('utf8'))
 if (keys && keys.tests) {
-    if (API === 'mattercloud' && !APIKEY) { Run.defaults.apiKey = keys.tests.matterCloudApiKey }
-    if (!PURSE) { Run.defaults.purse = keys.tests[NETWORK] }
+  if (API === 'mattercloud' && !APIKEY) { Run.defaults.apiKey = keys.tests.matterCloudApiKey }
+  if (!PURSE) { Run.defaults.purse = keys.tests[NETWORK] }
 }
 
 module.exports = { Run, PERF }
