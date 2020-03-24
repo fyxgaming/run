@@ -11,7 +11,7 @@ const os = require('os')
 const Run = process.env.LIB ? require(path.join(process.cwd(), process.env.LIB)) : require('target')
 
 const PERF = process.env.PERF ? JSON.parse(process.env.PERF) : false
-const LOGGER = process.env.LOGGER ? process.env.LOGGER : 'run'
+const LOGGER = process.env.LOGGER ? process.env.LOGGER : false
 const NETWORK = process.env.NETWORK ? process.env.NETWORK : 'mock'
 const API = process.env.API ? process.env.API : 'run'
 const APIKEY = process.env.APIKEY ? process.env.APIKEY : undefined
