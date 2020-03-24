@@ -14,23 +14,23 @@ const PERF = process.env.PERF ? JSON.parse(process.env.PERF) : false
 const LOGGER = process.env.LOGGER ? process.env.LOGGER : false
 const NETWORK = process.env.NETWORK ? process.env.NETWORK : 'mock'
 const API = process.env.API ? process.env.API : 'run'
-const APIKEY = process.env.APIKEY ? process.env.APIKEY : undefined
-const PURSE = process.env.PURSE ? process.env.PURSE : undefined
-
-Run.defaults.logger = LOGGER ? console : undefined
-Run.defaults.network = NETWORK
-Run.defaults.api = API
-Run.defaults.apiKey = APIKEY
-Run.defaults.purse = PURSE
+let APIKEY = process.env.APIKEY ? process.env.APIKEY : undefined
+let PURSE = process.env.PURSE ? process.env.PURSE : undefined
 
 // Use the user's ~/.keys.json if some settings are left unspecified
 const keysPath = path.join(os.homedir(), '.keys.json')
 if (fs.existsSync && fs.existsSync(keysPath)) {
   const keys = JSON.parse(fs.readFileSync(keysPath).toString('utf8'))
   if (keys && keys.tests) {
-    if (API === 'mattercloud' && !APIKEY) { Run.defaults.apiKey = keys.tests.matterCloudApiKey }
-    if (!PURSE) { Run.defaults.purse = keys.tests[NETWORK] }
+    if (API === 'mattercloud' && !APIKEY) { APIKEY = keys.tests.matterCloudApiKey }
+    if (!PURSE) { PURSE = keys.tests[NETWORK] }
   }
 }
+
+Run.defaults.logger = LOGGER ? console : undefined
+Run.defaults.network = NETWORK
+Run.defaults.api = API
+Run.defaults.apiKey = APIKEY
+Run.defaults.purse = PURSE
 
 module.exports = { Run, PERF }

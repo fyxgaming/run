@@ -26,7 +26,7 @@ describe('Blockchain', () => {
   const clearCache = () => blockchain instanceof BlockchainApi && blockchain.cache.clear()
 
   describe('broadcast', () => {
-    it('should support sending to self', async () => {
+    it.only('should support sending to self', async () => {
       const tx = await purse.pay(new Transaction())
       await blockchain.broadcast(tx)
     })
