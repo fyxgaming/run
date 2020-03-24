@@ -40,11 +40,11 @@ jobs:
       run: npm run test:cover
 
     - name: Collect Coverage (Testnet)
-      run: |
+      run:
         npx nyc --clean=false npm test test/module/blockchain-api.js test/kernel/blockchain.js
-        env:
-          NETWORK: test
-          PURSE: ${{ secrets.PURSE_TESTNET }}
+      env:
+        NETWORK: test
+        PURSE: ${{ secrets.PURSE_TESTNET }}
 
     - name: Test Node
       run: npm run test:node
