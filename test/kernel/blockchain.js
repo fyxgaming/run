@@ -11,6 +11,9 @@ const { Run } = require('../config')
 const { Transaction, Script, PrivateKey } = bsv
 const { BlockchainApi } = Run.module
 
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+const randomTx = () => new Transaction().addSafeData(Math.random().toString())
+
 // ------------------------------------------------------------------------------------------------
 // Blockchain Tests
 // ------------------------------------------------------------------------------------------------
@@ -22,9 +25,7 @@ describe('Blockchain', () => {
   let TEST_DATA = null
   before(async () => { TEST_DATA = await getTestData(blockchain, purse) })
 
-  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
   const clearCache = () => blockchain instanceof BlockchainApi && blockchain.cache.clear()
-  const randomTx = () => new Transaction().addSafeData(Math.random().toString())
 
   describe('broadcast', () => {
     it('should support sending to self', async () => {
@@ -232,7 +233,7 @@ async function getTestData (blockchain, purse) {
 
 async function getMockNetworkTestData (blockchain, purse) {
   const utxo1 = (await blockchain.utxos(purse.bsvAddress))[0]
-  const tx1 = randomTx().from(utxo1).addSafeData('123').change(purse.address).sign(purse.bsvPrivateKey)
+  const tx1 = new Transaction().from(utxo1).addSafeData('123').change(purse.address).sign(purse.bsvPrivateKey)
   await blockchain.broadcast(tx1)
 
   const utxo2 = { txid: tx1.hash, vout: 1, script: tx1.outputs[1].script, satoshis: tx1.outputs[1].satoshis }
