@@ -41,7 +41,7 @@ jobs:
 
     - name: Collect Coverage (Testnet)
       run:
-        npx nyc --clean=false -r=text -r=lcovonly -x=test/** mocha npm test test/module/blockchain-api.js test/kernel/blockchain.js
+        npx nyc --clean=false -r=text -r=lcovonly -x=test/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
       env:
         NETWORK: test
         PURSE: ${{ secrets.PURSE_TESTNET }}
