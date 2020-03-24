@@ -106,9 +106,11 @@ const entries = Array.from(paths).map(x => path.join(process.cwd(), x))
 if (!entries.length) throw new Error(`No test files found: ${patterns}`)
 
 const browserTests = {
+  target: 'web',
   entry: entries,
   output: { filename: `${name}.browser.tests.js`, path: dist },
-  externals: { mocha: 'Mocha', chai: 'chai', bsv: 'bsv', target: library, fs: 'empty' },
+  node: { fs: 'empty' },
+  externals: { mocha: 'Mocha', chai: 'chai', bsv: 'bsv', target: library },
   optimization: { minimize: false },
   plugins: [new webpack.EnvironmentPlugin(process.env)],
   stats: 'errors-only'
