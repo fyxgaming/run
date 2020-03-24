@@ -10,7 +10,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Run, perf } = require('../config')
+const { Run, PERF } = require('../config')
 const { Mockchain } = Run.module
 
 // ------------------------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ describe('Mockchain', () => {
 // Mockchain Performance Tests
 // ------------------------------------------------------------------------------------------------
 
-if (perf) {
+if (PERF) {
   describe('Mockchain Performance', () => {
     it('should support fast broadcsts', async () => {
       const utxo = (await mockchain.utxos(script))[0]

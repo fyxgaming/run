@@ -7,8 +7,12 @@
 const path = require('path')
 
 const Run = process.env.LIB ? require(path.join(process.cwd(), process.env.LIB)) : require('target')
-const perf = process.env.PERF ? JSON.parse(process.env.PERF) : false
+const PERF = process.env.PERF ? JSON.parse(process.env.PERF) : false
+const NETWORK = process.env.NETWORK ? process.env.NETWORK : 'mock'
+const PURSE = process.env.PURSE ? process.env.PURSE : undefined
 
-Run.defaults.network = 'mock'
+Run.defaults.network = NETWORK
+Run.defaults.purse = PURSE
+Run.defaults.logger = console
 
-module.exports = { Run, perf }
+module.exports = { Run, PERF }
