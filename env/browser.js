@@ -9,7 +9,7 @@
  *    node ./browser.js [spec..]
  *
  * Environment variables:
- *    BROWSER=<firefox|chrome|safari|MicrosoftEdge>       (Default: firefox)
+ *    BROWSER=<chrome|firefox|safari|MicrosoftEdge>       (Default: chrome)
  *    TIMEOUT=<milliseconds>                              (Default: 300000)
  */
 
@@ -28,17 +28,17 @@ async function buildTests () {
 
 async function runTests () {
   const timeout = process.env.TIMEOUT || 5 * 60 * 1000
-  const browser = process.env.BROWSER || 'firefox'
+  const browser = process.env.BROWSER || 'chrome'
 
   // Headless mode is required in Linux VMs on Github Actions
-  const firefoxOptions = new firefox.Options().headless()
   const chromeOptions = new chrome.Options().headless()
+  const firefoxOptions = new firefox.Options().headless()
   const edgeOptions = new edge.Options().headless().setEdgeChromium(true)
 
   // Start the browser
   const driver = await new webdriver.Builder()
-    .setFirefoxOptions(firefoxOptions)
     .setChromeOptions(chromeOptions)
+    .setFirefoxOptions(firefoxOptions)
     .setEdgeOptions(edgeOptions)
     .forBrowser(browser)
     .build()

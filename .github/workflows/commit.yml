@@ -1,12 +1,10 @@
 # Standard checks that run on every push
 #
-#   Environment: Ubuntu 18.04, Node 12
+#   Environment: Ubuntu 18.04 Linux
 #
-#   - Check if built
 #   - Lint
-#   - Test code coverage
-#   - Test on node
-#   - Test on chrome
+#   - Node 10
+#   - Chrome
 
 name: Last Commit
 

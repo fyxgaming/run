@@ -8,7 +8,7 @@
 - `npm run build` - Build outputs
 - `npm run test` - Test library quickly
 - `npm run test:node` - Test the minified node build
-- `npm run test:browser` - Test the minified browser build (Firefox default)
+- `npm run test:browser` - Test the minified browser build (Chrome default)
 - `env BROWSER=safari npm run test:browser` - Test the minified browser build on Safari
 - `npm run test:cover` - Collect code coverage
 - `npm run test test/adder.js` - Run just the adder tests
