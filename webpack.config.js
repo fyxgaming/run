@@ -40,10 +40,33 @@ if (!fs.existsSync('./dist/bsv.browser.min.js')) {
 // Terser options
 // ------------------------------------------------------------------------------------------------
 
-const terserPluginOptions = {
+const terserOptions = {
   terserOptions: {
+    ecma: 2015,
+
     mangle: {
-      keep_classnames: /AbortSignal/
+      // The AbortSignal name is required for node-fetch and abort-controller to work together
+      keep_classnames: /AbortSignal/,
+
+      // All private properties (methods, variables) that the end user is not expected to interact
+      // with should be prefixed with _. The terser will mangle these properties. We will make
+      // specific exceptions where it is problematic.
+      properties: {
+        regex: /^_.*$/,
+
+        reserved: [
+          // These come from node_modules. Best to be safe.
+          '_read',
+          '_lengthRetrievers',
+
+          // These are bsv library properties that we use and should not be mangled
+          '_hash',
+          '_getHash',
+          '_getInputAmount',
+          '_estimateFee',
+          '_getOutputAmount'
+        ]
+      }
     }
   }
 }
@@ -63,8 +86,10 @@ const browserMin = {
     bsv: 'bsv'
   },
   optimization: {
-    minimize: true,
-    minimizer: [new TerserPlugin(terserPluginOptions)]
+    // minimize: false
+    minimizer: [
+      new TerserPlugin(terserOptions)
+    ]
   },
   plugins: [config],
   stats: 'errors-only'
