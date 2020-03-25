@@ -16,7 +16,7 @@
     "build": "webpack",
     "test": "env LIB=lib mocha",
     "test:cover": "env LIB=lib nyc -r=text -r=lcovonly -x=test/** -x=env/** mocha",
-    "test:node": "webpack && env LIB=dist/run.node.min mocha",
+    "test:node": "webpack && mocha dist/run.node.tests.js",
     "test:browser": "node env/browser",
     "version": "webpack && standard && npm test",
     "bump": "npm version patch && git push --follow-tags && npm publish"

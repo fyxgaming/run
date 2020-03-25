@@ -35,7 +35,6 @@ describe('Mockchain', () => {
       await mockchain.broadcast(tx)
       expect(tx.blockheight).to.equal(-1)
       mockchain.block()
-      console.log('hello')
       expect(tx.blockheight).to.equal(mockchain._height)
     })
 

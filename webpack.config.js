@@ -40,13 +40,17 @@ if (!fs.existsSync('./dist/bsv.browser.min.js')) {
 // Terser options
 // ------------------------------------------------------------------------------------------------
 
-const nameCache = {}
+const terserPluginConfig = {
+  // The nameCache requires parallel to be off
+  parallel: false,
 
-const terserOptions = {
+  // We don't cache, because otherwise the name cache is lost
+  cache: false,
+
   terserOptions: {
     ecma: 2015,
 
-    nameCache,
+    nameCache: {},
 
     mangle: {
       // The AbortSignal name is required for node-fetch and abort-controller to work together
@@ -94,7 +98,7 @@ const browserMin = {
   },
   optimization: {
     minimizer: [
-      new TerserPlugin(terserOptions)
+      new TerserPlugin(terserPluginConfig)
     ]
   },
   plugins: [config],
@@ -165,10 +169,9 @@ const browserTests = {
   output: { filename: `${name}.browser.tests.js`, path: dist },
   node: { fs: 'empty' },
   externals: { mocha: 'Mocha', chai: 'chai', bsv: 'bsv', target: library },
-  // optimization: { minimize: false },
   optimization: {
     minimizer: [
-      new TerserPlugin(terserOptions)
+      new TerserPlugin(terserPluginConfig)
     ]
   },
   plugins: [new webpack.EnvironmentPlugin(process.env)],
@@ -176,5 +179,17 @@ const browserTests = {
 }
 
 // ------------------------------------------------------------------------------------------------
+// Node Tests
+// ------------------------------------------------------------------------------------------------
 
-module.exports = [browserMin, nodeMin, browser, node, browserTests]
+const nodeTests = {
+  ...browserTests,
+  target: 'node',
+  output: { filename: `${name}.node.tests.js`, path: dist, libraryTarget: 'commonjs2' },
+  externals: { mocha: 'mocha', chai: 'chai', bsv: 'bsv', target: './run.node.min' },
+  node: { fs: 'empty' }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = [browserMin, nodeMin, browser, node, browserTests, nodeTests]
