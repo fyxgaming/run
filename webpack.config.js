@@ -5,6 +5,7 @@
  */
 
 const webpack = require('webpack')
+const TerserPlugin = require('terser-webpack-plugin')
 const path = require('path')
 const fs = require('fs')
 const { execSync } = require('child_process')
@@ -36,6 +37,18 @@ if (!fs.existsSync('./dist/bsv.browser.min.js')) {
 }
 
 // ------------------------------------------------------------------------------------------------
+// Terser options
+// ------------------------------------------------------------------------------------------------
+
+const terserPluginOptions = {
+  terserOptions: {
+    mangle: {
+      // properties: true
+    }
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
 // Browser Minified
 // ------------------------------------------------------------------------------------------------
 
@@ -48,6 +61,10 @@ const browserMin = {
   },
   externals: {
     bsv: 'bsv'
+  },
+  optimization: {
+    minimize: true,
+    minimizer: [new TerserPlugin(terserPluginOptions)]
   },
   plugins: [config],
   stats: 'errors-only'
