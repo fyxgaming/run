@@ -20,12 +20,12 @@ Various environment variables may be used to configure the tests:
 | Name        | Description                                     | Possible Values                                | Default     |
 |-------------|-------------------------------------------------|------------------------------------------------|-------------|
 | **NETWORK** | Network to run the tests on                     | `mock`, `main`, `test`                         | `mock`      |
-| **PURSE**   | Purse key used on mainnet or testnet            | *your string privkey*                          | `undefined` |
+| **PURSE**   | Purse key used on mainnet or testnet            | your string privkey                            | `undefined` |
 | **BROWSER** | Browser used for testing                        | `chrome`, `firefox`, `safari`, `MicrosoftEdge` | `chrome`    |
 | **LOGGER**  | Whether to log internal messages to the console | `true`, `false`                                | `false`     |
 | **PERF**    | Whether to run performance tests                | `true`, `false`                                | `false`     |
 | **API**     | Blockchain API when using mainnet or testnet    | `run`, `mattercloud`, `whatsonchain`           | `run`       |
-| **APIKEY**  | API key for the blockchain API                  | *your string api key*                          | `undefined` |
+| **APIKEY**  | API key for the blockchain API                  | your string api key                            | `undefined` |
 
 ### Examples
 
@@ -35,7 +35,7 @@ Various environment variables may be used to configure the tests:
 
 ### Storing Keys
 
-For ease of use, you can setup your `testnet` and `mainnet` keys once so that you don't have to pass them on the command line each time. Run will read test keys from `~/.keys.json` if it exists. The format should be:
+For ease of use, Run lets you store `testnet` and `mainnet` keys to avoid having to pass them as environment variables. Run will read your keys from `~/.keys.json`. The format is:
 
 ```
 {
