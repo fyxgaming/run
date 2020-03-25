@@ -40,9 +40,13 @@ if (!fs.existsSync('./dist/bsv.browser.min.js')) {
 // Terser options
 // ------------------------------------------------------------------------------------------------
 
+const nameCache = {}
+
 const terserOptions = {
   terserOptions: {
     ecma: 2015,
+
+    nameCache,
 
     mangle: {
       // The AbortSignal name is required for node-fetch and abort-controller to work together
@@ -58,6 +62,9 @@ const terserOptions = {
           // These come from node_modules. Best to be safe.
           '_read',
           '_lengthRetrievers',
+
+          '_obj',
+          '__methods',
 
           // These are bsv library properties that we use and should not be mangled
           '_hash',
@@ -86,7 +93,6 @@ const browserMin = {
     bsv: 'bsv'
   },
   optimization: {
-    // minimize: false
     minimizer: [
       new TerserPlugin(terserOptions)
     ]
@@ -159,7 +165,12 @@ const browserTests = {
   output: { filename: `${name}.browser.tests.js`, path: dist },
   node: { fs: 'empty' },
   externals: { mocha: 'Mocha', chai: 'chai', bsv: 'bsv', target: library },
-  optimization: { minimize: false },
+  // optimization: { minimize: false },
+  optimization: {
+    minimizer: [
+      new TerserPlugin(terserOptions)
+    ]
+  },
   plugins: [new webpack.EnvironmentPlugin(process.env)],
   stats: 'errors-only'
 }

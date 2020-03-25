@@ -35,7 +35,8 @@ describe('Mockchain', () => {
       await mockchain.broadcast(tx)
       expect(tx.blockheight).to.equal(-1)
       mockchain.block()
-      expect(tx.blockheight >= 0).to.equal(true)
+      console.log('hello')
+      expect(tx.blockheight).to.equal(mockchain._height)
     })
 
     it('should spent spentHeight on outputs', async () => {
@@ -45,7 +46,7 @@ describe('Mockchain', () => {
       const prevtx = await mockchain.fetch(utxo.txid)
       expect(prevtx.outputs[utxo.vout].spentHeight).to.equal(-1)
       mockchain.block()
-      expect(tx.blockheight >= 0).to.equal(true)
+      expect(tx.blockheight).to.equal(mockchain._height)
     })
 
     it('should respect 25 chain limit', async () => {

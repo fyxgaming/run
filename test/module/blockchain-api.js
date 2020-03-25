@@ -45,7 +45,7 @@ describe('BlockchainApi', () => {
 
     describe('api', () => {
       it('should default to run api', () => {
-        expect(new BlockchainApi().api.constructor.shortName).to.equal('run')
+        expect(new BlockchainApi().api.constructor).to.equal(BlockchainApi.RunConnect)
       })
 
       it('should throw for bad api', () => {
@@ -147,25 +147,25 @@ describe('BlockchainApiCache', () => {
   describe('get', () => {
     it('should not return expired transactions', async () => {
       const cache = new BlockchainApi.Cache()
-      cache.expiration = 1
+      cache._expiration = 1
       const tx = new Transaction()
-      cache.fetched(tx)
+      cache._fetched(tx)
       const sleep = ms => { return new Promise(resolve => setTimeout(resolve, ms)) }
       await sleep(10)
-      expect(cache.get(tx.hash)).not.to.equal(tx)
+      expect(cache._get(tx.hash)).not.to.equal(tx)
     })
   })
 
   describe('fetched', () => {
     it('should flush oldest transcation when full', () => {
       const cache = new BlockchainApi.Cache({ size: 1 })
-      cache.size = 1
+      cache._size = 1
       const tx1 = new Transaction().addData('1')
       const tx2 = new Transaction().addData('2')
-      cache.fetched(tx1)
-      cache.fetched(tx2)
-      expect(cache.transactions.size).to.equal(1)
-      expect(cache.transactions.get(tx2.hash)).to.equal(tx2)
+      cache._fetched(tx1)
+      cache._fetched(tx2)
+      expect(cache._transactions.size).to.equal(1)
+      expect(cache._transactions.get(tx2.hash)).to.equal(tx2)
     })
   })
 })
