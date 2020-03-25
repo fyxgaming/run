@@ -90,6 +90,7 @@ jobs:
     - name: Collect Coverage (Testnet)
       run: |
         env API=run npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+        sleep 1
         env API=whatsonchain npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
       env:
         NETWORK: test
@@ -98,7 +99,9 @@ jobs:
     - name: Collect Coverage (Mainnet)
       run: |
         env API=run npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+        sleep 1
         env API=mattercloud npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+        sleep 1
         env API=whatsonchain npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
       env:
         NETWORK: main
