@@ -9,9 +9,40 @@
 - `npm run test` - Test library quickly
 - `npm run test:node` - Test the minified node build
 - `npm run test:browser` - Test the minified browser build (Chrome default)
-- `env BROWSER=safari npm run test:browser` - Test the minified browser build on Safari
 - `npm run test:cover` - Collect code coverage
-- `npm run test test/adder.js` - Run just the adder tests
-- `env PERF=1 npm run test` - Test library with performance tests
 - `npm run bump` - Create a new patch release
+- `npm run test test/module/local-purse.js` - Run just the purse tests
+
+## Configuring the Tests
+
+Various environment variables may be used to configure the tests:
+
+| Name        | Description                                     | Possible Values                                | Default     |
+|-------------|-------------------------------------------------|------------------------------------------------|-------------|
+| **NETWORK** | Network to run the tests on                     | `mock`, `main`, `test`                         | `mock`      |
+| **PURSE**   | Purse key used on mainnet or testnet            | *your string privkey*                          | `undefined` |
+| **BROWSER** | Browser used for testing                        | `chrome`, `firefox`, `safari`, `MicrosoftEdge` | `chrome`    |
+| **LOGGER**  | Whether to log internal messages to the console | `true`, `false`                                | `false`     |
+| **PERF**    | Whether to run performance tests                | `true`, `false`                                | `false`     |
+| **API**     | Blockchain API when using mainnet or testnet    | `run`, `mattercloud`, `whatsonchain`           | `run`       |
+| **APIKEY**  | API key for the blockchain API                  | *your string api key*                          | `undefined` |
+
+### Examples
+
+- `env BROWSER=safari npm run test:browser` - Test the browser build on Safari
+- `env PERF=1 npm run test` - Test library with performance tests
 - `env NETWORK=test env PURSE=<funded_private_key> npm run test` - Run all tests on testnet
+
+### Storing Keys
+
+For ease of use, you can setup your `testnet` and `mainnet` keys once so that you don't have to pass them on the command line each time. Run will read test keys from `~/.keys.json` if it exists. The format should be:
+
+```
+{
+    "tests": {
+        "test": "<your testnet key here>",
+        "main": "<your mainnet key here>",
+        "matterCloudApiKey": "<your mattercloud api key here>"
+    },
+}
+```
