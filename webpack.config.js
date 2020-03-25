@@ -43,7 +43,7 @@ if (!fs.existsSync('./dist/bsv.browser.min.js')) {
 const terserPluginOptions = {
   terserOptions: {
     mangle: {
-      // properties: true
+      keep_classnames: /AbortSignal/
     }
   }
 }
@@ -77,7 +77,10 @@ const browserMin = {
 const nodeMin = {
   ...browserMin,
   target: 'node',
-  resolve: { mainFields: ['main', 'module'] },
+  resolve: {
+    mainFields: ['main', 'module'],
+    extensions: ['.js', '.mjs', '.wasm', '.json']
+  },
   output: {
     filename: `${name}.node.min.js`,
     path: dist,
