@@ -76,12 +76,26 @@ describe('BlockchainApi', () => {
     })
 
     describe('timeout', () => {
-      it('should support custom timeouts', () => {
-        expect(new BlockchainApi({ timeout: 3333 }).api.axios.defaults.timeout).to.equal(3333)
+      it('should time out', async () => {
+        const timeout = 1
+        const { RunConnect } = Run.module.BlockchainApi
+        const api = new RunConnect({ timeout })
+        const blockchain = new BlockchainApi({ api })
+        expect(blockchain.api.timeout).to.equal(timeout)
+        const oldFetchWithTimeout = RunConnect.prototype.fetchWithTimeout
+        RunConnect.prototype.fetchWithTimeout = function (url, options) {
+          url = 'http://www.google.com:81'
+          return oldFetchWithTimeout.call(this, url, options)
+        }
+        try {
+          await expect(blockchain.fetch('')).to.be.rejectedWith('Request timed out')
+        } finally {
+          RunConnect.prototype.fetchWithTimeout = oldFetchWithTimeout
+        }
       })
 
       it('should default timeout to 10000', () => {
-        expect(new BlockchainApi().api.axios.defaults.timeout).to.equal(10000)
+        expect(new BlockchainApi().api.timeout).to.equal(10000)
       })
 
       it('should throw for bad timeout', () => {
