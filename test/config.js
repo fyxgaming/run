@@ -1,7 +1,7 @@
 /**
  * config.js
  *
- * Provides the test build and other settings for the tests.
+ * Provides the build of Run for testing and other settings.
  */
 
 const path = require('path')

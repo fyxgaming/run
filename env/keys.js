@@ -1,3 +1,8 @@
+/**
+ * keys.js
+ *
+ * Loads the user stored keys from ~/.keys.json
+ */
 
 const path = require('path')
 const fs = require('fs')
