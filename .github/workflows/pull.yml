@@ -34,7 +34,7 @@ jobs:
     - name: Install
       if: steps.cache-node-modules.outputs.cache-hit != 'true'
       run: |
-        echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.AUTH_TOKEN }}" > ~/.npmrc
         npm ci
 
     - name: Lint
