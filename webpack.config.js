@@ -118,6 +118,10 @@ const browserMin = {
     path: dist,
     library
   },
+  resolve: {
+    mainFields: ['browser', 'main', 'module'],
+    extensions: ['.js', '.mjs', '.wasm', '.json']
+  },
   externals: {
     bsv: 'bsv'
   },
@@ -137,14 +141,14 @@ const browserMin = {
 const nodeMin = {
   ...browserMin,
   target: 'node',
-  resolve: {
-    mainFields: ['main', 'module'],
-    extensions: ['.js', '.mjs', '.wasm', '.json']
-  },
   output: {
     filename: `${name}.node.min.js`,
     path: dist,
     libraryTarget: 'commonjs2'
+  },
+  resolve: {
+    mainFields: ['main', 'module'],
+    extensions: ['.js', '.mjs', '.wasm', '.json']
   }
 }
 
