@@ -2,7 +2,7 @@
   "name": "run",
   "version": "0.5.0",
   "description": "Run Javascript library",
-  "main": "dist/run.node.min.js",
+  "main": "lib/index.js",
   "browser": "dist/run.browser.min.js",
   "files": [
     "dist/**.min.js",
