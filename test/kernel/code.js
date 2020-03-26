@@ -11,7 +11,8 @@ describe('Code', () => {
   it.only('should deploy', async () => {
     const run = new Run({ logger: console })
     // await run.deploy(function render () { return 1 })
-    await run.deploy(class Dragon {})
+    class Monster {}
+    await run.deploy(class Dragon extends Monster {})
     // await run.deploy(x => x)
     // await run.deploy(class {})
 
