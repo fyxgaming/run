@@ -10,8 +10,11 @@ const { Run } = require('../config')
 describe('Code', () => {
   it.only('should deploy', async () => {
     const run = new Run({ logger: console })
-    function f () { return 1 }
-    const location = await run.deploy(f)
-    console.log(location)
+    await run.deploy(function render () { return 1 })
+    await run.deploy(class Dragon {})
+    await run.deploy(x => x)
+    await run.deploy(class {})
+
+    await run.deploy('class A { }')
   })
 })
