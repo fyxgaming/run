@@ -17,5 +17,9 @@ describe('Code', () => {
 
     // TODO: Detect undeployable
     // await run.deploy('class A { }')
+
+    class B { }
+    B.locationMocknet = '123'
+    await run.deploy(B)
   })
 })
