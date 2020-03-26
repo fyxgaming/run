@@ -15,6 +15,7 @@ describe('Code', () => {
     await run.deploy(x => x)
     await run.deploy(class {})
 
-    await run.deploy('class A { }')
+    // TODO: Detect undeployable
+    // await run.deploy('class A { }')
   })
 })
