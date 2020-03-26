@@ -117,7 +117,7 @@ const browserMin = {
     filename: `${name}.browser.min.js`,
     path: dist,
     library,
-    libraryTarget: 'umd',
+    libraryTarget: 'umd'
   },
   resolve: {
     mainFields: ['browser', 'main', 'module'],
