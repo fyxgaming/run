@@ -1,118 +1,48 @@
 /**
  * code.js
  *
- * Tests for code deployment, loading, and sandboxing.
+ * Tests for kernel code sandboxing, deploying, and loading
  */
 
 const { describe, it } = require('mocha')
-// const { Run } = require('../config')
-const Sandbox = require('@runonbitcoin/sandbox')
 const { expect } = require('chai')
+const { Run } = require('../config')
+const code = Run._code
 
-describe('Code', () => {
-  it.only('c', async () => {
-    class B {
-      constructor () {
-        console.log('B.constructor()')
-      }
+describe.only('Code', () => {
+  describe('sourceCode', () => {
+    it('test', () => {
+      class A { }
+      const A2 = A
+      class B extends A2 {}
+      expect(code.sourceCode(B)).to.equal('class B extends A {}')
+    })
+  })
 
-      checkInstanceOf (X) {
-        return this instanceof X
-      }
+  describe('makeFunctionProxy', () => {
+    it('should handle basic instances', () => {
+      class A { }
+      const A2 = code.makeFunctionProxy(A)
 
-      checkConstructor (X) {
-        return this.constructor === X
-      }
-    }
+      expect(A === A2)
+      expect(new A() instanceof A).to.equal(true)
+      expect(new A() instanceof A2).to.equal(true)
+      expect(new A2() instanceof A).to.equal(true)
+      expect(new A2() instanceof A2).to.equal(true)
 
-    const r = new Sandbox()
-    const BC = r.makeCompartment()
-    const BS = BC.evaluate(`var X=${B.toString()};X`)
+      expect(new A().constructor).to.equal(A)
+      expect(new A().constructor).not.to.equal(A2)
+      expect(new A2().constructor).not.to.equal(A)
+      expect(new A2().constructor).to.equal(A2)
 
-    // const BProxy = B
-    // const BProxy = proxyClass(B)
-    const BProxy = proxyClass(BS)
-    // const BProxy = BS
+      expect(Object.getPrototypeOf(new A())).to.equal(A.prototype)
+      expect(Object.getPrototypeOf(new A())).to.equal(A2.prototype)
+      expect(Object.getPrototypeOf(new A2())).to.equal(A.prototype)
+      expect(Object.getPrototypeOf(new A2())).to.equal(A2.prototype)
+    })
 
-    class A extends BProxy {
-      constructor (n) {
-        super()
-        this.n = n
-        this.n = 2
-      }
-    }
+    it('should handle child class instances', () => {
 
-    /**
- * Returns the source code for a class or function. This is generally type.toString(), however if
- * the type is a class and it extends another class, we make sure the parent class name in the
- * extends expression is the actual name of the parent class name because a lot of times the code
- * will be "class X extends SomeLibrary.Y" and what is deployed should be "class X extends Y"
- *
- * This may still return slightly different results. For example, node 8 and node 12 sometimes
- * have slightly different spacing. Howeve, functionally the code should be the same.
- */
-    function getNormalizedSourceCode (type) {
-      const code = type.toString()
-      const parent = Object.getPrototypeOf(type)
-
-      if (parent.prototype) {
-        const classDef = /^class \S+ extends \S+ {/
-        return code.replace(classDef, `class ${type.name} extends ${parent.name} {`)
-      }
-
-      return code
-    }
-    console.log('...')
-    console.log(getNormalizedSourceCode(A))
-
-    function proxyClass (T) {
-      const H = {}
-      const P = new Proxy(T, H)
-      H.construct = (target, args, newTarget) => {
-        console.log('P.construct', target.name, args)
-        const t = Reflect.construct(target, args, newTarget)
-        // const t = new target(...args)
-        const h = {}
-        const p = new Proxy(t, h)
-        h.get = (target, prop) => {
-          // console.log('GET', target, prop)
-          if (prop === 'constructor') return P
-          return target[prop]
-        }
-        h.setPrototypeOf = (target, prototype) => {
-          // console.log('SET_PROTOTYPE_OF', target, prototype)
-          Object.setPrototypeOf(target, prototype)
-        }
-        return p
-      }
-      return P
-    }
-
-    console.log('---')
-    const AC = r.makeCompartment()
-    console.log(BProxy.name)
-    AC.global.B = BProxy
-    console.log('---')
-    const AS = AC.evaluate(`var X=${getNormalizedSourceCode(A)};X`)
-
-    console.log('---')
-    const AProxy = proxyClass(AS)
-    console.log('---')
-
-    const a = new AProxy(1)
-
-    console.log(a) // A {}
-    expect(a instanceof A).to.equal(false) // handled in Jig
-    expect(a instanceof AProxy).to.equal(true)
-    expect(a.constructor === A).to.equal(false)
-    expect(a.constructor === AProxy).to.equal(true)
-    expect(a instanceof B).to.equal(false) // handled in Jig
-    expect(a instanceof BProxy).to.equal(true)
-    expect(a.constructor === B).to.equal(false)
-    expect(a.constructor === BProxy).to.equal(false)
-    expect(a.checkInstanceOf(B)).to.equal(false) // handled in Jig
-    expect(a.checkInstanceOf(BProxy)).to.equal(true)
-    expect(a.checkConstructor(B)).to.equal(false)
-    expect(a.checkConstructor(BProxy)).to.equal(false)
+    })
   })
 })
