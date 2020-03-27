@@ -9,7 +9,56 @@ const { Run } = require('../config')
 const Sandbox = require('@runonbitcoin/sandbox')
 
 describe('Code', () => {
-  it.only('a', async () => {
+  it.only('b', async () => {
+    class B {
+      constructor() {
+        console.log(`B.constructor()`)
+      }
+    }
+
+    class A extends B {
+      constructor(n) {
+        console.log(`A.constructor(${n})`)
+        super()
+        this.n
+      }
+    }
+
+    function proxyClass(T) {
+      const H = {}
+      let P = new Proxy(T, H)
+      H.construct = (target, args, newTarget) => {
+        console.log('P.construct', args)
+        const t = new target(...args)
+        const h = {}
+        const p = new Proxy(t, h)
+        h.get = (target, prop) => {
+          if (prop === 'constructor') return P
+          return target[prop]
+        }
+        return p
+      }
+      return P
+    }
+
+    const AProxy = proxyClass(A)
+
+    const a = new AProxy(1)
+
+    console.log(a) // A {}
+    console.log('---')
+    console.log(a instanceof A) // true
+    console.log(a instanceof AProxy) // true
+    console.log(a.constructor === A) // false
+    console.log(a.constructor === AProxy) // true
+    console.log('---')
+    console.log(a instanceof B) // true
+    // console.log(a instanceof BProxy) // true
+    console.log(a.constructor === B) // false
+    // console.log(a.constructor === BProxy) // true
+  })
+
+  it('a', async () => {
     class A {
       constructor(n) {
         console.log(`A.constructor(${n})`)
