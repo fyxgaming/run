@@ -40,45 +40,70 @@ if (!fs.existsSync('./dist/bsv.browser.min.js')) {
 // Terser options
 // ------------------------------------------------------------------------------------------------
 
+// Reserved words that should not be mangled in minified builds
+const reserved = [
+  // These come from node_modules. Best to be safe.
+  '_read',
+  '_lengthRetrievers',
+  '_obj',
+  '__methods',
+
+  // These are bsv library properties that we use and should not be mangled
+  '_hash',
+  '_getHash',
+  '_getInputAmount',
+  '_estimateFee',
+  '_getOutputAmount'
+]
+
+// Run library terser settings
 const terserPluginConfig = {
   // The nameCache requires parallel to be off
   parallel: false,
-
   // We don't cache, because otherwise the name cache is lost
   cache: false,
-
   terserOptions: {
     ecma: 2015,
-
     nameCache: {},
-
     mangle: {
       // The AbortSignal name is required for node-fetch and abort-controller to work together
       keep_classnames: /AbortSignal/,
-
       // All private properties (methods, variables) that the end user is not expected to interact
       // with should be prefixed with _. The terser will mangle these properties. We will make
       // specific exceptions where it is problematic.
       properties: {
         regex: /^_.*$/,
-
-        reserved: [
-          // These come from node_modules. Best to be safe.
-          '_read',
-          '_lengthRetrievers',
-
-          '_obj',
-          '__methods',
-
-          // These are bsv library properties that we use and should not be mangled
-          '_hash',
-          '_getHash',
-          '_getInputAmount',
-          '_estimateFee',
-          '_getOutputAmount'
-        ]
+        reserved
       }
     }
+  }
+}
+
+// Compiled tests terser settings
+const terserTestPluginConfig = {
+  parallel: false,
+  cache: false,
+  terserOptions: {
+    ecma: 2015,
+    // The tests need similar mangling as the main library. For example, if a test accesses an
+    // internal property like mockchain._height, _height will be manged in the final build, so
+    // the test should also be mangled the same way. We use the name cache for this.
+    nameCache: terserPluginConfig.terserOptions.nameCache,
+    mangle: {
+      properties: {
+        regex: /^_.*$/,
+        reserved
+      }
+    },
+    // Keep code as close to the original as possible for debugging
+    compress: false,
+    output: {
+      beautify: true,
+      comments: true
+    },
+    // Don't mangle test classes and functions, because it also debugging harder
+    keep_classnames: true,
+    keep_fnames: true
   }
 }
 
@@ -91,7 +116,12 @@ const browserMin = {
   output: {
     filename: `${name}.browser.min.js`,
     path: dist,
-    library
+    library,
+    libraryTarget: 'umd'
+  },
+  resolve: {
+    mainFields: ['browser', 'main', 'module'],
+    extensions: ['.js', '.mjs', '.wasm', '.json']
   },
   externals: {
     bsv: 'bsv'
@@ -112,14 +142,14 @@ const browserMin = {
 const nodeMin = {
   ...browserMin,
   target: 'node',
-  resolve: {
-    mainFields: ['main', 'module'],
-    extensions: ['.js', '.mjs', '.wasm', '.json']
-  },
   output: {
     filename: `${name}.node.min.js`,
     path: dist,
     libraryTarget: 'commonjs2'
+  },
+  resolve: {
+    mainFields: ['main', 'module'],
+    extensions: ['.js', '.mjs', '.wasm', '.json']
   }
 }
 
@@ -171,7 +201,7 @@ const browserTests = {
   externals: { mocha: 'Mocha', chai: 'chai', bsv: 'bsv', target: library },
   optimization: {
     minimizer: [
-      new TerserPlugin(terserPluginConfig)
+      new TerserPlugin(terserTestPluginConfig)
     ]
   },
   plugins: [new webpack.EnvironmentPlugin(process.env)],
