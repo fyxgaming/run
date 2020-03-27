@@ -9,7 +9,151 @@ const { Run } = require('../config')
 const Sandbox = require('@runonbitcoin/sandbox')
 
 describe('Code', () => {
-  it.only('b', async () => {
+  it.only('c', async () => {
+    class B {
+      constructor() {
+        console.log(`B.constructor()`)
+      }
+
+      checkInstanceOf(X) {
+        return this instanceof X
+      }
+      
+      checkConstructor(X) {
+        return this.constructor === X
+      }
+    }
+
+
+    const r = new Sandbox()
+    const BC = r.makeCompartment()
+    const BS = BC.evaluate(`var X=${B.toString()};X`)
+
+    // const BProxy = B
+    // const BProxy = proxyClass(B)
+    const BProxy = proxyClass(BS)
+    // const BProxy = BS
+
+    class A extends BProxy {
+      constructor(n) {
+        super()
+        this.n = n
+        this.n = 2
+      }
+    }
+    console.log('...')
+    console.log(A.toString())
+
+    function proxyClass(T) {
+      const H = {}
+      let P = new Proxy(T, H)
+      H.construct = (target, args, newTarget) => {
+        console.log('P.construct', target.name, args)
+        const t =  Reflect.construct(target, args, newTarget)
+        // const t = new target(...args)
+        const h = {}
+        const p = new Proxy(t, h)
+        h.get = (target, prop) => {
+          // console.log('GET', target, prop)
+          if (prop === 'constructor') return P
+          return target[prop]
+        }
+        h.setPrototypeOf = (target, prototype) => {
+          // console.log('SET_PROTOTYPE_OF', target, prototype)
+          Object.setPrototypeOf(target, prototype)
+        }
+        return p
+      }
+      return P
+    }
+
+    const AC = r.makeCompartment()
+    AC.global.BProxy = BProxy
+    const AS = AC.evaluate(`var X=${A.toString()};X`)
+
+    const AProxy = proxyClass(AS)
+
+    const a = new AProxy(1)
+
+    console.log(a) // A {}
+    console.log('---')
+    console.log(a instanceof A) // false --- handled in Jig
+    console.log(a instanceof AProxy) // true
+    console.log(a.constructor === A) // false
+    console.log(a.constructor === AProxy) // true
+    console.log('---')
+    console.log(a instanceof B) // false --- handled in Jig
+    console.log(a instanceof BProxy) // true
+    console.log(a.constructor === B) // false
+    console.log(a.constructor === BProxy) // false
+    console.log('---')
+    console.log(a.checkInstanceOf(B)) // false --- handled in Jig
+    console.log(a.checkInstanceOf(BProxy)) // true
+    console.log(a.checkConstructor(B)) // false
+    console.log(a.checkConstructor(BProxy)) // false
+  })
+
+  it('bproxy', async () => {
+    class B {
+      constructor() {
+        console.log(`B.constructor()`)
+      }
+    }
+
+    // const BProxy = B
+    const BProxy = proxyClass(B)
+
+    class A extends BProxy {
+      constructor(n) {
+        console.log(`A.constructor(${n})`)
+        super()
+        console.log('THIS', this)
+        console.log('PROTO', Object.getPrototypeOf(this))
+        this.n
+      }
+    }
+
+    function proxyClass(T) {
+      const H = {}
+      let P = new Proxy(T, H)
+      H.construct = (target, args, newTarget) => {
+        console.log('P.construct', target.name, args)
+        const t =  Reflect.construct(target, args, newTarget)
+        // const t = new target(...args)
+        const h = {}
+        const p = new Proxy(t, h)
+        h.get = (target, prop) => {
+          // console.log('GET', target, prop)
+          if (prop === 'constructor') return P
+          return target[prop]
+        }
+        h.setPrototypeOf = (target, prototype) => {
+          // console.log('SET_PROTOTYPE_OF', target, prototype)
+          Object.setPrototypeOf(target, prototype)
+        }
+        return p
+      }
+      return P
+    }
+
+    const AProxy = proxyClass(A)
+
+    const a = new AProxy(1)
+
+    console.log(a) // A {}
+    console.log('---')
+    console.log(a instanceof A) // true
+    console.log(a instanceof AProxy) // true
+    console.log(a.constructor === A) // false
+    console.log(a.constructor === AProxy) // true
+    console.log('---')
+    console.log(a instanceof B) // true
+    console.log(a instanceof BProxy) // true
+    console.log(a.constructor === B) // false
+    console.log(a.constructor === BProxy) // false
+  })
+
+  it('b', async () => {
     class B {
       constructor() {
         console.log(`B.constructor()`)
