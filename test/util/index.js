@@ -118,6 +118,7 @@ describe('util', () => {
 
   function buildRunTransaction (prefixString, protocolVersionArray, runData, scriptBuilder,
     containDebugInfo, numAdditionalOutputs) {
+      const Buffer = bsv.deps.Buffer
     const prefix = Buffer.from(prefixString, 'utf8')
     const protocolVersion = Buffer.from(protocolVersionArray, 'hex')
     const appId = Buffer.from('my-app', 'utf8')
@@ -133,7 +134,7 @@ describe('util', () => {
   }
 
   describe('checkRunTransaction', () => {
-    it('should detects valid run transaction', () => {
+    it('should detect valid run transaction', () => {
       const tx = buildRunTransaction('run', [Run.protocol], {}, 'buildSafeDataOut', true, 0)
       expect(() => checkRunTransaction(tx)).not.to.throw()
     })
@@ -216,9 +217,10 @@ describe('util', () => {
   describe('getNormalizedSourceCode', () => {
     // Node 8 and Node 12 have slightly different spacing for getNormalizedSourceCode('function () { return 1 }')
     // We don't need the normalized code to always be exactly the same, as long as it functions the same.
+    // Compiled build also add semicolons, so we normlize that too.
     function expectNormalizedSourceCode (type, text) {
-      const removeWhitespace = str => str.replace(/\s+/g, '')
-      expect(removeWhitespace(getNormalizedSourceCode(type))).to.equal(removeWhitespace(text))
+      const normalize = str => str.replace(/\s+/g, '').replace(/;/g, '')
+      expect(normalize(getNormalizedSourceCode(type))).to.equal(normalize(text))
     }
 
     it('should get code for basic class', () => {
