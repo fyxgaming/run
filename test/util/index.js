@@ -93,8 +93,7 @@ describe('util', () => {
 
   describe('ownerScript', () => {
     it('should support valid owners on different networks', () => {
-      const networks = [['main', 'mainnet'], ['test', 'testnet']]
-      for (const [network, bsvNetwork] of networks) {
+      for (const bsvNetwork of ['mainnet', 'testnet']) {
         const privkey = new bsv.PrivateKey(bsvNetwork)
         const pubkey = privkey.publicKey.toString()
         const addr = privkey.toAddress().toString()
@@ -118,7 +117,7 @@ describe('util', () => {
 
   function buildRunTransaction (prefixString, protocolVersionArray, runData, scriptBuilder,
     containDebugInfo, numAdditionalOutputs) {
-      const Buffer = bsv.deps.Buffer
+    const Buffer = bsv.deps.Buffer
     const prefix = Buffer.from(prefixString, 'utf8')
     const protocolVersion = Buffer.from(protocolVersionArray, 'hex')
     const appId = Buffer.from('my-app', 'utf8')
