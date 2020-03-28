@@ -5,6 +5,7 @@
  */
 
 require('./kernel/blockchain')
+require('./kernel/location')
 
 require('./module/blockchain-api')
 require('./module/local-purse')
