@@ -11,3 +11,4 @@ require('./module/local-purse')
 require('./module/mockchain')
 
 require('./util')
+require('./util/friendly')
