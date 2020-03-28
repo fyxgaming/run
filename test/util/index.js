@@ -95,7 +95,6 @@ describe('util', () => {
     it('should support valid owners on different networks', () => {
       const networks = [['main', 'mainnet'], ['test', 'testnet']]
       for (const [network, bsvNetwork] of networks) {
-        new Run({ network }) // eslint-disable-line
         const privkey = new bsv.PrivateKey(bsvNetwork)
         const pubkey = privkey.publicKey.toString()
         const addr = privkey.toAddress().toString()
@@ -117,7 +116,6 @@ describe('util', () => {
     })
   })
 
-  /*
   function buildRunTransaction (prefixString, protocolVersionArray, runData, scriptBuilder,
     containDebugInfo, numAdditionalOutputs) {
     const prefix = Buffer.from(prefixString, 'utf8')
@@ -311,5 +309,4 @@ describe('util', () => {
       expect(done2).to.equal(true)
     })
   })
-  */
 })
