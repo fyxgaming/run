@@ -235,7 +235,7 @@ describe('Run', () => {
     it('throw accept setting valid purse', () => {
       const run = new Run()
       run.purse = new bsv.PrivateKey()
-      expect(run.purse instanceof Run.Purse).to.equal(true)
+      expect(run.purse instanceof Run.LocalPurse).to.equal(true)
     })
 
     it('throw throw if set invalid purse', () => {
