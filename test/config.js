@@ -18,7 +18,7 @@ const PURSE = process.env.PURSE ? process.env.PURSE : undefined
 
 const Run = process.env.LIB ? require(path.join(process.cwd(), process.env.LIB)) : require('target')
 
-Run.defaults.logger = LOGGER ? console : undefined
+Run.defaults.logger = LOGGER ? console : {}
 Run.defaults.network = NETWORK
 Run.defaults.api = API
 Run.defaults.apiKey = APIKEY
