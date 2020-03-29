@@ -175,8 +175,8 @@ describe('Run', () => {
       })
 
       it('should throw if invalid state', () => {
-        expect(() => new Run({ state: { get: () => {} } })).to.throw('State requires a set method')
-        expect(() => new Run({ state: { set: () => {} } })).to.throw('State requires a get method')
+        expect(() => new Run({ state: { get: () => {} } })).to.throw('Invalid state: [object Object]')
+        expect(() => new Run({ state: { set: () => {} } })).to.throw('Invalid state: [object Object]')
         expect(() => new Run({ state: null })).to.throw('Invalid state: null')
         expect(() => new Run({ state: false })).to.throw('Invalid state: false')
       })
