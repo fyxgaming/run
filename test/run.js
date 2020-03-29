@@ -289,7 +289,8 @@ describe('Run', () => {
       const key = new bsv.PrivateKey('testnet')
       const run = new Run({ owner: key, purse: key })
       class A extends Jig { set (name) { this.name = name; return this } }
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       const purseUtxos = await run.purse.utxos()
       expect(purseUtxos.length).to.equal(10)
       await run.sync()

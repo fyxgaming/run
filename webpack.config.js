@@ -40,20 +40,18 @@ if (!fs.existsSync('./dist/bsv.browser.min.js')) {
 // Terser options
 // ------------------------------------------------------------------------------------------------
 
-// Reserved words that should not be mangled in minified builds
-const reserved = [
-  // These come from node_modules. Best to be safe.
-  '_read',
-  '_lengthRetrievers',
-  '_obj',
-  '__methods',
+// Reserved variables, usually for sandboxing reasons
+const reservedNames = [
+  // Jig and berry names and dependencies must be preserved
+  'Jig', 'Berry', 'Context', 'JigControl', 'BerryControl'
+]
 
+// Reserved words that should not be mangled in minified builds
+const reservedProperties = [
+  // These come from node_modules. Best to be safe.
+  '_read', '_lengthRetrievers', '_obj', '__methods',
   // These are bsv library properties that we use and should not be mangled
-  '_hash',
-  '_getHash',
-  '_getInputAmount',
-  '_estimateFee',
-  '_getOutputAmount'
+  '_hash', '_getHash', '_getInputAmount', '_estimateFee', '_getOutputAmount'
 ]
 
 // Run library terser settings
@@ -66,6 +64,7 @@ const terserPluginConfig = {
     ecma: 2015,
     nameCache: {},
     mangle: {
+      reserved: reservedNames,
       // The AbortSignal name is required for node-fetch and abort-controller to work together
       keep_classnames: /AbortSignal/,
       // All private properties (methods, variables) that the end user is not expected to interact
@@ -73,7 +72,7 @@ const terserPluginConfig = {
       // specific exceptions where it is problematic.
       properties: {
         regex: /^_.*$/,
-        reserved
+        reserved: reservedProperties
       }
     }
   }
@@ -90,9 +89,10 @@ const terserTestPluginConfig = {
     // the test should also be mangled the same way. We use the name cache for this.
     nameCache: terserPluginConfig.terserOptions.nameCache,
     mangle: {
+      reserved: reservedNames,
       properties: {
         regex: /^_.*$/,
-        reserved
+        reserved: reservedProperties
       }
     },
     // Keep code as close to the original as possible for debugging
