@@ -5,7 +5,7 @@
  */
 
 const path = require('path')
-const { addUserKeystoEnvironment } = require('../env/keys')
+const { addUserKeystoEnvironment } = require('./env/keys')
 
 addUserKeystoEnvironment()
 

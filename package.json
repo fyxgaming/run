@@ -16,9 +16,9 @@
     "lint": "standard --fix",
     "build": "webpack",
     "test": "env LIB=lib mocha",
-    "test:cover": "env LIB=lib nyc -r=text -r=lcovonly -x=test/** -x=env/** mocha",
+    "test:cover": "env LIB=lib nyc -r=text -r=lcovonly -x=test/** -x=test/env/** mocha",
     "test:node": "webpack && mocha dist/run.node.tests.js",
-    "test:browser": "node env/browser",
+    "test:browser": "node test/env/browser",
     "version": "webpack && standard && npm test",
     "bump": "npm version patch && git push --follow-tags && npm publish"
   },
