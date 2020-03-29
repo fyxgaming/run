@@ -223,28 +223,6 @@ describe('Run', () => {
       })
     })
 
-    describe('code', () => {
-      it('should default to new code', () => {
-        expect(new Run().code instanceof Run.Code).to.equal(true)
-      })
-
-      it('should support creating with new code', () => {
-        expect(() => new Run({ code: new Run.Code() })).not.to.throw()
-      })
-
-      it('should reuse code if possible', () => {
-        expect(new Map(new Run().code.installs)).to.deep.equal(new Map(new Run().code.installs))
-        expect(new Map(new Run({ sandbox: false }).code.installs))
-          .not.to.deep.equal(new Map(new Run({ sandbox: true }).code.installs))
-      })
-
-      it('should throw for invalid code', () => {
-        expect(() => new Run({ code: null })).to.throw('Option \'code\' must be an instance of Code')
-        expect(() => new Run({ code: 123 })).to.throw('Option \'code\' must be an instance of Code')
-        expect(() => new Run({ code: false })).to.throw('Option \'code\' must be an instance of Code')
-      })
-    })
-
     it('should set global bsv network', () => {
       new Run({ network: 'main' }) // eslint-disable-line
       expect(bsv.Networks.defaultNetwork).to.equal('mainnet')
