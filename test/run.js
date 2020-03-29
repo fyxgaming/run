@@ -26,9 +26,9 @@ describe('Run', () => {
       })
 
       it('should throw for invalid logger', () => {
-        expect(() => new Run({ logger: 1 })).to.throw('Option \'logger\' must be an object. Received: 1')
-        expect(() => new Run({ logger: false })).to.throw('Option \'logger\' must be an object. Received: false')
-        expect(() => new Run({ logger: () => {} })).to.throw('Option \'logger\' must be an object. Received: ')
+        expect(() => new Run({ logger: 1 })).to.throw('Invalid logger: 1')
+        expect(() => new Run({ logger: false })).to.throw('Invalid logger: false')
+        expect(() => new Run({ logger: () => {} })).to.throw('Invalid logger: [anonymous function]')
       })
 
       it('should complete methods for custom logger', () => {
@@ -158,9 +158,9 @@ describe('Run', () => {
       })
 
       it('should throw if bad app name', () => {
-        expect(() => new Run({ app: 0 })).to.throw('Option \'app\' must be a string. Received: 0')
-        expect(() => new Run({ app: true })).to.throw('Option \'app\' must be a string. Received: true')
-        expect(() => new Run({ app: { name: 'biz' } })).to.throw('Option \'app\' must be a string. Received: [object Object]')
+        expect(() => new Run({ app: 0 })).to.throw('Invalid app: 0')
+        expect(() => new Run({ app: true })).to.throw('Invalid app: true')
+        expect(() => new Run({ app: { name: 'biz' } })).to.throw('Invalid app: [object Object]')
       })
     })
 
@@ -177,8 +177,8 @@ describe('Run', () => {
       it('should throw if invalid state', () => {
         expect(() => new Run({ state: { get: () => {} } })).to.throw('State requires a set method')
         expect(() => new Run({ state: { set: () => {} } })).to.throw('State requires a get method')
-        expect(() => new Run({ state: null })).to.throw('Option \'state\' must not be null')
-        expect(() => new Run({ state: false })).to.throw('Option \'state\' must be an object. Received: false')
+        expect(() => new Run({ state: null })).to.throw('Invalid state: null')
+        expect(() => new Run({ state: false })).to.throw('Invalid state: false')
       })
 
       it('should copy previous state', () => {
@@ -200,8 +200,8 @@ describe('Run', () => {
       })
 
       it('should throw for invalid owner', () => {
-        expect(() => new Run({ owner: 123 })).to.throw('Option \'owner\' must be a valid key, address, or Owner instance. Received: 123')
-        expect(() => new Run({ owner: false })).to.throw('Option \'owner\' must be a valid key, address, or Owner instance. Received: false')
+        expect(() => new Run({ owner: 123 })).to.throw('Invalid owner: 123')
+        expect(() => new Run({ owner: false })).to.throw('Invalid owner: false')
       })
     })
 
@@ -262,7 +262,7 @@ describe('Run', () => {
 
     it('throw throw if set invalid purse', () => {
       const run = new Run()
-      expect(() => { run.purse = 123 }).to.throw('Option \'purse\' must be a valid private key or Pay API')
+      expect(() => { run.purse = 123 }).to.throw('Invalid purse: 123')
     })
   })
 
