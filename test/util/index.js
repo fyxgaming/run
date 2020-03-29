@@ -18,7 +18,7 @@ const {
   deployable,
   checkRunTransaction,
   extractRunData,
-  outputType,
+  _outputType,
   encryptRunData,
   decryptRunData,
   SerialTaskQueue
@@ -182,36 +182,36 @@ describe('util', () => {
     })
   })
 
-  describe('outputType', () => {
+  describe('_outputType', () => {
     it('should return rundata', () => {
       const tx = buildRunTransaction('run', [Run.protocol], { code: [1], jigs: 2 }, 'buildSafeDataOut', true, 0)
-      expect(outputType(tx, 0)).to.equal('rundata')
+      expect(_outputType(tx, 0)).to.equal('rundata')
     })
 
     it('should return code', () => {
       const tx = buildRunTransaction('run', [Run.protocol], { code: [1], jigs: 2 }, 'buildSafeDataOut', true, 4)
-      expect(outputType(tx, 1)).to.equal('code')
+      expect(_outputType(tx, 1)).to.equal('code')
     })
 
     it('should return jig', () => {
       const tx = buildRunTransaction('run', [Run.protocol], { code: [1], jigs: 2 }, 'buildSafeDataOut', true, 4)
-      expect(outputType(tx, 2)).to.equal('jig')
-      expect(outputType(tx, 3)).to.equal('jig')
+      expect(_outputType(tx, 2)).to.equal('jig')
+      expect(_outputType(tx, 3)).to.equal('jig')
     })
 
     it('should return other for change', () => {
       const tx = buildRunTransaction('run', [Run.protocol], { code: [1], jigs: 2 }, 'buildSafeDataOut', true, 4)
-      expect(outputType(tx, 4)).to.equal('other')
+      expect(_outputType(tx, 4)).to.equal('other')
     })
 
     it('should return other for money', () => {
       const tx = new bsv.Transaction().to(new bsv.PrivateKey().toAddress(), 100)
-      expect(outputType(tx, 0)).to.equal('other')
+      expect(_outputType(tx, 0)).to.equal('other')
     })
 
     it('should return other for bad run data', () => {
       const tx = buildRunTransaction('run', [Run.protocol], 'hello, world', 'buildSafeDataOut', true, 4)
-      expect(outputType(tx, 4)).to.equal('other')
+      expect(_outputType(tx, 4)).to.equal('other')
     })
   })
 
