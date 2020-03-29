@@ -7,6 +7,7 @@
 require('./run')
 
 require('./kernel/blockchain')
+require('./kernel/jig')
 require('./kernel/location')
 
 require('./module/blockchain-api')
