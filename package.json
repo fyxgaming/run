@@ -16,7 +16,7 @@
     "lint": "standard --fix",
     "build": "webpack",
     "test": "env LIB=lib mocha",
-    "test:cover": "env LIB=lib nyc -r=text -r=lcovonly -x=test/** -x=test/env/** mocha",
+    "test:cover": "env LIB=lib nyc -r=text -r=lcovonly mocha",
     "test:node": "webpack && mocha dist/run.node.tests.js",
     "test:browser": "node test/env/browser",
     "version": "webpack && standard && npm test",
@@ -30,6 +30,12 @@
   },
   "mocha": {
     "timeout": 30000
+  },
+  "nyc": {
+    "exclude": [
+        "**/intrinsics.js",
+        "test/**"
+    ]
   },
   "devDependencies": {
     "chai": "^4.2.0",

@@ -23,5 +23,7 @@ Run.defaults.network = NETWORK
 Run.defaults.api = API
 Run.defaults.apiKey = APIKEY
 Run.defaults.purse = PURSE
+// TODO: Only if cover
+Run.defaults.sandbox = /^(?!Jig|Berry|Token|expect|FriendlySet|FriendlyMap|AddressScript|PubKeyScript|getIntrinsics).*$/
 
 module.exports = { Run, PERF }

@@ -113,7 +113,7 @@ describe('Run', () => {
 
     describe('sandbox', () => {
       it('should default to sandbox enabled', () => {
-        expect(new Run({ network: 'mock' }).sandbox).to.equal(true)
+        expect(new Run({ network: 'mock', sandbox: undefined }).sandbox).to.equal(true)
         class A extends Jig { init () { this.version = Run.version } }
         expect(() => new A()).to.throw()
       })
