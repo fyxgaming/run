@@ -2,7 +2,7 @@ const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const { Run } = require('../config')
-const { Location, FriendlySet, FriendlyMap } = Run
+const { Location, TokenSet, TokenMap } = Run
 
 // ------------------------------------------------------------------------------------------------
 // A temporary token used for testing
@@ -27,29 +27,29 @@ const testToken = (origin, location) => {
 }
 
 // ------------------------------------------------------------------------------------------------
-// FriendlyMap
+// TokenMap
 // ------------------------------------------------------------------------------------------------
 
-describe('FriendlyMap', () => {
+describe('TokenMap', () => {
   const run = new Run()
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
     it('should create empty map', () => {
-      expect(new FriendlyMap().size).to.equal(0)
+      expect(new TokenMap().size).to.equal(0)
     })
 
     it('should create map from array', () => {
       const arr = [[1, 2], ['a', 'b']]
-      const map = new FriendlyMap(arr)
+      const map = new TokenMap(arr)
       expect(map.size).to.equal(arr.length)
       arr.forEach(x => expect(map.has(x[0])).to.equal(true))
     })
 
     it('should create map from map', () => {
       const arr = [[1, 2], ['a', 'b']]
-      const map = new FriendlyMap(arr)
-      const map2 = new FriendlyMap(map)
+      const map = new TokenMap(arr)
+      const map2 = new TokenMap(map)
       expect(map2.size).to.equal(arr.length)
       arr.forEach(([x]) => expect(map2.has(x)).to.equal(true))
       arr.forEach(([x, y]) => expect(map2.get(x)).to.equal(y))
@@ -58,11 +58,11 @@ describe('FriendlyMap', () => {
 
   describe('clear', () => {
     it('should not throw on empty map', () => {
-      expect(() => new FriendlyMap().clear()).not.to.throw()
+      expect(() => new TokenMap().clear()).not.to.throw()
     })
 
     it('should empty contents', () => {
-      const map = new FriendlyMap()
+      const map = new TokenMap()
       map.set(1, 2)
       map.clear()
       expect(map.size).to.equal(0)
@@ -71,7 +71,7 @@ describe('FriendlyMap', () => {
     it('should clear token states', () => {
       const a = testToken()
       const b = testToken().deploy().publish()
-      const map = new FriendlyMap([[a, 1], [b, 2]])
+      const map = new TokenMap([[a, 1], [b, 2]])
       map.clear()
       expect(map.size).to.equal(0)
       a.publish()
@@ -84,20 +84,20 @@ describe('FriendlyMap', () => {
 
   describe('delete', () => {
     it('should return false if item is not present', () => {
-      expect(new FriendlyMap().delete(1)).to.equal(false)
-      expect(new FriendlyMap().delete(testToken())).to.equal(false)
-      expect(new FriendlyMap().delete(testToken().deploy())).to.equal(false)
-      expect(new FriendlyMap().delete(testToken().deploy().publish())).to.equal(false)
+      expect(new TokenMap().delete(1)).to.equal(false)
+      expect(new TokenMap().delete(testToken())).to.equal(false)
+      expect(new TokenMap().delete(testToken().deploy())).to.equal(false)
+      expect(new TokenMap().delete(testToken().deploy().publish())).to.equal(false)
     })
 
     it('should delete item and return true if item is present', () => {
-      expect(new FriendlyMap([[1, 1]]).delete(1)).to.equal(true)
+      expect(new TokenMap([[1, 1]]).delete(1)).to.equal(true)
     })
 
     it('should clear token states', () => {
       const a = testToken()
       const b = testToken().deploy()
-      const map = new FriendlyMap([[a, 1], [b, 1]])
+      const map = new TokenMap([[a, 1], [b, 1]])
       map.delete(a)
       map.delete(b)
       expect(map.size).to.equal(0)
@@ -109,7 +109,7 @@ describe('FriendlyMap', () => {
 
     it('should throw for same tokens at different states', () => {
       const a = testToken().deploy().publish()
-      const map = new FriendlyMap([[a, a]])
+      const map = new TokenMap([[a, a]])
       const a2 = a.duplicate().update()
       expect(() => map.delete(a2)).to.throw('Inconsistent worldview')
     })
@@ -118,7 +118,7 @@ describe('FriendlyMap', () => {
   describe('entries', () => {
     it('should iterate across entries', () => {
       const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
-      const map = new FriendlyMap(entries)
+      const map = new TokenMap(entries)
       for (const entry of map.entries()) {
         const next = entries.shift()
         expect(entry).to.deep.equal(next)
@@ -129,7 +129,7 @@ describe('FriendlyMap', () => {
   describe('forEach', () => {
     it('should execute function for each entry', () => {
       const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
-      const map = new FriendlyMap(entries)
+      const map = new TokenMap(entries)
       class A {
         constructor () { this.arr = [] }
         push (x, y) { this.arr.push([x, y]) }
@@ -143,19 +143,19 @@ describe('FriendlyMap', () => {
   describe('get', () => {
     it('should return values for basic types and objects in set', () => {
       const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
-      const map = new FriendlyMap(entries)
+      const map = new TokenMap(entries)
       entries.forEach(entry => expect(map.get(entry[0])).to.equal(entry[1]))
     })
 
     it('should return undefined for basic types and objects not in set', () => {
       const entries = [1, 'a', false, {}, []]
-      const map = new FriendlyMap()
+      const map = new TokenMap()
       entries.forEach(entry => expect(map.get(entry)).to.equal(undefined))
     })
 
     it('should return undefined after object is deleted', () => {
       const obj = {}
-      const map = new FriendlyMap([[obj, 1]])
+      const map = new TokenMap([[obj, 1]])
       expect(map.get(obj)).to.equal(1)
       map.delete(obj)
       expect(map.get(obj)).to.equal(undefined)
@@ -165,7 +165,7 @@ describe('FriendlyMap', () => {
       const a = testToken()
       const b = testToken().deploy()
       const c = testToken().deploy().publish()
-      const map = new FriendlyMap([[a, 'abc'], [b, 'def'], [c, 'ghi']])
+      const map = new TokenMap([[a, 'abc'], [b, 'def'], [c, 'ghi']])
       expect(map.get(a)).to.equal('abc')
       expect(map.get(b)).to.equal('def')
       expect(map.get(c)).to.equal('ghi')
@@ -178,14 +178,14 @@ describe('FriendlyMap', () => {
     })
 
     it('should return undefined for missing tokens', () => {
-      expect(new FriendlyMap().get(testToken().deploy())).to.equal(undefined)
+      expect(new TokenMap().get(testToken().deploy())).to.equal(undefined)
     })
 
     it('should throw for same tokens at different states', () => {
       const a = testToken()
       const b = testToken().deploy()
       const c = testToken().deploy().publish()
-      const map = new FriendlyMap([[a, 1], [b, 2], [c, 3]])
+      const map = new TokenMap([[a, 1], [b, 2], [c, 3]])
       expect(map.get(a)).to.equal(1)
       expect(map.get(b)).to.equal(2)
       expect(map.get(c)).to.equal(3)
@@ -201,19 +201,19 @@ describe('FriendlyMap', () => {
   describe('has', () => {
     it('should return true for basic types and objects in set', () => {
       const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
-      const map = new FriendlyMap(entries)
+      const map = new TokenMap(entries)
       entries.forEach(entry => expect(map.has(entry[0])).to.equal(true))
     })
 
     it('should return false for basic types and objects not in set', () => {
       const entries = [1, 'a', false, {}, []]
-      const map = new FriendlyMap()
+      const map = new TokenMap()
       entries.forEach(entry => expect(map.has(entry)).to.equal(false))
     })
 
     it('should return false after object is deleted', () => {
       const obj = {}
-      const map = new FriendlyMap([[obj, 1]])
+      const map = new TokenMap([[obj, 1]])
       expect(map.has(obj)).to.equal(true)
       map.delete(obj)
       expect(map.has(obj)).to.equal(false)
@@ -222,22 +222,22 @@ describe('FriendlyMap', () => {
     it('should return true for tokens in map', () => {
       const a = testToken()
       const b = testToken().deploy().publish().update()
-      const map = new FriendlyMap([[a, {}], [b, {}]])
+      const map = new TokenMap([[a, {}], [b, {}]])
       expect(map.has(a)).to.equal(true)
       expect(map.has(b)).to.equal(true)
       expect(map.has(b.duplicate())).to.equal(true)
     })
 
     it('should return false for missing tokens', () => {
-      expect(new FriendlyMap().has(testToken())).to.equal(false)
-      expect(new FriendlyMap().has(testToken().deploy())).to.equal(false)
-      expect(new FriendlyMap().has(testToken().deploy().publish())).to.equal(false)
-      expect(new FriendlyMap().has(testToken().deploy().publish().update())).to.equal(false)
+      expect(new TokenMap().has(testToken())).to.equal(false)
+      expect(new TokenMap().has(testToken().deploy())).to.equal(false)
+      expect(new TokenMap().has(testToken().deploy().publish())).to.equal(false)
+      expect(new TokenMap().has(testToken().deploy().publish().update())).to.equal(false)
     })
 
     it('should throw for same tokens at different states', () => {
       const a = testToken().deploy().publish().update().publish()
-      const map = new FriendlyMap([[a, []]])
+      const map = new TokenMap([[a, []]])
       expect(map.has(a)).to.equal(true)
       expect(() => map.has(a.duplicate().update())).to.throw('Inconsistent worldview')
     })
@@ -245,13 +245,13 @@ describe('FriendlyMap', () => {
 
   describe('set', () => {
     it('should return map regardless', () => {
-      const map = new FriendlyMap()
+      const map = new TokenMap()
       expect(map.set(1, 1)).to.equal(map)
       expect(map.set(1, 1)).to.equal(map)
     })
 
     it('should set basic types and objects as keys once', () => {
-      const map = new FriendlyMap()
+      const map = new TokenMap()
       const entries = [[1, 2], ['abc', 'def'], [true, false], [{}, []]]
       entries.forEach(([x, y]) => map.set(x, y))
       entries.forEach(([x, y]) => map.set(x, y))
@@ -260,7 +260,7 @@ describe('FriendlyMap', () => {
 
     it('should set tokens once', () => {
       const a = testToken().deploy().publish()
-      const map = new FriendlyMap()
+      const map = new TokenMap()
       map.set(a, 0)
       const a2 = a.duplicate()
       map.set(a2, 1)
@@ -271,7 +271,7 @@ describe('FriendlyMap', () => {
     it('should throw if add two of the same tokens at different states', () => {
       const a = testToken().deploy().publish()
       const a2 = a.duplicate().update()
-      const map = new FriendlyMap()
+      const map = new TokenMap()
       map.set(a2, a2)
       expect(() => map.set(a, {})).to.throw('Inconsistent worldview')
     })
@@ -280,7 +280,7 @@ describe('FriendlyMap', () => {
   describe('values', () => {
     it('should return values iterator', () => {
       const entries = [[1, 2], [3, 4]]
-      const map = new FriendlyMap(entries)
+      const map = new TokenMap(entries)
       const arr = []
       for (const val of map.values()) { arr.push(val) }
       expect(arr).to.deep.equal([2, 4])
@@ -288,37 +288,37 @@ describe('FriendlyMap', () => {
   })
 
   describe('misc', () => {
-    it('should return FriendlyMap for Symbol.species', () => {
-      expect(new FriendlyMap()[Symbol.species]).to.equal(FriendlyMap)
+    it('should return TokenMap for Symbol.species', () => {
+      expect(new TokenMap()[Symbol.species]).to.equal(TokenMap)
     })
 
     it('should return iterator for Symbol.iterator', () => {
-      expect(new FriendlyMap()[Symbol.species]).to.equal(FriendlyMap)
+      expect(new TokenMap()[Symbol.species]).to.equal(TokenMap)
     })
   })
 })
 
 // ------------------------------------------------------------------------------------------------
-// FriendlySet
+// TokenSet
 // ------------------------------------------------------------------------------------------------
 
-describe('FriendlySet', () => {
+describe('TokenSet', () => {
   describe('constructor', () => {
     it('should create empty set', () => {
-      expect(new FriendlySet().size).to.equal(0)
+      expect(new TokenSet().size).to.equal(0)
     })
 
     it('should create set from array', () => {
       const arr = [1, 2, 3]
-      const set = new FriendlySet(arr)
+      const set = new TokenSet(arr)
       expect(set.size).to.equal(arr.length)
       arr.forEach(x => expect(set.has(x)).to.equal(true))
     })
 
     it('should create set from set', () => {
       const arr = [1, 2, 3]
-      const set = new FriendlySet(arr)
-      const set2 = new FriendlySet(set)
+      const set = new TokenSet(arr)
+      const set2 = new TokenSet(set)
       expect(set2.size).to.equal(arr.length)
       arr.forEach(x => expect(set2.has(x)).to.equal(true))
     })
@@ -326,13 +326,13 @@ describe('FriendlySet', () => {
 
   describe('add', () => {
     it('should return set regardless', () => {
-      const set = new FriendlySet()
+      const set = new TokenSet()
       expect(set.add(1)).to.equal(set)
       expect(set.add(1)).to.equal(set)
     })
 
     it('should add basic types and objects once', () => {
-      const set = new FriendlySet()
+      const set = new TokenSet()
       const entries = [1, 'abc', true, {}, []]
       entries.forEach(entry => set.add(entry))
       entries.forEach(entry => set.add(entry))
@@ -342,7 +342,7 @@ describe('FriendlySet', () => {
     it('should add tokens once', async () => {
       const a = testToken()
       const b = testToken().deploy().publish()
-      const set = new FriendlySet()
+      const set = new TokenSet()
       set.add(a)
       set.add(b)
       set.add(b.duplicate())
@@ -352,7 +352,7 @@ describe('FriendlySet', () => {
     it('should throw if add two of the same tokens at different states', () => {
       const a = testToken()
       const b = testToken().deploy().publish()
-      const set = new FriendlySet()
+      const set = new TokenSet()
       set.add(a)
       set.add(b)
       const a2 = a.deploy().publish().duplicate().update()
@@ -364,18 +364,18 @@ describe('FriendlySet', () => {
 
   describe('clear', () => {
     it('should not throw on empty set', () => {
-      expect(() => new FriendlySet().clear()).not.to.throw()
+      expect(() => new TokenSet().clear()).not.to.throw()
     })
 
     it('should empty contents', () => {
-      const set = new FriendlySet()
+      const set = new TokenSet()
       set.add(1)
       set.clear()
       expect(set.size).to.equal(0)
     })
 
     it('should clear token states', () => {
-      const set = new FriendlySet()
+      const set = new TokenSet()
       const a = testToken().deploy()
       const b = testToken().deploy().publish()
       set.add(a)
@@ -390,17 +390,17 @@ describe('FriendlySet', () => {
 
   describe('delete', () => {
     it('should return false if item is not present', () => {
-      expect(new FriendlySet().delete(1)).to.equal(false)
-      expect(new FriendlySet().delete(testToken())).to.equal(false)
-      expect(new FriendlySet().delete(testToken().deploy().publish())).to.equal(false)
+      expect(new TokenSet().delete(1)).to.equal(false)
+      expect(new TokenSet().delete(testToken())).to.equal(false)
+      expect(new TokenSet().delete(testToken().deploy().publish())).to.equal(false)
     })
 
     it('should delete item and return true if item is present', () => {
-      expect(new FriendlySet([1]).delete(1)).to.equal(true)
+      expect(new TokenSet([1]).delete(1)).to.equal(true)
     })
 
     it('should clear token states', () => {
-      const set = new FriendlySet()
+      const set = new TokenSet()
       const token = testToken().deploy().publish()
       set.add(token)
       set.delete(token)
@@ -411,7 +411,7 @@ describe('FriendlySet', () => {
     it('should throw for same tokens at different states', () => {
       const a = testToken()
       const b = testToken().deploy().publish()
-      const set = new FriendlySet([a, b])
+      const set = new TokenSet([a, b])
       expect(() => set.delete(a.deploy().publish().duplicate().update())).to.throw('Inconsistent worldview')
       expect(() => set.delete(b.duplicate().update().publish())).to.throw('Inconsistent worldview')
     })
@@ -420,7 +420,7 @@ describe('FriendlySet', () => {
   describe('entries', () => {
     it('should iterate across entries', () => {
       const arr = [1, 2, 3]
-      const set = new FriendlySet(arr)
+      const set = new TokenSet(arr)
       for (const entry of set.entries()) {
         const next = arr.shift()
         expect(entry).to.deep.equal([next, next])
@@ -430,7 +430,7 @@ describe('FriendlySet', () => {
 
   describe('forEach', () => {
     it('should execute function for each entry', () => {
-      const set = new FriendlySet([1, 2, 3])
+      const set = new TokenSet([1, 2, 3])
       class A {
         constructor () { this.arr = [] }
         push (x) { this.arr.push(x) }
@@ -444,19 +444,19 @@ describe('FriendlySet', () => {
   describe('has', () => {
     it('should return true for basic types and objects in set', () => {
       const entries = [1, 'a', false, {}, []]
-      const set = new FriendlySet(entries)
+      const set = new TokenSet(entries)
       entries.forEach(entry => expect(set.has(entry)).to.equal(true))
     })
 
     it('should return false for basic types and objects not in set', () => {
       const entries = [1, 'a', false, {}, []]
-      const set = new FriendlySet()
+      const set = new TokenSet()
       entries.forEach(entry => expect(set.has(entry)).to.equal(false))
     })
 
     it('should return false after object is deleted', () => {
       const obj = {}
-      const set = new FriendlySet([obj])
+      const set = new TokenSet([obj])
       expect(set.has(obj)).to.equal(true)
       set.delete(obj)
       expect(set.has(obj)).to.equal(false)
@@ -464,21 +464,21 @@ describe('FriendlySet', () => {
 
     it('should return true for tokens in set', () => {
       const a = testToken().deploy().publish()
-      const set = new FriendlySet([a])
+      const set = new TokenSet([a])
       expect(set.has(a)).to.equal(true)
       expect(set.has(a.duplicate())).to.equal(true)
     })
 
     it('should return false for missing tokens', () => {
-      expect(new FriendlySet().has(testToken())).to.equal(false)
-      expect(new FriendlySet().has(testToken().deploy())).to.equal(false)
-      expect(new FriendlySet().has(testToken().deploy().publish())).to.equal(false)
+      expect(new TokenSet().has(testToken())).to.equal(false)
+      expect(new TokenSet().has(testToken().deploy())).to.equal(false)
+      expect(new TokenSet().has(testToken().deploy().publish())).to.equal(false)
     })
 
     it('should throw for same tokens at different states', () => {
       const a = testToken().deploy()
       const b = testToken().deploy().publish().update()
-      const set = new FriendlySet([a, b])
+      const set = new TokenSet([a, b])
       expect(set.has(a)).to.equal(true)
       expect(set.has(b)).to.equal(true)
       expect(() => set.has(a.publish().duplicate().update())).to.throw('Inconsistent worldview')
@@ -489,19 +489,19 @@ describe('FriendlySet', () => {
   describe('values', () => {
     it('should return values iterator', () => {
       const arr = []
-      const set = new FriendlySet([1, 2, 3])
+      const set = new TokenSet([1, 2, 3])
       for (const val of set.values()) { arr.push(val) }
       expect(arr).to.deep.equal([1, 2, 3])
     })
   })
 
   describe('misc', () => {
-    it('should return FriendlySet for Symbol.species', () => {
-      expect(new FriendlySet()[Symbol.species]).to.equal(FriendlySet)
+    it('should return TokenSet for Symbol.species', () => {
+      expect(new TokenSet()[Symbol.species]).to.equal(TokenSet)
     })
 
     it('should return iterator for Symbol.iterator', () => {
-      expect(new FriendlySet()[Symbol.species]).to.equal(FriendlySet)
+      expect(new TokenSet()[Symbol.species]).to.equal(TokenSet)
     })
   })
 })

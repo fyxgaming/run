@@ -1651,7 +1651,7 @@ describe.skip('Jig', () => {
       })
     })
 
-    it('should use friendly set', async () => {
+    it('should use token set', async () => {
       class B extends Jig {}
       class A extends Jig {
         init () { this.set = new Set() }
@@ -1669,7 +1669,7 @@ describe.skip('Jig', () => {
       await run.load(a.location)
     })
 
-    it('should use friendly map', async () => {
+    it('should use token map', async () => {
       class B extends Jig {}
       class A extends Jig {
         init () { this.map = new Map() }

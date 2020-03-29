@@ -9,7 +9,7 @@ const { addUserKeystoEnvironment } = require('./env/keys')
 
 addUserKeystoEnvironment()
 
-const coverSandbox = /^(?!Jig|Berry|Token|expect|FriendlySet|FriendlyMap|AddressScript|PubKeyScript|getIntrinsics).*$/
+const coverSandbox = /^(?!Jig|Berry|Token|expect|TokenSet|TokenMap|AddressScript|PubKeyScript|getIntrinsics).*$/
 
 const PERF = process.env.PERF ? JSON.parse(process.env.PERF) : false
 const LOGGER = process.env.LOGGER ? process.env.LOGGER : false
