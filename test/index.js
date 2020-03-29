@@ -13,3 +13,4 @@ require('./module/mockchain')
 
 require('./util')
 require('./util/friendly')
+// require('./util/xray')
