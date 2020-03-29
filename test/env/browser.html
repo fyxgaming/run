@@ -7,14 +7,14 @@
     <title>Browser Tests</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
+    <link rel="stylesheet" href="../../node_modules/mocha/mocha.css" />
   </head>
 
   <body>
     <div id="mocha"></div>
 
-    <script src="../node_modules/chai/chai.js"></script>
-    <script src="../node_modules/mocha/mocha.js"></script>
+    <script src="../../node_modules/chai/chai.js"></script>
+    <script src="../../node_modules/mocha/mocha.js"></script>
 
     <script class="mocha-init">
       this.logs = []
@@ -48,9 +48,9 @@
 
     </script>
 
-    <script src="../dist/bsv.browser.min.js"></script>
-    <script src="../dist/run.browser.min.js"></script>
-    <script src="../dist/run.browser.tests.js"></script>
+    <script src="../../dist/bsv.browser.min.js"></script>
+    <script src="../../dist/run.browser.min.js"></script>
+    <script src="../../dist/run.browser.tests.js"></script>
 
     <script class="mocha-exec">
       mocha.run(failures => { this.failures = failures })
