@@ -122,11 +122,12 @@ describe('Run', () => {
         expect(new Run({ sandbox: true }).sandbox).to.equal(true)
       })
 
-      it('should support disabling sandbox', () => {
+      it.only('should support disabling sandbox', () => {
         const run = new Run({ network: 'mock', sandbox: false })
         expect(run.sandbox).to.equal(false)
         class A extends Jig { init () { this.version = Run.version } }
-        expect(() => new A()).not.to.throw()
+        new A()
+        // expect(() => new A()).not.to.throw()
         run.deactivate()
       })
 
