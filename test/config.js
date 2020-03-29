@@ -9,12 +9,15 @@ const { addUserKeystoEnvironment } = require('./env/keys')
 
 addUserKeystoEnvironment()
 
+const coverSandbox = /^(?!Jig|Berry|Token|expect|FriendlySet|FriendlyMap|AddressScript|PubKeyScript|getIntrinsics).*$/
+
 const PERF = process.env.PERF ? JSON.parse(process.env.PERF) : false
 const LOGGER = process.env.LOGGER ? process.env.LOGGER : false
 const NETWORK = process.env.NETWORK ? process.env.NETWORK : 'mock'
 const API = process.env.API ? process.env.API : 'run'
 const APIKEY = process.env.APIKEY ? process.env.APIKEY : undefined
 const PURSE = process.env.PURSE ? process.env.PURSE : undefined
+const COVER = process.env.COVER ? process.env.COVER : false
 
 const Run = process.env.LIB ? require(path.join(process.cwd(), process.env.LIB)) : require('target')
 
@@ -23,7 +26,6 @@ Run.defaults.network = NETWORK
 Run.defaults.api = API
 Run.defaults.apiKey = APIKEY
 Run.defaults.purse = PURSE
-// TODO: Only if cover
-Run.defaults.sandbox = /^(?!Jig|Berry|Token|expect|FriendlySet|FriendlyMap|AddressScript|PubKeyScript|getIntrinsics).*$/
+Run.defaults.sandbox = COVER ? coverSandbox : undefined
 
 module.exports = { Run, PERF }
