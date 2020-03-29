@@ -12,6 +12,7 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../config')
 const { LocalPurse } = Run
+const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Purse tests
