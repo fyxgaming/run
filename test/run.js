@@ -218,8 +218,8 @@ describe('Run', () => {
 
       it('should throw for invalid purse', () => {
         expect(() => new Run({ purse: {} })).to.throw('Purse requires a pay method')
-        expect(() => new Run({ purse: 123 })).to.throw('Option \'purse\' must be a valid private key or Pay API. Received: 123')
-        expect(() => new Run({ purse: true })).to.throw('Option \'purse\' must be a valid private key or Pay API. Received: true')
+        expect(() => new Run({ purse: 123 })).to.throw('Invalid purse: 123')
+        expect(() => new Run({ purse: true })).to.throw('Invalid purse: true')
       })
     })
 
