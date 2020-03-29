@@ -330,7 +330,7 @@ describe('Run', () => {
       await Promise.all([p1, p2])
     })
 
-    it('should reuse state cache', async () => {
+    it.skip('should reuse state cache', async () => {
       const networks = ['main', 'test']
 
       async function timeLoad (network, location) {
@@ -351,7 +351,7 @@ describe('Run', () => {
         expect(await timeLoad(network, location) > 1000).to.equal(true)
         expect(await timeLoad(network, location) > 1000).to.equal(false)
       }
-    }).timeout(30000)
+    })
 
     it.skip('should fail if reuse jigs across code instances', () => {
       // TODO: What should this behavior be?
