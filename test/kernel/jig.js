@@ -49,6 +49,15 @@ function expectNoAction () {
   if (action) throw new Error('Unexpected transaction')
 }
 
+async function hookPay (run, ...enables) {
+  enables = new Array(run.syncer.queued.length).fill(true).concat(enables)
+  const orig = run.purse.pay.bind(run.purse)
+  run.purse.pay = async (tx) => {
+    if (!enables.length) { return orig(tx) }
+    if (enables.shift()) { return orig(tx) } else { return tx }
+  }
+}
+
 // ------------------------------------------------------------------------------------------------
 // Jig tests
 // ------------------------------------------------------------------------------------------------
@@ -516,7 +525,7 @@ describe.skip('Jig', () => {
     it('should throw if update on wrong network', async () => {
       class A extends Jig { f () { this.n = 1; return this } }
       const a = await new A().sync()
-      new Run({ network: 'test' })
+      new Run({ network: 'test' }) // eslint-disable-line
       await expect(a.f().sync()).to.be.rejectedWith('Signature missing for A')
     }).timeout(30000)
   })
