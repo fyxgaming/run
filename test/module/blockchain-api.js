@@ -45,7 +45,7 @@ describe('BlockchainApi', () => {
 
     describe('api', () => {
       it('should default to run api', () => {
-        expect(new BlockchainApi().api.constructor).to.equal(BlockchainApi.RunConnect)
+        expect(new BlockchainApi().remoteBlockchain.constructor).to.equal(BlockchainApi.RunConnect)
       })
 
       it('should throw for bad api', () => {
@@ -81,7 +81,7 @@ describe('BlockchainApi', () => {
         const { RunConnect } = Run.BlockchainApi
         const api = new RunConnect({ timeout })
         const blockchain = new BlockchainApi({ api })
-        expect(blockchain.api.timeout).to.equal(timeout)
+        expect(blockchain.remoteBlockchain.timeout).to.equal(timeout)
         const oldFetchWithTimeout = RunConnect.prototype.fetchWithTimeout
         RunConnect.prototype.fetchWithTimeout = function (url, options) {
           url = 'http://www.google.com:81'
@@ -95,7 +95,7 @@ describe('BlockchainApi', () => {
       })
 
       it('should default timeout to 10000', () => {
-        expect(new BlockchainApi().api.timeout).to.equal(10000)
+        expect(new BlockchainApi().remoteBlockchain.timeout).to.equal(10000)
       })
 
       it('should throw for bad timeout', () => {
