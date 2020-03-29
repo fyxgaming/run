@@ -11,7 +11,7 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run, PERF } = require('../config')
-const { Mockchain } = Run.module
+const { Mockchain } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Globals

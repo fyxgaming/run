@@ -11,7 +11,7 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../config')
-const { LocalPurse } = Run.module
+const { LocalPurse } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Purse tests
@@ -115,9 +115,9 @@ describe('Purse', () => {
 
     describe('blockchain', () => {
       it('should support passing in valid blockchain', () => {
-        const mockchain = new Run.module.Mockchain()
+        const mockchain = new Run.Mockchain()
         expect(new LocalPurse({ blockchain: mockchain }).blockchain).to.equal(mockchain)
-        const blockchainApi = new Run.module.BlockchainApi()
+        const blockchainApi = new Run.BlockchainApi()
         expect(new LocalPurse({ blockchain: blockchainApi }).blockchain).to.equal(blockchainApi)
       })
 

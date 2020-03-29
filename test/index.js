@@ -4,6 +4,8 @@
  * Master list of test modules
  */
 
+require('./run')
+
 require('./kernel/blockchain')
 require('./kernel/location')
 

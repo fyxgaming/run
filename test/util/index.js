@@ -11,7 +11,7 @@ const { expect } = require('chai')
 const { AddressScript, PubKeyScript } = Run
 const {
   _bsvNetwork,
-  _name,
+  _display,
   checkSatoshis,
   ownerScript,
   getNormalizedSourceCode,
@@ -36,38 +36,40 @@ describe('util', () => {
     })
   })
 
-  describe('_name', () => {
+  describe('_display', () => {
     it('should create short names', () => {
       // Strings
-      expect(_name('')).to.equal('""')
-      expect(_name('abc')).to.equal('"abc"')
-      expect(_name('Hello, world!')).to.equal('"Hello, wor…"')
+      expect(_display('')).to.equal('""')
+      expect(_display('abc')).to.equal('"abc"')
+      expect(_display('Hello, world!')).to.equal('"Hello, wor…"')
       // Booleans
-      expect(_name(true)).to.equal('true')
-      expect(_name(false)).to.equal('false')
+      expect(_display(true)).to.equal('true')
+      expect(_display(false)).to.equal('false')
       // Numbers
-      expect(_name(1)).to.equal('1')
-      expect(_name(-1)).to.equal('-1')
-      expect(_name(1.5)).to.equal('1.5')
-      expect(_name(NaN)).to.equal('NaN')
-      expect(_name(-Infinity)).to.equal('-Infinity')
+      expect(_display(1)).to.equal('1')
+      expect(_display(-1)).to.equal('-1')
+      expect(_display(1.5)).to.equal('1.5')
+      expect(_display(NaN)).to.equal('NaN')
+      expect(_display(-Infinity)).to.equal('-Infinity')
       // Symbols
-      expect(_name(Symbol.iterator)).to.equal('Symbol(Symbol.iterator)')
-      expect(_name(Symbol.unscopables)).to.equal('Symbol(Symbol.unscopables)')
+      expect(_display(Symbol.iterator)).to.equal('Symbol(Symbol.iterator)')
+      expect(_display(Symbol.unscopables)).to.equal('Symbol(Symbol.unscopables)')
       // Undefined
-      expect(_name(undefined)).to.equal('undefined')
+      expect(_display(undefined)).to.equal('undefined')
       // Objects
-      expect(_name(null)).to.equal('null')
-      expect(_name({})).to.equal('[object Object]')
-      expect(_name({ a: 1 })).to.equal('[object Object]')
-      expect(_name([1, 2, 3])).to.equal('[object Array]')
-      expect(_name(new class Dragon {}())).to.equal('[object Dragon]')
+      expect(_display(null)).to.equal('null')
+      expect(_display({})).to.equal('[object Object]')
+      expect(_display({ a: 1 })).to.equal('[object Object]')
+      expect(_display([1, 2, 3])).to.equal('[object Array]')
+      expect(_display(new class Dragon {}())).to.equal('[object Dragon]')
       // Functions
-      expect(_name(function f () { })).to.equal('f')
-      expect(_name(class A { })).to.equal('A')
-      expect(_name(function () { })).to.equal('[anonymous function]')
-      expect(_name(() => { })).to.equal('[anonymous function]')
-      expect(_name(class { })).to.equal('[anonymous class]')
+      expect(_display(function f () { })).to.equal('f')
+      expect(_display(class A { })).to.equal('A')
+      expect(_display(function () { })).to.equal('[anonymous function]')
+      expect(_display(() => { })).to.equal('[anonymous function]')
+      expect(_display((x, y) => { })).to.equal('[anonymous function]')
+      expect(_display(_$xX123 => _$xX123)).to.equal('[anonymous function]')
+      expect(_display(class { })).to.equal('[anonymous class]')
     })
   })
 

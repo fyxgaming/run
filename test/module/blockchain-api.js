@@ -11,7 +11,7 @@ const chaiAsPromised = require('chai-as-promised')
 const { expect } = chai
 chai.use(chaiAsPromised)
 const { Run } = require('../config')
-const { BlockchainApi } = Run.module
+const { BlockchainApi } = Run
 
 // ------------------------------------------------------------------------------------------------
 // BlockchainApi tests
@@ -78,7 +78,7 @@ describe('BlockchainApi', () => {
     describe('timeout', () => {
       it('should time out', async () => {
         const timeout = 1
-        const { RunConnect } = Run.module.BlockchainApi
+        const { RunConnect } = Run.BlockchainApi
         const api = new RunConnect({ timeout })
         const blockchain = new BlockchainApi({ api })
         expect(blockchain.api.timeout).to.equal(timeout)
