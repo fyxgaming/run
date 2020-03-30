@@ -60,11 +60,13 @@ describe('util', () => {
       s.x = 1
       console.log(_fromTokenJson(_toTokenJson(s)).x)
 
-      // const o = Object.create(Object.prototype)
-      // o.n = 1
-      // o.m = o
-      // const p = Array.from([o, o])
-      // console.log(JSON.stringify(_fromTokenJson(_toTokenJson(p))))
+      const o = Object.create(Object.prototype)
+      o.n = 1
+      o.m = o
+      const p = Array.from([o, o])
+      const q = _fromTokenJson(_toTokenJson(p))
+      console.log(q)
+      console.log(q[0] === q[1])
     })
   })
 })
