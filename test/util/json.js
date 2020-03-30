@@ -28,7 +28,7 @@ function testSuccess (x, y) {
   const serialized = TokenJSON._serialize(x)
   const jsonString = JSON.stringify(serialized)
   const json = JSON.parse(jsonString)
-  expect(json).to.equal(y)
+  expect(json).to.deep.equal(y)
 }
 
 function testFail (x) {
@@ -37,7 +37,10 @@ function testFail (x) {
 
 describe.only('TokenJSON', () => {
   describe('_serialize', () => {
-    it('should serialize primitives', () => {
+    it('should serialize supported primitives', () => {
+      // Booleans
+      testSuccess(true, true)
+      testSuccess(false, false)
       // Numbers
       testSuccess(0, 0)
       testSuccess(1, 1)
@@ -48,13 +51,26 @@ describe.only('TokenJSON', () => {
       testSuccess(Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER)
       testSuccess(Number.MAX_VALUE, Number.MAX_VALUE)
       testSuccess(Number.MIN_VALUE, Number.MIN_VALUE)
+      testSuccess(-0, { $n0: 1 })
+      testSuccess(Infinity, { $inf: 1 })
+      testSuccess(-Infinity, { $ninf: 1 })
+      testSuccess(NaN, { $nan: 1 })
+      // Strings
+      testSuccess('', '')
+      testSuccess('abc', 'abc')
+      testSuccess('🐉', '🐉')
+      let longString = ''
+      for (let i = 0; i < 10000; i++) longString += 'abcdefghijklmnopqrstuvwxyz'
+      testSuccess(longString, longString)
+      // Undefined
+      testSuccess(undefined, { $undef: 1 })
     })
 
-    it('should throw for unserializable', () => {
-      // Numbers
-      testFail(Infinity)
-      testFail(-Infinity)
-      testFail(NaN)
+    it('should fail to serialize symbols', () => {
+      testFail(Symbol.hasInstance)
+      testFail(Symbol.iterator)
+      testFail(Symbol.species)
+      testFail(Symbol.unscopables)
     })
 
     it.skip('rest', () => {
