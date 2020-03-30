@@ -11,11 +11,9 @@ const { expect } = require('chai')
 const { AddressScript, PubKeyScript } = Run
 const {
   _bsvNetwork,
-  _display,
   checkSatoshis,
   ownerScript,
   getNormalizedSourceCode,
-  deployable,
   checkRunTransaction,
   extractRunData,
   _outputType,
@@ -33,43 +31,6 @@ describe('util', () => {
       expect(_bsvNetwork('test')).to.equal('testnet')
       expect(_bsvNetwork('mock')).to.equal('testnet')
       expect(_bsvNetwork('stn')).to.equal('testnet')
-    })
-  })
-
-  describe('_display', () => {
-    it('should create short names', () => {
-      // Strings
-      expect(_display('')).to.equal('""')
-      expect(_display('abc')).to.equal('"abc"')
-      expect(_display('Hello, world!')).to.equal('"Hello, wor…"')
-      // Booleans
-      expect(_display(true)).to.equal('true')
-      expect(_display(false)).to.equal('false')
-      // Numbers
-      expect(_display(1)).to.equal('1')
-      expect(_display(-1)).to.equal('-1')
-      expect(_display(1.5)).to.equal('1.5')
-      expect(_display(NaN)).to.equal('NaN')
-      expect(_display(-Infinity)).to.equal('-Infinity')
-      // Symbols
-      expect(_display(Symbol.iterator)).to.equal('Symbol(Symbol.iterator)')
-      expect(_display(Symbol.unscopables)).to.equal('Symbol(Symbol.unscopables)')
-      // Undefined
-      expect(_display(undefined)).to.equal('undefined')
-      // Objects
-      expect(_display(null)).to.equal('null')
-      expect(_display({})).to.equal('[object Object]')
-      expect(_display({ a: 1 })).to.equal('[object Object]')
-      expect(_display([1, 2, 3])).to.equal('[object Array]')
-      expect(_display(new class Dragon {}())).to.equal('[object Dragon]')
-      // Functions
-      expect(_display(function f () { })).to.equal('f')
-      expect(_display(class A { })).to.equal('A')
-      expect(_display(function () { })).to.equal('[anonymous function]')
-      expect(_display(() => { })).to.equal('[anonymous function]')
-      expect(_display((x, y) => { })).to.equal('[anonymous function]')
-      expect(_display(_$xX123 => _$xX123)).to.equal('[anonymous function]')
-      expect(_display(class { })).to.equal('[anonymous class]')
     })
   })
 
@@ -244,31 +205,6 @@ describe('util', () => {
       class B { }
       class A extends B { f () {} }
       expectNormalizedSourceCode(A, 'class A extends B { f () {} }')
-    })
-  })
-
-  describe('deployable', () => {
-    it('should return true for allowed', () => {
-      class B { }
-      expect(deployable(class A { })).to.equal(true)
-      expect(deployable(class A extends B { })).to.equal(true)
-      expect(deployable(function f () {})).to.equal(true)
-      expect(deployable(() => {})).to.equal(true)
-      expect(deployable(function () { })).to.equal(true)
-      expect(deployable(class {})).to.equal(true)
-    })
-
-    it('should return false for non-functions', () => {
-      expect(deployable()).to.equal(false)
-      expect(deployable(1)).to.equal(false)
-      expect(deployable({})).to.equal(false)
-      expect(deployable(true)).to.equal(false)
-    })
-
-    it('should return false for standard library objects', () => {
-      expect(deployable(Array)).to.equal(false)
-      expect(deployable(Uint8Array)).to.equal(false)
-      expect(deployable(Math.sin)).to.equal(false)
     })
   })
 
