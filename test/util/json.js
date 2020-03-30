@@ -1,7 +1,7 @@
 /**
  * json.js
  *
- * Tests for lib/util/serialize.js
+ * Tests for lib/util/json.js
  */
 
 const { describe, it } = require('mocha')

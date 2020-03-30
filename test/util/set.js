@@ -1,6 +1,6 @@
 /**
  * set.js
- * 
+ *
  * Tests for util/set.js
  */
 
