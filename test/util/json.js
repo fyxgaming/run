@@ -67,6 +67,14 @@ describe('util', () => {
       const q = _fromTokenJson(_toTokenJson(p))
       console.log(q[0] === q[1])
       // console.log(q)
+
+      class Dragon {}
+      const dragon = new Dragon()
+      const opts = {
+        _replacers: [x => x instanceof Dragon && { $dragon: x }],
+        _revivers: [x => x.$dragon]
+      }
+      console.log(_fromTokenJson(_toTokenJson(dragon, opts), opts))
     })
   })
 })
