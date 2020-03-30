@@ -71,8 +71,8 @@ describe('util', () => {
       class Dragon {}
       const dragon = new Dragon()
       const opts = {
-        _replacers: [x => x instanceof Dragon && { $dragon: x }],
-        _revivers: [x => x.$dragon]
+        _replacer: x => x instanceof Dragon && { $dragon: x },
+        _reviver: x => x.$dragon
       }
       console.log(_fromTokenJson(_toTokenJson(dragon, opts), opts))
     })
