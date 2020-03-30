@@ -9,10 +9,19 @@ const { Run } = require('../config')
 const { _toTokenJson, _fromTokenJson } = Run._util
 const DeterministicRealm = require('@runonbitcoin/sandbox')
 
+const _hostIntrinsics = { Object, Array, Set, Map }
+
 const realm = new DeterministicRealm()
 const compartment = realm.makeCompartment()
-const Object = compartment.evaluate('Object')
-const Array = compartment.evaluate('Array')
+
+const _sandboxIntrinsics = {
+  Object: compartment.evaluate('Object'),
+  Array: compartment.evaluate('Array'),
+  Set: compartment.evaluate('Object'),
+  Map: compartment.evaluate('Array')
+}
+
+const options = { _hostIntrinsics, _sandboxIntrinsics }
 
 describe('util', () => {
   describe('_toTokenJson', () => {
@@ -30,15 +39,13 @@ describe('util', () => {
 
   describe('_fromTokenJson', () => {
     it('test', () => {
-      console.log(
-        JSON.stringify(
-          _fromTokenJson(
-            _toTokenJson(
-              { $hello: 'world' }
-            )
-          )
-        )
-      )
+      const x = { $hello: 'world' }
+      const y = _toTokenJson(x, { options, _outputIntrinsics: _sandboxIntrinsics })
+      console.log(y)
+      console.log(y.constructor === _hostIntrinsics.Object)
+      console.log(y.constructor === _sandboxIntrinsics.Object)
+      const z = _fromTokenJson(y, options)
+      console.log(z)
     })
   })
 })
