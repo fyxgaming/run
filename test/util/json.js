@@ -65,6 +65,8 @@ describe.only('TokenJSON', () => {
       testSuccess(longString, longString)
       // Undefined
       testSuccess(undefined, { $undef: 1 })
+      // Null
+      testSuccess(null, null)
     })
 
     it('should serialize basic objects', () => {
@@ -81,11 +83,32 @@ describe.only('TokenJSON', () => {
       testSuccess({ a: { $a: { a: {} } } }, { a: { $obj: { $a: { a: {} } } } })
     })
 
+    it('should serialize basic arrays', () => {
+
+    })
+
+    it('should serialize complex objects', () => {
+      // Dollar signs, mixture of arrays and objects
+
+    })
+
+    it('should serialize duplicate objects', () => {
+      // Multiple
+    })
+
+    it('should serialize circular references', () => {
+      // Multiple
+    })
+
     it('should fail to serialize symbols', () => {
       testFail(Symbol.hasInstance)
       testFail(Symbol.iterator)
       testFail(Symbol.species)
       testFail(Symbol.unscopables)
+    })
+
+    it('test intrinsics', () => {
+      // For everything that creates objects or arrays
     })
 
     it.skip('rest', () => {

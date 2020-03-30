@@ -156,44 +156,11 @@ function addTestVectors (intrinsics, testIntrinsics) {
     return vector
   }
 
-  // Booleans
-  addTestVector(true)
-  addTestVector(false)
-
-  // Numbers
-  addTestVector(0)
-  addTestVector(-0)
-  addTestVector(-1)
-  addTestVector(Number.MAX_SAFE_INTEGER)
-  addTestVector(Number.MIN_SAFE_INTEGER)
-  addTestVector(Number.MAX_VALUE)
-  addTestVector(Number.MIN_VALUE)
-  addTestVector(0.5)
-  addTestVector(-1.5)
-  addTestVector(0.1234567890987654321)
-  addTestVector(NaN).unserializable().undeserializable()
-  addTestVector(Infinity).unserializable().undeserializable()
-  addTestVector(-Infinity).unserializable().undeserializable()
-
-  // Strings
-  addTestVector('')
-  addTestVector('abc')
-  addTestVector('🐉')
-  let longString = ''
-  for (let i = 0; i < 10000; i++) longString += 'abcdefghijklmnopqrstuvwxyz'
-  addTestVector(longString)
-
-  // Undefined
-  addTestVector(undefined).serialized({ $undef: 1 })
-
   // Objects
-  addTestVector(null)
   addTestVector({})
     .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Object))
     .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
     .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-  addTestVector({ n: 1 })
-  addTestVector({ o1: { o2: { o3: {} } } })
   addTestVector({ s: 't', a: [1], b: true, n: 0, o: { n2: 2 }, z: null })
   addTestVector(new Proxy({}, {}))
   addTestVector({ $undef: 1 }).serialized(undefined).unserializable().undeserializable()
@@ -410,12 +377,6 @@ function addTestVectors (intrinsics, testIntrinsics) {
     // eslint-disable-next-line
     addTestVector(new BigUint64Array()).serialized({ $bui64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
   }
-
-  // Symbols
-  addTestVector(Symbol.hasInstance).uncloneable().unserializable().undeserializable()
-  addTestVector(Symbol.iterator).uncloneable().unserializable().undeserializable()
-  addTestVector(Symbol.species).uncloneable().unserializable().undeserializable()
-  addTestVector(Symbol.unscopables).uncloneable().unserializable().undeserializable()
 
   // Intrinsic objects
   addTestVector(console).unscannable().uncloneable().unserializable().undeserializable()
