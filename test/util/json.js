@@ -43,6 +43,7 @@ describe.only('TokenJSON', () => {
       testSuccess(1, 1)
       testSuccess(-1, -1)
       testSuccess(1.5, 1.5)
+      testSuccess(-0.1234567890987654321, -0.1234567890987654321)
       testSuccess(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER)
       testSuccess(Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER)
       testSuccess(Number.MAX_VALUE, Number.MAX_VALUE)
