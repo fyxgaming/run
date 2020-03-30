@@ -67,6 +67,20 @@ describe.only('TokenJSON', () => {
       testSuccess(undefined, { $undef: 1 })
     })
 
+    it('should serialize basic objects', () => {
+      testSuccess({}, {})
+      testSuccess({ n: 1 }, { n: 1 })
+      testSuccess({ a: 'a', b: true, c: {} }, { a: 'a', b: true, c: {} })
+      testSuccess({ a: { a: { a: {} } } }, { a: { a: { a: {} } } })
+      testSuccess({ a: {}, b: {}, c: {} }, { a: {}, b: {}, c: {} })
+    })
+
+    it('should serialize objects with $ properties', () => {
+      testSuccess({ $n: 1 }, { $obj: { $n: 1 } })
+      testSuccess({ $obj: {} }, { $obj: { $obj: {} } })
+      testSuccess({ a: { $a: { a: {} } } }, { a: { $obj: { $a: { a: {} } } } })
+    })
+
     it('should fail to serialize symbols', () => {
       testFail(Symbol.hasInstance)
       testFail(Symbol.iterator)
