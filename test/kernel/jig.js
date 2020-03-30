@@ -62,20 +62,54 @@ async function hookPay (run, ...enables) {
 // Jig tests
 // ------------------------------------------------------------------------------------------------
 
-it('TODO REMOVE', async () => {
-  const run = new Run()
-  class Dragon extends Jig {
-    set (name) { this.name = name }
-  }
-  const dragon = new Dragon()
-  class Lair extends Jig { }
-  Lair.dragon = Lair
-  dragon.set('Empress')
-  await run.deploy(Lair)
-  await run.sync()
-  run.deactivate()
-  const run2 = new Run({ blockchain: run.blockchain })
-  await run2.load(Lair.location)
+describe('temp', () => {
+  it.only('TODO REMOVE', async () => {
+    const run = new Run()
+    class Dragon extends Jig {
+      set (name) { this.name = name }
+    }
+    const dragon = new Dragon()
+    class Lair extends Jig { }
+    Lair.dragon = Lair
+    dragon.set('Empress')
+    await run.deploy(Lair)
+    await run.sync()
+    run.deactivate()
+    const run2 = new Run({ blockchain: run.blockchain })
+    await run2.load(Lair.location)
+  })
+
+  it.only('DEPLOY CLASS', async () => {
+    const run = new Run()
+    class Store extends Jig {
+      set (x) { this.x = x }
+    }
+    class Dragon { }
+    const store = new Store()
+    store.set(Dragon)
+    await run.sync()
+    run.deactivate()
+    const run2 = new Run({ blockchain: run.blockchain })
+    await run2.load(Store.location)
+  })
+
+  it.only('CUSTOM OBJECT', async () => {
+    const run = new Run()
+    class Store extends Jig {
+      set (x) { this.x = x }
+    }
+    class Dragon { }
+    const dragon = new Dragon()
+    dragon.name = 'Empress'
+    const store = new Store()
+    store.set(dragon)
+    await run.sync()
+    run.deactivate()
+    const run2 = new Run({ blockchain: run.blockchain })
+    const store2 = await run2.load(store.location)
+    console.log(store2.dragon)
+    await run2.load(Dragon.location)
+  })
 })
 
 describe.skip('Jig', () => {

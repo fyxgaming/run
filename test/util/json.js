@@ -25,7 +25,7 @@ const options = { _hostIntrinsics, _sandboxIntrinsics }
 
 describe('util', () => {
   describe('_toTokenJson', () => {
-    it('test', () => {
+    it.only('test', () => {
       console.log(JSON.stringify(_toTokenJson({ n: 1 })))
       console.log(JSON.stringify(_toTokenJson({ $hello: 'world' })))
       console.log(JSON.stringify(_toTokenJson(new Set([1, 'a', 2, {}]))))
@@ -38,6 +38,55 @@ describe('util', () => {
       o.m = o
       const p = Array.from([o, o])
       console.log(JSON.stringify(_toTokenJson(p)))
+
+      // Custom object
+      class Dragon { }
+      const dragon = new Dragon()
+      dragon.name = 'Empress'
+      dragon.self = dragon
+      const _replaceCustomObjects = deployables => {
+        return (x, opts) => {
+          console.log(x)
+          if (typeof x === 'object') {
+            if (Run._util.deployable(x.constructor)) {
+            // add to deployable list
+              deployables.push(x.constructor)
+            }
+            // TODO: use _newObject
+            const y = { }
+            opts._cache.set(x, y)
+            y.$arb = _toTokenJson(Object.assign({}, x), opts)
+            y.T = '123'
+            return y
+          }
+        }
+      }
+
+      const _replaceDeployables = deployables => {
+        return () => {}
+      }
+
+      const _firstResult = (...callbacks) => {
+        return (...args) => {
+          for (const callback of callbacks) {
+            const y = callback(...args)
+            if (y) return y
+          }
+        }
+      }
+
+      const deployables = []
+
+      const _replacer = _firstResult(
+        _replaceDeployables(deployables),
+        _replaceCustomObjects(deployables))
+
+      console.log(JSON.stringify(_toTokenJson(dragon, { _replacer })))
+      console.log(deployables)
+
+      // Tests
+      // Multiple dups
+      // Dups in custom objects
     })
   })
 
