@@ -8,7 +8,6 @@ require('./run')
 
 require('./kernel/blockchain')
 require('./kernel/jig')
-require('./kernel/location')
 
 require('./module/blockchain-api')
 require('./module/local-purse')
@@ -16,5 +15,6 @@ require('./module/mockchain')
 
 require('./util')
 require('./util/json')
+require('./util/location')
 require('./util/set')
 // require('./util/xray')
