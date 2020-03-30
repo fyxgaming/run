@@ -1,5 +1,5 @@
 /**
- * serialize.js
+ * json.js
  *
  * Tests for lib/util/serialize.js
  */
