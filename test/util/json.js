@@ -40,49 +40,19 @@ describe('TokenJSON', () => {
       console.log(JSON.stringify(TokenJSON._serialize(p)))
 
       // Custom object
-      class Dragon { }
-      const dragon = new Dragon()
-      dragon.name = 'Empress'
-      dragon.self = dragon
-      const _replaceCustomObjects = deployables => {
-        return (x, opts) => {
-          console.log(x)
-          if (typeof x === 'object') {
-            if (Run._util.deployable(x.constructor)) {
-            // add to deployable list
-              deployables.push(x.constructor)
-            }
-            // TODO: use _newObject
-            const y = { }
-            opts._cache.set(x, y)
-            y.$arb = TokenJSON._serialize(Object.assign({}, x), opts)
-            y.T = '123'
-            return y
-          }
-        }
-      }
+      // class Dragon { }
+      // const dragon = new Dragon()
+      // dragon.name = 'Empress'
+      // dragon.self = dragon
 
-      const _replaceDeployables = deployables => {
-        return () => {}
-      }
+      // const deployables = []
 
-      const _firstResult = (...callbacks) => {
-        return (...args) => {
-          for (const c of callbacks) {
-            const y = c(...args)
-            if (y) return y
-          }
-        }
-      }
+      // const _replacer = _firstResult(
+      // _replaceDeployables(deployables),
+      // _replaceCustomObjects(deployables))
 
-      const deployables = []
-
-      const _replacer = _firstResult(
-        _replaceDeployables(deployables),
-        _replaceCustomObjects(deployables))
-
-      console.log(JSON.stringify(TokenJSON._serialize(dragon, { _replacer })))
-      console.log(deployables)
+      // console.log(JSON.stringify(TokenJSON._serialize(dragon, { _replacer })))
+      // console.log(deployables)
 
       // Tests
       // Multiple dups
