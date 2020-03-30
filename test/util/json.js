@@ -10,6 +10,10 @@ const { Run } = require('../config')
 const { TokenJSON, _display } = Run._util
 const DeterministicRealm = require('@runonbitcoin/sandbox')
 
+// ------------------------------------------------------------------------------------------------
+// Globals
+// ------------------------------------------------------------------------------------------------
+
 const _hostIntrinsics = { Object, Array, Set, Map }
 
 const realm = new DeterministicRealm()
@@ -24,6 +28,10 @@ const _sandboxIntrinsics = {
 
 const options = { _hostIntrinsics, _sandboxIntrinsics }
 
+// ------------------------------------------------------------------------------------------------
+// Helpers
+// ------------------------------------------------------------------------------------------------
+
 function testSuccess (x, y) {
   const serialized = TokenJSON._serialize(x)
   const jsonString = JSON.stringify(serialized)
@@ -35,6 +43,10 @@ function testSuccess (x, y) {
 function testFail (x) {
   expect(() => TokenJSON._serialize(x)).to.throw(`Cannot serialize ${_display(x)}`)
 }
+
+// ------------------------------------------------------------------------------------------------
+// TokenJSON
+// ------------------------------------------------------------------------------------------------
 
 describe.only('TokenJSON', () => {
   describe('_serialize', () => {
@@ -183,3 +195,5 @@ describe.only('TokenJSON', () => {
     })
   })
 })
+
+// ------------------------------------------------------------------------------------------------
