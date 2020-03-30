@@ -29,6 +29,7 @@ function testSuccess (x, y) {
   const jsonString = JSON.stringify(serialized)
   const json = JSON.parse(jsonString)
   expect(json).to.deep.equal(y)
+  expect(TokenJSON._deserialize(json)).to.deep.equal(x)
 }
 
 function testFail (x) {
