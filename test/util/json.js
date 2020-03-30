@@ -65,8 +65,8 @@ describe('util', () => {
       o.m = o
       const p = Array.from([o, o])
       const q = _fromTokenJson(_toTokenJson(p))
-      console.log(q)
       console.log(q[0] === q[1])
+      // console.log(q)
     })
   })
 })
