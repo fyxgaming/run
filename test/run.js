@@ -30,23 +30,6 @@ describe('Run', () => {
         expect(() => new Run({ logger: false })).to.throw('Invalid logger: false')
         expect(() => new Run({ logger: () => {} })).to.throw('Invalid logger: [anonymous function]')
       })
-
-      it('should complete methods for custom logger', () => {
-        let infoMessage = ''; let errorMessage = ''; let errorData = null
-        const run = new Run({
-          logger: {
-            info: message => { infoMessage = message },
-            error: (message, data) => { errorMessage = message; errorData = data }
-          }
-        })
-        run.logger.info('info')
-        run.logger.debug('debug')
-        run.logger.warn('warn')
-        run.logger.error('error', 1)
-        expect(infoMessage).to.equal('info')
-        expect(errorMessage).to.equal('error')
-        expect(errorData).to.equal(1)
-      })
     })
 
     describe('blockchain', () => {
@@ -95,19 +78,10 @@ describe('Run', () => {
         })
       })
 
-      it('should copy mockchain from previous blockchain', () => {
-        const run1 = new Run({ network: 'mock' })
-        const run2 = new Run({ network: 'mock' })
-        expect(run1.blockchain).to.be.instanceOf(Run.Mockchain)
-        expect(run1.blockchain).to.deep.equal(run2.blockchain)
-      })
-
-      it('should copy blockchain cache from previous blockchain', async () => {
-        const run1 = new Run({ network: 'test' })
-        await run1.blockchain.fetch('d89f6bfb9f4373212ed18b9da5f45426d50a4676a4a684c002a4e838618cf3ee')
-        const run2 = new Run({ network: 'test' })
-        expect(run1.blockchain).not.to.deep.equal(run2.blockchain)
-        expect(run1.blockchain.cache).to.deep.equal(run2.blockchain.cache)
+      it('should reuse blockchains', () => {
+        const run1 = new Run()
+        const run2 = new Run()
+        expect(run1.blockchain).to.equal(run2.blockchain)
       })
     })
 
