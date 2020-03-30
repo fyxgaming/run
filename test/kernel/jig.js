@@ -62,7 +62,7 @@ async function hookPay (run, ...enables) {
 // Jig tests
 // ------------------------------------------------------------------------------------------------
 
-describe('temp', () => {
+describe.skip('temp', () => {
   it.only('TODO REMOVE', async () => {
     const run = new Run()
     class Dragon extends Jig {

@@ -5,8 +5,9 @@
  */
 
 const { describe, it } = require('mocha')
+const { expect } = require('chai')
 const { Run } = require('../config')
-const { TokenJSON } = Run._util
+const { TokenJSON, _display } = Run._util
 const DeterministicRealm = require('@runonbitcoin/sandbox')
 
 const _hostIntrinsics = { Object, Array, Set, Map }
@@ -23,9 +24,39 @@ const _sandboxIntrinsics = {
 
 const options = { _hostIntrinsics, _sandboxIntrinsics }
 
-describe('TokenJSON', () => {
+function testSuccess (x, y) {
+  const serialized = TokenJSON._serialize(x)
+  const jsonString = JSON.stringify(serialized)
+  const json = JSON.parse(jsonString)
+  expect(json).to.equal(y)
+}
+
+function testFail (x) {
+  expect(() => TokenJSON._serialize(x)).to.throw(`Cannot serialize ${_display(x)}`)
+}
+
+describe.only('TokenJSON', () => {
   describe('_serialize', () => {
-    it.only('test', () => {
+    it('should serialize primitives', () => {
+      // Numbers
+      testSuccess(0, 0)
+      testSuccess(1, 1)
+      testSuccess(-1, -1)
+      testSuccess(1.5, 1.5)
+      testSuccess(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER)
+      testSuccess(Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER)
+      testSuccess(Number.MAX_VALUE, Number.MAX_VALUE)
+      testSuccess(Number.MIN_VALUE, Number.MIN_VALUE)
+    })
+
+    it('should throw for unserializable', () => {
+      // Numbers
+      testFail(Infinity)
+      testFail(-Infinity)
+      testFail(NaN)
+    })
+
+    it.skip('rest', () => {
       console.log(JSON.stringify(TokenJSON._serialize({ n: 1 })))
       console.log(JSON.stringify(TokenJSON._serialize({ $hello: 'world' })))
       console.log(JSON.stringify(TokenJSON._serialize(new Set([1, 'a', 2, {}]))))
@@ -61,7 +92,7 @@ describe('TokenJSON', () => {
   })
 
   describe('_deserialize', () => {
-    it('test', () => {
+    it.skip('test', () => {
       console.log(JSON.stringify(TokenJSON._deserialize(TokenJSON._serialize({ n: 1 }))))
 
       const x = { $hello: 'world' }
