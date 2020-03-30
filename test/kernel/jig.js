@@ -62,13 +62,29 @@ async function hookPay (run, ...enables) {
 // Jig tests
 // ------------------------------------------------------------------------------------------------
 
-describe('Jig', () => {
+it('TODO REMOVE', async () => {
+  const run = new Run()
+  class Dragon extends Jig {
+    set (name) { this.name = name }
+  }
+  const dragon = new Dragon()
+  class Lair extends Jig { }
+  Lair.dragon = Lair
+  dragon.set('Empress')
+  await run.deploy(Lair)
+  await run.sync()
+  run.deactivate()
+  const run2 = new Run({ blockchain: run.blockchain })
+  await run2.load(Lair.location)
+})
+
+describe.skip('Jig', () => {
   const run = hookStoreAction(new Run())
   beforeEach(() => run.blockchain.block())
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
-    it.only('should create basic jig', async () => {
+    it('should create basic jig', async () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -191,7 +207,7 @@ describe('Jig', () => {
       const a = new A()
       await run.sync()
       run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
+      const run2 = new Run()
       const a2 = await run2.load(a.location)
       expect(a2 instanceof A).to.equal(true)
     })
@@ -270,7 +286,7 @@ describe('Jig', () => {
       class A extends Jig { set (x) { this.x = x } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.privkey })
+      const run2 = new Run({ owner: run.owner.privkey })
       await run.sync()
       const a2 = await run2.load(a.location)
       a2.set(1)
@@ -290,7 +306,7 @@ describe('Jig', () => {
       expectAction(b, 'init', [], [], [b], [])
       a.set('b', b)
       await run.sync()
-      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.privkey })
+      const run2 = new Run({ owner: run.owner.privkey })
       const b2 = await run2.load(b.location)
       b2.set('n', 1)
       await b2.sync()
@@ -309,7 +325,7 @@ describe('Jig', () => {
       expectAction(b, 'init', [], [], [b], [])
       a.setB(b)
       await run.sync()
-      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.privkey })
+      const run2 = new Run({ owner: run.owner.privkey })
       const a2 = await run2.load(a.location)
       const b2 = await run2.load(b.location)
       b2.setA(a2)
@@ -325,7 +341,7 @@ describe('Jig', () => {
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
       await run.sync()
-      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.privkey })
+      const run2 = new Run({ owner: run.owner.privkey })
       const a2 = await run2.load(a.location)
       a2.set(1)
       await a2.sync()
@@ -356,7 +372,7 @@ describe('Jig', () => {
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
       await run.sync()
-      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.privkey })
+      const run2 = new Run({ owner: run.owner.privkey })
       const a2 = await run2.load(a.location)
       a2.set(1)
       await a2.sync()
@@ -589,7 +605,7 @@ describe('Jig', () => {
       expect(a.test).to.equal(true)
       await run.sync()
       run.deactivate()
-      const run2 = new Run({ owner: run.owner.privkey, blockchain: run.blockchain })
+      const run2 = new Run({ owner: run.owner.privkey })
       await run2.sync()
     })
   })
@@ -888,7 +904,7 @@ describe('Jig', () => {
       a2.set(2)
       await run.sync()
       // create a new run to not use the state cache
-      const run2 = new Run({ blockchain: run.blockchain, state: new Run.StateCache() })
+      const run2 = new Run({ state: new Run.StateCache() })
       const oldFetch = run.blockchain.fetch
       try {
         run2.blockchain.fetch = async txid => {
@@ -1335,7 +1351,7 @@ describe('Jig', () => {
       a.send(pubkey)
       expectAction(a, 'send', [pubkey], [a], [a], [])
       await a.sync()
-      const run2 = hookStoreAction(new Run({ blockchain: run.blockchain, owner: privateKey }))
+      const run2 = hookStoreAction(new Run({ owner: privateKey }))
       const a2 = await run2.load(a.location)
       const a3 = a2.createA()
       expectAction(a2, 'createA', [], [a2], [a2, a3], [])
@@ -1408,7 +1424,7 @@ describe('Jig', () => {
       const a = new A(privkey.publicKey.toString())
       await run.sync()
       run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain, owner: privkey })
+      const run2 = new Run({ owner: privkey })
       await run2.load(a.location)
     })
   })
@@ -1975,7 +1991,7 @@ describe('Jig', () => {
       class B extends A { }
       const b = await new B().sync()
       expectAction(b, 'init', [], [], [b], [])
-      const run2 = new Run({ blockchain: run.blockchain })
+      const run2 = new Run()
       await run2.load(b.location)
     })
 
@@ -2038,7 +2054,7 @@ describe('Jig', () => {
       const t2 = Date.now()
       expect((t1 - t0) / (t2 - t1) > 10).to.equal(true) // Load without state cache is 10x slower
 
-      const run2 = new Run({ blockchain: run.blockchain, state: new Run.StateCache() })
+      const run2 = new Run({ state: new Run.StateCache() })
       const t3 = Date.now()
       await run2.load(a.location)
       const t4 = Date.now()
@@ -2053,7 +2069,7 @@ describe('Jig', () => {
       class A extends Jig {}
       A.n = 1
       const a = await new A().sync()
-      const run2 = new Run({ blockchain: run.blockchain })
+      const run2 = new Run()
       const a2 = await run2.load(a.location)
       expect(a2.constructor.n).to.equal(1)
     })
@@ -2090,7 +2106,7 @@ describe('Jig', () => {
       expectAction(b, 'init', [], [], [b], [])
       run.transaction.end()
       await a.sync()
-      const run2 = new Run({ blockchain: run.blockchain })
+      const run2 = new Run()
       const a2 = await run2.load(a.location)
       const b2 = await run2.load(b.location)
       expect(a.origin.slice(0, 64)).to.equal(b.origin.slice(0, 64))
@@ -2111,7 +2127,7 @@ describe('Jig', () => {
       expectAction(b, 'f', [2], [b], [b], [])
       run.transaction.end()
       await a.sync()
-      const run2 = new Run({ blockchain: run.blockchain })
+      const run2 = new Run()
       const a2 = await run2.load(a.location)
       const b2 = await run2.load(b.location)
       expect(a2.location.slice(0, 64)).to.equal(b2.location.slice(0, 64))
@@ -2128,7 +2144,7 @@ describe('Jig', () => {
       expectAction(a, 'f', [a], [a], [a], [])
       run.transaction.end()
       await a.sync()
-      const run2 = new Run({ blockchain: run.blockchain })
+      const run2 = new Run()
       const a2 = await run2.load(a.location)
       expect(a.origin).to.equal(a2.origin)
       expect(a2).to.deep.equal(a2.n)
