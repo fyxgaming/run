@@ -6,7 +6,7 @@
 
 const { describe, it } = require('mocha')
 const { Run } = require('../config')
-const { _serialize } = Run._util
+const { _toTokenJson } = Run._util
 const DeterministicRealm = require('@runonbitcoin/sandbox')
 
 const realm = new DeterministicRealm()
@@ -21,13 +21,10 @@ describe('util', () => {
       o.n = 1
       o.m = o
       const p = Array.from([o, o])
-      console.log(JSON.stringify(_serialize(p)))
-
-      console.log(JSON.stringify(_serialize({ $hello: 'world' })))
-
-      console.log(JSON.stringify(_serialize(new Set([1, 'a', 2, {}]))))
-
-      console.log(JSON.stringify(_serialize(new Map([[1, 2], [{}, 'o']]))))
+      console.log(JSON.stringify(_toTokenJson(p)))
+      console.log(JSON.stringify(_toTokenJson({ $hello: 'world' })))
+      console.log(JSON.stringify(_toTokenJson(new Set([1, 'a', 2, {}]))))
+      console.log(JSON.stringify(_toTokenJson(new Map([[1, 2], [{}, 'o']]))))
     })
   })
 })
