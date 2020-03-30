@@ -15,5 +15,6 @@ require('./module/local-purse')
 require('./module/mockchain')
 
 require('./util')
-require('./util/token-set')
+require('./util/json')
+require('./util/set')
 // require('./util/xray')

@@ -1,3 +1,9 @@
+/**
+ * set.js
+ * 
+ * Tests for util/set.js
+ */
+
 const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
@@ -5,7 +11,7 @@ const { Run } = require('../config')
 const { Location, TokenSet, TokenMap } = Run
 
 // ------------------------------------------------------------------------------------------------
-// A temporary token used for testing
+// A temporary token for testing
 // ------------------------------------------------------------------------------------------------
 
 const randomLocation = () => `${bsv.crypto.Random.getRandomBuffer(32).toString('hex')}_o0`
