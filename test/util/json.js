@@ -344,11 +344,18 @@ describe.only('TokenJSON', () => {
       serializeFail(new Uint8Array(), opts)
     })
 
+    it('should support custom replacer', () => {
+      class A {}
+      expect(() => TokenJSON._serialize(new A())).to.throw('Cannot serialize')
+      expect(TokenJSON._serialize(new A(), {
+        _replacer: x => { if (x instanceof A) return { $a: 1 } }
+      })).to.deep.equal({ $a: 1 })
+    })
+
     // Arb objects
     // Token replacers
     // Circular arbs, and all the other tests, and for tokens too
     // Deployables
-    // Replacers and revivers
 
     /*
   addTestVector(class { }, { deployable: true })
@@ -465,6 +472,15 @@ describe.only('TokenJSON', () => {
       expect(TokenJSON._deserialize({ $set: [] }, opts).constructor).to.equal(_sandboxIntrinsics.Set)
       expect(TokenJSON._deserialize({ $map: [] }, opts).constructor).to.equal(_sandboxIntrinsics.Map)
       expect(TokenJSON._deserialize({ $ui8a: '' }, opts).constructor).to.equal(_sandboxIntrinsics.Uint8Array)
+    })
+
+    it('should support custom reviver', () => {
+      class A {}
+      const a = new A()
+      expect(() => TokenJSON._deserialize({ $a: 1 })).to.throw('Cannot deserialize')
+      expect(TokenJSON._deserialize({ $a: 1 }, {
+        _reviver: x => { if (x.$a === 1) return a }
+      })).to.equal(a)
     })
 
     it.skip('test', () => {
