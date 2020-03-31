@@ -214,6 +214,13 @@ describe.only('TokenJSON', () => {
       testSuccess(m5, { $dedup: { $dup: 0 }, dups: [{ $map: [[{ $dup: 0 }, 1]], props: { x: { $dup: 0 } } }] })
     })
 
+    it('should fail for extensions to built-in types', () => {
+      testFail(new (class CustomArray extends Array {})())
+      testFail(new (class CustomObject extends Object {})())
+      testFail(new (class CustomSet extends Set {})())
+      testFail(new (class CustomMap extends Map {})())
+    })
+
     it('test intrinsics', () => {
       // For everything that creates objects or arrays
     })
