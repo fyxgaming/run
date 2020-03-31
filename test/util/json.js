@@ -103,19 +103,21 @@ describe.only('TokenJSON', () => {
       testSuccess([0, undefined, 2], [0, { $undef: 1 }, 2])
     })
 
-    it('should support arrays with properties', () => {
-      const a1 = [1]
-      a1.x = 'a'
-      a1[''] = true
-      a1.$obj = {}
-      testSuccess(a1, { $arr: { 0: 1, x: 'a', '': true, $obj: {} } })
+    it('should support sparse arrays', () => {
+      const a = []
+      a[0] = 0
+      a[9] = 9
+      testSuccess(a, { $arr: { 0: 0, 9: 9 } })
     })
 
-    it('should support sparse arrays', () => {
-      const a2 = []
-      a2[0] = 0
-      a2[9] = 9
-      testSuccess(a2, { $arr: { 0: 0, 9: 9 } })
+    it('should support arrays with non-numeric properties', () => {
+      const a = [1]
+      a[9] = 9
+      a[-1] = -1
+      a.x = 'a'
+      a[''] = true
+      a.$obj = {}
+      testSuccess(a, { $arr: { 0: 1, 9: 9, '-1': -1, x: 'a', '': true, $obj: {} } })
     })
 
     it('should support complex objects', () => {
