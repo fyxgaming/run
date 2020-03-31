@@ -169,6 +169,13 @@ describe.only('TokenJSON', () => {
       const s2 = new Set()
       s2.add(s2)
       testSuccess(s2, { $dedup: { $dup: 0 }, dups: [{ $set: [{ $dup: 0 }] }] })
+      const s3 = new Set([1])
+      s3.x = null
+      testSuccess(s3, { $set: [1], props: { x: null } })
+      const s4 = new Set([])
+      s4.add(s4)
+      s4.s = s4
+      testSuccess(s4, { $dedup: { $dup: 0 }, dups: [{ $set: [{ $dup: 0 }], props: { s: { $dup: 0 } } }] })
     })
 
     it('should support maps', () => {
