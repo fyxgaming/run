@@ -23,8 +23,8 @@ const compartment = realm.makeCompartment()
 const _sandboxIntrinsics = {
   Object: compartment.evaluate('Object'),
   Array: compartment.evaluate('Array'),
-  Set: compartment.evaluate('Object'),
-  Map: compartment.evaluate('Array'),
+  Set: compartment.evaluate('Set'),
+  Map: compartment.evaluate('Map'),
   Uint8Array: compartment.evaluate('Uint8Array')
 }
 
@@ -42,8 +42,8 @@ function serializePass (x, y) {
   expect(TokenJSON._deserialize(json)).to.deep.equal(x)
 }
 
-const serializeFail = x => expect(() => TokenJSON._serialize(x)).to.throw('Cannot serialize')
-const deserializeFail = y => expect(() => TokenJSON._deserialize(y)).to.throw('Cannot deserialize')
+const serializeFail = (...args) => expect(() => TokenJSON._serialize(...args)).to.throw('Cannot serialize')
+const deserializeFail = (...args) => expect(() => TokenJSON._deserialize(...args)).to.throw('Cannot deserialize')
 
 // ------------------------------------------------------------------------------------------------
 // TokenJSON
@@ -336,6 +336,47 @@ describe.only('TokenJSON', () => {
       serializeFail(new Error())
       serializeFail(Buffer.alloc(0))
     })
+
+    it('should fail for unrecognized intrinsics', () => {
+      // Use sandbox intrinsics, but don't set them
+      serializeFail(new _sandboxIntrinsics.Set())
+      serializeFail(new _sandboxIntrinsics.Map())
+      serializeFail(new _sandboxIntrinsics.Uint8Array())
+      // Use host intrinsics, but set them to sandbox
+      const opts = { _hostIntrinsics: _sandboxIntrinsics }
+      serializeFail(new Set(), opts)
+      serializeFail(new Map(), opts)
+      serializeFail(new Uint8Array(), opts)
+    })
+
+    // Arb objects
+    // Token replacers
+    // Circular arbs, and all the other tests, and for tokens too
+    // Deployables
+    // Replacers and revivers
+
+    /*
+  addTestVector(class { }, { deployable: true })
+  addTestVector(class A { }, { deployable: true })
+  addTestVector(class { method() { return null }}, { deployable: true })
+  addTestVector(class B { constructor() {}}, { deployable: true })
+  addTestVector(function f() {}, { deployable: true })
+  addTestVector(function add(a, b) { return a + b}, { deployable: true })
+  addTestVector(function () { return '123' }, { deployable: true })
+  addTestVector(() => {}, { deployable: true })
+  addTestVector(x => x, { deployable: true })
+
+  // Non-deployable
+  addTestVector(Math.random, { deployable: false })
+  addTestVector(Array.prototype.indexOf, { deployable: false })
+  addTestVector(WeakSet.prototype.has, { deployable: false })
+  addTestVector(String.prototype.endsWith, { deployable: false })
+  addTestVector(isNaN, { deployable: false })
+  addTestVector(isFinite, { deployable: false })
+  addTestVector(parseInt, { deployable: false })
+  addTestVector(escape, { deployable: false })
+  addTestVector(eval, { deployable: false })
+  */
 
     it.skip('rest', () => {
       // Custom object
