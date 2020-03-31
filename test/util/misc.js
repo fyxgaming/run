@@ -94,6 +94,7 @@ describe('_deepTraverseObjects', () => {
     const a3 = []
     class C { }
     const f = function f () { }
+    f.n = 1
     f.o = { a: [{}] }
     f.s = new Set()
     f.s.add(a2)
