@@ -338,19 +338,6 @@ describe.only('TokenJSON', () => {
     })
 
     it.skip('rest', () => {
-      console.log(JSON.stringify(TokenJSON._serialize({ n: 1 })))
-      console.log(JSON.stringify(TokenJSON._serialize({ $hello: 'world' })))
-      console.log(JSON.stringify(TokenJSON._serialize(new Set([1, 'a', 2, {}]))))
-      console.log(JSON.stringify(TokenJSON._serialize(new Map([[1, 2], [{}, 'o']]))))
-      const s = new Set()
-      s.x = 1
-      console.log(JSON.stringify(TokenJSON._serialize(s)))
-      const o = Object.create(Object.prototype)
-      o.n = 1
-      o.m = o
-      const p = Array.from([o, o])
-      console.log(JSON.stringify(TokenJSON._serialize(p)))
-
       // Custom object
       // class Dragon { }
       // const dragon = new Dragon()
