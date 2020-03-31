@@ -23,7 +23,8 @@ const _sandboxIntrinsics = {
   Object: compartment.evaluate('Object'),
   Array: compartment.evaluate('Array'),
   Set: compartment.evaluate('Object'),
-  Map: compartment.evaluate('Array')
+  Map: compartment.evaluate('Array'),
+  Uint8Array: compartment.evaluate('Uint8Array')
 }
 
 const options = { _hostIntrinsics, _sandboxIntrinsics }
@@ -278,11 +279,24 @@ describe.only('TokenJSON', () => {
       serializeFail(JSON)
       serializeFail(Promise)
       serializeFail(Proxy)
+      serializeFail(Int8Array)
+      serializeFail(Int16Array)
+      serializeFail(Int32Array)
+      serializeFail(Uint8Array)
+      serializeFail(Uint16Array)
+      serializeFail(Uint32Array)
+      serializeFail(Uint8ClampedArray)
+      serializeFail(Float32Array)
+      serializeFail(Float64Array)
+      if (typeof BigInt64Array !== 'undefined') serializeFail(BigInt64Array) // eslint-disable-line
+      if (typeof BigUint64Array !== 'undefined') serializeFail(BigUint64Array) // eslint-disable-line
+      if (typeof BigInt !== 'undefined') serializeFail(BigInt) // eslint-disable-line
       if (typeof WebAssembly !== 'undefined') serializeFail(WebAssembly) // eslint-disable-line
       serializeFail(_sandboxIntrinsics.Object, { _sandboxIntrinsics })
       serializeFail(_sandboxIntrinsics.Array, { _sandboxIntrinsics })
       serializeFail(_sandboxIntrinsics.Set, { _sandboxIntrinsics })
       serializeFail(_sandboxIntrinsics.Map, { _sandboxIntrinsics })
+      serializeFail(_sandboxIntrinsics.Uint8Array, { _sandboxIntrinsics })
     })
 
     it('should fail for unsupported objects intrinsics', () => {

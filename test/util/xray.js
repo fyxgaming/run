@@ -10,12 +10,6 @@ const run = new Run()
 // ------------------------------------------------------------------------------------------------
 
 function addTestVectors (intrinsics, testIntrinsics) {
-  const {
-    Uint8Array, Int8Array,
-    Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array,
-    Float32Array, Float64Array
-  } = testIntrinsics
-
   const addTestVector = () => {}
 
   // Uint8Array
@@ -36,24 +30,6 @@ function addTestVectors (intrinsics, testIntrinsics) {
   addTestVector({ $ui8a: {} }).unserializable().undeserializable()
   addTestVector({ $ui8a: '🐉' }).unserializable().undeserializable()
   addTestVector({ $ui8a: new Uint8Array() }).unserializable().undeserializable()
-
-  // Unsupported TypedArrays
-  addTestVector(new Int8Array()).serialized({ $i8a: '' }).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(new Uint8ClampedArray()).serialized({ $ui8ca: '' }).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(new Int16Array()).serialized({ $i16a: '' }).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(new Uint16Array()).serialized({ $u16a: '' }).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(new Int32Array()).serialized({ $i32a: '' }).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(new Uint32Array()).serialized({ $ui32a: '' }).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(new Float32Array()).serialized({ $f32a: '' }).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(new Float64Array()).serialized({ $f64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
-  if (typeof BigInt64Array !== 'undefined') {
-    // eslint-disable-next-line
-    addTestVector(new BigInt64Array()).serialized({ $bi64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
-  }
-  if (typeof BigUint64Array !== 'undefined') {
-    // eslint-disable-next-line
-    addTestVector(new BigUint64Array()).serialized({ $bui64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
-  }
 
   // Unknown intrinsics
   const sandboxIntrinsics = run.code.intrinsics.allowed[1]
