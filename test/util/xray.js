@@ -11,12 +11,10 @@ const run = new Run()
 
 function addTestVectors (intrinsics, testIntrinsics) {
   const {
-    Object, Array, Set, Map, Uint8Array, Proxy, Int8Array,
+    Uint8Array, Int8Array,
     Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array,
-    Float32Array, Float64Array, console, Function, Error, Math, WebAssembly,
-    String, Date, JSON, Promise, WeakSet, WeakMap, RegExp
+    Float32Array, Float64Array
   } = testIntrinsics
-  console.log(Array, Set, Map)
 
   const addTestVector = () => {}
 
@@ -56,30 +54,6 @@ function addTestVectors (intrinsics, testIntrinsics) {
     // eslint-disable-next-line
     addTestVector(new BigUint64Array()).serialized({ $bui64a: '' }).unscannable().uncloneable().unserializable().undeserializable()
   }
-
-  // Intrinsic objects
-  addTestVector(console).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(Object).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(Function).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(Error).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(Math).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(Buffer).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(String).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(Date).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(JSON).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(Promise).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(Proxy).unscannable().uncloneable().unserializable().undeserializable()
-  if (typeof WebAssembly !== 'undefined') {
-    // eslint-disable-next-line
-    addTestVector(WebAssembly).unscannable().uncloneable().unserializable().undeserializable()
-  }
-
-  // Unsupported objects
-  addTestVector(new Date()).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(new WeakSet()).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(new WeakMap()).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(new RegExp()).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector(/^abc/).unscannable().uncloneable().unserializable().undeserializable()
 
   // Unknown intrinsics
   const sandboxIntrinsics = run.code.intrinsics.allowed[1]

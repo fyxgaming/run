@@ -267,6 +267,33 @@ describe.only('TokenJSON', () => {
       expect(TokenJSON._serialize([], opts).constructor).to.equal(Array)
     })
 
+    it('should fail for raw intrinsics', () => {
+      serializeFail(console)
+      serializeFail(Object)
+      serializeFail(Function)
+      serializeFail(Error)
+      serializeFail(Math)
+      serializeFail(Buffer)
+      serializeFail(Date)
+      serializeFail(JSON)
+      serializeFail(Promise)
+      serializeFail(Proxy)
+      if (typeof WebAssembly !== 'undefined') serializeFail(WebAssembly) // eslint-disable-line
+      serializeFail(_sandboxIntrinsics.Object, { _sandboxIntrinsics })
+      serializeFail(_sandboxIntrinsics.Array, { _sandboxIntrinsics })
+      serializeFail(_sandboxIntrinsics.Set, { _sandboxIntrinsics })
+      serializeFail(_sandboxIntrinsics.Map, { _sandboxIntrinsics })
+    })
+
+    it('should fail for unsupported objects intrinsics', () => {
+      serializeFail(new Date())
+      serializeFail(new WeakSet())
+      serializeFail(new WeakMap())
+      serializeFail(new RegExp())
+      serializeFail(/^abc/)
+      serializeFail(new Error())
+    })
+
     it.skip('rest', () => {
       console.log(JSON.stringify(TokenJSON._serialize({ n: 1 })))
       console.log(JSON.stringify(TokenJSON._serialize({ $hello: 'world' })))
