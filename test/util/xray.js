@@ -1,16 +1,13 @@
 const bsv = require('bsv')
-const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
-const { Xray, Intrinsics } = Run
+const { Intrinsics } = Run
 
 const run = new Run()
 
 // ------------------------------------------------------------------------------------------------
 // Test vectors
 // ------------------------------------------------------------------------------------------------
-
-const vectors = []
 
 function addTestVectors (intrinsics, testIntrinsics) {
   const {
@@ -146,59 +143,5 @@ addTestVectors(sesIntrinsics, sesIntrinsics.allowed[0])
 // allIntrinsics.use(evaluator.intrinsics.default)
 // addTestVectors(allIntrinsics, allIntrinsics.allowed[0])
 // addTestVectors(allIntrinsics, allIntrinsics.allowed[1])
-
-// ------------------------------------------------------------------------------------------------
-// Tests
-// ------------------------------------------------------------------------------------------------
-
-describe('Xray', () => {
-  describe('constructor', () => {
-    it('should use default intrinsics', () => {
-      expect(new Xray().intrinsics).to.equal(Intrinsics.defaultIntrinsics)
-    })
-  })
-
-  describe('scan', () => {
-    it('should pass test vectors', () => {
-      vectors.forEach(vector => vector.testScan())
-    })
-  })
-
-  describe('cloneable', () => {
-    it('should pass test vectors', () => {
-      vectors.forEach(vector => vector.testCloneable())
-    })
-  })
-
-  describe('serializable', () => {
-    it('should pass test vectors', () => {
-      vectors.forEach(vector => vector.testSerializable())
-    })
-  })
-
-  describe('deserializable', () => {
-    it('should pass test vectors', () => {
-      vectors.forEach(vector => vector.testDeserializable())
-    })
-  })
-
-  describe('clone', () => {
-    it('should pass test vectors', () => {
-      vectors.forEach(vector => vector.testClone())
-    })
-  })
-
-  describe('serialize', () => {
-    it('should pass test vectors', () => {
-      vectors.forEach(vector => vector.testSerialize())
-    })
-  })
-
-  describe('deserialize', () => {
-    it('should pass test vectors', () => {
-      vectors.forEach(vector => vector.testDeserialize())
-    })
-  })
-})
 
 // ------------------------------------------------------------------------------------------------
