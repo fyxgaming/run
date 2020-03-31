@@ -4,7 +4,7 @@
  * Tests for lib/util/json.js
  */
 
-const { describe, it } = require('mocha')
+const { describe, it, before } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const { Run } = require('../config')
@@ -47,6 +47,8 @@ const deserializeFail = (...args) => expect(() => TokenJSON._deserialize(...args
 // ------------------------------------------------------------------------------------------------
 
 describe('TokenJSON', () => {
+  before(() => run.activate())
+
   describe('_serialize', () => {
     it('should supported non-symbol primitives', () => {
       // Booleans
