@@ -91,30 +91,32 @@ describe('_display', () => {
 describe('_deepTraverseObjects', () => {
   it('should callback for every function or object', () => {
     const a2 = []
-    const a3 = []
     class C { }
+    const c = new C()
+    c.x = {}
     const f = function f () { }
     f.n = 1
     f.o = { a: [{}] }
     f.s = new Set()
-    f.s.add(a2)
+    f.s.add(c)
     f.s.a = []
     f.m = new Map()
-    f.m.set(C, a3)
+    f.m.set(C, a2)
     f.m.o = { }
     const results = []
     _deepTraverseObjects(f, x => { results.push(x); return true })
-    expect(results.length).to.equal(10)
+    expect(results.length).to.equal(11)
     expect(results[0]).to.equal(f.o)
     expect(results[1]).to.equal(f.o.a)
     expect(results[2]).to.equal(f.o.a[0])
     expect(results[3]).to.equal(f.s)
-    expect(results[4]).to.equal(a2)
-    expect(results[5]).to.equal(f.s.a)
-    expect(results[6]).to.equal(f.m)
-    expect(results[7]).to.equal(C)
-    expect(results[8]).to.equal(a3)
-    expect(results[9]).to.equal(f.m.o)
+    expect(results[4]).to.equal(c)
+    expect(results[5]).to.equal(c.x)
+    expect(results[6]).to.equal(f.s.a)
+    expect(results[7]).to.equal(f.m)
+    expect(results[8]).to.equal(C)
+    expect(results[9]).to.equal(a2)
+    expect(results[10]).to.equal(f.m.o)
   })
 
   it('should not dive deep if callback returns false', () => {
