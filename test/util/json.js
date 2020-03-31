@@ -87,12 +87,14 @@ describe.only('TokenJSON', () => {
       testSuccess({ a: 'a', b: true, c: {}, d: null }, { a: 'a', b: true, c: {}, d: null })
       testSuccess({ a: { a: { a: {} } } }, { a: { a: { a: {} } } })
       testSuccess({ a: {}, b: {}, c: {} }, { a: {}, b: {}, c: {} })
+      testSuccess(new Proxy({}, {}), {})
     })
 
     it('should support objects with $ properties', () => {
       testSuccess({ $n: 1 }, { $obj: { $n: 1 } })
       testSuccess({ $obj: {} }, { $obj: { $obj: {} } })
       testSuccess({ a: { $a: { a: {} } } }, { a: { $obj: { $a: { a: {} } } } })
+      testSuccess({ $undef: 1 }, { $obj: { $undef: 1 } })
     })
 
     it('should support basic arrays', () => {
@@ -121,12 +123,23 @@ describe.only('TokenJSON', () => {
     })
 
     it('should support complex objects', () => {
-      // Dollar signs, mixture of arrays and objects
-
+      const o = {}
+      o.o = { a: [] }
+      o.a = [{ n: 1 }]
+      o.u = undefined
+      testSuccess(o, { a: [{ n: 1 }], o: { a: [] }, u: { $undef: 1 } })
     })
 
     it('should support duplicate objects', () => {
-      // Multiple
+      const o = {}
+      const p = [1]
+      const d0 = { $dup: 0 }
+      const d1 = { $dup: 1 }
+      testSuccess([o, o], { $dedup: [d0, d0], dups: [{}] })
+      testSuccess({ a: o, b: o }, { $dedup: { a: d0, b: d0 }, dups: [{}] })
+      testSuccess([o, { o }], { $dedup: [d0, { o: d0 }], dups: [{}] })
+      testSuccess([o, p, o, p], { $dedup: [d0, d1, d0, d1], dups: [{}, [1]] })
+      testSuccess([o, o, p, [o, p], { z: p }], { $dedup: [d0, d0, d1, [d0, d1], { z: d1 }], dups: [{}, [1]] })
     })
 
     it('should support circular references', () => {
@@ -145,6 +158,8 @@ describe.only('TokenJSON', () => {
     })
 
     // Extensions of Object and Array, Map and Set
+
+    // Deserialize, throw for unknown $
 
     // Set, Map
 
