@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const { Run } = require('../config')
-const { Jig } = Run
+const { Jig, Berry } = Run
 const { TokenJSON } = Run._util
 const DeterministicRealm = require('@runonbitcoin/sandbox')
 
@@ -16,7 +16,7 @@ const DeterministicRealm = require('@runonbitcoin/sandbox')
 // Globals
 // ------------------------------------------------------------------------------------------------
 
-new Run() // eslint-disable-line
+const run = new Run()
 const realm = new DeterministicRealm()
 const compartment = realm.makeCompartment()
 const _sandboxIntrinsics = {
@@ -442,8 +442,8 @@ describe('TokenJSON', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const opts = {
-        _replacer: TokenJSON._replace._tokens(token => '123'),
-        _outputIntrinsics: _sandboxIntrinsics
+        _outputIntrinsics: _sandboxIntrinsics,
+        _replacer: TokenJSON._replace._tokens(token => '123')
       }
       const json = TokenJSON._serialize(dragon, opts)
       expect(json).to.deep.equal({ $ref: '123' })
@@ -454,8 +454,8 @@ describe('TokenJSON', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const opts = {
-        _reviver: TokenJSON._revive._tokens(ref => dragon),
-        _sandboxIntrinsics
+        _sandboxIntrinsics,
+        _reviver: TokenJSON._revive._tokens(ref => dragon)
       }
       expect(TokenJSON._deserialize({ $ref: '123' }, opts)).to.equal(dragon)
     })
@@ -464,9 +464,9 @@ describe('TokenJSON', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const opts = {
+        _outputIntrinsics: _sandboxIntrinsics,
         _replacer: TokenJSON._replace._tokens(token => '123'),
-        _reviver: TokenJSON._revive._tokens(ref => dragon),
-        _outputIntrinsics: _sandboxIntrinsics
+        _reviver: TokenJSON._revive._tokens(ref => dragon)
       }
       const x = [dragon, { dragon }, new Set([dragon])]
       const json = TokenJSON._serialize(x, opts)
@@ -507,7 +507,18 @@ describe('TokenJSON', () => {
       expect(() => TokenJSON._serialize(eval, opts)).to.throw('Cannot serialize') // eslint-disable-line
     })
 
-    // TODO: Replace Berries
+    it('should replace and revive berries', () => {
+      class CustomBerry extends Berry { }
+      run.deploy(CustomBerry)
+      const berry = { location: 'abc' }
+      Object.setPrototypeOf(berry, CustomBerry.prototype)
+      const opts = {
+        _sandboxIntrinsics,
+        _replacer: TokenJSON._replace._tokens(token => '123'),
+        _reviver: TokenJSON._revive._tokens(ref => berry)
+      }
+      serializePass(berry, { $ref: '123' }, opts)
+    })
   })
 
   describe('arbitrary objects', () => {
