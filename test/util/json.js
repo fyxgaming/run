@@ -15,11 +15,8 @@ const DeterministicRealm = require('@runonbitcoin/sandbox')
 // Globals
 // ------------------------------------------------------------------------------------------------
 
-const _hostIntrinsics = { Object, Array, Set, Map }
-
 const realm = new DeterministicRealm()
 const compartment = realm.makeCompartment()
-
 const _sandboxIntrinsics = {
   Object: compartment.evaluate('Object'),
   Array: compartment.evaluate('Array'),
@@ -27,8 +24,6 @@ const _sandboxIntrinsics = {
   Map: compartment.evaluate('Map'),
   Uint8Array: compartment.evaluate('Uint8Array')
 }
-
-const options = { _hostIntrinsics, _sandboxIntrinsics }
 
 // ------------------------------------------------------------------------------------------------
 // Helpers
@@ -473,31 +468,7 @@ describe.only('TokenJSON', () => {
     })
 
     it.skip('test', () => {
-      console.log(JSON.stringify(TokenJSON._deserialize(TokenJSON._serialize({ n: 1 }))))
-
-      const x = { $hello: 'world' }
-      const y = TokenJSON._serialize(x, { options, _outputIntrinsics: _sandboxIntrinsics })
-      console.log(y)
-      console.log(y.constructor === _hostIntrinsics.Object)
-      console.log(y.constructor === _sandboxIntrinsics.Object)
-      const z = TokenJSON._deserialize(y, options)
-      console.log(z)
-
-      console.log(TokenJSON._deserialize(TokenJSON._serialize(new Set([1, 'a', 2, {}]))))
-      console.log(TokenJSON._deserialize(TokenJSON._serialize(new Map([[1, 2], [{}, 'o']]))))
-
-      const s = new Set()
-      s.x = 1
-      console.log(TokenJSON._deserialize(TokenJSON._serialize(s)).x)
-
-      const o = Object.create(Object.prototype)
-      o.n = 1
-      o.m = o
-      const p = Array.from([o, o])
-      const q = TokenJSON._deserialize(TokenJSON._serialize(p))
-      console.log(q[0] === q[1])
-      // console.log(q)
-
+      /*
       class Dragon {}
       const dragon = new Dragon()
       const opts = {
@@ -505,6 +476,7 @@ describe.only('TokenJSON', () => {
         _reviver: x => x.$dragon
       }
       console.log(TokenJSON._deserialize(TokenJSON._serialize(dragon, opts), opts))
+      */
     })
   })
 })
