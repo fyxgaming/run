@@ -185,7 +185,7 @@ describe.only('TokenJSON', () => {
       const m = new Map()
       testSuccess(new Map([[m, m]]), { $dedup: { $map: [[{ $dup: 0 }, { $dup: 0 }]] }, dups: [{ $map: [] }] })
       // Custom keys, custom values
-      // Circular keys, Circular vaules
+      // Circular keys, Circular values
       // Props
       // Circular props
     })
@@ -197,6 +197,8 @@ describe.only('TokenJSON', () => {
     // Extensions of Object and Array, Map and Set
 
     // Deserialize, throw for unknown $
+
+    // Key order
 
     it.skip('rest', () => {
       console.log(JSON.stringify(TokenJSON._serialize({ n: 1 })))
