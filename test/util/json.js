@@ -376,6 +376,7 @@ describe('TokenJSON', () => {
       deserializeFail({ $: 1 })
       deserializeFail({ $err: 1 })
       deserializeFail({ $undef: 1, $nan: 1 })
+      deserializeFail({ $obj: null })
       // Array
       deserializeFail([{ $undef: undefined }])
       deserializeFail({ $arr: 1 })
