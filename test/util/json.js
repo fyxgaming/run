@@ -184,6 +184,10 @@ describe.only('TokenJSON', () => {
       testSuccess(new Map([[1, 2], [null, {}]]), { $map: [[1, 2], [null, {}]] })
       const m = new Map()
       testSuccess(new Map([[m, m]]), { $dedup: { $map: [[{ $dup: 0 }, { $dup: 0 }]] }, dups: [{ $map: [] }] })
+      // Custom keys, custom values
+      // Circular keys, Circular vaules
+      // Props
+      // Circular props
     })
 
     it('test intrinsics', () => {
