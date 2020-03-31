@@ -534,6 +534,12 @@ describe.only('TokenJSON', () => {
       const output = TokenJSON._deserialize(parsed, opts)
       expect(output).to.deep.equal(x)
     })
+
+    it('should fail to deserialize bad ref', () => {
+      const opts = { _reviver: TokenJSON._revive._tokens(ref => {}) }
+      deserializeFail({ $ref: 1, $ref2: 2 }, opts)
+      deserializeFail({ $ref: '123' })
+    })
   })
 })
 
