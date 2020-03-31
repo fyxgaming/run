@@ -180,6 +180,10 @@ describe.only('TokenJSON', () => {
 
     it('should support maps', () => {
       testSuccess(new Map(), { $map: [] })
+      testSuccess(new Map([['a', 'b']]), { $map: [['a', 'b']] })
+      testSuccess(new Map([[1, 2], [null, {}]]), { $map: [[1, 2], [null, {}]] })
+      const m = new Map()
+      testSuccess(new Map([[m, m]]), { $dedup: { $map: [[{ $dup: 0 }, { $dup: 0 }]] }, dups: [{ $map: [] }] })
     })
 
     it('test intrinsics', () => {
