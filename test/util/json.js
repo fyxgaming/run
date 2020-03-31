@@ -354,7 +354,6 @@ describe.only('TokenJSON', () => {
     })
 
     // Arb objects
-    // Token replacers
     // Circular arbs, and all the other tests, and for tokens too
     // Deployables
 
@@ -540,6 +539,16 @@ describe.only('TokenJSON', () => {
       deserializeFail({ $ref: 1, $ref2: 2 }, opts)
       deserializeFail({ $ref: '123' })
     })
+  })
+
+  describe('_findAllTokenRefsInTokenJson', () => {
+    function f () { }
+    let n = 1
+    const opts = { _replacer: TokenJSON._replace._tokens(token => n++) }
+    const x = [f, { f }, new Set([f])]
+    const json = TokenJSON._serialize(x, opts)
+    const refs = TokenJSON._findAllTokenRefsInTokenJson(json)
+    expect(Array.from(refs)).to.deep.equal([1, 2, 3])
   })
 })
 
