@@ -413,6 +413,7 @@ describe('TokenJSON', () => {
       deserializeFail({ $dedup: { $dup: 1 }, dups: [{}] })
       deserializeFail({ $dedup: { $dup: 0 }, dups: [{ $dup: 1 }] })
       deserializeFail({ $dedup: { $dedup: { }, dups: [] }, dups: [] })
+      deserializeFail({ $dedup: { $dup: '0' }, dups: [] })
     })
 
     it('should default to sandbox intrinsics', () => {
@@ -513,11 +514,11 @@ describe('TokenJSON', () => {
       expect(() => TokenJSON._serialize(eval, opts)).to.throw('Cannot serialize') // eslint-disable-line
     })
 
-    it('should replace and revive berries', () => {
+    it('should replace and revive berries', async () => {
       class CustomBerry extends Berry { }
-      run.deploy(CustomBerry)
+      const CustomBerrySandbox = await run.load(await run.deploy(CustomBerry))
       const berry = { location: 'abc' }
-      Object.setPrototypeOf(berry, CustomBerry.prototype)
+      Object.setPrototypeOf(berry, CustomBerrySandbox.prototype)
       const opts = {
         _sandboxIntrinsics,
         _replacer: TokenJSON._replace._tokens(token => '123'),
