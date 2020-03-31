@@ -116,14 +116,20 @@ describe('_deepTraverseObjects', () => {
   })
 
   it('should not dive deep if callback returns false', () => {
-
+    const a = [[{}]]
+    const results = []
+    _deepTraverseObjects(a, x => { results.push(x); return false })
+    expect(results.length).to.equal(1)
+    expect(results[0]).to.equal(a[0])
   })
 
   it('should only traverse once in circular reference', () => {
 
   })
 
-  it('should recognize alternate sets and maps')
+  it('should recognize alternate sets and maps', () => {
+
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
