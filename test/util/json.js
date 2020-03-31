@@ -6,6 +6,7 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+const bsv = require('bsv')
 const { Run } = require('../config')
 const { TokenJSON } = Run._util
 const DeterministicRealm = require('@runonbitcoin/sandbox')
@@ -217,27 +218,17 @@ describe.only('TokenJSON', () => {
 
     it('should support buffers', () => {
       serializePass(new Uint8Array(), { $ui8a: '' })
-      /*
-  // Uint8Array
-  addTestVector(new Uint8Array()).serialized({ $ui8a: '' })
-    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Uint8Array))
-    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Uint8Array))
-  addTestVector(new Uint8Array([0x00, 0x01])).serialized({ $ui8a: 'AAE=' })
-  const hellobuf = Buffer.from('hello', 'utf8')
-  addTestVector(new Uint8Array(hellobuf)).serialized({ $ui8a: hellobuf.toString('base64') })
-  const randombuf = bsv.crypto.Random.getRandomBuffer(1024)
-  addTestVector(new Uint8Array(randombuf)).serialized({ $ui8a: randombuf.toString('base64') })
-  const bufWithProps = new Uint8Array()
-  bufWithProps.x = 1
-  addTestVector(bufWithProps).serialized({ $ui8a: '' }).unscannable().uncloneable().unserializable()
-  addTestVector(Buffer.alloc(0)).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector({ $ui8a: [] }).unserializable().undeserializable()
-  addTestVector({ $ui8a: {} }).unserializable().undeserializable()
-  addTestVector({ $ui8a: '🐉' }).unserializable().undeserializable()
-  addTestVector({ $ui8a: new Uint8Array() }).unserializable().undeserializable()
-  */
-      // Check other methods
+      serializePass(new Uint8Array([0, 1]), { $ui8a: 'AAE=' })
+      const hello = Buffer.from('hello', 'utf8')
+      serializePass(new Uint8Array(hello), { $ui8a: hello.toString('base64') })
+      const random = bsv.crypto.Random.getRandomBuffer(1024)
+      serializePass(new Uint8Array(random), { $ui8a: random.toString('base64') })
+    })
+
+    it('should fail for buffers with props', () => {
+      const b = new Uint8Array()
+      b.x = 1
+      serializeFail(b)
     })
 
     it('should fail for extensions to built-in types', () => {
@@ -343,6 +334,7 @@ describe.only('TokenJSON', () => {
       serializeFail(new RegExp())
       serializeFail(/^abc/)
       serializeFail(new Error())
+      serializeFail(Buffer.alloc(0))
     })
 
     it.skip('rest', () => {
