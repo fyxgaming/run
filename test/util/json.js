@@ -7,7 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
-const { TokenJSON, _display } = Run._util
+const { TokenJSON } = Run._util
 const DeterministicRealm = require('@runonbitcoin/sandbox')
 
 // ------------------------------------------------------------------------------------------------
@@ -40,13 +40,8 @@ function serializePass (x, y) {
   expect(TokenJSON._deserialize(json)).to.deep.equal(x)
 }
 
-function serializeFail (x) {
-  expect(() => TokenJSON._serialize(x)).to.throw(`Cannot serialize ${_display(x)}`)
-}
-
-function deserializeFail (y) {
-  expect(() => TokenJSON._deserialize(y)).to.throw(`Cannot deserialize ${_display(y)}`)
-}
+const serializeFail = x => expect(() => TokenJSON._serialize(x)).to.throw('Cannot serialize')
+const deserializeFail = y => expect(() => TokenJSON._deserialize(y)).to.throw('Cannot deserialize')
 
 // ------------------------------------------------------------------------------------------------
 // TokenJSON
@@ -327,11 +322,14 @@ describe.only('TokenJSON', () => {
       deserializeFail({ $err: 1 })
       deserializeFail({ $undef: 1, $nan: 1 })
       // Array
+      deserializeFail([{ $undef: undefined }])
       deserializeFail({ $arr: 1 })
       deserializeFail({ $arr: [] })
       // Set
       deserializeFail({ $set: null })
       deserializeFail({ $set: {} })
+      deserializeFail({ $set: [{ $err: 1 }] })
+      deserializeFail({ $set: new Uint8Array() })
       deserializeFail({ $set: [], props: 0 })
       deserializeFail({ $set: [], props: [] })
       // Map

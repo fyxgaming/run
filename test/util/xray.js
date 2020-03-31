@@ -2,139 +2,9 @@ const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
-const { _util, Xray, Intrinsics } = Run
-const { display } = _util
+const { Xray, Intrinsics } = Run
 
 const run = new Run()
-
-// ------------------------------------------------------------------------------------------------
-// Test vector class
-// ------------------------------------------------------------------------------------------------
-
-class TestVector {
-  constructor (x) {
-    this.x = x
-    this.scannable = true
-    this.cloneable = true
-    this.serializable = true
-    this.deserializable = true
-    this.serializedX = x
-    this.cloneChecks = []
-    this.serializedChecks = []
-    this.deserializedChecks = []
-    this.intrinsics = Intrinsics.defaultIntrinsics
-  }
-
-  unscannable () { this.scannable = false; return this }
-  uncloneable () { this.cloneable = false; return this }
-  unserializable () { this.serializable = false; return this }
-  undeserializable () { this.deserializable = false; return this }
-  serialized (value) { this.serializedX = value; return this }
-
-  checkClone (f) { this.cloneChecks.push(f); return this }
-  checkSerialized (f) { this.serializedChecks.push(f); return this }
-  checkDeserialized (f) { this.deserializedChecks.push(f); return this }
-
-  useIntrinsics (intrinsics) { this.intrinsics = intrinsics; return this }
-
-  testScan () {
-    try {
-      const xray = new Xray().useIntrinsics(this.intrinsics)
-      if (this.scannable) {
-        expect(() => xray.scan(this.x)).not.to.throw()
-      } else {
-        expect(() => xray.scan(this.x)).to.throw(`${display(this.x)} cannot be scanned`)
-      }
-    } catch (e) { throw new Error(`Test failed for ${display(this.x)}\n\n${e}`) }
-  }
-
-  testCloneable () {
-    try {
-      const xray = new Xray().useIntrinsics(this.intrinsics)
-      expect(xray.cloneable(this.x)).to.equal(this.cloneable)
-      expect(xray.caches.cloneable.get(this.x)).to.equal(this.cloneable)
-    } catch (e) { throw new Error(`Test failed for ${display(this.x)}\n\n${e}`) }
-  }
-
-  testSerializable () {
-    try {
-      const xray = new Xray().useIntrinsics(this.intrinsics)
-      expect(xray.serializable(this.x)).to.equal(this.serializable)
-      expect(xray.caches.serializable.get(this.x)).to.equal(this.serializable)
-    } catch (e) { throw new Error(`Test failed for ${display(this.x)}\n\n${e}`) }
-  }
-
-  testDeserializable () {
-    try {
-      const xray = new Xray().useIntrinsics(this.intrinsics)
-      expect(xray.deserializable(this.serializedX)).to.equal(this.deserializable)
-      expect(xray.caches.deserializable.get(this.serializedX)).to.equal(this.deserializable)
-    } catch (e) { throw new Error(`Test failed for ${display(this.x)}\n\n${e}`) }
-  }
-
-  testClone () {
-    try {
-      const xray = new Xray().useIntrinsics(this.intrinsics)
-
-      if (!this.cloneable) {
-        expect(() => xray.clone(this.x)).to.throw(`${display(this.x)} cannot be cloned`)
-        return
-      }
-
-      const cloned = xray.clone(this.x)
-
-      if (typeof this.x === 'object' && this.x) {
-        expect(cloned).not.to.equal(this.x)
-      }
-      expect(cloned).to.deep.equal(this.x)
-      expect(xray.caches.clone.get(this.x)).to.deep.equal(this.x)
-
-      this.cloneChecks.forEach(f => f(cloned))
-    } catch (e) { throw new Error(`Test failed for ${display(this.x)}\n\n${e}`) }
-  }
-
-  testSerialize () {
-    try {
-      const xray = new Xray().useIntrinsics(this.intrinsics)
-
-      if (!this.serializable) {
-        expect(() => xray.serialize(this.x)).to.throw(`${display(this.x)} cannot be serialized`)
-        return
-      }
-
-      const serialized = xray.serialize(this.x)
-
-      if (typeof this.x === 'object' && this.x) {
-        expect(serialized).not.to.equal(this.serializedX)
-      }
-      expect(serialized).to.deep.equal(this.serializedX)
-      expect(xray.caches.serialize.get(this.x)).to.deep.equal(this.serializedX)
-
-      this.serializedChecks.forEach(f => f(serialized))
-    } catch (e) { throw new Error(`Test failed for ${display(this.x)}\n\n${e}`) }
-  }
-
-  testDeserialize () {
-    try {
-      const xray = new Xray().useIntrinsics(this.intrinsics)
-
-      if (!this.deserializable) {
-        expect(() => xray.deserialize(this.serializedX)).to.throw(`${display(this.serializedX)} cannot be deserialized`)
-        return
-      }
-
-      const deserialized = xray.deserialize(this.serializedX)
-
-      if (typeof this.x === 'object' && this.x) {
-        expect(deserialized).not.to.equal(this.x)
-      }
-      expect(deserialized).to.deep.equal(this.x)
-      expect(xray.caches.deserialize.get(this.serializedX)).to.deep.equal(this.x)
-
-      this.deserializedChecks.forEach(f => f(deserialized))
-    } catch (e) { throw new Error(`Test failed for ${display(this.x)}\n\n${e}`) }
-  }
-}
 
 // ------------------------------------------------------------------------------------------------
 // Test vectors
@@ -149,48 +19,11 @@ function addTestVectors (intrinsics, testIntrinsics) {
     Float32Array, Float64Array, console, Function, Error, Math, WebAssembly,
     String, Date, JSON, Promise, WeakSet, WeakMap, RegExp
   } = testIntrinsics
+  console.log(Array, Set, Map)
 
-  console.log(Array)
-
-  function addTestVector (x) {
-    const vector = new TestVector(x).useIntrinsics(intrinsics)
-    vectors.push(vector)
-    return vector
-  }
-
-  // Objects
-  addTestVector({})
-    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-  addTestVector({ $ref: '123' }).unserializable().undeserializable()
-  addTestVector({ $n: '0' }).unserializable().undeserializable()
-  addTestVector({ $invalid: 1 }).unserializable().undeserializable()
-  addTestVector({ undef: undefined }).serialized({ undef: { $undef: 1 } })
-
-  // Array
-  addTestVector([])
-    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Array))
-    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Array))
-    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Array))
-  addTestVector([undefined, null]).serialized([{ $undef: 1 }, null])
-  addTestVector([{ $invalid: 1 }]).unserializable().undeserializable()
-
-  // Sets
-  addTestVector(new Set()).serialized({ $set: [] })
-    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Set))
-    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Set))
-  addTestVector({ $set: null }).unserializable().undeserializable()
-  addTestVector({ $set: {} }).unserializable().undeserializable()
-  addTestVector({ $set: [{ $invalid: 1 }] }).unserializable().undeserializable()
-  addTestVector({ $set: new Uint8Array() }).unserializable().undeserializable()
+  const addTestVector = () => {}
 
   // Maps
-  addTestVector(new Map()).serialized({ $map: [] })
-    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Map))
-    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Map))
   addTestVector({ $map: null }).unserializable().undeserializable()
   addTestVector({ $map: {} }).unserializable().undeserializable()
   addTestVector({ $map: [{}] }).unserializable().undeserializable()
