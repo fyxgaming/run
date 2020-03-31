@@ -356,6 +356,7 @@ describe.only('TokenJSON', () => {
     // Arb objects
     // Circular arbs, and all the other tests, and for tokens too
     // Deployables
+    // Replace Tokens: Berries, Code
 
     /*
   addTestVector(class { }, { deployable: true })
