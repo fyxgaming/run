@@ -63,7 +63,7 @@ async function hookPay (run, ...enables) {
 // ------------------------------------------------------------------------------------------------
 
 describe.skip('temp', () => {
-  it.only('TODO REMOVE', async () => {
+  it('TODO REMOVE', async () => {
     const run = new Run()
     class Dragon extends Jig {
       set (name) { this.name = name }
@@ -79,7 +79,7 @@ describe.skip('temp', () => {
     await run2.load(Lair.location)
   })
 
-  it.only('DEPLOY CLASS', async () => {
+  it('DEPLOY CLASS', async () => {
     const run = new Run()
     class Store extends Jig {
       set (x) { this.x = x }
@@ -93,7 +93,7 @@ describe.skip('temp', () => {
     await run2.load(Store.location)
   })
 
-  it.only('CUSTOM OBJECT', async () => {
+  it('CUSTOM OBJECT', async () => {
     const run = new Run()
     class Store extends Jig {
       set (x) { this.x = x }

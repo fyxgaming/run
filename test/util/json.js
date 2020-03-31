@@ -45,7 +45,7 @@ const deserializeFail = (...args) => expect(() => TokenJSON._deserialize(...args
 // TokenJSON
 // ------------------------------------------------------------------------------------------------
 
-describe.only('TokenJSON', () => {
+describe('TokenJSON', () => {
   describe('_serialize', () => {
     it('should supported non-symbol primitives', () => {
       // Booleans
