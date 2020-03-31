@@ -341,6 +341,12 @@ describe.only('TokenJSON', () => {
       deserializeFail({ $map: [[1, 2, 3]] })
       deserializeFail({ $map: [], props: 0 })
       deserializeFail({ $map: [], props: [] })
+      // Dedup
+      deserializeFail({ $dedup: {} })
+      deserializeFail({ $dedup: {}, dups: {} })
+      deserializeFail({ $dedup: { $dup: 0 }, dups: [] })
+      deserializeFail({ $dedup: { $dup: 1 }, dups: [{}] })
+      deserializeFail({ $dedup: { $dup: 0 }, dups: [{ $dup: 1 }] })
     })
 
     it('should default to sandbox intrinsics', () => {

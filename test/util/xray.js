@@ -42,12 +42,6 @@ function addTestVectors (intrinsics, testIntrinsics) {
   addTestVector({ $ui8a: '🐉' }).unserializable().undeserializable()
   addTestVector({ $ui8a: new Uint8Array() }).unserializable().undeserializable()
 
-  // Bad dedup serialization
-  addTestVector({ $dedup: {} }).unserializable().undeserializable()
-  addTestVector({ $dedup: {}, dups: {} }).unserializable().undeserializable()
-  addTestVector({ $dedup: { $dup: 0 }, dups: [] }).unserializable().undeserializable()
-  addTestVector({ $dedup: { $dup: 0 }, dups: [{ $dup: 1 }] }).unserializable().undeserializable()
-
   // Unsupported TypedArrays
   addTestVector(new Int8Array()).serialized({ $i8a: '' }).unscannable().uncloneable().unserializable().undeserializable()
   addTestVector(new Uint8ClampedArray()).serialized({ $ui8ca: '' }).unscannable().uncloneable().unserializable().undeserializable()
