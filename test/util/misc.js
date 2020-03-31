@@ -7,7 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
-const { _deployable, _display } = Run._util
+const { _deployable, _display, _deepTraverseObjects } = Run._util
 
 // ------------------------------------------------------------------------------------------------
 // _deployable
@@ -85,6 +85,45 @@ describe('_display', () => {
     expect(_display(_$xX123 => _$xX123)).to.equal('[anonymous function]')
     expect(_display(class { })).to.equal('[anonymous class]')
   })
+})
+
+describe('_deepTraverseObjects', () => {
+  it('should callback for every function or object', () => {
+    const a2 = []
+    const a3 = []
+    class C { }
+    const f = function f () { }
+    f.o = { a: [{}] }
+    f.s = new Set()
+    f.s.add(a2)
+    f.s.a = []
+    f.m = new Map()
+    f.m.set(C, a3)
+    f.m.o = { }
+    const results = []
+    _deepTraverseObjects(f, x => { results.push(x); return true })
+    expect(results.length).to.equal(10)
+    expect(results[0]).to.equal(f.o)
+    expect(results[1]).to.equal(f.o.a)
+    expect(results[2]).to.equal(f.o.a[0])
+    expect(results[3]).to.equal(f.s)
+    expect(results[4]).to.equal(a2)
+    expect(results[5]).to.equal(f.s.a)
+    expect(results[6]).to.equal(f.m)
+    expect(results[7]).to.equal(C)
+    expect(results[8]).to.equal(a3)
+    expect(results[9]).to.equal(f.m.o)
+  })
+
+  it('should not dive deep if callback returns false', () => {
+
+  })
+
+  it('should only traverse once in circular reference', () => {
+
+  })
+
+  it('should recognize alternate sets and maps')
 })
 
 // ------------------------------------------------------------------------------------------------
