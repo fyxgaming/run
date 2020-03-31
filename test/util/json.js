@@ -353,32 +353,6 @@ describe('TokenJSON', () => {
         _replacer: x => { if (x instanceof A) return { $a: 1 } }
       })).to.deep.equal({ $a: 1 })
     })
-
-    // Deployables
-    // Replace Tokens: Berries, Code
-
-    /*
-  addTestVector(class { }, { deployable: true })
-  addTestVector(class A { }, { deployable: true })
-  addTestVector(class { method() { return null }}, { deployable: true })
-  addTestVector(class B { constructor() {}}, { deployable: true })
-  addTestVector(function f() {}, { deployable: true })
-  addTestVector(function add(a, b) { return a + b}, { deployable: true })
-  addTestVector(function () { return '123' }, { deployable: true })
-  addTestVector(() => {}, { deployable: true })
-  addTestVector(x => x, { deployable: true })
-
-  // Non-deployable
-  addTestVector(Math.random, { deployable: false })
-  addTestVector(Array.prototype.indexOf, { deployable: false })
-  addTestVector(WeakSet.prototype.has, { deployable: false })
-  addTestVector(String.prototype.endsWith, { deployable: false })
-  addTestVector(isNaN, { deployable: false })
-  addTestVector(isFinite, { deployable: false })
-  addTestVector(parseInt, { deployable: false })
-  addTestVector(escape, { deployable: false })
-  addTestVector(eval, { deployable: false })
-  */
   })
 
   describe('_deserialize', () => {
@@ -506,6 +480,34 @@ describe('TokenJSON', () => {
       deserializeFail({ $ref: 1, $ref2: 2 }, opts)
       deserializeFail({ $ref: '123' })
     })
+
+    it('should replace deployables with location ref', () => {
+      const opts = { _replacer: TokenJSON._replace._tokens(x => '123') }
+      expect(TokenJSON._serialize(class {}, opts)).to.deep.equal({ $ref: '123' })
+      expect(TokenJSON._serialize(class A {}, opts)).to.deep.equal({ $ref: '123' })
+      expect(TokenJSON._serialize(class { method () { return null } }, opts)).to.deep.equal({ $ref: '123' })
+      expect(TokenJSON._serialize(class B { constructor () { this.x = 1 } }, opts)).to.deep.equal({ $ref: '123' })
+      expect(TokenJSON._serialize(function f () {}, opts)).to.deep.equal({ $ref: '123' })
+      expect(TokenJSON._serialize(function add (a, b) { return a + b }, opts)).to.deep.equal({ $ref: '123' })
+      expect(TokenJSON._serialize(function () {}, opts)).to.deep.equal({ $ref: '123' })
+      expect(TokenJSON._serialize(() => {}, opts)).to.deep.equal({ $ref: '123' })
+      expect(TokenJSON._serialize(x => x, opts)).to.deep.equal({ $ref: '123' })
+    })
+
+    // Replace Berries
+
+    /*
+  // Non-deployable
+  addTestVector(Math.random, { deployable: false })
+  addTestVector(Array.prototype.indexOf, { deployable: false })
+  addTestVector(WeakSet.prototype.has, { deployable: false })
+  addTestVector(String.prototype.endsWith, { deployable: false })
+  addTestVector(isNaN, { deployable: false })
+  addTestVector(isFinite, { deployable: false })
+  addTestVector(parseInt, { deployable: false })
+  addTestVector(escape, { deployable: false })
+  addTestVector(eval, { deployable: false })
+  */
   })
 
   describe('arbitrary objects', () => {
