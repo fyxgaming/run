@@ -161,17 +161,22 @@ describe.only('TokenJSON', () => {
     })
 
     it('should support sets', () => {
+      // Basic keys and values
       testSuccess(new Set(), { $set: [] })
       testSuccess(new Set([1, 2, 3]), { $set: [1, 2, 3] })
+      // Object keys and values
       testSuccess(new Set([new Set()]), { $set: [{ $set: [] }] })
       const s = new Set()
       testSuccess(new Set([s, s]), { $set: [{ $set: [] }] })
+      // Circular entries
       const s2 = new Set()
       s2.add(s2)
       testSuccess(s2, { $dedup: { $dup: 0 }, dups: [{ $set: [{ $dup: 0 }] }] })
+      // Props
       const s3 = new Set([1])
       s3.x = null
       testSuccess(s3, { $set: [1], props: { x: null } })
+      // Circular props
       const s4 = new Set([])
       s4.add(s4)
       s4.s = s4
@@ -179,15 +184,34 @@ describe.only('TokenJSON', () => {
     })
 
     it('should support maps', () => {
+      // Basic keys and values
       testSuccess(new Map(), { $map: [] })
       testSuccess(new Map([['a', 'b']]), { $map: [['a', 'b']] })
       testSuccess(new Map([[1, 2], [null, {}]]), { $map: [[1, 2], [null, {}]] })
+      // Object keys and values
+      testSuccess(new Map([[{}, []], [new Set(), new Map()]]), { $map: [[{}, []], [{ $set: [] }, { $map: [] }]] })
+      // Duplicate keys and values
       const m = new Map()
       testSuccess(new Map([[m, m]]), { $dedup: { $map: [[{ $dup: 0 }, { $dup: 0 }]] }, dups: [{ $map: [] }] })
-      // Custom keys, custom values
-      // Circular keys, Circular values
+      // Circular keys
+      const m2 = new Map()
+      m2.set(m2, 1)
+      testSuccess(m2, { $dedup: { $dup: 0 }, dups: [{ $map: [[{ $dup: 0 }, 1]] }] })
+      // Circular values
+      const m3 = new Map()
+      const a = [m3]
+      m3.set(1, a)
+      testSuccess(a, { $dedup: { $dup: 0 }, dups: [[{ $map: [[1, { $dup: 0 }]] }]] })
       // Props
+      const m4 = new Map([[1, 2]])
+      m4.x = 'abc'
+      m4[''] = 'def'
+      testSuccess(m4, { $map: [[1, 2]], props: { x: 'abc', '': 'def' } })
       // Circular props
+      const m5 = new Map()
+      m5.x = m5
+      m5.set(m5.x, 1)
+      testSuccess(m5, { $dedup: { $dup: 0 }, dups: [{ $map: [[{ $dup: 0 }, 1]], props: { x: { $dup: 0 } } }] })
     })
 
     it('test intrinsics', () => {
