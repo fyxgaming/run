@@ -161,7 +161,6 @@ function addTestVectors (intrinsics, testIntrinsics) {
     .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Object))
     .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
     .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-  addTestVector({ s: 't', a: [1], b: true, n: 0, o: { n2: 2 }, z: null })
   addTestVector(new Proxy({}, {}))
   addTestVector({ $undef: 1 }).serialized(undefined).unserializable().undeserializable()
   addTestVector({ $ref: '123' }).unserializable().undeserializable()
@@ -174,13 +173,6 @@ function addTestVectors (intrinsics, testIntrinsics) {
     .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Array))
     .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Array))
     .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Array))
-  addTestVector([1, 'a', true])
-  addTestVector([[[]]])
-  const z = [[1], [2], [3]]
-  addTestVector(z)
-  const arr = [1]
-  arr.x = 2
-  addTestVector(arr)
   addTestVector([undefined, null]).serialized([{ $undef: 1 }, null])
   class CustomArray extends Array {}
   addTestVector(CustomArray.from([])).unscannable().uncloneable().unserializable().undeserializable()

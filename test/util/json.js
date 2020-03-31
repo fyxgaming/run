@@ -84,7 +84,7 @@ describe.only('TokenJSON', () => {
     it('should serialize basic objects', () => {
       testSuccess({}, {})
       testSuccess({ n: 1 }, { n: 1 })
-      testSuccess({ a: 'a', b: true, c: {} }, { a: 'a', b: true, c: {} })
+      testSuccess({ a: 'a', b: true, c: {}, d: null }, { a: 'a', b: true, c: {}, d: null })
       testSuccess({ a: { a: { a: {} } } }, { a: { a: { a: {} } } })
       testSuccess({ a: {}, b: {}, c: {} }, { a: {}, b: {}, c: {} })
     })
@@ -96,7 +96,20 @@ describe.only('TokenJSON', () => {
     })
 
     it('should serialize basic arrays', () => {
-
+      testSuccess([], [])
+      testSuccess([1, 'a', false, {}], [1, 'a', false, {}])
+      testSuccess([[[]]], [[[]]])
+      testSuccess([[1], [2], [3]], [[1], [2], [3]])
+      const a1 = [1]
+      a1.x = 'a'
+      a1[''] = true
+      a1.$obj = {}
+      testSuccess(a1, { $arr: { 0: 1, x: 'a', '': true, $obj: {} } })
+      const a2 = []
+      a2[0] = 0
+      a2[9] = 9
+      testSuccess(a2, { $arr: { 0: 0, 9: 9 } })
+      testSuccess([0, undefined, 2], [0, { $undef: 1 }, 2])
     })
 
     it('should serialize complex objects', () => {
@@ -122,6 +135,8 @@ describe.only('TokenJSON', () => {
     it('test intrinsics', () => {
       // For everything that creates objects or arrays
     })
+
+    // Extensions of Object and Array, Map and Set
 
     it.skip('rest', () => {
       console.log(JSON.stringify(TokenJSON._serialize({ n: 1 })))
