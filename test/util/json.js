@@ -354,8 +354,6 @@ describe('TokenJSON', () => {
       })).to.deep.equal({ $a: 1 })
     })
 
-    // Arb objects
-    // Circular arbs, and all the other tests, and for tokens too
     // Deployables
     // Replace Tokens: Berries, Code
 
@@ -381,10 +379,6 @@ describe('TokenJSON', () => {
   addTestVector(escape, { deployable: false })
   addTestVector(eval, { deployable: false })
   */
-
-    // Tests
-    // Multiple dups
-    // Dups in custom objects
   })
 
   describe('_deserialize', () => {
@@ -528,11 +522,30 @@ describe('TokenJSON', () => {
       )
     }
 
-    it('should support arbitrary objects', () => {
+    it('should support basic arbitrary objects', () => {
+      const $ref = tokens.length
       class A { }
       const a = new A()
       a.n = 1
-      serializePass(a, { $arb: { n: 1 }, T: { $ref: 0 } }, opts)
+      serializePass(a, { $arb: { n: 1 }, T: { $ref } }, opts)
+    })
+
+    it('should support arbitrary objects with circular references', () => {
+      const $ref = tokens.length
+      class A { }
+      const a = new A()
+      a.a = a
+      serializePass(a, { $dedup: { $dup: 0 }, dups: [{ $arb: { a: { $dup: 0 } }, T: { $ref } }] }, opts)
+    })
+
+    it('should support arbitrary objects with duplicate inners', () => {
+      const $ref = tokens.length
+      const o = {}
+      class A { }
+      const a = new A()
+      a.o1 = o
+      a.o2 = o
+      serializePass(a, { $dedup: { $arb: { o1: { $dup: 0 }, o2: { $dup: 0 } }, T: { $ref } }, dups: [{ }] }, opts)
     })
   })
 
