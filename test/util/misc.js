@@ -6,6 +6,7 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+const DeterministicRealm = require('@runonbitcoin/sandbox')
 const { Run } = require('../config')
 const { _deployable, _display, _deepTraverseObjects } = Run._util
 
@@ -124,11 +125,31 @@ describe('_deepTraverseObjects', () => {
   })
 
   it('should only traverse once in circular reference', () => {
-
+    const o = {}
+    o.o = o
+    const results = []
+    _deepTraverseObjects(o, x => { results.push(x); return true })
+    expect(results.length).to.equal(1)
+    expect(results[0]).to.equal(o)
   })
 
   it('should recognize alternate sets and maps', () => {
-
+    const realm = new DeterministicRealm()
+    const compartment = realm.makeCompartment()
+    const _sandboxIntrinsics = {
+      Set: compartment.evaluate('Set'),
+      Map: compartment.evaluate('Map')
+    }
+    const set = new _sandboxIntrinsics.Set()
+    set.add({})
+    const map = new _sandboxIntrinsics.Map()
+    map.set({}, {})
+    const results1 = []
+    _deepTraverseObjects([set, map], x => { results1.push(x); return true })
+    expect(results1.length).to.equal(2)
+    const results2 = []
+    _deepTraverseObjects([set, map], x => { results2.push(x); return true }, _sandboxIntrinsics)
+    expect(results2.length).to.equal(5)
   })
 })
 
