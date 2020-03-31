@@ -221,15 +221,23 @@ describe.only('TokenJSON', () => {
       testFail(new (class CustomMap extends Map {})())
     })
 
+    it('should maintain key order', () => {
+      const o = {}
+      o.x = 'x'
+      o[3] = 3
+      o[2] = 2
+      o.n = 3
+      const serialized = TokenJSON._serialize(o)
+      const json = JSON.parse(JSON.stringify(serialized))
+      const o2 = TokenJSON._deserialize(json)
+      expect(Object.keys(o)).to.deep.equal(Object.keys(o2))
+    })
+
     it('test intrinsics', () => {
       // For everything that creates objects or arrays
     })
 
-    // Extensions of Object and Array, Map and Set
-
     // Deserialize, throw for unknown $
-
-    // Key order
 
     it.skip('rest', () => {
       console.log(JSON.stringify(TokenJSON._serialize({ n: 1 })))
