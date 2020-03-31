@@ -16,6 +16,7 @@ const DeterministicRealm = require('@runonbitcoin/sandbox')
 // Globals
 // ------------------------------------------------------------------------------------------------
 
+new Run() // eslint-disable-line
 const realm = new DeterministicRealm()
 const compartment = realm.makeCompartment()
 const _sandboxIntrinsics = {
@@ -30,12 +31,12 @@ const _sandboxIntrinsics = {
 // Helpers
 // ------------------------------------------------------------------------------------------------
 
-function serializePass (x, y) {
-  const serialized = TokenJSON._serialize(x)
+function serializePass (x, y, opts) {
+  const serialized = TokenJSON._serialize(x, opts)
   const jsonString = JSON.stringify(serialized)
   const json = JSON.parse(jsonString)
   expect(json).to.deep.equal(y)
-  expect(TokenJSON._deserialize(json)).to.deep.equal(x)
+  expect(TokenJSON._deserialize(json, opts)).to.deep.equal(x)
 }
 
 const serializeFail = (...args) => expect(() => TokenJSON._serialize(...args)).to.throw('Cannot serialize')
@@ -381,26 +382,9 @@ describe('TokenJSON', () => {
   addTestVector(eval, { deployable: false })
   */
 
-    it.skip('rest', () => {
-      // Custom object
-      // class Dragon { }
-      // const dragon = new Dragon()
-      // dragon.name = 'Empress'
-      // dragon.self = dragon
-
-      // const deployables = []
-
-      // const _replacer = _firstResult(
-      // _replaceDeployables(deployables),
-      // _replaceCustomObjects(deployables))
-
-      // console.log(JSON.stringify(TokenJSON._serialize(dragon, { _replacer })))
-      // console.log(deployables)
-
-      // Tests
-      // Multiple dups
-      // Dups in custom objects
-    })
+    // Tests
+    // Multiple dups
+    // Dups in custom objects
   })
 
   describe('_deserialize', () => {
@@ -483,18 +467,6 @@ describe('TokenJSON', () => {
         _reviver: x => { if (x.$a === 1) return a }
       })).to.equal(a)
     })
-
-    it.skip('test', () => {
-      /*
-      class Dragon {}
-      const dragon = new Dragon()
-      const opts = {
-        _replacer: x => x instanceof Dragon && { $dragon: x },
-        _reviver: x => x.$dragon
-      }
-      console.log(TokenJSON._deserialize(TokenJSON._serialize(dragon, opts), opts))
-      */
-    })
   })
 
   describe('tokens', () => {
@@ -539,6 +511,28 @@ describe('TokenJSON', () => {
       const opts = { _reviver: TokenJSON._revive._tokens(ref => {}) }
       deserializeFail({ $ref: 1, $ref2: 2 }, opts)
       deserializeFail({ $ref: '123' })
+    })
+  })
+
+  describe('arbitrary objects', () => {
+    const tokens = []
+    const opts = {
+      _sandboxIntrinsics,
+      _replacer: TokenJSON._replace._multiple(
+        TokenJSON._replace._tokens(x => { tokens.push(x); return tokens.length - 1 }),
+        TokenJSON._replace._arbitraryObjects()
+      ),
+      _reviver: TokenJSON._revive._multiple(
+        TokenJSON._revive._tokens(x => tokens[x]),
+        TokenJSON._revive._arbitraryObjects()
+      )
+    }
+
+    it('should support arbitrary objects', () => {
+      class A { }
+      const a = new A()
+      a.n = 1
+      serializePass(a, { $arb: { n: 1 }, T: { $ref: 0 } }, opts)
     })
   })
 
