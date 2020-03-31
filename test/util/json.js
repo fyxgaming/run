@@ -287,6 +287,25 @@ describe.only('TokenJSON', () => {
       deserializeFail(NaN)
       deserializeFail(Infinity)
       deserializeFail(-Infinity)
+      // Symbols
+      deserializeFail(Symbol.iterator)
+      deserializeFail(Symbol.hasInstance)
+      // Functions
+      deserializeFail(class A {})
+      deserializeFail(function f () { })
+      // Objects
+      deserializeFail({ $: 1 })
+      deserializeFail({ $err: 1 })
+      deserializeFail({ $undef: 1, $nan: 1 })
+      // Array
+      deserializeFail({ $arr: 1 })
+      deserializeFail({ $arr: [] })
+      // Set
+      deserializeFail({ $set: null })
+      deserializeFail({ $set: {} })
+      deserializeFail({ $set: [], props: 0 })
+      deserializeFail({ $set: [], props: [] })
+      // Map
     })
 
     it.skip('test', () => {
