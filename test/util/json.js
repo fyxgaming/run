@@ -237,11 +237,34 @@ describe.only('TokenJSON', () => {
       expect(Object.keys(o)).to.deep.equal(Object.keys(o2))
     })
 
-    it('test intrinsics', () => {
-      // For everything that creates objects or arrays
+    it('should create output intrinsics', () => {
+      const opts = { _outputIntrinsics: _sandboxIntrinsics }
+      expect(TokenJSON._serialize({}, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize({ $: 1 }, opts).$obj.constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(undefined, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(-0, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(NaN, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(Infinity, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(-Infinity, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize([], opts).constructor).to.equal(_sandboxIntrinsics.Array)
+      const a = []
+      a.x = 1
+      expect(TokenJSON._serialize(a, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(a, opts).$arr.constructor).to.equal(_sandboxIntrinsics.Object)
+      const s = new Set()
+      s.x = 1
+      expect(TokenJSON._serialize(s, opts).$set.constructor).to.equal(_sandboxIntrinsics.Array)
+      expect(TokenJSON._serialize(s, opts).props.constructor).to.equal(_sandboxIntrinsics.Object)
+      const m = new Map()
+      m.x = 1
+      expect(TokenJSON._serialize(m, opts).$map.constructor).to.equal(_sandboxIntrinsics.Array)
+      expect(TokenJSON._serialize(m, opts).props.constructor).to.equal(_sandboxIntrinsics.Object)
+      const o = { }
+      expect(TokenJSON._serialize([o, o], opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize([o, o], opts).$dedup.constructor).to.equal(_sandboxIntrinsics.Array)
+      expect(TokenJSON._serialize([o, o], opts).dups.constructor).to.equal(_sandboxIntrinsics.Array)
+      expect(TokenJSON._serialize([o, o], opts).dups[0].constructor).to.equal(_sandboxIntrinsics.Object)
     })
-
-    // Deserialize, throw for unknown $
 
     it.skip('rest', () => {
       console.log(JSON.stringify(TokenJSON._serialize({ n: 1 })))
