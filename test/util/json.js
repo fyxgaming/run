@@ -237,7 +237,7 @@ describe.only('TokenJSON', () => {
       expect(Object.keys(o)).to.deep.equal(Object.keys(o2))
     })
 
-    it('should create output intrinsics', () => {
+    it('should use output intrinsics', () => {
       const opts = { _outputIntrinsics: _sandboxIntrinsics }
       expect(TokenJSON._serialize({}, opts).constructor).to.equal(_sandboxIntrinsics.Object)
       expect(TokenJSON._serialize({ $: 1 }, opts).$obj.constructor).to.equal(_sandboxIntrinsics.Object)
@@ -264,6 +264,12 @@ describe.only('TokenJSON', () => {
       expect(TokenJSON._serialize([o, o], opts).$dedup.constructor).to.equal(_sandboxIntrinsics.Array)
       expect(TokenJSON._serialize([o, o], opts).dups.constructor).to.equal(_sandboxIntrinsics.Array)
       expect(TokenJSON._serialize([o, o], opts).dups[0].constructor).to.equal(_sandboxIntrinsics.Object)
+    })
+
+    it('should default to host intrinsics', () => {
+      const opts = { _sandboxIntrinsics }
+      expect(TokenJSON._serialize({}, opts).constructor).to.equal(Object)
+      expect(TokenJSON._serialize([], opts).constructor).to.equal(Array)
     })
 
     it.skip('rest', () => {
@@ -329,6 +335,51 @@ describe.only('TokenJSON', () => {
       deserializeFail({ $set: [], props: 0 })
       deserializeFail({ $set: [], props: [] })
       // Map
+      deserializeFail({ $map: null })
+      deserializeFail({ $map: {} })
+      deserializeFail({ $map: [{}] })
+      deserializeFail({ $map: [[]] })
+      deserializeFail({ $map: [[1]] })
+      deserializeFail({ $map: [[1, 2, 3]] })
+      deserializeFail({ $map: [], props: 0 })
+      deserializeFail({ $map: [], props: [] })
+    })
+
+    it('should default to sandbox intrinsics', () => {
+      const opts = { _sandboxIntrinsics }
+      expect(TokenJSON._deserialize({}, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._deserialize([], opts).constructor).to.equal(_sandboxIntrinsics.Array)
+    })
+
+    it('should use output intrinsics', () => {
+      /*
+      const opts = { _outputIntrinsics: _sandboxIntrinsics }
+      expect(TokenJSON._serialize({}, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize({ $: 1 }, opts).$obj.constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(undefined, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(-0, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(NaN, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(Infinity, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(-Infinity, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize([], opts).constructor).to.equal(_sandboxIntrinsics.Array)
+      const a = []
+      a.x = 1
+      expect(TokenJSON._serialize(a, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(a, opts).$arr.constructor).to.equal(_sandboxIntrinsics.Object)
+      const s = new Set()
+      s.x = 1
+      expect(TokenJSON._serialize(s, opts).$set.constructor).to.equal(_sandboxIntrinsics.Array)
+      expect(TokenJSON._serialize(s, opts).props.constructor).to.equal(_sandboxIntrinsics.Object)
+      const m = new Map()
+      m.x = 1
+      expect(TokenJSON._serialize(m, opts).$map.constructor).to.equal(_sandboxIntrinsics.Array)
+      expect(TokenJSON._serialize(m, opts).props.constructor).to.equal(_sandboxIntrinsics.Object)
+      const o = { }
+      expect(TokenJSON._serialize([o, o], opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize([o, o], opts).$dedup.constructor).to.equal(_sandboxIntrinsics.Array)
+      expect(TokenJSON._serialize([o, o], opts).dups.constructor).to.equal(_sandboxIntrinsics.Array)
+      expect(TokenJSON._serialize([o, o], opts).dups[0].constructor).to.equal(_sandboxIntrinsics.Object)
+      */
     })
 
     it.skip('test', () => {
