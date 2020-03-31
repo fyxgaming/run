@@ -161,8 +161,6 @@ function addTestVectors (intrinsics, testIntrinsics) {
     .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Object))
     .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
     .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-  addTestVector(new Proxy({}, {}))
-  addTestVector({ $undef: 1 }).serialized(undefined).unserializable().undeserializable()
   addTestVector({ $ref: '123' }).unserializable().undeserializable()
   addTestVector({ $n: '0' }).unserializable().undeserializable()
   addTestVector({ $invalid: 1 }).unserializable().undeserializable()
