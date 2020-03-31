@@ -143,7 +143,14 @@ describe.only('TokenJSON', () => {
     })
 
     it('should support circular references', () => {
-      // Multiple
+      const o = {}
+      o.o = o
+      testSuccess(o, { $dedup: { $dup: 0 }, dups: [{ o: { $dup: 0 } }] })
+      const a = [{}, []]
+      a[0].x = a[1]
+      a[1].push(a[0])
+      a.a = a
+      testSuccess(a, { $dedup: { $dup: 2 }, dups: [{ x: { $dup: 1 } }, [{ $dup: 0 }], { $arr: { 0: { $dup: 0 }, 1: { $dup: 1 }, a: { $dup: 2 } } }] })
     })
 
     it('should fail to serialize symbols', () => {
