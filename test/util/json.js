@@ -163,7 +163,7 @@ describe.only('TokenJSON', () => {
     it('should support sets', () => {
       // Basic keys and values
       testSuccess(new Set(), { $set: [] })
-      testSuccess(new Set([1, 2, 3]), { $set: [1, 2, 3] })
+      testSuccess(new Set([0, false, null]), { $set: [0, false, null] })
       // Object keys and values
       testSuccess(new Set([new Set()]), { $set: [{ $set: [] }] })
       const s = new Set()
