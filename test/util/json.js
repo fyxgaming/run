@@ -8,6 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const { Run } = require('../config')
+const { Jig } = Run
 const { TokenJSON } = Run._util
 const DeterministicRealm = require('@runonbitcoin/sandbox')
 
@@ -493,6 +494,45 @@ describe.only('TokenJSON', () => {
       }
       console.log(TokenJSON._deserialize(TokenJSON._serialize(dragon, opts), opts))
       */
+    })
+  })
+
+  describe('tokens', () => {
+    it('should replace jigs with location ref', () => {
+      class Dragon extends Jig { }
+      const dragon = new Dragon()
+      const opts = {
+        _replacer: TokenJSON._replace._tokens(token => '123'),
+        _outputIntrinsics: _sandboxIntrinsics
+      }
+      const json = TokenJSON._serialize(dragon, opts)
+      expect(json).to.deep.equal({ $ref: '123' })
+      expect(json.constructor).to.equal(_sandboxIntrinsics.Object)
+    })
+
+    it('should revive jigs from location ref', () => {
+      class Dragon extends Jig { }
+      const dragon = new Dragon()
+      const opts = {
+        _reviver: TokenJSON._revive._tokens(ref => dragon),
+        _sandboxIntrinsics
+      }
+      expect(TokenJSON._deserialize({ $ref: '123' }, opts)).to.equal(dragon)
+    })
+
+    it('should replace and revive jigs in complex structures', () => {
+      class Dragon extends Jig { }
+      const dragon = new Dragon()
+      const opts = {
+        _replacer: TokenJSON._replace._tokens(token => '123'),
+        _reviver: TokenJSON._revive._tokens(ref => dragon),
+        _outputIntrinsics: _sandboxIntrinsics
+      }
+      const x = [dragon, { dragon }, new Set([dragon])]
+      const json = TokenJSON._serialize(x, opts)
+      const parsed = JSON.parse(JSON.stringify(json))
+      const output = TokenJSON._deserialize(parsed, opts)
+      expect(output).to.deep.equal(x)
     })
   })
 })
