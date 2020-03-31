@@ -172,8 +172,6 @@ function addTestVectors (intrinsics, testIntrinsics) {
     .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Array))
     .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Array))
   addTestVector([undefined, null]).serialized([{ $undef: 1 }, null])
-  class CustomArray extends Array {}
-  addTestVector(CustomArray.from([])).unscannable().uncloneable().unserializable().undeserializable()
   addTestVector([{ $invalid: 1 }]).unserializable().undeserializable()
 
   // Sets
@@ -214,123 +212,6 @@ function addTestVectors (intrinsics, testIntrinsics) {
   addTestVector({ $ui8a: {} }).unserializable().undeserializable()
   addTestVector({ $ui8a: '🐉' }).unserializable().undeserializable()
   addTestVector({ $ui8a: new Uint8Array() }).unserializable().undeserializable()
-
-  // Duplicate references
-  const objDup = { n: null }
-  const dupObj = { a: objDup, b: objDup }
-  addTestVector(dupObj)
-    .serialized({ $dedup: { a: { $dup: 0 }, b: { $dup: 0 } }, dups: [{ n: null }] })
-    .checkDeserialized(x => expect(x.a).to.equal(x.b))
-  const arrDup = [undefined]
-  const dupArr = [arrDup, arrDup]
-  addTestVector(dupArr)
-    .serialized({ $dedup: [{ $dup: 0 }, { $dup: 0 }], dups: [[{ $undef: 1 }]] })
-    .checkDeserialized(x => expect(x[0]).to.equal(x[1]))
-  const bufDup = new Uint8Array()
-  const dupBuf = [bufDup, bufDup]
-  addTestVector(dupBuf)
-    .serialized({ $dedup: [{ $dup: 0 }, { $dup: 0 }], dups: [{ $ui8a: '' }] })
-    .checkDeserialized(x => expect(x[0]).to.equal(x[1]))
-  const setDup = new Set()
-  const dupSet = new Set([{ a: setDup }, { b: setDup }])
-  addTestVector(dupSet)
-    .serialized({ $dedup: { $set: [{ a: { $dup: 0 } }, { b: { $dup: 0 } }] }, dups: [{ $set: [] }] })
-    .checkDeserialized(x => {
-      const keys = Array.from(x)
-      expect(keys[0].a).to.equal(keys[1].b)
-      expect(keys[0].a).not.to.equal(undefined)
-    })
-  const mapDup = new Map()
-  const dupMap = new Map([[0, mapDup], [1, mapDup]])
-  addTestVector(dupMap)
-    .serialized({ $dedup: { $map: [[0, { $dup: 0 }], [1, { $dup: 0 }]] }, dups: [{ $map: [] }] })
-    .checkDeserialized(x => expect(x.has(0)).to.equal(true))
-    .checkDeserialized(x => expect(x.has(1)).to.equal(true))
-    .checkDeserialized(x => expect(x.get(0)).to.equal(x.get(1)))
-
-  // Multiple dups in a tree
-  const multipleDups = { arr: [] }
-  multipleDups.a = []
-  multipleDups.arr.push(multipleDups.a)
-  multipleDups.b = new Uint8Array()
-  multipleDups.arr.push(multipleDups.b)
-  multipleDups.c = new Set()
-  multipleDups.arr.push(multipleDups.c)
-  addTestVector(multipleDups)
-    .serialized({
-      $dedup: { a: { $dup: 0 }, b: { $dup: 1 }, c: { $dup: 2 }, arr: [{ $dup: 0 }, { $dup: 1 }, { $dup: 2 }] },
-      dups: [[], { $ui8a: '' }, { $set: [] }]
-    })
-    .checkDeserialized(x => expect(x.a).to.equal(x.arr[0]))
-    .checkDeserialized(x => expect(x.b).to.equal(x.arr[1]))
-    .checkDeserialized(x => expect(x.c).to.equal(x.arr[2]))
-    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-
-  // Circular references
-  const circObj = {}
-  circObj.c = circObj
-  addTestVector(circObj)
-    .serialized({
-      $dedup: { $dup: 0 },
-      dups: [{ c: { $dup: 0 } }]
-    })
-    .checkDeserialized(x => expect(x.c).to.equal(x))
-  const circArr = []
-  circArr.push(circArr)
-  addTestVector(circArr)
-    .serialized({
-      $dedup: { $dup: 0 },
-      dups: [[{ $dup: 0 }]]
-    })
-    .checkDeserialized(x => expect(x[0]).to.equal(x))
-  const circSet = new Set()
-  circSet.add(circSet)
-  circSet.c = circSet
-  addTestVector(circSet)
-    .serialized({
-      $dedup: { $dup: 0 },
-      dups: [{ $set: [{ $dup: 0 }], props: { c: { $dup: 0 } } }]
-    })
-    .checkDeserialized(x => expect(x.c).to.equal(x.values().next().value))
-  const circMap = new Map()
-  circMap.set(circMap, 1)
-  circMap.set(1, circMap)
-  circMap.m = circMap
-  addTestVector(circMap)
-    .serialized({
-      $dedup: { $dup: 0 },
-      dups: [{
-        $map: [[{ $dup: 0 }, 1], [1, { $dup: 0 }]],
-        props: { m: { $dup: 0 } }
-      }]
-    })
-    .checkDeserialized(x => expect(x.m).to.equal(x.get(1)))
-    .checkDeserialized(x => expect(x.get(x.m)).to.equal(1))
-    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Map))
-    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Map))
-
-  // Complex circular dups
-  const complexMap = new Map()
-  const complexObj = {}
-  const complexArr = []
-  complexArr.push(complexMap)
-  complexArr.push(complexObj)
-  complexMap.set('a', complexObj)
-  complexObj.b = complexArr
-  addTestVector(complexArr)
-    .serialized({
-      $dedup: { $dup: 0 },
-      dups: [[{ $map: [['a', { $dup: 1 }]] }, { $dup: 1 }], { b: { $dup: 0 } }]
-    })
-    .checkDeserialized(x => expect(x).to.equal(x[0].get('a').b))
-    .checkDeserialized(x => expect(x[0]).to.equal(x[0].get('a').b[0]))
-    .checkDeserialized(x => expect(x[0].get('a')).to.equal(x[0].get('a').b[0].get('a')))
-    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Array))
-    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Array))
 
   // Bad dedup serialization
   addTestVector({ $dedup: {} }).unserializable().undeserializable()
