@@ -32,7 +32,7 @@ const options = { _hostIntrinsics, _sandboxIntrinsics }
 // Helpers
 // ------------------------------------------------------------------------------------------------
 
-function testSuccess (x, y) {
+function serializePass (x, y) {
   const serialized = TokenJSON._serialize(x)
   const jsonString = JSON.stringify(serialized)
   const json = JSON.parse(jsonString)
@@ -40,7 +40,7 @@ function testSuccess (x, y) {
   expect(TokenJSON._deserialize(json)).to.deep.equal(x)
 }
 
-function testFail (x) {
+function serializeFail (x) {
   expect(() => TokenJSON._serialize(x)).to.throw(`Cannot serialize ${_display(x)}`)
 }
 
@@ -52,71 +52,71 @@ describe.only('TokenJSON', () => {
   describe('_serialize', () => {
     it('should supported non-symbol primitives', () => {
       // Booleans
-      testSuccess(true, true)
-      testSuccess(false, false)
+      serializePass(true, true)
+      serializePass(false, false)
       // Numbers
-      testSuccess(0, 0)
-      testSuccess(1, 1)
-      testSuccess(-1, -1)
-      testSuccess(1.5, 1.5)
-      testSuccess(-0.1234567890987654321, -0.1234567890987654321)
-      testSuccess(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER)
-      testSuccess(Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER)
-      testSuccess(Number.MAX_VALUE, Number.MAX_VALUE)
-      testSuccess(Number.MIN_VALUE, Number.MIN_VALUE)
-      testSuccess(-0, { $n0: 1 })
-      testSuccess(Infinity, { $inf: 1 })
-      testSuccess(-Infinity, { $ninf: 1 })
-      testSuccess(NaN, { $nan: 1 })
+      serializePass(0, 0)
+      serializePass(1, 1)
+      serializePass(-1, -1)
+      serializePass(1.5, 1.5)
+      serializePass(-0.1234567890987654321, -0.1234567890987654321)
+      serializePass(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER)
+      serializePass(Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER)
+      serializePass(Number.MAX_VALUE, Number.MAX_VALUE)
+      serializePass(Number.MIN_VALUE, Number.MIN_VALUE)
+      serializePass(-0, { $n0: 1 })
+      serializePass(Infinity, { $inf: 1 })
+      serializePass(-Infinity, { $ninf: 1 })
+      serializePass(NaN, { $nan: 1 })
       // Strings
-      testSuccess('', '')
-      testSuccess('abc', 'abc')
-      testSuccess('🐉', '🐉')
+      serializePass('', '')
+      serializePass('abc', 'abc')
+      serializePass('🐉', '🐉')
       let longString = ''
       for (let i = 0; i < 10000; i++) longString += 'abcdefghijklmnopqrstuvwxyz'
-      testSuccess(longString, longString)
+      serializePass(longString, longString)
       // Undefined
-      testSuccess(undefined, { $undef: 1 })
+      serializePass(undefined, { $undef: 1 })
       // Null
-      testSuccess(null, null)
+      serializePass(null, null)
     })
 
     it('should fail to serialize symbols', () => {
-      testFail(Symbol.hasInstance)
-      testFail(Symbol.iterator)
-      testFail(Symbol.species)
-      testFail(Symbol.unscopables)
+      serializeFail(Symbol.hasInstance)
+      serializeFail(Symbol.iterator)
+      serializeFail(Symbol.species)
+      serializeFail(Symbol.unscopables)
     })
 
     it('should support basic objects', () => {
-      testSuccess({}, {})
-      testSuccess({ n: 1 }, { n: 1 })
-      testSuccess({ a: 'a', b: true, c: {}, d: null }, { a: 'a', b: true, c: {}, d: null })
-      testSuccess({ a: { a: { a: {} } } }, { a: { a: { a: {} } } })
-      testSuccess({ a: {}, b: {}, c: {} }, { a: {}, b: {}, c: {} })
-      testSuccess(new Proxy({}, {}), {})
+      serializePass({}, {})
+      serializePass({ n: 1 }, { n: 1 })
+      serializePass({ a: 'a', b: true, c: {}, d: null }, { a: 'a', b: true, c: {}, d: null })
+      serializePass({ a: { a: { a: {} } } }, { a: { a: { a: {} } } })
+      serializePass({ a: {}, b: {}, c: {} }, { a: {}, b: {}, c: {} })
+      serializePass(new Proxy({}, {}), {})
     })
 
     it('should support objects with $ properties', () => {
-      testSuccess({ $n: 1 }, { $obj: { $n: 1 } })
-      testSuccess({ $obj: {} }, { $obj: { $obj: {} } })
-      testSuccess({ a: { $a: { a: {} } } }, { a: { $obj: { $a: { a: {} } } } })
-      testSuccess({ $undef: 1 }, { $obj: { $undef: 1 } })
+      serializePass({ $n: 1 }, { $obj: { $n: 1 } })
+      serializePass({ $obj: {} }, { $obj: { $obj: {} } })
+      serializePass({ a: { $a: { a: {} } } }, { a: { $obj: { $a: { a: {} } } } })
+      serializePass({ $undef: 1 }, { $obj: { $undef: 1 } })
     })
 
     it('should support basic arrays', () => {
-      testSuccess([], [])
-      testSuccess([1, 'a', false, {}], [1, 'a', false, {}])
-      testSuccess([[[]]], [[[]]])
-      testSuccess([[1], [2], [3]], [[1], [2], [3]])
-      testSuccess([0, undefined, 2], [0, { $undef: 1 }, 2])
+      serializePass([], [])
+      serializePass([1, 'a', false, {}], [1, 'a', false, {}])
+      serializePass([[[]]], [[[]]])
+      serializePass([[1], [2], [3]], [[1], [2], [3]])
+      serializePass([0, undefined, 2], [0, { $undef: 1 }, 2])
     })
 
     it('should support sparse arrays', () => {
       const a = []
       a[0] = 0
       a[9] = 9
-      testSuccess(a, { $arr: { 0: 0, 9: 9 } })
+      serializePass(a, { $arr: { 0: 0, 9: 9 } })
     })
 
     it('should support arrays with non-numeric properties', () => {
@@ -126,7 +126,7 @@ describe.only('TokenJSON', () => {
       a.x = 'a'
       a[''] = true
       a.$obj = {}
-      testSuccess(a, { $arr: { 0: 1, 9: 9, '-1': -1, x: 'a', '': true, $obj: {} } })
+      serializePass(a, { $arr: { 0: 1, 9: 9, '-1': -1, x: 'a', '': true, $obj: {} } })
     })
 
     it('should support complex objects', () => {
@@ -134,7 +134,7 @@ describe.only('TokenJSON', () => {
       o.o = { a: [] }
       o.a = [{ n: 1 }]
       o.u = undefined
-      testSuccess(o, { a: [{ n: 1 }], o: { a: [] }, u: { $undef: 1 } })
+      serializePass(o, { a: [{ n: 1 }], o: { a: [] }, u: { $undef: 1 } })
     })
 
     it('should support duplicate objects', () => {
@@ -142,83 +142,83 @@ describe.only('TokenJSON', () => {
       const p = [1]
       const d0 = { $dup: 0 }
       const d1 = { $dup: 1 }
-      testSuccess([o, o], { $dedup: [d0, d0], dups: [{}] })
-      testSuccess({ a: o, b: o }, { $dedup: { a: d0, b: d0 }, dups: [{}] })
-      testSuccess([o, { o }], { $dedup: [d0, { o: d0 }], dups: [{}] })
-      testSuccess([o, p, o, p], { $dedup: [d0, d1, d0, d1], dups: [{}, [1]] })
-      testSuccess([o, o, p, [o, p], { z: p }], { $dedup: [d0, d0, d1, [d0, d1], { z: d1 }], dups: [{}, [1]] })
+      serializePass([o, o], { $dedup: [d0, d0], dups: [{}] })
+      serializePass({ a: o, b: o }, { $dedup: { a: d0, b: d0 }, dups: [{}] })
+      serializePass([o, { o }], { $dedup: [d0, { o: d0 }], dups: [{}] })
+      serializePass([o, p, o, p], { $dedup: [d0, d1, d0, d1], dups: [{}, [1]] })
+      serializePass([o, o, p, [o, p], { z: p }], { $dedup: [d0, d0, d1, [d0, d1], { z: d1 }], dups: [{}, [1]] })
     })
 
     it('should support circular references', () => {
       const o = {}
       o.o = o
-      testSuccess(o, { $dedup: { $dup: 0 }, dups: [{ o: { $dup: 0 } }] })
+      serializePass(o, { $dedup: { $dup: 0 }, dups: [{ o: { $dup: 0 } }] })
       const a = [{}, []]
       a[0].x = a[1]
       a[1].push(a[0])
       a.a = a
-      testSuccess(a, { $dedup: { $dup: 2 }, dups: [{ x: { $dup: 1 } }, [{ $dup: 0 }], { $arr: { 0: { $dup: 0 }, 1: { $dup: 1 }, a: { $dup: 2 } } }] })
+      serializePass(a, { $dedup: { $dup: 2 }, dups: [{ x: { $dup: 1 } }, [{ $dup: 0 }], { $arr: { 0: { $dup: 0 }, 1: { $dup: 1 }, a: { $dup: 2 } } }] })
     })
 
     it('should support sets', () => {
       // Basic keys and values
-      testSuccess(new Set(), { $set: [] })
-      testSuccess(new Set([0, false, null]), { $set: [0, false, null] })
+      serializePass(new Set(), { $set: [] })
+      serializePass(new Set([0, false, null]), { $set: [0, false, null] })
       // Object keys and values
-      testSuccess(new Set([new Set()]), { $set: [{ $set: [] }] })
+      serializePass(new Set([new Set()]), { $set: [{ $set: [] }] })
       const s = new Set()
-      testSuccess(new Set([s, s]), { $set: [{ $set: [] }] })
+      serializePass(new Set([s, s]), { $set: [{ $set: [] }] })
       // Circular entries
       const s2 = new Set()
       s2.add(s2)
-      testSuccess(s2, { $dedup: { $dup: 0 }, dups: [{ $set: [{ $dup: 0 }] }] })
+      serializePass(s2, { $dedup: { $dup: 0 }, dups: [{ $set: [{ $dup: 0 }] }] })
       // Props
       const s3 = new Set([1])
       s3.x = null
-      testSuccess(s3, { $set: [1], props: { x: null } })
+      serializePass(s3, { $set: [1], props: { x: null } })
       // Circular props
       const s4 = new Set([])
       s4.add(s4)
       s4.s = s4
-      testSuccess(s4, { $dedup: { $dup: 0 }, dups: [{ $set: [{ $dup: 0 }], props: { s: { $dup: 0 } } }] })
+      serializePass(s4, { $dedup: { $dup: 0 }, dups: [{ $set: [{ $dup: 0 }], props: { s: { $dup: 0 } } }] })
     })
 
     it('should support maps', () => {
       // Basic keys and values
-      testSuccess(new Map(), { $map: [] })
-      testSuccess(new Map([['a', 'b']]), { $map: [['a', 'b']] })
-      testSuccess(new Map([[1, 2], [null, {}]]), { $map: [[1, 2], [null, {}]] })
+      serializePass(new Map(), { $map: [] })
+      serializePass(new Map([['a', 'b']]), { $map: [['a', 'b']] })
+      serializePass(new Map([[1, 2], [null, {}]]), { $map: [[1, 2], [null, {}]] })
       // Object keys and values
-      testSuccess(new Map([[{}, []], [new Set(), new Map()]]), { $map: [[{}, []], [{ $set: [] }, { $map: [] }]] })
+      serializePass(new Map([[{}, []], [new Set(), new Map()]]), { $map: [[{}, []], [{ $set: [] }, { $map: [] }]] })
       // Duplicate keys and values
       const m = new Map()
-      testSuccess(new Map([[m, m]]), { $dedup: { $map: [[{ $dup: 0 }, { $dup: 0 }]] }, dups: [{ $map: [] }] })
+      serializePass(new Map([[m, m]]), { $dedup: { $map: [[{ $dup: 0 }, { $dup: 0 }]] }, dups: [{ $map: [] }] })
       // Circular keys
       const m2 = new Map()
       m2.set(m2, 1)
-      testSuccess(m2, { $dedup: { $dup: 0 }, dups: [{ $map: [[{ $dup: 0 }, 1]] }] })
+      serializePass(m2, { $dedup: { $dup: 0 }, dups: [{ $map: [[{ $dup: 0 }, 1]] }] })
       // Circular values
       const m3 = new Map()
       const a = [m3]
       m3.set(1, a)
-      testSuccess(a, { $dedup: { $dup: 0 }, dups: [[{ $map: [[1, { $dup: 0 }]] }]] })
+      serializePass(a, { $dedup: { $dup: 0 }, dups: [[{ $map: [[1, { $dup: 0 }]] }]] })
       // Props
       const m4 = new Map([[1, 2]])
       m4.x = 'abc'
       m4[''] = 'def'
-      testSuccess(m4, { $map: [[1, 2]], props: { x: 'abc', '': 'def' } })
+      serializePass(m4, { $map: [[1, 2]], props: { x: 'abc', '': 'def' } })
       // Circular props
       const m5 = new Map()
       m5.x = m5
       m5.set(m5.x, 1)
-      testSuccess(m5, { $dedup: { $dup: 0 }, dups: [{ $map: [[{ $dup: 0 }, 1]], props: { x: { $dup: 0 } } }] })
+      serializePass(m5, { $dedup: { $dup: 0 }, dups: [{ $map: [[{ $dup: 0 }, 1]], props: { x: { $dup: 0 } } }] })
     })
 
     it('should fail for extensions to built-in types', () => {
-      testFail(new (class CustomArray extends Array {})())
-      testFail(new (class CustomObject extends Object {})())
-      testFail(new (class CustomSet extends Set {})())
-      testFail(new (class CustomMap extends Map {})())
+      serializeFail(new (class CustomArray extends Array {})())
+      serializeFail(new (class CustomObject extends Object {})())
+      serializeFail(new (class CustomSet extends Set {})())
+      serializeFail(new (class CustomMap extends Map {})())
     })
 
     it('should maintain key order', () => {
@@ -275,6 +275,9 @@ describe.only('TokenJSON', () => {
   })
 
   describe('_deserialize', () => {
+    it('should fail to deserialize unsupported primitive types', () => {
+    })
+
     it.skip('test', () => {
       console.log(JSON.stringify(TokenJSON._deserialize(TokenJSON._serialize({ n: 1 }))))
 

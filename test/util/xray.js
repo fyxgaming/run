@@ -150,6 +150,8 @@ function addTestVectors (intrinsics, testIntrinsics) {
     String, Date, JSON, Promise, WeakSet, WeakMap, RegExp
   } = testIntrinsics
 
+  console.log(Array)
+
   function addTestVector (x) {
     const vector = new TestVector(x).useIntrinsics(intrinsics)
     vectors.push(vector)
