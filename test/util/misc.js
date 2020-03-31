@@ -89,7 +89,7 @@ describe('_display', () => {
 })
 
 describe('_deepTraverseObjects', () => {
-  it('should callback for every function or object', () => {
+  it('should call callback for every function or object', () => {
     const a2 = []
     class C { }
     const c = new C()
