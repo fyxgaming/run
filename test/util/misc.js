@@ -152,6 +152,15 @@ describe('_deepTraverseObjects', () => {
     _deepTraverseObjects([set, map], x => { results2.push(x); return true }, _sandboxIntrinsics)
     expect(results2.length).to.equal(5)
   })
+
+  it('should not deep traverse non-objects', () => {
+    const results = []
+    _deepTraverseObjects(123, x => { results.push(x); return true })
+    _deepTraverseObjects(true, x => { results.push(x); return true })
+    _deepTraverseObjects(Symbol.iterator, x => { results.push(x); return true })
+    _deepTraverseObjects('hello', x => { results.push(x); return true })
+    _deepTraverseObjects(null, x => { results.push(x); return true })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
