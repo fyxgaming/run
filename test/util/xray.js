@@ -23,12 +23,6 @@ function addTestVectors (intrinsics, testIntrinsics) {
 
   const addTestVector = () => {}
 
-  // Maps
-  addTestVector({ $map: null }).unserializable().undeserializable()
-  addTestVector({ $map: {} }).unserializable().undeserializable()
-  addTestVector({ $map: [{}] }).unserializable().undeserializable()
-  addTestVector({ $map: [[1, 2, 3]] }).unserializable().undeserializable()
-
   // Uint8Array
   addTestVector(new Uint8Array()).serialized({ $ui8a: '' })
     .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Uint8Array))
