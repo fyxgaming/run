@@ -44,6 +44,10 @@ function serializeFail (x) {
   expect(() => TokenJSON._serialize(x)).to.throw(`Cannot serialize ${_display(x)}`)
 }
 
+function deserializeFail (y) {
+  expect(() => TokenJSON._deserialize(y)).to.throw(`Cannot deserialize ${_display(y)}`)
+}
+
 // ------------------------------------------------------------------------------------------------
 // TokenJSON
 // ------------------------------------------------------------------------------------------------
@@ -275,7 +279,14 @@ describe.only('TokenJSON', () => {
   })
 
   describe('_deserialize', () => {
-    it('should fail to deserialize unsupported primitive types', () => {
+    it('should fail to deserialize unsupported types', () => {
+      // Undefined
+      deserializeFail(undefined)
+      // Numbers
+      deserializeFail(-0)
+      deserializeFail(NaN)
+      deserializeFail(Infinity)
+      deserializeFail(-Infinity)
     })
 
     it.skip('test', () => {
