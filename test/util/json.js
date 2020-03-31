@@ -81,6 +81,13 @@ describe.only('TokenJSON', () => {
       testSuccess(null, null)
     })
 
+    it('should fail to serialize symbols', () => {
+      testFail(Symbol.hasInstance)
+      testFail(Symbol.iterator)
+      testFail(Symbol.species)
+      testFail(Symbol.unscopables)
+    })
+
     it('should support basic objects', () => {
       testSuccess({}, {})
       testSuccess({ n: 1 }, { n: 1 })
@@ -153,11 +160,19 @@ describe.only('TokenJSON', () => {
       testSuccess(a, { $dedup: { $dup: 2 }, dups: [{ x: { $dup: 1 } }, [{ $dup: 0 }], { $arr: { 0: { $dup: 0 }, 1: { $dup: 1 }, a: { $dup: 2 } } }] })
     })
 
-    it('should fail to serialize symbols', () => {
-      testFail(Symbol.hasInstance)
-      testFail(Symbol.iterator)
-      testFail(Symbol.species)
-      testFail(Symbol.unscopables)
+    it('should support sets', () => {
+      testSuccess(new Set(), { $set: [] })
+      testSuccess(new Set([1, 2, 3]), { $set: [1, 2, 3] })
+      testSuccess(new Set([new Set()]), { $set: [{ $set: [] }] })
+      const s = new Set()
+      testSuccess(new Set([s, s]), { $set: [{ $set: [] }] })
+      const s2 = new Set()
+      s2.add(s2)
+      testSuccess(s2, { $dedup: { $dup: 0 }, dups: [{ $set: [{ $dup: 0 }] }] })
+    })
+
+    it('should support maps', () => {
+      testSuccess(new Map(), { $map: [] })
     })
 
     it('test intrinsics', () => {
@@ -167,8 +182,6 @@ describe.only('TokenJSON', () => {
     // Extensions of Object and Array, Map and Set
 
     // Deserialize, throw for unknown $
-
-    // Set, Map
 
     it.skip('rest', () => {
       console.log(JSON.stringify(TokenJSON._serialize({ n: 1 })))
