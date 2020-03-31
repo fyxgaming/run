@@ -134,7 +134,8 @@ describe.only('TokenJSON', () => {
       o.o = { a: [] }
       o.a = [{ n: 1 }]
       o.u = undefined
-      serializePass(o, { a: [{ n: 1 }], o: { a: [] }, u: { $undef: 1 } })
+      o.b = new Uint8Array()
+      serializePass(o, { a: [{ n: 1 }], o: { a: [] }, u: { $undef: 1 }, b: { $ui8a: '' } })
     })
 
     it('should support duplicate objects', () => {
@@ -214,11 +215,37 @@ describe.only('TokenJSON', () => {
       serializePass(m5, { $dedup: { $dup: 0 }, dups: [{ $map: [[{ $dup: 0 }, 1]], props: { x: { $dup: 0 } } }] })
     })
 
+    it('should support buffers', () => {
+      serializePass(new Uint8Array(), { $ui8a: '' })
+      /*
+  // Uint8Array
+  addTestVector(new Uint8Array()).serialized({ $ui8a: '' })
+    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Uint8Array))
+    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
+    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Uint8Array))
+  addTestVector(new Uint8Array([0x00, 0x01])).serialized({ $ui8a: 'AAE=' })
+  const hellobuf = Buffer.from('hello', 'utf8')
+  addTestVector(new Uint8Array(hellobuf)).serialized({ $ui8a: hellobuf.toString('base64') })
+  const randombuf = bsv.crypto.Random.getRandomBuffer(1024)
+  addTestVector(new Uint8Array(randombuf)).serialized({ $ui8a: randombuf.toString('base64') })
+  const bufWithProps = new Uint8Array()
+  bufWithProps.x = 1
+  addTestVector(bufWithProps).serialized({ $ui8a: '' }).unscannable().uncloneable().unserializable()
+  addTestVector(Buffer.alloc(0)).unscannable().uncloneable().unserializable().undeserializable()
+  addTestVector({ $ui8a: [] }).unserializable().undeserializable()
+  addTestVector({ $ui8a: {} }).unserializable().undeserializable()
+  addTestVector({ $ui8a: '🐉' }).unserializable().undeserializable()
+  addTestVector({ $ui8a: new Uint8Array() }).unserializable().undeserializable()
+  */
+      // Check other methods
+    })
+
     it('should fail for extensions to built-in types', () => {
       serializeFail(new (class CustomArray extends Array {})())
       serializeFail(new (class CustomObject extends Object {})())
       serializeFail(new (class CustomSet extends Set {})())
       serializeFail(new (class CustomMap extends Map {})())
+      serializeFail(new (class CustomUint8Array extends Uint8Array {})())
     })
 
     it('should maintain key order', () => {
@@ -235,6 +262,7 @@ describe.only('TokenJSON', () => {
 
     it('should use output intrinsics', () => {
       const opts = { _outputIntrinsics: _sandboxIntrinsics }
+      // Primitives
       expect(TokenJSON._serialize({}, opts).constructor).to.equal(_sandboxIntrinsics.Object)
       expect(TokenJSON._serialize({ $: 1 }, opts).$obj.constructor).to.equal(_sandboxIntrinsics.Object)
       expect(TokenJSON._serialize(undefined, opts).constructor).to.equal(_sandboxIntrinsics.Object)
@@ -242,19 +270,28 @@ describe.only('TokenJSON', () => {
       expect(TokenJSON._serialize(NaN, opts).constructor).to.equal(_sandboxIntrinsics.Object)
       expect(TokenJSON._serialize(Infinity, opts).constructor).to.equal(_sandboxIntrinsics.Object)
       expect(TokenJSON._serialize(-Infinity, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      // Array
       expect(TokenJSON._serialize([], opts).constructor).to.equal(_sandboxIntrinsics.Array)
       const a = []
       a.x = 1
       expect(TokenJSON._serialize(a, opts).constructor).to.equal(_sandboxIntrinsics.Object)
       expect(TokenJSON._serialize(a, opts).$arr.constructor).to.equal(_sandboxIntrinsics.Object)
+      // Set
       const s = new Set()
       s.x = 1
+      expect(TokenJSON._serialize(s, opts).constructor).to.equal(_sandboxIntrinsics.Object)
       expect(TokenJSON._serialize(s, opts).$set.constructor).to.equal(_sandboxIntrinsics.Array)
       expect(TokenJSON._serialize(s, opts).props.constructor).to.equal(_sandboxIntrinsics.Object)
+      // Map
       const m = new Map()
       m.x = 1
+      expect(TokenJSON._serialize(m, opts).constructor).to.equal(_sandboxIntrinsics.Object)
       expect(TokenJSON._serialize(m, opts).$map.constructor).to.equal(_sandboxIntrinsics.Array)
       expect(TokenJSON._serialize(m, opts).props.constructor).to.equal(_sandboxIntrinsics.Object)
+      // Uint8Array
+      const b = new Uint8Array()
+      expect(TokenJSON._serialize(b, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      // Dedup
       const o = { }
       expect(TokenJSON._serialize([o, o], opts).constructor).to.equal(_sandboxIntrinsics.Object)
       expect(TokenJSON._serialize([o, o], opts).$dedup.constructor).to.equal(_sandboxIntrinsics.Array)
@@ -369,6 +406,7 @@ describe.only('TokenJSON', () => {
       // Set
       deserializeFail({ $set: null })
       deserializeFail({ $set: {} })
+      deserializeFail({ $set: new Set() })
       deserializeFail({ $set: [{ $err: 1 }] })
       deserializeFail({ $set: new Uint8Array() })
       deserializeFail({ $set: [], props: 0 })
@@ -376,12 +414,19 @@ describe.only('TokenJSON', () => {
       // Map
       deserializeFail({ $map: null })
       deserializeFail({ $map: {} })
+      deserializeFail({ $map: new Map() })
       deserializeFail({ $map: [{}] })
       deserializeFail({ $map: [[]] })
       deserializeFail({ $map: [[1]] })
       deserializeFail({ $map: [[1, 2, 3]] })
       deserializeFail({ $map: [], props: 0 })
       deserializeFail({ $map: [], props: [] })
+      // Uint8Array
+      deserializeFail({ $ui8a: null })
+      deserializeFail({ $ui8a: [] })
+      deserializeFail({ $ui8a: {} })
+      deserializeFail({ $ui8a: '*' })
+      deserializeFail({ $ui8a: new Uint8Array() })
       // Dedup
       deserializeFail({ $dedup: {} })
       deserializeFail({ $dedup: {}, dups: {} })
@@ -404,6 +449,7 @@ describe.only('TokenJSON', () => {
       expect(TokenJSON._deserialize({ $arr: {} }, opts).constructor).to.equal(_sandboxIntrinsics.Array)
       expect(TokenJSON._deserialize({ $set: [] }, opts).constructor).to.equal(_sandboxIntrinsics.Set)
       expect(TokenJSON._deserialize({ $map: [] }, opts).constructor).to.equal(_sandboxIntrinsics.Map)
+      expect(TokenJSON._deserialize({ $ui8a: '' }, opts).constructor).to.equal(_sandboxIntrinsics.Uint8Array)
     })
 
     it.skip('test', () => {

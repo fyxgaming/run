@@ -1,5 +1,3 @@
-const bsv = require('bsv')
-const { expect } = require('chai')
 const { Run } = require('../config')
 const { Intrinsics } = Run
 
@@ -11,25 +9,6 @@ const run = new Run()
 
 function addTestVectors (intrinsics, testIntrinsics) {
   const addTestVector = () => {}
-
-  // Uint8Array
-  addTestVector(new Uint8Array()).serialized({ $ui8a: '' })
-    .checkClone(x => expect(x.constructor).to.equal(intrinsics.default.Uint8Array))
-    .checkSerialized(x => expect(x.constructor).to.equal(intrinsics.default.Object))
-    .checkDeserialized(x => expect(x.constructor).to.equal(intrinsics.default.Uint8Array))
-  addTestVector(new Uint8Array([0x00, 0x01])).serialized({ $ui8a: 'AAE=' })
-  const hellobuf = Buffer.from('hello', 'utf8')
-  addTestVector(new Uint8Array(hellobuf)).serialized({ $ui8a: hellobuf.toString('base64') })
-  const randombuf = bsv.crypto.Random.getRandomBuffer(1024)
-  addTestVector(new Uint8Array(randombuf)).serialized({ $ui8a: randombuf.toString('base64') })
-  const bufWithProps = new Uint8Array()
-  bufWithProps.x = 1
-  addTestVector(bufWithProps).serialized({ $ui8a: '' }).unscannable().uncloneable().unserializable()
-  addTestVector(Buffer.alloc(0)).unscannable().uncloneable().unserializable().undeserializable()
-  addTestVector({ $ui8a: [] }).unserializable().undeserializable()
-  addTestVector({ $ui8a: {} }).unserializable().undeserializable()
-  addTestVector({ $ui8a: '🐉' }).unserializable().undeserializable()
-  addTestVector({ $ui8a: new Uint8Array() }).unserializable().undeserializable()
 
   // Unknown intrinsics
   const sandboxIntrinsics = run.code.intrinsics.allowed[1]
