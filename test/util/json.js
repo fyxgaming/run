@@ -348,10 +348,12 @@ describe('TokenJSON', () => {
 
     it('should support custom replacer', () => {
       class A {}
-      expect(() => TokenJSON._serialize(new A())).to.throw('Cannot serialize')
-      expect(TokenJSON._serialize(new A(), {
+      const a = new A()
+      expect(() => TokenJSON._serialize(a)).to.throw('Cannot serialize')
+      expect(TokenJSON._serialize(a, {
         _replacer: x => { if (x instanceof A) return { $a: 1 } }
       })).to.deep.equal({ $a: 1 })
+      expect(() => TokenJSON._serialize(a, { _replacer: () => {} })).to.throw('Cannot serialize')
     })
   })
 
@@ -403,6 +405,7 @@ describe('TokenJSON', () => {
       deserializeFail({ $ui8a: '*' })
       deserializeFail({ $ui8a: new Uint8Array() })
       // Dedup
+      deserializeFail({ $dedup: null })
       deserializeFail({ $dedup: {} })
       deserializeFail({ $dedup: {}, dups: {} })
       deserializeFail({ $dedup: { $dup: 0 }, dups: [] })
@@ -435,6 +438,7 @@ describe('TokenJSON', () => {
       expect(TokenJSON._deserialize({ $a: 1 }, {
         _reviver: x => { if (x.$a === 1) return a }
       })).to.equal(a)
+      expect(() => TokenJSON._deserialize(a, { _reviver: () => {} })).to.throw('Cannot deserialize')
     })
   })
 
