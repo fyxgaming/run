@@ -494,20 +494,20 @@ describe('TokenJSON', () => {
       expect(TokenJSON._serialize(x => x, opts)).to.deep.equal({ $ref: '123' })
     })
 
-    // Replace Berries
+    it('should fail to serialize built-in functions', () => {
+      const opts = { _replacer: TokenJSON._replace._tokens(x => '123') }
+      expect(() => TokenJSON._serialize(Math.random, opts)).to.throw('Cannot serialize')
+      expect(() => TokenJSON._serialize(Array.prototype.indexOf, opts)).to.throw('Cannot serialize')
+      expect(() => TokenJSON._serialize(WeakSet.prototype.has, opts)).to.throw('Cannot serialize')
+      expect(() => TokenJSON._serialize(String.prototype.endsWith, opts)).to.throw('Cannot serialize')
+      expect(() => TokenJSON._serialize(isNaN, opts)).to.throw('Cannot serialize')
+      expect(() => TokenJSON._serialize(isFinite, opts)).to.throw('Cannot serialize')
+      expect(() => TokenJSON._serialize(parseInt, opts)).to.throw('Cannot serialize')
+      expect(() => TokenJSON._serialize(escape, opts)).to.throw('Cannot serialize')
+      expect(() => TokenJSON._serialize(eval, opts)).to.throw('Cannot serialize') // eslint-disable-line
+    })
 
-    /*
-  // Non-deployable
-  addTestVector(Math.random, { deployable: false })
-  addTestVector(Array.prototype.indexOf, { deployable: false })
-  addTestVector(WeakSet.prototype.has, { deployable: false })
-  addTestVector(String.prototype.endsWith, { deployable: false })
-  addTestVector(isNaN, { deployable: false })
-  addTestVector(isFinite, { deployable: false })
-  addTestVector(parseInt, { deployable: false })
-  addTestVector(escape, { deployable: false })
-  addTestVector(eval, { deployable: false })
-  */
+    // TODO: Replace Berries
   })
 
   describe('arbitrary objects', () => {
