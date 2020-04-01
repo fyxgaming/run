@@ -14,6 +14,7 @@ require('./module/local-purse')
 require('./module/mockchain')
 
 require('./util')
+require('./util/checkpoint')
 require('./util/json')
 require('./util/location')
 require('./util/misc')
