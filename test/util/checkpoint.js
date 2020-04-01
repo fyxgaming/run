@@ -19,9 +19,8 @@ describe('Checkpoint', () => {
       }
 
       const a = new Store({})
-      console.log('---')
-      //   const b = new Store({ ...a.x })
-      const b = new Store(a.x)
+      const b = new Store({ ...a.x })
+      //   const b = new Store(a.x)
 
       await run.sync()
 
