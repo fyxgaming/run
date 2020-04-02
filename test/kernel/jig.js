@@ -97,7 +97,7 @@ describe('Jig', () => {
     })
   })
 
-  describe.only('sandbox', () => {
+  describe('sandbox', () => {
     it('should throw if access external variables', () => {
       let n = 1 // eslint-disable-line
       class A extends Jig { init () { n = 2 } }
@@ -182,7 +182,7 @@ describe('Jig', () => {
       const a = new A()
       await run.sync()
       run.deactivate()
-      const run2 = new Run()
+      const run2 = new Run({ blockchain: run.blockchain })
       const a2 = await run2.load(a.location)
       expect(a2 instanceof A).to.equal(true)
     })
@@ -223,7 +223,7 @@ describe('Jig', () => {
     })
   })
 
-  describe('sync', () => {
+  describe.only('sync', () => {
     it('should set origins and locations on class and instance', async () => {
       class A extends Jig { }
       const a = new A()
