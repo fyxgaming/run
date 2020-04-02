@@ -964,21 +964,15 @@ describe('Jig', () => {
   describe('set', () => {
     it('should throw if unserializable value', () => {
       class A extends Jig {
-        f () { this.n = NaN }
-
+        f () { this.n = new WeakMap() }
         g () { this.n = Symbol.hasInstance }
-
-        h () { this.n = -Infinity }
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f()).to.throw('NaN cannot be serialized')
+      expect(() => a.f()).to.throw('Cannot serialize WeakMap')
       expectNoAction()
       expect(typeof a.n).to.equal('undefined')
-      expect(() => a.g()).to.throw('Symbol(Symbol.hasInstance) cannot be serialized')
-      expectNoAction()
-      expect(typeof a.n).to.equal('undefined')
-      expect(() => a.h()).to.throw('-Infinity cannot be serialized')
+      expect(() => a.g()).to.throw('Cannot serialize Symbol(Symbol.hasInstance)')
       expectNoAction()
       expect(typeof a.n).to.equal('undefined')
     })
