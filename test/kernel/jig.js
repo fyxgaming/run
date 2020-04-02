@@ -257,13 +257,15 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('should forward sync', async () => {
+    it.only('should forward sync', async () => {
       class A extends Jig { set (x) { this.x = x } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      const run2 = new Run({ owner: run.owner.privkey })
       await run.sync()
+      const run2 = new Run({ owner: run.owner.privkey })
+      console.log('BEFORE')
       const a2 = await run2.load(a.location)
+      console.log('AFTER')
       a2.set(1)
       a2.set(2)
       await a2.sync()
