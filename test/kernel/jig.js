@@ -397,7 +397,7 @@ describe('Jig', () => {
     })
   })
 
-  describe.only('method', () => {
+  describe('method', () => {
     it('should support passing null in args', async () => {
       class Dragon extends Jig {
         init (lair) {
@@ -529,7 +529,9 @@ describe('Jig', () => {
     it('should throw if update on wrong network', async () => {
       class A extends Jig { f () { this.n = 1; return this } }
       const a = await new A().sync()
-      new Run({ network: 'test' }) // eslint-disable-line
+      const run2 = new Run({ network: 'test' }) // eslint-disable-line
+      run2.blockchain.fetch = async () => undefined
+      run2.blockchain.utxos = async () => []
       await expect(a.f().sync()).to.be.rejectedWith('Signature missing for A')
     }).timeout(30000)
   })
