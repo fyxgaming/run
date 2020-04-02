@@ -561,17 +561,18 @@ describe('Jig', () => {
       const blob = new (class Blob {})()
       a.f(blob)
       expectAction(a, 'f', [blob], [a], [a], [])
+      a.f(NaN)
+      expectAction(a, 'f', [NaN], [a], [a], [])
+      a.f(Infinity)
+      expectAction(a, 'f', [Infinity], [a], [a], [])
     })
 
-    it('should throw if not arguments not serializable', () => {
+    it('should throw if arguments not serializable', () => {
       class A extends Jig { f (...args) { this.args = args } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f(NaN)).to.throw('NaN cannot be serialized')
+      expect(() => a.f(Symbol.hasInstance)).to.throw('Cannot serialize Symbol(Symbol.hasInstance)')
       expectNoAction()
-      expect(() => a.f(Infinity)).to.throw('Infinity cannot be serialized')
-      expectNoAction()
-      expect(() => a.f(Symbol.hasInstance)).to.throw('Symbol(Symbol.hasInstance) cannot be serialized')
     })
 
     it('should support changing args in method', () => {
