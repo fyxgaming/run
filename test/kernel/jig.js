@@ -448,10 +448,10 @@ describe('Jig', () => {
         methodThatThrows (outer) {
           outer.setN()
           this.n = 2
-          this.arr[2].b = 2
+          this.arr[1].b = 2
           this.arr.push(3)
           this.inner.setZ()
-          throw new Error()
+          throw new Error('an error')
         }
       }
       Revertable.deps = { Inner }
