@@ -62,57 +62,7 @@ async function hookPay (run, ...enables) {
 // Jig tests
 // ------------------------------------------------------------------------------------------------
 
-describe.skip('temp', () => {
-  it('TODO REMOVE', async () => {
-    const run = new Run()
-    class Dragon extends Jig {
-      set (name) { this.name = name }
-    }
-    const dragon = new Dragon()
-    class Lair extends Jig { }
-    Lair.dragon = Lair
-    dragon.set('Empress')
-    await run.deploy(Lair)
-    await run.sync()
-    run.deactivate()
-    const run2 = new Run({ blockchain: run.blockchain })
-    await run2.load(Lair.location)
-  })
-
-  it('DEPLOY CLASS', async () => {
-    const run = new Run()
-    class Store extends Jig {
-      set (x) { this.x = x }
-    }
-    class Dragon { }
-    const store = new Store()
-    store.set(Dragon)
-    await run.sync()
-    run.deactivate()
-    const run2 = new Run({ blockchain: run.blockchain })
-    await run2.load(Store.location)
-  })
-
-  it('CUSTOM OBJECT', async () => {
-    const run = new Run()
-    class Store extends Jig {
-      set (x) { this.x = x }
-    }
-    class Dragon { }
-    const dragon = new Dragon()
-    dragon.name = 'Empress'
-    const store = new Store()
-    store.set(dragon)
-    await run.sync()
-    run.deactivate()
-    const run2 = new Run({ blockchain: run.blockchain })
-    const store2 = await run2.load(store.location)
-    console.log(store2.dragon)
-    await run2.load(Dragon.location)
-  })
-})
-
-describe.skip('Jig', () => {
+describe('Jig', () => {
   const run = hookStoreAction(new Run())
   beforeEach(() => run.blockchain.block())
   beforeEach(() => run.activate())
@@ -127,7 +77,7 @@ describe.skip('Jig', () => {
       expect(A.origin.length).to.equal(67)
     })
 
-    it('throws if not extended', () => {
+    it('should throw if not extended', () => {
       expect(() => new Jig()).to.throw()
       expectNoAction()
     })
@@ -145,22 +95,9 @@ describe.skip('Jig', () => {
       expect(a.a).to.equal(1)
       expect(a.b).to.equal('z')
     })
-
-    it('should all supers', async () => {
-      class A extends Jig { f () { this.a = true }}
-      class B extends A { f () { super.f(); this.b = true }}
-      class C extends B { f () { super.f(); this.c = true }}
-      const c = new C()
-      expectAction(c, 'init', [], [], [c], [])
-      c.f()
-      expectAction(c, 'f', [], [c], [c], [])
-      expect(c.a).to.equal(true)
-      expect(c.b).to.equal(true)
-      expect(c.c).to.equal(true)
-    })
   })
 
-  describe('sandbox', () => {
+  describe.only('sandbox', () => {
     it('should throw if access external variables', () => {
       let n = 1 // eslint-disable-line
       class A extends Jig { init () { n = 2 } }
@@ -192,10 +129,14 @@ describe.skip('Jig', () => {
       bad.forEach(x => expect(a.isUndefined(x)).to.equal(true))
     })
 
-    it('should throw useful error when creating date', () => {
-      class A extends Jig { createDate () { return new Date() } }
+    it('should throw useful error when using Date and Math', () => {
+      class A extends Jig {
+        createDate () { return new Date() }
+        useMath () { return Math.random() }
+      }
       const a = new A()
-      expect(() => a.createDate()).to.throw('Hint: Date is disabled inside jigs because it is non-deterministic.')
+      expect(() => a.createDate()).to.throw('Date is not defined\n\nHint: Date is disabled because it is non-deterministic.')
+      expect(() => a.useMath()).to.throw('Math is not defined\n\nHint: Math is disabled because it is non-deterministic.')
     })
   })
 
@@ -535,6 +476,19 @@ describe.skip('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       expect(() => a.f()).to.throw('internal errors must not be swallowed\n\nError: some error message')
       expectNoAction()
+    })
+
+    it('should support calling super method', async () => {
+      class A extends Jig { f () { this.a = true }}
+      class B extends A { f () { super.f(); this.b = true }}
+      class C extends B { f () { super.f(); this.c = true }}
+      const c = new C()
+      expectAction(c, 'init', [], [], [c], [])
+      c.f()
+      expectAction(c, 'f', [], [c], [c], [])
+      expect(c.a).to.equal(true)
+      expect(c.b).to.equal(true)
+      expect(c.c).to.equal(true)
     })
 
     it('should support calling static helpers', () => {
