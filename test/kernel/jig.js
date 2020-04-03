@@ -1316,7 +1316,7 @@ describe('Jig', () => {
     })
   })
 
-  describe('owner', () => {
+  describe.only('owner', () => {
     it('should be defined before init is called', () => {
       class A extends Jig { init () { this.ownerAtInit = this.owner }}
       const a = new A()
@@ -1332,7 +1332,7 @@ describe('Jig', () => {
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      const bsvNetwork = Run._util.bsvNetwork(run.blockchain.network)
+      const bsvNetwork = Run._util._bsvNetwork(run.blockchain.network)
       const privateKey = new PrivateKey(bsvNetwork)
       const pubkey = privateKey.publicKey.toString()
       a.send(pubkey)
