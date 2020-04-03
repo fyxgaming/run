@@ -1658,7 +1658,7 @@ describe('Jig', () => {
       await run.load(a.location)
     })
 
-    it.only('should use token map', async () => {
+    it('should use token map', async () => {
       class B extends Jig {}
       class A extends Jig {
         init () { this.map = new Map() }
