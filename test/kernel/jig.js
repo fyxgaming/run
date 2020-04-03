@@ -1416,70 +1416,50 @@ describe('Jig', () => {
     })
   })
 
-  describe.only('satoshis', () => {
-    it('should be defined before init', () => {
+  describe('satoshis', () => {
+    async function testSetAndLoad (amount) {
+      class A extends Jig { f (s) { this.satoshis = s }}
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      a.f(amount)
+      await run.sync()
+      const a2 = await run.load(a.location)
+      expect(a2.satoshis).to.equal(amount)
+    }
+
+    // minimum amount
+    it('should set and load 0 satoshis', () => testSetAndLoad(0))
+
+    // less than dust
+    it('should set and load 50 satoshis', () => testSetAndLoad(0))
+
+    // more than dust
+    it('should set and load 600 satoshis', () => testSetAndLoad(0))
+
+    function testFailToSet (amount, err) {
+      class A extends Jig { f (s) { this.satoshis = s } }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      expect(() => a.f(amount)).to.throw(err)
+      expectNoAction()
+    }
+
+    it('should throw if set to negative', () => testFailToSet(-1, 'satoshis must be non-negative'))
+    it('should throw if set to float', () => testFailToSet(1.1, 'satoshis must be an integer'))
+    it('should throw if set to string', () => testFailToSet('1', 'satoshis must be a number'))
+    it('should throw if set above 100M', () => testFailToSet(100000001, 'satoshis must be <= 100000000'))
+    it('should throw if set to NaN', () => testFailToSet(NaN, 'satoshis must be an integer'))
+    it('should throw if set to Infinity', () => testFailToSet(Infinity, 'satoshis must be an integer'))
+    it('should throw if set to undefined', () => testFailToSet(undefined, 'satoshis must be a number'))
+
+    it('should initialize to 0 satoshis', () => {
       class A extends Jig { init () { this.satoshisAtInit = this.satoshis }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [a])
       expect(a.satoshisAtInit).to.equal(0)
     })
 
-    it('should support setting to valid numbers', async () => {
-      class A extends Jig { f (s) { this.satoshis = s }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      a.f(1)
-      expectAction(a, 'f', [1], [a], [a], [])
-      a.f(100000)
-      expectAction(a, 'f', [100000], [a], [a], [])
-      a.f(0)
-      expectAction(a, 'f', [0], [a], [a], [])
-      await run.sync()
-    })
-
-    it('should throw if set to invalid number', () => {
-      class A extends Jig {
-        f (s) { this.satoshis = s }
-
-        g () { this.satoshis = NaN }
-
-        h () { this.satoshis = Infinity }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f(-1)).to.throw()
-      expectNoAction()
-      expect(() => a.f('1')).to.throw()
-      expectNoAction()
-      expect(() => a.f(100000001)).to.throw()
-      expectNoAction()
-      expect(() => a.g()).to.throw()
-      expectNoAction()
-      expect(() => a.h()).to.throw()
-      expectNoAction()
-    })
-
-    it('should load satoshis from mocknet', async () => {
-      class A extends Jig { f (s) { this.satoshis = s }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      a.f(50)
-      expectAction(a, 'f', [50], [a], [a], [])
-      await run.sync()
-      const a2 = await run.load(a.location)
-      expect(a2.satoshis).to.equal(50)
-    })
-
-    it('should load satoshis from testnet', async () => {
-      const run = new Run({ network: 'test' })
-      class A extends Jig { f (s) { this.satoshis = s }}
-      const a = new A()
-      a.f(50)
-      await run.sync()
-      await run.load(a.location)
-    }).timeout(10000)
-
-    it('should throw if create satoshis method', () => {
+    it('should throw if satoshis method exists', () => {
       class A extends Jig { owner () {} }
       expect(() => new A()).to.throw()
       expectNoAction()
@@ -1491,7 +1471,7 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       expect(() => { delete a.satoshis }).to.throw()
       expectNoAction()
-      expect(() => a.f()).to.throw()
+      expect(() => a.f()).to.throw('must not delete satoshis')
       expectNoAction()
     })
 
@@ -1499,7 +1479,7 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => { a.satoshis = 1 }).to.throw()
+      expect(() => { a.satoshis = 1 }).to.throw('must not set satoshis outside of a method')
       expectNoAction()
     })
 
@@ -1507,18 +1487,18 @@ describe('Jig', () => {
       class A extends Jig { f (satoshis) { this.satoshis = satoshis; return this }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      await a.f(10000).sync()
-      expectAction(a, 'f', [10000], [a], [a], [])
+      await a.f(5000).sync()
+      expectAction(a, 'f', [5000], [a], [a], [])
       const before = await run.purse.balance()
       await a.f(0).sync()
       expectAction(a, 'f', [0], [a], [a], [])
       const after = await run.purse.balance()
-      expect(after - before > 8000).to.equal(true)
+      expect(after - before > 3000).to.equal(true)
     })
   })
 
-  describe('misc', () => {
-    it('should support custom toJSON method', () => {
+  describe.only('misc', () => {
+    it.only('should support custom toJSON method', () => {
       class A extends Jig { toJSON () { return [1, 2, 3] } }
       const a = new A()
       expect(JSON.stringify(a)).to.equal('[1,2,3]')
