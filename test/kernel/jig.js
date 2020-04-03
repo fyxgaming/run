@@ -1688,7 +1688,7 @@ describe('Jig', () => {
       await run.load(store.location)
     })
 
-    it('should support circular objects', async () => {
+    it.only('should support circular objects', async () => {
       class A extends Jig {
         init () {
           this.x = []
