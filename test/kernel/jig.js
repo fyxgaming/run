@@ -1316,7 +1316,7 @@ describe('Jig', () => {
     })
   })
 
-  describe.only('owner', () => {
+  describe('owner', () => {
     it('should be defined before init is called', () => {
       class A extends Jig { init () { this.ownerAtInit = this.owner }}
       const a = new A()
@@ -1411,12 +1411,12 @@ describe('Jig', () => {
       const a = new A(privkey.publicKey.toString())
       await run.sync()
       run.deactivate()
-      const run2 = new Run({ owner: privkey })
+      const run2 = new Run({ owner: privkey, blockchain: run.blockchain })
       await run2.load(a.location)
     })
   })
 
-  describe('satoshis', () => {
+  describe.only('satoshis', () => {
     it('should be defined before init', () => {
       class A extends Jig { init () { this.satoshisAtInit = this.satoshis }}
       const a = new A()
