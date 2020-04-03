@@ -1666,12 +1666,12 @@ describe('Jig', () => {
       }
       const a = await new A().sync()
       const b = await new B().sync()
-      // const b2 = await run.load(b.location)
+      const b2 = await run.load(b.location)
       a.set(b, 1)
-      a.set(b, 2)
+      a.set(b2, 2)
       expect(a.map.size).to.equal(1)
       await run.sync()
-      // await run.load(a.location)
+      await run.load(a.location)
       run.state.cache.clear()
       await run.load(a.location)
     })
@@ -1688,7 +1688,7 @@ describe('Jig', () => {
       await run.load(store.location)
     })
 
-    it.only('should support circular objects', async () => {
+    it('should support circular objects', async () => {
       class A extends Jig {
         init () {
           this.x = []
@@ -2437,9 +2437,9 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).to.throw('Property [object Object] is owned by a different token')
-      expect(() => b.g(a)).to.throw('Property 1,2,3 is owned by a different token')
-      expect(() => b.h(a)).to.throw('Property 1,2 is owned by a different token')
+      expect(() => b.f(a)).to.throw('Property [object Object] belongs to a different token')
+      expect(() => b.g(a)).to.throw('Property 1,2,3 belongs to a different token')
+      expect(() => b.h(a)).to.throw('Property 1,2 belongs to a different token')
     })
 
     it('should not throw if save a copy of an internal property on another jig', () => {
@@ -2478,7 +2478,7 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).to.throw('Property f () { return 2 } is owned by a different token')
+      expect(() => b.f(a)).to.throw('Property f () { return 2 } belongs to a different token')
     })
   })
 })
