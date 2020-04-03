@@ -1497,7 +1497,7 @@ describe('Jig', () => {
     })
   })
 
-  describe.only('misc', () => {
+  describe('misc', () => {
     it('should support custom toJSON method', () => {
       class A extends Jig { toJSON () { return [1, 2, 3] } }
       const a = new A()
@@ -1640,7 +1640,7 @@ describe('Jig', () => {
       })
     })
 
-    it.only('should use token set', async () => {
+    it('should use token set', async () => {
       class B extends Jig {}
       class A extends Jig {
         init () { this.set = new Set() }
