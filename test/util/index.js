@@ -50,7 +50,7 @@ describe('util', () => {
       expect(() => checkSatoshis(1.5)).to.throw('satoshis must be an integer')
       expect(() => checkSatoshis(NaN)).to.throw('satoshis must be an integer')
       expect(() => checkSatoshis(Infinity)).to.throw('satoshis must be an integer')
-      expect(() => checkSatoshis(100000001)).to.throw('satoshis must be less than 100000000')
+      expect(() => checkSatoshis(100000001)).to.throw('satoshis must be <= 100000000')
     })
   })
 
