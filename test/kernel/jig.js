@@ -1498,31 +1498,28 @@ describe('Jig', () => {
   })
 
   describe.only('misc', () => {
-    it.only('should support custom toJSON method', () => {
+    it('should support custom toJSON method', () => {
       class A extends Jig { toJSON () { return [1, 2, 3] } }
       const a = new A()
       expect(JSON.stringify(a)).to.equal('[1,2,3]')
       expectAction(a, 'init', [], [], [a], [])
     })
 
-    it('should throw if $class or $ref property', () => {
-      class A extends Jig { init () { this.o = { $class: 'undefined' } } }
-      expect(() => new A()).to.throw()
-      expectNoAction()
-      class B extends Jig { init () { this.o = { $ref: '123' } } }
-      expect(() => new B()).to.throw()
-      expectNoAction()
+    it('should support $ properties and args', () => {
+      class A extends Jig {
+        init () { this.o = { $class: 'undefined' } }
+        f () { this.$ref = '123' }
+        g (x) { this.x = x }
+      }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      a.f()
+      expectAction(a, 'f', [], [a], [a], [])
+      a.g({ $undef: 1 })
+      expectAction(a, 'g', [{ $undef: 1 }], [a], [a], [])
     })
 
-    it('should throw if $class or $ref arg', () => {
-      class A extends Jig { init (o) { this.o = o } }
-      expect(() => new A({ $class: 'undefined' })).to.throw()
-      expectNoAction()
-      expect(() => new A({ $ref: '123' })).to.throw()
-      expectNoAction()
-    })
-
-    it('should make unusable when deploy fails', async () => {
+    it('should be unusable after deploy fails', async () => {
       const oldPay = run.purse.pay
       run.purse.pay = async tx => tx
       class A extends Jig {
@@ -1643,7 +1640,7 @@ describe('Jig', () => {
       })
     })
 
-    it('should use token set', async () => {
+    it.only('should use token set', async () => {
       class B extends Jig {}
       class A extends Jig {
         init () { this.set = new Set() }
