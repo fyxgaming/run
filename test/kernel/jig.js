@@ -1221,7 +1221,7 @@ describe('Jig', () => {
       expectAction(a, 'add', [1], [a], [a], [a])
     })
 
-    it('should throw if change array externally', () => {
+    it('should throw if change array externally', async () => {
       class A extends Jig {
         init () { this.a = [3, 1, 2, 5, 0] }
 
@@ -1231,20 +1231,22 @@ describe('Jig', () => {
       B.deps = { A }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      const err = func => `internal method ${func} may not be called to change state`
-      const writeOps = [
-        () => expect(() => a.a.copyWithin(1)).to.throw(err('copyWithin')),
-        () => expect(() => a.a.pop()).to.throw(err('pop')),
-        () => expect(() => a.a.push(1)).to.throw(err('push')),
-        () => expect(() => a.a.reverse()).to.throw(err('reverse')),
-        () => expect(() => a.a.shift()).to.throw(err('shift')),
-        () => expect(() => a.a.sort()).to.throw(err('sort')),
-        () => expect(() => a.a.splice(0, 1)).to.throw(err('splice')),
-        () => expect(() => a.a.unshift(4)).to.throw(err('unshift')),
-        () => expect(() => a.a.fill(0)).to.throw(err('fill')),
-        () => expect(() => new B()).to.throw(err('push'))
-      ]
-      writeOps.forEach(op => { op(); expectNoAction() })
+      const expectArrayError = (method, ...args) => {
+        const err = `internal method ${method} may not be called to change state`
+        expect(() => a.a[method](...args)).to.throw(err)
+        expectNoAction()
+      }
+      expectArrayError('copyWithin', 1)
+      expectArrayError('pop')
+      expectArrayError('push', 1)
+      expectArrayError('reverse')
+      expectArrayError('shift')
+      expectArrayError('sort')
+      expectArrayError('splice', 0, 1)
+      expectArrayError('unshift', 4)
+      expectArrayError('fill', 0)
+      expect(() => new B()).to.throw()
+      expectNoAction()
     })
 
     it('should support read-only methods without spending', () => {
