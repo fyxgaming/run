@@ -163,11 +163,8 @@ describe('Purse', () => {
     it('should throw if no utxos', async () => {
       const address = new PrivateKey().toAddress()
       const tx = new Transaction().to(address, Transaction.DUST_AMOUNT)
-      let didLogWarning = false
-      const logger = { warn: () => { didLogWarning = true } }
-      const purse = new LocalPurse({ blockchain: run.blockchain, logger })
+      const purse = new LocalPurse({ blockchain: run.blockchain })
       await expect(purse.pay(tx)).to.be.rejectedWith('Not enough funds')
-      expect(didLogWarning).to.equal(true)
       const purseWithNoLogger = new LocalPurse({ blockchain: run.blockchain, logger: null })
       await expect(purseWithNoLogger.pay(tx)).to.be.rejectedWith('Not enough funds')
     })

@@ -530,6 +530,7 @@ describe('Jig', () => {
       class A extends Jig { f () { this.n = 1; return this } }
       const a = await new A().sync()
       const run2 = new Run({ network: 'test' }) // eslint-disable-line
+      run2.purse.pay = tx => tx
       run2.blockchain.fetch = async () => undefined
       run2.blockchain.utxos = async () => []
       await expect(a.f().sync()).to.be.rejectedWith('Signature missing for A')
@@ -2442,6 +2443,23 @@ describe('Jig', () => {
       expect(() => b.h(a)).to.throw('[object Uint8Array] belongs to a different token')
     })
 
+    it('should throw if save an arbitrary object from another jig', () => {
+      class A extends Jig {
+        init () {
+          class Blob { f () { return 2 } }
+          this.blob = new Blob()
+        }
+      }
+      class B extends Jig {
+        set (a) { this.x = a.blob }
+      }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      const b = new B()
+      expectAction(b, 'init', [], [], [b], [])
+      expect(() => b.set(a)).to.throw('[object Blob] belongs to a different token')
+    })
+
     it('should not throw if save a copy of an internal property on another jig', () => {
       class A extends Jig {
         init () {
@@ -2464,22 +2482,6 @@ describe('Jig', () => {
       expect(() => b.f(a)).not.to.throw()
       expect(() => b.g(a)).not.to.throw()
       expect(() => b.h(a)).not.to.throw()
-    })
-
-    it.only('should throw if save an internal method on another jig', () => {
-      class A extends Jig {
-        init () {
-          class Blob { f () { return 2 } }
-          this.blob = new Blob()
-        }
-      }
-      class B extends Jig { f (a) { this.x = a.blob.f } }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      console.log('---')
-      expect(() => b.f(a)).to.throw('f () { return 2 } belongs to a different token')
     })
   })
 })
