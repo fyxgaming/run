@@ -50,7 +50,7 @@ function expectNoAction () {
 }
 
 async function hookPay (run, ...enables) {
-  enables = new Array(run.syncer.queued.length).fill(true).concat(enables)
+  enables = new Array(run._kernel._syncer.queued.length).fill(true).concat(enables)
   const orig = run.purse.pay.bind(run.purse)
   run.purse.pay = async (tx) => {
     if (!enables.length) { return orig(tx) }
