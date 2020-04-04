@@ -2466,7 +2466,7 @@ describe('Jig', () => {
       expect(() => b.h(a)).not.to.throw()
     })
 
-    it('should throw if save an internal method on another jig', () => {
+    it.only('should throw if save an internal method on another jig', () => {
       class A extends Jig {
         init () {
           class Blob { f () { return 2 } }
@@ -2478,6 +2478,7 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
+      console.log('---')
       expect(() => b.f(a)).to.throw('f () { return 2 } belongs to a different token')
     })
   })

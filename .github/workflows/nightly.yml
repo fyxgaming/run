@@ -19,6 +19,7 @@ jobs:
   mac_tests:
     name: Mac Tests
     runs-on: macos-latest
+    timeout-minutes: 5
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -57,6 +58,7 @@ jobs:
   linux_tests:
     name: Linux Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
     - name: Setup Node 10
       uses: actions/setup-node@v1
@@ -125,6 +127,7 @@ jobs:
   windows_tests:
     name: Windows Tests
     runs-on: windows-latest
+    timeout-minutes: 5
     steps:
     - name: Checkout
       uses: actions/checkout@v2
