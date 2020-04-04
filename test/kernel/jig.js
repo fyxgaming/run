@@ -2117,10 +2117,10 @@ describe('Jig', () => {
     })
 
     it('should support load of batch with circularly referenced jigs', async () => {
-      class A extends Jig { set (x) { this.x = x } }
+      class S extends Jig { set (x) { this.x = x } }
       run.transaction.begin()
-      const a = new A()
-      const b = new A()
+      const a = new S()
+      const b = new S()
       a.set(b)
       b.set(a)
       run.transaction.end()
