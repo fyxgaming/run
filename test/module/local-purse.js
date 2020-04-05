@@ -15,10 +15,10 @@ const { LocalPurse } = Run
 const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
-// Purse tests
+// LocalPurse tests
 // ------------------------------------------------------------------------------------------------
 
-describe('Purse', () => {
+describe('LocalPurse', () => {
   const run = new Run()
 
   describe('constructor', () => {
@@ -48,26 +48,6 @@ describe('Purse', () => {
       it('should throw if private key is on wrong network', () => {
         const purse = new PrivateKey('mainnet').toString()
         expect(() => new Run({ purse, network: 'test' })).to.throw('Private key network mismatch')
-      })
-    })
-
-    describe('logger', () => {
-      it('should support passing in valid logger', () => {
-        expect(new LocalPurse({ blockchain: run.blockchain, logger: console }).logger).to.equal(console)
-      })
-
-      it('should support passing in null logger', () => {
-        expect(new LocalPurse({ blockchain: run.blockchain, logger: null }).logger).to.equal(null)
-      })
-
-      it('should support not passing in a logger', () => {
-        expect(new LocalPurse({ blockchain: run.blockchain }).logger).to.equal(null)
-      })
-
-      it('should throw if pass in an invalid logger', () => {
-        expect(() => new LocalPurse({ blockchain: run.blockchain, logger: 123 })).to.throw('Invalid logger: 123')
-        expect(() => new LocalPurse({ blockchain: run.blockchain, logger: () => {} })).to.throw('Invalid logger: ')
-        expect(() => new LocalPurse({ blockchain: run.blockchain, logger: false })).to.throw('Invalid logger: false')
       })
     })
 
@@ -165,8 +145,6 @@ describe('Purse', () => {
       const tx = new Transaction().to(address, Transaction.DUST_AMOUNT)
       const purse = new LocalPurse({ blockchain: run.blockchain })
       await expect(purse.pay(tx)).to.be.rejectedWith('Not enough funds')
-      const purseWithNoLogger = new LocalPurse({ blockchain: run.blockchain, logger: null })
-      await expect(purseWithNoLogger.pay(tx)).to.be.rejectedWith('Not enough funds')
     })
 
     it('should automatically split utxos', async () => {
