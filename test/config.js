@@ -9,8 +9,6 @@ const { addUserKeystoEnvironment } = require('./env/keys')
 
 addUserKeystoEnvironment()
 
-const coverSandbox = /^(?!Jig|Berry|Token|expect|TokenSet|TokenMap|AddressScript|PubKeyScript).*$/
-
 const PERF = process.env.PERF ? JSON.parse(process.env.PERF) : false
 const LOGGER = process.env.LOGGER ? process.env.LOGGER : false
 const NETWORK = process.env.NETWORK ? process.env.NETWORK : 'mock'
@@ -26,6 +24,9 @@ Run.defaults.network = NETWORK
 Run.defaults.api = API
 Run.defaults.apiKey = APIKEY
 Run.defaults.purse = PURSE
-Run.defaults.sandbox = COVER ? coverSandbox : undefined
+
+if (COVER) {
+  Run.sandbox.excludes = [Run.Jig, Run.Berry, Run.Token, Run.expect]
+}
 
 module.exports = { Run, PERF }

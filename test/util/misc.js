@@ -4,11 +4,37 @@
  * Tests for lib/util/misc.js
  */
 
+const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
-const { _deployable, _display, _deepTraverseObjects } = Run._util
+const { AddressScript, PubKeyScript } = Run
+const {
+  _bsvNetwork,
+  _deployable,
+  _display,
+  _sourceCode,
+  _deepTraverseObjects,
+  _checkSatoshis,
+  _ownerScript,
+  SerialTaskQueue
+} = Run._util
 const Sandbox = Run._sandbox
+
+// ------------------------------------------------------------------------------------------------
+// _bsvNetwork
+// ------------------------------------------------------------------------------------------------
+
+describe('_bsvNetwork', () => {
+  it('should return appropriate network', () => {
+    expect(_bsvNetwork('main')).to.equal('mainnet')
+    expect(_bsvNetwork('mainnet')).to.equal('mainnet')
+    expect(_bsvNetwork('mainSideChain')).to.equal('mainnet')
+    expect(_bsvNetwork('test')).to.equal('testnet')
+    expect(_bsvNetwork('mock')).to.equal('testnet')
+    expect(_bsvNetwork('stn')).to.equal('testnet')
+  })
+})
 
 // ------------------------------------------------------------------------------------------------
 // _deployable
@@ -88,6 +114,48 @@ describe('_display', () => {
   })
 })
 
+// ------------------------------------------------------------------------------------------------
+// _sourceCode
+// ------------------------------------------------------------------------------------------------
+
+describe('_sourceCode', () => {
+  // Node 8 and Node 12 have slightly different spacing for getNormalizedSourceCode('function () { return 1 }')
+  // We don't need the normalized code to always be exactly the same, as long as it functions the same.
+  // Compiled build also add semicolons, so we normlize that too.
+  function expectNormalizedSourceCode (type, text) {
+    const normalize = str => str.replace(/\s+/g, '').replace(/;/g, '')
+    expect(normalize(_sourceCode(type))).to.equal(normalize(text))
+  }
+
+  it('should get code for basic class', () => {
+    class A {}
+    expectNormalizedSourceCode(A, 'class A {}')
+  })
+
+  it('should get code for basic function', () => {
+    function f () { return 1 }
+    expectNormalizedSourceCode(f, 'function f () { return 1 }')
+  })
+
+  it('should get code for class that extends another class', () => {
+    const SomeLibrary = { B: class B { } }
+    class A extends SomeLibrary.B {}
+    expectNormalizedSourceCode(A, 'class A extends B {}')
+  })
+
+  it('should get code for single-line class', () => {
+    class B { }
+    class A extends B { f () {} }
+    expectNormalizedSourceCode(A, 'class A extends B { f () {} }')
+  })
+
+  // TODO: More tests
+})
+
+// ------------------------------------------------------------------------------------------------
+// _deepTraverseObjects
+// ------------------------------------------------------------------------------------------------
+
 describe('_deepTraverseObjects', () => {
   it('should call callback for every function or object', () => {
     const a2 = []
@@ -156,6 +224,85 @@ describe('_deepTraverseObjects', () => {
     _deepTraverseObjects(Symbol.iterator, x => { results.push(x); return true })
     _deepTraverseObjects('hello', x => { results.push(x); return true })
     _deepTraverseObjects(null, x => { results.push(x); return true })
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// _checkSatoshis
+// ------------------------------------------------------------------------------------------------
+
+describe('_checkSatoshis', () => {
+  it('should support allowed values', () => {
+    expect(() => _checkSatoshis(0)).not.to.throw()
+    expect(() => _checkSatoshis(1)).not.to.throw()
+    expect(() => _checkSatoshis(bsv.Transaction.DUST_AMOUNT)).not.to.throw()
+    expect(() => _checkSatoshis(100000000)).not.to.throw()
+  })
+
+  it('should throw if bad satoshis', () => {
+    expect(() => _checkSatoshis()).to.throw('satoshis must be a number')
+    expect(() => _checkSatoshis(-1)).to.throw('satoshis must be non-negative')
+    expect(() => _checkSatoshis('0')).to.throw('satoshis must be a number')
+    expect(() => _checkSatoshis([0])).to.throw('satoshis must be a number')
+    expect(() => _checkSatoshis(1.5)).to.throw('satoshis must be an integer')
+    expect(() => _checkSatoshis(NaN)).to.throw('satoshis must be an integer')
+    expect(() => _checkSatoshis(Infinity)).to.throw('satoshis must be an integer')
+    expect(() => _checkSatoshis(100000001)).to.throw('satoshis must be <= 100000000')
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// _ownerScript
+// ------------------------------------------------------------------------------------------------
+
+describe('_ownerScript', () => {
+  it('should support valid owners on different networks', () => {
+    for (const bsvNetwork of ['mainnet', 'testnet']) {
+      const privkey = new bsv.PrivateKey(bsvNetwork)
+      const pubkey = privkey.publicKey.toString()
+      const addr = privkey.toAddress().toString()
+      const bytes = new AddressScript(addr).toBytes()
+      expect(_ownerScript(pubkey).toBytes()).to.deep.equal(bytes)
+      expect(_ownerScript(addr).toBytes()).to.deep.equal(bytes)
+      expect(_ownerScript(new PubKeyScript(pubkey)).toBytes()).to.deep.equal(new PubKeyScript(pubkey).toBytes())
+      expect(_ownerScript(new AddressScript(addr)).toBytes()).to.deep.equal(bytes)
+    }
+  })
+
+  it('should throw if bad owner', () => {
+    expect(() => _ownerScript()).to.throw('Invalid owner: undefined')
+    expect(() => _ownerScript(123)).to.throw('Invalid owner: 123')
+    expect(() => _ownerScript('hello')).to.throw('Invalid owner: hello')
+    expect(() => _ownerScript(new bsv.PrivateKey())).to.throw('Invalid owner')
+    expect(() => _ownerScript(new bsv.PrivateKey().publicKey)).to.throw('Invalid owner')
+    expect(() => _ownerScript([new bsv.PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// SerialTaskQueue
+// ------------------------------------------------------------------------------------------------
+
+describe('SerialTaskQueue', () => {
+  const sleep = ms => { return new Promise(resolve => setTimeout(resolve, ms)) }
+
+  it('should serialize tasks in order', async () => {
+    const queue = new SerialTaskQueue()
+    const order = []; const promises = []
+    promises.push(queue.enqueue(async () => { await sleep(5); order.push(1) }))
+    promises.push(queue.enqueue(async () => { await sleep(3); order.push(2) }))
+    promises.push(queue.enqueue(async () => { await sleep(1); order.push(3) }))
+    await Promise.all(promises)
+    expect(order).to.deep.equal([1, 2, 3])
+  })
+
+  it('should support stops and starts', async () => {
+    const queue = new SerialTaskQueue()
+    let done1 = false; let done2 = false
+    await queue.enqueue(() => { done1 = true })
+    expect(done1).to.equal(true)
+    await queue.enqueue(() => { done2 = true })
+    expect(done2).to.equal(true)
   })
 })
 

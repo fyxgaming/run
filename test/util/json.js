@@ -8,7 +8,7 @@ const { describe, it, before } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const { Run } = require('../config')
-const { Jig, Berry, Sandbox } = Run
+const { Jig, Berry } = Run
 const { TokenJSON } = Run._util
 
 // ------------------------------------------------------------------------------------------------
@@ -16,8 +16,6 @@ const { TokenJSON } = Run._util
 // ------------------------------------------------------------------------------------------------
 
 const run = new Run()
-
-const _sandboxIntrinsics = Sandbox._instance._intrinsics
 
 // ------------------------------------------------------------------------------------------------
 // Helpers
@@ -243,48 +241,47 @@ describe('TokenJSON', () => {
     })
 
     it('should use output intrinsics', () => {
-      const opts = { _outputIntrinsics: _sandboxIntrinsics }
+      const opts = { _outputIntrinsics: Run.sandbox._intrinsics }
       // Primitives
-      expect(TokenJSON._serialize({}, opts).constructor).to.equal(_sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize({ $: 1 }, opts).$obj.constructor).to.equal(_sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(undefined, opts).constructor).to.equal(_sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(-0, opts).constructor).to.equal(_sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(NaN, opts).constructor).to.equal(_sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(Infinity, opts).constructor).to.equal(_sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(-Infinity, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize({}, opts).constructor).to.equal(Run.sandbox._intrinsics.Object)
+      expect(TokenJSON._serialize({ $: 1 }, opts).$obj.constructor).to.equal(Run.sandbox._intrinsics.Object)
+      expect(TokenJSON._serialize(undefined, opts).constructor).to.equal(Run.sandbox._intrinsics.Object)
+      expect(TokenJSON._serialize(-0, opts).constructor).to.equal(Run.sandbox._intrinsics.Object)
+      expect(TokenJSON._serialize(NaN, opts).constructor).to.equal(Run.sandbox._intrinsics.Object)
+      expect(TokenJSON._serialize(Infinity, opts).constructor).to.equal(Run.sandbox._intrinsics.Object)
+      expect(TokenJSON._serialize(-Infinity, opts).constructor).to.equal(Run.sandbox._intrinsics.Object)
       // Array
-      expect(TokenJSON._serialize([], opts).constructor).to.equal(_sandboxIntrinsics.Array)
+      expect(TokenJSON._serialize([], opts).constructor).to.equal(Run.sandbox._intrinsics.Array)
       const a = []
       a.x = 1
-      expect(TokenJSON._serialize(a, opts).constructor).to.equal(_sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(a, opts).$arr.constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(a, opts).constructor).to.equal(Run.sandbox._intrinsics.Object)
+      expect(TokenJSON._serialize(a, opts).$arr.constructor).to.equal(Run.sandbox._intrinsics.Object)
       // Set
       const s = new Set()
       s.x = 1
-      expect(TokenJSON._serialize(s, opts).constructor).to.equal(_sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(s, opts).$set.constructor).to.equal(_sandboxIntrinsics.Array)
-      expect(TokenJSON._serialize(s, opts).props.constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(s, opts).constructor).to.equal(Run.sandbox._intrinsics.Object)
+      expect(TokenJSON._serialize(s, opts).$set.constructor).to.equal(Run.sandbox._intrinsics.Array)
+      expect(TokenJSON._serialize(s, opts).props.constructor).to.equal(Run.sandbox._intrinsics.Object)
       // Map
       const m = new Map()
       m.x = 1
-      expect(TokenJSON._serialize(m, opts).constructor).to.equal(_sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(m, opts).$map.constructor).to.equal(_sandboxIntrinsics.Array)
-      expect(TokenJSON._serialize(m, opts).props.constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(m, opts).constructor).to.equal(Run.sandbox._intrinsics.Object)
+      expect(TokenJSON._serialize(m, opts).$map.constructor).to.equal(Run.sandbox._intrinsics.Array)
+      expect(TokenJSON._serialize(m, opts).props.constructor).to.equal(Run.sandbox._intrinsics.Object)
       // Uint8Array
       const b = new Uint8Array()
-      expect(TokenJSON._serialize(b, opts).constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize(b, opts).constructor).to.equal(Run.sandbox._intrinsics.Object)
       // Dedup
       const o = { }
-      expect(TokenJSON._serialize([o, o], opts).constructor).to.equal(_sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize([o, o], opts).$dedup.constructor).to.equal(_sandboxIntrinsics.Array)
-      expect(TokenJSON._serialize([o, o], opts).dups.constructor).to.equal(_sandboxIntrinsics.Array)
-      expect(TokenJSON._serialize([o, o], opts).dups[0].constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(TokenJSON._serialize([o, o], opts).constructor).to.equal(Run.sandbox._intrinsics.Object)
+      expect(TokenJSON._serialize([o, o], opts).$dedup.constructor).to.equal(Run.sandbox._intrinsics.Array)
+      expect(TokenJSON._serialize([o, o], opts).dups.constructor).to.equal(Run.sandbox._intrinsics.Array)
+      expect(TokenJSON._serialize([o, o], opts).dups[0].constructor).to.equal(Run.sandbox._intrinsics.Object)
     })
 
     it('should default to host intrinsics', () => {
-      const opts = { _sandboxIntrinsics }
-      expect(TokenJSON._serialize({}, opts).constructor).to.equal(Object)
-      expect(TokenJSON._serialize([], opts).constructor).to.equal(Array)
+      expect(TokenJSON._serialize({}).constructor).to.equal(Object)
+      expect(TokenJSON._serialize([]).constructor).to.equal(Array)
     })
 
     it('should fail for raw intrinsics', () => {
@@ -311,11 +308,11 @@ describe('TokenJSON', () => {
       if (typeof BigUint64Array !== 'undefined') serializeFail(BigUint64Array) // eslint-disable-line
       if (typeof BigInt !== 'undefined') serializeFail(BigInt) // eslint-disable-line
       if (typeof WebAssembly !== 'undefined') serializeFail(WebAssembly) // eslint-disable-line
-      serializeFail(_sandboxIntrinsics.Object, { _sandboxIntrinsics })
-      serializeFail(_sandboxIntrinsics.Array, { _sandboxIntrinsics })
-      serializeFail(_sandboxIntrinsics.Set, { _sandboxIntrinsics })
-      serializeFail(_sandboxIntrinsics.Map, { _sandboxIntrinsics })
-      serializeFail(_sandboxIntrinsics.Uint8Array, { _sandboxIntrinsics })
+      serializeFail(Run.sandbox._intrinsics.Object)
+      serializeFail(Run.sandbox._intrinsics.Array)
+      serializeFail(Run.sandbox._intrinsics.Set)
+      serializeFail(Run.sandbox._intrinsics.Map)
+      serializeFail(Run.sandbox._intrinsics.Uint8Array)
     })
 
     it('should fail for unsupported objects intrinsics', () => {
@@ -330,11 +327,11 @@ describe('TokenJSON', () => {
 
     it('should fail for unrecognized intrinsics', () => {
       // Use sandbox intrinsics, but don't set them
-      serializeFail(new _sandboxIntrinsics.Set())
-      serializeFail(new _sandboxIntrinsics.Map())
-      serializeFail(new _sandboxIntrinsics.Uint8Array())
+      serializeFail(new Run.sandbox._intrinsics.Set())
+      serializeFail(new Run.sandbox._intrinsics.Map())
+      serializeFail(new Run.sandbox._intrinsics.Uint8Array())
       // Use host intrinsics, but set them to sandbox
-      const opts = { _hostIntrinsics: _sandboxIntrinsics }
+      const opts = { _hostIntrinsics: Run.sandbox._intrinsics }
       serializeFail(new Set(), opts)
       serializeFail(new Map(), opts)
       serializeFail(new Uint8Array(), opts)
@@ -411,20 +408,19 @@ describe('TokenJSON', () => {
     })
 
     it('should default to sandbox intrinsics', () => {
-      const opts = { _sandboxIntrinsics }
-      expect(TokenJSON._deserialize({}, opts).constructor).to.equal(_sandboxIntrinsics.Object)
-      expect(TokenJSON._deserialize([], opts).constructor).to.equal(_sandboxIntrinsics.Array)
+      expect(TokenJSON._deserialize({}).constructor).to.equal(Run.sandbox._intrinsics.Object)
+      expect(TokenJSON._deserialize([]).constructor).to.equal(Run.sandbox._intrinsics.Array)
     })
 
     it('should use output intrinsics', () => {
-      const opts = { _outputIntrinsics: _sandboxIntrinsics }
-      expect(TokenJSON._deserialize({}, opts).constructor).to.equal(_sandboxIntrinsics.Object)
-      expect(TokenJSON._deserialize({ $obj: {} }, opts).constructor).to.equal(_sandboxIntrinsics.Object)
-      expect(TokenJSON._deserialize([], opts).constructor).to.equal(_sandboxIntrinsics.Array)
-      expect(TokenJSON._deserialize({ $arr: {} }, opts).constructor).to.equal(_sandboxIntrinsics.Array)
-      expect(TokenJSON._deserialize({ $set: [] }, opts).constructor).to.equal(_sandboxIntrinsics.Set)
-      expect(TokenJSON._deserialize({ $map: [] }, opts).constructor).to.equal(_sandboxIntrinsics.Map)
-      expect(TokenJSON._deserialize({ $ui8a: '' }, opts).constructor).to.equal(_sandboxIntrinsics.Uint8Array)
+      const opts = { _outputIntrinsics: Run.sandbox._intrinsics }
+      expect(TokenJSON._deserialize({}, opts).constructor).to.equal(Run.sandbox._intrinsics.Object)
+      expect(TokenJSON._deserialize({ $obj: {} }, opts).constructor).to.equal(Run.sandbox._intrinsics.Object)
+      expect(TokenJSON._deserialize([], opts).constructor).to.equal(Run.sandbox._intrinsics.Array)
+      expect(TokenJSON._deserialize({ $arr: {} }, opts).constructor).to.equal(Run.sandbox._intrinsics.Array)
+      expect(TokenJSON._deserialize({ $set: [] }, opts).constructor).to.equal(Run.sandbox._intrinsics.Set)
+      expect(TokenJSON._deserialize({ $map: [] }, opts).constructor).to.equal(Run.sandbox._intrinsics.Map)
+      expect(TokenJSON._deserialize({ $ui8a: '' }, opts).constructor).to.equal(Run.sandbox._intrinsics.Uint8Array)
     })
 
     it('should support custom reviver', () => {
@@ -443,19 +439,18 @@ describe('TokenJSON', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const opts = {
-        _outputIntrinsics: _sandboxIntrinsics,
+        _outputIntrinsics: Run.sandbox._intrinsics,
         _replacer: TokenJSON._replace._tokens(token => '123')
       }
       const json = TokenJSON._serialize(dragon, opts)
       expect(json).to.deep.equal({ $ref: '123' })
-      expect(json.constructor).to.equal(_sandboxIntrinsics.Object)
+      expect(json.constructor).to.equal(Run.sandbox._intrinsics.Object)
     })
 
     it('should revive jigs from location ref', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const opts = {
-        _sandboxIntrinsics,
         _reviver: TokenJSON._revive._tokens(ref => dragon)
       }
       expect(TokenJSON._deserialize({ $ref: '123' }, opts)).to.equal(dragon)
@@ -465,7 +460,7 @@ describe('TokenJSON', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const opts = {
-        _outputIntrinsics: _sandboxIntrinsics,
+        _outputIntrinsics: Run.sandbox._intrinsics,
         _replacer: TokenJSON._replace._tokens(token => '123'),
         _reviver: TokenJSON._revive._tokens(ref => dragon)
       }
@@ -514,7 +509,6 @@ describe('TokenJSON', () => {
       const berry = { location: 'abc' }
       Object.setPrototypeOf(berry, CustomBerrySandbox.prototype)
       const opts = {
-        _sandboxIntrinsics,
         _replacer: TokenJSON._replace._tokens(token => '123'),
         _reviver: TokenJSON._revive._tokens(ref => berry)
       }
@@ -525,7 +519,6 @@ describe('TokenJSON', () => {
   describe('arbitrary objects', () => {
     const tokens = []
     const opts = {
-      _sandboxIntrinsics,
       _replacer: TokenJSON._replace._multiple(
         TokenJSON._replace._tokens(x => { tokens.push(x); return tokens.length - 1 }),
         TokenJSON._replace._arbitraryObjects()
