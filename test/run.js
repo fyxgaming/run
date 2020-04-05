@@ -85,43 +85,6 @@ describe('Run', () => {
       })
     })
 
-    describe('sandbox', () => {
-      it('should default to sandbox enabled', () => {
-        expect(new Run({ network: 'mock', sandbox: undefined }).sandbox).to.equal(true)
-        class A extends Jig { init () { this.version = Run.version } }
-        expect(() => new A()).to.throw()
-      })
-
-      it('should support enabling sandbox', () => {
-        expect(new Run({ sandbox: true }).sandbox).to.equal(true)
-      })
-
-      it('should support disabling sandbox', () => {
-        const run = new Run({ network: 'mock', sandbox: false })
-        expect(run.sandbox).to.equal(false)
-        class A extends Jig { init () { this.version = Run.version } }
-        expect(() => new A()).not.to.throw()
-        run.deactivate()
-      })
-
-      it('should support RegExp sandbox', () => {
-        const run = new Run({ network: 'mock', sandbox: /A/ })
-        expect(run.sandbox instanceof RegExp).to.equal(true)
-        class A extends Jig { init () { this.version = Run.version } }
-        class B extends Jig { init () { this.version = Run.version } }
-        expect(() => new A()).to.throw()
-        expect(() => new B()).not.to.throw()
-        run.deactivate()
-      })
-
-      it('should throw for bad sandbox', () => {
-        expect(() => new Run({ sandbox: null })).to.throw('Invalid sandbox: null')
-        expect(() => new Run({ sandbox: 0 })).to.throw('Invalid sandbox: 0')
-        expect(() => new Run({ sandbox: {} })).to.throw('Invalid sandbox: [object Object]')
-        expect(() => new Run({ sandbox: () => {} })).to.throw('Invalid sandbox: [anonymous function]')
-      })
-    })
-
     describe('app', () => {
       it('should default to empty app string', () => {
         expect(new Run().app).to.equal('')

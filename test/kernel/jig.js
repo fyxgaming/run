@@ -2324,7 +2324,6 @@ describe('Jig', () => {
     })
 
     it('should allow dependencies named caller', async () => {
-      const run = new Run({ sandbox: false })
       function caller () { return 2 }
       class A extends Jig { init () { this.n = caller() } }
       A.deps = { caller }
@@ -2332,7 +2331,6 @@ describe('Jig', () => {
       expect(a.n).to.equal(2)
       const a2 = await run.load(a.location)
       expect(a2.n).to.equal(2)
-      run.deactivate()
     })
   })
 
