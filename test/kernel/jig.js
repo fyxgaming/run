@@ -2460,7 +2460,7 @@ describe('Jig', () => {
       expect(() => b.set(a)).to.throw('[object Blob] belongs to a different token')
     })
 
-    it('should not throw if save a copy of an internal property on another jig', () => {
+    it.only('should not throw if save a copy of an internal property on another jig', () => {
       class A extends Jig {
         init () {
           this.obj = { n: 1 }
@@ -2473,7 +2473,11 @@ describe('Jig', () => {
 
         g (a) { this.y = [...a.arr] }
 
-        h (a) { this.z = new Uint8Array(a.buf) }
+        h (a) {
+          console.log('---')
+          this.z = new Uint8Array(a.buf)
+          console.log('---')
+        }
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])

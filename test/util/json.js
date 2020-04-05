@@ -8,24 +8,16 @@ const { describe, it, before } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const { Run } = require('../config')
-const { Jig, Berry } = Run
+const { Jig, Berry, Sandbox } = Run
 const { TokenJSON } = Run._util
-const DeterministicRealm = require('@runonbitcoin/sandbox')
 
 // ------------------------------------------------------------------------------------------------
 // Globals
 // ------------------------------------------------------------------------------------------------
 
 const run = new Run()
-const realm = new DeterministicRealm()
-const compartment = realm.makeCompartment()
-const _sandboxIntrinsics = {
-  Object: compartment.evaluate('Object'),
-  Array: compartment.evaluate('Array'),
-  Set: compartment.evaluate('Set'),
-  Map: compartment.evaluate('Map'),
-  Uint8Array: compartment.evaluate('Uint8Array')
-}
+
+const _sandboxIntrinsics = Sandbox._instance._intrinsics
 
 // ------------------------------------------------------------------------------------------------
 // Helpers
