@@ -32,17 +32,6 @@ describe('BlockchainApi', () => {
       })
     })
 
-    describe('logger', () => {
-      it('should support null loggers', () => {
-        expect(new BlockchainApi({ logger: null }).logger).to.equal(null)
-      })
-
-      it('should throw for bad logger', () => {
-        expect(() => new BlockchainApi({ logger: 'bad' })).to.throw('Invalid logger: bad')
-        expect(() => new BlockchainApi({ logger: false })).to.throw('Invalid logger: false')
-      })
-    })
-
     describe('api', () => {
       it('should default to run api', () => {
         expect(new BlockchainApi().remoteBlockchain.constructor).to.equal(BlockchainApi.RunConnect)
@@ -119,12 +108,13 @@ describe('BlockchainApi', () => {
         }
       }
       const api = new MockApi()
-      function warn (warning) { this.lastWarning = warning }
-      const logger = { warn, info: () => {} }
-      const blockchain = new BlockchainApi({ network: 'main', api, logger })
+      let lastWarning = null
+      Run._util.Log._logger = { warn: (time, tag, ...warning) => { lastWarning = warning.join(' ') } }
+      const blockchain = new BlockchainApi({ network: 'main', api })
       const utxos = await blockchain.utxos(script)
       expect(utxos.length).to.equal(1)
-      expect(logger.lastWarning).to.equal(`Duplicate utxo returned from server: ${txid}_o0`)
+      expect(lastWarning).to.equal(`Duplicate utxo returned from server: ${txid}_o0`)
+      Run._util.Log._logger = undefined
     })
 
     it('should throw if API is down', async () => {
