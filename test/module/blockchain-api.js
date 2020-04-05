@@ -114,7 +114,7 @@ describe('BlockchainApi', () => {
       const utxos = await blockchain.utxos(script)
       expect(utxos.length).to.equal(1)
       expect(lastWarning).to.equal(`Duplicate utxo returned from server: ${txid}_o0`)
-      Run._util.Log._logger = undefined
+      Run._util.Log._logger = Run._util.Log._defaultLogger
     })
 
     it('should throw if API is down', async () => {

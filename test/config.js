@@ -19,7 +19,7 @@ const COVER = process.env.COVER ? process.env.COVER : false
 
 const Run = process.env.LIB ? require(path.join(process.cwd(), process.env.LIB)) : require('target')
 
-Run.defaults.logger = LOGGER ? console : {}
+Run.defaults.logger = Run._util.Log._logger = LOGGER ? console : {}
 Run.defaults.network = NETWORK
 Run.defaults.api = API
 Run.defaults.apiKey = APIKEY
