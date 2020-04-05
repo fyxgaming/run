@@ -19,7 +19,7 @@ const {
   _ownerScript,
   SerialTaskQueue
 } = Run._util
-const Sandbox = Run._sandbox
+const Sandbox = Run.sandbox
 
 // ------------------------------------------------------------------------------------------------
 // _bsvNetwork
@@ -82,7 +82,7 @@ describe('_display', () => {
     // Strings
     expect(_display('')).to.equal('""')
     expect(_display('abc')).to.equal('"abc"')
-    expect(_display('Hello, world!')).to.equal('"Hello, wor…"')
+    expect(_display('The quick brown fox jumped over blah blah')).to.equal('"The quick brown fox …"')
     // Booleans
     expect(_display(true)).to.equal('true')
     expect(_display(false)).to.equal('false')
@@ -209,12 +209,9 @@ describe('_deepTraverseObjects', () => {
     set.add({})
     const map = new Sandbox._instance._intrinsics.Map()
     map.set({}, {})
-    const results1 = []
-    _deepTraverseObjects([set, map], x => { results1.push(x); return true })
-    expect(results1.length).to.equal(2)
-    const results2 = []
-    _deepTraverseObjects([set, map], x => { results2.push(x); return true })
-    expect(results2.length).to.equal(5)
+    const results = []
+    _deepTraverseObjects([set, map], x => { results.push(x); return true })
+    expect(results.length).to.equal(5)
   })
 
   it('should not deep traverse non-objects', () => {
