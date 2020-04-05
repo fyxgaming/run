@@ -7,7 +7,7 @@
 const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { Run } = require('./config')
+const { Run } = require('../config')
 const {
   _checkRunTransaction,
   _extractRunData,
