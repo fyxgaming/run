@@ -44,8 +44,11 @@ function unmangle (obj) {
       const descriptor = Object.getOwnPropertyDescriptor(target, key)
       if (descriptor && descriptor.writable === false && descriptor.configurable === false) return val
 
-      // Objects and types get re-proxied so that their sub-properties are unmangled
-      if ((typeof val === 'object' || typeof val === 'function') && prop !== 'prototype') return new Proxy(val, handler)
+      // Objects get re-proxied so that their sub-properties are unmangled
+      if (typeof val === 'object' && prop !== 'prototype') return new Proxy(val, handler)
+
+      // Regular types also get reproxied
+      if (typeof val === 'function') return new Proxy(val, handler)
 
       // All other objects we return directly
       return val
