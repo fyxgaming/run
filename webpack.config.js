@@ -11,7 +11,7 @@ const fs = require('fs')
 const { execSync } = require('child_process')
 const glob = require('glob')
 const pkg = require('./package')
-const { addUserKeystoEnvironment } = require('./test/env/keys')
+const addUserKeystoEnvironment = require('./test/env/keys')
 
 // ------------------------------------------------------------------------------------------------
 // Constants

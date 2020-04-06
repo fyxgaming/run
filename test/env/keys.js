@@ -24,4 +24,4 @@ function addUserKeystoEnvironment () {
   }
 }
 
-module.exports = { addUserKeystoEnvironment }
+module.exports = addUserKeystoEnvironment
