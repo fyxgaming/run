@@ -8,7 +8,7 @@
 // unmangle
 // ------------------------------------------------------------------------------------------------
 
-const reserved = ['Jig', 'Berry', 'Token', 'expect']
+const reserved = ['Jig', 'Berry', 'Token', 'expect', '_intrinsics']
 
 function unmangle (obj) {
   const nameCache = require('../../dist/name-cache.json')
@@ -20,7 +20,7 @@ function unmangle (obj) {
 
   const handler = {
     get: (target, prop) => {
-      if (reserved.includes(prop)) return target[prop]
+      if (reserved.includes(prop)) return target[mangledKey(prop, target)]
 
       // If we're getting a constructor, we can simply reproxy and return it here
       if (prop === 'constructor') return new Proxy(target.constructor, handler)
