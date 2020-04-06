@@ -1,7 +1,7 @@
 /**
  * jig.js
  *
- * Tests for lib/jig.js
+ * Tests for lib/kernel/jig.js
  */
 
 const { describe, it, beforeEach } = require('mocha')

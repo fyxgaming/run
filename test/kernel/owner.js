@@ -1,7 +1,7 @@
 /**
  * owner.js
  *
- * Tests for lib/owner.js
+ * Tests for lib/kernel/owner.js
  */
 
 const bsv = require('bsv')

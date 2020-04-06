@@ -1,7 +1,7 @@
 /**
  * run.js
  *
- * Tests for Run class
+ * Tests for lib/run.js
  */
 
 const { describe, it } = require('mocha')

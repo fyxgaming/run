@@ -519,7 +519,7 @@ describe('TokenJSON', () => {
     it('should replace and revive berries', async () => {
       class CustomBerry extends Berry { }
       const CustomBerrySandbox = await run.load(await run.deploy(CustomBerry))
-      const berry = { location: 'abc' }
+      const berry = { location: '_o1' }
       Object.setPrototypeOf(berry, CustomBerrySandbox.prototype)
       const opts = mangle({
         _replacer: _replace._tokens(token => '123'),

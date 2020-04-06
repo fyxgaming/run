@@ -1,7 +1,7 @@
 /**
- * state.js
+ * state-cache.js
  *
- * Tests for ../lib/state.js
+ * Tests for lib/module/state-cache.js
  */
 
 const bsv = require('bsv')
