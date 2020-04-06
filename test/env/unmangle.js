@@ -8,6 +8,13 @@ let mangledProps = {}
 try { mangledProps = require('../../dist/name-cache.json').props.props } catch (e) { }
 
 // ------------------------------------------------------------------------------------------------
+// setMangled
+// ------------------------------------------------------------------------------------------------
+
+let mangled = false
+function setMangled(enable) { mangled = enable }
+
+// ------------------------------------------------------------------------------------------------
 // unmangle
 // ------------------------------------------------------------------------------------------------
 
@@ -15,6 +22,8 @@ try { mangledProps = require('../../dist/name-cache.json').props.props } catch (
  * Wraps an object so that its immediate properties are able to be accessed unmangled
  */
 function unmangle (x) {
+  if (!mangled) return x
+
   return new Proxy(x, {
     get: (target, prop) => {
       if (typeof prop !== 'string') return target[prop]
@@ -32,13 +41,15 @@ function unmangle (x) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// unmangle
+// mangle
 // ------------------------------------------------------------------------------------------------
 
 /**
  * Transforms an object so that every key is mangled to be used within Run
  */
 function mangle (x) {
+  if (!mangled) return x
+
   Object.keys(x).forEach(key => {
     const mangledKey = '$' + key
     if (mangledKey in mangledProps) {
@@ -46,9 +57,10 @@ function mangle (x) {
       delete x[key]
     }
   })
+
   return x
 }
 
 // ------------------------------------------------------------------------------------------------
 
-module.exports = { unmangle, mangle }
+module.exports = { setMangled, unmangle, mangle }

@@ -6,7 +6,7 @@
 
 const path = require('path')
 const addUserKeystoEnvironment = require('./env/keys')
-const { unmangle } = require('./env/unmangle')
+const { setMangled, unmangle } = require('./env/unmangle')
 
 addUserKeystoEnvironment()
 
@@ -17,6 +17,9 @@ const API = process.env.API ? process.env.API : 'run'
 const APIKEY = process.env.APIKEY ? process.env.APIKEY : undefined
 const PURSE = process.env.PURSE ? process.env.PURSE : undefined
 const COVER = process.env.COVER ? process.env.COVER : false
+const MANGLED = process.env.MANGLED ? process.env.MANGLED : false
+
+setMangled(MANGLED)
 
 const Run = process.env.LIB ? require(path.join(process.cwd(), process.env.LIB)) : require('target')
 
