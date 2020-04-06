@@ -10,6 +10,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 const { expect } = chai
 chai.use(chaiAsPromised)
+const { unmangle } = require('../env/unmangle')
 const { Run } = require('../config')
 const { BlockchainApi } = Run
 
@@ -109,12 +110,13 @@ describe('BlockchainApi', () => {
       }
       const api = new MockApi()
       let lastWarning = null
-      Run._util.Log._logger = { warn: (time, tag, ...warning) => { lastWarning = warning.join(' ') } }
+      const Log = unmangle(unmangle(Run)._util.Log)
+      Log._logger = { warn: (time, tag, ...warning) => { lastWarning = warning.join(' ') } }
       const blockchain = new BlockchainApi({ network: 'main', api })
       const utxos = await blockchain.utxos(script)
       expect(utxos.length).to.equal(1)
       expect(lastWarning).to.equal(`Duplicate utxo returned from server: ${txid}_o0`)
-      Run._util.Log._logger = Run._util.Log._defaultLogger
+      Log._logger = Log._defaultLogger
     })
 
     it('should throw if API is down', async () => {
@@ -136,7 +138,7 @@ describe('BlockchainApi', () => {
 describe('BlockchainApiCache', () => {
   describe('get', () => {
     it('should not return expired transactions', async () => {
-      const cache = new BlockchainApi.Cache()
+      const cache = unmangle(new BlockchainApi.Cache())
       cache._expiration = 1
       const tx = new Transaction()
       cache._fetched(tx)
@@ -148,7 +150,7 @@ describe('BlockchainApiCache', () => {
 
   describe('fetched', () => {
     it('should flush oldest transcation when full', () => {
-      const cache = new BlockchainApi.Cache({ size: 1 })
+      const cache = unmangle(new BlockchainApi.Cache({ size: 1 }))
       cache._size = 1
       const tx1 = new Transaction().addData('1')
       const tx2 = new Transaction().addData('2')

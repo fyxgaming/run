@@ -4,75 +4,51 @@
  * Wraps an object to remove property name mangling. We use this to test minified builds.
  */
 
+let mangledProps = {}
+try { mangledProps = require('../../dist/name-cache.json').props.props } catch (e) { }
+
 // ------------------------------------------------------------------------------------------------
 // unmangle
 // ------------------------------------------------------------------------------------------------
 
-const reserved = ['Jig', 'Berry', 'Token', 'expect', '_intrinsics', 'script']
-
-function unmangle (obj) {
-  const nameCache = require('../../dist/name-cache.json')
-  const mangledKey = (prop, target) => {
-    if (prop in target || typeof prop !== 'string') return prop
-    if (('$' + prop) in nameCache.props.props) return nameCache.props.props['$' + prop]
-    return prop
-  }
-
-  const handler = {
+/**
+ * Wraps an object so that its immediate properties are able to be accessed unmangled
+ */
+function unmangle (x) {
+  return new Proxy(x, {
     get: (target, prop) => {
-      if (reserved.includes(prop)) return target[mangledKey(prop, target)]
-
-      // If we're getting a constructor, we can simply reproxy and return it here
-      if (prop === 'constructor') return new Proxy(target.constructor, handler)
-
-      // If the name cache has the key, use its transalted version
-      const key = mangledKey(prop, target)
-      const val = target[key]
-
-      // If val is null, we can return it directly
-      if (!val) return val
-
-      // Regular functions get bound to the target not the proxy for better reliability
-      if (typeof val === 'function' && !val.prototype) return val.bind(target)
-
-      // Jig instances don't need to be proxied and cause problems when they are
-      // "val instanceof Jig" causes problems. Checking class names is good enough for tests.
-      let T = val.constructor
-      while (T) {
-        if (T.name === 'Jig') return val
-        T = Object.getPrototypeOf(T)
-      }
-
-      // Read-only non-confurable properties cannot be proxied
-      const descriptor = Object.getOwnPropertyDescriptor(target, key)
-      if (descriptor && descriptor.writable === false && descriptor.configurable === false) return val
-
-      // Objects get re-proxied so that their sub-properties are unmangled
-      if (typeof val === 'object' && prop !== 'prototype') return new Proxy(val, handler)
-
-      // Regular types also get reproxied
-      if (typeof val === 'function') return new Proxy(val, handler)
-
-      // All other primitive types we return directly
-      return val
+      if (typeof prop !== 'string') return target[prop]
+      if (prop in target) return target[prop]
+      if (('$' + prop) in mangledProps) return target[mangledProps['$' + prop]]
     },
 
     set: (target, prop, value) => {
-      // Sets are applied to the mangled properties if they exist
-      const key = mangledKey(prop, target)
-      target[key] = value
+      if (typeof prop !== 'string') target[prop] = value
+      if (prop in target) target[prop] = value
+      if (('$' + prop) in mangledProps) target[mangledProps['$' + prop]] = value
       return true
-    },
-
-    construct: (T, args) => {
-      // If we construct from a type, the new instance gets proxied to be unmangled too
-      return new Proxy(new T(...args), handler)
     }
-  }
+  })
+}
 
-  return new Proxy(obj, handler)
+// ------------------------------------------------------------------------------------------------
+// unmangle
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Transforms an object so that every key is mangled to be used within Run
+ */
+function mangle (x) {
+  Object.keys(x).forEach(key => {
+    const mangledKey = '$' + key
+    if (mangledKey in mangledProps) {
+      x[mangledProps[mangledKey]] = x[key]
+      delete x[key]
+    }
+  })
+  return x
 }
 
 // ------------------------------------------------------------------------------------------------
 
-module.exports = unmangle
+module.exports = { unmangle, mangle }

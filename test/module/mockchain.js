@@ -11,6 +11,7 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run, PERF } = require('../config')
+const { unmangle } = require('../env/unmangle')
 const { Mockchain } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -35,17 +36,17 @@ describe('Mockchain', () => {
       await mockchain.broadcast(tx)
       expect(tx.blockheight).to.equal(-1)
       mockchain.block()
-      expect(tx.blockheight).to.equal(mockchain._height)
+      expect(tx.blockheight).to.equal(unmangle(mockchain)._height)
     })
 
-    it('should spent spentHeight on outputs', async () => {
+    it('should set spentHeight on outputs', async () => {
       const utxo = (await mockchain.utxos(script))[0]
       const tx = new Transaction().from(utxo).change(address).sign(privkey)
       await mockchain.broadcast(tx)
       const prevtx = await mockchain.fetch(utxo.txid)
       expect(prevtx.outputs[utxo.vout].spentHeight).to.equal(-1)
       mockchain.block()
-      expect(tx.blockheight).to.equal(mockchain._height)
+      expect(tx.blockheight).to.equal(unmangle(mockchain)._height)
     })
 
     it('should respect 25 chain limit', async () => {

@@ -22,7 +22,6 @@ const edge = require('selenium-webdriver/edge')
 
 async function buildTests () {
   if (process.argv.length > 2) process.env.SPECS = JSON.stringify(process.argv.slice(2))
-  process.env.UNMANGLE = 1
   const compiler = webpack(require('../../webpack.config'))
   return new Promise((resolve, reject) => compiler.run(e => e ? reject(e) : resolve()))
 }

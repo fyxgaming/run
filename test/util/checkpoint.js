@@ -7,7 +7,8 @@
 const { describe, it } = require('mocha')
 const { Run } = require('../config')
 const { Jig } = Run
-const { Checkpoint } = Run._util
+const { unmangle } = require('../env/unmangle')
+const { Checkpoint } = unmangle(Run)._util
 
 describe('Checkpoint', () => {
   describe('constructor', () => {

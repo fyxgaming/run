@@ -9,34 +9,41 @@ const { expect } = require('chai')
 const bsv = require('bsv')
 const { Run } = require('../config')
 const { Jig, Berry } = Run
-const { TokenJSON } = Run._util
+const { unmangle, mangle } = require('../env/unmangle')
+const { TokenJSON } = unmangle(Run)._util
 
 // ------------------------------------------------------------------------------------------------
 // Globals
 // ------------------------------------------------------------------------------------------------
 
 const run = new Run()
+const sandbox = unmangle(Run.sandbox)._instance
+const sandboxIntrinsics = unmangle(sandbox)._intrinsics
 
-const sandboxIntrinsics = Run.sandbox._instance._intrinsics
+const _serialize = unmangle(TokenJSON)._serialize
+const _deserialize = unmangle(TokenJSON)._deserialize
+const _replace = unmangle(unmangle(TokenJSON)._replace)
+const _revive = unmangle(unmangle(TokenJSON)._revive)
+const _findAllTokenRefsInTokenJson = unmangle(TokenJSON)._findAllTokenRefsInTokenJson
 
 // ------------------------------------------------------------------------------------------------
 // Helpers
 // ------------------------------------------------------------------------------------------------
 
-const defaultOpts = {
-  _sandboxIntrinsics: Run.sandbox._instance._hostIntrinsics
-}
+const defaultOpts = mangle({
+  _sandboxIntrinsics: unmangle(sandbox)._hostIntrinsics
+})
 
 function serializePass (x, y, opts = defaultOpts) {
-  const serialized = TokenJSON._serialize(x, opts)
+  const serialized = _serialize(x, opts)
   const jsonString = JSON.stringify(serialized)
   const json = JSON.parse(jsonString)
   expect(json).to.deep.equal(y)
-  expect(TokenJSON._deserialize(json, opts)).to.deep.equal(x)
+  expect(_deserialize(json, opts)).to.deep.equal(x)
 }
 
-const serializeFail = (x, opts = defaultOpts) => expect(() => TokenJSON._serialize(x, opts)).to.throw('Cannot serialize')
-const deserializeFail = (y, opts = defaultOpts) => expect(() => TokenJSON._deserialize(y, opts)).to.throw('Cannot deserialize')
+const serializeFail = (x, opts = defaultOpts) => expect(() => _serialize(x, opts)).to.throw('Cannot serialize')
+const deserializeFail = (y, opts = defaultOpts) => expect(() => _deserialize(y, opts)).to.throw('Cannot deserialize')
 
 // ------------------------------------------------------------------------------------------------
 // TokenJSON
@@ -240,54 +247,54 @@ describe('TokenJSON', () => {
       o[3] = 3
       o[2] = 2
       o.n = 3
-      const serialized = TokenJSON._serialize(o)
+      const serialized = _serialize(o)
       const json = JSON.parse(JSON.stringify(serialized))
-      const o2 = TokenJSON._deserialize(json)
+      const o2 = _deserialize(json)
       expect(Object.keys(o)).to.deep.equal(Object.keys(o2))
     })
 
     it('should use output intrinsics', () => {
-      const opts = { _outputIntrinsics: sandboxIntrinsics }
+      const opts = mangle({ _outputIntrinsics: sandboxIntrinsics })
       // Primitives
-      expect(TokenJSON._serialize({}, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize({ $: 1 }, opts).$obj.constructor).to.equal(sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(undefined, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(-0, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(NaN, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(Infinity, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(-Infinity, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize({}, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize({ $: 1 }, opts).$obj.constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize(undefined, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize(-0, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize(NaN, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize(Infinity, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize(-Infinity, opts).constructor).to.equal(sandboxIntrinsics.Object)
       // Array
-      expect(TokenJSON._serialize([], opts).constructor).to.equal(sandboxIntrinsics.Array)
+      expect(_serialize([], opts).constructor).to.equal(sandboxIntrinsics.Array)
       const a = []
       a.x = 1
-      expect(TokenJSON._serialize(a, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(a, opts).$arr.constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize(a, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize(a, opts).$arr.constructor).to.equal(sandboxIntrinsics.Object)
       // Set
       const s = new Set()
       s.x = 1
-      expect(TokenJSON._serialize(s, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(s, opts).$set.constructor).to.equal(sandboxIntrinsics.Array)
-      expect(TokenJSON._serialize(s, opts).props.constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize(s, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize(s, opts).$set.constructor).to.equal(sandboxIntrinsics.Array)
+      expect(_serialize(s, opts).props.constructor).to.equal(sandboxIntrinsics.Object)
       // Map
       const m = new Map()
       m.x = 1
-      expect(TokenJSON._serialize(m, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize(m, opts).$map.constructor).to.equal(sandboxIntrinsics.Array)
-      expect(TokenJSON._serialize(m, opts).props.constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize(m, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize(m, opts).$map.constructor).to.equal(sandboxIntrinsics.Array)
+      expect(_serialize(m, opts).props.constructor).to.equal(sandboxIntrinsics.Object)
       // Uint8Array
       const b = new Uint8Array()
-      expect(TokenJSON._serialize(b, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize(b, opts).constructor).to.equal(sandboxIntrinsics.Object)
       // Dedup
       const o = { }
-      expect(TokenJSON._serialize([o, o], opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(TokenJSON._serialize([o, o], opts).$dedup.constructor).to.equal(sandboxIntrinsics.Array)
-      expect(TokenJSON._serialize([o, o], opts).dups.constructor).to.equal(sandboxIntrinsics.Array)
-      expect(TokenJSON._serialize([o, o], opts).dups[0].constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize([o, o], opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_serialize([o, o], opts).$dedup.constructor).to.equal(sandboxIntrinsics.Array)
+      expect(_serialize([o, o], opts).dups.constructor).to.equal(sandboxIntrinsics.Array)
+      expect(_serialize([o, o], opts).dups[0].constructor).to.equal(sandboxIntrinsics.Object)
     })
 
     it('should default to host intrinsics', () => {
-      expect(TokenJSON._serialize({}).constructor).to.equal(Object)
-      expect(TokenJSON._serialize([]).constructor).to.equal(Array)
+      expect(_serialize({}).constructor).to.equal(Object)
+      expect(_serialize([]).constructor).to.equal(Array)
     })
 
     it('should fail for raw intrinsics', () => {
@@ -337,7 +344,7 @@ describe('TokenJSON', () => {
       serializeFail(new sandboxIntrinsics.Map())
       serializeFail(new sandboxIntrinsics.Uint8Array())
       // Use host intrinsics, but set them to sandbox
-      const opts = { _hostIntrinsics: sandboxIntrinsics }
+      const opts = mangle({ _hostIntrinsics: sandboxIntrinsics })
       serializeFail(new Set(), opts)
       serializeFail(new Map(), opts)
       serializeFail(new Uint8Array(), opts)
@@ -346,11 +353,11 @@ describe('TokenJSON', () => {
     it('should support custom replacer', () => {
       class A {}
       const a = new A()
-      expect(() => TokenJSON._serialize(a)).to.throw('Cannot serialize')
-      expect(TokenJSON._serialize(a, {
+      expect(() => _serialize(a)).to.throw('Cannot serialize')
+      expect(_serialize(a, mangle({
         _replacer: x => { if (x instanceof A) return { $a: 1 } }
-      })).to.deep.equal({ $a: 1 })
-      expect(() => TokenJSON._serialize(a, { _replacer: () => {} })).to.throw('Cannot serialize')
+      }))).to.deep.equal({ $a: 1 })
+      expect(() => _serialize(a, { _replacer: () => {} })).to.throw('Cannot serialize')
     })
   })
 
@@ -414,29 +421,29 @@ describe('TokenJSON', () => {
     })
 
     it('should default to sandbox intrinsics', () => {
-      expect(TokenJSON._deserialize({}).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(TokenJSON._deserialize([]).constructor).to.equal(sandboxIntrinsics.Array)
+      expect(_deserialize({}).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_deserialize([]).constructor).to.equal(sandboxIntrinsics.Array)
     })
 
     it('should use output intrinsics', () => {
-      const opts = { _outputIntrinsics: sandboxIntrinsics }
-      expect(TokenJSON._deserialize({}, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(TokenJSON._deserialize({ $obj: {} }, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(TokenJSON._deserialize([], opts).constructor).to.equal(sandboxIntrinsics.Array)
-      expect(TokenJSON._deserialize({ $arr: {} }, opts).constructor).to.equal(sandboxIntrinsics.Array)
-      expect(TokenJSON._deserialize({ $set: [] }, opts).constructor).to.equal(sandboxIntrinsics.Set)
-      expect(TokenJSON._deserialize({ $map: [] }, opts).constructor).to.equal(sandboxIntrinsics.Map)
-      expect(TokenJSON._deserialize({ $ui8a: '' }, opts).constructor).to.equal(sandboxIntrinsics.Uint8Array)
+      const opts = mangle({ _outputIntrinsics: sandboxIntrinsics })
+      expect(_deserialize({}, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_deserialize({ $obj: {} }, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(_deserialize([], opts).constructor).to.equal(sandboxIntrinsics.Array)
+      expect(_deserialize({ $arr: {} }, opts).constructor).to.equal(sandboxIntrinsics.Array)
+      expect(_deserialize({ $set: [] }, opts).constructor).to.equal(sandboxIntrinsics.Set)
+      expect(_deserialize({ $map: [] }, opts).constructor).to.equal(sandboxIntrinsics.Map)
+      expect(_deserialize({ $ui8a: '' }, opts).constructor).to.equal(sandboxIntrinsics.Uint8Array)
     })
 
     it('should support custom reviver', () => {
       class A {}
       const a = new A()
-      expect(() => TokenJSON._deserialize({ $a: 1 })).to.throw('Cannot deserialize')
-      expect(TokenJSON._deserialize({ $a: 1 }, {
+      expect(() => _deserialize({ $a: 1 })).to.throw('Cannot deserialize')
+      expect(_deserialize({ $a: 1 }, mangle({
         _reviver: x => { if (x.$a === 1) return a }
-      })).to.equal(a)
-      expect(() => TokenJSON._deserialize(a, { _reviver: () => {} })).to.throw('Cannot deserialize')
+      }))).to.equal(a)
+      expect(() => _deserialize(a, { _reviver: () => {} })).to.throw('Cannot deserialize')
     })
   })
 
@@ -444,11 +451,11 @@ describe('TokenJSON', () => {
     it('should replace jigs with location ref', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
-      const opts = {
+      const opts = mangle({
         _outputIntrinsics: sandboxIntrinsics,
-        _replacer: TokenJSON._replace._tokens(token => '123')
-      }
-      const json = TokenJSON._serialize(dragon, opts)
+        _replacer: _replace._tokens(token => '123')
+      })
+      const json = _serialize(dragon, opts)
       expect(json).to.deep.equal({ $ref: '123' })
       expect(json.constructor).to.equal(sandboxIntrinsics.Object)
     })
@@ -456,57 +463,57 @@ describe('TokenJSON', () => {
     it('should revive jigs from location ref', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
-      const opts = {
-        _reviver: TokenJSON._revive._tokens(ref => dragon)
-      }
-      expect(TokenJSON._deserialize({ $ref: '123' }, opts)).to.equal(dragon)
+      const opts = mangle({
+        _reviver: _revive._tokens(ref => dragon)
+      })
+      expect(_deserialize({ $ref: '123' }, opts)).to.equal(dragon)
     })
 
     it('should replace and revive jigs in complex structures', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
-      const opts = {
-        _outputIntrinsics: Run.sandbox._instance._hostIntrinsics,
-        _replacer: TokenJSON._replace._tokens(token => '123'),
-        _reviver: TokenJSON._revive._tokens(ref => dragon)
-      }
+      const opts = mangle({
+        _outputIntrinsics: unmangle(sandbox)._hostIntrinsics,
+        _replacer: _replace._tokens(token => '123'),
+        _reviver: _revive._tokens(ref => dragon)
+      })
       const x = [dragon, { dragon }, new Set([dragon])]
-      const json = TokenJSON._serialize(x, opts)
+      const json = _serialize(x, opts)
       const parsed = JSON.parse(JSON.stringify(json))
-      const output = TokenJSON._deserialize(parsed, opts)
+      const output = _deserialize(parsed, opts)
       expect(output).to.deep.equal(x)
     })
 
     it('should fail to deserialize bad ref', () => {
-      const opts = { _reviver: TokenJSON._revive._tokens(ref => {}) }
+      const opts = mangle({ _reviver: _revive._tokens(ref => {}) })
       deserializeFail({ $ref: 1, $ref2: 2 }, opts)
       deserializeFail({ $ref: '123' })
     })
 
     it('should replace deployables with location ref', () => {
-      const opts = { _replacer: TokenJSON._replace._tokens(x => '123') }
-      expect(TokenJSON._serialize(class {}, opts)).to.deep.equal({ $ref: '123' })
-      expect(TokenJSON._serialize(class A {}, opts)).to.deep.equal({ $ref: '123' })
-      expect(TokenJSON._serialize(class { method () { return null } }, opts)).to.deep.equal({ $ref: '123' })
-      expect(TokenJSON._serialize(class B { constructor () { this.x = 1 } }, opts)).to.deep.equal({ $ref: '123' })
-      expect(TokenJSON._serialize(function f () {}, opts)).to.deep.equal({ $ref: '123' })
-      expect(TokenJSON._serialize(function add (a, b) { return a + b }, opts)).to.deep.equal({ $ref: '123' })
-      expect(TokenJSON._serialize(function () {}, opts)).to.deep.equal({ $ref: '123' })
-      expect(TokenJSON._serialize(() => {}, opts)).to.deep.equal({ $ref: '123' })
-      expect(TokenJSON._serialize(x => x, opts)).to.deep.equal({ $ref: '123' })
+      const opts = mangle({ _replacer: _replace._tokens(x => '123') })
+      expect(_serialize(class {}, opts)).to.deep.equal({ $ref: '123' })
+      expect(_serialize(class A {}, opts)).to.deep.equal({ $ref: '123' })
+      expect(_serialize(class { method () { return null } }, opts)).to.deep.equal({ $ref: '123' })
+      expect(_serialize(class B { constructor () { this.x = 1 } }, opts)).to.deep.equal({ $ref: '123' })
+      expect(_serialize(function f () {}, opts)).to.deep.equal({ $ref: '123' })
+      expect(_serialize(function add (a, b) { return a + b }, opts)).to.deep.equal({ $ref: '123' })
+      expect(_serialize(function () {}, opts)).to.deep.equal({ $ref: '123' })
+      expect(_serialize(() => {}, opts)).to.deep.equal({ $ref: '123' })
+      expect(_serialize(x => x, opts)).to.deep.equal({ $ref: '123' })
     })
 
     it('should fail to serialize built-in functions', () => {
-      const opts = { _replacer: TokenJSON._replace._tokens(x => '123') }
-      expect(() => TokenJSON._serialize(Math.random, opts)).to.throw('Cannot serialize')
-      expect(() => TokenJSON._serialize(Array.prototype.indexOf, opts)).to.throw('Cannot serialize')
-      expect(() => TokenJSON._serialize(WeakSet.prototype.has, opts)).to.throw('Cannot serialize')
-      expect(() => TokenJSON._serialize(String.prototype.endsWith, opts)).to.throw('Cannot serialize')
-      expect(() => TokenJSON._serialize(isNaN, opts)).to.throw('Cannot serialize')
-      expect(() => TokenJSON._serialize(isFinite, opts)).to.throw('Cannot serialize')
-      expect(() => TokenJSON._serialize(parseInt, opts)).to.throw('Cannot serialize')
-      expect(() => TokenJSON._serialize(escape, opts)).to.throw('Cannot serialize')
-      expect(() => TokenJSON._serialize(eval, opts)).to.throw('Cannot serialize') // eslint-disable-line
+      const opts = mangle({ _replacer: _replace._tokens(x => '123') })
+      expect(() => _serialize(Math.random, opts)).to.throw('Cannot serialize')
+      expect(() => _serialize(Array.prototype.indexOf, opts)).to.throw('Cannot serialize')
+      expect(() => _serialize(WeakSet.prototype.has, opts)).to.throw('Cannot serialize')
+      expect(() => _serialize(String.prototype.endsWith, opts)).to.throw('Cannot serialize')
+      expect(() => _serialize(isNaN, opts)).to.throw('Cannot serialize')
+      expect(() => _serialize(isFinite, opts)).to.throw('Cannot serialize')
+      expect(() => _serialize(parseInt, opts)).to.throw('Cannot serialize')
+      expect(() => _serialize(escape, opts)).to.throw('Cannot serialize')
+      expect(() => _serialize(eval, opts)).to.throw('Cannot serialize') // eslint-disable-line
     })
 
     it('should replace and revive berries', async () => {
@@ -514,26 +521,26 @@ describe('TokenJSON', () => {
       const CustomBerrySandbox = await run.load(await run.deploy(CustomBerry))
       const berry = { location: 'abc' }
       Object.setPrototypeOf(berry, CustomBerrySandbox.prototype)
-      const opts = {
-        _replacer: TokenJSON._replace._tokens(token => '123'),
-        _reviver: TokenJSON._revive._tokens(ref => berry)
-      }
+      const opts = mangle({
+        _replacer: _replace._tokens(token => '123'),
+        _reviver: _revive._tokens(ref => berry)
+      })
       serializePass(berry, { $ref: '123' }, opts)
     })
   })
 
   describe('arbitrary objects', () => {
     const tokens = []
-    const opts = {
-      _replacer: TokenJSON._replace._multiple(
-        TokenJSON._replace._tokens(x => { tokens.push(x); return tokens.length - 1 }),
-        TokenJSON._replace._arbitraryObjects()
+    const opts = mangle({
+      _replacer: _replace._multiple(
+        _replace._tokens(x => { tokens.push(x); return tokens.length - 1 }),
+        _replace._arbitraryObjects()
       ),
-      _reviver: TokenJSON._revive._multiple(
-        TokenJSON._revive._tokens(x => tokens[x]),
-        TokenJSON._revive._arbitraryObjects()
+      _reviver: _revive._multiple(
+        _revive._tokens(x => tokens[x]),
+        _revive._arbitraryObjects()
       )
-    }
+    })
 
     it('should support basic arbitrary objects', () => {
       const $ref = tokens.length
@@ -566,10 +573,10 @@ describe('TokenJSON', () => {
     it('should find serializables', () => {
       function f () { }
       let n = 1
-      const opts = { _replacer: TokenJSON._replace._tokens(token => n++) }
+      const opts = mangle({ _replacer: _replace._tokens(token => n++) })
       const x = [f, { f }, new Set([f])]
-      const json = TokenJSON._serialize(x, opts)
-      const refs = TokenJSON._findAllTokenRefsInTokenJson(json)
+      const json = _serialize(x, opts)
+      const refs = _findAllTokenRefsInTokenJson(json)
       expect(Array.from(refs)).to.deep.equal([1, 2, 3])
     })
   })

@@ -8,13 +8,14 @@ const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
+const { unmangle } = require('../env/unmangle')
 const {
   _checkRunTransaction,
   _extractRunData,
   _outputType,
   _encryptRunData,
   _decryptRunData
-} = Run._util
+} = unmangle(unmangle(Run)._util)
 
 // ------------------------------------------------------------------------------------------------
 // _checkRunTransaction

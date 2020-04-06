@@ -9,6 +9,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../config')
 const { AddressScript, PubKeyScript } = Run
+const { unmangle } = require('../env/unmangle')
 const {
   _bsvNetwork,
   _deployable,
@@ -18,7 +19,7 @@ const {
   _checkSatoshis,
   _ownerScript,
   SerialTaskQueue
-} = Run._util
+} = unmangle(unmangle(Run)._util)
 const Sandbox = Run.sandbox
 
 // ------------------------------------------------------------------------------------------------
@@ -205,9 +206,10 @@ describe('_deepTraverseObjects', () => {
   })
 
   it('should recognize sandbox sets and maps', () => {
-    const set = new Sandbox._instance._intrinsics.Set()
+    const sandboxIntrinsics = unmangle(unmangle(Sandbox)._instance)._intrinsics
+    const set = new sandboxIntrinsics.Set()
     set.add({})
-    const map = new Sandbox._instance._intrinsics.Map()
+    const map = new sandboxIntrinsics.Map()
     map.set({}, {})
     const results = []
     _deepTraverseObjects([set, map], x => { results.push(x); return true })

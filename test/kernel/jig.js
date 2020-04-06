@@ -11,52 +11,8 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 const { PrivateKey } = require('bsv')
 const { Run } = require('../config')
+const { unmangle } = require('../env/unmangle')
 const { Jig } = Run
-
-// ------------------------------------------------------------------------------------------------
-// Test hooks
-// ------------------------------------------------------------------------------------------------
-
-let action = null
-
-function hookStoreAction (run) {
-  const oldAction = run.transaction.storeAction.bind(run.transaction)
-  run.transaction.storeAction = (target, method, args, inputs, outputs, reads, before, after, proxies) => {
-    oldAction(target, method, args, inputs, outputs, reads, before, after, proxies)
-    target = proxies.get(target)
-    inputs = new Set(Array.from(inputs).map(i => proxies.get(i)))
-    outputs = new Set(Array.from(outputs).map(o => proxies.get(o)))
-    reads = new Set(Array.from(reads).map(o => proxies.get(o)))
-    action = { target, method, args, inputs, outputs, reads }
-  }
-  return run
-}
-
-function expectAction (target, method, args, inputs, outputs, reads) {
-  expect(action.target).to.equal(target)
-  expect(action.method).to.equal(method)
-  expect(action.args).to.deep.equal(args)
-  expect(action.inputs.size).to.equal(inputs.length)
-  Array.from(action.inputs.values()).forEach((i, n) => expect(i).to.equal(inputs[n]))
-  expect(action.outputs.size).to.equal(outputs.length)
-  Array.from(action.outputs.values()).forEach((o, n) => expect(o).to.equal(outputs[n]))
-  expect(action.reads.size).to.equal(reads.length)
-  Array.from(action.reads.values()).forEach((x, n) => expect(x).to.equal(reads[n]))
-  action = null
-}
-
-function expectNoAction () {
-  if (action) throw new Error('Unexpected transaction')
-}
-
-async function hookPay (run, ...enables) {
-  enables = new Array(run._kernel._syncer.queued.length).fill(true).concat(enables)
-  const orig = run.purse.pay.bind(run.purse)
-  run.purse.pay = async (tx) => {
-    if (!enables.length) { return orig(tx) }
-    if (enables.shift()) { return orig(tx) } else { return tx }
-  }
-}
 
 // ------------------------------------------------------------------------------------------------
 // Jig tests
@@ -943,13 +899,14 @@ describe('Jig', () => {
 
         getBuf () { return this.buf }
       }
+      const sandboxIntrinsics = unmangle(unmangle(Run.sandbox)._instance)._intrinsics
       const a = new A()
       function testBuf (buf) {
         expect(buf.length).to.equal(3)
         expect(buf[0]).to.equal(1)
         expect(buf[1]).to.equal(2)
         expect(buf[2]).to.equal(3)
-        expect(buf.constructor === Run.sandbox._instance._intrinsics.Uint8Array).to.equal(true)
+        expect(buf.constructor === sandboxIntrinsics.Uint8Array).to.equal(true)
       }
       testBuf(a.buf)
       testBuf(a.buf2)
@@ -1333,7 +1290,7 @@ describe('Jig', () => {
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      const bsvNetwork = Run._util._bsvNetwork(run.blockchain.network)
+      const bsvNetwork = unmangle(unmangle(Run)._util)._bsvNetwork(run.blockchain.network)
       const privateKey = new PrivateKey(bsvNetwork)
       const pubkey = privateKey.publicKey.toString()
       a.send(pubkey)
@@ -2486,3 +2443,51 @@ describe('Jig', () => {
     })
   })
 })
+
+// ------------------------------------------------------------------------------------------------
+// Test hooks
+// ------------------------------------------------------------------------------------------------
+
+let action = null
+
+function hookStoreAction (run) {
+  const oldAction = run.transaction.storeAction.bind(run.transaction)
+  run.transaction.storeAction = (target, method, args, inputs, outputs, reads, before, after, proxies) => {
+    oldAction(target, method, args, inputs, outputs, reads, before, after, proxies)
+    target = proxies.get(target)
+    inputs = new Set(Array.from(inputs).map(i => proxies.get(i)))
+    outputs = new Set(Array.from(outputs).map(o => proxies.get(o)))
+    reads = new Set(Array.from(reads).map(o => proxies.get(o)))
+    action = { target, method, args, inputs, outputs, reads }
+  }
+  return run
+}
+
+function expectAction (target, method, args, inputs, outputs, reads) {
+  expect(action.target).to.equal(target)
+  expect(action.method).to.equal(method)
+  expect(action.args).to.deep.equal(args)
+  expect(action.inputs.size).to.equal(inputs.length)
+  Array.from(action.inputs.values()).forEach((i, n) => expect(i).to.equal(inputs[n]))
+  expect(action.outputs.size).to.equal(outputs.length)
+  Array.from(action.outputs.values()).forEach((o, n) => expect(o).to.equal(outputs[n]))
+  expect(action.reads.size).to.equal(reads.length)
+  Array.from(action.reads.values()).forEach((x, n) => expect(x).to.equal(reads[n]))
+  action = null
+}
+
+function expectNoAction () {
+  if (action) throw new Error('Unexpected transaction')
+}
+
+async function hookPay (run, ...enables) {
+  const syncer = unmangle(unmangle(run)._kernel)._syncer
+  enables = new Array(syncer.queued.length).fill(true).concat(enables)
+  const orig = run.purse.pay.bind(run.purse)
+  run.purse.pay = async (tx) => {
+    if (!enables.length) { return orig(tx) }
+    if (enables.shift()) { return orig(tx) } else { return tx }
+  }
+}
+
+// ------------------------------------------------------------------------------------------------

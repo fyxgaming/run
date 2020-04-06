@@ -6,7 +6,7 @@
 
 const path = require('path')
 const addUserKeystoEnvironment = require('./env/keys')
-const unmangle = require('./env/unmangle')
+const { unmangle } = require('./env/unmangle')
 
 addUserKeystoEnvironment()
 
@@ -17,12 +17,12 @@ const API = process.env.API ? process.env.API : 'run'
 const APIKEY = process.env.APIKEY ? process.env.APIKEY : undefined
 const PURSE = process.env.PURSE ? process.env.PURSE : undefined
 const COVER = process.env.COVER ? process.env.COVER : false
-const UNMANGLE = process.env.UNMANGLE ? process.env.UNMANGLE : false
 
-const TargetRun = process.env.LIB ? require(path.join(process.cwd(), process.env.LIB)) : require('target')
-const Run = UNMANGLE ? unmangle(TargetRun) : TargetRun
+const Run = process.env.LIB ? require(path.join(process.cwd(), process.env.LIB)) : require('target')
 
-Run.defaults.logger = Run._util.Log._logger = LOGGER ? console : {}
+const util = unmangle(Run)._util
+
+Run.defaults.logger = unmangle(util.Log)._logger = LOGGER ? console : {}
 Run.defaults.network = NETWORK
 Run.defaults.api = API
 Run.defaults.apiKey = APIKEY
