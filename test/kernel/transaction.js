@@ -673,7 +673,7 @@ describe('Transaction', () => {
         const a = await new A().sync()
         const actions = [{ target: '_i0', method: 'f', args: [{ $class: 'Map' }] }]
         const txid = await build([], actions, [a.location], null, 1)
-        await expect(run.load(txid + '_o1')).to.be.rejectedWith('Cannot deserialized [object Object')
+        await expect(run.load(txid + '_o1')).to.be.rejectedWith('Cannot deserialize [object Object')
       })
 
       it('should throw if nonexistant jig arg', async () => {
@@ -806,7 +806,7 @@ describe('Transaction', () => {
         await expect(run.load(txid + '_o1')).to.be.rejectedWith('Cannot deserialize [object Object]')
         const code2 = [{ text: A.toString(), props: { n: { $ref: 123 } }, owner }]
         const txid2 = await build(code2, [], [], null, 0)
-        await expect(run.load(txid2 + '_o1')).to.be.rejectedWith('[object Object] cannot be scanned')
+        await expect(run.load(txid2 + '_o1')).to.be.rejected
       })
 
       it('should throw if non-existant ref', async () => {
