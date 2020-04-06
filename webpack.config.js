@@ -56,7 +56,7 @@ const reservedProperties = [
   '_hash', '_getHash', '_getInputAmount', '_estimateFee', '_getOutputAmount'
 ]
 
-// The mangled names are cached in a special name-cache file. We use this in the tests
+// The mangled names are cached in a special name-cache file. We use this file in the tests
 // to access mangled names as if they were not mangled. We also cache this file ourselves
 // so that we can reuse the same mangled names for every build.
 const nameCachePath = path.join(dist, 'name-cache.json')
@@ -65,18 +65,16 @@ const nameCache = JSON.parse(lastNameCacheJson)
 
 // Plugin to save the name cache if it differs from the last known name cache
 class SaveNameCache {
-  apply(compiler) {
-    compiler.hooks.done.tap(SaveNameCache.name, () => {
+  apply (compiler) {
+    compiler.hooks.done.tap(SaveNameCache.name, async () => {
       const newNameCacheJson = JSON.stringify(nameCache)
       if (newNameCacheJson !== lastNameCacheJson) {
         lastNameCacheJson = newNameCacheJson
-        fs.writeFileSync(nameCachePath, newNameCacheJson)
+        await fs.writeFile(nameCachePath, newNameCacheJson)
       }
     })
   }
 }
-
-const saveNameCache = new SaveNameCache()
 
 // Run library terser settings
 const terserPluginConfig = {
@@ -99,35 +97,6 @@ const terserPluginConfig = {
         reserved: reservedProperties
       }
     }
-  }
-}
-
-// Compiled tests terser settings
-const terserTestPluginConfig = {
-  parallel: false,
-  // cache: false,
-  terserOptions: {
-    ecma: 2015,
-    // The tests need similar mangling as the main library. For example, if a test accesses an
-    // internal property like mockchain._height, _height will be manged in the final build, so
-    // the test should also be mangled the same way. We use the name cache for this.
-    nameCache: terserPluginConfig.terserOptions.nameCache,
-    mangle: {
-      reserved: reservedNames,
-      properties: {
-        regex: /^_.*$/,
-        reserved: reservedProperties
-      }
-    },
-    // Keep code as close to the original as possible for debugging
-    compress: false,
-    output: {
-      beautify: true,
-      comments: true
-    },
-    // Don't mangle test classes and functions, because it also debugging harder
-    keep_classnames: true,
-    keep_fnames: true
   }
 }
 
@@ -155,7 +124,7 @@ const browserMin = {
       new TerserPlugin(terserPluginConfig)
     ]
   },
-  plugins: [config, saveNameCache],
+  plugins: [config, new SaveNameCache()],
   stats: 'errors-only'
 }
 
@@ -188,6 +157,7 @@ const browser = {
     path: dist,
     library
   },
+  plugins: [config],
   optimization: { minimize: false }
 }
 
@@ -202,6 +172,7 @@ const node = {
     path: dist,
     libraryTarget: 'commonjs2'
   },
+  plugins: [config],
   optimization: { minimize: false }
 }
 
@@ -223,28 +194,11 @@ const browserTests = {
   output: { filename: `${name}.browser.tests.js`, path: dist },
   node: { fs: 'empty' },
   externals: { mocha: 'Mocha', chai: 'chai', bsv: 'bsv', target: library },
-  optimization: {
-    minimizer: [
-      new TerserPlugin(terserTestPluginConfig)
-    ]
-  },
-  plugins: [new webpack.EnvironmentPlugin(process.env), saveNameCache],
+  optimization: { minimize: false },
+  plugins: [new webpack.EnvironmentPlugin(process.env)],
   stats: 'errors-only'
 }
 
 // ------------------------------------------------------------------------------------------------
-// Node Tests
-// ------------------------------------------------------------------------------------------------
 
-const nodeTests = {
-  ...browserTests,
-  target: 'node',
-  output: { filename: `${name}.node.tests.js`, path: dist, libraryTarget: 'commonjs2' },
-  externals: { mocha: 'mocha', chai: 'chai', bsv: 'bsv', target: './run.node.min' },
-  node: { fs: 'empty' }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-// module.exports = [browserMin, nodeMin, browser, node, browserTests, nodeTests]
-module.exports = [browserMin, browser, nodeMin, node]
+module.exports = [browserMin, nodeMin, browser, node, browserTests]

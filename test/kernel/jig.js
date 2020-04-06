@@ -68,7 +68,7 @@ describe('Jig', () => {
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
-    it('should create basic jig', async () => {
+    it.only('should create basic jig', async () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -2160,7 +2160,7 @@ describe('Jig', () => {
   })
 
   describe('private', () => {
-    it.only('should handle has of private property', () => {
+    it('should handle has of private property', () => {
       class J extends Jig {
         init () { this._x = 1 }
 
