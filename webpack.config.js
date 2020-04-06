@@ -43,7 +43,9 @@ if (!fs.existsSync('./dist/bsv.browser.min.js')) {
 // Reserved variables, usually for sandboxing reasons
 const reservedNames = [
   // Jig and berry names and dependencies must be preserved
-  'Jig', 'Berry', 'Context', 'JigControl', 'BerryControl'
+  'Jig', 'Berry', 'Context', 'JigControl', 'BerryControl',
+  // TokenSet/TokenMap dependency names must be preserved
+  'internal', 'uniqueKey', 'TokenMap'
 ]
 
 // Reserved words that should not be mangled in minified builds

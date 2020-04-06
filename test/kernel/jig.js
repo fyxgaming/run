@@ -1647,8 +1647,9 @@ describe('Jig', () => {
         init () { this.set = new Set() }
         add (x) { this.set.add(x) }
       }
-      const a = await new A().sync()
-      const b = await new B().sync()
+      const a = new A()
+      const b = new B()
+      await run.sync()
       const b2 = await run.load(b.location)
       a.add(b)
       a.add(b2)
