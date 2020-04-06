@@ -56,16 +56,20 @@ const reservedProperties = [
   '_hash', '_getHash', '_getInputAmount', '_estimateFee', '_getOutputAmount'
 ]
 
-const nameCachePath = path.join(dist, 'namecache.json')
-let nameCacheJson = fs.existsSync(nameCachePath) ? fs.readFileSync(nameCachePath).toString('utf8') : '{}'
-const nameCache = JSON.parse(nameCacheJson)
+// The mangled names are cached in a special name-cache file. We use this in the tests
+// to access mangled names as if they were not mangled. We also cache this file ourselves
+// so that we can reuse the same mangled names for every build.
+const nameCachePath = path.join(dist, 'name-cache.json')
+let lastNameCacheJson = fs.existsSync(nameCachePath) ? fs.readFileSync(nameCachePath).toString('utf8') : '{}'
+const nameCache = JSON.parse(lastNameCacheJson)
 
+// Plugin to save the name cache if it differs from the last known name cache
 class SaveNameCache {
   apply(compiler) {
     compiler.hooks.done.tap(SaveNameCache.name, () => {
       const newNameCacheJson = JSON.stringify(nameCache)
-      if (newNameCacheJson !== nameCacheJson) {
-        nameCacheJson = newNameCacheJson
+      if (newNameCacheJson !== lastNameCacheJson) {
+        lastNameCacheJson = newNameCacheJson
         fs.writeFileSync(nameCachePath, newNameCacheJson)
       }
     })
