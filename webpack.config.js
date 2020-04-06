@@ -56,15 +56,33 @@ const reservedProperties = [
   '_hash', '_getHash', '_getInputAmount', '_estimateFee', '_getOutputAmount'
 ]
 
+const nameCachePath = path.join(dist, 'namecache.json')
+let nameCacheJson = fs.existsSync(nameCachePath) ? fs.readFileSync(nameCachePath).toString('utf8') : '{}'
+const nameCache = JSON.parse(nameCacheJson)
+
+class SaveNameCache {
+  apply(compiler) {
+    compiler.hooks.done.tap(SaveNameCache.name, () => {
+      const newNameCacheJson = JSON.stringify(nameCache)
+      if (newNameCacheJson !== nameCacheJson) {
+        nameCacheJson = newNameCacheJson
+        fs.writeFileSync(nameCachePath, newNameCacheJson)
+      }
+    })
+  }
+}
+
+const saveNameCache = new SaveNameCache()
+
 // Run library terser settings
 const terserPluginConfig = {
   // The nameCache requires parallel to be off
   parallel: false,
   // We don't cache, because otherwise the name cache is lost
-  cache: false,
+  // cache: false,
   terserOptions: {
     ecma: 2015,
-    nameCache: {},
+    nameCache,
     mangle: {
       reserved: reservedNames,
       // The AbortSignal name is required for node-fetch and abort-controller to work together
@@ -83,7 +101,7 @@ const terserPluginConfig = {
 // Compiled tests terser settings
 const terserTestPluginConfig = {
   parallel: false,
-  cache: false,
+  // cache: false,
   terserOptions: {
     ecma: 2015,
     // The tests need similar mangling as the main library. For example, if a test accesses an
@@ -133,7 +151,7 @@ const browserMin = {
       new TerserPlugin(terserPluginConfig)
     ]
   },
-  plugins: [config],
+  plugins: [config, saveNameCache],
   stats: 'errors-only'
 }
 
@@ -206,7 +224,7 @@ const browserTests = {
       new TerserPlugin(terserTestPluginConfig)
     ]
   },
-  plugins: [new webpack.EnvironmentPlugin(process.env)],
+  plugins: [new webpack.EnvironmentPlugin(process.env), saveNameCache],
   stats: 'errors-only'
 }
 
@@ -224,4 +242,5 @@ const nodeTests = {
 
 // ------------------------------------------------------------------------------------------------
 
-module.exports = [browserMin, nodeMin, browser, node, browserTests, nodeTests]
+// module.exports = [browserMin, nodeMin, browser, node, browserTests, nodeTests]
+module.exports = [browserMin, browser, nodeMin, node]

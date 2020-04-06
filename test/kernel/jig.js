@@ -2160,7 +2160,7 @@ describe('Jig', () => {
   })
 
   describe('private', () => {
-    it('should handle has of private property', () => {
+    it.only('should handle has of private property', () => {
       class J extends Jig {
         init () { this._x = 1 }
 
