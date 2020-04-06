@@ -8,7 +8,7 @@
 // unmangle
 // ------------------------------------------------------------------------------------------------
 
-const reserved = ['Jig', 'Berry', 'Token', 'expect', '_intrinsics']
+const reserved = ['Jig', 'Berry', 'Token', 'expect', '_intrinsics', 'script']
 
 function unmangle (obj) {
   const nameCache = require('../../dist/name-cache.json')
