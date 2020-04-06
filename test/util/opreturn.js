@@ -7,7 +7,7 @@
 const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { Run } = require('../config')
+const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const {
   _checkRunTransaction,

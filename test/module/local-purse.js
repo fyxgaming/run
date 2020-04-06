@@ -10,7 +10,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Run } = require('../config')
+const { Run } = require('../env/config')
 const { LocalPurse } = Run
 const { Jig } = Run
 

@@ -7,7 +7,7 @@
 const { describe, it, before } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
-const { Run } = require('../config')
+const { Run } = require('../env/config')
 const { Jig, Berry } = Run
 const { unmangle, mangle } = require('../env/unmangle')
 const { TokenJSON } = unmangle(Run)._util

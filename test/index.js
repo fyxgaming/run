@@ -6,6 +6,7 @@
 
 require('./kernel/blockchain')
 require('./kernel/jig')
+require('./kernel/owner')
 
 require('./module/blockchain-api')
 require('./module/local-purse')

@@ -11,7 +11,7 @@ const chaiAsPromised = require('chai-as-promised')
 const { expect } = chai
 chai.use(chaiAsPromised)
 const { unmangle } = require('../env/unmangle')
-const { Run } = require('../config')
+const { Run } = require('../env/config')
 const { BlockchainApi } = Run
 
 // ------------------------------------------------------------------------------------------------

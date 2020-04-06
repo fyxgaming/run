@@ -8,6 +8,10 @@ const path = require('path')
 const fs = require('fs')
 const os = require('os')
 
+// ------------------------------------------------------------------------------------------------
+// addUserKeysToEnvironment
+// ------------------------------------------------------------------------------------------------
+
 function addUserKeystoEnvironment () {
   // Use the user's ~/.keys.json if some settings are left unspecified
   const keysPath = path.join(os.homedir(), '.keys.json')
@@ -23,5 +27,7 @@ function addUserKeystoEnvironment () {
     }
   }
 }
+
+// ------------------------------------------------------------------------------------------------
 
 module.exports = addUserKeystoEnvironment

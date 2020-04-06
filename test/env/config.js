@@ -5,8 +5,8 @@
  */
 
 const path = require('path')
-const addUserKeystoEnvironment = require('./env/keys')
-const { setMangled, unmangle } = require('./env/unmangle')
+const addUserKeystoEnvironment = require('./keys')
+const { setMangled, unmangle } = require('./unmangle')
 
 addUserKeystoEnvironment()
 

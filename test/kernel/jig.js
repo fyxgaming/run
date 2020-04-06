@@ -10,8 +10,9 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { PrivateKey } = require('bsv')
-const { Run } = require('../config')
+const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
+const { hookPay } = require('../env/helpers')
 const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -2478,16 +2479,6 @@ function expectAction (target, method, args, inputs, outputs, reads) {
 
 function expectNoAction () {
   if (action) throw new Error('Unexpected transaction')
-}
-
-async function hookPay (run, ...enables) {
-  const syncer = unmangle(unmangle(run)._kernel)._syncer
-  enables = new Array(syncer.queued.length).fill(true).concat(enables)
-  const orig = run.purse.pay.bind(run.purse)
-  run.purse.pay = async (tx) => {
-    if (!enables.length) { return orig(tx) }
-    if (enables.shift()) { return orig(tx) } else { return tx }
-  }
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -20,12 +20,20 @@ const firefox = require('selenium-webdriver/firefox')
 const chrome = require('selenium-webdriver/chrome')
 const edge = require('selenium-webdriver/edge')
 
+// ------------------------------------------------------------------------------------------------
+// buildTests
+// ------------------------------------------------------------------------------------------------
+
 async function buildTests () {
   if (process.argv.length > 2) process.env.SPECS = JSON.stringify(process.argv.slice(2))
   process.env.MANGLED = 1
   const compiler = webpack(require('../../webpack.config'))
   return new Promise((resolve, reject) => compiler.run(e => e ? reject(e) : resolve()))
 }
+
+// ------------------------------------------------------------------------------------------------
+// runTests
+// ------------------------------------------------------------------------------------------------
 
 async function runTests () {
   const timeout = process.env.TIMEOUT || 5 * 60 * 1000
@@ -74,6 +82,10 @@ async function runTests () {
   process.exit(failures)
 }
 
+// ------------------------------------------------------------------------------------------------
+// Main
+// ------------------------------------------------------------------------------------------------
+
 function error (e) {
   console.error(e)
   process.exit(1)
@@ -81,3 +93,5 @@ function error (e) {
 
 const testing = typeof global.it !== 'undefined'
 if (!testing) buildTests().then(runTests).catch(error)
+
+// ------------------------------------------------------------------------------------------------

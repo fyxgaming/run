@@ -7,7 +7,7 @@
 const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
-const { Run } = require('../config')
+const { Run } = require('../env/config')
 const { Location, TokenSet, TokenMap } = Run
 
 // ------------------------------------------------------------------------------------------------

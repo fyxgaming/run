@@ -10,7 +10,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Run, PERF } = require('../config')
+const { Run, PERF } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const { Mockchain } = Run
 
