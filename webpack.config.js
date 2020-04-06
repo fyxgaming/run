@@ -66,11 +66,11 @@ const nameCache = JSON.parse(lastNameCacheJson)
 // Plugin to save the name cache if it differs from the last known name cache
 class SaveNameCache {
   apply (compiler) {
-    compiler.hooks.done.tap(SaveNameCache.name, async () => {
+    compiler.hooks.done.tap(SaveNameCache.name, () => {
       const newNameCacheJson = JSON.stringify(nameCache)
       if (newNameCacheJson !== lastNameCacheJson) {
         lastNameCacheJson = newNameCacheJson
-        await fs.writeFile(nameCachePath, newNameCacheJson)
+        fs.writeFileSync(nameCachePath, newNameCacheJson)
       }
     })
   }

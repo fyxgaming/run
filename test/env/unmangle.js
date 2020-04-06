@@ -12,7 +12,7 @@ try { mangledProps = require('../../dist/name-cache.json').props.props } catch (
 // ------------------------------------------------------------------------------------------------
 
 let mangled = false
-function setMangled(enable) { mangled = enable }
+function setMangled (enable) { mangled = enable }
 
 // ------------------------------------------------------------------------------------------------
 // unmangle
