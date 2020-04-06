@@ -10,6 +10,7 @@ require('./kernel/jig')
 require('./module/blockchain-api')
 require('./module/local-purse')
 require('./module/mockchain')
+require('./module/state-cache')
 
 require('./util/checkpoint')
 require('./util/datatypes')
