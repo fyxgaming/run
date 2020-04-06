@@ -563,13 +563,15 @@ describe('TokenJSON', () => {
   })
 
   describe('_findAllTokenRefsInTokenJson', () => {
-    function f () { }
-    let n = 1
-    const opts = { _replacer: TokenJSON._replace._tokens(token => n++) }
-    const x = [f, { f }, new Set([f])]
-    const json = TokenJSON._serialize(x, opts)
-    const refs = TokenJSON._findAllTokenRefsInTokenJson(json)
-    expect(Array.from(refs)).to.deep.equal([1, 2, 3])
+    it('should find serializables', () => {
+      function f () { }
+      let n = 1
+      const opts = { _replacer: TokenJSON._replace._tokens(token => n++) }
+      const x = [f, { f }, new Set([f])]
+      const json = TokenJSON._serialize(x, opts)
+      const refs = TokenJSON._findAllTokenRefsInTokenJson(json)
+      expect(Array.from(refs)).to.deep.equal([1, 2, 3])
+    })
   })
 })
 

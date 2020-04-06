@@ -68,8 +68,8 @@ describe('Jig', () => {
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
-    it.only('should create basic jig', async () => {
-      class A extends Jig { }
+    it('should create basic jig', async () => {
+      class A extends Run.Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
       expect(run.code.installs.has(A)).to.equal(true)

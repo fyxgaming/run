@@ -8,7 +8,8 @@
 // unmangle
 // ------------------------------------------------------------------------------------------------
 
-// Wraps an object to unmangle its properties for testing in minified builds
+const reserved = ['Jig', 'Berry', 'Token', 'expect']
+
 function unmangle (obj) {
   const nameCache = require('../../dist/name-cache.json')
   const mangledKey = (prop, target) => {
@@ -19,6 +20,8 @@ function unmangle (obj) {
 
   const handler = {
     get: (target, prop) => {
+      if (reserved.includes(prop)) return target[prop]
+
       // If we're getting a constructor, we can simply reproxy and return it here
       if (prop === 'constructor') return new Proxy(target.constructor, handler)
 
@@ -32,12 +35,12 @@ function unmangle (obj) {
       // Regular functions get bound to the target not the proxy for better reliability
       if (typeof val === 'function' && !val.prototype) return val.bind(target)
 
-      // Jigs don't need to be proxied and cause problems when they are
+      // Jig instances don't need to be proxied and cause problems when they are
       // "val instanceof Jig" causes problems. Checking class names is good enough for tests.
-      let type = val.constructor
-      while (type) {
-        if (type.name === 'Jig') return val
-        type = Object.getPrototypeOf(type)
+      let T = val.constructor
+      while (T) {
+        if (T.name === 'Jig') return val
+        T = Object.getPrototypeOf(T)
       }
 
       // Read-only non-confurable properties cannot be proxied
@@ -50,7 +53,7 @@ function unmangle (obj) {
       // Regular types also get reproxied
       if (typeof val === 'function') return new Proxy(val, handler)
 
-      // All other objects we return directly
+      // All other primitive types we return directly
       return val
     },
 
