@@ -8,7 +8,8 @@ const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const { Run } = require('../env/config')
-const { Location, TokenSet, TokenMap } = Run
+const { unmangle } = require('../env/unmangle')
+const { Location, TokenSet, TokenMap } = unmangle(Run)._util
 
 // ------------------------------------------------------------------------------------------------
 // A temporary token for testing
