@@ -32,7 +32,7 @@ Run.defaults.apiKey = APIKEY
 Run.defaults.purse = PURSE
 
 if (COVER) {
-  Run.sandbox.excludes = [Run.Jig, Run.Berry, Run.Token, Run.expect, Run.TokenSet, Run.TokenMap]
+  Run.sandbox.excludes = [Run.Jig, Run.Berry, Run.Token, Run.expect, util.TokenSet, util.TokenMap]
 }
 
 module.exports = { Run, PERF }
