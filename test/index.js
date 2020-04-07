@@ -7,6 +7,7 @@
 require('./extra/expect')
 require('./extra/token')
 
+require('./kernel/berry')
 require('./kernel/blockchain')
 require('./kernel/code')
 require('./kernel/jig')
