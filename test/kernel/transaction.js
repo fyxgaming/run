@@ -13,7 +13,7 @@ const { describe, it, beforeEach, afterEach } = require('mocha')
 const { Run } = require('../env/config')
 const { Jig } = Run
 const { unmangle } = require('../env/unmangle')
-const { _extractRunData, _encryptRunData, _decryptRunData, _bsvNetwork } = unmangle(Run)._util
+const { _extractRunData, _encryptRunData, _decryptRunData, _bsvNetwork } = unmangle(unmangle(Run)._util)
 
 // ------------------------------------------------------------------------------------------------
 // Transaction
