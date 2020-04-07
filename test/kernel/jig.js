@@ -1884,17 +1884,17 @@ describe('Jig', () => {
       expect(a2.n).to.equal(2)
     })
 
-    it.only('should support arguments with different instances of the same jig location', async () => {
+    it('should support arguments with different instances of the same jig location', async () => {
       class Num extends Jig { init (n) { this.n = n }}
-      const a = await new Num(1).sync()
-      expectAction(a, 'init', [1], [], [a], [])
+      const a = await new Num(10).sync()
+      expectAction(a, 'init', [10], [], [a], [])
       const a2 = await run.load(a.location)
       const a3 = await run.load(a.location)
       class Sum extends Jig { init (x, y) { this.n = x.n + y.n }}
       const sum = new Sum(a2, a3)
       expectAction(sum, 'init', [a2, a3], [], [sum], [a2, a3])
       await run.sync()
-      expect(sum.n).to.equal(2)
+      expect(sum.n).to.equal(20)
     })
 
     it('should throw if pass different locations of same jig as arguments', async () => {
