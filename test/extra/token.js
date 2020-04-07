@@ -1,7 +1,7 @@
 /**
  * token.js
  *
- * Tests for ../lib/token.js
+ * Tests for lib/extra/token.js
  */
 
 const bsv = require('bsv')

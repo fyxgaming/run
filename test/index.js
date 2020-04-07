@@ -4,6 +4,7 @@
  * Master list of test modules
  */
 
+require('./extra/expect')
 require('./extra/token')
 
 require('./kernel/blockchain')
