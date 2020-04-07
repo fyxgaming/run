@@ -44,6 +44,8 @@ if (!fs.existsSync('./dist/bsv.browser.min.js')) {
 const reservedNames = [
   // Jig and berry names and dependencies must be preserved
   'Jig', 'Berry', 'Context', 'JigControl', 'BerryControl',
+  // Token and expect built-in jigs must be preserved
+  'Token', 'expect',
   // TokenSet/TokenMap dependency names must be preserved
   'internal', 'uniqueKey', 'TokenMap'
 ]

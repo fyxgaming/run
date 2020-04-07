@@ -4,6 +4,8 @@
  * Master list of test modules
  */
 
+require('./extra/token')
+
 require('./kernel/blockchain')
 require('./kernel/code')
 require('./kernel/jig')

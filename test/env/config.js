@@ -8,6 +8,10 @@ const path = require('path')
 const addUserKeystoEnvironment = require('./keys')
 const { setMangled, unmangle } = require('./unmangle')
 
+// ------------------------------------------------------------------------------------------------
+// Load environment variables
+// ------------------------------------------------------------------------------------------------
+
 addUserKeystoEnvironment()
 
 const PERF = process.env.PERF ? JSON.parse(process.env.PERF) : false
@@ -19,9 +23,17 @@ const PURSE = process.env.PURSE ? process.env.PURSE : undefined
 const COVER = process.env.COVER ? process.env.COVER : false
 const MANGLED = process.env.MANGLED ? process.env.MANGLED : false
 
-setMangled(MANGLED)
+// ------------------------------------------------------------------------------------------------
+// Load Run
+// ------------------------------------------------------------------------------------------------
 
 const Run = process.env.LIB ? require(path.join(process.cwd(), process.env.LIB)) : require('target')
+
+// ------------------------------------------------------------------------------------------------
+// Configure Run
+// ------------------------------------------------------------------------------------------------
+
+setMangled(MANGLED)
 
 const util = unmangle(Run)._util
 
@@ -34,5 +46,7 @@ Run.defaults.purse = PURSE
 if (COVER) {
   Run.sandbox.excludes = [Run.Jig, Run.Berry, Run.Token, Run.expect, util.TokenSet, util.TokenMap]
 }
+
+// ------------------------------------------------------------------------------------------------
 
 module.exports = { Run, PERF, COVER }
