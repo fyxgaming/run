@@ -36,7 +36,7 @@
     "chai-as-promised": "^7.1.1",
     "glob": "^7.1.6",
     "mocha": "^7.1.0",
-    "nyc": "^15.0.0",
+    "nyc": "^15.0.1",
     "selenium-webdriver": "^4.0.0-alpha.7",
     "standard": "^14.3.3",
     "terser-webpack-plugin": "^2.3.5",
