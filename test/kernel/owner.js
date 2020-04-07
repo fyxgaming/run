@@ -42,7 +42,7 @@ describe('AddressScript', () => {
 
   it.skip('should deploy', async () => {
     await deploy(AddressScript)
-  }).timeout(30000)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ describe('PubKeyScript', () => {
 
   it.skip('should deploy', async () => {
     await deploy(PubKeyScript)
-  }).timeout(30000)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

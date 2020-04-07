@@ -96,7 +96,7 @@ if (PERF) {
       const end = measures.slice(measures.length - 3).reduce((a, b) => a + b, 0) / 3
       expect(start < 10).to.equal(true)
       expect(end < 10).to.equal(true)
-    }).timeout(30000)
+    })
 
     it('should support fast utxo queries', async () => {
       // Generate 10 private keys and fund their addresses
@@ -123,7 +123,7 @@ if (PERF) {
       const end = measures.slice(measures.length - 3).reduce((a, b) => a + b, 0) / 3
       expect(start < 10).to.equal(true)
       expect(end < 10).to.equal(true)
-    }).timeout(30000)
+    })
   })
 }
 

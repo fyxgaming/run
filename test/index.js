@@ -5,6 +5,7 @@
  */
 
 require('./kernel/blockchain')
+require('./kernel/code')
 require('./kernel/jig')
 require('./kernel/owner')
 require('./kernel/transaction')

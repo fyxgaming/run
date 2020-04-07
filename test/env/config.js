@@ -35,4 +35,4 @@ if (COVER) {
   Run.sandbox.excludes = [Run.Jig, Run.Berry, Run.Token, Run.expect, util.TokenSet, util.TokenMap]
 }
 
-module.exports = { Run, PERF }
+module.exports = { Run, PERF, COVER }

@@ -491,7 +491,7 @@ describe('Jig', () => {
       run2.blockchain.fetch = async () => undefined
       run2.blockchain.utxos = async () => []
       await expect(a.f().sync()).to.be.rejectedWith('Signature missing for A')
-    }).timeout(30000)
+    })
   })
 
   describe('arguments', () => {
@@ -1668,7 +1668,7 @@ describe('Jig', () => {
       class A extends Jig { }
       for (let i = 0; i < 100; i++) { new A() } // eslint-disable-line
       await run.sync()
-    }).timeout(10000)
+    })
 
     it.skip('should support long mempool chain for jig', async () => {
       class A extends Jig { set (n) { this.n = n } }
