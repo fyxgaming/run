@@ -39,7 +39,8 @@ function serializePass (x, y, opts = defaultOpts) {
   const jsonString = JSON.stringify(serialized)
   const json = JSON.parse(jsonString)
   expect(json).to.deep.equal(y)
-  expect(_deserialize(json, opts)).to.deep.equal(x)
+  const deserialized = _deserialize(json, opts)
+  expect(deserialized).to.deep.equal(x)
 }
 
 const serializeFail = (x, opts = defaultOpts) => expect(() => _serialize(x, opts)).to.throw('Cannot serialize')
