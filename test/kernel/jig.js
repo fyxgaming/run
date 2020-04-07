@@ -1884,7 +1884,7 @@ describe('Jig', () => {
       expect(a2.n).to.equal(2)
     })
 
-    it('should support arguments with different instances of the same jig location', async () => {
+    it.only('should support arguments with different instances of the same jig location', async () => {
       class Num extends Jig { init (n) { this.n = n }}
       const a = await new Num(1).sync()
       expectAction(a, 'init', [1], [], [a], [])
