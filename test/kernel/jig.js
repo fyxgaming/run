@@ -2186,8 +2186,8 @@ describe('Jig', () => {
   describe('caller', () => {
     it('should be null when called externally', async () => {
       class A extends Jig {
-        init () { expect(Jig.caller).toBeNull() }
-        f () { expect(Jig.caller).toBeNull() }
+        init () { expect(caller).toBeNull() }
+        f () { expect(caller).toBeNull() }
       }
       A.deps = { expect: Run.expect }
       const a = new A()
@@ -2196,14 +2196,14 @@ describe('Jig', () => {
       await run.load(a.location)
     })
 
-    it('should be calling jig when called internally', async () => {
+    it('should be the calling jig when called from another jig', async () => {
       class Parent extends Jig {
         init () { this.child = new Child(this) }
         f () { this.self = this.child.f(this) }
       }
       class Child extends Jig {
-        init (parent) { expect(Jig.caller).toBe(parent) }
-        f (parent) { expect(Jig.caller).toBe(parent); return parent }
+        init (parent) { expect(caller).toBe(parent) }
+        f (parent) { expect(caller).toBe(parent); return parent }
       }
       Parent.deps = { Child }
       Child.deps = { expect: Run.expect }
@@ -2217,7 +2217,7 @@ describe('Jig', () => {
     it('should support caller being this', async () => {
       class A extends Jig {
         init () { this.f() }
-        f () { this.caller = Jig.caller }
+        f () { this.caller = caller }
       }
       const a = await new A().sync()
       expect(a.caller).to.equal(a)
@@ -2225,30 +2225,12 @@ describe('Jig', () => {
       expect(a2.caller).to.equal(a2)
     })
 
-    it('should be accessible as static on both extended and base class', async () => {
-      class A extends Jig {
-        expectCaller (caller) {
-          expect(Jig.caller).toBe(caller)
-          expect(A.caller).toBe(caller)
-        }
-      }
-      A.deps = { expect: Run.expect }
-      class B extends Jig {
-        init (a) { a.expectCaller(this) }
-      }
-      const a = new A()
-      a.expectCaller(null)
-      const b = new B(a)
-      await run.sync()
-      await run.load(b.location)
-    })
-
     it('should support calling a method on the caller', async () => {
       class A extends Jig {
         set (n) { this.n = n }
         apply (b) { b.apply() }
       }
-      class B extends Jig { apply () { Jig.caller.set(1) } }
+      class B extends Jig { apply () { caller.set(1) } }
       const a = new A()
       const b = new B()
       a.apply(b)
@@ -2256,22 +2238,6 @@ describe('Jig', () => {
       await run.sync()
       const a2 = await run.load(a.location)
       expect(a2.n).to.equal(1)
-    })
-
-    it('should support static getter called caller', () => {
-      class A extends Jig {
-        static get caller () { return 1 }
-      }
-      expect(Jig.caller).to.equal(null)
-      expect(A.caller).to.equal(1)
-      const a = new A()
-      expect(a.constructor.caller).to.equal(1)
-    })
-
-    it('should throw if set caller', () => {
-      class A extends Jig { init () { A.caller = 1 } }
-      expect(() => { A.caller = 1 }).to.throw('Must not set caller on Jig')
-      expect(() => new A()).to.throw('Must not set caller on Jig')
     })
 
     it('should allow local variables named caller', async () => {
@@ -2290,6 +2256,11 @@ describe('Jig', () => {
       expect(a.n).to.equal(2)
       const a2 = await run.load(a.location)
       expect(a2.n).to.equal(2)
+    })
+
+    it('should throw if set caller', () => {
+      class A extends Jig { init () { caller = 1 } } // eslint-disable-line
+      expect(() => new A()).to.throw('Must not set caller')
     })
   })
 

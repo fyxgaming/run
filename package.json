@@ -32,10 +32,13 @@
     "timeout": 30000
   },
   "standard": {
+    "globals": [
+      "caller"
+    ],
     "ignore": [
-        "examples/**"
+      "examples/**"
     ]
-},
+  },
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
