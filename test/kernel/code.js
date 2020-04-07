@@ -17,10 +17,6 @@ const { Jig } = Run
 // Code tests
 // ------------------------------------------------------------------------------------------------
 
-// These are set in 'should deploy to testnet' and used in 'should load from testnet'.
-let deployedCodeLocation = null
-let deployedCodeOwner = null
-
 describe('Code', () => {
   const run = new Run()
   beforeEach(() => run.activate())
@@ -252,45 +248,6 @@ describe('Code', () => {
       expect(B.locationMocknet).to.equal(undefined)
     })
 
-    it('should deploy to testnet', async () => {
-      const run = new Run({ network: 'test' })
-      class C { g () { return 1 } }
-      class B { }
-      class A extends B {
-        f () { return 1 }
-
-        createC () { return new C() }
-      }
-      A.deps = { B, C }
-      await run.deploy(A)
-      expect(A.origin.split('_')[0].length).to.equal(64)
-      expect(B.origin.split('_')[0].length).to.equal(64)
-      expect(C.origin.split('_')[0].length).to.equal(64)
-      expect(A.originTestnet.split('_')[0].length).to.equal(64)
-      expect(B.originTestnet.split('_')[0].length).to.equal(64)
-      expect(C.originTestnet.split('_')[0].length).to.equal(64)
-      expect(A.origin.endsWith('_o2')).to.equal(true)
-      expect(B.origin.endsWith('_o1')).to.equal(true)
-      expect(C.origin.endsWith('_o3')).to.equal(true)
-      expect(A.originTestnet.endsWith('_o2')).to.equal(true)
-      expect(B.originTestnet.endsWith('_o1')).to.equal(true)
-      expect(C.originTestnet.endsWith('_o3')).to.equal(true)
-      expect(A.location.split('_')[0].length).to.equal(64)
-      expect(B.location.split('_')[0].length).to.equal(64)
-      expect(C.location.split('_')[0].length).to.equal(64)
-      expect(A.locationTestnet.split('_')[0].length).to.equal(64)
-      expect(B.locationTestnet.split('_')[0].length).to.equal(64)
-      expect(C.locationTestnet.split('_')[0].length).to.equal(64)
-      expect(A.location.endsWith('_o2')).to.equal(true)
-      expect(B.location.endsWith('_o1')).to.equal(true)
-      expect(C.location.endsWith('_o3')).to.equal(true)
-      expect(A.locationTestnet.endsWith('_o2')).to.equal(true)
-      expect(B.locationTestnet.endsWith('_o1')).to.equal(true)
-      expect(C.locationTestnet.endsWith('_o3')).to.equal(true)
-      deployedCodeLocation = A.originTestnet
-      deployedCodeOwner = A.ownerTestnet
-    })
-
     it('should support presets', async () => {
       const run = new Run({ network: 'test' })
       class A { }
@@ -359,19 +316,6 @@ describe('Code', () => {
       expect(A2.owner).to.equal(run.owner.address)
       expect(A2.owner).to.equal(A2.ownerMocknet)
       expect(A3.owner).to.equal(A2.owner)
-    })
-
-    it('should load from testnet', async () => {
-      const run = new Run({ network: 'test' })
-      const A = await run.load(deployedCodeLocation)
-      expect(A.origin).to.equal(deployedCodeLocation)
-      expect(A.location).to.equal(deployedCodeLocation)
-      expect(A.originTestnet).to.equal(deployedCodeLocation)
-      expect(A.locationTestnet).to.equal(deployedCodeLocation)
-      expect(A.owner).to.equal(deployedCodeOwner)
-      expect(A.ownerTestnet).to.equal(deployedCodeOwner)
-      expect(new A().f()).to.equal(1)
-      expect(new A().createC().g()).to.equal(1)
     })
 
     it('should throw if load temporary location', async () => {
