@@ -151,7 +151,7 @@ describe('Transaction', () => {
       await run.transaction.import(tx)
       expect(run.transaction.actions.length).to.equal(1)
       const a = run.transaction.actions[0].target
-      expect(() => a.origin).to.throw('sync required before reading origin')
+      expect(() => a.origin).to.throw('sync() required before reading origin')
       a.set(1)
       expect(run.transaction.actions.length).to.equal(2)
       const tx2 = run.transaction.export()

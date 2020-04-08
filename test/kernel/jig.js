@@ -495,42 +495,74 @@ describe('Jig', () => {
   })
 
   describe('arguments', () => {
-    it('should support serializable arguments', () => {
+    async function testArgumentPass (...args) {
       class A extends Jig { f (...args) { this.args = args } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      a.f(1)
-      expectAction(a, 'f', [1], [a], [a], [])
-      a.f(1, 'a', true)
-      expectAction(a, 'f', [1, 'a', true], [a], [a], [])
-      a.f({ n: 1 }, [1, 2, 3])
-      expectAction(a, 'f', [{ n: 1 }, [1, 2, 3]], [a], [a], [])
-      a.f({ a: { b: {} } }, { a: [1, 2, 3] })
-      expectAction(a, 'f', [{ a: { b: {} } }, { a: [1, 2, 3] }], [a], [a], [])
-      a.f(a, [a], { a })
-      expectAction(a, 'f', [a, [a], { a }], [a], [a], [])
-      a.f(new Set())
-      expectAction(a, 'f', [new Set()], [a], [a], [])
-      a.f(new Map())
-      expectAction(a, 'f', [new Map()], [a], [a], [])
-      const g = () => {}
-      a.f(g)
-      expectAction(a, 'f', [g], [a], [a], [])
-      const blob = new (class Blob {})()
-      a.f(blob)
-      expectAction(a, 'f', [blob], [a], [a], [])
-      a.f(NaN)
-      expectAction(a, 'f', [NaN], [a], [a], [])
-      a.f(Infinity)
-      expectAction(a, 'f', [Infinity], [a], [a], [])
-    })
+      a.f(...args)
+      expectAction(a, 'f', args, [a], [a], [])
+      await a.sync()
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      await run2.load(a.location)
+      // TODO: Re-enable. Right now, proxy objects are always different. Infinite loop.
+      // const a2 = ...
+      // expect(a2.args).to.deep.equal(args)
+    }
 
-    it('should throw if arguments not serializable', () => {
+    it('should pass nothing', () => testArgumentPass())
+    it('should pass positive zero', () => testArgumentPass(0))
+    it('should pass negative zero', () => testArgumentPass(-0))
+    it('should pass integer', () => testArgumentPass(1))
+    it('should pass negative float', () => testArgumentPass(-1.5))
+    it('should pass min integer', () => testArgumentPass(Number.MIN_SAFE_INTEGER))
+    it('should pass max value', () => testArgumentPass(Number.MAX_VALUE))
+    it('should pass NaN', () => testArgumentPass(NaN))
+    it('should pass Infinity', () => testArgumentPass(Infinity))
+    it('should pass true', () => testArgumentPass(true))
+    it('should pass false', () => testArgumentPass(false))
+    it('should pass empty string', () => testArgumentPass(''))
+    it('should pass normal strings', () => testArgumentPass('abc'))
+    it('should pass multiple', () => testArgumentPass(1, true, 'a', [], {}, new Set(), new Map()))
+    it('should pass objects', () => testArgumentPass({ n: 1, m: [], k: { l: new Set([1]) } }))
+    it('should pass set', () => testArgumentPass(new Set(['a', {}, null])))
+    it('should pass map', () => testArgumentPass(new Map([[0, 0]])))
+    const o = { }
+    o.o = o
+    it('should pass circular reference', () => testArgumentPass(o))
+    it('should pass arbitrary object', () => testArgumentPass(new (class Blob {})()))
+    it('should pass class', () => testArgumentPass(class Dragon extends Jig { }))
+    it('should pass anonymous function', () => testArgumentPass(() => {}))
+    it('should pass jig', () => testArgumentPass(new (class A extends Jig {})))
+
+    function testArgumentFail(...args) {
       class A extends Jig { f (...args) { this.args = args } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
       expect(() => a.f(Symbol.hasInstance)).to.throw('Cannot serialize Symbol(Symbol.hasInstance)')
-      expectNoAction()
+    }
+
+    it('should throw if pass symbol', () => testArgumentFail(Symbol.hasInstance))
+    it('should throw if pass built-in intrinsic', () => testArgumentFail(Math))
+    it('should throw if pass date', () => testArgumentFail(new Date()))
+
+    it('should dedup tokens passed in set', async () => {
+      class A extends Jig { f (...args) { this.args = args } }
+      const b1 = new A()
+      await run.sync()
+      const b2 = await run.load(b1.location)
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      const set = new Set([b1, b2])
+      expect(set.size).to.equal(2)
+      a.f(set)
+      expectAction(a, 'f', [set], [a], [a], [b1, b2])
+      expect(a.args[0].size).to.equal(1)
+      await a.sync()
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      const a2 = await run2.load(a.location)
+      expect(a2.args[0].size).to.equal(1)
     })
 
     it('should support changing args in method', () => {
@@ -900,14 +932,13 @@ describe('Jig', () => {
 
         getBuf () { return this.buf }
       }
-      const sandboxIntrinsics = unmangle(unmangle(Run.sandbox)._instance)._intrinsics
       const a = new A()
       function testBuf (buf) {
         expect(buf.length).to.equal(3)
         expect(buf[0]).to.equal(1)
         expect(buf[1]).to.equal(2)
         expect(buf[2]).to.equal(3)
-        expect(buf.constructor === sandboxIntrinsics.Uint8Array).to.equal(true)
+        expect(buf.constructor === Uint8Array).to.equal(true)
       }
       testBuf(a.buf)
       testBuf(a.buf2)
@@ -1705,8 +1736,8 @@ describe('Jig', () => {
       class A extends Jig { f () { this.origin2 = this.origin }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.origin).to.throw('sync required before reading origin')
-      expect(() => a.f()).to.throw('sync required before reading origin')
+      expect(() => a.origin).to.throw('sync() required before reading origin')
+      expect(() => a.f()).to.throw('sync() required before reading origin')
       await a.sync()
       expect(() => a.origin).not.to.throw()
       expect(() => a.f()).not.to.throw()
@@ -1753,7 +1784,7 @@ describe('Jig', () => {
       class A extends Jig {}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.location).to.throw('sync required before reading location')
+      expect(() => a.location).to.throw('sync() required before reading location')
       await a.sync()
       expect(() => a.location).not.to.throw()
     })
@@ -1766,7 +1797,7 @@ describe('Jig', () => {
       a.f()
       expectAction(a, 'f', [], [a], [a], [a])
       expect(a.location2).to.equal(a.origin)
-      expect(() => a.f()).to.throw('sync required before reading location')
+      expect(() => a.f()).to.throw('sync() required before reading location')
       expectNoAction()
       await a.sync()
       const secondLocation = a.location

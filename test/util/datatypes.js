@@ -54,7 +54,7 @@ describe('TokenMap', () => {
     })
 
     it('should create map from map', () => {
-      const arr = [[1, 2], ['a', 'b']]
+      const arr = [[null, null]]
       const map = new TokenMap(arr)
       const map2 = new TokenMap(map)
       expect(map2.size).to.equal(arr.length)
@@ -316,7 +316,7 @@ describe('TokenSet', () => {
     })
 
     it('should create set from array', () => {
-      const arr = [1, 2, 3]
+      const arr = [null]
       const set = new TokenSet(arr)
       expect(set.size).to.equal(arr.length)
       arr.forEach(x => expect(set.has(x)).to.equal(true))
