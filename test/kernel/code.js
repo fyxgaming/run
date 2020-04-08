@@ -384,7 +384,7 @@ describe('Code', () => {
     })
   })
 
-  describe('static props', () => {
+  describe.only('static props', () => {
     it('should support circular props', async () => {
       class A extends Jig { }
       class B extends Jig { }
@@ -399,45 +399,24 @@ describe('Code', () => {
       expect(B2.A).to.equal(A2)
     })
 
-    it('should correctly deploy then load static properties', async () => {
-      // TODO: Arbitrary code, circular, move out
-      class B { }
-      class A extends B { }
-      class J extends Jig {}
-      class K extends Jig {}
-      class C { }
-      A.deps = { C }
-      A.j = new J()
-      A.k = [new K()]
-      A.F = { R: class R { } }
-      A.Self = A
-      await run.deploy(A)
-      expect(A.F.R.origin.length > 66 && A.F.R.location.length > 66).to.equal(true)
-      const run2 = new Run()
-      const checkAllProperties = async T => {
-        expect(T.j.origin).to.equal(A.j.origin)
-        expect(T.j.location).to.equal(A.j.location)
-        expect(T.k[0].origin).to.equal(A.k[0].origin)
-        expect(T.k[0].location).to.equal(A.k[0].location)
-        const R2 = await run2.load(A.F.R.origin)
-        expect(T.F.R).to.equal(R2)
-        const C2 = await run2.load(C.origin)
-        expect(T.deps).to.deep.equal({ C: C2 })
-        expect(T.Self).to.equal(T)
-      }
-      await checkAllProperties(await run2.load(A.origin))
-    })
-
     async function testStaticPropPass (x) {
-      function b () { }
-      b.x = x
-      const b2 = await run.load(await run.deploy(b))
-      if (_tokenType(x)) {
-        expect(b2.x.origin).to.equal(x.origin)
-        expect(b2.x.location).to.equal(x.location)
-      } else {
-        expect(b2.x).to.deep.equal(x)
-      }
+      // Test with a child class and various properties to ensure variation
+      class A { }
+      class B extends A { }
+      B.x = x
+      B.y = [x]
+      B.s = new Set()
+      B.s.x = x
+      const B2 = await run.load(await run.deploy(B))
+      const props = [B2.x, B2.y[0], B2.s.x]
+      props.forEach(y => {
+        if (_tokenType(y)) {
+          expect(y.origin).to.equal(x.origin)
+          expect(y.location).to.equal(x.location)
+        } else {
+          expect(y).to.deep.equal(x)
+        }
+      })
     }
 
     it('should support static prop that is zero', () => testStaticPropPass(0))
@@ -454,21 +433,16 @@ describe('Code', () => {
     it('should support static prop that is class', () => testStaticPropPass(class A { }))
     it('should support static prop that is anonymous class', () => testStaticPropPass(class { }))
     it('should support static prop that is anonymous function', () => testStaticPropPass(function () { }))
+    it('should support static prop that is a jig', () => testStaticPropPass(new (class A extends Jig {})()))
 
-    it('should dedup set and map keys in static props', async () => {
-      class A extends Jig { }
-      const a1 = new A()
-      await run.sync()
-      const a2 = await run.load(a1.location)
-      function b () { }
-      b.set = new Set([a1, a2, null])
-      b.map = new Map([[a1, 0], [a2, 1]])
-      const b2 = await run.load(await run.deploy(b))
-      expect(b2.set.size).to.equal(2)
-      expect(b2.map.size).to.equal(1)
+    it('should support static prop that is self-reference', async () => {
+      class A { }
+      A.A = A
+      const A2 = await run.load(await run.deploy(A))
+      expect(A2.A).to.equal(A2)
     })
 
-    it('should support static props', async () => {
+    it('should dedup set and map keys in static props', async () => {
       class A extends Jig { }
       const a1 = new A()
       await run.sync()
