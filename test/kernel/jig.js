@@ -533,9 +533,9 @@ describe('Jig', () => {
     it('should pass arbitrary object', () => testArgumentPass(new (class Blob {})()))
     it('should pass class', () => testArgumentPass(class Dragon extends Jig { }))
     it('should pass anonymous function', () => testArgumentPass(() => {}))
-    it('should pass jig', () => testArgumentPass(new (class A extends Jig {})))
+    it('should pass jig', () => testArgumentPass(new (class A extends Jig {})()))
 
-    function testArgumentFail(...args) {
+    function testArgumentFail (...args) {
       class A extends Jig { f (...args) { this.args = args } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])

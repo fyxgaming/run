@@ -399,7 +399,7 @@ describe('Code', () => {
     })
 
     it('should correctly deploy then load static properties', async () => {
-      // TODO: Arbitrary code, support, maps, sets, circular, anonymous class
+      // TODO: Arbitrary code, support, circular, anonymous class
       class B { }
       class A extends B { }
       class J extends Jig {}
@@ -455,6 +455,19 @@ describe('Code', () => {
         // expect(T.anonymousLambda).to.equal(await run2.load(A.anonymousLambda.origin))
       }
       await checkAllProperties(await run2.load(A.origin))
+    })
+
+    it('should dedup set and map keys in static props', async () => {
+      class A extends Jig { }
+      const a1 = new A()
+      await run.sync()
+      const a2 = await run.load(a1.location)
+      function b () { }
+      b.set = new Set([a1, a2, null])
+      b.map = new Map([[a1, 0], [a2, 1]])
+      const b2 = await run.load(await run.deploy(b))
+      expect(b2.set.size).to.equal(2)
+      expect(b2.map.size).to.equal(1)
     })
 
     it('should throw for bad deps', async () => {
