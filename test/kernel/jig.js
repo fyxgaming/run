@@ -508,6 +508,33 @@ describe('Jig', () => {
       expect(a.returnMap().constructor).to.equal(Map)
       expect(a.returnUint8Array().constructor).to.equal(Uint8Array)
     })
+
+    it.skip('should throw if async', async () => {
+      class A extends Jig {
+        async f () {}
+        g () { return new Promise((resolve, reject) => { }) }
+      }
+      const a = new A()
+      expect(() => a.f()).to.throw('123')
+      expect(() => a.g()).to.throw('123')
+    })
+
+    it.skip('should not be able to modify return values', async () => {
+      class A extends Jig {
+        f () {
+          const x = { }
+          this.x = x
+          return x
+        }
+      }
+      const a = new A()
+      expect(() => { a.f().n = 1 }).to.throw('123')
+      class B extends Jig {
+        f (a) { a.f().n = 1 }
+      }
+      const b = new B()
+      expect(() => b.f(a)).to.throw('123')
+    })
   })
 
   describe('arguments', () => {
@@ -1059,6 +1086,17 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       a.set(1)
       expectNoAction()
+    })
+
+    it('should support setting zero-length properties', async () => {
+      class A extends Jig {
+        init () { this[''] = 1 }
+      }
+      const a = new A()
+      await a.sync()
+      expect(a['']).to.equal(1)
+      const a2 = await run.load(a.location)
+      expect(a2['']).to.equal(1)
     })
   })
 

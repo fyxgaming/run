@@ -333,6 +333,7 @@ describe('TokenJSON', () => {
       serializeFail(new Date())
       serializeFail(new WeakSet())
       serializeFail(new WeakMap())
+      serializeFail(new Promise((resolve, reject) => {}))
       serializeFail(new RegExp())
       serializeFail(/^abc/)
       serializeFail(new Error())
