@@ -8,12 +8,14 @@ const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
+const { Jig } = Run
 const { AddressScript, PubKeyScript } = Run
 const { unmangle } = require('../env/unmangle')
 const {
   _bsvNetwork,
   _deployable,
   _display,
+  _tokenType,
   _sourceCode,
   _deepTraverseObjects,
   _checkSatoshis,
@@ -71,7 +73,16 @@ describe('_deployable', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('_tokenType', () => {
-  // TODO: add tests
+  const test = (x, type) => expect(_tokenType(x)).to.equal(type)
+  it('should return jig for jigs', () => test(new (class A extends Jig {})(), 'jig'))
+  it('should return code for class', () => test(class A extends Jig {}, 'code'))
+  it('should return code for function', () => test(function f () {}, 'code'))
+  it('should return code for anonymous function', () => test(x => x, 'code'))
+  it('should return undefined for null', () => test(null, undefined))
+  it('should return undefined for number', () => test(0, undefined))
+  it('should return undefined for string', () => test('abc', undefined))
+  it('should return undefined for object', () => test({}, undefined))
+  it('should return undefined for undefined', () => test({}, undefined))
 })
 
 // ------------------------------------------------------------------------------------------------

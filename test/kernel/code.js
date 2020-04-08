@@ -13,6 +13,7 @@ const { Run, COVER } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const { hookPay } = require('../env/helpers')
 const { Jig } = Run
+const { _tokenType } = unmangle(unmangle(Run)._util)
 
 // ------------------------------------------------------------------------------------------------
 // Code tests
@@ -399,65 +400,75 @@ describe('Code', () => {
     })
 
     it('should correctly deploy then load static properties', async () => {
-      // TODO: Arbitrary code, support, circular, anonymous class
+      // TODO: Arbitrary code, circular, move out
       class B { }
       class A extends B { }
       class J extends Jig {}
       class K extends Jig {}
       class C { }
       A.deps = { C }
-      A.n = 1
-      A.s = 'a'
-      A.a = [1, 2, 3]
-      A.b = true
-      A.x = null
-      A.o = { m: 1, n: '2' }
       A.j = new J()
       A.k = [new K()]
-      class D { }
-      A.D = D
-      A.E = class E { }
       A.F = { R: class R { } }
       A.Self = A
-      A.G = function g () { return 1 }
-      // A.anonymousClass = class {}
-      // A.anonymousFunction = function () {}
-      // A.anonymousLambda = () => {}
       await run.deploy(A)
-      expect(D.origin.length > 66 && D.location.length > 66).to.equal(true)
-      expect(A.E.origin.length > 66 && A.E.location.length > 66).to.equal(true)
       expect(A.F.R.origin.length > 66 && A.F.R.location.length > 66).to.equal(true)
       const run2 = new Run()
       const checkAllProperties = async T => {
-        expect(T.n).to.equal(A.n)
-        expect(T.s).to.equal(A.s)
-        expect(T.a).to.deep.equal(A.a)
-        expect(T.b).to.equal(A.b)
-        expect(T.x).to.equal(A.x)
-        expect(T.o).to.deep.equal(A.o)
         expect(T.j.origin).to.equal(A.j.origin)
         expect(T.j.location).to.equal(A.j.location)
         expect(T.k[0].origin).to.equal(A.k[0].origin)
         expect(T.k[0].location).to.equal(A.k[0].location)
-        const D2 = await run2.load(A.D.origin)
-        expect(T.D).to.equal(D2)
-        const E2 = await run2.load(A.E.origin)
-        expect(T.E).to.equal(E2)
         const R2 = await run2.load(A.F.R.origin)
         expect(T.F.R).to.equal(R2)
         const C2 = await run2.load(C.origin)
         expect(T.deps).to.deep.equal({ C: C2 })
         expect(T.Self).to.equal(T)
-        const G2 = await run2.load(A.G.origin)
-        expect(T.G).to.equal(G2)
-        // expect(T.anonymousClass).to.equal(await run2.load(A.anonymousClass.origin))
-        // expect(T.anonymousFunction).to.equal(await run2.load(A.anonymousFunction.origin))
-        // expect(T.anonymousLambda).to.equal(await run2.load(A.anonymousLambda.origin))
       }
       await checkAllProperties(await run2.load(A.origin))
     })
 
+    async function testStaticPropPass (x) {
+      function b () { }
+      b.x = x
+      const b2 = await run.load(await run.deploy(b))
+      if (_tokenType(x)) {
+        expect(b2.x.origin).to.equal(x.origin)
+        expect(b2.x.location).to.equal(x.location)
+      } else {
+        expect(b2.x).to.deep.equal(x)
+      }
+    }
+
+    it('should support static prop that is zero', () => testStaticPropPass(0))
+    it('should support static prop that is negative number', () => testStaticPropPass(-1))
+    it('should support static prop that is max integer', () => testStaticPropPass(Number.MAX_SAFE_INTEGER))
+    it('should support static prop that is true', () => testStaticPropPass(true))
+    it('should support static prop that is false', () => testStaticPropPass(false))
+    it('should support static prop that is null', () => testStaticPropPass(null))
+    it('should support static prop that is empty string', () => testStaticPropPass(''))
+    it('should support static prop that is emoji string', () => testStaticPropPass('😊'))
+    it('should support static prop that is object', () => testStaticPropPass({ m: 1, n: 2, o: [] }))
+    it('should support static prop that is array', () => testStaticPropPass([1, 2, 3]))
+    it('should support static prop that is buffer', () => testStaticPropPass(new Uint8Array([0, 1, 2])))
+    it('should support static prop that is class', () => testStaticPropPass(class A { }))
+    it('should support static prop that is anonymous class', () => testStaticPropPass(class { }))
+    it('should support static prop that is anonymous function', () => testStaticPropPass(function () { }))
+
     it('should dedup set and map keys in static props', async () => {
+      class A extends Jig { }
+      const a1 = new A()
+      await run.sync()
+      const a2 = await run.load(a1.location)
+      function b () { }
+      b.set = new Set([a1, a2, null])
+      b.map = new Map([[a1, 0], [a2, 1]])
+      const b2 = await run.load(await run.deploy(b))
+      expect(b2.set.size).to.equal(2)
+      expect(b2.map.size).to.equal(1)
+    })
+
+    it('should support static props', async () => {
       class A extends Jig { }
       const a1 = new A()
       await run.sync()
