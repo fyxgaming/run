@@ -492,6 +492,22 @@ describe('Jig', () => {
       run2.blockchain.utxos = async () => []
       await expect(a.f().sync()).to.be.rejectedWith('Signature missing for A')
     })
+
+    it('should return host intrinsics', () => {
+      class A extends Jig {
+        returnObject () { return {} }
+        returnArray () { return [] }
+        returnSet () { return new Set() }
+        returnMap () { return new Map() }
+        returnUint8Array () { return new Uint8Array() }
+      }
+      const a = new A()
+      expect(a.returnObject().constructor).to.equal(Object)
+      expect(a.returnArray().constructor).to.equal(Array)
+      expect(a.returnSet().constructor).to.equal(Set)
+      expect(a.returnMap().constructor).to.equal(Map)
+      expect(a.returnUint8Array().constructor).to.equal(Uint8Array)
+    })
   })
 
   describe('arguments', () => {
