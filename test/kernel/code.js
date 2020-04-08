@@ -384,21 +384,7 @@ describe('Code', () => {
     })
   })
 
-  describe.only('static props', () => {
-    it('should support circular props', async () => {
-      class A extends Jig { }
-      class B extends Jig { }
-      A.B = B
-      B.A = A
-      await run.deploy(A)
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      const A2 = await run2.load(A.location)
-      const B2 = await run2.load(B.location)
-      expect(A2.B).to.equal(B2)
-      expect(B2.A).to.equal(A2)
-    })
-
+  describe('static props', () => {
     async function testStaticPropPass (x) {
       // Test with a child class and various properties to ensure variation
       class A { }
@@ -455,6 +441,20 @@ describe('Code', () => {
       expect(b2.map.size).to.equal(1)
     })
 
+    it('should support circular props', async () => {
+      class A extends Jig { }
+      class B extends Jig { }
+      A.B = B
+      B.A = A
+      await run.deploy(A)
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      const A2 = await run2.load(A.location)
+      const B2 = await run2.load(B.location)
+      expect(A2.B).to.equal(B2)
+      expect(B2.A).to.equal(A2)
+    })
+
     it('should throw for bad deps', async () => {
       class B { }
       class A extends Jig { }
@@ -477,17 +477,16 @@ describe('Code', () => {
       }
     })
 
-    it('should throw if unpackable', async () => {
+    async function testStaticPropFail (x) {
       class A { }
-      A.date = new Date()
+      A.x = x
       await expect(run.deploy(A)).to.be.rejectedWith('A static property of A is not supported')
-      class B { }
-      B.Math = Math
-      await expect(run.deploy(B)).to.be.rejectedWith('A static property of B is not supported')
-      class C { }
-      C.weakSet = new WeakSet()
-      await expect(run.deploy(C)).to.be.rejectedWith('A static property of C is not supported')
-    })
+    }
+
+    it('should throw for static prop that is a Date', () => testStaticPropFail(new Date()))
+    it('should throw for static prop that is the Math intrinsic', () => testStaticPropFail(Math))
+    it('should throw for static prop that is a WeakSet', () => testStaticPropFail(new WeakSet()))
+    it('should throw for static prop that is a Int32Array', () => testStaticPropFail(new Int32Array()))
   })
 
   describe('sandbox', () => {
