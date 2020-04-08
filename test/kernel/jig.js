@@ -493,7 +493,7 @@ describe('Jig', () => {
       await expect(a.f().sync()).to.be.rejectedWith('Signature missing for A')
     })
 
-    it('should return host intrinsics', () => {
+    it('should return host intrinsics to user', () => {
       class A extends Jig {
         returnObject () { return {} }
         returnArray () { return [] }
@@ -654,6 +654,24 @@ describe('Jig', () => {
       await run.sync()
       const b2 = await run.load(b.location)
       expect(b2.n).to.equal(2)
+    })
+
+    it('should get host intrinsics to user', () => {
+      class A extends Jig {
+        init () {
+          this.object = {}
+          this.array = []
+          this.set = new Set()
+          this.map = new Map()
+          this.buffer = new Uint8Array()
+        }
+      }
+      const a = new A()
+      expect(a.object.constructor).to.equal(Object)
+      expect(a.array.constructor).to.equal(Array)
+      expect(a.set.constructor).to.equal(Set)
+      expect(a.map.constructor).to.equal(Map)
+      expect(a.buffer.constructor).to.equal(Uint8Array)
     })
   })
 
