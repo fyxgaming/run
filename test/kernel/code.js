@@ -408,6 +408,8 @@ describe('Code', () => {
     it('should support static prop that is zero', () => testStaticPropPass(0))
     it('should support static prop that is negative number', () => testStaticPropPass(-1))
     it('should support static prop that is max integer', () => testStaticPropPass(Number.MAX_SAFE_INTEGER))
+    it('should support static prop that is NaN', () => testStaticPropPass(NaN))
+    it('should support static prop that is negative infinity', () => testStaticPropPass(-Infinity))
     it('should support static prop that is true', () => testStaticPropPass(true))
     it('should support static prop that is false', () => testStaticPropPass(false))
     it('should support static prop that is null', () => testStaticPropPass(null))
@@ -420,6 +422,8 @@ describe('Code', () => {
     it('should support static prop that is anonymous class', () => testStaticPropPass(class { }))
     it('should support static prop that is anonymous function', () => testStaticPropPass(function () { }))
     it('should support static prop that is a jig', () => testStaticPropPass(new (class A extends Jig {})()))
+    it('should support static prop that is a arbitrary object', () =>
+      testStaticPropPass(new (class A { constructor () { this.n = 1 }})()))
 
     it('should support static prop that is self-reference', async () => {
       class A { }
