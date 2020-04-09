@@ -19,7 +19,7 @@ const { hookPay, deploy } = require('../env/helpers')
 it.only('test', async () => {
   class Dragon extends Jig { }
   const run = new Run()
-  const dragon = new Dragon()
+  const dragon = new Dragon() // eslint-disable-line
   await run.sync()
   console.log('jigs', run.jigs)
   console.log('code', run.code)
