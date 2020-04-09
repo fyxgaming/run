@@ -1383,7 +1383,7 @@ describe('Jig', () => {
       class A extends Jig { init () { this.ownerAtInit = this.owner }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [a])
-      expect(a.ownerAtInit).to.equal(run.owner.getOwner())
+      expect(a.ownerAtInit).to.equal(run.owner.locks[0])
     })
 
     it('should be assigned to creator', async () => {

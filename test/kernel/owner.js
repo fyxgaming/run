@@ -82,7 +82,7 @@ describe('Owner', () => {
       expect(run.owner.privkey).to.equal(privkey.toString())
       expect(run.owner.pubkey).to.equal(privkey.publicKey.toString())
       expect(run.owner.address).to.equal(privkey.toAddress().toString())
-      expect(run.owner.getOwner()).to.equal(privkey.toAddress().toString())
+      expect(run.owner.locks[0]).to.equal(privkey.toAddress().toString())
     })
 
     it('should support creating from string private key on mainnet', () => {
@@ -91,7 +91,7 @@ describe('Owner', () => {
       expect(run.owner.privkey).to.equal(privkey.toString())
       expect(run.owner.pubkey).to.equal(privkey.publicKey.toString())
       expect(run.owner.address).to.equal(privkey.toAddress().toString())
-      expect(run.owner.getOwner()).to.equal(privkey.toAddress().toString())
+      expect(run.owner.locks[0]).to.equal(privkey.toAddress().toString())
     })
 
     it('should support creating from bsv public key on mainnet', () => {
@@ -100,7 +100,7 @@ describe('Owner', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(pubkey.toString())
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
-      expect(run.owner.getOwner()).to.equal(pubkey.toAddress().toString())
+      expect(run.owner.locks[0]).to.equal(pubkey.toAddress().toString())
     })
 
     it('should support creating from string public key on mocknet', () => {
@@ -109,7 +109,7 @@ describe('Owner', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(pubkey.toString())
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
-      expect(run.owner.getOwner()).to.equal(pubkey.toAddress().toString())
+      expect(run.owner.locks[0]).to.equal(pubkey.toAddress().toString())
     })
 
     it('should support creating from bsv address on testnet', () => {
@@ -118,7 +118,7 @@ describe('Owner', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(undefined)
       expect(run.owner.address).to.equal(address.toString())
-      expect(run.owner.getOwner()).to.equal(address.toString())
+      expect(run.owner.locks[0]).to.equal(address.toString())
     })
 
     it('should support creating from string address on mainnet', () => {
@@ -127,7 +127,7 @@ describe('Owner', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(undefined)
       expect(run.owner.address).to.equal(address.toString())
-      expect(run.owner.getOwner()).to.equal(address.toString())
+      expect(run.owner.locks[0]).to.equal(address.toString())
     })
 
     it('should throw if bad owner', () => {
@@ -233,7 +233,7 @@ describe('Owner', () => {
       const run = new Run()
       class A extends Jig {}
       const a = await new A().sync()
-      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.getOwner() })
+      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.locks[0] })
       await run2.sync()
       expect(run2.owner.privkey).to.equal(undefined)
       expect(run2.owner.jigs).to.deep.equal([a])
