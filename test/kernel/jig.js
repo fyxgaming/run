@@ -1408,14 +1408,14 @@ describe('Jig', () => {
       expect(a3.owner).to.equal(pubkey)
     })
 
-    it('should throw if not set to a valid owner', async () => {
+    it('should throw if set to an invalid owner', async () => {
       class A extends Jig { send (owner) { this.owner = owner }}
       const a = await new A().sync()
       expectAction(a, 'init', [], [], [a], [])
       const publicKey = new PrivateKey().publicKey
       expect(() => a.send(publicKey)).to.throw('is not deployable')
       expect(() => a.send(JSON.parse(JSON.stringify(publicKey)))).to.throw('Invalid owner: [object Object]')
-      expect(() => a.send('123')).to.throw('Invalid owner: 123')
+      expect(() => a.send('123')).to.throw('Invalid owner: "123"')
       expectNoAction()
     })
 

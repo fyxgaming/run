@@ -9,7 +9,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { Jig } = Run
-const { AddressScript, PubKeyScript } = Run
+const { AddressLock, PubKeyLock } = Run
 const { unmangle } = require('../env/unmangle')
 const {
   _bsvNetwork,
@@ -271,18 +271,18 @@ describe('_ownerScript', () => {
       const privkey = new bsv.PrivateKey(bsvNetwork)
       const pubkey = privkey.publicKey.toString()
       const addr = privkey.toAddress().toString()
-      const bytes = new AddressScript(addr).toBytes()
-      expect(_ownerScript(pubkey).toBytes()).to.deep.equal(bytes)
-      expect(_ownerScript(addr).toBytes()).to.deep.equal(bytes)
-      expect(_ownerScript(new PubKeyScript(pubkey)).toBytes()).to.deep.equal(new PubKeyScript(pubkey).toBytes())
-      expect(_ownerScript(new AddressScript(addr)).toBytes()).to.deep.equal(bytes)
+      const bytes = new AddressLock(addr).script
+      expect(_ownerScript(pubkey).script).to.deep.equal(bytes)
+      expect(_ownerScript(addr).script).to.deep.equal(bytes)
+      expect(_ownerScript(new PubKeyLock(pubkey)).script).to.deep.equal(new PubKeyLock(pubkey).script)
+      expect(_ownerScript(new AddressLock(addr)).script).to.deep.equal(bytes)
     }
   })
 
   it('should throw if bad owner', () => {
     expect(() => _ownerScript()).to.throw('Invalid owner: undefined')
     expect(() => _ownerScript(123)).to.throw('Invalid owner: 123')
-    expect(() => _ownerScript('hello')).to.throw('Invalid owner: hello')
+    expect(() => _ownerScript('hello')).to.throw('Invalid owner: "hello"')
     expect(() => _ownerScript(new bsv.PrivateKey())).to.throw('Invalid owner')
     expect(() => _ownerScript(new bsv.PrivateKey().publicKey)).to.throw('Invalid owner')
     expect(() => _ownerScript([new bsv.PrivateKey().publicKey.toString()])).to.throw('Invalid owner')

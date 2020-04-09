@@ -102,7 +102,7 @@ describe('Token', () => {
     it('should throw if send to bad owner', () => {
       const token = new TestToken(100)
       expect(() => token.send(10)).to.throw('Invalid owner: 10')
-      expect(() => token.send('abc', 10)).to.throw('Invalid owner: abc')
+      expect(() => token.send('abc', 10)).to.throw('Invalid owner: "abc"')
     })
   })
 

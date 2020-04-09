@@ -11,62 +11,62 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../env/config')
-const { Jig, AddressScript, PubKeyScript } = Run
+const { Jig, AddressLock, PubKeyLock } = Run
 const { hookPay, deploy } = require('../env/helpers')
 
 // ------------------------------------------------------------------------------------------------
-// AddressScript tests
+// AddressLock tests
 // ------------------------------------------------------------------------------------------------
 
-describe('AddressScript', () => {
+describe('AddressLock', () => {
   it('should create buffer for valid addresses', () => {
-    new AddressScript('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').toBytes() // eslint-disable-line
-    new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').toBytes() // eslint-disable-line
+    new AddressLock('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').script // eslint-disable-line
+    new AddressLock('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').script // eslint-disable-line
   })
 
   it('throws if bad address', () => {
-    expect(() => new AddressScript().toBytes()).to.throw('Address is not a string')
-    expect(() => new AddressScript([]).toBytes()).to.throw('Address is not a string')
-    expect(() => new AddressScript('3P14159f73E4gFr7JterCCQh9QjiTjiZrG').toBytes()).to.throw('Address may only be a P2PKH type')
-    expect(() => new AddressScript('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9n').toBytes()).to.throw('Address may only be a P2PKH type')
-    expect(() => new AddressScript('@').toBytes()).to.throw('Invalid character in address')
+    expect(() => new AddressLock().script).to.throw('Address is not a string')
+    expect(() => new AddressLock([]).script).to.throw('Address is not a string')
+    expect(() => new AddressLock('3P14159f73E4gFr7JterCCQh9QjiTjiZrG').script).to.throw('Address may only be a P2PKH type')
+    expect(() => new AddressLock('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9n').script).to.throw('Address may only be a P2PKH type')
+    expect(() => new AddressLock('@').script).to.throw('Invalid character in address')
   })
 
   it('should correctly return P2PKH buffer', () => {
     const addr = '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
     const script = bsv.Script.fromAddress(addr)
     const buffer1 = new Uint8Array(script.toBuffer())
-    const buffer2 = new AddressScript(addr).toBytes()
+    const buffer2 = new AddressLock(addr).script
     expect(buffer1).to.deep.equal(buffer2)
   })
 
   it.skip('should deploy', async () => {
-    await deploy(AddressScript)
+    await deploy(AddressLock)
   })
 })
 
 // ------------------------------------------------------------------------------------------------
-// PubKeyScript tests
+// PubKeyLock tests
 // ------------------------------------------------------------------------------------------------
 
-describe('PubKeyScript', () => {
+describe('PubKeyLock', () => {
   it('throws if bad pubkey', () => {
-    expect(() => new PubKeyScript().toBytes()).to.throw('Pubkey is not a string')
-    expect(() => new PubKeyScript([]).toBytes()).to.throw('Pubkey is not a string')
-    expect(() => new PubKeyScript('abcde').toBytes()).to.throw('Pubkey has bad length')
-    expect(() => new PubKeyScript('@$').toBytes()).to.throw('Invalid pubkey hex')
+    expect(() => new PubKeyLock().script).to.throw('Pubkey is not a string')
+    expect(() => new PubKeyLock([]).script).to.throw('Pubkey is not a string')
+    expect(() => new PubKeyLock('abcde').script).to.throw('Pubkey has bad length')
+    expect(() => new PubKeyLock('@$').script).to.throw('Invalid pubkey hex')
   })
 
   it('should correctly return P2PH buffer', () => {
     const pubkey = new bsv.PrivateKey().publicKey
     const script = bsv.Script.buildPublicKeyOut(pubkey)
     const buffer1 = new Uint8Array(script.toBuffer())
-    const buffer2 = new PubKeyScript(pubkey.toString()).toBytes()
+    const buffer2 = new PubKeyLock(pubkey.toString()).script
     expect(buffer1).to.deep.equal(buffer2)
   })
 
   it.skip('should deploy', async () => {
-    await deploy(PubKeyScript)
+    await deploy(PubKeyLock)
   })
 })
 
