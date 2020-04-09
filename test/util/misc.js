@@ -19,7 +19,7 @@ const {
   _sourceCode,
   _deepTraverseObjects,
   _checkSatoshis,
-  _ownerScript,
+  _ownerLock,
   SerialTaskQueue
 } = unmangle(unmangle(Run)._util)
 const Sandbox = Run.sandbox
@@ -262,30 +262,30 @@ describe('_checkSatoshis', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
-// _ownerScript
+// _ownerLock
 // ------------------------------------------------------------------------------------------------
 
-describe('_ownerScript', () => {
+describe('_ownerLock', () => {
   it('should support valid owners on different networks', () => {
     for (const bsvNetwork of ['mainnet', 'testnet']) {
       const privkey = new bsv.PrivateKey(bsvNetwork)
       const pubkey = privkey.publicKey.toString()
       const addr = privkey.toAddress().toString()
       const bytes = new AddressLock(addr).script
-      expect(_ownerScript(pubkey).script).to.deep.equal(bytes)
-      expect(_ownerScript(addr).script).to.deep.equal(bytes)
-      expect(_ownerScript(new PubKeyLock(pubkey)).script).to.deep.equal(new PubKeyLock(pubkey).script)
-      expect(_ownerScript(new AddressLock(addr)).script).to.deep.equal(bytes)
+      expect(_ownerLock(pubkey).script).to.deep.equal(bytes)
+      expect(_ownerLock(addr).script).to.deep.equal(bytes)
+      expect(_ownerLock(new PubKeyLock(pubkey)).script).to.deep.equal(new PubKeyLock(pubkey).script)
+      expect(_ownerLock(new AddressLock(addr)).script).to.deep.equal(bytes)
     }
   })
 
   it('should throw if bad owner', () => {
-    expect(() => _ownerScript()).to.throw('Invalid owner: undefined')
-    expect(() => _ownerScript(123)).to.throw('Invalid owner: 123')
-    expect(() => _ownerScript('hello')).to.throw('Invalid owner: "hello"')
-    expect(() => _ownerScript(new bsv.PrivateKey())).to.throw('Invalid owner')
-    expect(() => _ownerScript(new bsv.PrivateKey().publicKey)).to.throw('Invalid owner')
-    expect(() => _ownerScript([new bsv.PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
+    expect(() => _ownerLock()).to.throw('Invalid owner: undefined')
+    expect(() => _ownerLock(123)).to.throw('Invalid owner: 123')
+    expect(() => _ownerLock('hello')).to.throw('Invalid owner: "hello"')
+    expect(() => _ownerLock(new bsv.PrivateKey())).to.throw('Invalid owner')
+    expect(() => _ownerLock(new bsv.PrivateKey().publicKey)).to.throw('Invalid owner')
+    expect(() => _ownerLock([new bsv.PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
   })
 })
 

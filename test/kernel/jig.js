@@ -2065,7 +2065,6 @@ describe('Jig', () => {
         set (n) { this.n = n }
       }
       const a = new A()
-      const t0 = Date.now()
       for (let i = 0; i < 10; i++) {
         a.set(i)
       }
@@ -2076,18 +2075,14 @@ describe('Jig', () => {
       run.transaction.end()
       b.set(1)
       await a.sync()
-      const t1 = Date.now()
-      await run.load(a.location)
-      const t2 = Date.now()
-      expect((t1 - t0) / (t2 - t1) > 10).to.equal(true) // Load without state cache is 10x slower
 
       const run2 = new Run({ state: new Run.StateCache() })
-      const t3 = Date.now()
+      const t0 = Date.now()
       await run2.load(a.location)
-      const t4 = Date.now()
+      const t1 = Date.now()
       await run2.load(a.location)
-      const t5 = Date.now()
-      expect((t4 - t3) / (t5 - t4) > 10).to.equal(true) // Load without state cache is 10x slower
+      const t2 = Date.now()
+      expect((t1 - t0) / (t2 - t1) > 3).to.equal(true) // Load without state cache is 3x slower
     })
   })
 
