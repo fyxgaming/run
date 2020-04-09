@@ -17,7 +17,8 @@ const { AddressLock, PubKeyLock } = unmangle(Run)._util
 const { hookPay, deploy } = require('../env/helpers')
 
 it.only('test', async () => {
-  console.log('hello')
+  const run = new Run()
+  console.log(run.owner)
 })
 
 // ------------------------------------------------------------------------------------------------
