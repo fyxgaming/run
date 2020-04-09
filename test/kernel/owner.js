@@ -19,10 +19,13 @@ const { hookPay, deploy } = require('../env/helpers')
 it.only('test', async () => {
   class Dragon extends Jig { }
   const run = new Run()
-  const dragon = new Dragon() // eslint-disable-line
-  await run.sync()
-  console.log('jigs', run.jigs)
-  console.log('code', run.code)
+  const dragon = new Dragon()
+  await dragon.sync()
+  run.deactivate()
+  const run2 = new Run({ blockchain: run.blockchain, owner: run.owner })
+  await run2.sync()
+  console.log('jigs', run2.jigs)
+  console.log('code', run2.code)
 })
 
 // ------------------------------------------------------------------------------------------------
