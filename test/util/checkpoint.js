@@ -30,7 +30,7 @@ describe('Checkpoint', () => {
       await run.sync()
 
       // eslint-disable-next-line
-      const checkpoint = new Checkpoint(b, run.code, run.owner)
+      const checkpoint = new Checkpoint(b, run.internal.code, run.owner)
     })
   })
 })

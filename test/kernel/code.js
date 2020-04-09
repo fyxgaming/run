@@ -80,8 +80,8 @@ describe('Code', () => {
       const child = new Child2()
       child.f()
       expect(child.n).to.equal(2)
-      expect(run.code.installs.has(Parent)).to.equal(true)
-      expect(run.code.installs.has(Grandparent)).to.equal(true)
+      expect(run.internal.code.installs.has(Parent)).to.equal(true)
+      expect(run.internal.code.installs.has(Grandparent)).to.equal(true)
     })
 
     it('should deploy dependencies', async () => {
@@ -365,7 +365,7 @@ describe('Code', () => {
       await run2.deploy(A)
       // find the sandbox directly, without using load, because we want to make sure deploy works correctly.
       // and using load, make sure the sandboxes are the same
-      expect(run2.code.installs.get(A)).to.equal(await run2.load(A.location))
+      expect(run2.internal.code.installs.get(A)).to.equal(await run2.load(A.location))
     })
 
     it('should support dependencies in different transactions', async () => {
@@ -561,7 +561,7 @@ describe('Code', () => {
       expect(A.location.length).to.equal(67)
       expect(A.location).to.equal(A.locationMocknet)
       expect(A.owner).to.equal(A.ownerMocknet)
-      expect(run.code.installs.size).to.equal(COVER ? 7 : 8)
+      expect(run.internal.code.installs.size).to.equal(COVER ? 7 : 8)
     })
 
     it.skip('should set correct owner for different networks', async () => {

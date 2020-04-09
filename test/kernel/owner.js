@@ -11,8 +11,14 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../env/config')
-const { Jig, AddressLock, PubKeyLock } = Run
+const { Jig } = Run
+const { unmangle } = require('../env/unmangle')
+const { AddressLock, PubKeyLock } = unmangle(Run)._util
 const { hookPay, deploy } = require('../env/helpers')
+
+it.only('test', async () => {
+  console.log('hello')
+})
 
 // ------------------------------------------------------------------------------------------------
 // AddressLock tests
@@ -145,20 +151,20 @@ describe('Owner', () => {
       const run = new Run()
       class A extends Jig { set (x) { this.x = x }}
       run.deploy(A)
-      expect(run.owner.code.length).to.equal(1)
-      expect(run.owner.code[0].name).to.equal('A')
-      expect(run.owner.code[0].origin).to.equal(A.origin)
-      expect(run.owner.code[0].location).to.equal(A.location)
+      expect(run.code.length).to.equal(1)
+      expect(run.code[0].name).to.equal('A')
+      expect(run.code[0].origin).to.equal(A.origin)
+      expect(run.code[0].location).to.equal(A.location)
       await run.sync()
-      expect(run.owner.code.length).to.equal(1)
-      expect(run.owner.code[0].name).to.equal('A')
-      expect(run.owner.code[0].origin).to.equal(A.origin)
-      expect(run.owner.code[0].location).to.equal(A.location)
+      expect(run.code.length).to.equal(1)
+      expect(run.code[0].name).to.equal('A')
+      expect(run.code[0].origin).to.equal(A.origin)
+      expect(run.code[0].location).to.equal(A.location)
       const a = new A()
       a.set(function add (a, b) { return a + b })
-      expect(run.owner.code.length).to.equal(2)
+      expect(run.code.length).to.equal(2)
       await run.sync()
-      expect(run.owner.code.length).to.equal(2)
+      expect(run.code.length).to.equal(2)
     })
 
     it('should remove if code fails to post', async () => {
@@ -166,12 +172,12 @@ describe('Owner', () => {
       hookPay(run, false)
       class A {}
       run.deploy(A).catch(() => {})
-      expect(run.owner.code.length).to.equal(1)
-      expect(run.owner.code[0].name).to.equal('A')
-      expect(run.owner.code[0].origin).to.equal(A.origin)
-      expect(run.owner.code[0].location).to.equal(A.location)
+      expect(run.code.length).to.equal(1)
+      expect(run.code[0].name).to.equal('A')
+      expect(run.code[0].origin).to.equal(A.origin)
+      expect(run.code[0].location).to.equal(A.location)
       await expect(run.sync()).to.be.rejected
-      expect(run.owner.code.length).to.equal(0)
+      expect(run.code.length).to.equal(0)
     })
   })
 
@@ -182,15 +188,15 @@ describe('Owner', () => {
       class B extends Jig { send (to) { this.owner = to } }
       A.deps = { B }
       const a = new A()
-      expect(run.owner.jigs).to.deep.equal([a])
+      expect(run.jigs).to.deep.equal([a])
       const b = a.createB()
-      expect(run.owner.jigs).to.deep.equal([a, b])
+      expect(run.jigs).to.deep.equal([a, b])
       await run.sync()
-      expect(run.owner.jigs).to.deep.equal([a, b])
+      expect(run.jigs).to.deep.equal([a, b])
       b.send(new bsv.PrivateKey().publicKey.toString())
-      expect(run.owner.jigs).to.deep.equal([a])
+      expect(run.jigs).to.deep.equal([a])
       await run.sync()
-      expect(run.owner.jigs).to.deep.equal([a])
+      expect(run.jigs).to.deep.equal([a])
     })
 
     it('should update jigs on sync', async () => {
@@ -200,12 +206,12 @@ describe('Owner', () => {
       A.deps = { B }
       const a = new A()
       const b = a.createB()
-      expect(run.owner.jigs).to.deep.equal([a, b])
+      expect(run.jigs).to.deep.equal([a, b])
       await run.sync()
       const run2 = new Run({ owner: run.owner.privkey, blockchain: run.blockchain })
       const c = new A()
       await run2.sync()
-      expect(run2.owner.jigs).to.deep.equal([a, b, c])
+      expect(run2.jigs).to.deep.equal([a, b, c])
     })
 
     it('should remove jigs when fail to post', async () => {
@@ -213,11 +219,11 @@ describe('Owner', () => {
       hookPay(run, false)
       class A extends Jig {}
       const a = new A()
-      expect(run.owner.jigs).to.deep.equal([a])
-      expect(run.owner.code.length).to.equal(1)
+      expect(run.jigs).to.deep.equal([a])
+      expect(run.code.length).to.equal(1)
       await expect(run.sync()).to.be.rejectedWith('tx has no inputs')
-      expect(run.owner.jigs.length).to.equal(0)
-      expect(run.owner.code.length).to.equal(0)
+      expect(run.jigs.length).to.equal(0)
+      expect(run.code.length).to.equal(0)
     })
 
     it('should support filtering jigs by class', async () => {
@@ -226,7 +232,7 @@ describe('Owner', () => {
       class B extends Jig {}
       const a = new A()
       new B() // eslint-disable-line
-      expect(run.owner.jigs.find(x => x instanceof A)).to.deep.equal(a)
+      expect(run.jigs.find(x => x instanceof A)).to.deep.equal(a)
     })
 
     it('should support getting jigs without private key', async () => {
@@ -236,7 +242,7 @@ describe('Owner', () => {
       const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.locks[0] })
       await run2.sync()
       expect(run2.owner.privkey).to.equal(undefined)
-      expect(run2.owner.jigs).to.deep.equal([a])
+      expect(run2.jigs).to.deep.equal([a])
     })
   })
 })

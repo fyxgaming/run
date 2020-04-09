@@ -29,7 +29,7 @@ describe('Jig', () => {
       class A extends Run.Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(run.code.installs.has(A)).to.equal(true)
+      expect(run.internal.code.installs.has(A)).to.equal(true)
       await run.sync()
       expect(A.origin.length).to.equal(67)
     })
@@ -131,7 +131,7 @@ describe('Jig', () => {
       class B extends Jig { }
       const a = new A() // eslint-disable-line
       await a.sync()
-      run.owner.jigs.find(jig => jig instanceof B)
+      run.jigs.find(jig => jig instanceof B)
     })
 
     it('should match loaded instances', async () => {

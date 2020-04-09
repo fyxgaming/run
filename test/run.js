@@ -235,12 +235,12 @@ describe('Run', () => {
       const purseUtxos = await run.purse.utxos()
       expect(purseUtxos.length).to.equal(10)
       await run.sync()
-      expect(run.owner.code.length).to.equal(1)
-      expect(run.owner.jigs.length).to.equal(1)
+      expect(run.code.length).to.equal(1)
+      expect(run.jigs.length).to.equal(1)
 
-      const txid = run.owner.code[0].location.slice(0, 64)
-      const codeVout = parseInt(run.owner.code[0].location.slice(66))
-      const jigVout = parseInt(run.owner.jigs[0].location.slice(66))
+      const txid = run.code[0].location.slice(0, 64)
+      const codeVout = parseInt(run.code[0].location.slice(66))
+      const jigVout = parseInt(run.jigs[0].location.slice(66))
       expect(codeVout).to.equal(1)
       expect(jigVout).to.equal(2)
 

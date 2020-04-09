@@ -13,6 +13,7 @@ const { expect } = chai
 const { Run } = require('../env/config')
 const { Token } = Run
 const { deploy } = require('../env/helpers')
+const { unmangle } = require('../env/unmangle')
 
 // ------------------------------------------------------------------------------------------------
 // Token
@@ -139,7 +140,8 @@ describe('Token', () => {
       const c = TestToken.combine(a, b)
       await run.sync()
       run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain, code: run.code })
+      const code = unmangle(unmangle(run)._kernel)._code
+      const run2 = new Run({ blockchain: run.blockchain, code })
       const c2 = await run2.load(c.location)
       expect(c2.amount).to.equal(c.amount)
     })
