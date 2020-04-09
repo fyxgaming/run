@@ -19,10 +19,10 @@ const { hookPay, deploy } = require('../env/helpers')
 it.only('test', async () => {
   class Dragon extends Jig { }
   const run = new Run()
-  console.log(run.owner)
   const dragon = new Dragon()
   await run.sync()
-  console.log(dragon)
+  console.log('jigs', run.jigs)
+  console.log('code', run.code)
 })
 
 // ------------------------------------------------------------------------------------------------
