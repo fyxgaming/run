@@ -16,13 +16,14 @@ const { unmangle } = require('../env/unmangle')
 const { AddressLock, PubKeyLock } = unmangle(Run)._util
 const { hookPay, deploy } = require('../env/helpers')
 
-it.only('test', async () => {
+it.skip('TEMP', async () => {
   class Dragon extends Jig { }
   const run = new Run()
   const dragon = new Dragon()
   await dragon.sync()
   run.deactivate()
   const run2 = new Run({ blockchain: run.blockchain, owner: run.owner })
+  await run2.sync()
   await run2.sync()
   console.log('jigs', run2.jigs)
   console.log('code', run2.code)
@@ -145,7 +146,7 @@ describe('Owner', () => {
     })
 
     it('should throw if bad owner', () => {
-      expect(() => new Run({ owner: '123' })).to.throw('bad owner key or address: 123')
+      expect(() => new Run({ owner: '123' })).to.throw('Bad owner key or address: 123')
     })
 
     it('throw if owner private key is on wrong network', () => {
@@ -219,7 +220,7 @@ describe('Owner', () => {
       const run2 = new Run({ owner: run.owner.privkey, blockchain: run.blockchain })
       const c = new A()
       await run2.sync()
-      expect(run2.jigs).to.deep.equal([a, b, c])
+      expect(run2.jigs).to.deep.equal([c, a, b])
     })
 
     it('should remove jigs when fail to post', async () => {
