@@ -235,12 +235,12 @@ describe('Run', () => {
       const purseUtxos = await run.purse.utxos()
       expect(purseUtxos.length).to.equal(10)
       await run.sync()
-      expect(run.code.length).to.equal(1)
-      expect(run.jigs.length).to.equal(1)
+      expect(run.inventory.code.length).to.equal(1)
+      expect(run.inventory.jigs.length).to.equal(1)
 
-      const txid = run.code[0].location.slice(0, 64)
-      const codeVout = parseInt(run.code[0].location.slice(66))
-      const jigVout = parseInt(run.jigs[0].location.slice(66))
+      const txid = run.inventory.code[0].location.slice(0, 64)
+      const codeVout = parseInt(run.inventory.code[0].location.slice(66))
+      const jigVout = parseInt(run.inventory.jigs[0].location.slice(66))
       expect(codeVout).to.equal(1)
       expect(jigVout).to.equal(2)
 
@@ -298,9 +298,9 @@ describe('Run', () => {
     it.skip('should fail if reuse jigs across code instances', () => {
       // TODO: What should this behavior be?
       class A extends Jig { set (x) { this.x = x } }
-      new Run({ code: new Run.Code() }) // eslint-disable-line
+      new Run({ code: new run.inventory.code() }) // eslint-disable-line
       const a1 = new A()
-      new Run({ code: new Run.Code() }) // eslint-disable-line
+      new Run({ code: new run.inventory.code() }) // eslint-disable-line
       const a2 = new A()
       expect(a1.constructor).not.to.equal(a2.constructor)
       expect(() => a2.set(a1)).to.throw('Different code instances')

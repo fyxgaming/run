@@ -131,7 +131,7 @@ describe('Jig', () => {
       class B extends Jig { }
       const a = new A() // eslint-disable-line
       await a.sync()
-      run.jigs.find(jig => jig instanceof B)
+      run.inventory.jigs.find(jig => jig instanceof B)
     })
 
     it('should match loaded instances', async () => {
