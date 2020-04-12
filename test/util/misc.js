@@ -8,8 +8,7 @@ const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
-const { Jig } = Run
-const { AddressLock, PubKeyLock } = Run
+const { Jig, StandardLock } = Run
 const { unmangle } = require('../env/unmangle')
 const {
   _bsvNetwork,
@@ -271,11 +270,10 @@ describe('_lockify', () => {
       const privkey = new bsv.PrivateKey(bsvNetwork)
       const pubkey = privkey.publicKey.toString()
       const addr = privkey.toAddress().toString()
-      const bytes = new AddressLock(addr).script
+      const bytes = new StandardLock(addr).script
       expect(_lockify(pubkey).script).to.deep.equal(bytes)
       expect(_lockify(addr).script).to.deep.equal(bytes)
-      expect(_lockify(new PubKeyLock(pubkey)).script).to.deep.equal(new PubKeyLock(pubkey).script)
-      expect(_lockify(new AddressLock(addr)).script).to.deep.equal(bytes)
+      expect(_lockify(new StandardLock(addr)).script).to.deep.equal(bytes)
     }
   })
 
