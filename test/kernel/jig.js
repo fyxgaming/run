@@ -29,7 +29,7 @@ describe('Jig', () => {
       class A extends Run.Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(run.internal.code.installs.has(A)).to.equal(true)
+      expect(run.code.installs.has(A)).to.equal(true)
       await run.sync()
       expect(A.origin.length).to.equal(67)
     })
