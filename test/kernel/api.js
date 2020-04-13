@@ -180,19 +180,31 @@ describe('Lock API', () => {
 describe('Owner API', () => {
   describe('instanceof', () => {
     it('returns true if next and sign are present', () => {
-
+      expect(({ next: () => {}, sign: () => {} }) instanceof Owner).to.equal(true)
+      expect(Object.assign(() => {}, { next: () => {}, sign: () => {} }) instanceof Owner).to.equal(true)
     })
 
-    it('returns false if next or sign are missing', () => {
-
+    it('returns false if next or sign are not functions', () => {
+      expect(({ next: () => {} }) instanceof Owner).to.equal(false)
+      expect(({ sign: () => {} }) instanceof Owner).to.equal(false)
+      expect(({ next: false, sign: () => {} }) instanceof Owner).to.equal(false)
+      expect(({ next: () => {}, sign: 123 }) instanceof Owner).to.equal(false)
+      expect(({ next: () => {}, get sign () { } }) instanceof Owner).to.equal(false)
+      expect(({ get next () {}, sign: () => { } }) instanceof Owner).to.equal(false)
     })
 
     it('returns true if ours or locations are functions', () => {
-
+      function f () { }
+      expect(({ next: f, sign: f, ours: f, locations: f }) instanceof Owner).to.equal(true)
+      expect(({ next: f, sign: f, locations: f }) instanceof Owner).to.equal(true)
+      expect(({ next: f, sign: f, ours: f }) instanceof Owner).to.equal(true)
     })
 
     it('returns false if ours or locations are not functions', () => {
-
+      function f () { }
+      expect(({ next: f, sign: f, locations: [] }) instanceof Owner).to.equal(false)
+      expect(({ next: f, sign: f, ours: true }) instanceof Owner).to.equal(false)
+      expect(({ next: f, sign: f, get ours () { return true } }) instanceof Owner).to.equal(false)
     })
 
     it('returns false for non-objects', () => {
