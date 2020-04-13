@@ -114,6 +114,7 @@ describe('Owner', () => {
       class A extends Jig { }
       console.log('1')
       const a = new A()
+    //   console.log(a.owner)
       console.log('2')
       await a.sync()
       console.log('3')
