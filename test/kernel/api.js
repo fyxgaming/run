@@ -55,6 +55,19 @@ describe('Blockchain API', () => {
 
 describe('Purse API ', () => {
   describe('instanceof', () => {
+    it('returns true if pay method is present', () => {
+      const purse = { pay: () => {} }
+      expect(purse instanceof Purse).to.equal(true)
+      expect(Object.assign(function () {}, purse) instanceof Purse).to.equal(true)
+    })
+
+    it('returns false if pay method is missing or invalid', () => {
+      expect(({}) instanceof Purse).to.equal(false)
+      expect((() => {}) instanceof Purse).to.equal(false)
+      expect(({ pay: null }) instanceof Purse).to.equal(false)
+      expect(({ pay: {} }) instanceof Purse).to.equal(false)
+    })
+
     it('returns false for non-objects', () => {
       expect(0 instanceof Purse).to.equal(false)
       expect(true instanceof Purse).to.equal(false)
