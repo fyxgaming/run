@@ -24,7 +24,7 @@ describe('LocalOwner', () => {
       expect(run.owner.privkey).to.equal(privkey.toString())
       expect(run.owner.pubkey).to.equal(privkey.publicKey.toString())
       expect(run.owner.address).to.equal(privkey.toAddress().toString())
-      expect(run.owner.locks[0]).to.equal(privkey.toAddress().toString())
+      expect(run.owner.next()).to.equal(privkey.toAddress().toString())
     })
 
     it('should support creating from string private key on mainnet', () => {
@@ -33,7 +33,7 @@ describe('LocalOwner', () => {
       expect(run.owner.privkey).to.equal(privkey.toString())
       expect(run.owner.pubkey).to.equal(privkey.publicKey.toString())
       expect(run.owner.address).to.equal(privkey.toAddress().toString())
-      expect(run.owner.locks[0]).to.equal(privkey.toAddress().toString())
+      expect(run.owner.next()).to.equal(privkey.toAddress().toString())
     })
 
     it('should support creating from bsv public key on mainnet', () => {
@@ -42,7 +42,7 @@ describe('LocalOwner', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(pubkey.toString())
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
-      expect(run.owner.locks[0]).to.equal(pubkey.toAddress().toString())
+      expect(run.owner.next()).to.equal(pubkey.toAddress().toString())
     })
 
     it('should support creating from string public key on mocknet', () => {
@@ -51,7 +51,7 @@ describe('LocalOwner', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(pubkey.toString())
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
-      expect(run.owner.locks[0]).to.equal(pubkey.toAddress().toString())
+      expect(run.owner.next()).to.equal(pubkey.toAddress().toString())
     })
 
     it('should support creating from bsv address on testnet', () => {
@@ -60,7 +60,7 @@ describe('LocalOwner', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(undefined)
       expect(run.owner.address).to.equal(address.toString())
-      expect(run.owner.locks[0]).to.equal(address.toString())
+      expect(run.owner.next()).to.equal(address.toString())
     })
 
     it('should support creating from string address on mainnet', () => {
@@ -69,7 +69,7 @@ describe('LocalOwner', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(undefined)
       expect(run.owner.address).to.equal(address.toString())
-      expect(run.owner.locks[0]).to.equal(address.toString())
+      expect(run.owner.next()).to.equal(address.toString())
     })
 
     it('should throw if bad owner', () => {

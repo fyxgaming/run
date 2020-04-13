@@ -22,6 +22,13 @@ describe('Inventory', () => {
   // Todo: Tokens
   // Todo: sync
 
+  it.only('test', async () => {
+    const run = new Run() // eslint-disable-line
+    class Dragon extends Jig {}
+    const dragon = new Dragon()
+    await dragon.sync()
+  })
+
   describe('code', () => {
     it('should update with code deployed', async () => {
       const run = new Run()
@@ -115,7 +122,7 @@ describe('Inventory', () => {
       const run = new Run()
       class A extends Jig {}
       const a = await new A().sync()
-      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.locks[0] })
+      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.next() })
       await run2.sync()
       expect(run2.owner.privkey).to.equal(undefined)
       expect(run2.inventory.jigs).to.deep.equal([a])
