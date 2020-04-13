@@ -37,7 +37,7 @@ describe('Blockchain API', () => {
       expect(Object.assign({}, blockchain, { network: () => {} }) instanceof Blockchain).to.equal(false)
     })
 
-    it('should not match non-objects', () => {
+    it('returns false for non-objects', () => {
       expect(0 instanceof Blockchain).to.equal(false)
       expect(true instanceof Blockchain).to.equal(false)
       expect('blockchain' instanceof Blockchain).to.equal(false)
