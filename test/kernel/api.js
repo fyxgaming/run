@@ -141,6 +141,18 @@ describe('State API', () => {
 
 describe('Lock API', () => {
   describe('instanceof', () => {
+    it('returns true if script is a getter', () => {
+
+    })
+
+    it('returns false if script is a function', () => {
+
+    })
+
+    it('returns false if script is a property', () => {
+
+    })
+
     it('returns false for non-objects', () => {
       expect(0 instanceof Lock).to.equal(false)
       expect(true instanceof Lock).to.equal(false)
@@ -158,6 +170,22 @@ describe('Lock API', () => {
 
 describe('Owner API', () => {
   describe('instanceof', () => {
+    it('returns true if next and sign are present', () => {
+
+    })
+
+    it('returns false if next or sign are missing', () => {
+
+    })
+
+    it('returns true if ours or locations are functions', () => {
+
+    })
+
+    it('returns false if ours or locations are not functions', () => {
+
+    })
+
     it('returns false for non-objects', () => {
       expect(0 instanceof Owner).to.equal(false)
       expect(true instanceof Owner).to.equal(false)
