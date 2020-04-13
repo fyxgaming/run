@@ -8,8 +8,7 @@ const { HDPrivateKey } = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
-const { Jig } = Run
-const { compile } = Run.asm
+const { Jig, compileAsm } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Owner
@@ -92,9 +91,33 @@ describe('Owner', () => {
   })
 
   describe('sign', () => {
-    it('should support signing with custom scripts', () => {
-      class OnePlusOne { get script () { return compile('OP_1 OP_1 OP_ADD OP_EQUAL') } }
-      OnePlusOne.deps = { compile }
+    it.only('should support signing with custom scripts', async () => {
+      class OnePlusOneLock {
+        get script () {
+          return compileAsm('OP_1 OP_1 OP_ADD OP_EQUAL')
+        }
+      }
+
+      OnePlusOneLock.deps = { compileAsm }
+
+      class CustomOwner {
+        next () { return new OnePlusOneLock() }
+
+        async sign (tx, locks) {
+          console.log('sign')
+        }
+      }
+
+      const owner = new CustomOwner()
+      const run = new Run({ owner })
+
+      class A extends Jig { }
+      console.log('1')
+      const a = new A()
+      console.log('2')
+      await a.sync()
+      console.log('3')
+      console.log(a.owner)
     })
 
     it('should throw if script does not evaluate to true', () => {
