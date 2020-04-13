@@ -21,6 +21,7 @@ const { hookPay } = require('../env/helpers')
 describe('Inventory', () => {
   // Todo: Tokens
   // Todo: sync
+  // Can set old inventory for old owner
 
   describe('code', () => {
     it('should update with code deployed', async () => {
