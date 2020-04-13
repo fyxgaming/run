@@ -79,6 +79,14 @@ describe('Owner', () => {
     })
 
     it('should fail to create tokens if next() throws', () => {
+      // Hook next() to throw
+      const owner = new Run().owner
+      owner.next = () => { throw new Error('failed to get next') }
+
+      // Create a jig, and make sure it errored upon create
+      new Run({ owner }) // eslint-disable-line
+      class A extends Jig { }
+      expect(() => new A()).to.throw('failed to get next')
     })
   })
 
