@@ -151,7 +151,7 @@ describe('Token', () => {
       const b = new TestToken(2)
       const address = new bsv.PrivateKey().toAddress().toString()
       b.send(address)
-      await expect(TestToken.combine(a, b).sync()).to.be.rejectedWith('Signature missing for TestToken')
+      await expect(TestToken.combine(a, b).sync()).to.be.rejectedWith('Missing signature for TestToken')
     })
 
     it('should throw if combined amount is too large', () => {

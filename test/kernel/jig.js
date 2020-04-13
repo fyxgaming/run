@@ -490,7 +490,7 @@ describe('Jig', () => {
       run2.purse.pay = tx => tx
       run2.blockchain.fetch = async () => undefined
       run2.blockchain.utxos = async () => []
-      await expect(a.f().sync()).to.be.rejectedWith('Signature missing for A')
+      await expect(a.f().sync()).to.be.rejectedWith('Missing signature for A')
     })
 
     it('should return host intrinsics to user', () => {
@@ -1646,7 +1646,7 @@ describe('Jig', () => {
       const oldSign = run.owner.sign
       run.owner.sign = async (tx) => { return tx }
       a.f()
-      await expect(a.sync()).to.be.rejectedWith('Signature missing for A')
+      await expect(a.sync()).to.be.rejectedWith('Missing signature for A')
       run.owner.sign = oldSign
     })
 

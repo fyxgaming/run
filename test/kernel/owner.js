@@ -6,7 +6,10 @@
 
 const { HDPrivateKey } = require('bsv')
 const { describe, it } = require('mocha')
-const { expect } = require('chai')
+const chai = require('chai')
+const chaiAsPromised = require('chai-as-promised')
+chai.use(chaiAsPromised)
+const { expect } = chai
 const { Run } = require('../env/config')
 const { Jig, asm } = Run
 
@@ -123,7 +126,35 @@ describe('Owner', () => {
       expect(a.n).to.equal(1)
     })
 
-    it('should throw if script does not evaluate to true', () => {
+    it('should throw if script does not evaluate to true', async () => {
+      class OnePlusOneLock {
+        get script () { return asm('OP_1 OP_1 OP_ADD OP_EQUAL') }
+      }
+
+      OnePlusOneLock.deps = { asm }
+
+      class CustomOwner {
+        next () { return new OnePlusOneLock() }
+
+        async sign (tx, locks) {
+          tx.inputs
+            .filter((_, n) => locks[n] instanceof OnePlusOneLock)
+            .forEach(input => input.setScript('OP_3'))
+        }
+      }
+
+      const owner = new CustomOwner()
+      new Run({ owner }) // eslint-disable-line
+
+      // Create the jig, which will set the custom owner
+      class A extends Jig { set () { this.n = 1 } }
+      const a = new A()
+      await a.sync()
+      expect(a.owner.constructor.name).to.equal('OnePlusOneLock')
+
+      // Call a method, which will call our custom sign, and fail
+      a.set()
+      await expect(a.sync()).to.be.rejectedWith('Bad signature for A')
     })
 
     it('should rethrow error during sign', () => {
