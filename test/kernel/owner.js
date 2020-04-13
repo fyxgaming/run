@@ -4,6 +4,7 @@
  * Tests common for all owners
  */
 
+const { HDPrivateKey } = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
@@ -14,6 +15,8 @@ const { Jig } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('Owner', () => {
+  const run = new Run()
+
   describe('next', () => {
     it('should call next for every new jig or code', async () => {
       // Hook next() to count the number of times its called
@@ -21,21 +24,54 @@ describe('Owner', () => {
       const oldNext = owner.next
       let nextCount = 0
       owner.next = () => { nextCount++; return oldNext.call(owner) }
-      // Create a jig and code
+
+      // Create a jig and code, checking when next() is called
       class A extends Jig { }
       const run = new Run({ owner })
       expect(nextCount).to.equal(0)
+
       run.deploy(A)
       expect(nextCount).to.equal(1)
+
       const a = new A()
       expect(nextCount).to.equal(2)
+
       await a.sync()
       expect(nextCount).to.equal(2)
     })
 
-    it('should support changing lock every call', () => {
-      // And assigns to proper token
-      // Deploy jigs and code together with different owners, then create one more.
+    it.only('should support changing lock every call', async () => {
+      class HDOwner {
+        constructor () {
+          this.master = new HDPrivateKey()
+          this.n = 0
+        }
+
+        next () {
+          const child = this.master.deriveChild(this.n++)
+          const address = child.publicKey.toAddress()
+          return address.toString()
+        }
+
+        async sign (tx, locks) {
+          for (let i = 0; i < this.n; i++) {
+            tx.sign(this.master.deriveChild(i).privateKey)
+          }
+        }
+      }
+
+      const owner = new HDOwner()
+      const run = new Run({ owner })
+
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+
+      console.log('--')
+      console.log(a.owner)
+      console.log(A.owner)
+
+      // One more
     })
 
     it('should fail to create tokens if next throws', () => {
