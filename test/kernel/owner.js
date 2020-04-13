@@ -8,7 +8,7 @@ const { HDPrivateKey } = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
-const { Jig, compileAsm } = Run
+const { Jig, asm } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Owner
@@ -91,20 +91,20 @@ describe('Owner', () => {
   })
 
   describe('sign', () => {
-    it.only('should support signing with custom scripts', async () => {
+    it('should support signing with custom scripts', async () => {
       class OnePlusOneLock {
-        get script () {
-          return compileAsm('OP_1 OP_1 OP_ADD OP_EQUAL')
-        }
+        get script () { return asm('OP_1 OP_1 OP_ADD OP_EQUAL') }
       }
 
-      OnePlusOneLock.deps = { compileAsm }
+      OnePlusOneLock.deps = { asm }
 
       class CustomOwner {
         next () { return new OnePlusOneLock() }
 
         async sign (tx, locks) {
-          console.log('sign locks', locks)
+          tx.inputs
+            .filter((_, n) => locks[n] instanceof OnePlusOneLock)
+            .forEach(input => input.setScript('OP_2'))
         }
       }
 
