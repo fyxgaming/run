@@ -40,23 +40,25 @@ describe('Owner', () => {
       expect(nextCount).to.equal(2)
     })
 
-    it.only('should support creating new locks for every token', async () => {
+    it('should support creating new locks for every token', async () => {
       class HDOwner {
         constructor () {
           this.master = new HDPrivateKey()
           this.n = 0
         }
 
-        next () {
-          const child = this.master.deriveChild(this.n++)
-          const address = child.publicKey.toAddress()
-          return address.toString()
-        }
+        next () { return this.addr(this.n++) }
 
         async sign (tx, locks) {
           for (let i = 0; i < this.n; i++) {
             tx.sign(this.master.deriveChild(i).privateKey)
           }
+        }
+
+        addr (n) {
+          const child = this.master.deriveChild(n)
+          const address = child.publicKey.toAddress()
+          return address.toString()
         }
       }
 
@@ -64,14 +66,16 @@ describe('Owner', () => {
       const run = new Run({ owner })
 
       class A extends Jig { }
+      function f () { }
+
       const a = new A()
+      run.deploy(f)
       await run.sync()
 
-      console.log('--')
-      console.log(a.owner)
-      console.log(A.owner)
-
-      // One more
+      expect(a.owner).not.to.equal(A.owner)
+      expect(A.owner).to.equal(owner.addr(0))
+      expect(a.owner).to.equal(owner.addr(1))
+      expect(f.owner).to.equal(owner.addr(2))
     })
 
     it('should fail to create tokens if next() throws', () => {
