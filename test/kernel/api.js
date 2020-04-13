@@ -10,6 +10,7 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../env/config')
+const { unmangle } = require('../env/unmangle')
 const { NotImplementedError } = Run.errors
 const { Blockchain, Purse, Logger, State, Lock, Owner } = Run.api
 
@@ -187,6 +188,12 @@ describe('Lock API', () => {
       expect(new CustomLock() instanceof Lock).to.equal(true)
     })
 
+    it('returns true if script is a returns a sandox Uint8Array', () => {
+      const SandboxUint8Array = unmangle(unmangle(Run.sandbox)._instance)._intrinsics.Uint8Array
+      class CustomLock { get script () { return new SandboxUint8Array() } }
+      expect(new CustomLock() instanceof Lock).to.equal(true)
+    })
+
     it('returns false if script is a function', () => {
       class CustomLock { script () { return new Uint8Array() } }
       expect(new CustomLock() instanceof Lock).to.equal(false)
@@ -216,6 +223,11 @@ describe('Lock API', () => {
       const o = { script: new Uint8Array() }
       Object.setPrototypeOf(o, CustomLock.prototype)
       expect(o instanceof Lock).to.equal(false)
+    })
+
+    it('returns false if script is not a Uint8Array', () => {
+      class CustomLock { get script () { return [1, 2, 3] } }
+      expect(new CustomLock() instanceof Lock).to.equal(false)
     })
 
     it('returns false for non-objects', () => {
