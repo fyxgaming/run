@@ -135,6 +135,9 @@ describe('Owner', () => {
 
     it('should leave existing inventory to be saved and reassigned', () => {
     })
+
+    it('should support changing owners within batch transaction', () => {
+    })
   })
 })
 
