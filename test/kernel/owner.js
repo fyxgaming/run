@@ -104,21 +104,23 @@ describe('Owner', () => {
         next () { return new OnePlusOneLock() }
 
         async sign (tx, locks) {
-          console.log('sign')
+          console.log('sign locks', locks)
         }
       }
 
       const owner = new CustomOwner()
-      const run = new Run({ owner })
+      new Run({ owner }) // eslint-disable-line
 
-      class A extends Jig { }
-      console.log('1')
+      // Create the jig, which will set the custom owner
+      class A extends Jig { set () { this.n = 1 } }
       const a = new A()
-      //   console.log(a.owner)
-      console.log('2')
       await a.sync()
-      console.log('3')
-      console.log(a.owner)
+      expect(a.owner.constructor.name).to.equal('OnePlusOneLock')
+
+      // Call a method, which will call our custom sign
+      a.set()
+      await a.sync()
+      expect(a.n).to.equal(1)
     })
 
     it('should throw if script does not evaluate to true', () => {
