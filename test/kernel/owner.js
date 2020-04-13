@@ -5,6 +5,9 @@
  */
 
 const { describe, it } = require('mocha')
+const { expect } = require('chai')
+const { Run } = require('../env/config')
+const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Owner
@@ -12,11 +15,27 @@ const { describe, it } = require('mocha')
 
 describe('Owner', () => {
   describe('next', () => {
-    it('should call for every new jig or code', () => {
+    it.only('should call next for every new jig or code', async () => {
+      // Hook next() to count the number of times its called
+      const owner = new Run().owner
+      const oldNext = owner.next
+      let nextCount = 0
+      owner.next = () => { nextCount++; return oldNext.call(owner) }
+      // Create a jig and code
+      class A extends Jig { }
+      const run = new Run({ owner })
+      expect(nextCount).to.equal(0)
+      run.deploy(A)
+      expect(nextCount).to.equal(1)
+      const a = new A()
+      expect(nextCount).to.equal(2)
+      await a.sync()
+      expect(nextCount).to.equal(2)
     })
 
-    it('should support changing every call', () => {
+    it('should support changing lock every call', () => {
       // And assigns to proper token
+      // Deploy jigs and code together with different owners, then create one more.
     })
 
     it('should fail to create tokens if next throws', () => {

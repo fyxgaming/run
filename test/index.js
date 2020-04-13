@@ -13,6 +13,7 @@ require('./kernel/blockchain')
 require('./kernel/code')
 require('./kernel/inventory')
 require('./kernel/jig')
+require('./kernel/owner')
 require('./kernel/transaction')
 
 require('./module/blockchain-api')
