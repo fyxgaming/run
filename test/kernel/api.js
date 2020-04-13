@@ -4,7 +4,9 @@
  * Tests for lib/kernel/api.js
  */
 
-const { describe } = require('mocha')
+const { describe, it } = require('mocha')
+const { Run } = require('../env/config')
+const { Blockchain, Purse, Logger, State, Lock, Owner } = Run.api
 
 // ------------------------------------------------------------------------------------------------
 // Api
@@ -12,7 +14,9 @@ const { describe } = require('mocha')
 
 describe('Api', () => {
   describe('Blockchain', () => {
-    // TODO
+    it('test', () => {
+      console.log('hello')
+    })
   })
 
   describe('Purse', () => {
