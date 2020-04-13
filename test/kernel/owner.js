@@ -9,6 +9,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { Jig } = Run
+const { compile } = Run.asm
 
 // ------------------------------------------------------------------------------------------------
 // Owner
@@ -92,6 +93,8 @@ describe('Owner', () => {
 
   describe('sign', () => {
     it('should support signing with custom scripts', () => {
+      class OnePlusOne { get script () { return compile('OP_1 OP_1 OP_ADD OP_EQUAL') } }
+      OnePlusOne.deps = { compile }
     })
 
     it('should throw if script does not evaluate to true', () => {
