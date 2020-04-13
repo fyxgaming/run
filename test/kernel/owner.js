@@ -157,7 +157,16 @@ describe('Owner', () => {
       await expect(a.sync()).to.be.rejectedWith('Bad signature for A')
     })
 
-    it('should rethrow error during sign', () => {
+    it('should rethrow error during sign', async () => {
+      // Hook sign() to throw an error
+      const owner = new Run().owner
+      owner.sign = () => { throw new Error('failed to sign') }
+
+      // Create a jig and code, and check for our error on sync
+      class A extends Jig { }
+      new Run({ owner }) // eslint-disable-line
+      const a = new A()
+      await expect(a.sync()).to.be.rejectedWith('failed to sign')
     })
 
     it('should throw if partially signed', () => {
