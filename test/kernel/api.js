@@ -15,6 +15,28 @@ const { Blockchain, Purse, Logger, State, Lock, Owner } = Run.api
 
 describe('Blockchain API', () => {
   describe('instanceof', () => {
+    it('passes if all required properties are present', () => {
+      const blockchain = { broadcast: () => {}, fetch: () => {}, utxos: () => {}, network: 'test' }
+      expect(blockchain instanceof Blockchain).to.equal(true)
+      expect(Object.assign(() => {}, blockchain) instanceof Blockchain).to.equal(true)
+    })
+
+    it('returns false if required property is missing', () => {
+      const blockchain = { broadcast: () => {}, fetch: () => {}, utxos: () => {}, network: 'test' }
+      expect(Object.assign({}, blockchain, { broadcast: undefined }) instanceof Blockchain).to.equal(false)
+      expect(Object.assign({}, blockchain, { fetch: undefined }) instanceof Blockchain).to.equal(false)
+      expect(Object.assign({}, blockchain, { utxos: undefined }) instanceof Blockchain).to.equal(false)
+      expect(Object.assign({}, blockchain, { network: undefined }) instanceof Blockchain).to.equal(false)
+    })
+
+    it('returns false if required properties have wrong types', () => {
+      const blockchain = { broadcast: () => {}, fetch: () => {}, utxos: () => {}, network: 'test' }
+      expect(Object.assign({}, blockchain, { broadcast: 'method' }) instanceof Blockchain).to.equal(false)
+      expect(Object.assign({}, blockchain, { fetch: 123 }) instanceof Blockchain).to.equal(false)
+      expect(Object.assign({}, blockchain, { utxos: null }) instanceof Blockchain).to.equal(false)
+      expect(Object.assign({}, blockchain, { network: () => {} }) instanceof Blockchain).to.equal(false)
+    })
+
     it('should not match non-objects', () => {
       expect(0 instanceof Blockchain).to.equal(false)
       expect(true instanceof Blockchain).to.equal(false)
