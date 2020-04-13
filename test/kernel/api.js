@@ -141,16 +141,25 @@ describe('State API', () => {
 
 describe('Lock API', () => {
   describe('instanceof', () => {
-    it('returns true if script is a getter', () => {
-
+    it('returns true if script is a getter on class', () => {
+      class CustomLock { get script () { return new Uint8Array() } }
+      expect(new CustomLock() instanceof Lock).to.equal(true)
     })
 
     it('returns false if script is a function', () => {
-
+      class CustomLock { script () { return new Uint8Array() } }
+      expect(new CustomLock() instanceof Lock).to.equal(false)
     })
 
     it('returns false if script is a property', () => {
+      class CustomLock { constructor () { this.script = new Uint8Array() } }
+      expect(new CustomLock() instanceof Lock).to.equal(false)
+      expect(({ script: null }) instanceof Lock).to.equal(false)
+      expect(({ script: new Uint8Array() }) instanceof Lock).to.equal(false)
+    })
 
+    it('returns false if script is a getter on object', () => {
+      expect(({ get script () { return new Uint8Array() } }) instanceof Lock).to.equal(false)
     })
 
     it('returns false for non-objects', () => {
