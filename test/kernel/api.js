@@ -112,6 +112,18 @@ describe('Logger API', () => {
 
 describe('State API', () => {
   describe('instanceof', () => {
+    it('returns true if set and get functions are present', () => {
+      expect(({ set: () => {}, get: () => {} }) instanceof State).to.equal(true)
+      expect(Object.assign(() => {}, { set: () => {}, get: () => {} }) instanceof State).to.equal(true)
+    })
+
+    it('returns false if set and get are not functions', () => {
+      expect(({ set: false, get: () => {} }) instanceof State).to.equal(false)
+      expect(({ set: () => {}, get: null }) instanceof State).to.equal(false)
+      expect(({ set: () => {} }) instanceof State).to.equal(false)
+      expect(({ get: () => {} }) instanceof State).to.equal(false)
+    })
+
     it('returns false for non-objects', () => {
       expect(0 instanceof State).to.equal(false)
       expect(true instanceof State).to.equal(false)
