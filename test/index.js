@@ -6,7 +6,7 @@
 
 require('./extra/asm')
 require('./extra/expect')
-require('./extra/group')
+require('./extra/group-lock')
 require('./extra/hex')
 require('./extra/token')
 
