@@ -22,13 +22,6 @@ describe('Inventory', () => {
   // Todo: Tokens
   // Todo: sync
 
-  it.only('test', async () => {
-    const run = new Run() // eslint-disable-line
-    class Dragon extends Jig {}
-    const dragon = new Dragon()
-    await dragon.sync()
-  })
-
   describe('code', () => {
     it('should update with code deployed', async () => {
       const run = new Run()
@@ -97,7 +90,7 @@ describe('Inventory', () => {
       expect(run2.inventory.jigs).to.deep.equal([c, a, b])
     })
 
-    it('should remove jigs when fail to post', async () => {
+    it.only('should remove jigs when fail to post', async () => {
       const run = new Run()
       hookPay(run, false)
       class A extends Jig {}
@@ -105,7 +98,9 @@ describe('Inventory', () => {
       expect(run.inventory.jigs).to.deep.equal([a])
       expect(run.inventory.code.length).to.equal(1)
       await expect(run.sync()).to.be.rejectedWith('tx has no inputs')
+      console.log('--')
       expect(run.inventory.jigs.length).to.equal(0)
+      console.log('--')
       expect(run.inventory.code.length).to.equal(0)
     })
 
