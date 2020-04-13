@@ -203,6 +203,14 @@ describe('Lock API', () => {
       expect(({ get script () { return new Uint8Array() } }) instanceof Lock).to.equal(false)
     })
 
+    it('returns false if script has a setter on class', () => {
+      class CustomLock {
+        get script () { return new Uint8Array() }
+        set script (value) { }
+      }
+      expect(new CustomLock() instanceof Lock).to.equal(false)
+    })
+
     it('returns false for non-objects', () => {
       expect(0 instanceof Lock).to.equal(false)
       expect(true instanceof Lock).to.equal(false)
