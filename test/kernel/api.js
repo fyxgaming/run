@@ -10,12 +10,12 @@ const { Run } = require('../env/config')
 const { Blockchain, Purse, Logger, State, Lock, Owner } = Run.api
 
 // ------------------------------------------------------------------------------------------------
-// Blockchain Api
+// Blockchain API
 // ------------------------------------------------------------------------------------------------
 
 describe('Blockchain API', () => {
   describe('instanceof', () => {
-    it('passes if all required properties are present', () => {
+    it('returns true if all required properties are present', () => {
       const blockchain = { broadcast: () => {}, fetch: () => {}, utxos: () => {}, network: 'test' }
       expect(blockchain instanceof Blockchain).to.equal(true)
       expect(Object.assign(() => {}, blockchain) instanceof Blockchain).to.equal(true)
@@ -49,9 +49,13 @@ describe('Blockchain API', () => {
   })
 })
 
+// ------------------------------------------------------------------------------------------------
+// Purse API
+// ------------------------------------------------------------------------------------------------
+
 describe('Purse API ', () => {
   describe('instanceof', () => {
-    it('should match non-objects', () => {
+    it('returns false for non-objects', () => {
       expect(0 instanceof Purse).to.equal(false)
       expect(true instanceof Purse).to.equal(false)
       expect('blockchain' instanceof Purse).to.equal(false)
@@ -63,9 +67,13 @@ describe('Purse API ', () => {
   })
 })
 
+// ------------------------------------------------------------------------------------------------
+// Logger API
+// ------------------------------------------------------------------------------------------------
+
 describe('Logger API', () => {
   describe('instanceof', () => {
-    it('should match non-objects', () => {
+    it('returns false for non-objects', () => {
       expect(0 instanceof Logger).to.equal(false)
       expect(true instanceof Logger).to.equal(false)
       expect('blockchain' instanceof Logger).to.equal(false)
@@ -77,9 +85,13 @@ describe('Logger API', () => {
   })
 })
 
+// ------------------------------------------------------------------------------------------------
+// State API
+// ------------------------------------------------------------------------------------------------
+
 describe('State API', () => {
   describe('instanceof', () => {
-    it('should match non-objects', () => {
+    it('returns false for non-objects', () => {
       expect(0 instanceof State).to.equal(false)
       expect(true instanceof State).to.equal(false)
       expect('blockchain' instanceof State).to.equal(false)
@@ -91,9 +103,13 @@ describe('State API', () => {
   })
 })
 
+// ------------------------------------------------------------------------------------------------
+// Lock API
+// ------------------------------------------------------------------------------------------------
+
 describe('Lock API', () => {
   describe('instanceof', () => {
-    it('should match non-objects', () => {
+    it('returns false for non-objects', () => {
       expect(0 instanceof Lock).to.equal(false)
       expect(true instanceof Lock).to.equal(false)
       expect('blockchain' instanceof Lock).to.equal(false)
@@ -105,9 +121,13 @@ describe('Lock API', () => {
   })
 })
 
+// ------------------------------------------------------------------------------------------------
+// Owner API
+// ------------------------------------------------------------------------------------------------
+
 describe('Owner API', () => {
   describe('instanceof', () => {
-    it('should match non-objects', () => {
+    it('returns false for non-objects', () => {
       expect(0 instanceof Owner).to.equal(false)
       expect(true instanceof Owner).to.equal(false)
       expect('blockchain' instanceof Owner).to.equal(false)
