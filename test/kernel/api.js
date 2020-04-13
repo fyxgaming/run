@@ -211,6 +211,13 @@ describe('Lock API', () => {
       expect(new CustomLock() instanceof Lock).to.equal(false)
     })
 
+    it('returns false if object overrides script getter', () => {
+      class CustomLock { get script () { return new Uint8Array() } }
+      const o = { script: new Uint8Array() }
+      Object.setPrototypeOf(o, CustomLock.prototype)
+      expect(o instanceof Lock).to.equal(false)
+    })
+
     it('returns false for non-objects', () => {
       expect(0 instanceof Lock).to.equal(false)
       expect(true instanceof Lock).to.equal(false)
