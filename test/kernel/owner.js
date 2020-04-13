@@ -18,7 +18,7 @@ describe('Owner', () => {
   const run = new Run()
 
   describe('next', () => {
-    it('should call next for every new jig or code', async () => {
+    it('should call next() for every new jig or code', async () => {
       // Hook next() to count the number of times its called
       const owner = new Run().owner
       const oldNext = owner.next
@@ -40,7 +40,7 @@ describe('Owner', () => {
       expect(nextCount).to.equal(2)
     })
 
-    it.only('should support changing lock every call', async () => {
+    it.only('should support creating new locks for every token', async () => {
       class HDOwner {
         constructor () {
           this.master = new HDPrivateKey()
@@ -65,7 +65,7 @@ describe('Owner', () => {
 
       class A extends Jig { }
       const a = new A()
-      await a.sync()
+      await run.sync()
 
       console.log('--')
       console.log(a.owner)
@@ -74,7 +74,7 @@ describe('Owner', () => {
       // One more
     })
 
-    it('should fail to create tokens if next throws', () => {
+    it('should fail to create tokens if next() throws', () => {
     })
   })
 
