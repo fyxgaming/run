@@ -18,6 +18,15 @@ const { Blockchain, Purse, Logger, State, Lock, Owner } = Run.api
 // ------------------------------------------------------------------------------------------------
 
 describe('Blockchain API', () => {
+  describe('methods', () => {
+    it('should throw NotImplementedError by default', async () => {
+      await expect(new Blockchain().broadcast()).to.be.rejectedWith(NotImplementedError)
+      await expect(new Blockchain().fetch()).to.be.rejectedWith(NotImplementedError)
+      await expect(new Blockchain().utxos()).to.be.rejectedWith(NotImplementedError)
+      expect(() => new Blockchain().network).to.throw(NotImplementedError)
+    })
+  })
+
   describe('instanceof', () => {
     it('returns true if all required properties are present', () => {
       const blockchain = { broadcast: () => {}, fetch: () => {}, utxos: () => {}, network: 'test' }
@@ -57,6 +66,12 @@ describe('Blockchain API', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('Purse API ', () => {
+  describe('pay', () => {
+    it('should throw NotImplementedError by default', async () => {
+      await expect(new Purse().pay()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
   describe('instanceof', () => {
     it('returns true if pay method is present', () => {
       const purse = { pay: () => {} }
@@ -87,6 +102,15 @@ describe('Purse API ', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('Logger API', () => {
+  describe('methods', () => {
+    it('should not throw by default', () => {
+      expect(() => new Logger().info()).not.to.throw()
+      expect(() => new Logger().warn()).not.to.throw()
+      expect(() => new Logger().debug()).not.to.throw()
+      expect(() => new Logger().error()).not.to.throw()
+    })
+  })
+
   describe('instanceof', () => {
     it('returns true for any object for function', () => {
       expect(({}) instanceof Logger).to.equal(true)
@@ -115,6 +139,13 @@ describe('Logger API', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('State API', () => {
+  describe('methods', () => {
+    it('should throw NotImplementedError by default', async () => {
+      await expect(new State().get()).to.be.rejectedWith(NotImplementedError)
+      await expect(new State().set()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
   describe('instanceof', () => {
     it('returns true if set and get functions are present', () => {
       expect(({ set: () => {}, get: () => {} }) instanceof State).to.equal(true)
@@ -144,6 +175,12 @@ describe('State API', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('Lock API', () => {
+  describe('script', () => {
+    it('should throw NotImplementedError by default', () => {
+      expect(() => new Lock().script).to.throw(NotImplementedError)
+    })
+  })
+
   describe('instanceof', () => {
     it('returns true if script is a getter on class', () => {
       class CustomLock { get script () { return new Uint8Array() } }
