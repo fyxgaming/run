@@ -11,7 +11,7 @@ const { describe, it } = require('mocha')
 // ------------------------------------------------------------------------------------------------
 
 describe('Group', () => {
-  it('test', async () => {
+  it.only('test', async () => {
     const { Run } = require('../env/config')
     const { Jig } = Run
     class A extends Jig { set () { this.n = 1 } }
