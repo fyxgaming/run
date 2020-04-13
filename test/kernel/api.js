@@ -44,7 +44,6 @@ describe('Blockchain API', () => {
       expect(null instanceof Blockchain).to.equal(false)
       expect(undefined instanceof Blockchain).to.equal(false)
       expect(Symbol.hasInstance instanceof Blockchain).to.equal(false)
-      expect((() => {}) instanceof Blockchain).to.equal(false)
     })
   })
 })
@@ -75,7 +74,6 @@ describe('Purse API ', () => {
       expect(null instanceof Purse).to.equal(false)
       expect(undefined instanceof Purse).to.equal(false)
       expect(Symbol.hasInstance instanceof Purse).to.equal(false)
-      expect((() => {}) instanceof Purse).to.equal(false)
     })
   })
 })
@@ -86,6 +84,17 @@ describe('Purse API ', () => {
 
 describe('Logger API', () => {
   describe('instanceof', () => {
+    it('returns true for any object for function', () => {
+      expect(({}) instanceof Logger).to.equal(true)
+      expect((() => {}) instanceof Logger).to.equal(true)
+      expect(({ info: () => {} }) instanceof Logger).to.equal(true)
+      expect(({ warn: function () { } }) instanceof Logger).to.equal(true)
+      expect(({ debug: false }) instanceof Logger).to.equal(true)
+      expect(({ error: null }) instanceof Logger).to.equal(true)
+      const f = () => {}
+      expect(({ error: f, info: f, warn: f, debug: f }) instanceof Logger).to.equal(true)
+    })
+
     it('returns false for non-objects', () => {
       expect(0 instanceof Logger).to.equal(false)
       expect(true instanceof Logger).to.equal(false)
@@ -93,7 +102,6 @@ describe('Logger API', () => {
       expect(null instanceof Logger).to.equal(false)
       expect(undefined instanceof Logger).to.equal(false)
       expect(Symbol.hasInstance instanceof Logger).to.equal(false)
-      expect((() => {}) instanceof Logger).to.equal(false)
     })
   })
 })
@@ -111,7 +119,6 @@ describe('State API', () => {
       expect(null instanceof State).to.equal(false)
       expect(undefined instanceof State).to.equal(false)
       expect(Symbol.hasInstance instanceof State).to.equal(false)
-      expect((() => {}) instanceof State).to.equal(false)
     })
   })
 })
@@ -129,7 +136,6 @@ describe('Lock API', () => {
       expect(null instanceof Lock).to.equal(false)
       expect(undefined instanceof Lock).to.equal(false)
       expect(Symbol.hasInstance instanceof Lock).to.equal(false)
-      expect((() => {}) instanceof Lock).to.equal(false)
     })
   })
 })
@@ -147,7 +153,6 @@ describe('Owner API', () => {
       expect(null instanceof Owner).to.equal(false)
       expect(undefined instanceof Owner).to.equal(false)
       expect(Symbol.hasInstance instanceof Owner).to.equal(false)
-      expect((() => {}) instanceof Owner).to.equal(false)
     })
   })
 })
