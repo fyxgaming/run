@@ -5,8 +5,12 @@
  */
 
 const { describe, it } = require('mocha')
-const { expect } = require('chai')
+const chai = require('chai')
+const chaiAsPromised = require('chai-as-promised')
+chai.use(chaiAsPromised)
+const { expect } = chai
 const { Run } = require('../env/config')
+const { NotImplementedError } = Run.errors
 const { Blockchain, Purse, Logger, State, Lock, Owner } = Run.api
 
 // ------------------------------------------------------------------------------------------------
@@ -178,6 +182,15 @@ describe('Lock API', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('Owner API', () => {
+  describe('methods', () => {
+    it('should throw NotImplementedError by default', async () => {
+      expect(() => new Owner().next()).to.throw(NotImplementedError)
+      await expect(new Owner().sign()).to.be.rejectedWith(NotImplementedError)
+      expect(() => new Owner().ours()).to.throw(NotImplementedError)
+      await expect(new Owner().locations()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
   describe('instanceof', () => {
     it('returns true if next and sign are present', () => {
       expect(({ next: () => {}, sign: () => {} }) instanceof Owner).to.equal(true)
