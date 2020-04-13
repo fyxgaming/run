@@ -15,7 +15,7 @@ const { Jig } = Run
 
 describe('Owner', () => {
   describe('next', () => {
-    it.only('should call next for every new jig or code', async () => {
+    it('should call next for every new jig or code', async () => {
       // Hook next() to count the number of times its called
       const owner = new Run().owner
       const oldNext = owner.next
