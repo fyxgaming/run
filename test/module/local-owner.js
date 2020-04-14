@@ -78,7 +78,19 @@ describe('LocalOwner', () => {
     const run = new Run()
     beforeEach(() => run.activate())
 
-    it('should sign 1-1 multisig', async () => {
+    it('should sign with standard lock', async () => {
+      // TODO
+    })
+
+    it('should not sign standard lock if different address', async () => {
+      // TODO
+    })
+
+    it('should not sign standard lock if already signed', async () => {
+      // TODO
+    })
+
+    it('should sign 1-1 group lock', async () => {
       class A extends Jig {
         init (owner) { this.owner = owner }
         set () { this.n = 1 }
@@ -88,7 +100,7 @@ describe('LocalOwner', () => {
       await a.sync()
     })
 
-    it('should sign 2-3 multisig', async () => {
+    it('should sign 2-3 group lock', async () => {
       const run2 = new Run()
       const run3 = new Run()
       class A extends Jig {
@@ -117,7 +129,7 @@ describe('LocalOwner', () => {
       await run2.sync()
     })
 
-    it('should not sign if already signed', async () => {
+    it('should not sign group lock if already signed', async () => {
       class A extends Jig {
         init (owner) { this.owner = owner }
         set () { this.n = 1 }
@@ -141,7 +153,7 @@ describe('LocalOwner', () => {
       await run.sync()
     })
 
-    it('should not sign if not our pubkey', async () => {
+    it('should not sign group lock if not our pubkey', async () => {
       const run2 = new Run()
       class A extends Jig {
         init (owner) { this.owner = owner }
