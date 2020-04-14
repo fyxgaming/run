@@ -6,8 +6,9 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+const { PrivateKey, PublicKey } = require('bsv')
 const { Run } = require('../env/config')
-const { LockOwner } = Run
+const { LockOwner, Mockchain, StandardLock } = Run
 
 // ------------------------------------------------------------------------------------------------
 // LockOwner
@@ -15,8 +16,32 @@ const { LockOwner } = Run
 
 describe('LockOwner', () => {
   describe('constructor', () => {
-    it('should support creating with owner and blockchain', () => {
+    it('should support address lock owners', () => {
+      const blockchain = new Mockchain()
+      const address = new PrivateKey().toAddress().toString()
+      const addressLockOwner = new LockOwner({ owner: address, blockchain })
+      expect(addressLockOwner.blockchain).to.equal(blockchain)
+      expect(addressLockOwner.lock instanceof StandardLock).to.equal(true)
+      expect(addressLockOwner.lock.address).to.equal(address)
+    })
 
+    it('should support pubkey lock owners', () => {
+      const blockchain = new Mockchain()
+      const pubkey = new PrivateKey().publicKey.toString()
+      const address = new PublicKey(pubkey).toAddress().toString()
+      const pubkeyLockOwner = new LockOwner({ owner: pubkey, blockchain })
+      expect(pubkeyLockOwner.blockchain).to.equal(blockchain)
+      expect(pubkeyLockOwner.lock instanceof StandardLock).to.equal(true)
+      expect(pubkeyLockOwner.lock.address).to.equal(address)
+    })
+
+    it('should support custom lock owners', () => {
+      class CustomLock { get script () { return new Uint8Array([0, 1, 2]) }}
+      const blockchain = new Mockchain()
+      const lock = new CustomLock()
+      const lockOwner = new LockOwner({ owner: lock, blockchain })
+      expect(lockOwner.blockchain).to.equal(blockchain)
+      expect(lockOwner.lock).to.equal(lock)
     })
 
     it('should throw if owner is invalid', () => {
