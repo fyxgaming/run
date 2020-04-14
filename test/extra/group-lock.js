@@ -8,7 +8,8 @@ const { describe, it } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
-const { PrivateKey } = require('bsv')
+const bsv = require('bsv')
+const { PrivateKey, Script } = bsv
 const { expect } = chai
 const { Run } = require('../env/config')
 const { GroupLock } = Run
@@ -19,7 +20,10 @@ const { GroupLock } = Run
 
 describe('GroupLock', () => {
   it('should generate script 1-1', () => {
-
+    const pubkeys = [new PrivateKey().publicKey.toString()]
+    const script = new GroupLock(pubkeys, 1).script
+    const asm = new Script(bsv.deps.Buffer.from(script)).toASM()
+    expect(asm).to.equal(`OP_1 ${pubkeys[0]} OP_1 OP_CHECKMULTISIG`)
   })
 
   it('should generate script 3-5', () => {
