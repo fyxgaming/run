@@ -6,7 +6,7 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { PrivateKey, PublicKey } = require('bsv')
+const { PrivateKey, PublicKey, Transaction } = require('bsv')
 const { Run } = require('../env/config')
 const { LockOwner, Mockchain, StandardLock } = Run
 
@@ -62,8 +62,13 @@ describe('LockOwner', () => {
   })
 
   describe('sign', () => {
-    it('should log warning and not sign', () => {
-      // TODO
+    it('should not sign', async () => {
+      const address = new PrivateKey().toAddress().toString()
+      const lockOwner = new LockOwner({ owner: address })
+      const tx = new Transaction()
+      const hashBefore = tx.hash
+      expect(await lockOwner.sign(tx, [])).to.equal(tx)
+      expect(tx.hash).to.equal(hashBefore)
     })
   })
 
