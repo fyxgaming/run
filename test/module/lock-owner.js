@@ -5,6 +5,9 @@
  */
 
 const { describe, it } = require('mocha')
+const { expect } = require('chai')
+const { Run } = require('../env/config')
+const { LockOwner } = Run
 
 // ------------------------------------------------------------------------------------------------
 // LockOwner
@@ -12,8 +15,14 @@ const { describe, it } = require('mocha')
 
 describe('LockOwner', () => {
   describe('constructor', () => {
+    it('should support creating with owner and blockchain', () => {
+
+    })
+
     it('should throw if owner is invalid', () => {
-      // TODO
+      expect(() => new LockOwner()).to.throw('Invalid owner: undefined')
+      expect(() => new LockOwner({ owner: null })).to.throw('Invalid owner: null')
+      expect(() => new LockOwner({ owner: new (class {})() })).to.throw('Invalid owner: [object ??]')
     })
   })
 
