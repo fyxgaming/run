@@ -621,8 +621,8 @@ describe('Transaction', () => {
       it('should throw if no data', async () => {
         const tx = await run.purse.pay(new bsv.Transaction())
         await run.blockchain.broadcast(tx)
-        await expect(run.load(tx.hash + '_o0')).to.be.rejectedWith(`not a run tx: ${tx.hash}`)
-        await expect(run.load(tx.hash + '_o1')).to.be.rejectedWith(`not a run tx: ${tx.hash}`)
+        await expect(run.load(tx.hash + '_o0')).to.be.rejectedWith(`Not a token: ${tx.hash}`)
+        await expect(run.load(tx.hash + '_o1')).to.be.rejectedWith(`Not a token: ${tx.hash}`)
       })
 
       it('should throw if bad output target', async () => {

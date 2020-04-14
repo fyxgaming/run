@@ -154,7 +154,7 @@ describe('Owner', () => {
 
       // Call a method, which will call our custom sign, and fail
       a.set()
-      await expect(a.sync()).to.be.rejectedWith('Bad signature for A')
+      await expect(a.sync()).to.be.rejectedWith('tx signature not valid')
     })
 
     it('should rethrow error during sign', async () => {
