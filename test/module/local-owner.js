@@ -87,7 +87,7 @@ describe('LocalOwner', () => {
       expect(a.owner instanceof StandardLock)
     })
 
-    it('should not sign standard lock if different address', async () => {
+    it.only('should not sign standard lock if different address', async () => {
       const run2 = new Run()
       class A extends Jig {
         init (owner) { this.owner = owner }
