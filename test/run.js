@@ -144,6 +144,44 @@ describe('Run', () => {
         expect(() => new Run({ owner: 123 })).to.throw('Invalid owner: 123')
         expect(() => new Run({ owner: false })).to.throw('Invalid owner: false')
       })
+
+      /*
+    it('should support creating from bsv public key on mainnet', () => {
+      const pubkey = new bsv.PrivateKey('mainnet').publicKey
+      const run = new Run({ network: 'main', owner: pubkey })
+      expect(run.owner.privkey).to.equal(undefined)
+      expect(run.owner.pubkey).to.equal(pubkey.toString())
+      expect(run.owner.address).to.equal(pubkey.toAddress().toString())
+      expect(run.owner.next()).to.equal(pubkey.toAddress().toString())
+    })
+
+    it('should support creating from string public key on mocknet', () => {
+      const pubkey = new bsv.PrivateKey('testnet').publicKey
+      const run = new Run({ network: 'mock', owner: pubkey.toString() })
+      expect(run.owner.privkey).to.equal(undefined)
+      expect(run.owner.pubkey).to.equal(pubkey.toString())
+      expect(run.owner.address).to.equal(pubkey.toAddress().toString())
+      expect(run.owner.next()).to.equal(pubkey.toAddress().toString())
+    })
+
+    it('should support creating from bsv address on testnet', () => {
+      const address = new bsv.PrivateKey('testnet').toAddress()
+      const run = new Run({ network: 'test', owner: address })
+      expect(run.owner.privkey).to.equal(undefined)
+      expect(run.owner.pubkey).to.equal(undefined)
+      expect(run.owner.address).to.equal(address.toString())
+      expect(run.owner.next()).to.equal(address.toString())
+    })
+
+    it('should support creating from string address on mainnet', () => {
+      const address = new bsv.PrivateKey('livenet').toAddress()
+      const run = new Run({ network: 'main', owner: address.toString() })
+      expect(run.owner.privkey).to.equal(undefined)
+      expect(run.owner.pubkey).to.equal(undefined)
+      expect(run.owner.address).to.equal(address.toString())
+      expect(run.owner.next()).to.equal(address.toString())
+    })
+    */
     })
 
     describe('purse', () => {
