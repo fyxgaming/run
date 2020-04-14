@@ -94,11 +94,15 @@ describe('Run', () => {
         expect(() => new Run({ blockchain: () => {} })).to.throw('Invalid blockchain: [anonymous function]')
       })
 
-      it('should support all networks', () => {
+      it('should create blockchain for supported networks', () => {
         const networks = ['main', 'test', 'mock']
         networks.forEach(network => {
           expect(new Run({ network }).blockchain.network).to.equal(network)
         })
+      })
+
+      it('should throw for unsupported networks', () => {
+        expect(() => new Run({ network: 'blah' })).to.throw('Unsupported network: blah')
       })
 
       it('should reuse blockchains', () => {
