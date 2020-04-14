@@ -173,7 +173,19 @@ describe('LocalOwner', () => {
   })
 
   describe('locations', () => {
-    // TODO - with and without blockchain
+    it('should return utxos for address', async () => {
+      const mockchain = new Mockchain()
+      const privateKey = new PrivateKey('testnet')
+      const address = privateKey.toAddress().toString()
+      const txid = mockchain.fund(address, 10000)
+      const owner = new LocalOwner({ privkey: privateKey, blockchain: mockchain })
+      expect((await owner.locations())).to.deep.equal([txid + '_o1'])
+    })
+
+    it('should return empty array is blockchain is undefined', async () => {
+      const owner = new LocalOwner()
+      expect(await owner.locations()).to.deep.equal([])
+    })
   })
 
   describe('ours', () => {
