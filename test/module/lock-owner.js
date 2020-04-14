@@ -77,8 +77,10 @@ describe('LockOwner', () => {
       // TODO
     })
 
-    it('should return empty array is blockchain is undefined', () => {
-      // TODO
+    it('should return empty array is blockchain is undefined', async () => {
+      const address = new PrivateKey().toAddress().toString()
+      const lockOwner = new LockOwner({ owner: address })
+      expect(await lockOwner.locations()).to.deep.equal([])
     })
   })
 

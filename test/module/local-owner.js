@@ -180,6 +180,14 @@ describe('LocalOwner', () => {
       await run2.sync()
     })
   })
+
+  describe('locations', () => {
+    // TODO - with and without blockchain
+  })
+
+  describe('ours', () => {
+    // TODO
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
