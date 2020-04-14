@@ -62,6 +62,15 @@ describe('Mockchain', () => {
       await mockchain.broadcast(tx)
     })
   })
+
+  describe('fund', () => {
+    it('should directly fund address with amount', async () => {
+      const address = new PrivateKey('testnet').toAddress()
+      const txid = mockchain.fund(address, 10000)
+      const utxos = await mockchain.utxos(Script.fromAddress(address))
+      expect(txid).to.equal(utxos[0].txid)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

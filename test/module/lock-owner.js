@@ -73,8 +73,12 @@ describe('LockOwner', () => {
   })
 
   describe('locations', () => {
-    it('should return utxos for locking script', () => {
-      // TODO
+    it('should return utxos for locking script', async () => {
+      const mockchain = new Mockchain()
+      const address = new PrivateKey('testnet').toAddress().toString()
+      const txid = mockchain.fund(address, 10000)
+      const lockOwner = new LockOwner({ owner: address, blockchain: mockchain })
+      expect((await lockOwner.locations())).to.deep.equal([txid + '_o1'])
     })
 
     it('should return empty array is blockchain is undefined', async () => {
