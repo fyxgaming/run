@@ -80,7 +80,11 @@ describe('LocalOwner', () => {
     beforeEach(() => run.activate())
 
     it('should sign with standard lock', async () => {
-      // TODO
+      class A extends Jig { set() { this.n = 1}}
+      const a = new A()
+      a.set()
+      await a.sync()
+      expect(a.owner instanceof StandardLock)
     })
 
     it('should not sign standard lock if different address', async () => {
