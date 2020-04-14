@@ -65,8 +65,14 @@ describe('LocalOwner', () => {
     })
   })
 
-  // Next
-  // expect(run.owner.next()).to.equal(privkey.toAddress().toString())
+  describe('next', () => {
+    it('should always return the address', () => {
+      const privateKey = new PrivateKey()
+      const owner = new LocalOwner({ privkey: privateKey })
+      expect(owner.next()).to.equal(owner.address)
+      expect(owner.next()).to.equal(owner.address)
+    })
+  })
 
   describe('sign', () => {
     const run = new Run()
