@@ -19,21 +19,17 @@ const { GroupLock } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('GroupLock', () => {
-  it('should generate script 1-1', () => {
-    const pubkeys = [new PrivateKey().publicKey.toString()]
-    const script = new GroupLock(pubkeys, 1).script
+  function testScript (m, n) {
+    const pubkeys = []
+    for (let i = 0; i < n; i++) pubkeys.push(new PrivateKey().publicKey.toString())
+    const script = new GroupLock(pubkeys, m).script
     const asm = new Script(bsv.deps.Buffer.from(script)).toASM()
-    expect(asm).to.equal(`OP_1 ${pubkeys[0]} OP_1 OP_CHECKMULTISIG`)
-  })
+    expect(asm).to.equal(`OP_${m} ${pubkeys.join(' ')} OP_${n} OP_CHECKMULTISIG`)
+  }
 
-  it('should generate script 3-5', () => {
-
-  })
-
-  it('should generate script 16-16', () => {
-    // Defaults to 16
-
-  })
+  it('should generate script 1-1', () => testScript(1, 1))
+  it('should generate script 3-5', () => testScript(3, 5))
+  it('should generate script 16-16', () => testScript(16, 16))
 
   it('should default m to all pubkeys length', () => {
     const pubkeys = [new PrivateKey().publicKey.toString(), new PrivateKey().publicKey.toString()]
