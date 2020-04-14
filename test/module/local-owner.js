@@ -80,7 +80,7 @@ describe('LocalOwner', () => {
     beforeEach(() => run.activate())
 
     it('should sign with standard lock', async () => {
-      class A extends Jig { set() { this.n = 1}}
+      class A extends Jig { set () { this.n = 1 }}
       const a = new A()
       a.set()
       await a.sync()
@@ -88,7 +88,33 @@ describe('LocalOwner', () => {
     })
 
     it('should not sign standard lock if different address', async () => {
-      // TODO
+      const run2 = new Run()
+      class A extends Jig {
+        init (owner) { this.owner = owner }
+        set () { this.n = 1 }
+      }
+
+      // Create a jig assigned to someone else
+      run.activate()
+      const a = new A(new StandardLock(run2.owner.address))
+      await a.sync()
+
+      // Try signing and then export tx
+      run.transaction.begin()
+      a.set()
+      await run.transaction.pay()
+      await run.transaction.sign()
+      const tx = run.transaction.export()
+      run.transaction.rollback()
+
+      // Make sure our transaction is not fully signed
+      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith('tx not fully signed')
+
+      // Sign with pubkey 2 and broadcast
+      run2.activate()
+      await run2.transaction.import(tx)
+      run2.transaction.end()
+      await run2.sync()
     })
 
     it('should not sign standard lock if already signed', async () => {
@@ -170,7 +196,7 @@ describe('LocalOwner', () => {
       const a = new A(new GroupLock([run2.owner.pubkey], 1))
       await a.sync()
 
-      // Sign with pubkey 1 and export tx
+      // Try signing and then export tx
       run.transaction.begin()
       a.set()
       await run.transaction.pay()

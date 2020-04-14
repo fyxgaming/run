@@ -45,7 +45,7 @@ Run.defaults.purse = PURSE
 
 if (COVER) {
   Run.sandbox.excludes = [Run.Jig, Run.Berry, Run.Token, Run.expect, util.TokenSet, util.TokenMap,
-    Run.GroupLock]
+    Run.StandardLock, Run.GroupLock]
 }
 
 // ------------------------------------------------------------------------------------------------
