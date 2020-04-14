@@ -154,13 +154,10 @@ describe('Run', () => {
         expect(typeof run.owner.privkey).to.equal('string')
       })
 
-      it('should support null owner', () => {
-        expect(new Run({ owner: null }).owner).not.to.equal(null)
-      })
-
       it('should throw for invalid owner', () => {
         expect(() => new Run({ owner: 123 })).to.throw('Invalid owner: 123')
         expect(() => new Run({ owner: false })).to.throw('Invalid owner: false')
+        expect(() => new Run({ owner: null }).owner).to.throw('Invalid owner: null')
       })
 
       // TODO: Test that instance of is correct
