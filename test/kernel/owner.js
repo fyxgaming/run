@@ -18,7 +18,7 @@ const { Jig, asm } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('Owner', () => {
-  const run = new Run()
+  new Run() // eslint-disable-line
 
   describe('next', () => {
     it('should call next() for every new jig or code', async () => {

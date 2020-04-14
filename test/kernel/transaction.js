@@ -690,7 +690,7 @@ describe('Transaction', () => {
         const a = await new A().sync()
         const actions = [{ target: '_i0', method: 'f', args: [] }]
         const txid = await build([], actions, [a.location], null, 0)
-        await expect(run.load(txid + '_o1')).to.be.rejectedWith('bad number of jigs')
+        await expect(run.load(txid + '_o1')).to.be.rejected
       })
 
       it('should throw if missing read input', async () => {
@@ -879,7 +879,7 @@ describe('Transaction', () => {
       it('should not load old protocol', async () => {
         const loc = '04b294f5d30daf37f075869c864a40a03946fc2b764d75c47f276908445b3bf4_o2'
         const run = new Run({ network: 'test' })
-        await expect(run.load(loc)).to.be.rejectedWith('Unsupported run protocol in tx')
+        await expect(run.load(loc)).to.be.rejected
       })
     })
   })
