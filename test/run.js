@@ -10,7 +10,7 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('./env/config')
-const { Jig } = Run
+const { Jig, LocalOwner, LocalPurse } = Run
 const bsv = require('bsv')
 const packageInfo = require('../package.json')
 
@@ -150,8 +150,7 @@ describe('Run', () => {
     describe('owner', () => {
       it('should default to random owner', () => {
         const run = new Run()
-        expect(run.owner).not.to.equal(null)
-        expect(typeof run.owner.privkey).to.equal('string')
+        expect(run.owner instanceof LocalOwner).to.equal(true)
       })
 
       it('should throw for invalid owner', () => {
@@ -205,26 +204,24 @@ describe('Run', () => {
     describe('purse', () => {
       it('should default to random purse', () => {
         const run = new Run()
-        expect(run.purse).not.to.equal(null)
-        expect(typeof run.purse.privkey).to.equal('string')
-      })
-
-      it('should support null purse', () => {
-        expect(new Run({ purse: null }).purse).not.to.equal(null)
+        expect(run.purse instanceof LocalPurse).to.equal(true)
       })
 
       it('should throw for invalid purse', () => {
-        expect(() => new Run({ purse: {} })).to.throw('Purse requires a pay method')
+        expect(() => new Run({ purse: {} })).to.throw('Invalid purse: [object Object]')
         expect(() => new Run({ purse: 123 })).to.throw('Invalid purse: 123')
         expect(() => new Run({ purse: true })).to.throw('Invalid purse: true')
+        expect(() => new Run({ purse: null }).purse).to.throw('Invalid purse: null')
       })
     })
 
-    it('should set global bsv network', () => {
+    describe('misc', () => {
+      it('should set global bsv network', () => {
       new Run({ network: 'main' }) // eslint-disable-line
-      expect(bsv.Networks.defaultNetwork).to.equal('mainnet')
+        expect(bsv.Networks.defaultNetwork).to.equal('mainnet')
       new Run({ network: 'test' }) // eslint-disable-line
-      expect(bsv.Networks.defaultNetwork).to.equal('testnet')
+        expect(bsv.Networks.defaultNetwork).to.equal('testnet')
+      })
     })
   })
 
