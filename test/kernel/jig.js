@@ -1601,7 +1601,7 @@ describe('Jig', () => {
         console.log(a.n)
       } catch (e) {
         expect(e.toString().startsWith('Error: Deploy failed')).to.equal(true)
-        expect(e.toString().indexOf('Error: Broadcast failed, tx has no inputs')).not.to.equal(-1)
+        expect(e.toString().indexOf('Error: Broadcast failed: tx has no inputs')).not.to.equal(-1)
       } finally {
         run.purse.pay = oldPay
       }
@@ -1617,11 +1617,11 @@ describe('Jig', () => {
       // test when just init, no inputs
       expectAction(b, 'init', [], [], [b], [])
       const suggestion = 'Hint: Is the purse funded to pay for this transaction?'
-      await expect(run.sync()).to.be.rejectedWith(`Broadcast failed, tx has no inputs\n\n${suggestion}`)
+      await expect(run.sync()).to.be.rejectedWith(`Broadcast failed: tx has no inputs\n\n${suggestion}`)
       // test with a spend, pre-existing inputs
       a.set(1)
       expectAction(a, 'set', [1], [a], [a], [])
-      await expect(run.sync()).to.be.rejectedWith(`Broadcast failed, tx fee too low\n\n${suggestion}`)
+      await expect(run.sync()).to.be.rejectedWith(`Broadcast failed: tx fee too low\n\n${suggestion}`)
       run.purse.pay = oldPay
     })
 
