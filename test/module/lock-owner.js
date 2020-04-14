@@ -53,7 +53,11 @@ describe('LockOwner', () => {
 
   describe('next', () => {
     it('should always return the lock', () => {
-      // TODO
+      class CustomLock { get script () { return new Uint8Array([0, 1, 2]) }}
+      const lock = new CustomLock()
+      const lockOwner = new LockOwner({ owner: lock })
+      expect(lockOwner.next()).to.equal(lock)
+      expect(lockOwner.next()).to.equal(lock)
     })
   })
 
