@@ -1462,7 +1462,6 @@ describe('Jig', () => {
     })
 
     it('should support only class owner creating instances', async () => {
-      const privkey = new PrivateKey()
       class A extends Jig {
         init (owner) {
           if (this.owner !== A.owner) throw new Error()
@@ -1470,6 +1469,7 @@ describe('Jig', () => {
         }
       }
       const run = new Run()
+      const privkey = new PrivateKey()
       const a = new A(privkey.publicKey.toString())
       await run.sync()
       run.deactivate()
