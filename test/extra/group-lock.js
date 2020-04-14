@@ -32,7 +32,8 @@ describe('GroupLock', () => {
   })
 
   it('should default m to all pubkeys length', () => {
-
+    const pubkeys = [new PrivateKey().publicKey.toString(), new PrivateKey().publicKey.toString()]
+    expect(new GroupLock(pubkeys).m).to.equal(2)
   })
 
   it('should throw if pubkeys is not non-empty array', () => {
