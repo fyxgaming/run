@@ -22,7 +22,7 @@ describe('LockOwner', () => {
     it('should throw if owner is invalid', () => {
       expect(() => new LockOwner()).to.throw('Invalid owner: undefined')
       expect(() => new LockOwner({ owner: null })).to.throw('Invalid owner: null')
-      expect(() => new LockOwner({ owner: new (class {})() })).to.throw('Invalid owner: [object ??]')
+      expect(() => new LockOwner({ owner: new (class {})() })).to.throw('Invalid owner: [anonymous object]')
     })
   })
 

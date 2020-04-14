@@ -114,6 +114,7 @@ describe('_display', () => {
     expect(_display({ a: 1 })).to.equal('[object Object]')
     expect(_display([1, 2, 3])).to.equal('[object Array]')
     expect(_display(new class Dragon {}())).to.equal('[object Dragon]')
+    expect(_display(new class {}())).to.equal('[anonymous object]')
     // Functions
     expect(_display(function f () { })).to.equal('f')
     expect(_display(class A { })).to.equal('A')
