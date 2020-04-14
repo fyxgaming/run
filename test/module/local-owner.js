@@ -117,10 +117,6 @@ describe('LocalOwner', () => {
       await run2.sync()
     })
 
-    it('should not sign standard lock if already signed', async () => {
-      // TODO
-    })
-
     it('should sign 1-1 group lock', async () => {
       class A extends Jig {
         init (owner) { this.owner = owner }
