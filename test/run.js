@@ -145,6 +145,9 @@ describe('Run', () => {
         expect(() => new Run({ owner: false })).to.throw('Invalid owner: false')
       })
 
+      // TODO: Test that instance of is correct
+      // Objects and strings
+
       /*
     it('should support creating from bsv public key on mainnet', () => {
       const pubkey = new bsv.PrivateKey('mainnet').publicKey

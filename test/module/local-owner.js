@@ -4,14 +4,14 @@
  * Tests for lib/kernel/local-owner.js
  */
 
-const bsv = require('bsv')
+const { PrivateKey, PublicKey, Address } = require('bsv')
 const { describe, it, beforeEach } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../env/config')
-const { Jig, GroupLock } = Run
+const { LocalOwner, Mockchain, Jig, GroupLock } = Run
 
 // ------------------------------------------------------------------------------------------------
 // LocalOwner
@@ -19,33 +19,54 @@ const { Jig, GroupLock } = Run
 
 describe('LocalOwner', () => {
   describe('constructor', () => {
-    it('should support creating from bsv private key on testnet', () => {
-      const privkey = new bsv.PrivateKey('testnet')
-      const run = new Run({ owner: privkey })
-      expect(run.owner.privkey).to.equal(privkey.toString())
-      expect(run.owner.pubkey).to.equal(privkey.publicKey.toString())
-      expect(run.owner.address).to.equal(privkey.toAddress().toString())
-      expect(run.owner.next()).to.equal(privkey.toAddress().toString())
+    it('should create with expected properties', () => {
+      const privateKey = new PrivateKey('testnet')
+      const owner = new LocalOwner({ privkey: privateKey })
+
+      expect(owner.privkey).to.equal(privateKey.toString())
+      expect(owner.bsvPrivateKey).to.equal(privateKey)
+      expect(owner.bsvPrivateKey instanceof PrivateKey).to.equal(true)
+
+      expect(owner.pubkey).to.equal(privateKey.publicKey.toString())
+      expect(owner.bsvPublicKey instanceof PublicKey).to.equal(true)
+      expect(owner.bsvPublicKey.toString()).to.equal(privateKey.publicKey.toString())
+
+      expect(owner.address).to.equal(privateKey.toAddress().toString())
+      expect(owner.bsvAddress instanceof Address).to.equal(true)
+      expect(owner.bsvAddress.toString()).to.equal(privateKey.toAddress().toString())
     })
 
-    it('should support creating from string private key on mainnet', () => {
-      const privkey = new bsv.PrivateKey('mainnet')
-      const run = new Run({ network: 'main', owner: privkey.toString() })
-      expect(run.owner.privkey).to.equal(privkey.toString())
-      expect(run.owner.pubkey).to.equal(privkey.publicKey.toString())
-      expect(run.owner.address).to.equal(privkey.toAddress().toString())
-      expect(run.owner.next()).to.equal(privkey.toAddress().toString())
+    it('should support private key strings', () => {
+      const privateKey = new PrivateKey('mainnet')
+      const owner = new LocalOwner({ privkey: privateKey.toString() })
+      expect(owner.privkey).to.equal(privateKey.toString())
+      expect(owner.pubkey).to.equal(privateKey.publicKey.toString())
+      expect(owner.address).to.equal(privateKey.toAddress().toString())
     })
 
     it('should throw if bad owner', () => {
-      expect(() => new Run({ owner: '123' })).to.throw('Bad owner key or address: 123')
+      expect(() => new LocalOwner({ privkey: '123' })).to.throw('Invalid private key: "123"')
+      expect(() => new LocalOwner({ privkey: new PrivateKey().publicKey })).to.throw('Invalid private key: [object PublicKey]')
     })
 
     it('throw if owner private key is on wrong network', () => {
-      const owner = new bsv.PrivateKey('testnet').toString()
-      expect(() => new Run({ owner, network: 'main' })).to.throw('Private key network mismatch')
+      const privateKey = new PrivateKey('mainnet')
+      const blockchain = new Mockchain()
+      expect(() => new LocalOwner({ privkey: privateKey, blockchain })).to.throw('Private key network mismatch')
+      expect(() => new LocalOwner({ privkey: privateKey.toString(), blockchain })).to.throw('Private key network mismatch')
+    })
+
+    it('should randomly generate a key if no owner is specified', () => {
+      const owner1 = new LocalOwner()
+      const owner2 = new LocalOwner()
+      expect(typeof owner1.privkey).to.equal('string')
+      expect(typeof owner2.privkey).to.equal('string')
+      expect(owner1.privkey).not.to.equal(owner2.privkey)
     })
   })
+
+  // Next
+  // expect(run.owner.next()).to.equal(privkey.toAddress().toString())
 
   describe('sign', () => {
     const run = new Run()
