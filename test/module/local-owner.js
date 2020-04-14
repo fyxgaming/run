@@ -11,7 +11,7 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../env/config')
-const { LocalOwner, Mockchain, Jig, GroupLock } = Run
+const { LocalOwner, Mockchain, Jig, GroupLock, StandardLock } = Run
 
 // ------------------------------------------------------------------------------------------------
 // LocalOwner
@@ -177,7 +177,25 @@ describe('LocalOwner', () => {
   })
 
   describe('ours', () => {
-    // TODO
+    it('should return true for same address lock', () => {
+      const privateKey = new PrivateKey('testnet')
+      const sameLock = new StandardLock(privateKey.toAddress().toString())
+      const owner = new LocalOwner({ privkey: privateKey })
+      expect(owner.ours(sameLock)).to.equal(true)
+    })
+
+    it('should return false for different addresses', () => {
+      const privateKey = new PrivateKey('testnet')
+      const differentLock = new StandardLock(privateKey.toAddress().toString())
+      const owner = new LocalOwner()
+      expect(owner.ours(differentLock)).to.equal(false)
+    })
+
+    it('should return false for different scripts', () => {
+      const differentLock = new class { get script () { return new Uint8Array([1, 2, 3]) }}()
+      const owner = new LocalOwner()
+      expect(owner.ours(differentLock)).to.equal(false)
+    })
   })
 })
 
