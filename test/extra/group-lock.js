@@ -51,7 +51,10 @@ describe('GroupLock', () => {
   })
 
   it('should throw if pubkeys are not valid hex strings', () => {
-    // TODO
+    expect(() => new GroupLock(['a'], 1).script).to.throw('Bad hex')
+    expect(() => new GroupLock(['**'], 1).script).to.throw('Bad hex')
+    expect(() => new GroupLock([123], 1).script).to.throw('Bad hex')
+    expect(() => new GroupLock([null], 1).script).to.throw('Bad hex')
   })
 
   it('should throw if m is out of range', () => {
