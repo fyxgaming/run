@@ -76,6 +76,7 @@ describe('LocalOwner', () => {
 
   describe('sign', () => {
     const run = new Run()
+    expect(run.owner instanceof LocalOwner).to.equal(true)
     beforeEach(() => run.activate())
 
     it('should sign with standard lock', async () => {
