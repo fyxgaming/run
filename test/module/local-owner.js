@@ -1,7 +1,7 @@
 /**
  * local-owner.js
  *
- * Tests for lib/kernel/local-owner.js
+ * Tests for lib/module/local-owner.js
  */
 
 const { PrivateKey, PublicKey, Address } = require('bsv')
@@ -44,6 +44,14 @@ describe('LocalOwner', () => {
       expect(owner.address).to.equal(privateKey.toAddress().toString())
     })
 
+    it('should randomly generate a key if no owner is specified', () => {
+      const owner1 = new LocalOwner()
+      const owner2 = new LocalOwner()
+      expect(typeof owner1.privkey).to.equal('string')
+      expect(typeof owner2.privkey).to.equal('string')
+      expect(owner1.privkey).not.to.equal(owner2.privkey)
+    })
+
     it('should throw if bad owner', () => {
       expect(() => new LocalOwner({ privkey: '123' })).to.throw('Invalid private key: "123"')
       expect(() => new LocalOwner({ privkey: new PrivateKey().publicKey })).to.throw('Invalid private key: [object PublicKey]')
@@ -54,14 +62,6 @@ describe('LocalOwner', () => {
       const blockchain = new Mockchain()
       expect(() => new LocalOwner({ privkey: privateKey, blockchain })).to.throw('Private key network mismatch')
       expect(() => new LocalOwner({ privkey: privateKey.toString(), blockchain })).to.throw('Private key network mismatch')
-    })
-
-    it('should randomly generate a key if no owner is specified', () => {
-      const owner1 = new LocalOwner()
-      const owner2 = new LocalOwner()
-      expect(typeof owner1.privkey).to.equal('string')
-      expect(typeof owner2.privkey).to.equal('string')
-      expect(owner1.privkey).not.to.equal(owner2.privkey)
     })
   })
 
