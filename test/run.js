@@ -38,13 +38,15 @@ describe('Run', () => {
       it('should accept custom logger', () => {
         expect(() => new Run({ logger: {} })).not.to.throw()
 
+        // Create a basic info logger as an object
         let loggedInfo = false
-        const run = new Run({ logger: { info: () => {loggedInfo = true }} })
+        const run = new Run({ logger: { info: () => { loggedInfo = true } } })
         run.logger.info('test')
         expect(loggedInfo).to.equal(true)
 
-        const functionLogger = function() { }
+        // Create a basic error logger as a function object
         let loggedError = false
+        const functionLogger = function () { }
         functionLogger.error = () => { loggedError = true }
         const run2 = new Run({ logger: functionLogger })
         run2.logger.error('test')
