@@ -22,6 +22,7 @@ require('./kernel/transaction')
 require('./module/blockchain-api')
 require('./module/local-owner')
 require('./module/local-purse')
+require('./module/lock-owner')
 require('./module/mockchain')
 require('./module/state-cache')
 
