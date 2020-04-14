@@ -69,6 +69,7 @@ describe('GroupLock', () => {
     expect(() => new GroupLock(pubkeys, 1.5).script).to.throw('m must be a non-negative integer')
     expect(() => new GroupLock(pubkeys, '1').script).to.throw('m must be a non-negative integer')
     expect(() => new GroupLock(pubkeys, null).script).to.throw('m must be a non-negative integer')
+    expect(() => new GroupLock(pubkeys, 2).script).to.throw('m must be <= the number of pubkeys')
   })
 })
 
