@@ -23,6 +23,33 @@ describe('Inventory', () => {
   // Todo: sync
   // Can set old inventory for old owner
 
+  describe('load', () => {
+    it('should not add tokens loaded normally to inventory without sync', async () => {
+      // Create a jig and code
+      const run = new Run()
+      class A extends Jig {}
+      const a = new A()
+      await a.sync()
+
+      // Create a new run, and check that standard loads do not have these jigs
+      const run2 = new Run({ owner: run.owner })
+      expect(run2.inventory.jigs.length).to.equal(0)
+      expect(run2.inventory.code.length).to.equal(0)
+      await run2.load(a.location)
+      expect(run2.inventory.jigs.length).to.equal(0)
+      expect(run2.inventory.code.length).to.equal(0)
+
+      // Then sync, and see that we have them, because we know they're up-to-date
+      await run2.sync()
+      expect(run2.inventory.jigs.length).to.equal(1)
+      expect(run2.inventory.code.length).to.equal(1)
+    })
+
+    it.skip('should loaded synced tokens to inventory', () => {
+      // TODO
+    })
+  })
+
   describe('code', () => {
     it('should update with code deployed', async () => {
       const run = new Run()
