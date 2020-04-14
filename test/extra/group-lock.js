@@ -55,9 +55,56 @@ describe('GroupLock', () => {
     await run2.sync()
   })
 
-  // Move to local owner?
-  it('should not sign if already signed', () => {
-    // TODO
+  // TODO: Move to LocalOwner
+  it('should not sign if already signed', async () => {
+    class A extends Jig {
+      init (owner) { this.owner = owner }
+      set () { this.n = 1 }
+    }
+
+    // Create a jig with a 2-3 group owner
+    const a = new A(new GroupLock([run.owner.pubkey], 1))
+    await a.sync()
+
+    // Sign with pubkey 1 and export tx
+    run.transaction.begin()
+    a.set()
+    await run.transaction.pay()
+
+    // Sign more than once
+    await run.transaction.sign()
+    await run.transaction.sign()
+    await run.transaction.sign()
+
+    run.transaction.end()
+    await run.sync()
+  })
+
+  it('should not sign if not our pubkey', () => {
+    /*
+    class A extends Jig {
+      init (owner) { this.owner = owner }
+      set () { this.n = 1 }
+    }
+
+    // Create a jig with a 2-3 group owner
+    run.activate()
+    const a = new A(new GroupLock([run.owner.pubkey], 1))
+    await a.sync()
+
+    // Sign with pubkey 1 and export tx
+    run.transaction.begin()
+    a.set()
+    await run.transaction.pay()
+
+    // Sign more than once
+    await run.transaction.sign()
+    await run.transaction.sign()
+    await run.transaction.sign()
+
+    run.transaction.end()
+    await run.sync()
+    */
   })
 
   it('should throw if pubkeys is not array', () => {
