@@ -12,6 +12,7 @@ const { expect } = chai
 const { Run } = require('./env/config')
 const { Jig, LocalOwner, LocalPurse } = Run
 const bsv = require('bsv')
+const { PrivateKey } = bsv
 const packageInfo = require('../package.json')
 
 // ------------------------------------------------------------------------------------------------
@@ -164,7 +165,7 @@ describe('Run', () => {
 
       /*
     it('should support creating from bsv public key on mainnet', () => {
-      const pubkey = new bsv.PrivateKey('mainnet').publicKey
+      const pubkey = new PrivateKey('mainnet').publicKey
       const run = new Run({ network: 'main', owner: pubkey })
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(pubkey.toString())
@@ -173,7 +174,7 @@ describe('Run', () => {
     })
 
     it('should support creating from string public key on mocknet', () => {
-      const pubkey = new bsv.PrivateKey('testnet').publicKey
+      const pubkey = new PrivateKey('testnet').publicKey
       const run = new Run({ network: 'mock', owner: pubkey.toString() })
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(pubkey.toString())
@@ -182,7 +183,7 @@ describe('Run', () => {
     })
 
     it('should support creating from bsv address on testnet', () => {
-      const address = new bsv.PrivateKey('testnet').toAddress()
+      const address = new PrivateKey('testnet').toAddress()
       const run = new Run({ network: 'test', owner: address })
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(undefined)
@@ -191,7 +192,7 @@ describe('Run', () => {
     })
 
     it('should support creating from string address on mainnet', () => {
-      const address = new bsv.PrivateKey('livenet').toAddress()
+      const address = new PrivateKey('livenet').toAddress()
       const run = new Run({ network: 'main', owner: address.toString() })
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(undefined)
@@ -228,8 +229,8 @@ describe('Run', () => {
   describe('purse', () => {
     it('throw accept setting valid purse', () => {
       const run = new Run()
-      run.purse = new bsv.PrivateKey()
-      expect(run.purse instanceof Run.LocalPurse).to.equal(true)
+      run.purse = new PrivateKey()
+      expect(run.purse instanceof LocalPurse).to.equal(true)
     })
 
     it('throw throw if set invalid purse', () => {
@@ -280,7 +281,7 @@ describe('Run', () => {
 
   describe('misc', () => {
     it('should support same owner and purse', async () => {
-      const key = new bsv.PrivateKey('testnet')
+      const key = new PrivateKey('testnet')
       const run = new Run({ owner: key, purse: key })
       class A extends Jig { set (name) { this.name = name; return this } }
       const a = new A()
