@@ -247,11 +247,14 @@ describe('Lock API', () => {
 
 describe('Owner API', () => {
   describe('methods', () => {
-    it('should throw NotImplementedError by default', async () => {
+    it('should throw NotImplementedError by default for required next() and sign()', async () => {
       expect(() => new Owner().next()).to.throw(NotImplementedError)
       await expect(new Owner().sign()).to.be.rejectedWith(NotImplementedError)
-      expect(() => new Owner().ours()).to.throw(NotImplementedError)
-      await expect(new Owner().locations()).to.be.rejectedWith(NotImplementedError)
+    })
+
+    it('should no-op by default for optional ours() and locations()', async () => {
+      expect(() => new Owner().ours()).to.not.throw()
+      await new Owner().locations()
     })
   })
 
