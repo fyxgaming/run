@@ -96,9 +96,16 @@ describe('LockOwner', () => {
       expect(lockOwner.ours(sameLock)).to.equal(true)
     })
 
-    it('should return false for different locking scripts', () => {
+    it('should return false for different addresses', () => {
       const address = new PrivateKey('testnet').toAddress().toString()
       const differentLock = new StandardLock(new PrivateKey().toAddress().toString())
+      const lockOwner = new LockOwner({ owner: address })
+      expect(lockOwner.ours(differentLock)).to.equal(false)
+    })
+
+    it('should return false for different scripts', () => {
+      const address = new PrivateKey('testnet').toAddress().toString()
+      const differentLock = new class { get script () { return new Uint8Array([1, 2, 3]) }}()
       const lockOwner = new LockOwner({ owner: address })
       expect(lockOwner.ours(differentLock)).to.equal(false)
     })
