@@ -27,6 +27,7 @@ describe('StandardLock', () => {
     expect(() => new StandardLock('3P14159f73E4gFr7JterCCQh9QjiTjiZrG').script).to.throw('Address may only be a P2PKH type')
     expect(() => new StandardLock('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9n').script).to.throw('Address may only be a P2PKH type')
     expect(() => new StandardLock('@').script).to.throw('Invalid character in address')
+    expect(() => new StandardLock('3P14').script).to.throw('Address too short: 3P14')
   })
 
   it('should correctly return P2PKH buffer', () => {
