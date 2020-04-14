@@ -134,7 +134,7 @@ describe('Token', () => {
       })
     })
 
-    it('should support load after combine', async () => {
+    it.only('should support load after combine', async () => {
       const a = new TestToken(30)
       const b = new TestToken(70)
       const c = TestToken.combine(a, b)

@@ -44,8 +44,8 @@ if (!fs.existsSync('./dist/bsv.browser.min.js')) {
 const reservedNames = [
   // Jig and berry names and dependencies must be preserved
   'Jig', 'Berry', 'Context', 'JigControl', 'BerryControl',
-  // Token and expect built-in jigs must be preserved
-  'Token', 'expect',
+  // Token, expect, etc. are built-in code must be preserved
+  'Token', 'expect', 'asm', 'hex', 'StandardLock', 'GroupLock',
   // TokenSet/TokenMap dependency names must be preserved
   'internal', 'uniqueKey', 'TokenMap'
 ]
@@ -55,7 +55,8 @@ const reservedProperties = [
   // These come from node_modules. Best to be safe.
   '_read', '_lengthRetrievers', '_obj', '__methods',
   // These are bsv library properties that we use and should not be mangled
-  '_hash', '_getHash', '_getInputAmount', '_estimateFee', '_getOutputAmount'
+  '_hash', '_getHash', '_getInputAmount', '_estimateFee', '_getOutputAmount',
+  '_hashPrevouts', '_hashSequence', '_hashOutputsAll'
 ]
 
 // The mangled names are cached in a special name-cache file. We use this file in the tests
