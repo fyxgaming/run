@@ -46,7 +46,8 @@ describe('Inventory', () => {
     })
 
     it.skip('should loaded synced tokens to inventory', () => {
-      // TODO
+      // TODO: Check both jigs and code get synced once we know
+      // We might be able to add to this if we know a jig is latest during loading
     })
   })
 
