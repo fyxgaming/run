@@ -32,7 +32,23 @@ describe('Run', () => {
       it('should throw for invalid logger', () => {
         expect(() => new Run({ logger: 1 })).to.throw('Invalid logger: 1')
         expect(() => new Run({ logger: false })).to.throw('Invalid logger: false')
-        expect(() => new Run({ logger: () => {} })).to.throw('Invalid logger: [anonymous function]')
+        expect(() => new Run({ logger: 'none' })).to.throw('Invalid logger: "none"')
+      })
+
+      it('should accept custom logger', () => {
+        expect(() => new Run({ logger: {} })).not.to.throw()
+
+        let loggedInfo = false
+        const run = new Run({ logger: { info: () => {loggedInfo = true }} })
+        run.logger.info('test')
+        expect(loggedInfo).to.equal(true)
+
+        const functionLogger = function() { }
+        let loggedError = false
+        functionLogger.error = () => { loggedError = true }
+        const run2 = new Run({ logger: functionLogger })
+        run2.logger.error('test')
+        expect(loggedError).to.equal(true)
       })
     })
 
