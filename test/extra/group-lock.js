@@ -27,6 +27,11 @@ describe('GroupLock', () => {
   })
 
   it('should generate script 16-16', () => {
+    // Defaults to 16
+
+  })
+
+  it('should default m to all pubkeys length', () => {
 
   })
 
@@ -58,7 +63,12 @@ describe('GroupLock', () => {
   })
 
   it('should throw if m is out of range', () => {
-    // TODO
+    const pubkeys = [new PrivateKey().publicKey.toString()]
+    expect(() => new GroupLock(pubkeys, 0).script).to.throw('m must be a non-negative integer')
+    expect(() => new GroupLock(pubkeys, -1).script).to.throw('m must be a non-negative integer')
+    expect(() => new GroupLock(pubkeys, 1.5).script).to.throw('m must be a non-negative integer')
+    expect(() => new GroupLock(pubkeys, '1').script).to.throw('m must be a non-negative integer')
+    expect(() => new GroupLock(pubkeys, null).script).to.throw('m must be a non-negative integer')
   })
 })
 
