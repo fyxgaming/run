@@ -44,7 +44,11 @@ describe('GroupLock', () => {
     expect(() => new GroupLock(pubkeys, 1).script).to.throw('No more than 16 pubkeys allowed')
   })
 
-  // Duplicates
+  it('should throw if duplicate pubkeys', () => {
+    const pubkeys = [new PrivateKey().publicKey.toString()]
+    pubkeys.push(pubkeys[0])
+    expect(() => new GroupLock(pubkeys, 1).script).to.throw('pubkeys contains duplicates')
+  })
 
   it('should throw if pubkeys are not valid hex strings', () => {
     // TODO
