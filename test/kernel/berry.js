@@ -11,13 +11,13 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../env/config')
-const { Berry } = Run
+const { Berry, Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Berry
 // ------------------------------------------------------------------------------------------------
 
-describe.only('Berry', () => {
+describe('Berry', () => {
   describe('load', () => {
     it('should fetch to load a berry', async () => {
       const run = new Run()
@@ -39,13 +39,28 @@ describe.only('Berry', () => {
       B.protocol = P
       await expect(run.load('123', { protocol: P })).to.be.rejectedWith('Plucker must return an instance of Berry')
     })
+  })
 
-    it('should support multiple fetches', () => {
-
+  describe('jig', () => {
+    it('should support passing berries into jigs', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      class P { static async pluck (location, fetch, pluck) { return new B() } }
+      P.deps = { B }
+      B.protocol = P
+      await run.deploy(P)
+      const b = await run.load('123', { protocol: P })
+      class A extends Jig { init (b) { this.b = b } }
+      const a = new A(b)
+      await a.sync()
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      await run2.load(a.location)
+      // TODO: Add some checks
     })
   })
 
-  describe('protocols', () => {
+  describe.skip('protocols', () => {
     it('should load a twetch post', async () => {
       class Post extends Berry { init (text) { this.text = text } }
       class Twetch {
@@ -102,8 +117,13 @@ describe.only('Berry', () => {
 
   // May load protocols in long form
   // Load multiple protocols
+  // Set berries on code
 
   /*
+    it('should support multiple fetches', () => {
+      // TODO
+    })
+
     it('should call pluck function with location and functions', async () => {
       const run = new Run()
       class CustomBerry { }
