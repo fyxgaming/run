@@ -68,7 +68,7 @@ describe('Jig', () => {
     })
 
     it('should throw if access jig control', () => {
-      class A extends Jig { init () { JigControl.stack.push(1) } } // eslint-disable-line
+      class A extends Jig { init () { JigControl._stack.push(1) } } // eslint-disable-line
       expect(() => new A()).to.throw()
       expectNoAction()
     })
