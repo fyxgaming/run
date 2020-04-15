@@ -229,7 +229,7 @@ describe('StateCache', () => {
       expectStateGet(a.location)
     })
 
-    // TODO: pending state of jigs changed, make sure does not interfere in publishNext
+    // TODO: pending state of jigs changed, make sure does not interfere in _publishNext
   })
 })
 

@@ -59,9 +59,10 @@ describe('Berry', () => {
   describe.skip('protocols', () => {
     it('should load a twetch post', async () => {
       class TwetchPost extends Berry {
-        init(text) {
+        init (text) {
           this.text = text
         }
+
         static async pluck (location, fetch, pluck) {
           const txo = await fetch(location)
           if (txo.out[0].s2 === '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut') { // B protocol
@@ -83,6 +84,7 @@ describe('Berry', () => {
           this.parent = parent
           this.data = data
         }
+
         static async pluck (location, fetch, pluck) {
           const txo = await fetch(location)
           if (txo.out[0].s1 === 'meta') {

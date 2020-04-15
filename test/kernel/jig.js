@@ -2560,8 +2560,8 @@ describe('Jig', () => {
 let action = null
 
 function hookStoreAction (run) {
-  const oldAction = run.transaction.storeAction.bind(run.transaction)
-  run.transaction.storeAction = (target, method, args, inputs, outputs, reads, before, after, proxies) => {
+  const oldAction = unmangle(run.transaction)._storeAction.bind(run.transaction)
+  unmangle(run.transaction)._storeAction = (target, method, args, inputs, outputs, reads, before, after, proxies) => {
     oldAction(target, method, args, inputs, outputs, reads, before, after, proxies)
     target = proxies.get(target)
     inputs = new Set(Array.from(inputs).map(i => proxies.get(i)))

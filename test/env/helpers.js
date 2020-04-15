@@ -13,7 +13,7 @@ const { unmangle } = require('./unmangle')
 
 async function hookPay (run, ...enables) {
   const syncer = unmangle(unmangle(run)._kernel)._syncer
-  enables = new Array(syncer.queued.length).fill(true).concat(enables)
+  enables = new Array(unmangle(syncer)._queued.length).fill(true).concat(enables)
   const orig = run.purse.pay.bind(run.purse)
   run.purse.pay = async (tx) => {
     if (!enables.length) { return orig(tx) }
