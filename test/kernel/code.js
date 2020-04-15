@@ -36,6 +36,14 @@ describe('Code', () => {
       expect(A.ownerMocknet).to.equal(run.owner.address)
     })
 
+    it('should support custom owners', async () => {
+      class CustomOwner { get script () { return new Uint8Array() } }
+      const run = new Run({ owner: new CustomOwner() })
+      class A { }
+      await run.deploy(A)
+      expect(A.owner instanceof CustomOwner).to.equal(true)
+    })
+
     it('should not deploy previous install', async () => {
       class A { }
       const loc = await run.deploy(A)

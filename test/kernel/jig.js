@@ -1477,18 +1477,49 @@ describe('Jig', () => {
       await run2.load(a.location)
     })
 
-    it.only('should support copying non-standard owner to another jig', async () => {
+    it('should support copying non-standard owner to another jig', async () => {
       class CustomOwner { get script () { return new Uint8Array([1, 2, 3]) } }
       class A extends Jig { init () { this.owner = new CustomOwner() } }
       A.deps = { CustomOwner }
       class B extends Jig { init (a) { this.owner = a.owner } }
       expect(() => new B(new A())).not.to.throw()
     })
+
+    it('should return a copy of owners to outside', async () => {
+      class CustomOwner {
+        constructor (n) { this.n = n }
+        get script () { return new Uint8Array([this.n]) }
+      }
+      class A extends Jig { init (n) { this.owner = new CustomOwner(n) } }
+      A.deps = { CustomOwner }
+      class B extends Jig {
+        init (a, n) { this.owner = a.owner; this.owner.n = n }
+      }
+      const a = new A(1)
+      const b = new B(a, 2)
+      expect(a.owner.n).to.equal(1)
+      expect(b.owner.n).to.equal(2)
+    })
+
+    it('should return the original owner inside', async () => {
+      class A extends Jig {
+        init (owner) { this.owner = owner }
+        copyOwner () { this.owner2 = this.owner; this.owner2.n = 2 }
+      }
+      class CustomOwner {
+        constructor () { this.n = 1 }
+        get script () { return new Uint8Array([this.n]) }
+      }
+      const a = new A(new CustomOwner())
+      a.copyOwner()
+      expect(a.owner).to.deep.equal(a.owner2)
+      await expect(a.sync()).to.be.rejected
+    })
   })
 
   describe('satoshis', () => {
     async function testSetAndLoad (amount) {
-      class A extends Jig { f (s) { this.satoshis = s }}
+      class A extends Jig { f (s) { this.satoshis = s } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
       a.f(amount)
@@ -1501,10 +1532,10 @@ describe('Jig', () => {
     it('should set and load 0 satoshis', () => testSetAndLoad(0))
 
     // less than dust
-    it('should set and load 50 satoshis', () => testSetAndLoad(0))
+    it('should set and load 50 satoshis', () => testSetAndLoad(50))
 
     // more than dust
-    it('should set and load 600 satoshis', () => testSetAndLoad(0))
+    it('should set and load 600 satoshis', () => testSetAndLoad(600))
 
     function testFailToSet (amount, err) {
       class A extends Jig { f (s) { this.satoshis = s } }
