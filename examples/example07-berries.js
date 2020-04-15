@@ -2,10 +2,14 @@ const bsv = require('bsv')
 const Run = require('../dist/run.node.min')
 
 // ----------------------------------------------------------------------------
-// Define a protocol to read twetch posts
+// Define a berry protocol to read twetch posts
 // ----------------------------------------------------------------------------
 
-class Twetch {
+class TwetchPost extends Berry {
+  init (text) {
+    this.text = text
+  }
+
   static async pluck (txid, fetch) {
     // The txo returned from fetch is unwriter's txo format
     const txo = await fetch(txid)
@@ -16,19 +20,6 @@ class Twetch {
     }
   }
 }
-
-// Berries are stateless objects read from a protocol. They can be used in jigs.
-class TwetchPost extends Berry {
-  init (text) {
-    this.text = text
-  }
-}
-
-// We must always set the protocol on berry classes, because only this protocol
-// can create instances. The Berry class enforces this.
-TwetchPost.protocol = Twetch
-
-Twetch.deps = { TwetchPost }
 
 // ----------------------------------------------------------------------------
 // Read a twetch post and use it in a Jig
@@ -42,10 +33,10 @@ async function main () {
   const run = new Run({ network, purse })
 
   // Deploy the twetch protocol to mainnet. In a production app, we would pre-deploy the protocol.
-  await run.deploy(Twetch)
+  await run.deploy(TwetchPost)
 
   // We use the { protocol } syntax to specify this Twetch protocol is to be used
-  const post = await run.load(twetchPostTxid, { protocol: Twetch })
+  const post = await run.load(twetchPostTxid, TwetchPost)
 
   class MyFavoritePost extends Jig {
     init (post) {
