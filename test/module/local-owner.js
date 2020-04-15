@@ -54,7 +54,7 @@ describe('LocalOwner', () => {
 
     it('should throw if bad owner', () => {
       expect(() => new LocalOwner({ privkey: '123' })).to.throw('Invalid private key: "123"')
-      expect(() => new LocalOwner({ privkey: new PrivateKey().publicKey })).to.throw('Invalid private key: [object PublicKey]')
+      expect(() => new LocalOwner({ privkey: new PrivateKey().publicKey })).to.throw('Invalid private key')
     })
 
     it('throw if owner private key is on wrong network', () => {
