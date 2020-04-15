@@ -4,13 +4,19 @@
  * Tests for lib/extra/hex.js
  */
 
-const { describe } = require('mocha')
+const { describe, it } = require('mocha')
+const { deploy } = require('../env/helpers')
+const { Run } = require('../env/config')
+const { hex } = Run
 
 // ------------------------------------------------------------------------------------------------
 // hex
 // ------------------------------------------------------------------------------------------------
 
 describe('hex', () => {
+  it.skip('should deploy', async () => {
+    await deploy(hex)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

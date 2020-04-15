@@ -4,7 +4,10 @@
  * Various helpers methods used in tests
  */
 
-const Run = require('./config')
+const fs = require('fs')
+const os = require('os')
+const path = require('path')
+const { Run } = require('./config')
 const { unmangle } = require('./unmangle')
 
 // ------------------------------------------------------------------------------------------------
@@ -26,13 +29,17 @@ async function hookPay (run, ...enables) {
 // ------------------------------------------------------------------------------------------------
 
 async function deploy (Class) {
-  const app = 'Run ▸ Library'
+  const keysPath = path.join(os.homedir(), '.keys.json')
+  const deployKeys = JSON.parse(fs.readFileSync(keysPath)).deploy
+
+  const app = 'Run ▸ Extra'
   const networks = [['test', 'Testnet'], ['main', 'Mainnet']]
 
   let properties = ''
 
   for (const [network, suffix] of networks) {
-    const run = new Run({ network, app })
+    const purse = deployKeys[network]
+    const run = new Run({ network, purse, app })
     const origin = `origin${suffix}`
     const location = `location${suffix}`
     const owner = `owner${suffix}`
