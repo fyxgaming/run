@@ -7,7 +7,7 @@ class TwoPlusTwoLock {
   get script () { return asm('OP_2 OP_2 OP_ADD OP_EQUAL') }
 }
 
-TwoPlusTwoLock.deps { asm }
+TwoPlusTwoLock.deps = { asm }
 
 // Create a NonStandardOwner that is capable of signing these custom output scripts
 class NonStandardOwner {
