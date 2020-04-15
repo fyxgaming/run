@@ -11,6 +11,7 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../env/config')
+const { unmangle } = require('../env/unmangle')
 const { Jig, StateCache } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -130,10 +131,10 @@ describe('StateCache', () => {
       await state.set(`${txid}_o1`, undefined)
       await state.set(`${txid}_o2`, undefined)
       expect(state.cache.keys().next().value).to.equal(`${txid}_o0`)
-      const sizeBytesBefore = state.sizeBytes
+      const sizeBytesBefore = unmangle(state)._sizeBytes
       expect(sizeBytesBefore).not.to.equal(0)
       await state.set(`${txid}_o0`, undefined)
-      expect(state.sizeBytes).to.equal(sizeBytesBefore)
+      expect(unmangle(state)._sizeBytes).to.equal(sizeBytesBefore)
       expect(state.cache.keys().next().value).to.equal(`${txid}_o1`)
     })
 

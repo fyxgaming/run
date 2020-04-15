@@ -19,7 +19,7 @@ const {
   _deepTraverseObjects,
   _checkSatoshis,
   _lockify,
-  SerialTaskQueue
+  _SerialTaskQueue
 } = unmangle(unmangle(Run)._util)
 const Sandbox = Run.sandbox
 
@@ -289,14 +289,14 @@ describe('_lockify', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
-// SerialTaskQueue
+// _SerialTaskQueue
 // ------------------------------------------------------------------------------------------------
 
-describe('SerialTaskQueue', () => {
+describe('_SerialTaskQueue', () => {
   const sleep = ms => { return new Promise(resolve => setTimeout(resolve, ms)) }
 
   it('should serialize tasks in order', async () => {
-    const queue = new SerialTaskQueue()
+    const queue = new _SerialTaskQueue()
     const order = []; const promises = []
     promises.push(queue.enqueue(async () => { await sleep(5); order.push(1) }))
     promises.push(queue.enqueue(async () => { await sleep(3); order.push(2) }))
@@ -306,7 +306,7 @@ describe('SerialTaskQueue', () => {
   })
 
   it('should support stops and starts', async () => {
-    const queue = new SerialTaskQueue()
+    const queue = new _SerialTaskQueue()
     let done1 = false; let done2 = false
     await queue.enqueue(() => { done1 = true })
     expect(done1).to.equal(true)

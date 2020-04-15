@@ -56,7 +56,7 @@ describe('Berry', () => {
     })
   })
 
-  describe('protocols', () => {
+  describe.skip('protocols', () => {
     it('should load a twetch post', async () => {
       class TwetchPost extends Berry {
         init(text) {
