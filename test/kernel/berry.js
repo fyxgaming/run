@@ -31,6 +31,21 @@ describe.only('Berry', () => {
       expect(!!b.data).to.equal(true)
     })
 
+    it('must only return berries from pluck', async () => {
+      const run = new Run()
+      class B { }
+      class P { static async pluck (location, fetch, pluck) { return new B() } }
+      P.deps = { B }
+      B.protocol = P
+      await expect(run.load('123', { protocol: P })).to.be.rejectedWith('Plucker must return an instance of Berry')
+    })
+
+    it('should support multiple fetches', () => {
+
+    })
+  })
+
+  describe('protocols', () => {
     it('should load a twetch post', async () => {
       class Post extends Berry { init (text) { this.text = text } }
       class Twetch {
@@ -50,17 +65,43 @@ describe.only('Berry', () => {
       expect(post.text).to.equal('Came for the edgy marketing, stayed for truth & kindness')
     })
 
-    it('must only return berries from pluck', async () => {
-      const run = new Run()
-      class B { }
-      class P { static async pluck (location, fetch, pluck) { return new B() } }
-      P.deps = { B }
-      B.protocol = P
-      await expect(run.load('123', { protocol: P })).to.be.rejectedWith('Plucker must return an instance of Berry')
+    it('should load a metanet node', async () => {
+      class Node extends Berry {
+        init (pnode, parent, data) {
+          this.pnode = pnode
+          this.parent = parent
+          this.data = data
+        }
+      }
+      class Metanet {
+        static async pluck (location, fetch, pluck) {
+          const txo = await fetch(location)
+          if (txo.out[0].s1 === 'meta') {
+            const pnode = txo.out[0].s2
+            const txidParent = txo.out[0].s3
+            const data = txo.out[0].s4
+            if (data === 'METANET_ROOT') {
+              return new Node(pnode, null, data)
+            } else {
+              const parentNode = await pluck(txidParent)
+              return new Node(pnode, parentNode, data)
+            }
+          }
+        }
+      }
+      Metanet.deps = { Node }
+      Node.protocol = Metanet
+      const run = new Run({ network: 'main' })
+      const txid = '2f24d7edb8de0ef534d8e0bc2413eddda451b4accc481519a1647d7af79d8e88'
+      const node = await run.load(txid, { protocol: Metanet })
+      expect(node.pnode).to.equal('1FqmFgY45CqSGXRNVpHNRQWqoNVCkRpUau')
+      expect(node.parent instanceof Node).to.equal(true)
+      expect(!!node.data).to.equal(true)
     })
   })
 
   // May load protocols in long form
+  // Load multiple protocols
 
   /*
     it('should call pluck function with location and functions', async () => {
