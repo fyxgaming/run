@@ -46,9 +46,38 @@ class Favorite extends Jig {
 // ------------------------------------------------------------------------------------------------
 
 describe.only('Berry', () => {
-  const run = new Run()
-  beforeEach(() => run.activate())
+  describe('load', () => {
+    it('should load a berry from mainnet', async () => {
+      const run = new Run({ network: 'main'})
+      const txid = '4e146ac161324ef0b388798462867c29ad681ef4624ea4e3f7c775561af3ddd0'
+      const post = await run.load(txid, { protocol: Twetch })
+      expect(post instanceof Post).to.equal(true)
+      expect(post.text).to.equal('Came for the edgy marketing, stayed for truth & kindness')
+    })
 
+    it('should not have a location is protocol is not deployed', async () => {
+      const run = new Run({ network: 'main'})
+      const txid = '4e146ac161324ef0b388798462867c29ad681ef4624ea4e3f7c775561af3ddd0'
+      const post = await run.load(txid, { protocol: Twetch })
+      expect(post.location.startsWith('!')).to.equal(true)
+    })
+
+    it('should throw if berry protocol doesnt return', async () => {
+      const run = new Run()
+      const txid = '4e146ac161324ef0b388798462867c29ad681ef4624ea4e3f7c775561af3ddd0'
+      class Custom { static async pluck() { } }
+      await expect(run.load(txid, { protocol: Custom })).to.be.rejected
+    })
+
+    it('should throw if berry protocol throws', async () => {
+      const run = new Run()
+      const txid = '4e146ac161324ef0b388798462867c29ad681ef4624ea4e3f7c775561af3ddd0'
+      class Custom { static async pluck() { throw new Error('fail to load') } }
+      await expect(run.load(txid, { protocol: Custom })).to.be.rejectedWith('fail to load')
+    })
+  })
+
+  /*
   it('should fail to deploy if protocol is undeployed', async () => {
     const txid = 'd5e8313dc183d5a600a37933a55d1679436fc0d3f4d3c672b85872f84dbc41e1_o2'
     const post = await run.load(txid, { protocol: Twetch })
@@ -99,6 +128,7 @@ describe.only('Berry', () => {
   it('should support deploying protocol after already using it locally', () => {
     // TODO
   })
+  */
 })
 
 // ------------------------------------------------------------------------------------------------
