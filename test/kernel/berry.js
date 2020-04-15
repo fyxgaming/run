@@ -4,42 +4,14 @@
  * Tests for lib/kernel/berry.js
  */
 
-const { describe, it, beforeEach } = require('mocha')
+const { Transaction } = require('bsv')
+const { describe, it } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../env/config')
-const { Jig, Berry } = Run
-
-// ------------------------------------------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------------------------------------------
-
-class Post extends Berry {
-  init (text) {
-    this.text = text
-  }
-}
-
-class Twetch {
-  static async pluck (location, fetch, pluck) {
-    const txo = await fetch(location)
-    if (txo.out[0].s2 === '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut') { // B protocol
-      return new Post(txo.out[0].s3)
-    }
-  }
-}
-
-Twetch.deps = { Post }
-
-Post.protocol = Twetch
-
-class Favorite extends Jig {
-  init (post) {
-    this.post = post
-  }
-}
+const { Berry } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Berry
@@ -47,16 +19,68 @@ class Favorite extends Jig {
 
 describe.only('Berry', () => {
   describe('load', () => {
-    it('should load a berry from mainnet', async () => {
-      const run = new Run({ network: 'main'})
+    it('should fetch to load a berry', async () => {
+      const run = new Run()
+      const berryTx = await run.purse.pay(new Transaction())
+      await run.blockchain.broadcast(berryTx)
+      class B extends Berry { init (data) { this.data = data } }
+      class P { static async pluck (location, fetch, pluck) { return new B(await fetch(location)) } }
+      P.deps = { B }
+      B.protocol = P
+      const b = await run.load(berryTx.hash, { protocol: P })
+      expect(!!b.data).to.equal(true)
+    })
+
+    it('should load a twetch post', async () => {
+      class Post extends Berry { init (text) { this.text = text } }
+      class Twetch {
+        static async pluck (location, fetch, pluck) {
+          const txo = await fetch(location)
+          if (txo.out[0].s2 === '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut') { // B protocol
+            return new Post(txo.out[0].s3)
+          }
+        }
+      }
+      Twetch.deps = { Post }
+      Post.protocol = Twetch
+      const run = new Run({ network: 'main' })
       const txid = '4e146ac161324ef0b388798462867c29ad681ef4624ea4e3f7c775561af3ddd0'
       const post = await run.load(txid, { protocol: Twetch })
       expect(post instanceof Post).to.equal(true)
       expect(post.text).to.equal('Came for the edgy marketing, stayed for truth & kindness')
     })
 
+    it('must only return berries from pluck', async () => {
+      const run = new Run()
+      class B { }
+      class P { static async pluck (location, fetch, pluck) { return new B() } }
+      P.deps = { B }
+      B.protocol = P
+      await expect(run.load('123', { protocol: P })).to.be.rejectedWith('Plucker must return an instance of Berry')
+    })
+  })
+
+  // May load protocols in long form
+
+  /*
+    it('should call pluck function with location and functions', async () => {
+      const run = new Run()
+      class CustomBerry { }
+      class CustomProtocol {
+        static async pluck (location, fetch, pluck) {
+          expect(location).toBe('123')
+          expect(typeof fetch).toBe('function')
+          expect(typeof pluck).toBe('function')
+          return new CustomBerry()
+        }
+      }
+      CustomProtocol.deps = { expect: Run.expect, CustomBerry }
+      CustomBerry.protocol = CustomProtocol
+      await run.load('123', { protocol: CustomProtocol })
+    })
+
     it('should not have a location is protocol is not deployed', async () => {
-      const run = new Run({ network: 'main'})
+      const run = new Run({ network: 'main' })
       const txid = '4e146ac161324ef0b388798462867c29ad681ef4624ea4e3f7c775561af3ddd0'
       const post = await run.load(txid, { protocol: Twetch })
       expect(post.location.startsWith('!')).to.equal(true)
@@ -65,15 +89,14 @@ describe.only('Berry', () => {
     it('should throw if berry protocol doesnt return', async () => {
       const run = new Run()
       const txid = '4e146ac161324ef0b388798462867c29ad681ef4624ea4e3f7c775561af3ddd0'
-      class Custom { static async pluck() { } }
+      class Custom { static async pluck () { } }
       await expect(run.load(txid, { protocol: Custom })).to.be.rejected
     })
 
     it('should throw if berry protocol throws', async () => {
       const run = new Run()
-      const txid = '4e146ac161324ef0b388798462867c29ad681ef4624ea4e3f7c775561af3ddd0'
-      class Custom { static async pluck() { throw new Error('fail to load') } }
-      await expect(run.load(txid, { protocol: Custom })).to.be.rejectedWith('fail to load')
+      class Custom { static async pluck () { throw new Error('fail to load') } }
+      await expect(run.load('123', { protocol: Custom })).to.be.rejectedWith('fail to load')
     })
   })
 
