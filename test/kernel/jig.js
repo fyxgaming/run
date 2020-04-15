@@ -1476,6 +1476,14 @@ describe('Jig', () => {
       const run2 = new Run({ owner: privkey, blockchain: run.blockchain })
       await run2.load(a.location)
     })
+
+    it.only('should support copying non-standard owner to another jig', async () => {
+      class CustomOwner { get script () { return new Uint8Array([1, 2, 3]) } }
+      class A extends Jig { init () { this.owner = new CustomOwner() } }
+      A.deps = { CustomOwner }
+      class B extends Jig { init (a) { this.owner = a.owner } }
+      expect(() => new B(new A())).not.to.throw()
+    })
   })
 
   describe('satoshis', () => {
