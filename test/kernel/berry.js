@@ -23,33 +23,29 @@ describe('Berry', () => {
       const run = new Run()
       const berryTx = await run.purse.pay(new Transaction())
       await run.blockchain.broadcast(berryTx)
-      class B extends Berry { init (data) { this.data = data } }
-      class P { static async pluck (location, fetch, pluck) { return new B(await fetch(location)) } }
-      P.deps = { B }
-      B.protocol = P
-      const b = await run.load(berryTx.hash, { protocol: P })
+      class B extends Berry {
+        init (data) { this.data = data }
+        static async pluck (location, fetch) {
+          return new B(await fetch(location))
+        }
+      }
+      const b = await run.load(berryTx.hash, B)
       expect(!!b.data).to.equal(true)
     })
 
     it('must only return berries from pluck', async () => {
       const run = new Run()
-      class B { }
-      class P { static async pluck (location, fetch, pluck) { return new B() } }
-      P.deps = { B }
-      B.protocol = P
-      await expect(run.load('123', { protocol: P })).to.be.rejectedWith('Plucker must return an instance of Berry')
+      class B { static async pluck (location, fetch, pluck) { return new B() } }
+      await expect(run.load('123', B)).to.be.rejectedWith('Plucker must return an instance of Berry')
     })
   })
 
   describe('jig', () => {
     it('should support passing berries into jigs', async () => {
       const run = new Run()
-      class B extends Berry { }
-      class P { static async pluck (location, fetch, pluck) { return new B() } }
-      P.deps = { B }
-      B.protocol = P
-      await run.deploy(P)
-      const b = await run.load('123', { protocol: P })
+      class B extends Berry { static async pluck (location, fetch, pluck) { return new B() } }
+      await run.deploy(B)
+      const b = await run.load('123', B)
       class A extends Jig { init (b) { this.b = b } }
       const a = new A(b)
       await a.sync()
@@ -60,35 +56,33 @@ describe('Berry', () => {
     })
   })
 
-  describe.skip('protocols', () => {
+  describe('protocols', () => {
     it('should load a twetch post', async () => {
-      class Post extends Berry { init (text) { this.text = text } }
-      class Twetch {
+      class TwetchPost extends Berry {
+        init(text) {
+          this.text = text
+        }
         static async pluck (location, fetch, pluck) {
           const txo = await fetch(location)
           if (txo.out[0].s2 === '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut') { // B protocol
-            return new Post(txo.out[0].s3)
+            return new TwetchPost(txo.out[0].s3)
           }
         }
       }
-      Twetch.deps = { Post }
-      Post.protocol = Twetch
       const run = new Run({ network: 'main' })
       const txid = '4e146ac161324ef0b388798462867c29ad681ef4624ea4e3f7c775561af3ddd0'
-      const post = await run.load(txid, { protocol: Twetch })
-      expect(post instanceof Post).to.equal(true)
+      const post = await run.load(txid, TwetchPost)
+      expect(post instanceof TwetchPost).to.equal(true)
       expect(post.text).to.equal('Came for the edgy marketing, stayed for truth & kindness')
     })
 
     it('should load a metanet node', async () => {
-      class Node extends Berry {
+      class MetanetNode extends Berry {
         init (pnode, parent, data) {
           this.pnode = pnode
           this.parent = parent
           this.data = data
         }
-      }
-      class Metanet {
         static async pluck (location, fetch, pluck) {
           const txo = await fetch(location)
           if (txo.out[0].s1 === 'meta') {
@@ -96,21 +90,19 @@ describe('Berry', () => {
             const txidParent = txo.out[0].s3
             const data = txo.out[0].s4
             if (data === 'METANET_ROOT') {
-              return new Node(pnode, null, data)
+              return new MetanetNode(pnode, null, data)
             } else {
               const parentNode = await pluck(txidParent)
-              return new Node(pnode, parentNode, data)
+              return new MetanetNode(pnode, parentNode, data)
             }
           }
         }
       }
-      Metanet.deps = { Node }
-      Node.protocol = Metanet
       const run = new Run({ network: 'main' })
       const txid = '2f24d7edb8de0ef534d8e0bc2413eddda451b4accc481519a1647d7af79d8e88'
-      const node = await run.load(txid, { protocol: Metanet })
+      const node = await run.load(txid, MetanetNode)
       expect(node.pnode).to.equal('1FqmFgY45CqSGXRNVpHNRQWqoNVCkRpUau')
-      expect(node.parent instanceof Node).to.equal(true)
+      expect(node.parent instanceof MetanetNode).to.equal(true)
       expect(!!node.data).to.equal(true)
     })
   })
