@@ -45,8 +45,8 @@ class Favorite extends Jig {
 // Berry
 // ------------------------------------------------------------------------------------------------
 
-describe.skip('Berry', () => {
-  const run = new Run({ network: 'main' })
+describe.only('Berry', () => {
+  const run = new Run()
   beforeEach(() => run.activate())
 
   it('should fail to deploy if protocol is undeployed', async () => {
