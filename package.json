@@ -1,12 +1,11 @@
 {
   "name": "run",
-  "version": "0.5.0-rc0",
+  "version": "0.5.0-rc1",
   "description": "Run Javascript library",
-  "main": "lib/index.js",
+  "main": "dist/run.node.min.js",
   "browser": "dist/run.browser.min.js",
   "files": [
-    "dist/**.min.js",
-    "lib"
+    "dist/**.min.js"
   ],
   "repository": "git://github.com/runonbitcoin/run.git",
   "publishConfig": {
