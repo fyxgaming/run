@@ -139,7 +139,7 @@ describe('BlockchainApiCache', () => {
   describe('get', () => {
     it('should not return expired transactions', async () => {
       const cache = unmangle(new BlockchainApi.Cache())
-      cache._expiration = 1
+      cache.expiration = 1
       const tx = new Transaction()
       cache._fetched(tx)
       const sleep = ms => { return new Promise(resolve => setTimeout(resolve, ms)) }
@@ -151,7 +151,7 @@ describe('BlockchainApiCache', () => {
   describe('fetched', () => {
     it('should flush oldest transcation when full', () => {
       const cache = unmangle(new BlockchainApi.Cache({ size: 1 }))
-      cache._size = 1
+      cache.size = 1
       const tx1 = new Transaction().addData('1')
       const tx2 = new Transaction().addData('2')
       cache._fetched(tx1)
