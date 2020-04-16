@@ -1,6 +1,6 @@
 {
-  "name": "run",
-  "version": "0.5.0-rc7",
+  "name": "@runonbitcoin/run",
+  "version": "0.5.0-rc8",
   "description": "Run Javascript library",
   "main": "dist/run.node.min.js",
   "browser": "dist/run.browser.min.js",
@@ -9,9 +9,6 @@
     "examples"
   ],
   "repository": "git://github.com/runonbitcoin/run.git",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/@runonbitcoin"
-  },
   "scripts": {
     "lint": "standard --fix",
     "build": "webpack",
@@ -23,7 +20,7 @@
     "bump": "npm version patch && git push --follow-tags && npm publish"
   },
   "dependencies": {
-    "@runonbitcoin/sandbox": "^0.1.8",
+    "@runonbitcoin/sandbox": "^0.1.9",
     "abort-controller": "^3.0.0",
     "bsv": "^1.3.0",
     "node-fetch": "^2.6.0"

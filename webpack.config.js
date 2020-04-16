@@ -19,7 +19,7 @@ const addUserKeystoEnvironment = require('./test/env/keys')
 
 const entry = path.join(__dirname, 'lib')
 const dist = path.join(__dirname, 'dist/')
-const name = pkg.name
+const name = pkg.name.split('/').pop()
 const library = require(entry).name
 const config = new webpack.DefinePlugin({ VERSION: JSON.stringify(pkg.version) })
 
