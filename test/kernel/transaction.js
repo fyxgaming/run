@@ -614,7 +614,7 @@ describe('Transaction', () => {
 
     it('should support sending to new owner after changing networks', async () => {
       const run = new Run()
-      bsv.Networks.defaultNetwork = 'mainnet'
+      bsv.Networks.defaultNetwork = bsv.Networks.mainnet
       class A extends Jig { send (to) { this.owner = to } }
       const a = await new A().sync()
       const privkey = new bsv.PrivateKey('testnet')

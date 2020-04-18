@@ -223,9 +223,9 @@ describe('Run', () => {
     describe('misc', () => {
       it('should set global bsv network', () => {
       new Run({ network: 'main' }) // eslint-disable-line
-        expect(bsv.Networks.defaultNetwork).to.equal('mainnet')
+        expect(bsv.Networks.defaultNetwork).to.equal(bsv.Networks.mainnet)
       new Run({ network: 'test' }) // eslint-disable-line
-        expect(bsv.Networks.defaultNetwork).to.equal('testnet')
+        expect(bsv.Networks.defaultNetwork).to.equal(bsv.Networks.testnet)
       })
     })
   })
