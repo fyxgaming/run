@@ -21,7 +21,7 @@ function addUserKeystoEnvironment () {
       if (process.env.API === 'mattercloud' && !process.env.APIKEY) {
         process.env.APIKEY = keys.tests.matterCloudApiKey
       }
-      if (process.env.NETWORK && !process.env.PURSE) {
+      if (process.env.NETWORK && !process.env.PURSE && keys.tests[process.env.NETWORK]) {
         process.env.PURSE = keys.tests[process.env.NETWORK]
       }
     }

@@ -38,7 +38,10 @@ describe('Blockchain', () => {
 
     it('should throw if input does not exist', async () => {
       const tx = await purse.pay(new Transaction())
+      // Remove the signature, and sign again with a new output index
       tx.inputs[0].outputIndex = 9999
+      tx.inputs[0].setScript('')
+      tx.sign(purse.bsvPrivateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.missingInputs)
     })
 
@@ -51,10 +54,15 @@ describe('Blockchain', () => {
       const utxo = { txid, vout, script, satoshis }
       const tx = randomTx().from(utxo).addSafeData('123').change(run.purse.address)
       const oldIsFullySigned = Transaction.prototype.isFullySigned
+      const olsIsValidSignature = Transaction.prototype.isValidSignature
       try {
         Transaction.prototype.isFullySigned = () => true
+        Transaction.prototype.isValidSignature = () => true
         await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.missingInputs)
-      } finally { Transaction.prototype.isFullySigned = oldIsFullySigned }
+      } finally {
+        Transaction.prototype.isFullySigned = oldIsFullySigned
+        Transaction.prototype.isValidSignature = oldIsFullySigned
+      }
     })
 
     it('should throw if mempool conflict', async () => {

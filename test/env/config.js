@@ -38,6 +38,7 @@ setMangled(MANGLED)
 const util = unmangle(Run)._util
 
 Run.defaults.logger = unmangle(util.Log)._logger = LOGGER ? console : {}
+console.log(NETWORK)
 Run.defaults.network = NETWORK
 Run.defaults.api = API
 Run.defaults.apiKey = APIKEY
