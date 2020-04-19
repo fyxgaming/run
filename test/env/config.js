@@ -17,7 +17,7 @@ addUserKeystoEnvironment()
 const PERF = process.env.PERF ? JSON.parse(process.env.PERF) : false
 const LOGGER = process.env.LOGGER ? process.env.LOGGER : false
 const NETWORK = process.env.NETWORK ? process.env.NETWORK : 'mock'
-const API = process.env.API ? process.env.API : 'run'
+const API = process.env.API ? process.env.API : undefined
 const APIKEY = process.env.APIKEY ? process.env.APIKEY : undefined
 const PURSE = process.env.PURSE ? process.env.PURSE : undefined
 const COVER = process.env.COVER ? process.env.COVER : false

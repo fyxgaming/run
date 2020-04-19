@@ -19,7 +19,7 @@ Various environment variables may be used to configure the tests:
 
 | Name        | Description                                     | Possible Values                                | Default     |
 |-------------|-------------------------------------------------|------------------------------------------------|-------------|
-| **NETWORK** | Network to run the tests on                     | `mock`, `main`, `test`                         | `mock`      |
+| **NETWORK** | Network to run the tests on                     | `mock`, `main`, `test`, `stn`                  | `mock`      |
 | **PURSE**   | Purse key used on mainnet or testnet            | your string privkey                            | `undefined` |
 | **BROWSER** | Browser used for testing                        | `chrome`, `firefox`, `safari`, `MicrosoftEdge` | `chrome`    |
 | **LOGGER**  | Whether to log internal messages to the console | `true`, `false`                                | `false`     |

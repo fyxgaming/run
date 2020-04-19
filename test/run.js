@@ -95,7 +95,7 @@ describe('Run', () => {
       })
 
       it('should create blockchain for supported networks', () => {
-        const networks = ['main', 'test', 'mock']
+        const networks = ['main', 'test', 'mock', 'stn']
         networks.forEach(network => {
           expect(new Run({ network }).blockchain.network).to.equal(network)
         })

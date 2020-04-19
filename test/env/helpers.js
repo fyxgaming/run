@@ -33,7 +33,7 @@ async function deploy (Class) {
   const deployKeys = JSON.parse(fs.readFileSync(keysPath)).deploy
 
   const app = 'Run ▸ Extra'
-  const networks = [['test', 'Testnet'], ['main', 'Mainnet']]
+  const networks = [['test', 'Testnet'], ['main', 'Mainnet'], ['stn', 'Stn']]
 
   let properties = ''
 
