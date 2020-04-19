@@ -24,6 +24,7 @@ require('./module/local-owner')
 require('./module/local-purse')
 require('./module/lock-owner')
 require('./module/mockchain')
+require('./module/pay-server')
 require('./module/state-cache')
 
 require('./util/checkpoint')
