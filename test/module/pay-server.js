@@ -10,7 +10,8 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { HDPrivateKey } = require('bsv')
-const { Run, NETWORK } = require('../env/config')
+const { Run } = require('../env/config')
+const { network } = Run.defaults
 const { Jig, PayServer } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -27,13 +28,13 @@ const apiKeys = {
 // ------------------------------------------------------------------------------------------------
 
 describe('PayServer', () => {
-  const apiKey = apiKeys[NETWORK]
+  const apiKey = apiKeys[network]
   if (!apiKey) return
 
   describe('constructor', () => {
     it('should detect network', () => {
       const purse = new PayServer(apiKey)
-      expect(purse.network).to.equal(NETWORK)
+      expect(purse.network).to.equal(network)
     })
 
     it('should fail for invalid api keys', () => {

@@ -4,6 +4,7 @@
  * All the settings to build variants using webpack
  */
 
+require('dotenv').config()
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
 const path = require('path')
@@ -11,7 +12,6 @@ const fs = require('fs')
 const { execSync } = require('child_process')
 const glob = require('glob')
 const pkg = require('./package')
-const addUserKeystoEnvironment = require('./test/env/keys')
 
 // ------------------------------------------------------------------------------------------------
 // Constants
@@ -188,8 +188,6 @@ const paths = new Set()
 patterns.forEach(x => glob.sync(x).forEach(y => paths.add(y)))
 const entries = Array.from(paths).map(x => path.join(process.cwd(), x))
 if (!entries.length) throw new Error(`No test files found: ${patterns}`)
-
-addUserKeystoEnvironment()
 
 const browserTests = {
   target: 'web',

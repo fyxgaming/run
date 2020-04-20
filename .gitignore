@@ -1,4 +1,12 @@
+# Code coverage
 .nyc_output
 coverage
-dist
+
+# Dependencies
 node_modules
+
+# User-specific environment vars
+.env
+
+# Output builds
+dist
