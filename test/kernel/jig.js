@@ -1599,6 +1599,31 @@ describe('Jig', () => {
   })
 
   describe('misc', () => {
+    it.only('should serialize complex self-reference', async () => {
+      // This test came from Cryptofights
+      const run = new Run({ network: 'mock' })
+      class f { }
+      run.deploy(f)
+      class A extends Jig {
+        init (f) {
+          this.f = f
+          this.b = new B()
+        }
+      }
+      class B extends Jig {
+        init () { this.x = caller }
+      }
+      A.deps = { B }
+      const a = new A(f)
+      await a.sync()
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      console.log('--')
+      const a2 = await run2.load(a.location)
+      console.log(a2)
+      await a2.sync()
+      console.log(a2)
+    })
     it('should support custom toJSON method', () => {
       class A extends Jig { toJSON () { return [1, 2, 3] } }
       const a = new A()
