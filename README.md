@@ -38,7 +38,6 @@ Various environment variables may be used to configure the tests:
 
 For ease of use, you may also store these variables in a `.env` file where the tests are run. Here's a sample:
 
-.env
 ```
 BROWSER=safari
 PURSE_MAIN=<your priate key>
