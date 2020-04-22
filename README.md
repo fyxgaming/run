@@ -16,29 +16,27 @@
 
 ## Configuring the tests
 
-Various environment variables may be used to configure Run for testing:
+Various environment variables may be used to configure the tests:
 
-### Run
+| Name              | Description                                     | Possible Values                                | Default     |
+|-------------------|-------------------------------------------------|------------------------------------------------|-------------|
+| `NETWORK`         | Network to test on                              | `mock`, `main`, `test`, `stn`                  | `mock`      |
+| `BROWSER`         | Browser used for testing                        | `chrome`, `firefox`, `safari`, `MicrosoftEdge` | `chrome`    |
+| `PERF`            | Whether to run the performance tests            | `true`, `false`                                | `false`     |
+| `PURSE_[network]` | Purse key used on a specific network            | your string privkey                            | `undefined` |
+| `API`             | Blockchain API when not using the mock network  | `run`, `mattercloud`, `whatsonchain`           | `undefined` |
+| `APIKEY_[api]`    | API key used with a specific blockchain API     | your string api key                            | `undefined` |
+| `LOGGER`          | Whether to log internal messages to the console | `true`, `false`                                | `false`     |
 
-| Name                | Description                                     | Possible Values                      | Default     |
-|---------------------|-------------------------------------------------|--------------------------------------|-------------|
-| **NETWORK**         | Network string                                  | `mock`, `main`, `test`, `stn`        | `mock`      |
-| **PURSE**           | Purse key used                                  | your string privkey                  | `undefined` |
-| **PURSE_[network]** | Purse key used on a specific network            | your string privkey                  | `undefined` |
-| **LOGGER**          | Whether to log internal messages to the console | `true`, `false`                      | `false`     |
-| **API**             | Blockchain API when using mainnet or testnet    | `run`, `mattercloud`, `whatsonchain` | `run`       |
-| **APIKEY**          | API key for the blockchain API                  | your string api key                  | `undefined` |
-| **APIKEY_[api]**    | API key used with a specific API                | your string api key                  | `undefined` |
-| **APP**             | App string provided to Run                      | your app string                      | `''`        |
-| **OWNER**           | Owner key used                                  | your string privkey                  | `undefined` |
-| **OWNER_[network]** | Owner key used on a specific network            | your string privkey                  | `undefined` |
+For ease of use, you may also store these variables in a `.env` file where the tests are run. Here's an example:
 
-### Tests
-
-| Name        | Description                                     | Possible Values                                | Default     |
-|-------------|-------------------------------------------------|------------------------------------------------|-------------|
-| **BROWSER** | Browser used for testing                        | `chrome`, `firefox`, `safari`, `MicrosoftEdge` | `chrome`    |
-| **PERF**    | Whether to include performance tests            | `true`, `false`                                | `false`     |
+.env
+```
+BROWSER=safari
+PURSE_MAIN=<your priate key>
+PURSE_TEST=<your private key>
+APIKEY_MATTERCLOUD=<your api key>
+```
 
 ### Examples
 
@@ -46,31 +44,5 @@ Various environment variables may be used to configure Run for testing:
 - `env PERF=1 npm run test` - Test library with performance tests
 - `env NETWORK=test env PURSE=<funded_private_key> npm run test` - Run all tests on testnet
 
-### Storing Keys
+### Storing keys
 
-For ease of use, Run lets you store `testnet` and `mainnet` keys to avoid having to pass them as environment variables. Run will read your keys from `~/.keys.json`. The format is:
-
-```
-{
-    "tests": {
-        "test": "<your testnet key here>",
-        "main": "<your mainnet key here>",
-        "matterCloudApiKey": "<your mattercloud api key here>"
-    },
-}
-```
-
-## Environment variables
-
-The following environment variables may be set to override global and local settings:
-
-| **Variable** | **Description**               | **Values**                     |
-|--------------|-------------------------------|--------------------------------|
-| `NETWORK`    | Network string                | main, test, stn, mock          |
-| `PURSE`      | Purse private key             | string                         |
-| `PURSE_<NETWORK>`      | Purse private key             | string                         |
-| `OWNER`      | Owner private key             | string                         |
-| `API`        | Blockchain API                | run, whatsonchain, mattercloud |
-| `APIKEY`     | Blockchain API key            | string                         |
-| `APP`        | App name                      | string                         |
-| `LOGGER`     | Whether to log to the console | true or false                  |
