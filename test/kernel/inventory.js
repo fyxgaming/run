@@ -4,7 +4,7 @@
  * Tests for lib/kernel/inventory.js
  */
 
-const { PrivateKey }  = require('bsv')
+const { PrivateKey } = require('bsv')
 const { describe, it } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
@@ -117,16 +117,12 @@ describe('Inventory', () => {
       expect(run2.inventory.jigs).to.deep.equal([c, a, b])
     })
 
-    // --------
-
-    describe('jigs', () => {
-      it('should contain new tokens before sync', async () => {
-        const run = new Run()
-        class A extends Jig {}
-        const a = new A()
-        expect(run.inventory.jigs).to.deep.equal([a])
-        expect(run.inventory.code).to.deep.equal([a.constructor])
-      })
+    it('should contain new tokens before sync', async () => {
+      const run = new Run()
+      class A extends Jig {}
+      const a = new A()
+      expect(run.inventory.jigs).to.deep.equal([a])
+      expect(run.inventory.code).to.deep.equal([a.constructor])
     })
 
     it('should add received tokens before sync', async () => {
@@ -138,17 +134,27 @@ describe('Inventory', () => {
       a.send(run2.owner.address)
       expect(run.inventory.jigs.length).to.equal(0)
       expect(run2.inventory.jigs).to.deep.equal([a])
-      await expect(run2.sync()).to.be.rejected
+      await expect(a.sync()).to.be.rejected
     })
 
-    it('should remove synced tokens that are no longer in our utxos', async () => {
+    it('should remove tokens that fail to post', async () => {
+      const run = new Run()
+      hookPay(run, false)
+      class A extends Jig {}
+      const a = new A()
+      await expect(a.sync()).to.be.rejected
+      expect(run.inventory.jigs.length).to.equal(0)
+      expect(run.inventory.code.length).to.equal(0)
+    })
+
+    it('should remove deployed tokens that are no longer in our utxos', async () => {
       // Create two runs, each with the same owner
       const run1 = new Run()
       const run2 = new Run({ owner: run1.owner.privkey })
 
       // Create a jig on run1
       run1.activate()
-      class A extends Jig { send(to) { this.owner = to } }
+      class A extends Jig { send (to) { this.owner = to } }
       const a = new A()
       await a.sync()
 
@@ -163,16 +169,6 @@ describe('Inventory', () => {
       expect(run1.inventory.jigs).to.deep.equal([a])
       await run1.sync()
       expect(run1.inventory.jigs.length).to.equal(0)
-    })
-
-    it('should remove tokens that fail to post', async () => {
-      const run = new Run()
-      hookPay(run, false)
-      class A extends Jig {}
-      const a = new A()
-      await expect(a.sync()).to.be.rejected
-      expect(run.inventory.jigs.length).to.equal(0)
-      expect(run.inventory.code.length).to.equal(0)
     })
 
     it('should support filtering jigs by class', async () => {

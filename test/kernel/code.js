@@ -13,7 +13,7 @@ const { Run, COVER } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const { hookPay } = require('../env/helpers')
 const { Jig } = Run
-const { _tokenType } = unmangle(unmangle(Run)._util)
+const { _resourceType } = unmangle(unmangle(Run)._util)
 
 // ------------------------------------------------------------------------------------------------
 // Code tests
@@ -404,7 +404,7 @@ describe('Code', () => {
       const B2 = await run.load(await run.deploy(B))
       const props = [B2.x, B2.y[0], B2.s.x]
       props.forEach(y => {
-        if (_tokenType(y)) {
+        if (_resourceType(y)) {
           expect(y.origin).to.equal(x.origin)
           expect(y.location).to.equal(x.location)
         } else {

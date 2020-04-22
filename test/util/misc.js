@@ -14,7 +14,7 @@ const {
   _bsvNetwork,
   _deployable,
   _display,
-  _tokenType,
+  _resourceType,
   _sourceCode,
   _deepTraverseObjects,
   _checkSatoshis,
@@ -68,11 +68,11 @@ describe('_deployable', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
-// _tokenType
+// _resourceType
 // ------------------------------------------------------------------------------------------------
 
-describe('_tokenType', () => {
-  const test = (x, type) => expect(_tokenType(x)).to.equal(type)
+describe('_resourceType', () => {
+  const test = (x, type) => expect(_resourceType(x)).to.equal(type)
   it('should return jig for jigs', () => test(new (class A extends Jig {})(), 'jig'))
   it('should return code for class', () => test(class A extends Jig {}, 'code'))
   it('should return code for function', () => test(function f () {}, 'code'))
