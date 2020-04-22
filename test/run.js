@@ -95,11 +95,9 @@ describe('Run', () => {
       })
 
       it('should create blockchain for supported networks', () => {
-        clearDefaults(() => {
-          const networks = ['main', 'test', 'mock', 'stn']
-          networks.forEach(network => {
-            expect(new Run({ network }).blockchain.network).to.equal(network)
-          })
+        const networks = ['main', 'test', 'mock', 'stn']
+        networks.forEach(network => {
+          expect(new Run({ network }).blockchain.network).to.equal(network)
         })
       })
 
@@ -116,9 +114,10 @@ describe('Run', () => {
 
     describe('app', () => {
       it('should default to empty app string', () => {
-        clearDefaults(() => {
-          expect(new Run().app).to.equal('')
-        })
+        const oldApp = Run.defaults.app
+        Run.defaults.app = undefined
+        expect(new Run().app).to.equal('')
+        Run.defaults.app = oldApp
       })
 
       it('should support custom app name', () => {
@@ -369,19 +368,5 @@ describe('Run', () => {
     })
   })
 })
-
-// ------------------------------------------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------------------------------------------
-
-function clearDefaults (f) {
-  const oldDefaults = Run.defaults
-  Run.defaults = {}
-  try {
-    f()
-  } finally {
-    Run.defaults = oldDefaults
-  }
-}
 
 // ------------------------------------------------------------------------------------------------
