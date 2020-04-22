@@ -28,7 +28,15 @@ Various environment variables may be used to configure the tests:
 | `APIKEY_[api]`    | API key used with a specific blockchain API     | your string api key                            | `undefined` |
 | `LOGGER`          | Whether to log internal messages to the console | `true`, `false`                                | `false`     |
 
-For ease of use, you may also store these variables in a `.env` file where the tests are run. Here's an example:
+### Examples
+
+- `env BROWSER=safari npm run test:browser` - Test the browser build on Safari
+- `env PERF=1 npm run test` - Test library with performance tests
+- `env NETWORK=test env PURSE=<funded_private_key> npm run test` - Run all tests on testnet
+
+### .env file
+
+For ease of use, you may also store these variables in a `.env` file where the tests are run. Here's a sample:
 
 .env
 ```
@@ -37,9 +45,3 @@ PURSE_MAIN=<your priate key>
 PURSE_TEST=<your private key>
 APIKEY_MATTERCLOUD=<your api key>
 ```
-
-### Examples
-
-- `env BROWSER=safari npm run test:browser` - Test the browser build on Safari
-- `env PERF=1 npm run test` - Test library with performance tests
-- `env NETWORK=test env PURSE=<funded_private_key> npm run test` - Run all tests on testnet
