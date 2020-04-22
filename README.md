@@ -43,6 +43,3 @@ APIKEY_MATTERCLOUD=<your api key>
 - `env BROWSER=safari npm run test:browser` - Test the browser build on Safari
 - `env PERF=1 npm run test` - Test library with performance tests
 - `env NETWORK=test env PURSE=<funded_private_key> npm run test` - Run all tests on testnet
-
-### Storing keys
-
