@@ -26,7 +26,13 @@ const Run = process.env.LIB ? require(path.join(process.cwd(), process.env.LIB))
 // Configure Run
 // ------------------------------------------------------------------------------------------------
 
+// Read the local environment vars to configure Run for the tests
 Run.configure(process.env)
+
+// Prefer mocknet and no logs for testing
+Run.defaults.network = Run.defaults.network || 'mock'
+Run.defaults.logger = Run.defaults.logger || null
+console.log(Run.defaults)
 
 setMangled(MANGLED)
 
