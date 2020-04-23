@@ -24,7 +24,7 @@ describe('Inventory', () => {
   // Can set old inventory for old owner
 
   describe('load', () => {
-    it('should not add tokens without sync', async () => {
+    it('should not add resources without sync', async () => {
       // Create a jig and code
       const run = new Run()
       class A extends Jig {}
@@ -45,7 +45,7 @@ describe('Inventory', () => {
       expect(run2.inventory.code.length).to.equal(1)
     })
 
-    it.skip('should load synced tokens to inventory', () => {
+    it.skip('should load synced resources to inventory', () => {
       // TODO: Check both jigs and code get synced once we know
       // We might be able to add to this if we know a jig is latest during loading
     })
@@ -117,7 +117,7 @@ describe('Inventory', () => {
       expect(run2.inventory.jigs).to.deep.equal([c, a, b])
     })
 
-    it('should contain new tokens before sync', async () => {
+    it('should contain new resources before sync', async () => {
       const run = new Run()
       class A extends Jig {}
       const a = new A()
@@ -125,7 +125,7 @@ describe('Inventory', () => {
       expect(run.inventory.code).to.deep.equal([a.constructor])
     })
 
-    it('should add received tokens before sync', async () => {
+    it('should add received resources before sync', async () => {
       const run = new Run()
       class A extends Token { }
       const a = new A(100)
@@ -137,7 +137,7 @@ describe('Inventory', () => {
       await expect(a.sync()).to.be.rejected
     })
 
-    it('should remove tokens that fail to post', async () => {
+    it('should remove resources that fail to post', async () => {
       const run = new Run()
       hookPay(run, false)
       class A extends Jig {}
@@ -147,7 +147,7 @@ describe('Inventory', () => {
       expect(run.inventory.code.length).to.equal(0)
     })
 
-    it('should remove deployed tokens that are no longer in our utxos', async () => {
+    it('should remove deployed resources that are no longer in our utxos', async () => {
       // Create two runs, each with the same owner
       const run1 = new Run()
       const run2 = new Run({ owner: run1.owner.privkey })

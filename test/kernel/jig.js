@@ -589,7 +589,7 @@ describe('Jig', () => {
     it('should throw if pass built-in intrinsic', () => testArgumentFail(Math))
     it('should throw if pass date', () => testArgumentFail(new Date()))
 
-    it('should dedup tokens passed in set', async () => {
+    it('should dedup resources passed in set', async () => {
       class A extends Jig { f (...args) { this.args = args } }
       const b1 = new A()
       await run.sync()

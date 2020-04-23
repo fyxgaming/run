@@ -114,7 +114,7 @@ describe('TokenMap', () => {
       map.set(b2, 1)
     })
 
-    it('should throw for same tokens at different states', () => {
+    it('should throw for same resources at different states', () => {
       const a = testToken().deploy().publish()
       const map = new TokenMap([[a, a]])
       const a2 = a.duplicate().update()
@@ -168,7 +168,7 @@ describe('TokenMap', () => {
       expect(map.get(obj)).to.equal(undefined)
     })
 
-    it('should return value for tokens in map', () => {
+    it('should return value for resources in map', () => {
       const a = testToken()
       const b = testToken().deploy()
       const c = testToken().deploy().publish()
@@ -184,11 +184,11 @@ describe('TokenMap', () => {
       expect(map.get(c2)).to.equal('ghi')
     })
 
-    it('should return undefined for missing tokens', () => {
+    it('should return undefined for missing resources', () => {
       expect(new TokenMap().get(testToken().deploy())).to.equal(undefined)
     })
 
-    it('should throw for same tokens at different states', () => {
+    it('should throw for same resources at different states', () => {
       const a = testToken()
       const b = testToken().deploy()
       const c = testToken().deploy().publish()
@@ -226,7 +226,7 @@ describe('TokenMap', () => {
       expect(map.has(obj)).to.equal(false)
     })
 
-    it('should return true for tokens in map', () => {
+    it('should return true for resources in map', () => {
       const a = testToken()
       const b = testToken().deploy().publish().update()
       const map = new TokenMap([[a, {}], [b, {}]])
@@ -235,14 +235,14 @@ describe('TokenMap', () => {
       expect(map.has(b.duplicate())).to.equal(true)
     })
 
-    it('should return false for missing tokens', () => {
+    it('should return false for missing resources', () => {
       expect(new TokenMap().has(testToken())).to.equal(false)
       expect(new TokenMap().has(testToken().deploy())).to.equal(false)
       expect(new TokenMap().has(testToken().deploy().publish())).to.equal(false)
       expect(new TokenMap().has(testToken().deploy().publish().update())).to.equal(false)
     })
 
-    it('should throw for same tokens at different states', () => {
+    it('should throw for same resources at different states', () => {
       const a = testToken().deploy().publish().update().publish()
       const map = new TokenMap([[a, []]])
       expect(map.has(a)).to.equal(true)
@@ -265,7 +265,7 @@ describe('TokenMap', () => {
       expect(map.size).to.equal(entries.length)
     })
 
-    it('should set tokens once', () => {
+    it('should set resources once', () => {
       const a = testToken().deploy().publish()
       const map = new TokenMap()
       map.set(a, 0)
@@ -275,7 +275,7 @@ describe('TokenMap', () => {
       expect(map.get(a2)).to.equal(1)
     })
 
-    it('should throw if add two of the same tokens at different states', () => {
+    it('should throw if add two of the same resources at different states', () => {
       const a = testToken().deploy().publish()
       const a2 = a.duplicate().update()
       const map = new TokenMap()
@@ -346,7 +346,7 @@ describe('TokenSet', () => {
       expect(set.size).to.equal(entries.length)
     })
 
-    it('should add tokens once', async () => {
+    it('should add resources once', async () => {
       const a = testToken()
       const b = testToken().deploy().publish()
       const set = new TokenSet()
@@ -356,7 +356,7 @@ describe('TokenSet', () => {
       expect(set.size).to.equal(2)
     })
 
-    it('should throw if add two of the same tokens at different states', () => {
+    it('should throw if add two of the same resources at different states', () => {
       const a = testToken()
       const b = testToken().deploy().publish()
       const set = new TokenSet()
@@ -415,7 +415,7 @@ describe('TokenSet', () => {
       set.add(token.update().publish())
     })
 
-    it('should throw for same tokens at different states', () => {
+    it('should throw for same resources at different states', () => {
       const a = testToken()
       const b = testToken().deploy().publish()
       const set = new TokenSet([a, b])
@@ -469,20 +469,20 @@ describe('TokenSet', () => {
       expect(set.has(obj)).to.equal(false)
     })
 
-    it('should return true for tokens in set', () => {
+    it('should return true for resources in set', () => {
       const a = testToken().deploy().publish()
       const set = new TokenSet([a])
       expect(set.has(a)).to.equal(true)
       expect(set.has(a.duplicate())).to.equal(true)
     })
 
-    it('should return false for missing tokens', () => {
+    it('should return false for missing resources', () => {
       expect(new TokenSet().has(testToken())).to.equal(false)
       expect(new TokenSet().has(testToken().deploy())).to.equal(false)
       expect(new TokenSet().has(testToken().deploy().publish())).to.equal(false)
     })
 
-    it('should throw for same tokens at different states', () => {
+    it('should throw for same resources at different states', () => {
       const a = testToken().deploy()
       const b = testToken().deploy().publish().update()
       const set = new TokenSet([a, b])

@@ -449,13 +449,13 @@ describe('TokenJSON', () => {
     })
   })
 
-  describe('tokens', () => {
+  describe('resources', () => {
     it('should replace jigs with location ref', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const opts = mangle({
         _outputIntrinsics: sandboxIntrinsics,
-        _replacer: _replace._tokens(token => '123')
+        _replacer: _replace._resources(resource => '123')
       })
       const json = _serialize(dragon, opts)
       expect(json).to.deep.equal({ $ref: '123' })
@@ -466,7 +466,7 @@ describe('TokenJSON', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const opts = mangle({
-        _reviver: _revive._tokens(ref => dragon)
+        _reviver: _revive._resources(ref => dragon)
       })
       expect(_deserialize({ $ref: '123' }, opts)).to.equal(dragon)
     })
@@ -476,8 +476,8 @@ describe('TokenJSON', () => {
       const dragon = new Dragon()
       const opts = mangle({
         _outputIntrinsics: unmangle(sandbox)._hostIntrinsics,
-        _replacer: _replace._tokens(token => '123'),
-        _reviver: _revive._tokens(ref => dragon)
+        _replacer: _replace._resources(resource => '123'),
+        _reviver: _revive._resources(ref => dragon)
       })
       const x = [dragon, { dragon }, new Set([dragon])]
       const json = _serialize(x, opts)
@@ -487,13 +487,13 @@ describe('TokenJSON', () => {
     })
 
     it('should fail to deserialize bad ref', () => {
-      const opts = mangle({ _reviver: _revive._tokens(ref => {}) })
+      const opts = mangle({ _reviver: _revive._resources(ref => {}) })
       deserializeFail({ $ref: 1, $ref2: 2 }, opts)
       deserializeFail({ $ref: '123' })
     })
 
     it('should replace deployables with location ref', () => {
-      const opts = mangle({ _replacer: _replace._tokens(x => '123') })
+      const opts = mangle({ _replacer: _replace._resources(x => '123') })
       expect(_serialize(class {}, opts)).to.deep.equal({ $ref: '123' })
       expect(_serialize(class A {}, opts)).to.deep.equal({ $ref: '123' })
       expect(_serialize(class { method () { return null } }, opts)).to.deep.equal({ $ref: '123' })
@@ -506,7 +506,7 @@ describe('TokenJSON', () => {
     })
 
     it('should fail to serialize built-in functions', () => {
-      const opts = mangle({ _replacer: _replace._tokens(x => '123') })
+      const opts = mangle({ _replacer: _replace._resources(x => '123') })
       expect(() => _serialize(Math.random, opts)).to.throw('Cannot serialize')
       expect(() => _serialize(Array.prototype.indexOf, opts)).to.throw('Cannot serialize')
       expect(() => _serialize(WeakSet.prototype.has, opts)).to.throw('Cannot serialize')
@@ -524,28 +524,28 @@ describe('TokenJSON', () => {
       const berry = { location: '_o1' }
       Object.setPrototypeOf(berry, CustomBerrySandbox.prototype)
       const opts = mangle({
-        _replacer: _replace._tokens(token => '123'),
-        _reviver: _revive._tokens(ref => berry)
+        _replacer: _replace._resources(resource => '123'),
+        _reviver: _revive._resources(ref => berry)
       })
       serializePass(berry, { $ref: '123' }, opts)
     })
   })
 
   describe('arbitrary objects', () => {
-    const tokens = []
+    const resources = []
     const opts = mangle({
       _replacer: _replace._multiple(
-        _replace._tokens(x => { tokens.push(x); return tokens.length - 1 }),
+        _replace._resources(x => { resources.push(x); return resources.length - 1 }),
         _replace._arbitraryObjects()
       ),
       _reviver: _revive._multiple(
-        _revive._tokens(x => tokens[x]),
+        _revive._resources(x => resources[x]),
         _revive._arbitraryObjects()
       )
     })
 
     it('should support basic arbitrary objects', () => {
-      const $ref = tokens.length
+      const $ref = resources.length
       class A { }
       const a = new A()
       a.n = 1
@@ -553,7 +553,7 @@ describe('TokenJSON', () => {
     })
 
     it('should support arbitrary objects with circular references', () => {
-      const $ref = tokens.length
+      const $ref = resources.length
       class A { }
       const a = new A()
       a.a = a
@@ -561,7 +561,7 @@ describe('TokenJSON', () => {
     })
 
     it('should support arbitrary objects with duplicate inners', () => {
-      const $ref = tokens.length
+      const $ref = resources.length
       const o = {}
       class A { }
       const a = new A()
@@ -575,7 +575,7 @@ describe('TokenJSON', () => {
     it('should find serializables', () => {
       function f () { }
       let n = 1
-      const opts = mangle({ _replacer: _replace._tokens(token => n++) })
+      const opts = mangle({ _replacer: _replace._resources(resource => n++) })
       const x = [f, { f }, new Set([f])]
       const json = _serialize(x, opts)
       const refs = _findAllTokenRefsInTokenJson(json)

@@ -81,7 +81,7 @@ describe('Owner', () => {
       expect(f.owner).to.equal(owner.addr(2))
     })
 
-    it('should fail to create tokens if next() throws', () => {
+    it('should fail to create resources if next() throws', () => {
       // Hook next() to throw
       const owner = new Run().owner
       owner.next = () => { throw new Error('failed to get next') }
@@ -229,19 +229,19 @@ describe('Owner', () => {
     it('should throw if Run owner is a Lock', () => {
     })
 
-    it('should sync tokens using lock', () => {
+    it('should sync resources using lock', () => {
     })
 
-    it('should create new tokens with owner as lock', () => {
+    it('should create new resources with owner as lock', () => {
       // export
     })
   })
 
   describe('changing owners', () => {
-    it('should call next on the new owner for new tokens', () => {
+    it('should call next on the new owner for new resources', () => {
     })
 
-    it('should use prior owner for tokens enqueued', () => {
+    it('should use prior owner for resources enqueued', () => {
     })
 
     it('should call sign on owner that was assigned when token was created', () => {
