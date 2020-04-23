@@ -143,11 +143,11 @@ describe('Transaction', () => {
       expect(tx2.outputs.length).to.equal(3)
     })
 
-    it.only('should support importing new jig', async () => {
+    it('should support importing new jig', async () => {
       const run = new Run()
       run.transaction.begin()
       class B extends Jig { }
-      class A extends B { set (x) { this.x = x }}
+      class A extends B { set (x) { this.x = x } }
       A.author = 'abc'
       new A() // eslint-disable-line
       const tx = run.transaction.export()
