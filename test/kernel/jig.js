@@ -1766,7 +1766,7 @@ describe('Jig', () => {
       })
     })
 
-    it('should use token set', async () => {
+    it('should use ResourceSet', async () => {
       class B extends Jig {}
       class A extends Jig {
         init () { this.set = new Set() }
@@ -1785,7 +1785,7 @@ describe('Jig', () => {
       await run.load(a.location)
     })
 
-    it('should use token map', async () => {
+    it('should use ResourceMap', async () => {
       class B extends Jig {}
       class A extends Jig {
         init () { this.map = new Map() }

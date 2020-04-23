@@ -46,8 +46,8 @@ const reservedNames = [
   'Jig', 'Berry', 'Context', 'JigControl', 'BerryControl',
   // Token, expect, etc. are built-in code must be preserved
   'Token', 'expect', 'asm', 'hex', 'StandardLock', 'GroupLock',
-  // TokenSet/TokenMap dependency names must be preserved
-  'internal', 'uniqueKey', 'TokenMap'
+  // ResourceSet/ResourceMap dependency names must be preserved
+  'internal', 'uniqueKey', 'ResourceMap'
 ]
 
 // Reserved words that should not be mangled in minified builds
