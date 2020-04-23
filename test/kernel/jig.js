@@ -1477,22 +1477,19 @@ describe('Jig', () => {
       await run2.load(a.location)
     })
 
-    it('should load non-standard owner', async () => {
+    it.only('should load non-standard owner', async () => {
       class CustomLock { get script () { return new Uint8Array([1, 2, 3]) } }
       class CustomOwner {
-        next() { return new CustomLock() }
-        async sign(tx) { return tx }
+        next () { return new CustomLock() }
+        async sign (tx) { return tx }
       }
       const run = new Run({ owner: new CustomOwner() })
       class A extends Jig { }
-      console.log('==')
       const a = new A()
-      console.log('==2')
       await a.sync()
-      console.log('==3')
       run.deactivate()
       const run2 = new Run({ blockchain: run.blockchain })
-      console.log('!!')
+      console.log('--')
       const a2 = await run2.load(a.location)
       console.log(a2)
     })
