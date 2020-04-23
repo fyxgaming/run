@@ -175,7 +175,7 @@ describe('Transaction', () => {
       run.transaction.rollback()
       run.transaction.begin()
       run.deploy(class A {})
-      await expect(run.transaction.import(tx)).to.be.rejectedWith('transaction already in progress. cannot import.')
+      await expect(run.transaction.import(tx)).to.be.rejectedWith('Cannot import: Transaction already in progress')
     })
 
     it('should support exporting then importing transaction', async () => {
