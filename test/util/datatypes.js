@@ -12,25 +12,25 @@ const { unmangle } = require('../env/unmangle')
 const { Location, TokenSet, TokenMap } = unmangle(Run)._util
 
 // ------------------------------------------------------------------------------------------------
-// A temporary token for testing
+// A temporary resource for testing
 // ------------------------------------------------------------------------------------------------
 
 const randomLocation = () => `${bsv.crypto.Random.getRandomBuffer(32).toString('hex')}_o0`
 const randomTempLocation = () => `??${bsv.crypto.Random.getRandomBuffer(31).toString('hex')}_o0`
-const testToken = (origin, location) => {
-  const token = () => {}
-  token.owner = 'someone'
-  token.origin = origin
-  token.location = location
-  token.deploy = () => { token.location = token.origin = randomTempLocation(); return token }
-  token.update = () => { token.location = randomTempLocation(); return token }
-  token.publish = () => {
-    if (!token.origin || !Location.parse(token.origin).txid) token.origin = randomLocation()
-    if (!token.location || !Location.parse(token.location).txid) token.location = randomLocation()
-    return token
+const testResource = (origin, location) => {
+  const resource = () => {}
+  resource.owner = 'someone'
+  resource.origin = origin
+  resource.location = location
+  resource.deploy = () => { resource.location = resource.origin = randomTempLocation(); return resource }
+  resource.update = () => { resource.location = randomTempLocation(); return resource }
+  resource.publish = () => {
+    if (!resource.origin || !Location.parse(resource.origin).txid) resource.origin = randomLocation()
+    if (!resource.location || !Location.parse(resource.location).txid) resource.location = randomLocation()
+    return resource
   }
-  token.duplicate = () => { return testToken(token.origin, token.location) }
-  return token
+  resource.duplicate = () => { return testResource(resource.origin, resource.location) }
+  return resource
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -75,9 +75,9 @@ describe('TokenMap', () => {
       expect(map.size).to.equal(0)
     })
 
-    it('should clear token states', () => {
-      const a = testToken()
-      const b = testToken().deploy().publish()
+    it('should clear resource states', () => {
+      const a = testResource()
+      const b = testResource().deploy().publish()
       const map = new TokenMap([[a, 1], [b, 2]])
       map.clear()
       expect(map.size).to.equal(0)
@@ -92,9 +92,9 @@ describe('TokenMap', () => {
   describe('delete', () => {
     it('should return false if item is not present', () => {
       expect(new TokenMap().delete(1)).to.equal(false)
-      expect(new TokenMap().delete(testToken())).to.equal(false)
-      expect(new TokenMap().delete(testToken().deploy())).to.equal(false)
-      expect(new TokenMap().delete(testToken().deploy().publish())).to.equal(false)
+      expect(new TokenMap().delete(testResource())).to.equal(false)
+      expect(new TokenMap().delete(testResource().deploy())).to.equal(false)
+      expect(new TokenMap().delete(testResource().deploy().publish())).to.equal(false)
     })
 
     it('should delete item and return true if item is present', () => {
@@ -102,8 +102,8 @@ describe('TokenMap', () => {
     })
 
     it('should clear token states', () => {
-      const a = testToken()
-      const b = testToken().deploy()
+      const a = testResource()
+      const b = testResource().deploy()
       const map = new TokenMap([[a, 1], [b, 1]])
       map.delete(a)
       map.delete(b)
@@ -115,7 +115,7 @@ describe('TokenMap', () => {
     })
 
     it('should throw for same resources at different states', () => {
-      const a = testToken().deploy().publish()
+      const a = testResource().deploy().publish()
       const map = new TokenMap([[a, a]])
       const a2 = a.duplicate().update()
       expect(() => map.delete(a2)).to.throw('Inconsistent worldview')
@@ -169,9 +169,9 @@ describe('TokenMap', () => {
     })
 
     it('should return value for resources in map', () => {
-      const a = testToken()
-      const b = testToken().deploy()
-      const c = testToken().deploy().publish()
+      const a = testResource()
+      const b = testResource().deploy()
+      const c = testResource().deploy().publish()
       const map = new TokenMap([[a, 'abc'], [b, 'def'], [c, 'ghi']])
       expect(map.get(a)).to.equal('abc')
       expect(map.get(b)).to.equal('def')
@@ -185,13 +185,13 @@ describe('TokenMap', () => {
     })
 
     it('should return undefined for missing resources', () => {
-      expect(new TokenMap().get(testToken().deploy())).to.equal(undefined)
+      expect(new TokenMap().get(testResource().deploy())).to.equal(undefined)
     })
 
     it('should throw for same resources at different states', () => {
-      const a = testToken()
-      const b = testToken().deploy()
-      const c = testToken().deploy().publish()
+      const a = testResource()
+      const b = testResource().deploy()
+      const c = testResource().deploy().publish()
       const map = new TokenMap([[a, 1], [b, 2], [c, 3]])
       expect(map.get(a)).to.equal(1)
       expect(map.get(b)).to.equal(2)
@@ -227,8 +227,8 @@ describe('TokenMap', () => {
     })
 
     it('should return true for resources in map', () => {
-      const a = testToken()
-      const b = testToken().deploy().publish().update()
+      const a = testResource()
+      const b = testResource().deploy().publish().update()
       const map = new TokenMap([[a, {}], [b, {}]])
       expect(map.has(a)).to.equal(true)
       expect(map.has(b)).to.equal(true)
@@ -236,14 +236,14 @@ describe('TokenMap', () => {
     })
 
     it('should return false for missing resources', () => {
-      expect(new TokenMap().has(testToken())).to.equal(false)
-      expect(new TokenMap().has(testToken().deploy())).to.equal(false)
-      expect(new TokenMap().has(testToken().deploy().publish())).to.equal(false)
-      expect(new TokenMap().has(testToken().deploy().publish().update())).to.equal(false)
+      expect(new TokenMap().has(testResource())).to.equal(false)
+      expect(new TokenMap().has(testResource().deploy())).to.equal(false)
+      expect(new TokenMap().has(testResource().deploy().publish())).to.equal(false)
+      expect(new TokenMap().has(testResource().deploy().publish().update())).to.equal(false)
     })
 
     it('should throw for same resources at different states', () => {
-      const a = testToken().deploy().publish().update().publish()
+      const a = testResource().deploy().publish().update().publish()
       const map = new TokenMap([[a, []]])
       expect(map.has(a)).to.equal(true)
       expect(() => map.has(a.duplicate().update())).to.throw('Inconsistent worldview')
@@ -266,7 +266,7 @@ describe('TokenMap', () => {
     })
 
     it('should set resources once', () => {
-      const a = testToken().deploy().publish()
+      const a = testResource().deploy().publish()
       const map = new TokenMap()
       map.set(a, 0)
       const a2 = a.duplicate()
@@ -276,7 +276,7 @@ describe('TokenMap', () => {
     })
 
     it('should throw if add two of the same resources at different states', () => {
-      const a = testToken().deploy().publish()
+      const a = testResource().deploy().publish()
       const a2 = a.duplicate().update()
       const map = new TokenMap()
       map.set(a2, a2)
@@ -347,8 +347,8 @@ describe('TokenSet', () => {
     })
 
     it('should add resources once', async () => {
-      const a = testToken()
-      const b = testToken().deploy().publish()
+      const a = testResource()
+      const b = testResource().deploy().publish()
       const set = new TokenSet()
       set.add(a)
       set.add(b)
@@ -357,8 +357,8 @@ describe('TokenSet', () => {
     })
 
     it('should throw if add two of the same resources at different states', () => {
-      const a = testToken()
-      const b = testToken().deploy().publish()
+      const a = testResource()
+      const b = testResource().deploy().publish()
       const set = new TokenSet()
       set.add(a)
       set.add(b)
@@ -383,8 +383,8 @@ describe('TokenSet', () => {
 
     it('should clear token states', () => {
       const set = new TokenSet()
-      const a = testToken().deploy()
-      const b = testToken().deploy().publish()
+      const a = testResource().deploy()
+      const b = testResource().deploy().publish()
       set.add(a)
       set.add(b)
       set.clear()
@@ -398,26 +398,26 @@ describe('TokenSet', () => {
   describe('delete', () => {
     it('should return false if item is not present', () => {
       expect(new TokenSet().delete(1)).to.equal(false)
-      expect(new TokenSet().delete(testToken())).to.equal(false)
-      expect(new TokenSet().delete(testToken().deploy().publish())).to.equal(false)
+      expect(new TokenSet().delete(testResource())).to.equal(false)
+      expect(new TokenSet().delete(testResource().deploy().publish())).to.equal(false)
     })
 
     it('should delete item and return true if item is present', () => {
       expect(new TokenSet([1]).delete(1)).to.equal(true)
     })
 
-    it('should clear token states', () => {
+    it('should clear resource states', () => {
       const set = new TokenSet()
-      const token = testToken().deploy().publish()
-      set.add(token)
-      set.delete(token)
+      const resource = testResource().deploy().publish()
+      set.add(resource)
+      set.delete(resource)
       expect(set.size).to.equal(0)
-      set.add(token.update().publish())
+      set.add(resource.update().publish())
     })
 
     it('should throw for same resources at different states', () => {
-      const a = testToken()
-      const b = testToken().deploy().publish()
+      const a = testResource()
+      const b = testResource().deploy().publish()
       const set = new TokenSet([a, b])
       expect(() => set.delete(a.deploy().publish().duplicate().update())).to.throw('Inconsistent worldview')
       expect(() => set.delete(b.duplicate().update().publish())).to.throw('Inconsistent worldview')
@@ -470,21 +470,21 @@ describe('TokenSet', () => {
     })
 
     it('should return true for resources in set', () => {
-      const a = testToken().deploy().publish()
+      const a = testResource().deploy().publish()
       const set = new TokenSet([a])
       expect(set.has(a)).to.equal(true)
       expect(set.has(a.duplicate())).to.equal(true)
     })
 
     it('should return false for missing resources', () => {
-      expect(new TokenSet().has(testToken())).to.equal(false)
-      expect(new TokenSet().has(testToken().deploy())).to.equal(false)
-      expect(new TokenSet().has(testToken().deploy().publish())).to.equal(false)
+      expect(new TokenSet().has(testResource())).to.equal(false)
+      expect(new TokenSet().has(testResource().deploy())).to.equal(false)
+      expect(new TokenSet().has(testResource().deploy().publish())).to.equal(false)
     })
 
     it('should throw for same resources at different states', () => {
-      const a = testToken().deploy()
-      const b = testToken().deploy().publish().update()
+      const a = testResource().deploy()
+      const b = testResource().deploy().publish().update()
       const set = new TokenSet([a, b])
       expect(set.has(a)).to.equal(true)
       expect(set.has(b)).to.equal(true)

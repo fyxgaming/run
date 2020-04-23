@@ -2528,9 +2528,9 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).to.throw('[object Object] belongs to a different token')
-      expect(() => b.g(a)).to.throw('[object Array] belongs to a different token')
-      expect(() => b.h(a)).to.throw('[object Uint8Array] belongs to a different token')
+      expect(() => b.f(a)).to.throw('[object Object] belongs to a different resource')
+      expect(() => b.g(a)).to.throw('[object Array] belongs to a different resource')
+      expect(() => b.h(a)).to.throw('[object Uint8Array] belongs to a different resource')
     })
 
     it('should throw if save an arbitrary object from another jig', () => {
@@ -2547,7 +2547,7 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.set(a)).to.throw('[object Blob] belongs to a different token')
+      expect(() => b.set(a)).to.throw('[object Blob] belongs to a different resource')
     })
 
     it('should not throw if save a copy of an internal property on another jig', () => {

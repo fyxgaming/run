@@ -19,7 +19,7 @@ const { hookPay } = require('../env/helpers')
 // ------------------------------------------------------------------------------------------------
 
 describe('Inventory', () => {
-  // Todo: Tokens
+  // Todo: Resources
   // Todo: sync
   // Can set old inventory for old owner
 

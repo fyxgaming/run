@@ -10,7 +10,7 @@ const bsv = require('bsv')
 const { Run } = require('../env/config')
 const { Jig, Berry } = Run
 const { unmangle, mangle } = require('../env/unmangle')
-const { TokenJSON } = unmangle(Run)._util
+const { ResourceJSON } = unmangle(Run)._util
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -20,11 +20,11 @@ const run = new Run()
 const sandbox = unmangle(Run.sandbox)._instance
 const sandboxIntrinsics = unmangle(sandbox)._intrinsics
 
-const _serialize = unmangle(TokenJSON)._serialize
-const _deserialize = unmangle(TokenJSON)._deserialize
-const _replace = unmangle(unmangle(TokenJSON)._replace)
-const _revive = unmangle(unmangle(TokenJSON)._revive)
-const _findAllTokenRefsInTokenJson = unmangle(TokenJSON)._findAllTokenRefsInTokenJson
+const _serialize = unmangle(ResourceJSON)._serialize
+const _deserialize = unmangle(ResourceJSON)._deserialize
+const _replace = unmangle(unmangle(ResourceJSON)._replace)
+const _revive = unmangle(unmangle(ResourceJSON)._revive)
+const _findAllResourceRefsInResourceJSON = unmangle(ResourceJSON)._findAllResourceRefsInResourceJSON
 
 // ------------------------------------------------------------------------------------------------
 // Helpers
@@ -47,10 +47,10 @@ const serializeFail = (x, opts = defaultOpts) => expect(() => _serialize(x, opts
 const deserializeFail = (y, opts = defaultOpts) => expect(() => _deserialize(y, opts)).to.throw('Cannot deserialize')
 
 // ------------------------------------------------------------------------------------------------
-// TokenJSON
+// ResourceJSON
 // ------------------------------------------------------------------------------------------------
 
-describe('TokenJSON', () => {
+describe('ResourceJSON', () => {
   before(() => run.activate())
 
   describe('_serialize', () => {
@@ -571,14 +571,14 @@ describe('TokenJSON', () => {
     })
   })
 
-  describe('_findAllTokenRefsInTokenJson', () => {
+  describe('_findAllResourceRefsInResourceJSON', () => {
     it('should find serializables', () => {
       function f () { }
       let n = 1
       const opts = mangle({ _replacer: _replace._resources(resource => n++) })
       const x = [f, { f }, new Set([f])]
       const json = _serialize(x, opts)
-      const refs = _findAllTokenRefsInTokenJson(json)
+      const refs = _findAllResourceRefsInResourceJSON(json)
       expect(Array.from(refs)).to.deep.equal([1, 2, 3])
     })
   })

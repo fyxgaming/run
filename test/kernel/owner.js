@@ -43,7 +43,7 @@ describe('Owner', () => {
       expect(nextCount).to.equal(2)
     })
 
-    it('should support creating new locks for every token', async () => {
+    it('should support creating new locks for every resource', async () => {
       class HDOwner {
         constructor () {
           this.master = new HDPrivateKey()
@@ -172,15 +172,15 @@ describe('Owner', () => {
     it('should throw if partially signed', () => {
     })
 
-    it('should pass StandardLock for address token owner', () => {
+    it('should pass StandardLock for address resource owner', () => {
       // Jig / Code
     })
 
-    it('should pass StandardLock for pubkey token owner', () => {
+    it('should pass StandardLock for pubkey resource owner', () => {
       // Jig / Code
     })
 
-    it('should pass custom lock for custom token owner', () => {
+    it('should pass custom lock for custom resource owner', () => {
       // Jig / Code
     })
 
@@ -188,7 +188,7 @@ describe('Owner', () => {
       // Jig / Code
     })
 
-    it('should pass locks for token inputs and undefined for payment inputs', () => {
+    it('should pass locks for resource inputs and undefined for payment inputs', () => {
       // Custom lock
       // Payment input
     })
@@ -244,7 +244,7 @@ describe('Owner', () => {
     it('should use prior owner for resources enqueued', () => {
     })
 
-    it('should call sign on owner that was assigned when token was created', () => {
+    it('should call sign on owner that was assigned when resource was created', () => {
     })
 
     it('should create a new inventory when owner changes', () => {
