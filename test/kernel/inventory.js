@@ -24,7 +24,18 @@ describe('Inventory', () => {
   // Can set old inventory for old owner
 
   describe('load', () => {
-    it.only('should add loaded resources if unspent', async () => {
+    it('should add our loaded unspent resources', async () => {
+      const run = new Run()
+      class A extends Jig {}
+      const a = new A()
+      await a.sync()
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner })
+      const a2 = await run2.load(a.location)
+      expect(run2.inventory.jigs).to.deep.equal([a2])
+    })
+
+    it('should not add other peoples loaded unspent resources', async () => {
       const run = new Run()
       class A extends Jig {}
       const a = new A()
@@ -32,7 +43,7 @@ describe('Inventory', () => {
       run.deactivate()
       const run2 = new Run({ blockchain: run.blockchain })
       const a2 = await run2.load(a.location)
-      expect(run2.inventory.jigs).to.deep.equal([a2])
+      expect(run2.inventory.jigs.length).to.equal(0)
     })
 
     // If spentTxId is missing
