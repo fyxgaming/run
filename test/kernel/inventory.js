@@ -11,7 +11,7 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../env/config')
-const { Jig, Token } = Run
+const { Jig, Token, LockOwner } = Run
 const { hookPay } = require('../env/helpers')
 
 // ------------------------------------------------------------------------------------------------
@@ -24,6 +24,20 @@ describe('Inventory', () => {
   // Can set old inventory for old owner
 
   describe('load', () => {
+    it.only('should add loaded resources if unspent', async () => {
+      const run = new Run()
+      class A extends Jig {}
+      const a = new A()
+      await a.sync()
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      const a2 = await run2.load(a.location)
+      expect(run2.inventory.jigs).to.deep.equal([a2])
+    })
+
+    // If spentTxId is missing
+    // If state cache, don't expect
+
     it('should not add resources without sync', async () => {
       // Create a jig and code
       const run = new Run()
@@ -50,6 +64,9 @@ describe('Inventory', () => {
       // We might be able to add to this if we know a jig is latest during loading
     })
   })
+
+  // What happens when fail to spend, due to spent somewhere else? Remove jig
+  // Resources test
 
   describe('sync', () => {
     it('should update with code deployed', async () => {
@@ -170,6 +187,20 @@ describe('Inventory', () => {
       await run1.sync()
       expect(run1.inventory.jigs.length).to.equal(0)
     })
+  })
+
+  describe('flows', () => {
+    it('should sync jigs without private key', async () => {
+      const run = new Run()
+      class A extends Jig {}
+      const a = await new A().sync()
+      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.next() })
+      await run2.sync()
+      expect(run2.owner instanceof LockOwner).to.equal(true)
+      expect(run2.owner.privkey).to.equal(undefined)
+      expect(run2.inventory.jigs).to.deep.equal([a])
+      expect(run2.inventory.code).to.deep.equal([a.constructor])
+    })
 
     it('should support filtering jigs by class', async () => {
       const run = new Run()
@@ -177,17 +208,8 @@ describe('Inventory', () => {
       class B extends Jig {}
       const a = new A()
       new B() // eslint-disable-line
+      expect(run.inventory.jigs.length).to.equal(2)
       expect(run.inventory.jigs.find(x => x instanceof A)).to.deep.equal(a)
-    })
-
-    it('should support getting jigs without private key', async () => {
-      const run = new Run()
-      class A extends Jig {}
-      const a = await new A().sync()
-      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.next() })
-      await run2.sync()
-      expect(run2.owner.privkey).to.equal(undefined)
-      expect(run2.inventory.jigs).to.deep.equal([a])
     })
   })
 })

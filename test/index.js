@@ -17,6 +17,7 @@ require('./kernel/code')
 require('./kernel/inventory')
 require('./kernel/jig')
 require('./kernel/owner')
+require('./kernel/syncer')
 require('./kernel/transaction')
 
 require('./module/blockchain-api')
