@@ -195,7 +195,7 @@ describe('Transaction', () => {
       await run.sync()
     })
 
-    it.only('should add updated resources to the inventory after import', async () => {
+    it('should add updated resources to the inventory after import', async () => {
       const run = new Run()
       class Dragon extends Jig {}
       run.transaction.begin()
@@ -211,9 +211,12 @@ describe('Transaction', () => {
       await run.transaction.import(tx)
       expect(run.inventory.jigs.length).to.equal(1)
       expect(run.inventory.code.length).to.equal(1)
-      new Dragon() // eslint-disable-line
+      const Dragon2 = run.inventory.code[0]
+      new Dragon2() // eslint-disable-line
       expect(run.inventory.jigs.length).to.equal(2)
       expect(run.inventory.code.length).to.equal(1)
+      await run.transaction.pay()
+      await run.transaction.sign()
       run.transaction.end()
       await run.sync()
     })
