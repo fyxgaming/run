@@ -42,7 +42,7 @@ describe('Inventory', () => {
       await a.sync()
       run.deactivate()
       const run2 = new Run({ blockchain: run.blockchain })
-      const a2 = await run2.load(a.location)
+      await run2.load(a.location)
       expect(run2.inventory.jigs.length).to.equal(0)
     })
 

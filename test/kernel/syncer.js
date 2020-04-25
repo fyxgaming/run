@@ -1,6 +1,6 @@
 /**
  * syncer.js
- * 
+ *
  * Tests for lib/kernel/syncer.js
  */
 
