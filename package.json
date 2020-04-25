@@ -17,7 +17,7 @@
     "test:node": "webpack && env LIB=dist/run.node.min.js env MANGLED=1 mocha",
     "test:browser": "node test/env/browser",
     "deploy": "deploy --main --test --stn extras/**",
-    "version": "webpack && standard && npm test",
+    "version": "webpack && standard && npm test:node",
     "bump": "npm version patch && git push --follow-tags && npm publish"
   },
   "dependencies": {
