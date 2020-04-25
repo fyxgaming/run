@@ -194,6 +194,29 @@ describe('Transaction', () => {
       run.transaction.end()
       await run.sync()
     })
+
+    it.only('should add updated resources to the inventory after import', async () => {
+      const run = new Run()
+      class Dragon extends Jig {}
+      run.transaction.begin()
+      new Dragon() // eslint-disable-line
+      await run.transaction.pay()
+      await run.transaction.sign()
+      expect(run.inventory.jigs.length).to.equal(1)
+      expect(run.inventory.code.length).to.equal(1)
+      const tx = run.transaction.export()
+      run.transaction.rollback()
+      expect(run.inventory.jigs.length).to.equal(0)
+      expect(run.inventory.code.length).to.equal(0)
+      await run.transaction.import(tx)
+      expect(run.inventory.jigs.length).to.equal(1)
+      expect(run.inventory.code.length).to.equal(1)
+      new Dragon() // eslint-disable-line
+      expect(run.inventory.jigs.length).to.equal(2)
+      expect(run.inventory.code.length).to.equal(1)
+      run.transaction.end()
+      await run.sync()
+    })
   })
 
   describe('sign', () => {
