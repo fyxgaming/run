@@ -39,6 +39,14 @@ describe('Syncer', () => {
       expect(run.blockchain.fetch.calledWith(txid, false)).to.equal(true)
       run.deactivate()
     })
+
+    it('sync with nothing queued returns immediately', async () => {
+      const run = new Run()
+      await run.sync()
+      run.deploy(class A {})
+      await run.sync()
+      await run.sync()
+    })
   })
 })
 
