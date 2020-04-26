@@ -983,7 +983,7 @@ describe('Transaction', () => {
     })
   })
 
-  it.only('should error when import and queue twice', async () => {
+  it('should error when import and queue twice', async () => {
     const run = new Run()
     class A extends Jig { set (n) { this.n = n } }
     const a = new A()
@@ -1012,13 +1012,9 @@ describe('Transaction', () => {
     run.deploy(class A {})
     run.transaction.end()
 
-    await run.sync()
-
-    console.log(a)
+    await expect(run.sync()).to.be.rejected
 
     await a.sync()
-
-    console.log(a)
   })
 })
 
