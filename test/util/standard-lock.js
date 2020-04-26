@@ -9,7 +9,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { StandardLock } = Run
-const { deploy } = require('../env/helpers')
+const deploy = require('../env/deploy')
 
 // ------------------------------------------------------------------------------------------------
 // StandardLock

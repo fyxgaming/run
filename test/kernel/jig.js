@@ -9,10 +9,10 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
+const { stub } = require('sinon')
 const { PrivateKey } = require('bsv')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
-const { hookPay } = require('../env/helpers')
 const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -2267,7 +2267,8 @@ describe('Jig', () => {
     })
 
     it('should roll back all jigs from batch failures', async () => {
-      hookPay(run, true, true, true, false)
+      const run = hookStoreAction(new Run())
+      stub(run.purse, 'pay').callThrough().onCall(3).returns()
       class A extends Jig { f (n) { this.n = n } }
       class B extends Jig { f (a, n) { a.f(a.n + 1); this.n = n } }
       const a = new A()

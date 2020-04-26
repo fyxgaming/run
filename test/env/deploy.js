@@ -1,28 +1,13 @@
 /**
- * helpers.js
+ * deploy.js
  *
- * Various helpers methods used in tests
+ * Deploys code using Run
  */
 
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const { Run } = require('./config')
-const { unmangle } = require('./unmangle')
-
-// ------------------------------------------------------------------------------------------------
-// hookPay
-// ------------------------------------------------------------------------------------------------
-
-async function hookPay (run, ...enables) {
-  const publisher = unmangle(unmangle(run)._kernel)._publisher
-  enables = new Array(unmangle(publisher)._queued.length).fill(true).concat(enables)
-  const orig = run.purse.pay.bind(run.purse)
-  run.purse.pay = async (tx) => {
-    if (!enables.length) { return orig(tx) }
-    if (enables.shift()) { return orig(tx) } else { return tx }
-  }
-}
 
 // ------------------------------------------------------------------------------------------------
 // deploy
@@ -64,4 +49,4 @@ async function deploy (Class) {
 
 // ------------------------------------------------------------------------------------------------
 
-module.exports = { hookPay, deploy }
+module.exports = deploy

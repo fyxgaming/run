@@ -12,7 +12,7 @@ const bsv = require('bsv')
 const { PrivateKey, Script } = bsv
 const { expect } = chai
 const { Run } = require('../env/config')
-const { deploy } = require('../env/helpers')
+const deploy = require('../env/deploy')
 const { GroupLock } = Run
 
 // ------------------------------------------------------------------------------------------------

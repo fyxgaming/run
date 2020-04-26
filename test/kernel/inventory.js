@@ -10,9 +10,9 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
+const { stub } = require('sinon')
 const { Run } = require('../env/config')
 const { Jig, Token, LockOwner } = Run
-const { hookPay } = require('../env/helpers')
 
 // ------------------------------------------------------------------------------------------------
 // Inventory
@@ -102,7 +102,7 @@ describe('Inventory', () => {
 
     it('should remove if code fails to post', async () => {
       const run = new Run()
-      hookPay(run, false)
+      stub(run.purse, 'pay').returns()
       class A {}
       run.deploy(A).catch(() => {})
       expect(run.inventory.code.length).to.equal(1)
@@ -167,7 +167,7 @@ describe('Inventory', () => {
 
     it('should remove resources that fail to post', async () => {
       const run = new Run()
-      hookPay(run, false)
+      stub(run.purse, 'pay').returns()
       class A extends Jig {}
       const a = new A()
       await expect(a.sync()).to.be.rejected

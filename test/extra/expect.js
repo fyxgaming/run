@@ -8,7 +8,7 @@ const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { Jig } = Run
-const { deploy } = require('../env/helpers')
+const deploy = require('../env/deploy')
 
 // ------------------------------------------------------------------------------------------------
 // expect

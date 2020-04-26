@@ -5,7 +5,7 @@
  */
 
 const { describe, it } = require('mocha')
-const { deploy } = require('../env/helpers')
+const deploy = require('../env/deploy')
 const { Run } = require('../env/config')
 const { hex } = Run
 

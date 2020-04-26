@@ -12,7 +12,7 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../env/config')
 const { Token } = Run
-const { deploy } = require('../env/helpers')
+const deploy = require('../env/deploy')
 const { unmangle } = require('../env/unmangle')
 
 // ------------------------------------------------------------------------------------------------

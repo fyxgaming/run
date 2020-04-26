@@ -6,7 +6,7 @@
 
 const { describe, it } = require('mocha')
 const { Run } = require('../env/config')
-const { deploy } = require('../env/helpers')
+const deploy = require('../env/deploy')
 const { asm } = Run
 
 // ------------------------------------------------------------------------------------------------

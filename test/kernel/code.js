@@ -8,10 +8,10 @@ const { describe, it, beforeEach } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
+const { stub } = require('sinon')
 const { expect } = chai
 const { Run, COVER } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
-const { hookPay } = require('../env/helpers')
 const { Jig } = Run
 const { _resourceType } = unmangle(unmangle(Run)._util)
 
@@ -224,7 +224,8 @@ describe('Code', () => {
     })
 
     it('should revert metadata for deploy failures', async () => {
-      hookPay(run, false)
+      const run = new Run()
+      stub(run.purse, 'pay').returns()
       class A { }
       await expect(run.deploy(A)).to.be.rejected
       expect(A.origin).to.equal(undefined)
@@ -234,7 +235,8 @@ describe('Code', () => {
     })
 
     it('should revert metadata for queued deploy failures', async () => {
-      hookPay(run, true, false)
+      const run = new Run()
+      stub(run.purse, 'pay').callThrough().onSecondCall().returns()
       class A { }
       class B { }
       run.deploy(A).catch(e => {})
