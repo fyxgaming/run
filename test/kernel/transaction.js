@@ -983,7 +983,7 @@ describe('Transaction', () => {
     })
   })
 
-  it.skip('should not do anything wild when import twice', async () => {
+  it.only('should error when import and queue twice', async () => {
     const run = new Run()
     class A extends Jig { set (n) { this.n = n } }
     const a = new A()
@@ -993,9 +993,31 @@ describe('Transaction', () => {
     a.set(1)
     const tx = run.transaction.export()
     run.transaction.rollback()
+
     expect(a.location).to.equal(a.origin)
 
-    // Import twice
+    // Import twice with some other transactions queued, so that we'll attempt to spend the
+    // same inputs. This should error if things are working.
+
+    for (let i = 0; i < 3; i++) {
+      run.deploy(class A {})
+    }
+
+    await run.transaction.import(tx)
+    // Deploy something, so we trigger our tx to be paid with different UTXOs
+    run.deploy(class A {})
+    run.transaction.end()
+
+    await run.transaction.import(tx)
+    run.deploy(class A {})
+    run.transaction.end()
+
+    await run.sync()
+
+    console.log(a)
+
+    await a.sync()
+
     console.log(a)
   })
 })
