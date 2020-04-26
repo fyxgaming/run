@@ -99,7 +99,7 @@ describe('Transaction', () => {
       expect(tx.outputs.length).to.equal(3)
       const runData = _extractRunData(tx)
       expect(runData).to.deep.equal({
-        code: [{ text: A.toString(), creator }],
+        code: [{ text: A.toString(), owner: creator }],
         actions: [{ target: '_o1', method: 'init', args: [], creator }],
         jigs: 1
       })
@@ -298,7 +298,7 @@ describe('Transaction', () => {
       const creator = run.owner.address
       class A extends Jig {}
       const a = await new A().sync()
-      expect(data.code).to.deep.equal([{ text: A.toString(), creator }])
+      expect(data.code).to.deep.equal([{ text: A.toString(), owner: creator }])
       expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args: [], creator }])
       expect(data.jigs).to.equal(1)
       expect(A.location).to.equal(`${tx.hash}_o1`)
@@ -360,7 +360,7 @@ describe('Transaction', () => {
       new A() // eslint-disable-line
       new A() // eslint-disable-line
       await run.transaction.end().sync()
-      expect(data.code).to.deep.equal([{ text: A.toString(), creator }])
+      expect(data.code).to.deep.equal([{ text: A.toString(), owner: creator }])
       expect(data.actions).to.deep.equal([
         { target: '_o1', method: 'init', args: [], creator },
         { target: '_o1', method: 'init', args: [], creator }
@@ -378,8 +378,8 @@ describe('Transaction', () => {
       new B() // eslint-disable-line
       await run.transaction.end().sync()
       expect(data.code).to.deep.equal([
-        { text: A.toString(), creator },
-        { text: B.toString(), creator }
+        { text: A.toString(), owner: creator },
+        { text: B.toString(), owner: creator }
       ])
       expect(data.actions).to.deep.equal([
         { target: '_o1', method: 'init', args: [], creator },
@@ -436,11 +436,11 @@ describe('Transaction', () => {
       class C extends A { }
       const a = await new A(A).sync()
       const args = [{ $ref: '_o1' }]
-      expect(data.code).to.deep.equal([{ text: A.toString(), creator }])
+      expect(data.code).to.deep.equal([{ text: A.toString(), owner: creator }])
       expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args, creator }])
       expect(data.jigs).to.equal(1)
       await a.set(B).sync()
-      expect(data.code).to.deep.equal([{ text: B.toString(), creator }])
+      expect(data.code).to.deep.equal([{ text: B.toString(), owner: creator }])
       expect(data.actions).to.deep.equal([{ target: '_i0', method: 'set', args: [{ $ref: '_o1' }] }])
       expect(data.jigs).to.equal(1)
       await new C().sync()
@@ -461,8 +461,8 @@ describe('Transaction', () => {
       run.transaction.end()
       await run.sync()
       expect(data.code).to.deep.equal([
-        { text: A.toString(), creator },
-        { text: B.toString(), creator }
+        { text: A.toString(), owner: creator },
+        { text: B.toString(), owner: creator }
       ])
       expect(data.actions).to.deep.equal([
         { target: '_o1', method: 'init', args: [], creator },
@@ -508,9 +508,9 @@ describe('Transaction', () => {
       A.j = b
       run.deploy(A)
       await run.sync()
-      const defC = { text: C.toString(), props: { m: 'n' }, creator }
+      const defC = { text: C.toString(), props: { m: 'n' }, owner: creator }
       const propsA = { s: 'a', n: 1, a: [true, 'true'], b: false, x: null, o: { x: 2 }, j: { $ref: `${b.location}` } }
-      const defA = { text: A.toString(), deps: { C: '_o1' }, props: propsA, creator }
+      const defA = { text: A.toString(), deps: { C: '_o1' }, props: propsA, owner: creator }
       expect(data.code).to.deep.equal([defC, defA])
       expect(data.actions).to.deep.equal([])
       expect(data.jigs).to.equal(0)
@@ -577,7 +577,7 @@ describe('Transaction', () => {
       const run = new Run()
       const creator = run.owner.next()
       class A extends Jig { init (n) { this.n = n }}
-      const code = [{ text: A.toString(), creator }]
+      const code = [{ text: A.toString(), owner: creator }]
       const actions = [{ target: '_o1', method: 'init', args: [3], creator }]
       const txid = await build(run, code, actions, [], null, 1)
       const a = await run.load(txid + '_o2')
@@ -615,7 +615,7 @@ describe('Transaction', () => {
       const creator = run.owner.next()
       class B extends Jig { init () { this.n = 1 }}
       class A extends Jig { init (b) { this.n = b.n + 1 } }
-      const code = [{ text: B.toString(), creator }, { text: A.toString(), creator }]
+      const code = [{ text: B.toString(), owner: creator }, { text: A.toString(), owner: creator }]
       const action1 = { target: '_o1', method: 'init', args: [], creator }
       const args = [{ $ref: '_o3' }]
       const actions = [action1, { target: '_o2', method: 'init', args, creator }]
@@ -775,7 +775,7 @@ describe('Transaction', () => {
         class B extends Jig { }
         class A extends Jig { init (b) { this.n = b.n } }
         const b = await new B().sync()
-        const code = [{ text: A.toString(), creator }]
+        const code = [{ text: A.toString(), owner: creator }]
         const args = [{ $ref: `${b.location}` }]
         const actions = [{ target: '_o1', method: 'init', args, creator }]
         const txid = await build(run, code, actions, [], null, 2)
@@ -800,7 +800,7 @@ describe('Transaction', () => {
         class B extends Jig { }
         class A extends Jig { init (b) { this.n = b.n } }
         const b = await new B().sync()
-        const code = [{ text: A.toString(), creator }]
+        const code = [{ text: A.toString(), owner: creator }]
         const args = [{ $ref: '_i0' }]
         const actions = [{ target: '_o1', method: 'init', args, creator }]
         const txid = await build(run, code, actions, [b.location], null, 2, [], 2)
@@ -845,7 +845,7 @@ describe('Transaction', () => {
         const creator = run.owner.next()
         class B extends Jig { }
         class A extends Jig { init (b) { this.n = b.n } }
-        const code = [{ text: B.toString(), creator }, { text: A.toString(), creator }]
+        const code = [{ text: B.toString(), owner: creator }, { text: A.toString(), owner: creator }]
         const action1 = { target: '_o1', method: 'init', args: [], creator }
         const args = [{ $ref: '_o3' }]
         const actions = [action1, { target: '_o2', method: 'init', args, creator }]
@@ -857,7 +857,7 @@ describe('Transaction', () => {
         const run = new Run()
         const creator = run.owner.next()
         class A extends Jig { }
-        const code = [{ text: A.toString(), creator }]
+        const code = [{ text: A.toString(), owner: creator }]
         const anotherOwner = new bsv.PrivateKey('testnet').publicKey.toString()
         const actions = [{ target: '_o1', method: 'init', args: [], creator: anotherOwner }]
         const txid = await build(run, code, actions, [], null, 1)
@@ -895,10 +895,10 @@ describe('Transaction', () => {
         const run = new Run()
         const creator = run.owner.next()
         class A extends Jig { }
-        const code = [{ text: A.toString(), props: { n: { $class: 'Set' } }, creator }]
+        const code = [{ text: A.toString(), props: { n: { $class: 'Set' } }, owner: creator }]
         const txid = await build(run, code, [], [], null, 0)
         await expect(run.load(txid + '_o1')).to.be.rejectedWith('Cannot deserialize [object Object]')
-        const code2 = [{ text: A.toString(), props: { n: { $ref: 123 } }, creator }]
+        const code2 = [{ text: A.toString(), props: { n: { $ref: 123 } }, owner: creator }]
         const txid2 = await build(run, code2, [], [], null, 0)
         await expect(run.load(txid2 + '_o1')).to.be.rejected
       })
@@ -970,7 +970,7 @@ describe('Transaction', () => {
         const run = new Run()
         class A extends Jig { }
         const differentOwner = new bsv.PrivateKey().publicKey.toString()
-        const code = [{ text: A.toString(), creator: differentOwner }]
+        const code = [{ text: A.toString(), owner: differentOwner }]
         const txid = await build(run, code, [], [], null, 0)
         await expect(run.load(txid + '_o1')).to.be.rejectedWith(`bad def owner: ${txid}_o1`)
       })
