@@ -1000,16 +1000,16 @@ describe('Transaction', () => {
     // same inputs. This should error if things are working.
 
     for (let i = 0; i < 3; i++) {
-      run.deploy(class A {})
+      new A() // eslint-disable-line
     }
 
     await run.transaction.import(tx)
     // Deploy something, so we trigger our tx to be paid with different UTXOs
-    run.deploy(class A {})
+    new A() // eslint-disable-line
     run.transaction.end()
 
     await run.transaction.import(tx)
-    run.deploy(class A {})
+    new A() // eslint-disable-line
     run.transaction.end()
 
     await expect(run.sync()).to.be.rejected
