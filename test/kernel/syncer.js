@@ -4,9 +4,12 @@
  * Tests for lib/kernel/syncer.js
  */
 
-const { stub, spy } = require('sinon')
+const { spy } = require('sinon')
 const { describe, it } = require('mocha')
-const { expect } = require('chai')
+const chai = require('chai')
+const chaiAsPromised = require('chai-as-promised')
+chai.use(chaiAsPromised)
+const { expect } = chai
 const { Run } = require('../env/config')
 const { Jig } = Run
 
@@ -35,19 +38,6 @@ describe('Syncer', () => {
       const txid = a.location.slice(0, 64)
       expect(run.blockchain.fetch.calledWith(txid, false)).to.equal(true)
       run.deactivate()
-    })
-
-    it.only('should roll back code and jigs', async () => {
-      const run = new Run()
-      stub(run.purse, 'pay').callThrough().onThirdCall().returns()
-      class A extends Jig { set (n) { this.n = n } }
-      const a = new A()
-      await run.sync()
-      a.set(1)
-      await run.sync()
-      // a.set(2)
-      // await run.sync()
-      // hookPay(run, false)
     })
   })
 })
