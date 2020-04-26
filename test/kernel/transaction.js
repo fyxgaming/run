@@ -982,6 +982,22 @@ describe('Transaction', () => {
       })
     })
   })
+
+  it.skip('should not do anything wild when import twice', async () => {
+    const run = new Run()
+    class A extends Jig { set (n) { this.n = n } }
+    const a = new A()
+    await run.sync()
+
+    run.transaction.begin()
+    a.set(1)
+    const tx = run.transaction.export()
+    run.transaction.rollback()
+    expect(a.location).to.equal(a.origin)
+
+    // Import twice
+    console.log(a)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
