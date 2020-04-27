@@ -139,13 +139,14 @@ describe('Inventory', () => {
       const b = a.createB()
       expect(run.inventory.jigs).to.deep.equal([a, b])
       await run.sync()
-      const run2 = new Run({ owner: run.owner.privkey, blockchain: run.blockchain })
+      const run2 = new Run({ owner: run.owner.privkey })
       const c = new A()
       await run2.sync()
       expect(run2.inventory.jigs).to.deep.equal([c, a, b])
     })
 
-    it('should contain new resources before sync', async () => {
+    //  Not a sync test...
+    it('should contain resources created before sync', async () => {
       const run = new Run()
       class A extends Jig {}
       const a = new A()
@@ -175,13 +176,13 @@ describe('Inventory', () => {
       expect(run.inventory.code.length).to.equal(0)
     })
 
-    it('should remove deployed resources that are no longer in our utxos', async () => {
+    it('should remove deployed resources that are no longer ours', async () => {
       // Create two runs, each with the same owner
-      const run1 = new Run()
-      const run2 = new Run({ owner: run1.owner.privkey })
+      const run = new Run()
+      const run2 = new Run({ owner: run.owner})
 
       // Create a jig on run1
-      run1.activate()
+      run.activate()
       class A extends Jig { send (to) { this.owner = to } }
       const a = new A()
       await a.sync()
@@ -193,10 +194,27 @@ describe('Inventory', () => {
       await a2.sync()
 
       // Reactive run1, check we have the jig, sync, then check that we don't
-      run1.activate()
-      expect(run1.inventory.jigs).to.deep.equal([a])
-      await run1.sync()
-      expect(run1.inventory.jigs.length).to.equal(0)
+      run.activate()
+      expect(run.inventory.jigs).to.deep.equal([a])
+      await run.sync()
+      expect(run.inventory.jigs.length).to.equal(0)
+    })
+
+    it('should replace deployed resources that have updates', async () => {
+      const run = new Run()
+      class A extends Jig { set(n) { this.n = 1 } }
+      const a = new A()
+      await a.sync()
+
+      const run2 = new Run({ owner: run.owner})
+      const a2 = await run2.load(a.location)
+      a2.set(1)
+      await a2.sync()
+
+      run.activate()
+      expect(run.inventory.jigs[0].n).to.equal(undefined)
+      await run.sync()
+      expect(run.inventory.jigs[0].n).to.equal(1)
     })
   })
 
