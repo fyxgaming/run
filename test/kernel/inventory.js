@@ -179,7 +179,7 @@ describe('Inventory', () => {
     it('should remove deployed resources that are no longer ours', async () => {
       // Create two runs, each with the same owner
       const run = new Run()
-      const run2 = new Run({ owner: run.owner})
+      const run2 = new Run({ owner: run.owner })
 
       // Create a jig on run1
       run.activate()
@@ -202,11 +202,11 @@ describe('Inventory', () => {
 
     it('should replace deployed resources that have updates', async () => {
       const run = new Run()
-      class A extends Jig { set(n) { this.n = 1 } }
+      class A extends Jig { set (n) { this.n = 1 } }
       const a = new A()
       await a.sync()
 
-      const run2 = new Run({ owner: run.owner})
+      const run2 = new Run({ owner: run.owner })
       const a2 = await run2.load(a.location)
       a2.set(1)
       await a2.sync()
