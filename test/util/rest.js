@@ -7,7 +7,7 @@
 const { describe, it } = require('mocha')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
-const REST = unmangle(unmangle(Run)._util)._REST
+const REST = unmangle(unmangle(unmangle(Run)._util)._REST)
 
 describe('rest', () => {
   describe('_get', () => {
