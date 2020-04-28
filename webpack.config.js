@@ -49,7 +49,9 @@ const reservedNames = [
   // Token, expect, etc. are built-in code must be preserved
   'Token', 'expect', 'asm', 'hex', 'StandardLock', 'GroupLock',
   // ResourceSet/ResourceMap dependency names must be preserved
-  'internal', 'uniqueKey', 'ResourceMap'
+  'internal', 'uniqueKey', 'ResourceMap',
+  // Errors
+  'NotImplementedError', 'TimeoutError'
 ]
 
 // Reserved words that should not be mangled in minified builds

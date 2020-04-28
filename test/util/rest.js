@@ -14,8 +14,9 @@ describe('rest', () => {
     it('should return json', async () => {
       // console.log(await REST._get('https://api.run.network/v1/test/status'))
       // console.log(await REST._get('https://api.run.network/v1/test/utxos/mhjSrMHzs97CCvhPtBn1qbfuJqqfmMzWQ4'))
-      console.log(await REST._get('https://api.run.network/v1/test/abc'))
-      // console.log(await REST._get('123'))
+      // console.log(await REST._get('https://api.run.network/v1/test/abc'))
+      console.log(await REST._get('https://api.run.network/v1/test/tx/1234'))
+      // console.log(await REST._get('https://www.google.com:81', 100))
       // console.log(await REST._get('http://api.run.network/v1/test/status'))
     })
   })
