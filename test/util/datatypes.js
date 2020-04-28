@@ -9,7 +9,10 @@ const { expect } = require('chai')
 const bsv = require('bsv')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
-const { Location, ResourceSet, ResourceMap } = unmangle(Run)._util
+const util = unmangle(unmangle(Run)._util)
+const Location = util._Location
+const ResourceSet = util._ResourceSet
+const ResourceMap = util._ResourceMap
 
 // ------------------------------------------------------------------------------------------------
 // A temporary resource for testing

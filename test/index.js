@@ -30,6 +30,7 @@ require('./module/state-cache')
 
 require('./util/checkpoint')
 require('./util/datatypes')
+require('./util/rest')
 require('./util/json')
 require('./util/location')
 require('./util/misc')

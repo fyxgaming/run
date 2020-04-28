@@ -21,7 +21,9 @@ const entry = path.join(__dirname, 'lib')
 const dist = path.join(__dirname, 'dist/')
 const name = pkg.name.split('/').pop()
 const library = require(entry).name
-const config = new webpack.DefinePlugin({ VERSION: JSON.stringify(pkg.version) })
+const version = new webpack.DefinePlugin({ VERSION: JSON.stringify(pkg.version) })
+const browserVariant = new webpack.DefinePlugin({ VARIANT: JSON.stringify('browser') })
+const nodeVariant = new webpack.DefinePlugin({ VARIANT: JSON.stringify('node') })
 
 // ------------------------------------------------------------------------------------------------
 // Initialization
@@ -90,8 +92,6 @@ const terserPluginConfig = {
     nameCache,
     mangle: {
       reserved: reservedNames,
-      // The AbortSignal name is required for node-fetch and abort-controller to work together
-      keep_classnames: /AbortSignal/,
       // All private properties (methods, variables) that the end user is not expected to interact
       // with should be prefixed with _. The terser will mangle these properties. We will make
       // specific exceptions where it is problematic.
@@ -127,7 +127,7 @@ const browserMin = {
       new TerserPlugin(terserPluginConfig)
     ]
   },
-  plugins: [config, new SaveNameCache()],
+  plugins: [version, browserVariant, new SaveNameCache()],
   stats: 'errors-only'
 }
 
@@ -146,7 +146,8 @@ const nodeMin = {
   resolve: {
     mainFields: ['main', 'module'],
     extensions: ['.js', '.mjs', '.wasm', '.json']
-  }
+  },
+  plugins: [version, nodeVariant, new SaveNameCache()]
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -160,7 +161,7 @@ const browser = {
     path: dist,
     library
   },
-  plugins: [config],
+  plugins: [version, browserVariant],
   optimization: { minimize: false }
 }
 
@@ -175,7 +176,7 @@ const node = {
     path: dist,
     libraryTarget: 'commonjs2'
   },
-  plugins: [config],
+  plugins: [version, nodeVariant],
   optimization: { minimize: false }
 }
 

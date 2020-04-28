@@ -110,7 +110,7 @@ describe('BlockchainApi', () => {
       }
       const api = new MockApi()
       let lastWarning = null
-      const Log = unmangle(unmangle(Run)._util.Log)
+      const Log = unmangle(unmangle(unmangle(Run)._util)._Log)
       Log._logger = { warn: (time, tag, ...warning) => { lastWarning = warning.join(' ') } }
       const blockchain = new BlockchainApi({ network: 'main', api })
       const utxos = await blockchain.utxos(script)

@@ -10,7 +10,7 @@ const bsv = require('bsv')
 const { Run } = require('../env/config')
 const { Jig, Berry } = Run
 const { unmangle, mangle } = require('../env/unmangle')
-const { ResourceJSON } = unmangle(Run)._util
+const ResourceJSON = unmangle(unmangle(Run)._util)._ResourceJSON
 
 // ------------------------------------------------------------------------------------------------
 // Globals
