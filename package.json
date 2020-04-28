@@ -16,7 +16,7 @@
     "test:cover": "env LIB=lib env COVER=1 nyc -r=text -r=lcovonly -x=test/** mocha",
     "test:node": "webpack && env LIB=dist/run.node.min.js env MANGLED=1 mocha",
     "test:browser": "node test/env/browser",
-    "deploy": "deploy -m lib/extra/*.js",
+    "deploy": "deploy -mt lib/extra/*.js",
     "version": "webpack && standard && npm run test:node",
     "bump": "npm version patch && git push --follow-tags && npm publish"
   },
