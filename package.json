@@ -36,7 +36,7 @@
     ]
   },
   "devDependencies": {
-    "@runonbitcoin/deploy": "^0.5.7",
+    "@runonbitcoin/deploy": "^0.5.8",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "dotenv": "^8.2.0",
