@@ -89,8 +89,8 @@ describe('LocalPurse', () => {
         expect(() => new LocalPurse({ blockchain: run.blockchain, feePerKb: null })).to.throw('Invalid feePerKb: null')
       })
 
-      it('should default to 1000 if not specified', () => {
-        expect(new LocalPurse({ blockchain: run.blockchain }).feePerKb).to.equal(1000)
+      it('should default to 500 if not specified', () => {
+        expect(new LocalPurse({ blockchain: run.blockchain }).feePerKb).to.equal(500)
       })
     })
 

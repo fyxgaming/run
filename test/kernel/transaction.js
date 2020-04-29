@@ -274,7 +274,7 @@ describe('Transaction', () => {
       await run.transaction.pay()
       const tx = run.transaction.export()
       expect(tx.outputs.length >= 4).to.equal(true)
-      expect(tx.getFee() >= tx.toBuffer().length).to.equal(true)
+      expect(tx.getFee() >= tx.toBuffer().length * bsv.Transaction.FEE_PER_KB / 1000).to.equal(true)
     })
   })
 

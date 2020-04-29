@@ -21,7 +21,7 @@ const { Jig } = Run
 
 describe('Jig', () => {
   const run = hookStoreAction(new Run())
-  beforeEach(() => run.blockchain.block())
+  beforeEach(() => run.blockchain.block && run.blockchain.block())
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
