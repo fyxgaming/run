@@ -628,9 +628,8 @@ describe('Jig', () => {
       expect(b.x).to.equal(run.owner.address)
       expect(a.test).to.equal(true)
       await run.sync()
-      const privkey = run.owner.privkey
       run.deactivate()
-      const run2 = new Run({ owner: privkey })
+      const run2 = new Run({ owner: run.owner.privkey })
       await run2.sync()
     })
   })
