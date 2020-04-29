@@ -10,7 +10,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { stub } = require('sinon')
+const { spy, stub } = require('sinon')
 const { Run } = require('../env/config')
 const { Jig, Token, LockOwner } = Run
 
@@ -22,6 +22,24 @@ describe('Inventory', () => {
   // Todo:
   // Todo: sync
   // Can set old inventory for old owner
+
+  describe('backwards compatibility', () => {
+    it('should support run.owner.jigs and run.owner.code with warning', async () => {
+      const logger = spy({ warn: () => { } })
+      const run = new Run({ logger })
+      class A extends Jig {}
+      const a = new A()
+      await a.sync()
+      // Get inventory jigs and code, and check no warning
+      run.inventory.jigs // eslint-disable-line
+      run.inventory.code // eslint-disable-line
+      expect(logger.warn.called).to.equal(false)
+      // Get owner jigs and code, and ensure warning
+      expect(run.owner.jigs).to.deep.equal(run.inventory.jigs)
+      expect(run.owner.code).to.deep.equal(run.inventory.code)
+      expect(logger.warn.called).to.equal(true)
+    })
+  })
 
   describe('load', () => {
     it('should add our loaded unspent resources', async () => {
