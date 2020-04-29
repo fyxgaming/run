@@ -36,8 +36,8 @@ Run.configure(process.env)
 setMangled(MANGLED)
 
 if (COVER) {
-  const util = unmangle(Run)._util
-  Run.sandbox.excludes = [Run.Jig, Run.Berry, Run.Token, Run.expect, util.ResourceSet, util.ResourceMap,
+  const util = unmangle(unmangle(Run)._util)
+  Run.sandbox.excludes = [Run.Jig, Run.Berry, Run.Token, Run.expect, util._ResourceSet, util._ResourceMap,
     Run.StandardLock, Run.GroupLock]
 }
 
