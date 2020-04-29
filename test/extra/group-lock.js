@@ -12,7 +12,6 @@ const bsv = require('bsv')
 const { PrivateKey, Script } = bsv
 const { expect } = chai
 const { Run } = require('../env/config')
-const deploy = require('../env/deploy')
 const { GroupLock } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -72,10 +71,6 @@ describe('GroupLock', () => {
     expect(() => new GroupLock(pubkeys, '1').script).to.throw('m must be a non-negative integer')
     expect(() => new GroupLock(pubkeys, null).script).to.throw('m must be a non-negative integer')
     expect(() => new GroupLock(pubkeys, 2).script).to.throw('m must be <= the number of pubkeys')
-  })
-
-  it.skip('should deploy', async () => {
-    await deploy(GroupLock)
   })
 })
 

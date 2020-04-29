@@ -8,7 +8,6 @@ const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { Jig } = Run
-const deploy = require('../env/deploy')
 
 // ------------------------------------------------------------------------------------------------
 // expect
@@ -175,10 +174,6 @@ describe('expect', () => {
     expect(() => Run.expect(class {}).toBeFunction()).to.throw('expected value to be a function but was class {}')
     expect(() => Run.expect([]).not.toBeFunction()).not.to.throw()
     expect(() => Run.expect(() => {}).not.toBeFunction()).to.throw('expected value not to be a function but was () => {}')
-  })
-
-  it.skip('should deploy', async () => {
-    await deploy(Run.expect)
   })
 })
 

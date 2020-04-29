@@ -12,7 +12,6 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../env/config')
 const { Token } = Run
-const deploy = require('../env/deploy')
 const { unmangle } = require('../env/unmangle')
 
 // ------------------------------------------------------------------------------------------------
@@ -205,10 +204,6 @@ describe('Token', () => {
     it.skip('should support limiting supply', async () => {
       // TODO: need a good way to do this, ideally using class properties
     })
-  })
-
-  it.skip('should deploy', async () => {
-    await deploy(Token)
   })
 })
 

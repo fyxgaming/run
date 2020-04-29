@@ -9,7 +9,6 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { StandardLock } = Run
-const deploy = require('../env/deploy')
 
 // ------------------------------------------------------------------------------------------------
 // StandardLock
@@ -36,10 +35,6 @@ describe('StandardLock', () => {
     const buffer1 = new Uint8Array(script.toBuffer())
     const buffer2 = new StandardLock(addr).script
     expect(buffer1).to.deep.equal(buffer2)
-  })
-
-  it.skip('should deploy', async () => {
-    await deploy(StandardLock)
   })
 })
 

@@ -4,19 +4,14 @@
  * Tests for lib/extra/asm.js
  */
 
-const { describe, it } = require('mocha')
-const { Run } = require('../env/config')
-const deploy = require('../env/deploy')
-const { asm } = Run
+const { describe } = require('mocha')
 
 // ------------------------------------------------------------------------------------------------
 // asm
 // ------------------------------------------------------------------------------------------------
 
 describe('asm', () => {
-  it.skip('should deploy', async () => {
-    await deploy(asm)
-  })
+  // TODO
 })
 
 // ------------------------------------------------------------------------------------------------
