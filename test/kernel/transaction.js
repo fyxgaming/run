@@ -90,7 +90,7 @@ describe('Transaction', () => {
 
     it('should create transaction with new jig', () => {
       const run = new Run()
-      const creator = run.owner.next()
+      const creator = run.owner.address
       class A extends Jig { }
       run.transaction.begin()
       const a = new A() // eslint-disable-line
@@ -342,7 +342,7 @@ describe('Transaction', () => {
 
     it('should only deploy code once', async () => {
       const run = hookRun(new Run())
-      const creator = run.owner.next()
+      const creator = run.owner.address
       class A extends Jig {}
       const a = new A()
       await new A().sync() // eslint-disable-line
@@ -354,7 +354,7 @@ describe('Transaction', () => {
 
     it('should only deploy code once in batch', async () => {
       const run = hookRun(new Run())
-      const creator = run.owner.next()
+      const creator = run.owner.address
       class A extends Jig {}
       run.transaction.begin()
       new A() // eslint-disable-line
@@ -370,7 +370,7 @@ describe('Transaction', () => {
 
     it('should deploy code in batch', async () => {
       const run = hookRun(new Run())
-      const creator = run.owner.next()
+      const creator = run.owner.address
       class A extends Jig {}
       class B extends Jig {}
       run.transaction.begin()
@@ -390,7 +390,7 @@ describe('Transaction', () => {
 
     it('should support basic jig args', async () => {
       const run = hookRun(new Run())
-      const creator = run.owner.next()
+      const creator = run.owner.address
       class A extends Jig { init (a, b) { this.a = a; this.b = b }}
       await new A(1, { a: 'a' }).sync() // eslint-disable-line
       expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args: [1, { a: 'a' }], creator }])
@@ -426,7 +426,7 @@ describe('Transaction', () => {
 
     it('should support passing classes as args', async () => {
       const run = hookRun(new Run())
-      const creator = run.owner.next()
+      const creator = run.owner.address
       class A extends Jig {
         init (a) { this.a = a }
 
@@ -452,7 +452,7 @@ describe('Transaction', () => {
 
     it('should support passing classes as args in a batch transaction', async () => {
       const run = hookRun(new Run())
-      const creator = run.owner.next()
+      const creator = run.owner.address
       class A extends Jig { set (x) { this.x = x } }
       class B { }
       run.transaction.begin()
@@ -473,7 +473,7 @@ describe('Transaction', () => {
 
     it('should support batch method calls', async () => {
       const run = hookRun(new Run())
-      const creator = run.owner.next()
+      const creator = run.owner.address
       class A extends Jig { f (a) { this.a = a }}
       run.transaction.begin()
       const a = new A()
@@ -575,7 +575,7 @@ describe('Transaction', () => {
 
     it('should load new jig', async () => {
       const run = new Run()
-      const creator = run.owner.next()
+      const creator = run.owner.address
       class A extends Jig { init (n) { this.n = n }}
       const code = [{ text: A.toString(), owner: creator }]
       const actions = [{ target: '_o1', method: 'init', args: [3], creator }]
@@ -612,7 +612,7 @@ describe('Transaction', () => {
 
     it('should load complex batch of updates', async () => {
       const run = new Run()
-      const creator = run.owner.next()
+      const creator = run.owner.address
       class B extends Jig { init () { this.n = 1 }}
       class A extends Jig { init (b) { this.n = b.n + 1 } }
       const code = [{ text: B.toString(), owner: creator }, { text: A.toString(), owner: creator }]
@@ -771,7 +771,7 @@ describe('Transaction', () => {
 
       it('should throw if missing read input', async () => {
         const run = new Run()
-        const creator = run.owner.next()
+        const creator = run.owner.address
         class B extends Jig { }
         class A extends Jig { init (b) { this.n = b.n } }
         const b = await new B().sync()
@@ -796,7 +796,7 @@ describe('Transaction', () => {
 
       it('should throw if missing read output', async () => {
         const run = new Run()
-        const creator = run.owner.next()
+        const creator = run.owner.address
         class B extends Jig { }
         class A extends Jig { init (b) { this.n = b.n } }
         const b = await new B().sync()
@@ -830,7 +830,7 @@ describe('Transaction', () => {
 
       it('should throw if missing input in batch', async () => {
         const run = new Run()
-        const creator = run.owner.next()
+        const creator = run.owner.address
         class A extends Jig { f (b) { this.n = b.n + 1 } }
         const code = [{ text: A.toString(), creator }]
         const action1 = { target: '_o1', method: 'init', args: [], creator }
@@ -842,7 +842,7 @@ describe('Transaction', () => {
 
       it('should throw if missing output in batch', async () => {
         const run = new Run()
-        const creator = run.owner.next()
+        const creator = run.owner.address
         class B extends Jig { }
         class A extends Jig { init (b) { this.n = b.n } }
         const code = [{ text: B.toString(), owner: creator }, { text: A.toString(), owner: creator }]
@@ -855,7 +855,7 @@ describe('Transaction', () => {
 
       it('should throw if initial jig owner does not match pk script', async () => {
         const run = new Run()
-        const creator = run.owner.next()
+        const creator = run.owner.address
         class A extends Jig { }
         const code = [{ text: A.toString(), owner: creator }]
         const anotherOwner = new bsv.PrivateKey('testnet').publicKey.toString()
@@ -877,7 +877,7 @@ describe('Transaction', () => {
 
       it('should throw if missing target', async () => {
         const run = new Run()
-        const actions = [{ target: '_o1`', method: 'init', args: '[]', creator: run.owner.next() }]
+        const actions = [{ target: '_o1`', method: 'init', args: '[]', creator: run.owner.address }]
         const txid = await build(run, [], actions, [], null, 1)
         await expect(run.load(txid + '_o1')).to.be.rejectedWith('missing target _o1')
       })
@@ -893,7 +893,7 @@ describe('Transaction', () => {
 
       it('should throw if bad class props', async () => {
         const run = new Run()
-        const creator = run.owner.next()
+        const creator = run.owner.address
         class A extends Jig { }
         const code = [{ text: A.toString(), props: { n: { $class: 'Set' } }, owner: creator }]
         const txid = await build(run, code, [], [], null, 0)

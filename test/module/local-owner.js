@@ -69,8 +69,8 @@ describe('LocalOwner', () => {
     it('should always return the address', () => {
       const privateKey = new PrivateKey()
       const owner = new LocalOwner({ privkey: privateKey })
-      expect(owner.next()).to.equal(owner.address)
-      expect(owner.next()).to.equal(owner.address)
+      expect(owner.address).to.equal(owner.address)
+      expect(owner.address).to.equal(owner.address)
     })
   })
 
@@ -208,44 +208,6 @@ describe('LocalOwner', () => {
       await run2.transaction.import(tx)
       run2.transaction.end()
       await run2.sync()
-    })
-  })
-
-  describe('locations', () => {
-    it('should return utxos for address', async () => {
-      const mockchain = new Mockchain()
-      const privateKey = new PrivateKey('testnet')
-      const address = privateKey.toAddress().toString()
-      const txid = mockchain.fund(address, 10000)
-      const owner = new LocalOwner({ privkey: privateKey, blockchain: mockchain })
-      expect((await owner.locations())).to.deep.equal([txid + '_o1'])
-    })
-
-    it('should return empty array is blockchain is undefined', async () => {
-      const owner = new LocalOwner()
-      expect(await owner.locations()).to.deep.equal([])
-    })
-  })
-
-  describe('ours', () => {
-    it('should return true for same address lock', () => {
-      const privateKey = new PrivateKey('testnet')
-      const sameLock = new StandardLock(privateKey.toAddress().toString())
-      const owner = new LocalOwner({ privkey: privateKey })
-      expect(owner.ours(sameLock)).to.equal(true)
-    })
-
-    it('should return false for different addresses', () => {
-      const privateKey = new PrivateKey('testnet')
-      const differentLock = new StandardLock(privateKey.toAddress().toString())
-      const owner = new LocalOwner()
-      expect(owner.ours(differentLock)).to.equal(false)
-    })
-
-    it('should return false for different scripts', () => {
-      const differentLock = new class { get script () { return new Uint8Array([1, 2, 3]) }}()
-      const owner = new LocalOwner()
-      expect(owner.ours(differentLock)).to.equal(false)
     })
   })
 })

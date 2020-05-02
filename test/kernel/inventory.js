@@ -12,7 +12,7 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 const { spy, stub } = require('sinon')
 const { Run } = require('../env/config')
-const { Jig, Token, LockOwner } = Run
+const { Jig, Token, Viewer } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Inventory
@@ -241,9 +241,9 @@ describe('Inventory', () => {
       const run = new Run()
       class A extends Jig {}
       const a = await new A().sync()
-      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.next() })
+      const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.address })
       await run2.sync()
-      expect(run2.owner instanceof LockOwner).to.equal(true)
+      expect(run2.owner instanceof Viewer).to.equal(true)
       expect(run2.owner.privkey).to.equal(undefined)
       expect(run2.inventory.jigs).to.deep.equal([a])
       expect(run2.inventory.code).to.deep.equal([a.constructor])

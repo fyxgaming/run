@@ -177,7 +177,7 @@ describe('Run', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(pubkey.toString())
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
-      expect(run.owner.next()).to.equal(pubkey.toAddress().toString())
+      expect(run.owner.address).to.equal(pubkey.toAddress().toString())
     })
 
     it('should support creating from string public key on mocknet', () => {
@@ -186,7 +186,7 @@ describe('Run', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(pubkey.toString())
       expect(run.owner.address).to.equal(pubkey.toAddress().toString())
-      expect(run.owner.next()).to.equal(pubkey.toAddress().toString())
+      expect(run.owner.address).to.equal(pubkey.toAddress().toString())
     })
 
     it('should support creating from bsv address on testnet', () => {
@@ -195,7 +195,7 @@ describe('Run', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(undefined)
       expect(run.owner.address).to.equal(address.toString())
-      expect(run.owner.next()).to.equal(address.toString())
+      expect(run.owner.address).to.equal(address.toString())
     })
 
     it('should support creating from string address on mainnet', () => {
@@ -204,7 +204,7 @@ describe('Run', () => {
       expect(run.owner.privkey).to.equal(undefined)
       expect(run.owner.pubkey).to.equal(undefined)
       expect(run.owner.address).to.equal(address.toString())
-      expect(run.owner.next()).to.equal(address.toString())
+      expect(run.owner.address).to.equal(address.toString())
     })
     */
     })

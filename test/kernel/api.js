@@ -247,44 +247,28 @@ describe('Lock API', () => {
 
 describe('Owner API', () => {
   describe('methods', () => {
-    it('should throw NotImplementedError by default for required next() and sign()', async () => {
-      expect(() => new Owner().next()).to.throw(NotImplementedError)
+    it('should throw NotImplementedError by default for required address, locks and sign()', async () => {
+      expect(() => new Owner().address).to.throw(NotImplementedError)
+      expect(() => new Owner().locks).to.throw(NotImplementedError)
       await expect(new Owner().sign()).to.be.rejectedWith(NotImplementedError)
-    })
-
-    it('should no-op by default for optional ours() and locations()', async () => {
-      expect(() => new Owner().ours()).to.not.throw()
-      await new Owner().locations()
     })
   })
 
   describe('instanceof', () => {
-    it('returns true if next and sign are present', () => {
-      expect(({ next: () => {}, sign: () => {} }) instanceof Owner).to.equal(true)
-      expect(Object.assign(() => {}, { next: () => {}, sign: () => {} }) instanceof Owner).to.equal(true)
+    it('returns true if address and sign are present', () => {
+      expect(({ address: '', sign: () => {} }) instanceof Owner).to.equal(true)
+      expect(Object.assign(() => {}, { address: '', sign: () => {} }) instanceof Owner).to.equal(true)
     })
 
-    it('returns false if next or sign are not functions', () => {
-      expect(({ next: () => {} }) instanceof Owner).to.equal(false)
-      expect(({ sign: () => {} }) instanceof Owner).to.equal(false)
-      expect(({ next: false, sign: () => {} }) instanceof Owner).to.equal(false)
-      expect(({ next: () => {}, sign: 123 }) instanceof Owner).to.equal(false)
-      expect(({ next: () => {}, get sign () { } }) instanceof Owner).to.equal(false)
-      expect(({ get next () {}, sign: () => { } }) instanceof Owner).to.equal(false)
+    it('returns true if locks and sign are present', () => {
+      expect(({ locks: [''], sign: () => {} }) instanceof Owner).to.equal(true)
+      expect(Object.assign(() => {}, { locks: [''], sign: () => {} }) instanceof Owner).to.equal(true)
     })
 
-    it('returns true if ours or locations are functions', () => {
-      function f () { }
-      expect(({ next: f, sign: f, ours: f, locations: f }) instanceof Owner).to.equal(true)
-      expect(({ next: f, sign: f, locations: f }) instanceof Owner).to.equal(true)
-      expect(({ next: f, sign: f, ours: f }) instanceof Owner).to.equal(true)
-    })
-
-    it('returns false if ours or locations are not functions', () => {
-      function f () { }
-      expect(({ next: f, sign: f, locations: [] }) instanceof Owner).to.equal(false)
-      expect(({ next: f, sign: f, ours: true }) instanceof Owner).to.equal(false)
-      expect(({ next: f, sign: f, get ours () { return true } }) instanceof Owner).to.equal(false)
+    it('returns false if sign is not a function', () => {
+      expect(({ address: '' }) instanceof Owner).to.equal(false)
+      expect(({ address: '', sign: 123 }) instanceof Owner).to.equal(false)
+      expect(({ address: '', get sign () { } }) instanceof Owner).to.equal(false)
     })
 
     it('returns false for non-objects', () => {

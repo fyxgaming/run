@@ -4,6 +4,7 @@
  * Tests common for all owners
  */
 
+ const { spy } = require('sinon')
 const { HDPrivateKey } = require('bsv')
 const { describe, it } = require('mocha')
 const chai = require('chai')
@@ -20,30 +21,27 @@ const { Jig, asm } = Run
 describe('Owner', () => {
   new Run() // eslint-disable-line
 
-  describe('next', () => {
-    it('should call next() for every new jig or code', async () => {
-      // Hook next() to count the number of times its called
-      const owner = new Run().owner
-      const oldNext = owner.next
-      let nextCount = 0
-      owner.next = () => { nextCount++; return oldNext.call(owner) }
-
+  describe('address', () => {
+    it.skip('should get address for every new jig or code', async () => {
       // Create a jig and code, checking when next() is called
       class A extends Jig { }
-      const run = new Run({ owner })
-      expect(nextCount).to.equal(0)
+      const run = new Run()
+      spy(run.owner)
+      expect(run.owner.address.called).to.equal(0)
 
       run.deploy(A)
-      expect(nextCount).to.equal(1)
+      expect(run.owner.address.called).to.equal(1)
 
+      /*
       const a = new A()
       expect(nextCount).to.equal(2)
 
       await a.sync()
       expect(nextCount).to.equal(2)
+      */
     })
 
-    it('should support creating new locks for every resource', async () => {
+    it.skip('should support creating new locks for every resource', async () => {
       class HDOwner {
         constructor () {
           this.master = new HDPrivateKey()
@@ -81,7 +79,7 @@ describe('Owner', () => {
       expect(f.owner).to.equal(owner.addr(2))
     })
 
-    it('should fail to create resources if next() throws', () => {
+    it.skip('should fail to create resources if next() throws', () => {
       // Hook next() to throw
       const owner = new Run().owner
       owner.next = () => { throw new Error('failed to get next') }
@@ -102,7 +100,7 @@ describe('Owner', () => {
       OnePlusOneLock.deps = { asm }
 
       class CustomOwner {
-        next () { return new OnePlusOneLock() }
+        get locks () { return [new OnePlusOneLock()] }
 
         async sign (tx, locks) {
           tx.inputs
@@ -134,7 +132,7 @@ describe('Owner', () => {
       OnePlusOneLock.deps = { asm }
 
       class CustomOwner {
-        next () { return new OnePlusOneLock() }
+        get locks () { return [new OnePlusOneLock()] }
 
         async sign (tx, locks) {
           tx.inputs
@@ -197,6 +195,7 @@ describe('Owner', () => {
     })
   })
 
+  /*
   describe('ours', () => {
     it('should support owner without ours method', () => {
     })
@@ -224,6 +223,7 @@ describe('Owner', () => {
     it('should log errors if locations do not load', () => {
     })
   })
+  */
 
   describe('lock owners', () => {
     it('should throw if Run owner is a Lock', () => {
@@ -256,6 +256,87 @@ describe('Owner', () => {
     it('should support changing owners within batch transaction', () => {
     })
   })
+
+  /*
+  describe('locations', () => {
+    it('should return utxos for address', async () => {
+      const mockchain = new Mockchain()
+      const privateKey = new PrivateKey('testnet')
+      const address = privateKey.toAddress().toString()
+      const txid = mockchain.fund(address, 10000)
+      const owner = new LocalOwner({ privkey: privateKey, blockchain: mockchain })
+      expect((await owner.locations())).to.deep.equal([txid + '_o1'])
+    })
+
+    it('should return empty array is blockchain is undefined', async () => {
+      const owner = new LocalOwner()
+      expect(await owner.locations()).to.deep.equal([])
+    })
+  })
+
+  describe('ours', () => {
+    it('should return true for same address lock', () => {
+      const privateKey = new PrivateKey('testnet')
+      const sameLock = new StandardLock(privateKey.toAddress().toString())
+      const owner = new LocalOwner({ privkey: privateKey })
+      expect(owner.ours(sameLock)).to.equal(true)
+    })
+
+    it('should return false for different addresses', () => {
+      const privateKey = new PrivateKey('testnet')
+      const differentLock = new StandardLock(privateKey.toAddress().toString())
+      const owner = new LocalOwner()
+      expect(owner.ours(differentLock)).to.equal(false)
+    })
+
+    it('should return false for different scripts', () => {
+      const differentLock = new class { get script () { return new Uint8Array([1, 2, 3]) }}()
+      const owner = new LocalOwner()
+      expect(owner.ours(differentLock)).to.equal(false)
+    })
+  })
+  */
+
+  /*
+  describe('locations', () => {
+    it('should return utxos for locking script', async () => {
+      const mockchain = new Mockchain()
+      const address = new PrivateKey('testnet').toAddress().toString()
+      const txid = mockchain.fund(address, 10000)
+      const viewer = new Viewer(address)
+      expect((await viewer.locations())).to.deep.equal([txid + '_o1'])
+    })
+
+    it('should return empty array is blockchain is undefined', async () => {
+      const address = new PrivateKey().toAddress().toString()
+      const viewer = new Viewer(address)
+      expect(await viewer.locations()).to.deep.equal([])
+    })
+  })
+
+  describe('ours', () => {
+    it('should return true for same locking scripts', () => {
+      const address = new PrivateKey('testnet').toAddress().toString()
+      const sameLock = new StandardLock(address)
+      const viewer = new Viewer(address)
+      expect(viewer.ours(sameLock)).to.equal(true)
+    })
+
+    it('should return false for different addresses', () => {
+      const address = new PrivateKey('testnet').toAddress().toString()
+      const differentLock = new StandardLock(new PrivateKey().toAddress().toString())
+      const viewer = new Viewer(address)
+      expect(viewer.ours(differentLock)).to.equal(false)
+    })
+
+    it('should return false for different scripts', () => {
+      const address = new PrivateKey('testnet').toAddress().toString()
+      const differentLock = new class { get script () { return new Uint8Array([1, 2, 3]) }}()
+      const viewer = new Viewer(address)
+      expect(viewer.ours(differentLock)).to.equal(false)
+    })
+  })
+  */
 })
 
 // ------------------------------------------------------------------------------------------------

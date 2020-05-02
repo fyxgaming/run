@@ -1383,7 +1383,7 @@ describe('Jig', () => {
       class A extends Jig { init () { this.ownerAtInit = this.owner }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [a])
-      expect(a.ownerAtInit).to.equal(run.owner.next())
+      expect(a.ownerAtInit).to.equal(run.owner.address)
     })
 
     it('should be assigned to creator', async () => {
@@ -1480,7 +1480,7 @@ describe('Jig', () => {
     it('should load non-standard owner', async () => {
       class CustomLock { get script () { return new Uint8Array([1, 2, 3]) } }
       class CustomOwner {
-        next () { return new CustomLock() }
+        get locks () { return [new CustomLock()] }
         async sign (tx) { return tx }
       }
       const run = new Run({ owner: new CustomOwner() })
