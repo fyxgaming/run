@@ -4,7 +4,7 @@
  * Tests common for all owners
  */
 
- const { spy } = require('sinon')
+const { spy } = require('sinon')
 const { HDPrivateKey } = require('bsv')
 const { describe, it } = require('mocha')
 const chai = require('chai')
