@@ -100,7 +100,7 @@ describe('Owner', () => {
       OnePlusOneLock.deps = { asm }
 
       class CustomOwner {
-        get locks () { return [new OnePlusOneLock()] }
+        get owner () { return new OnePlusOneLock() }
 
         async sign (tx, locks) {
           tx.inputs
@@ -132,7 +132,7 @@ describe('Owner', () => {
       OnePlusOneLock.deps = { asm }
 
       class CustomOwner {
-        get locks () { return [new OnePlusOneLock()] }
+        get owner () { return new OnePlusOneLock() }
 
         async sign (tx, locks) {
           tx.inputs

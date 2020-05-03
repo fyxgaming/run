@@ -1480,7 +1480,7 @@ describe('Jig', () => {
     it('should load non-standard owner', async () => {
       class CustomLock { get script () { return new Uint8Array([1, 2, 3]) } }
       class CustomOwner {
-        get locks () { return [new CustomLock()] }
+        get owner () { return new CustomLock() }
         async sign (tx) { return tx }
       }
       const run = new Run({ owner: new CustomOwner() })

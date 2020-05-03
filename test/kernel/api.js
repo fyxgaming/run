@@ -247,22 +247,16 @@ describe('Lock API', () => {
 
 describe('Owner API', () => {
   describe('methods', () => {
-    it('should throw NotImplementedError by default for required address, locks and sign()', async () => {
-      expect(() => new Owner().address).to.throw(NotImplementedError)
-      expect(() => new Owner().locks).to.throw(NotImplementedError)
+    it('should throw NotImplementedError by default for required owner and sign()', async () => {
+      expect(() => new Owner().owner).to.throw(NotImplementedError)
       await expect(new Owner().sign()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
   describe('instanceof', () => {
-    it('returns true if address and sign are present', () => {
-      expect(({ address: '', sign: () => {} }) instanceof Owner).to.equal(true)
-      expect(Object.assign(() => {}, { address: '', sign: () => {} }) instanceof Owner).to.equal(true)
-    })
-
-    it('returns true if locks and sign are present', () => {
-      expect(({ locks: [''], sign: () => {} }) instanceof Owner).to.equal(true)
-      expect(Object.assign(() => {}, { locks: [''], sign: () => {} }) instanceof Owner).to.equal(true)
+    it('returns true if owner and sign are present', () => {
+      expect(({ owner: '', sign: () => {} }) instanceof Owner).to.equal(true)
+      expect(Object.assign(() => {}, { owner: [''], sign: () => {} }) instanceof Owner).to.equal(true)
     })
 
     it('returns false if sign is not a function', () => {
