@@ -11,8 +11,8 @@ TwoPlusTwoLock.deps = { asm }
 
 // Create a custom owner that is capable of unlocking TwoPlusTwoLocks
 class TwoPlusTwoKey {
-  // Returns the Lock used in the next jig owner
-  get locks () { return [new TwoPlusTwoLock()] }
+  // Returns the owner assigned to the next jig
+  get owner () { return new TwoPlusTwoLock() }
 
   // Unlocks a locking script
   async sign (tx, locks) {
