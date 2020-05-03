@@ -36,6 +36,19 @@ describe('Blockchain', () => {
       await blockchain.broadcast(tx)
     })
 
+    it('should support broadcast tx without inputs', async () => {
+      const run = new Run()
+      class Dragon extends Jig { }
+      run.transaction.begin()
+      const dragon = new Dragon()
+      await run.transaction.pay()
+      await run.transaction.sign()
+      const tx = run.transaction.export()
+      run.transaction.rollback()
+      const tx2 = new bsv.Transaction(tx.toString('hex'))
+      await run.blockchain.broadcast(tx2)
+    })
+
     it('should throw if input does not exist', async () => {
       const tx = await purse.pay(new Transaction())
       // Remove the signature, and sign again with a new output index
