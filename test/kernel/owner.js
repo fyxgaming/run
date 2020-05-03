@@ -106,7 +106,7 @@ describe('Owner', () => {
           tx.inputs
             .filter((_, n) => locks[n] instanceof OnePlusOneLock)
             .forEach(input => input.setScript('OP_2'))
-          
+
           return tx.toString('hex')
         }
       }
@@ -140,7 +140,7 @@ describe('Owner', () => {
           tx.inputs
             .filter((_, n) => locks[n] instanceof OnePlusOneLock)
             .forEach(input => input.setScript('OP_3'))
-          
+
           return tx.toString('hex')
         }
       }

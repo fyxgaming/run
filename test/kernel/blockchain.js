@@ -12,7 +12,7 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../env/config')
 const { Transaction, Script, PrivateKey } = bsv
-const { BlockchainApi } = Run
+const { Jig, BlockchainApi } = Run
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 const randomTx = () => new Transaction().addSafeData(Math.random().toString())
@@ -40,7 +40,7 @@ describe('Blockchain', () => {
       const run = new Run()
       class Dragon extends Jig { }
       run.transaction.begin()
-      const dragon = new Dragon()
+      new Dragon() // eslint-disable-line
       await run.transaction.pay()
       await run.transaction.sign()
       const tx = run.transaction.export()
