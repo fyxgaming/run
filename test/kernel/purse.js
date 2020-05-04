@@ -17,15 +17,41 @@ const { Jig } = Run
 
 describe('Purse', () => {
   describe('pay', () => {
-    // Calls pay with partial tx
+    it('should be called a partial transaction for create', async () => {
+      const run = new Run()
+      spy(run.purse)
+      class Dragon extends Jig { }
+      const dragon = new Dragon()
+      await dragon.sync()
+      expect(run.purse.pay.calledOnce).to.equal(true)
+      expect(run.purse.pay.args[0].length).to.equal(1)
+      const tx = new Transaction(run.purse.pay.args[0][0])
+      expect(tx.inputs.length).to.equal(0)
+      expect(tx.outputs.length).to.equal(3)
+    })
+
+    it('should be called a partial transaction for update', async () => {
+      const run = new Run()
+      class Sword extends Jig { upgrade () { this.upgraded = true } }
+      const sword = new Sword()
+      await sword.sync()
+      spy(run.purse)
+      sword.upgrade()
+      await sword.sync()
+      expect(run.purse.pay.calledOnce).to.equal(true)
+      expect(run.purse.pay.args[0].length).to.equal(1)
+      const tx = new Transaction(run.purse.pay.args[0][0])
+      expect(tx.inputs.length).to.equal(1)
+      expect(tx.outputs.length).to.equal(2)
+      expect(tx.inputs[0].script.toBuffer().length).to.equal(0)
+    })
+
     // Passes paid tx to owner.sign
     // Run.transaction.pay() calls pay
     // Calls pay more than once?
     // Errors stop tx broadcast and rollback
-
-    it('test', () => {
-      // TODO
-    })
+    // Backed jigs
+    // Change from backed jigs
   })
 
   describe('broadcast', () => {
