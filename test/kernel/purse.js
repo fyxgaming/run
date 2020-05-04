@@ -7,6 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { spy } = require('sinon')
+const { Transaction } = require('bsv')
 const { Run } = require('../env/config')
 const { Jig } = Run
 
@@ -23,10 +24,20 @@ describe('Purse', () => {
 
   describe('broadcast', () => {
     it('should be called with finalized transaction', async () => {
-      // TODO
+      const run = new Run()
+      // Hook purse.broadcast to check that the transaction we received looks correct
+      run.purse.broadcast = hex => {
+        const tx = new Transaction(hex)
+        expect(tx.inputs.length >= 1).to.equal(true)
+        expect(tx.outputs.length >= 4).to.equal(true)
+      }
+      spy(run.purse)
+      class Dragon extends Jig { }
+      const dragon = new Dragon()
+      await dragon.sync()
     })
 
-    it('should be called after before actual broadcast', async () => {
+    it('should be called before actual broadcast', async () => {
       const run = new Run()
       // Hook purse.broadcast to check that we are called after sign() and before broadcast()
       run.purse.broadcast = tx => {
