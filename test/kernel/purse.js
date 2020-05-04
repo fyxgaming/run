@@ -61,7 +61,14 @@ describe('Purse', () => {
     })
 
     it('should log but still broadcast tx if errors are thrown', async () => {
-      // TODO
+      const logger = spy({ error: () => {} })
+      const run = new Run({ logger })
+      run.purse.broadcast = async tx => { throw new Error('uh oh') }
+      class Dragon extends Jig { }
+      const dragon = new Dragon()
+      expect(logger.error.called).to.equal(false)
+      await dragon.sync()
+      expect(logger.error.called).to.equal(true)
     })
   })
 })
