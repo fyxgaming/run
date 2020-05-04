@@ -17,6 +17,12 @@ const { Jig } = Run
 
 describe('Purse', () => {
   describe('pay', () => {
+    // Calls pay with partial tx
+    // Passes paid tx to owner.sign
+    // Run.transaction.pay() calls pay
+    // Calls pay more than once?
+    // Errors stop tx broadcast and rollback
+
     it('test', () => {
       // TODO
     })
@@ -69,6 +75,24 @@ describe('Purse', () => {
       expect(logger.error.called).to.equal(false)
       await dragon.sync()
       expect(logger.error.called).to.equal(true)
+    })
+
+    it('should be called for imported transactions', async () => {
+      const run = new Run()
+      run.purse.broadcast = () => { }
+      spy(run.purse)
+      class Dragon extends Jig { }
+      run.transaction.begin()
+      new Dragon() // eslint-disable-line
+      const tx = run.transaction.export()
+      run.transaction.rollback()
+      expect(run.purse.broadcast.called).to.equal(false)
+      await run.transaction.import(new Transaction(tx.toBuffer().toString('hex')))
+      await run.transaction.pay()
+      await run.transaction.sign()
+      run.transaction.end()
+      await run.sync()
+      expect(run.purse.broadcast.called).to.equal(true)
     })
   })
 })
