@@ -46,7 +46,18 @@ describe('Purse', () => {
       expect(tx.inputs[0].script.toBuffer().length).to.equal(0)
     })
 
-    // Passes paid tx to owner.sign
+    it('should pass paid transaction to sign()', async () => {
+      const run = new Run()
+      spy(run.purse)
+      spy(run.owner)
+      class Sword extends Jig { upgrade () { this.upgraded = true } }
+      const sword = new Sword()
+      await sword.sync()
+      const hex = await run.purse.pay.returnValues[0]
+      expect(run.owner.sign.calledOnce).to.equal(true)
+      expect(run.owner.sign.args[0][0]).to.equal(hex)
+    })
+
     // Run.transaction.pay() calls pay
     // Calls pay more than once?
     // Errors stop tx broadcast and rollback
