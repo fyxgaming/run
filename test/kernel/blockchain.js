@@ -1,7 +1,7 @@
 /**
  * blockchain.js
  *
- * Blockchain API tests that should work across all blockchains
+ * Blockchain API tests that should work across all blockchain implementations.
  */
 
 const bsv = require('bsv')
@@ -18,7 +18,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 const randomTx = () => new Transaction().addSafeData(Math.random().toString())
 
 // ------------------------------------------------------------------------------------------------
-// Blockchain Tests
+// Blockchain tests
 // ------------------------------------------------------------------------------------------------
 
 describe('Blockchain', () => {

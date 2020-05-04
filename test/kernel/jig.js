@@ -13,7 +13,7 @@ const { stub } = require('sinon')
 const { PrivateKey } = require('bsv')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
-const { Jig } = Run
+const { Jig, Mockchain } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Jig tests
@@ -355,6 +355,17 @@ describe('Jig', () => {
   })
 
   describe('method', () => {
+    it('should support calling basic method', async () => {
+      class Sword extends Jig {
+        upgrade () { this.upgrades = (this.upgrades || 0) + 1 }
+      }
+      const sword = new Sword()
+      await run.sync()
+      sword.upgrade()
+      await run.sync()
+      expect(sword.upgrades).to.equal(1)
+    })
+
     it('should support passing null in args', async () => {
       class Dragon extends Jig {
         init (lair) {
@@ -483,14 +494,13 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it('should throw if update on wrong network', async () => {
-      class A extends Jig { f () { this.n = 1; return this } }
-      const a = await new A().sync()
-      const run2 = new Run({ network: 'test' }) // eslint-disable-line
-      run2.purse.pay = tx => tx
-      run2.blockchain.fetch = async () => undefined
-      run2.blockchain.utxos = async () => []
-      await expect(a.f().sync()).to.be.rejectedWith('Missing signature for A')
+    it('should throw if update on different network', async () => {
+      class A extends Jig { f () { this.n = 1 } }
+      const a = new A()
+      await run.sync()
+      const run2 = new Run({ blockchain: new Mockchain() })
+      a.f()
+      await expect(run2.sync()).to.be.rejectedWith(`tx not found: ${a.origin.slice(0, 64)}`)
     })
 
     it('should return host intrinsics to user', () => {

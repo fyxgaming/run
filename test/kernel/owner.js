@@ -1,7 +1,7 @@
 /**
  * owner.js
  *
- * Tests common for all owners
+ * Owner API tests that should work across all owner implementations.
  */
 
 const { spy } = require('sinon')
@@ -15,7 +15,7 @@ const { Run } = require('../env/config')
 const { Jig, asm } = Run
 
 // ------------------------------------------------------------------------------------------------
-// Owner
+// Owner tests
 // ------------------------------------------------------------------------------------------------
 
 describe('Owner', () => {
