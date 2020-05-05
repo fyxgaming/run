@@ -175,13 +175,13 @@ describe('LocalPurse', () => {
       run.purse.feePerKb = 1
       const tx = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       const feePerKb = tx.getFee() / tx.toBuffer().length * 1000
-      const diffFees = Math.abs(feePerKb - 1)
+      const diffFees = Math.abs(feePerKb - 1) / feePerKb
       expect(diffFees < 10).to.equal(true)
       run.purse.feePerKb = 2000
       const tx2 = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       const feePerKb2 = tx2.getFee() / tx2.toBuffer().length * 1000
-      const diffFees2 = Math.abs(feePerKb2 - 2000)
-      expect(diffFees2 < 10).to.equal(true)
+      const diffFees2 = Math.abs(feePerKb2 - 2000) / feePerKb2
+      expect(diffFees2 < 0.01).to.equal(true) // 1% difference
     })
 
     it('should respect custom splits', async () => {
