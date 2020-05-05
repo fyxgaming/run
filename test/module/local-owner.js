@@ -123,7 +123,6 @@ describe('LocalOwner', () => {
         set () { this.n = 1 }
       }
       const a = new A(new GroupLock([run.owner.pubkey], 1))
-      await a.sync() // TODO REMOVE
       a.set()
       await a.sync()
     })
