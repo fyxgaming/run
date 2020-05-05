@@ -557,7 +557,7 @@ describe('Transaction', () => {
         payload,
         Buffer.from('r11r', 'utf8')
       ])
-      const tx = new bsv.Transaction().addOutput(new bsv.Transaction.Output({ script, satoshis: 0 }))
+      let tx = new bsv.Transaction().addOutput(new bsv.Transaction.Output({ script, satoshis: 0 }))
       for (let i = 0; i < nout; i++) { tx.to(addr, satoshis ? satoshis[i] : bsv.Transaction.DUST_AMOUNT) }
       for (const loc of inputLocations) {
         const txid = loc.slice(0, 64)
@@ -565,7 +565,7 @@ describe('Transaction', () => {
         const output = (await run.blockchain.fetch(txid)).outputs[vout]
         tx.from({ txid, vout, script: output.script, satoshis: output.satoshis })
       }
-      await payFor(tx, run)
+      tx = await payFor(tx, run)
       tx.sign(run.owner.bsvPrivateKey)
       await run.blockchain.broadcast(tx)
       return tx.hash

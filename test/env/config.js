@@ -74,7 +74,7 @@ if (COVER) {
 const { _populatePreviousOutputs } = util
 
 async function payFor (tx, run) {
-  const txhex = tx.toBuffer().toString('hex')
+  const txhex = tx.toString('hex')
   const paidhex = await run.purse.pay(txhex)
   const paidtx = new Transaction(paidhex)
   await _populatePreviousOutputs(paidtx, run.blockchain)

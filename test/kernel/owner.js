@@ -5,7 +5,7 @@
  */
 
 const { spy } = require('sinon')
-const { HDPrivateKey } = require('bsv')
+const { HDPrivateKey, Transaction } = require('bsv')
 const { describe, it } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
@@ -48,7 +48,7 @@ describe('Owner', () => {
           this.n = 0
         }
 
-        next () { return this.addr(this.n++) }
+        owner () { return this.addr(this.n++) }
 
         async sign (tx, locks) {
           for (let i = 0; i < this.n; i++) {
@@ -100,9 +100,11 @@ describe('Owner', () => {
       OnePlusOneLock.deps = { asm }
 
       class CustomOwner {
-        get owner () { return new OnePlusOneLock() }
+        owner () { return new OnePlusOneLock() }
 
-        async sign (tx, locks) {
+        async sign (txhex, locks) {
+          const tx = new Transaction(txhex)
+
           tx.inputs
             .filter((_, n) => locks[n] instanceof OnePlusOneLock)
             .forEach(input => input.setScript('OP_2'))
@@ -134,9 +136,11 @@ describe('Owner', () => {
       OnePlusOneLock.deps = { asm }
 
       class CustomOwner {
-        get owner () { return new OnePlusOneLock() }
+        owner () { return new OnePlusOneLock() }
 
-        async sign (tx, locks) {
+        async sign (txhex, locks) {
+          const tx = new Transaction(txhex)
+
           tx.inputs
             .filter((_, n) => locks[n] instanceof OnePlusOneLock)
             .forEach(input => input.setScript('OP_3'))

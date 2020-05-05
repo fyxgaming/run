@@ -124,7 +124,7 @@ describe('Purse', () => {
       const tx = run.transaction.export()
       run.transaction.rollback()
       expect(run.purse.broadcast.called).to.equal(false)
-      await run.transaction.import(new Transaction(tx.toBuffer().toString('hex')))
+      await run.transaction.import(new Transaction(tx.toString('hex')))
       await run.transaction.pay()
       await run.transaction.sign()
       run.transaction.end()
