@@ -22,7 +22,7 @@ describe('GroupLock', () => {
   function testScript (m, n) {
     const pubkeys = []
     for (let i = 0; i < n; i++) pubkeys.push(new PrivateKey().publicKey.toString())
-    const script = new GroupLock(pubkeys, m).script
+    const script = new GroupLock(pubkeys, m).script()
     const asm = new Script(bsv.deps.Buffer.from(script)).toASM()
     expect(asm).to.equal(`OP_${m} ${pubkeys.join(' ')} OP_${n} OP_CHECKMULTISIG`)
   }
@@ -37,9 +37,9 @@ describe('GroupLock', () => {
   })
 
   it('should throw if pubkeys is not non-empty array', () => {
-    expect(() => new GroupLock(null, 1).script).to.throw('pubkeys not an array')
-    expect(() => new GroupLock({}, 1).script).to.throw('pubkeys not an array')
-    expect(() => new GroupLock([], 1).script).to.throw('pubkeys must have at least one entry')
+    expect(() => new GroupLock(null, 1).script()).to.throw('pubkeys not an array')
+    expect(() => new GroupLock({}, 1).script()).to.throw('pubkeys not an array')
+    expect(() => new GroupLock([], 1).script()).to.throw('pubkeys must have at least one entry')
   })
 
   it('should throw if more than 16 pubkeys', () => {
@@ -47,30 +47,30 @@ describe('GroupLock', () => {
     for (let i = 0; i < 17; i++) {
       pubkeys.push(new PrivateKey().publicKey.toString())
     }
-    expect(() => new GroupLock(pubkeys, 1).script).to.throw('No more than 16 pubkeys allowed')
+    expect(() => new GroupLock(pubkeys, 1).script()).to.throw('No more than 16 pubkeys allowed')
   })
 
   it('should throw if duplicate pubkeys', () => {
     const pubkeys = [new PrivateKey().publicKey.toString()]
     pubkeys.push(pubkeys[0])
-    expect(() => new GroupLock(pubkeys, 1).script).to.throw('pubkeys contains duplicates')
+    expect(() => new GroupLock(pubkeys, 1).script()).to.throw('pubkeys contains duplicates')
   })
 
   it('should throw if pubkeys are not valid hex strings', () => {
-    expect(() => new GroupLock(['a'], 1).script).to.throw('Bad hex')
-    expect(() => new GroupLock(['**'], 1).script).to.throw('Bad hex')
-    expect(() => new GroupLock([123], 1).script).to.throw('Bad hex')
-    expect(() => new GroupLock([null], 1).script).to.throw('Bad hex')
+    expect(() => new GroupLock(['a'], 1).script()).to.throw('Bad hex')
+    expect(() => new GroupLock(['**'], 1).script()).to.throw('Bad hex')
+    expect(() => new GroupLock([123], 1).script()).to.throw('Bad hex')
+    expect(() => new GroupLock([null], 1).script()).to.throw('Bad hex')
   })
 
   it('should throw if m is out of range', () => {
     const pubkeys = [new PrivateKey().publicKey.toString()]
-    expect(() => new GroupLock(pubkeys, 0).script).to.throw('m must be a non-negative integer')
-    expect(() => new GroupLock(pubkeys, -1).script).to.throw('m must be a non-negative integer')
-    expect(() => new GroupLock(pubkeys, 1.5).script).to.throw('m must be a non-negative integer')
-    expect(() => new GroupLock(pubkeys, '1').script).to.throw('m must be a non-negative integer')
-    expect(() => new GroupLock(pubkeys, null).script).to.throw('m must be a non-negative integer')
-    expect(() => new GroupLock(pubkeys, 2).script).to.throw('m must be <= the number of pubkeys')
+    expect(() => new GroupLock(pubkeys, 0).script()).to.throw('m must be a non-negative integer')
+    expect(() => new GroupLock(pubkeys, -1).script()).to.throw('m must be a non-negative integer')
+    expect(() => new GroupLock(pubkeys, 1.5).script()).to.throw('m must be a non-negative integer')
+    expect(() => new GroupLock(pubkeys, '1').script()).to.throw('m must be a non-negative integer')
+    expect(() => new GroupLock(pubkeys, null).script()).to.throw('m must be a non-negative integer')
+    expect(() => new GroupLock(pubkeys, 2).script()).to.throw('m must be <= the number of pubkeys')
   })
 })
 

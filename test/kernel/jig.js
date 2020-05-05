@@ -1488,7 +1488,7 @@ describe('Jig', () => {
     })
 
     it('should load non-standard owner', async () => {
-      class CustomLock { get script () { return new Uint8Array([1, 2, 3]) } }
+      class CustomLock { script () { return new Uint8Array([1, 2, 3]) } }
       class CustomOwner {
         owner () { return new CustomLock() }
         async sign (tx) { return tx }
@@ -1503,7 +1503,7 @@ describe('Jig', () => {
     })
 
     it('should support copying non-standard owner to another jig', async () => {
-      class CustomOwner { get script () { return new Uint8Array([1, 2, 3]) } }
+      class CustomOwner { script () { return new Uint8Array([1, 2, 3]) } }
       class A extends Jig { init () { this.owner = new CustomOwner() } }
       A.deps = { CustomOwner }
       class B extends Jig { init (a) { this.owner = a.owner } }
@@ -1513,7 +1513,7 @@ describe('Jig', () => {
     it('should return a copy of owners to outside', async () => {
       class CustomOwner {
         constructor (n) { this.n = n }
-        get script () { return new Uint8Array([this.n]) }
+        script () { return new Uint8Array([this.n]) }
       }
       class A extends Jig { init (n) { this.owner = new CustomOwner(n) } }
       A.deps = { CustomOwner }
@@ -1533,7 +1533,7 @@ describe('Jig', () => {
       }
       class CustomOwner {
         constructor () { this.n = 1 }
-        get script () { return new Uint8Array([this.n]) }
+        script () { return new Uint8Array([this.n]) }
       }
       const a = new A(new CustomOwner())
       a.copyOwner()

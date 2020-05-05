@@ -271,10 +271,10 @@ describe('_lockify', () => {
       const privkey = new bsv.PrivateKey(bsvNetwork)
       const pubkey = privkey.publicKey.toString()
       const addr = privkey.toAddress().toString()
-      const bytes = new StandardLock(addr).script
-      expect(_lockify(pubkey).script).to.deep.equal(bytes)
-      expect(_lockify(addr).script).to.deep.equal(bytes)
-      expect(_lockify(new StandardLock(addr)).script).to.deep.equal(bytes)
+      const bytes = new StandardLock(addr).script()
+      expect(_lockify(pubkey).script()).to.deep.equal(bytes)
+      expect(_lockify(addr).script()).to.deep.equal(bytes)
+      expect(_lockify(new StandardLock(addr)).script()).to.deep.equal(bytes)
     }
   })
 

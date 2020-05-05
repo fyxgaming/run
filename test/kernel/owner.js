@@ -94,7 +94,7 @@ describe('Owner', () => {
   describe('sign', () => {
     it('should support signing with custom scripts', async () => {
       class OnePlusOneLock {
-        get script () { return asm('OP_1 OP_1 OP_ADD OP_EQUAL') }
+        script () { return asm('OP_1 OP_1 OP_ADD OP_EQUAL') }
       }
 
       OnePlusOneLock.deps = { asm }
@@ -130,7 +130,7 @@ describe('Owner', () => {
 
     it('should throw if script does not evaluate to true', async () => {
       class OnePlusOneLock {
-        get script () { return asm('OP_1 OP_1 OP_ADD OP_EQUAL') }
+        script () { return asm('OP_1 OP_1 OP_ADD OP_EQUAL') }
       }
 
       OnePlusOneLock.deps = { asm }
@@ -298,7 +298,7 @@ describe('Owner', () => {
     })
 
     it('should return false for different scripts', () => {
-      const differentLock = new class { get script () { return new Uint8Array([1, 2, 3]) }}()
+      const differentLock = new class { script () { return new Uint8Array([1, 2, 3]) }}()
       const owner = new LocalOwner()
       expect(owner.ours(differentLock)).to.equal(false)
     })
@@ -339,7 +339,7 @@ describe('Owner', () => {
 
     it('should return false for different scripts', () => {
       const address = new PrivateKey('testnet').toAddress().toString()
-      const differentLock = new class { get script () { return new Uint8Array([1, 2, 3]) }}()
+      const differentLock = new class { script () { return new Uint8Array([1, 2, 3]) }}()
       const viewer = new Viewer(address)
       expect(viewer.ours(differentLock)).to.equal(false)
     })

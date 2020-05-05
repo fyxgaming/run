@@ -4,7 +4,8 @@ const { asm } = Run
 
 // Create a locking script which to spend must input the value of 2+2
 class TwoPlusTwoLock {
-  get script () { return asm('OP_2 OP_2 OP_ADD OP_EQUAL') }
+  script () { return asm('OP_2 OP_2 OP_ADD OP_EQUAL') }
+  unlockSize() { return 1 }
 }
 
 TwoPlusTwoLock.deps = { asm }

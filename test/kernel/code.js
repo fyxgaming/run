@@ -37,7 +37,7 @@ describe('Code', () => {
     })
 
     it('should support custom owners', async () => {
-      class CustomOwner { get script () { return new Uint8Array() } }
+      class CustomOwner { script () { return new Uint8Array() } }
       const run = new Run({ owner: new CustomOwner() })
       class A { }
       await run.deploy(A)
