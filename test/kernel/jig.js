@@ -1609,7 +1609,7 @@ describe('Jig', () => {
       expectNoAction()
     })
 
-    it.only('should add to purse when satoshis decreased', async () => {
+    it('should add to purse when satoshis decreased', async () => {
       class A extends Jig { f (satoshis) { this.satoshis = satoshis; return this }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
