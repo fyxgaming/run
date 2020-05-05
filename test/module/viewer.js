@@ -19,23 +19,23 @@ describe('Viewer', () => {
     it('should support address owners', () => {
       const address = new PrivateKey().toAddress().toString()
       const viewer = new Viewer(address)
-      expect(viewer.owner instanceof StandardLock).to.equal(true)
-      expect(viewer.owner.address).to.equal(address)
+      expect(viewer.lock instanceof StandardLock).to.equal(true)
+      expect(viewer.lock.address).to.equal(address)
     })
 
     it('should support pubkey owners', () => {
       const pubkey = new PrivateKey().publicKey.toString()
       const address = new PublicKey(pubkey).toAddress().toString()
       const viewer = new Viewer(pubkey)
-      expect(viewer.owner instanceof StandardLock).to.equal(true)
-      expect(viewer.owner.address).to.equal(address)
+      expect(viewer.lock instanceof StandardLock).to.equal(true)
+      expect(viewer.lock.address).to.equal(address)
     })
 
     it('should support lock object owners', () => {
       class CustomLock { get script () { return new Uint8Array([0, 1, 2]) }}
       const lock = new CustomLock()
       const viewer = new Viewer(lock)
-      expect(viewer.owner).to.deep.equal(lock)
+      expect(viewer.lock).to.deep.equal(lock)
     })
 
     it('should throw if owner is invalid', () => {
@@ -50,7 +50,7 @@ describe('Viewer', () => {
       class CustomLock { get script () { return new Uint8Array([0, 1, 2]) }}
       const lock = new CustomLock()
       const viewer = new Viewer(lock)
-      expect(viewer.owner).to.equal(lock)
+      expect(viewer.lock).to.equal(lock)
     })
   })
 
