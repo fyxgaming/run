@@ -19,11 +19,26 @@ const { Blockchain, Purse, Logger, State, Lock, Owner } = Run.api
 // ------------------------------------------------------------------------------------------------
 
 describe('Blockchain API', () => {
-  describe('methods', () => {
+  describe('broadcast', () => {
     it('should throw NotImplementedError by default', async () => {
       await expect(new Blockchain().broadcast()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
+  describe('fetch', () => {
+    it('should throw NotImplementedError by default', async () => {
       await expect(new Blockchain().fetch()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
+  describe('utxos', () => {
+    it('should throw NotImplementedError by default', async () => {
       await expect(new Blockchain().utxos()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
+  describe('network', () => {
+    it('should throw NotImplementedError by default', async () => {
       expect(() => new Blockchain().network).to.throw(NotImplementedError)
     })
   })
@@ -73,6 +88,12 @@ describe('Purse API ', () => {
     })
   })
 
+  describe('broadcast', () => {
+    it('should throw NotImplementedError by default', async () => {
+      await expect(new Purse().broadcast()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
   describe('instanceof', () => {
     it('returns true if pay method is present', () => {
       const purse = { pay: () => {} }
@@ -99,15 +120,70 @@ describe('Purse API ', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
+// Owner API
+// ------------------------------------------------------------------------------------------------
+
+describe('Owner API', () => {
+  describe('sign', () => {
+    it('should throw NotImplementedError by default', async () => {
+      await expect(new Owner().sign()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
+  describe('owner', () => {
+    it('should throw NotImplementedError by default', async () => {
+      expect(() => new Owner().owner()).to.throw(NotImplementedError)
+    })
+  })
+
+  describe('instanceof', () => {
+    it('returns true if owner and sign are present', () => {
+      expect(({ owner: () => '', sign: () => {} }) instanceof Owner).to.equal(true)
+      expect(Object.assign(() => {}, { owner: () => [''], sign: () => {} }) instanceof Owner).to.equal(true)
+    })
+
+    it('returns false if sign is not a function', () => {
+      expect(({ owner: () => '' }) instanceof Owner).to.equal(false)
+      expect(({ owner: () => '', sign: 123 }) instanceof Owner).to.equal(false)
+      expect(({ owner: () => '', get sign () { } }) instanceof Owner).to.equal(false)
+    })
+
+    it('returns false for non-objects', () => {
+      expect(0 instanceof Owner).to.equal(false)
+      expect(true instanceof Owner).to.equal(false)
+      expect('blockchain' instanceof Owner).to.equal(false)
+      expect(null instanceof Owner).to.equal(false)
+      expect(undefined instanceof Owner).to.equal(false)
+      expect(Symbol.hasInstance instanceof Owner).to.equal(false)
+    })
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
 // Logger API
 // ------------------------------------------------------------------------------------------------
 
 describe('Logger API', () => {
-  describe('methods', () => {
-    it('should not throw by default', () => {
+  describe('info', () => {
+    it('should not throw NotImplementedError by default', () => {
       expect(() => new Logger().info()).not.to.throw()
+    })
+  })
+
+  describe('warn', () => {
+    it('should not throw NotImplementedError by default', () => {
       expect(() => new Logger().warn()).not.to.throw()
+    })
+  })
+
+  describe('debug', () => {
+    it('should not throw NotImplementedError by default', () => {
       expect(() => new Logger().debug()).not.to.throw()
+    })
+  })
+
+  describe('error', () => {
+    it('should not throw NotImplementedError by default', () => {
       expect(() => new Logger().error()).not.to.throw()
     })
   })
@@ -140,9 +216,14 @@ describe('Logger API', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('State API', () => {
-  describe('methods', () => {
+  describe('get', () => {
     it('should throw NotImplementedError by default', async () => {
       await expect(new State().get()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
+  describe('set', () => {
+    it('should throw NotImplementedError by default', async () => {
       await expect(new State().set()).to.be.rejectedWith(NotImplementedError)
     })
   })
@@ -237,41 +318,6 @@ describe('Lock API', () => {
       expect(null instanceof Lock).to.equal(false)
       expect(undefined instanceof Lock).to.equal(false)
       expect(Symbol.hasInstance instanceof Lock).to.equal(false)
-    })
-  })
-})
-
-// ------------------------------------------------------------------------------------------------
-// Owner API
-// ------------------------------------------------------------------------------------------------
-
-describe('Owner API', () => {
-  describe('methods', () => {
-    it('should throw NotImplementedError by default for required owner and sign()', async () => {
-      expect(() => new Owner().owner).to.throw(NotImplementedError)
-      await expect(new Owner().sign()).to.be.rejectedWith(NotImplementedError)
-    })
-  })
-
-  describe('instanceof', () => {
-    it('returns true if owner and sign are present', () => {
-      expect(({ owner: '', sign: () => {} }) instanceof Owner).to.equal(true)
-      expect(Object.assign(() => {}, { owner: [''], sign: () => {} }) instanceof Owner).to.equal(true)
-    })
-
-    it('returns false if sign is not a function', () => {
-      expect(({ address: '' }) instanceof Owner).to.equal(false)
-      expect(({ address: '', sign: 123 }) instanceof Owner).to.equal(false)
-      expect(({ address: '', get sign () { } }) instanceof Owner).to.equal(false)
-    })
-
-    it('returns false for non-objects', () => {
-      expect(0 instanceof Owner).to.equal(false)
-      expect(true instanceof Owner).to.equal(false)
-      expect('blockchain' instanceof Owner).to.equal(false)
-      expect(null instanceof Owner).to.equal(false)
-      expect(undefined instanceof Owner).to.equal(false)
-      expect(Symbol.hasInstance instanceof Owner).to.equal(false)
     })
   })
 })
