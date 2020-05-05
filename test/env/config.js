@@ -6,6 +6,7 @@
 
 require('dotenv').config()
 const path = require('path')
+const { Transaction } = require('bsv')
 const { setMangled, unmangle } = require('./unmangle')
 
 // ------------------------------------------------------------------------------------------------
@@ -59,12 +60,27 @@ Run.configure({
 
 setMangled(MANGLED)
 
+const util = unmangle(unmangle(Run)._util)
+
 if (COVER) {
-  const util = unmangle(unmangle(Run)._util)
   Run.sandbox.excludes = [Run.Jig, Run.Berry, Run.Token, Run.expect, util._ResourceSet, util._ResourceMap,
     Run.StandardLock, Run.GroupLock]
 }
 
 // ------------------------------------------------------------------------------------------------
+// payFor
+// ------------------------------------------------------------------------------------------------
 
-module.exports = { Run, PERF, COVER }
+const { _populatePreviousOutputs } = util
+
+async function payFor (tx, run) {
+  const txhex = tx.toBuffer().toString('hex')
+  const paidhex = await run.purse.pay(txhex)
+  const paidtx = new Transaction(paidhex)
+  await _populatePreviousOutputs(paidtx, run.blockchain)
+  return paidtx
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { Run, PERF, COVER, payFor }

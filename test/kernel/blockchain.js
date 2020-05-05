@@ -10,7 +10,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Run } = require('../env/config')
+const { Run, payFor } = require('../env/config')
 const { Transaction, Script, PrivateKey } = bsv
 const { Jig, BlockchainApi } = Run
 
@@ -26,13 +26,13 @@ describe('Blockchain', () => {
   const { blockchain, purse } = run
 
   let TEST_DATA = null
-  before(async () => { TEST_DATA = await getTestData(blockchain, purse) })
+  before(async () => { TEST_DATA = await getTestData(run) })
 
   const clearCache = () => blockchain instanceof BlockchainApi && blockchain.cache.clear()
 
   describe('broadcast', () => {
     it('should support sending to self', async () => {
-      const tx = await purse.pay(randomTx())
+      const tx = await payFor(randomTx(), run)
       await blockchain.broadcast(tx)
     })
 
@@ -50,7 +50,7 @@ describe('Blockchain', () => {
     })
 
     it('should throw if input does not exist', async () => {
-      const tx = await purse.pay(new Transaction())
+      const tx = await payFor(new Transaction(), run)
       // Remove the signature, and sign again with a new output index
       tx.inputs[0].outputIndex = 9999
       tx.inputs[0].setScript('')
@@ -143,7 +143,7 @@ describe('Blockchain', () => {
     })
 
     it('should set spent information for unspent unconfirmed tx', async () => {
-      const tx = await purse.pay(randomTx())
+      const tx = await payFor(randomTx(), run)
       await blockchain.broadcast(tx)
       const tx2 = await blockchain.fetch(tx.hash)
       expect(tx2.outputs[0].spentTxId).to.equal(null)
@@ -159,7 +159,7 @@ describe('Blockchain', () => {
     })
 
     it('should set spent information for spent unconfirmed tx', async () => {
-      const tx = await purse.pay(randomTx())
+      const tx = await payFor(randomTx(), run)
       await blockchain.broadcast(tx)
       await sleep(TEST_DATA.indexingLatency)
       clearCache()
@@ -187,10 +187,10 @@ describe('Blockchain', () => {
     it('should cache spent info when force fetch', async () => {
       const privateKey2 = new PrivateKey(purse.bsvPrivateKey.network)
       const address2 = privateKey2.toAddress()
-      const tx1 = await purse.pay(randomTx().to(address2, 1000))
+      const tx1 = await payFor(randomTx().to(address2, 1000), run)
       await blockchain.broadcast(tx1)
       const utxo = { txid: tx1.hash, vout: 1, script: tx1.outputs[1].script, satoshis: 1000 }
-      const tx2 = (await purse.pay(randomTx().from(utxo))).sign(privateKey2)
+      const tx2 = (await payFor(randomTx().from(utxo), run)).sign(privateKey2)
       await blockchain.broadcast(tx2)
       const tx1b = await blockchain.fetch(tx1.hash, true)
       expect(tx1b.outputs[0].spentTxId).to.equal(tx1.outputs[0].spentTxId)
@@ -216,7 +216,7 @@ describe('Blockchain', () => {
     })
 
     it('should not return spent outputs', async () => {
-      const tx = await purse.pay(randomTx())
+      const tx = await payFor(randomTx(), run)
       await blockchain.broadcast(tx)
       const utxos = await blockchain.utxos(purse.script)
       expect(utxos.some(utxo => utxo.txid === tx.inputs[0].prevTxId.toString() &&
@@ -246,16 +246,17 @@ describe('Blockchain', () => {
 // Per-network test data
 // ------------------------------------------------------------------------------------------------
 
-async function getTestData (blockchain, purse) {
-  switch (blockchain.network) {
-    case 'mock': return getMockNetworkTestData(blockchain, purse)
-    case 'test': return getTestNetworkTestData(blockchain, purse)
-    case 'main': return getMainNetworkTestData(blockchain, purse)
-    default: throw new Error(`No test data for network: ${blockchain.network}`)
+async function getTestData (run) {
+  switch (run.blockchain.network) {
+    case 'mock': return getMockNetworkTestData(run)
+    case 'test': return getTestNetworkTestData()
+    case 'main': return getMainNetworkTestData()
+    default: throw new Error(`No test data for network: ${run.blockchain.network}`)
   }
 }
 
-async function getMockNetworkTestData (blockchain, purse) {
+async function getMockNetworkTestData (run) {
+  const { blockchain, purse } = run
   const utxo1 = (await blockchain.utxos(purse.script))[0]
   const tx1 = new Transaction().from(utxo1).addSafeData('123').change(purse.address).sign(purse.bsvPrivateKey)
   await blockchain.broadcast(tx1)
@@ -281,13 +282,13 @@ async function getMockNetworkTestData (blockchain, purse) {
   const largeTx = randomTx()
   const largeAddress = new PrivateKey('testnet').toAddress()
   for (let i = 0; i < 1500; i++) largeTx.to(largeAddress, Transaction.DUST_AMOUNT)
-  await blockchain.broadcast(await purse.pay(largeTx))
+  await blockchain.broadcast(await payFor(largeTx, run))
   const lockingScriptWithManyUtxos = Script.fromAddress(largeAddress)
 
   return { confirmed, indexingLatency, errors, lockingScriptWithManyUtxos }
 }
 
-async function getTestNetworkTestData (blockchain, purse) {
+async function getTestNetworkTestData () {
   const confirmed = {
     txid: '883bcccba28ca185b4d20b90f344f32f7fd9e273f962f661a48cea0849609443',
     time: 1583295191000,
@@ -308,7 +309,7 @@ async function getTestNetworkTestData (blockchain, purse) {
   return { confirmed, indexingLatency, errors, lockingScriptWithManyUtxos }
 }
 
-async function getMainNetworkTestData (blockchain, purse) {
+async function getMainNetworkTestData () {
   const confirmed = {
     txid: '8b580cd23c2d2cb0236b888a977a19153eaa9f5ff50b40876699738e747e87ef',
     time: 1583296480000,

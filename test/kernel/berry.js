@@ -10,7 +10,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Run } = require('../env/config')
+const { Run, payFor } = require('../env/config')
 const { Berry, Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ describe('Berry', () => {
   describe('load', () => {
     it('should fetch to load a berry', async () => {
       const run = new Run()
-      const berryTx = await run.purse.pay(new Transaction())
+      const berryTx = await payFor(new Transaction(), run)
       await run.blockchain.broadcast(berryTx)
       class B extends Berry {
         init (data) { this.data = data }

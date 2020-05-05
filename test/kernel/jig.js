@@ -1490,7 +1490,7 @@ describe('Jig', () => {
     it('should load non-standard owner', async () => {
       class CustomLock { get script () { return new Uint8Array([1, 2, 3]) } }
       class CustomOwner {
-        get owner () { return new CustomLock() }
+        owner () { return new CustomLock() }
         async sign (tx) { return tx }
       }
       const run = new Run({ owner: new CustomOwner() })
@@ -1672,7 +1672,7 @@ describe('Jig', () => {
 
     it('should be unusable after deploy fails', async () => {
       const oldPay = run.purse.pay
-      run.purse.pay = async tx => tx
+      run.purse.pay = async txhex => txhex
       class A extends Jig {
         init () { this.n = 1 }
 
@@ -1701,7 +1701,7 @@ describe('Jig', () => {
       const a = new Store()
       await a.sync()
       const oldPay = run.purse.pay
-      run.purse.pay = async (tx) => { return tx }
+      run.purse.pay = async txhex => txhex
       const b = new Store()
       // test when just init, no inputs
       expectAction(b, 'init', [], [], [b], [])

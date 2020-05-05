@@ -10,7 +10,7 @@ const chaiAsPromised = require('chai-as-promised')
 const { expect } = chai
 chai.use(chaiAsPromised)
 const { describe, it } = require('mocha')
-const { Run } = require('../env/config')
+const { Run, payFor } = require('../env/config')
 const { Jig } = Run
 const { unmangle } = require('../env/unmangle')
 const { _extractRunData, _encryptRunData, _decryptRunData, _bsvNetwork } = unmangle(unmangle(Run)._util)
@@ -195,7 +195,7 @@ describe('Transaction', () => {
       await run.sync()
     })
 
-    it('should add updated resources to the inventory after import', async () => {
+    it('should not add updated resources to the inventory after import', async () => {
       const run = new Run()
       class Dragon extends Jig {}
       run.transaction.begin()
@@ -209,16 +209,14 @@ describe('Transaction', () => {
       expect(run.inventory.jigs.length).to.equal(0)
       expect(run.inventory.code.length).to.equal(0)
       await run.transaction.import(tx)
-      expect(run.inventory.jigs.length).to.equal(1)
-      expect(run.inventory.code.length).to.equal(1)
-      const Dragon2 = run.inventory.code[0]
-      new Dragon2() // eslint-disable-line
-      expect(run.inventory.jigs.length).to.equal(2)
-      expect(run.inventory.code.length).to.equal(1)
+      expect(run.inventory.jigs.length).to.equal(0)
+      expect(run.inventory.code.length).to.equal(0)
       await run.transaction.pay()
       await run.transaction.sign()
       run.transaction.end()
       await run.sync()
+      expect(run.inventory.jigs.length).to.equal(1)
+      expect(run.inventory.code.length).to.equal(1)
     })
   })
 
@@ -567,7 +565,7 @@ describe('Transaction', () => {
         const output = (await run.blockchain.fetch(txid)).outputs[vout]
         tx.from({ txid, vout, script: output.script, satoshis: output.satoshis })
       }
-      await run.purse.pay(tx)
+      await payFor(tx, run)
       tx.sign(run.owner.bsvPrivateKey)
       await run.blockchain.broadcast(tx)
       return tx.hash
@@ -687,7 +685,7 @@ describe('Transaction', () => {
     describe('errors', () => {
       it('should throw if no data', async () => {
         const run = new Run()
-        const tx = await run.purse.pay(new bsv.Transaction())
+        const tx = await payFor(new bsv.Transaction(), run)
         await run.blockchain.broadcast(tx)
         await expect(run.load(tx.hash + '_o0')).to.be.rejectedWith(`Not a token: ${tx.hash}`)
         await expect(run.load(tx.hash + '_o1')).to.be.rejectedWith(`Not a token: ${tx.hash}`)
