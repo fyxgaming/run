@@ -10,7 +10,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Run } = require('../env/config')
+const { Run, payFor } = require('../env/config')
 const { LocalPurse } = Run
 const { Jig } = Run
 
@@ -129,7 +129,7 @@ describe('LocalPurse', () => {
     it('should add inputs and outputs', async () => {
       const address = new PrivateKey().toAddress()
       const tx = new Transaction().to(address, Transaction.DUST_AMOUNT)
-      const tx2 = await run.purse.pay(tx)
+      const tx2 = await payFor(tx, run)
       expect(tx2.inputs.length > 0).to.equal(true)
       expect(tx2.outputs.length > 1).to.equal(true)
     })
@@ -137,19 +137,19 @@ describe('LocalPurse', () => {
     it('should throw if not enough funds', async () => {
       const address = new PrivateKey().toAddress()
       const tx = new Transaction().to(address, Number.MAX_SAFE_INTEGER)
-      await expect(run.purse.pay(tx)).to.be.rejectedWith('Not enough funds')
+      await expect(payFor(tx, run)).to.be.rejectedWith('Not enough funds')
     })
 
     it('should throw if no utxos', async () => {
       const address = new PrivateKey().toAddress()
       const tx = new Transaction().to(address, Transaction.DUST_AMOUNT)
       const purse = new LocalPurse({ blockchain: run.blockchain })
-      await expect(purse.pay(tx)).to.be.rejectedWith('Not enough funds')
+      await expect(purse.pay(tx.toString('hex'))).to.be.rejectedWith('Not enough funds')
     })
 
     it('should automatically split utxos', async () => {
       const address = new PrivateKey().toAddress()
-      const tx = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
+      const tx = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       await run.blockchain.broadcast(tx)
       const utxos = await run.blockchain.utxos(run.purse.address)
       expect(utxos.length).to.equal(10)
@@ -157,11 +157,11 @@ describe('LocalPurse', () => {
 
     it('should shuffle UTXOs', async () => {
       const address = new PrivateKey().toAddress()
-      const tx = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
+      const tx = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       await run.blockchain.broadcast(tx)
-      const txBase = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
+      const txBase = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       for (let i = 0; i < 100; i++) {
-        const tx2 = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
+        const tx2 = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
         const sameTxId = tx2.inputs[0].prevTxId.toString() === txBase.inputs[0].prevTxId.toString()
         const sameIndex = tx2.inputs[0].outputIndex === txBase.inputs[0].outputIndex
         if (!sameTxId || !sameIndex) return
@@ -173,12 +173,12 @@ describe('LocalPurse', () => {
       const address = new PrivateKey().toAddress()
       const run = new Run()
       run.purse.feePerKb = 1
-      const tx = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
+      const tx = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       const feePerKb = tx.getFee() / tx.toBuffer().length * 1000
       const diffFees = Math.abs(feePerKb - 1)
       expect(diffFees < 10).to.equal(true)
       run.purse.feePerKb = 2000
-      const tx2 = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
+      const tx2 = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       const feePerKb2 = tx2.getFee() / tx2.toBuffer().length * 1000
       const diffFees2 = Math.abs(feePerKb2 - 2000)
       expect(diffFees2 < 10).to.equal(true)
@@ -189,21 +189,21 @@ describe('LocalPurse', () => {
       const run = new Run()
       run.purse.splits = 1
       const numUtxosBefore = (await run.purse.utxos()).length
-      const tx = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
+      const tx = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       expect(tx.outputs.length - 1 <= numUtxosBefore).to.equal(true)
       run.purse.splits = 20
-      const tx2 = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
+      const tx2 = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       expect(numUtxosBefore - tx2.inputs.length + tx2.outputs.length - 1 >= 20).to.equal(true)
     })
 
     it('should still have a change output when splits is lower than number of utxos', async () => {
       const address = new PrivateKey().toAddress()
       const run = new Run()
-      const tx = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
+      const tx = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       await run.blockchain.broadcast(tx)
       expect((await run.purse.utxos()).length >= 10).to.equal(true)
       run.purse.splits = 5
-      const tx2 = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT))
+      const tx2 = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       expect(tx2.outputs.length).to.equal(2)
       expect(tx2.getFee() < 1000).to.equal(true)
     })
@@ -212,7 +212,7 @@ describe('LocalPurse', () => {
   describe('balance', () => {
     it('should sum non-jig and non-class utxos', async () => {
       const address = new PrivateKey().toAddress()
-      const send = await run.purse.pay(new Transaction().to(address, Transaction.DUST_AMOUNT), run.purse.bsvPrivateKey, run.blockchain)
+      const send = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       await run.blockchain.broadcast(send)
       new Run({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain }) // eslint-disable-line
       class A extends Jig { init () { this.satoshis = 888 } }
