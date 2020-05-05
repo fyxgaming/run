@@ -95,6 +95,7 @@ describe('Owner', () => {
     it('should support signing with custom scripts', async () => {
       class OnePlusOneLock {
         script () { return asm('OP_1 OP_1 OP_ADD OP_EQUAL') }
+        domain () { return 1 }
       }
 
       OnePlusOneLock.deps = { asm }
@@ -131,6 +132,7 @@ describe('Owner', () => {
     it('should throw if script does not evaluate to true', async () => {
       class OnePlusOneLock {
         script () { return asm('OP_1 OP_1 OP_ADD OP_EQUAL') }
+        domain () { return 1 }
       }
 
       OnePlusOneLock.deps = { asm }

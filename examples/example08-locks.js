@@ -2,10 +2,10 @@ const bsv = require('bsv')
 const Run = require('../dist/run.node.min')
 const { asm } = Run
 
-// Create a locking script which to spend must input the value of 2+2
+// A locking script which to spend must input the value of 2+2
 class TwoPlusTwoLock {
   script () { return asm('OP_2 OP_2 OP_ADD OP_EQUAL') }
-  unlockSize() { return 1 }
+  domain () { return 1 } // domain is the max size of the unlock script
 }
 
 TwoPlusTwoLock.deps = { asm }

@@ -1488,7 +1488,10 @@ describe('Jig', () => {
     })
 
     it('should load non-standard owner', async () => {
-      class CustomLock { script () { return new Uint8Array([1, 2, 3]) } }
+      class CustomLock {
+        script () { return new Uint8Array([1, 2, 3]) }
+        domain () { return 1 }
+      }
       class CustomOwner {
         owner () { return new CustomLock() }
         async sign (tx) { return tx }
@@ -1503,20 +1506,24 @@ describe('Jig', () => {
     })
 
     it('should support copying non-standard owner to another jig', async () => {
-      class CustomOwner { script () { return new Uint8Array([1, 2, 3]) } }
-      class A extends Jig { init () { this.owner = new CustomOwner() } }
-      A.deps = { CustomOwner }
+      class CustomLock {
+        script () { return new Uint8Array([1, 2, 3]) }
+        domain () { return 1 }
+      }
+      class A extends Jig { init () { this.owner = new CustomLock() } }
+      A.deps = { CustomLock }
       class B extends Jig { init (a) { this.owner = a.owner } }
       expect(() => new B(new A())).not.to.throw()
     })
 
     it('should return a copy of owners to outside', async () => {
-      class CustomOwner {
+      class CustomLock {
         constructor (n) { this.n = n }
         script () { return new Uint8Array([this.n]) }
+        domain () { return 1 }
       }
-      class A extends Jig { init (n) { this.owner = new CustomOwner(n) } }
-      A.deps = { CustomOwner }
+      class A extends Jig { init (n) { this.owner = new CustomLock(n) } }
+      A.deps = { CustomLock }
       class B extends Jig {
         init (a, n) { this.owner = a.owner; this.owner.n = n }
       }
@@ -1531,11 +1538,12 @@ describe('Jig', () => {
         init (owner) { this.owner = owner }
         copyOwner () { this.owner2 = this.owner; this.owner2.n = 2 }
       }
-      class CustomOwner {
+      class CustomLock {
         constructor () { this.n = 1 }
         script () { return new Uint8Array([this.n]) }
+        domain () { return 1 }
       }
-      const a = new A(new CustomOwner())
+      const a = new A(new CustomLock())
       a.copyOwner()
       expect(a.owner).to.deep.equal(a.owner2)
       await expect(a.sync()).to.be.rejected

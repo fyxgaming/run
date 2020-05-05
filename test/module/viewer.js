@@ -32,7 +32,10 @@ describe('Viewer', () => {
     })
 
     it('should support lock object owners', () => {
-      class CustomLock { script () { return new Uint8Array([0, 1, 2]) }}
+      class CustomLock {
+        script () { return new Uint8Array([0, 1, 2]) }
+        domain () { return 1 }
+      }
       const lock = new CustomLock()
       const viewer = new Viewer(lock)
       expect(viewer.lock).to.deep.equal(lock)
@@ -47,7 +50,10 @@ describe('Viewer', () => {
 
   describe('locks', () => {
     it('should always return the lock', () => {
-      class CustomLock { script () { return new Uint8Array([0, 1, 2]) }}
+      class CustomLock {
+        script () { return new Uint8Array([0, 1, 2]) }
+        domain () { return 1 }
+      }
       const lock = new CustomLock()
       const viewer = new Viewer(lock)
       expect(viewer.lock).to.equal(lock)

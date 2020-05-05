@@ -265,59 +265,90 @@ describe('Lock API', () => {
 
   describe('instanceof', () => {
     it('returns true if script is a function on class', () => {
-      class CustomLock { script () { return new Uint8Array() } }
+      class CustomLock {
+        script () { return new Uint8Array() }
+        domain () { return 1 }
+      }
       expect(new CustomLock() instanceof Lock).to.equal(true)
     })
 
     it('returns true if script returns a sandbox Uint8Array', () => {
       const SandboxUint8Array = unmangle(unmangle(Run.sandbox)._instance)._intrinsics.Uint8Array
-      class CustomLock { script () { return new SandboxUint8Array() } }
+      class CustomLock {
+        script () { return new SandboxUint8Array() }
+        domain () { return 1 }
+      }
       expect(new CustomLock() instanceof Lock).to.equal(true)
     })
 
     it('returns false if script is a getter', () => {
-      class CustomLock { get script () { return new Uint8Array() } }
+      class CustomLock {
+        get script () { return new Uint8Array() }
+        domain () { return 1 }
+      }
       expect(new CustomLock() instanceof Lock).to.equal(false)
     })
 
     it('returns false if script is a property', () => {
-      class CustomLock { constructor () { this.script = new Uint8Array() } }
+      class CustomLock {
+        constructor () { this.script = new Uint8Array() }
+        domain () { return 1 }
+      }
       expect(new CustomLock() instanceof Lock).to.equal(false)
-      expect(({ script: null }) instanceof Lock).to.equal(false)
-      expect(({ script: new Uint8Array() }) instanceof Lock).to.equal(false)
+      expect(({ script: null, domain: 1 }) instanceof Lock).to.equal(false)
+      expect(({ script: new Uint8Array(), domain: 1 }) instanceof Lock).to.equal(false)
     })
 
     it('returns false if script is a getter on object', () => {
-      expect(({ script () { return new Uint8Array() } }) instanceof Lock).to.equal(false)
+      expect(({
+        script () { return new Uint8Array() },
+        domain () { return 1 }
+      }) instanceof Lock).to.equal(false)
     })
 
-    it('returns true if unlockSize is a function on class', () => {
+    it('returns true if domain is a function on class', () => {
       class CustomLock {
         script () { return new Uint8Array() }
-        unlockSize () { return 1 }
+        domain () { return 1 }
       }
       expect(new CustomLock() instanceof Lock).to.equal(true)
     })
 
-    it('returns false if unlockSize is a getter', () => {
+    it('returns false if domain is a getter', () => {
       class CustomLock {
         script () { return new Uint8Array() }
-        get unlockSize () { return 1 }
+        get domain () { return 1 }
       }
       expect(new CustomLock() instanceof Lock).to.equal(false)
     })
 
-    it('returns false if unlockSize is a property', () => {
+    it('returns false if domain is a property', () => {
       class CustomLock { script () { return new Uint8Array() } }
       const lock = new CustomLock()
-      lock.unlockSize = 1
+      lock.domain = 1
       expect(lock instanceof Lock).to.equal(false)
     })
 
-    it('returns false if unlockSize returns a non-number', () => {
+    it('returns false if domain returns a non-number', () => {
       class CustomLock {
         script () { return new Uint8Array() }
-        unlockSize () { return null }
+        domain () { return null }
+      }
+      expect(new CustomLock() instanceof Lock).to.equal(false)
+    })
+
+    it('returns false if domain returns a non-integer', () => {
+      class CustomLock {
+        script () { return new Uint8Array() }
+        domain () { return 1.5 }
+      }
+      expect(new CustomLock() instanceof Lock).to.equal(false)
+    })
+
+    it('returns false if domain returns negative', () => {
+      class CustomLock {
+        script () { return new Uint8Array() }
+        domain () { return -1 }
       }
       expect(new CustomLock() instanceof Lock).to.equal(false)
     })
