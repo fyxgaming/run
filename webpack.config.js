@@ -60,7 +60,7 @@ const reservedProperties = [
   '_read', '_lengthRetrievers', '_obj', '__methods',
   // These are bsv library properties that we use and should not be mangled
   '_hash', '_getHash', '_getInputAmount', '_estimateFee', '_getOutputAmount',
-  '_hashPrevouts', '_hashSequence', '_hashOutputsAll'
+  '_hashPrevouts', '_hashSequence', '_hashOutputsAll', '_fee'
 ]
 
 // The mangled names are cached in a special name-cache file. We use this file in the tests
