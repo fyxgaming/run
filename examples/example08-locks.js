@@ -13,14 +13,18 @@ TwoPlusTwoLock.deps = { asm }
 // Create a custom owner that is capable of unlocking TwoPlusTwoLocks
 class TwoPlusTwoKey {
   // Returns the owner assigned to the next jig
-  get owner () { return new TwoPlusTwoLock() }
+  owner () { return new TwoPlusTwoLock() }
 
   // Unlocks a locking script
-  async sign (tx, locks) {
+  async sign (txhex, locks) {
+    const tx = new bsv.Transaction(txhex)
+
     // Find each input that is a TwoPlusTwo lock and sign it with 4
     tx.inputs
       .filter((_, n) => locks[n] instanceof TwoPlusTwoLock)
       .forEach(input => input.setScript('OP_4'))
+    
+    return tx.toString('hex')
   }
 }
 
