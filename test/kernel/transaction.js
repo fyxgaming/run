@@ -585,7 +585,8 @@ describe('Transaction', () => {
     it('should load jig method call', async () => {
       const run = new Run()
       class A extends Jig { f (n) { this.n = n }}
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       const actions = [{ target: '_i0', method: 'f', args: [1] }]
       const txid = await build(run, [], actions, [a.location], null, 1)
       const a2 = await run.load(txid + '_o1')
@@ -595,8 +596,9 @@ describe('Transaction', () => {
     it('should load batch of jig updates', async () => {
       const run = new Run()
       class A extends Jig { f (n) { this.n = n }}
-      const a = await new A().sync()
-      const b = await new A().sync()
+      const a = new A()
+      const b = new A()
+      await run.sync()
       const actions = [
         { target: '_i0', method: 'f', args: [1] },
         { target: '_i1', method: 'f', args: [2] }
