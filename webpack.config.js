@@ -102,7 +102,9 @@ const terserPluginConfig = {
         reserved: reservedProperties
       }
     }
-  }
+  },
+  // Leave license comments intact
+  extractComments: false
 }
 
 // ------------------------------------------------------------------------------------------------

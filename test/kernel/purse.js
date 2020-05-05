@@ -70,6 +70,7 @@ describe('Purse', () => {
       const run = new Run()
       // Hook purse.broadcast to check that the transaction we received looks correct
       run.purse.broadcast = hex => {
+        expect(typeof hex).to.equal('string')
         const tx = new Transaction(hex)
         expect(tx.inputs.length >= 1).to.equal(true)
         expect(tx.outputs.length >= 4).to.equal(true)
