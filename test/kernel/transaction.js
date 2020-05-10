@@ -218,6 +218,19 @@ describe('Transaction', () => {
       expect(run.inventory.jigs.length).to.equal(1)
       expect(run.inventory.code.length).to.equal(1)
     })
+
+    it.only('should support importing unbroadcasted transaction with self-references', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      class B extends A { }
+      A.B = B
+      run.transaction.begin()
+      run.deploy(B)
+      new B() // eslint-disable-line
+      const tx = run.transaction.export()
+      run.transaction.rollback()
+      await run.transaction.import(tx)
+    })
   })
 
   describe('sign', () => {
