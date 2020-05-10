@@ -55,6 +55,19 @@ describe('PayServer', () => {
       await run.sync()
     })
 
+    it.skip('should pass stress test', async () => {
+      // Post 120 transactions over 2 minutes
+      const purse = new PayServer(apiKey)
+      const run = new Run({ purse })
+      class A extends Jig { f () { this.n = 1 } }
+      const a = new A()
+      for (let i = 0; i < 120; i++) {
+        console.log('posting', i, 'of 120')
+        a.f()
+        await run.sync()
+      }
+    })
+
     it('should fail if API key not recognized', async () => {
       const run = new Run()
       const badApiKey = new HDPrivateKey().hdPublicKey.toString()
