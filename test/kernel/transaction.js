@@ -219,7 +219,7 @@ describe('Transaction', () => {
       expect(run.inventory.code.length).to.equal(1)
     })
 
-    it.only('should support importing unbroadcasted transaction with self-references', async () => {
+    it('should support importing unbroadcasted transaction with self-references', async () => {
       const run = new Run()
       class A extends Jig { }
       class B extends A { }
