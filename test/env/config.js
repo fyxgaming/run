@@ -75,7 +75,8 @@ const { _populatePreviousOutputs } = util
 
 async function payFor (tx, run) {
   const txhex = tx.toString('hex')
-  const paidhex = await run.purse.pay(txhex)
+  const spent = tx.inputs.reduce((prev, curr) => curr.output.satoshis + prev, 0)
+  const paidhex = await run.purse.pay(txhex, spent)
   const paidtx = new Transaction(paidhex)
   await _populatePreviousOutputs(paidtx, run.blockchain)
   return paidtx
