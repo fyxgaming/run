@@ -207,6 +207,42 @@ describe('LocalPurse', () => {
       expect(tx2.outputs.length).to.equal(2)
       expect(tx2.getFee() < 1000).to.equal(true)
     })
+
+    it('should receive change from extra inputs', async () => {
+      const run = new Run()
+      const tx1 = await payFor(new Transaction().to(run.owner.address, 10000), run)
+      await run.blockchain.broadcast(tx1)
+      const utxo = { txid: tx1.hash, vout: 0, script: tx1.outputs[0].script, satoshis: 10000 }
+      const tx2 = await payFor(new Transaction().from(utxo), run)
+      expect(tx2.outputs[0].satoshis > 9000).to.equal(true)
+    })
+
+    it('should not receive change if not enough to receive dust', async () => {
+      const run = new Run()
+      const tx1 = await payFor(new Transaction().to(run.owner.address, 546), run)
+      await run.blockchain.broadcast(tx1)
+      const utxo = { txid: tx1.hash, vout: 0, script: tx1.outputs[0].script, satoshis: 10000 }
+      const tx2 = await payFor(new Transaction().from(utxo), run)
+      expect(tx2.outputs.length).to.equal(0)
+    })
+
+    it('should pay without optimized tx.signature method', async () => {
+      const run = new Run()
+      const savedSignatureMethod = Transaction.prototype.signature
+      delete Transaction.prototype.signature
+      const tx1 = await payFor(new Transaction().to(run.owner.address, 10000), run)
+      Transaction.prototype.signature = savedSignatureMethod
+    })
+
+    it('should not pay with jig utxo', async () => {
+      const run = new Run()
+      class Dragon extends Jig { }
+      new Dragon()
+      await run.sync()
+      const run2 = new Run({ purse: run.owner.privkey, autofund: false })
+      new Dragon()
+      await expect(run2.sync()).to.be.rejectedWith('Not enough funds')
+    })
   })
 
   describe('balance', () => {

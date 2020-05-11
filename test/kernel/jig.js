@@ -355,7 +355,7 @@ describe('Jig', () => {
   })
 
   describe('method', () => {
-    it('should support calling basic method', async () => {
+    it('should update basic jig', async () => {
       class Sword extends Jig {
         upgrade () { this.upgrades = (this.upgrades || 0) + 1 }
       }
