@@ -230,17 +230,17 @@ describe('LocalPurse', () => {
       const run = new Run()
       const savedSignatureMethod = Transaction.prototype.signature
       delete Transaction.prototype.signature
-      const tx1 = await payFor(new Transaction().to(run.owner.address, 10000), run)
+      await payFor(new Transaction().to(run.owner.address, 10000), run)
       Transaction.prototype.signature = savedSignatureMethod
     })
 
     it('should not pay with jig utxo', async () => {
       const run = new Run()
       class Dragon extends Jig { }
-      new Dragon()
+      new Dragon() // eslint-disable-line
       await run.sync()
       const run2 = new Run({ purse: run.owner.privkey, autofund: false })
-      new Dragon()
+      new Dragon() // eslint-disable-line
       await expect(run2.sync()).to.be.rejectedWith('Not enough funds')
     })
   })
