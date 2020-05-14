@@ -144,7 +144,10 @@ describe('LocalPurse', () => {
       const address = new PrivateKey().toAddress()
       const tx = new Transaction().to(address, Transaction.DUST_AMOUNT)
       const purse = new LocalPurse({ blockchain: run.blockchain })
-      await expect(purse.pay(tx.toString('hex'))).to.be.rejectedWith('Not enough funds')
+      const oldPurse = run.purse
+      run.purse = purse
+      await expect(payFor(tx, run)).to.be.rejectedWith('Not enough funds')
+      run.purse = oldPurse
     })
 
     it('should automatically split utxos', async () => {

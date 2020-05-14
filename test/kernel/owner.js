@@ -103,7 +103,7 @@ describe('Owner', () => {
       class CustomOwner {
         owner () { return new OnePlusOneLock() }
 
-        async sign (txhex, locks) {
+        async sign (txhex, inputs, locks) {
           const tx = new Transaction(txhex)
 
           tx.inputs

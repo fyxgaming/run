@@ -577,6 +577,8 @@ describe('Transaction', () => {
         const vout = parseInt(loc.slice(66))
         const output = (await run.blockchain.fetch(txid)).outputs[vout]
         tx.from({ txid, vout, script: output.script, satoshis: output.satoshis })
+        // Create a fake input buffer to pay for the P2PKH input
+        tx.inputs[tx.inputs.length - 1].setScript(Buffer.alloc(108))
       }
       tx = await payFor(tx, run)
       tx.sign(run.owner.bsvPrivateKey)

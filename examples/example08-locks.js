@@ -16,7 +16,7 @@ class TwoPlusTwoKey {
   owner () { return new TwoPlusTwoLock() }
 
   // Unlocks a locking script
-  async sign (txhex, locks) {
+  async sign (txhex, inputs, locks) {
     const tx = new bsv.Transaction(txhex)
 
     // Find each input that is a TwoPlusTwo lock and sign it with 4

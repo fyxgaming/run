@@ -17,21 +17,22 @@ const { Jig } = Run
 
 describe('Purse', () => {
   describe('pay', () => {
-    it('should be passed a partial transaction and spent for create', async () => {
+    it('should be called correctly for create jig', async () => {
       const run = new Run()
       spy(run.purse)
       class Dragon extends Jig { }
       const dragon = new Dragon()
       await dragon.sync()
       expect(run.purse.pay.calledOnce).to.equal(true)
-      expect(run.purse.pay.args[0].length).to.equal(2)
-      expect(run.purse.pay.args[0][1]).to.equal(0)
+      expect(run.purse.pay.args[0].length).to.equal(3)
+      expect(Array.isArray(run.purse.pay.args[0][1])).to.equal(true)
+      expect(run.purse.pay.args[0][2]).to.equal(0)
       const tx = new Transaction(run.purse.pay.args[0][0])
       expect(tx.inputs.length).to.equal(0)
       expect(tx.outputs.length).to.equal(3)
     })
 
-    it('should be passed a partial transaction with placeholders and spent for update', async () => {
+    it('should be called correctly for update jig', async () => {
       const run = new Run()
       class Sword extends Jig { upgrade () { this.upgraded = true } }
       const sword = new Sword()
@@ -40,8 +41,9 @@ describe('Purse', () => {
       sword.upgrade()
       await sword.sync()
       expect(run.purse.pay.calledOnce).to.equal(true)
-      expect(run.purse.pay.args[0].length).to.equal(2)
-      expect(run.purse.pay.args[0][1]).to.equal(546)
+      expect(run.purse.pay.args[0].length).to.equal(3)
+      expect(Array.isArray(run.purse.pay.args[0][1])).to.equal(true)
+      expect(run.purse.pay.args[0][2]).to.equal(546)
       const tx = new Transaction(run.purse.pay.args[0][0])
       expect(tx.inputs.length).to.equal(1)
       expect(tx.outputs.length).to.equal(2)
