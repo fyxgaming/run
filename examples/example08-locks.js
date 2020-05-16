@@ -33,7 +33,7 @@ class TwoPlusTwoKey {
 
     // Sign any TwoPlusTwoLock
     tx.inputs
-      .filter((input, n) => utxos[i] && utxos[i].lock instanceof TwoPlusTwoLock)
+      .filter((input, n) => utxos[n] && utxos[n].lock instanceof TwoPlusTwoLock)
       .forEach(input => input.setScript('OP_4'))
     
     return tx.toString('hex')
