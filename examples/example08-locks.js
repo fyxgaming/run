@@ -28,12 +28,12 @@ TwoPlusTwoLock.deps = { asm }
 class TwoPlusTwoKey {
   owner () { return new TwoPlusTwoLock() }
 
-  async sign (rawtx, utxos) {
+  async sign (rawtx, prevouts) {
     const tx = new bsv.Transaction(rawtx)
 
     // Sign any TwoPlusTwoLock
     tx.inputs
-      .filter((input, n) => utxos[n] && utxos[n].lock instanceof TwoPlusTwoLock)
+      .filter((input, n) => prevouts[n] && prevouts[n].lock instanceof TwoPlusTwoLock)
       .forEach(input => input.setScript('OP_4'))
     
     return tx.toString('hex')
