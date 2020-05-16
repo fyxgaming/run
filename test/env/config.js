@@ -75,12 +75,10 @@ const { _populatePreviousOutputs } = util
 
 async function payFor (tx, run) {
   const txhex = tx.toString('hex')
-  const prevtxs = (await Promise.all(tx.inputs
-    .map(input => input.prevTxId.toString('hex'))
-    .map(txid => run.blockchain.fetch(txid))))
-  const inputs = prevtxs.map(tx => tx.toString('hex'))
-  const spent = tx.inputs.reduce((prev, curr) => curr.output.satoshis + prev, 0)
-  const paidhex = await run.purse.pay(txhex, inputs, spent)
+  const prevtxids = tx.inputs.map(input => input.prevTxId.toString('hex'))
+  const prevtxs = await Promise.all(prevtxids.map(txid => run.blockchain.fetch(txid)))
+  const utxos = tx.inputs.map((input, n) => prevtxs[n].outputs[input.outputIndex])
+  const paidhex = await run.purse.pay(txhex, utxos)
   const paidtx = new Transaction(paidhex)
   await _populatePreviousOutputs(paidtx, run.blockchain)
   return paidtx
