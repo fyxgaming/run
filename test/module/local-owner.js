@@ -4,7 +4,7 @@
  * Tests for lib/module/local-owner.js
  */
 
-const { PrivateKey, PublicKey, Address } = require('bsv')
+const { Address, PrivateKey, PublicKey, Transaction } = require('bsv')
 const { describe, it, beforeEach } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
@@ -117,97 +117,112 @@ describe('LocalOwner', () => {
       await run2.sync()
     })
 
-    it('should sign 1-1 group lock', async () => {
-      class A extends Jig {
-        init (owner) { this.owner = owner }
-        set () { this.n = 1 }
-      }
-      const a = new A(new GroupLock([run.owner.pubkey], 1))
-      a.set()
+    it('should sign without locks', async () => {
+      class A extends Jig { set () { this.n = 1 }}
+      const a = new A()
       await a.sync()
-    })
-
-    it('should sign 2-3 group lock', async () => {
-      const run2 = new Run()
-      const run3 = new Run()
-      class A extends Jig {
-        init (owner) { this.owner = owner }
-        set () { this.n = 1 }
-      }
-
-      // Create a jig with a 2-3 group owner
-      run.activate()
-      const a = new A(new GroupLock([run.owner.pubkey, run2.owner.pubkey, run3.owner.pubkey], 2))
-      await a.sync()
-
-      // Sign with pubkey 1 and export tx
       run.transaction.begin()
       a.set()
-      await run.transaction.pay()
-      await run.transaction.sign()
       const tx = run.transaction.export()
+      const prevtx = await run.blockchain.fetch(a.origin.slice(0, 64))
+      const signed = await run.owner.sign(tx.toString('hex'), [prevtx.outputs[2]])
+      expect(new Transaction(signed).inputs[0].script.toBuffer().length > 0).to.equal(true)
       run.transaction.rollback()
-
-      // Sign with pubkey 2 and broadcast
-      run2.activate()
-      await run2.transaction.import(tx)
-      await run2.transaction.sign()
-      run2.transaction.end()
-      await run2.sync()
     })
 
-    it('should not sign group lock if already signed', async () => {
-      class A extends Jig {
-        init (owner) { this.owner = owner }
-        set () { this.n = 1 }
-      }
+    describe('group lock', () => {
+      it('should sign 1-1 group lock', async () => {
+        class A extends Jig {
+          init (owner) { this.owner = owner }
+          set () { this.n = 1 }
+        }
+        const a = new A(new GroupLock([run.owner.pubkey], 1))
+        a.set()
+        await a.sync()
+      })
 
-      // Create a jig with a 2-3 group owner
-      const a = new A(new GroupLock([run.owner.pubkey], 1))
-      await a.sync()
+      it('should sign 2-3 group lock', async () => {
+        const run2 = new Run()
+        const run3 = new Run()
+        class A extends Jig {
+          init (owner) { this.owner = owner }
+          set () { this.n = 1 }
+        }
 
-      // Sign with pubkey 1 and export tx
-      run.transaction.begin()
-      a.set()
-      await run.transaction.pay()
+        // Create a jig with a 2-3 group owner
+        run.activate()
+        const a = new A(new GroupLock([run.owner.pubkey, run2.owner.pubkey, run3.owner.pubkey], 2))
+        await a.sync()
 
-      // Sign more than once
-      await run.transaction.sign()
-      await run.transaction.sign()
-      await run.transaction.sign()
+        // Sign with pubkey 1 and export tx
+        run.transaction.begin()
+        a.set()
+        await run.transaction.pay()
+        await run.transaction.sign()
+        const tx = run.transaction.export()
+        run.transaction.rollback()
 
-      run.transaction.end()
-      await run.sync()
-    })
+        // Sign with pubkey 2 and broadcast
+        run2.activate()
+        await run2.transaction.import(tx)
+        await run2.transaction.sign()
+        run2.transaction.end()
+        await run2.sync()
+      })
 
-    it('should not sign group lock if not our pubkey', async () => {
-      const run2 = new Run()
-      class A extends Jig {
-        init (owner) { this.owner = owner }
-        set () { this.n = 1 }
-      }
+      it('should not sign group lock if already signed', async () => {
+        class A extends Jig {
+          init (owner) { this.owner = owner }
+          set () { this.n = 1 }
+        }
 
-      // Create a jig with a 2-3 group owner
-      run.activate()
-      const a = new A(new GroupLock([run2.owner.pubkey], 1))
-      await a.sync()
+        // Create a jig with a 2-3 group owner
+        const a = new A(new GroupLock([run.owner.pubkey], 1))
+        await a.sync()
 
-      // Try signing and then export tx
-      run.transaction.begin()
-      a.set()
-      await run.transaction.pay()
-      await run.transaction.sign()
-      const tx = run.transaction.export()
-      run.transaction.rollback()
+        // Sign with pubkey 1 and export tx
+        run.transaction.begin()
+        a.set()
+        await run.transaction.pay()
 
-      // Make sure our transaction is not fully signed
-      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith('tx signature not valid')
+        // Sign more than once
+        await run.transaction.sign()
+        await run.transaction.sign()
+        await run.transaction.sign()
 
-      // Sign with pubkey 2 and broadcast
-      run2.activate()
-      await run2.transaction.import(tx)
-      run2.transaction.end()
-      await run2.sync()
+        run.transaction.end()
+        await run.sync()
+      })
+
+      it('should not sign group lock if not our pubkey', async () => {
+        const run2 = new Run()
+        class A extends Jig {
+          init (owner) { this.owner = owner }
+          set () { this.n = 1 }
+        }
+
+        // Create a jig with a 2-3 group owner
+        run.activate()
+        const a = new A(new GroupLock([run2.owner.pubkey], 1))
+        await a.sync()
+
+        // Try signing and then export tx
+        run.transaction.begin()
+        a.set()
+        await run.transaction.pay()
+        await run.transaction.sign()
+        const tx = run.transaction.export()
+        run.transaction.rollback()
+
+        // Make sure our transaction is not fully signed
+        await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith('tx signature not valid')
+
+        // Sign with pubkey 2 and broadcast
+        run2.activate()
+        await run2.transaction.import(tx)
+        run2.transaction.end()
+        await run2.sync()
+      })
     })
   })
 })
