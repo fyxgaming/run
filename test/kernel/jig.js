@@ -1494,7 +1494,7 @@ describe('Jig', () => {
       }
       class CustomOwner {
         owner () { return new CustomLock() }
-        async sign (tx) { return tx }
+        async sign (rawtx) { return rawtx }
       }
       const run = new Run({ owner: new CustomOwner() })
       class A extends Jig { }

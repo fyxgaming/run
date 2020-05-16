@@ -28,8 +28,8 @@ TwoPlusTwoLock.deps = { asm }
 class TwoPlusTwoKey {
   owner () { return new TwoPlusTwoLock() }
 
-  async sign (tx, utxos) {
-    tx = new bsv.Transaction(tx)
+  async sign (rawtx, utxos) {
+    const tx = new bsv.Transaction(rawtx)
 
     // Sign any TwoPlusTwoLock
     tx.inputs
