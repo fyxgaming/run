@@ -13,6 +13,7 @@ chai.use(chaiAsPromised)
 const { unmangle } = require('../env/unmangle')
 const { Run } = require('../env/config')
 const { BlockchainApi } = Run
+const { RequestFailedError } = Run.errors
 
 // ------------------------------------------------------------------------------------------------
 // BlockchainApi tests
@@ -94,6 +95,14 @@ describe('BlockchainApi', () => {
         expect(() => new BlockchainApi({ timeout: -1 })).to.throw('Invalid timeout: -1')
         expect(() => new BlockchainApi({ timeout: NaN })).to.throw('Invalid timeout: NaN')
       })
+    })
+  })
+
+  describe('fetch', () => {
+    it('should throw RequestFailedError', async () => {
+      const blockchain = new BlockchainApi({ network: 'main' })
+      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
+      await expect(blockchain.fetch(txid)).to.be.rejectedWith(RequestFailedError)
     })
   })
 
