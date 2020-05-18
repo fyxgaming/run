@@ -136,7 +136,7 @@ describe('Blockchain', () => {
       await Promise.all(requests)
     })
 
-    it('should throw if nonexistant', async () => {
+    it.only('should throw if nonexistant', async () => {
       const bad = '0000000000000000000000000000000000000000000000000000000000000000'
       const requests = [bad, bad, bad].map(txid => blockchain.fetch(txid))
       await expect(Promise.all(requests)).to.be.rejectedWith()

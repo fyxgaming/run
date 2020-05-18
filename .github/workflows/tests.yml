@@ -2,6 +2,10 @@ name: tests
 
 on: push
 
+env:
+  PURSE_MAINNET: ${{ secrets.PURSE_MAINNET }}
+  PURSE_TESTNET: ${{ secrets.PURSE_TESTNET }}
+
 jobs:
   mac_tests:
     name: Mac Tests
@@ -65,25 +69,39 @@ jobs:
       env:
         PERF: 1
 
-    - name: Collect Coverage (Testnet)
+    - name: Collect Coverage (Testnet + Run)
       run: |
         env API=run env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+        sleep 5
+      env:
+        NETWORK: test
+
+    - name: Collect Coverage (Testnet + WhatsOnChain)
+      run: |
         sleep 5
         env API=whatsonchain env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
       env:
         NETWORK: test
-        PURSE: ${{ secrets.PURSE_TESTNET }}
 
-    - name: Collect Coverage (Mainnet)
+    - name: Collect Coverage (Mainnet + Run)
       run: |
         env API=run env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+      env:
+        NETWORK: main
+
+    - name: Collect Coverage (Mainnet + MatterCloud)
+      run: |
         sleep 5
         env API=mattercloud env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+      env:
+        NETWORK: main
+
+    - name: Collect Coverage (Mainnet + WhatsOnChain)
+      run: |
         sleep 5
         env API=whatsonchain env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
       env:
         NETWORK: main
-        PURSE: ${{ secrets.PURSE_MAINNET }}
 
     - name: Publish Coverage
       uses: codecov/codecov-action@v1
