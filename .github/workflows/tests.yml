@@ -11,6 +11,7 @@ jobs:
     name: Mac Tests
     runs-on: macos-latest
     timeout-minutes: 5
+    if: ${{ false }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -75,6 +76,7 @@ jobs:
         sleep 5
       env:
         NETWORK: test
+        PURSE: ${{ secrets.PURSE_TESTNET }}
 
     - name: Collect Coverage (Testnet + WhatsOnChain)
       run: |
