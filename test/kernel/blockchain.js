@@ -79,9 +79,10 @@ describe('Blockchain', () => {
     })
 
     it('should throw if mempool conflict', async () => {
-      const utxo = (await blockchain.utxos(purse.script))[0]
-      const tx1 = new Transaction().from(utxo).change(purse.address).sign(purse.bsvPrivateKey)
-      const tx2 = new Transaction().from(utxo).addSafeData('123').sign(purse.bsvPrivateKey)
+      // take 2 utxos to avoid transactions with no change
+      const utxos = (await blockchain.utxos(purse.script)).slice(0, 2)
+      const tx1 = new Transaction().from(utxos).change(purse.address).sign(purse.bsvPrivateKey)
+      const tx2 = new Transaction().from(utxos).addSafeData('123').sign(purse.bsvPrivateKey)
       await blockchain.broadcast(tx1)
       await expect(blockchain.broadcast(tx2)).to.be.rejectedWith(TEST_DATA.mempoolConflict)
     })
@@ -92,26 +93,30 @@ describe('Blockchain', () => {
     })
 
     it('should throw if no outputs', async () => {
-      const utxo = (await blockchain.utxos(purse.script))[0]
-      const tx = new Transaction().from(utxo).sign(purse.bsvPrivateKey)
+      // take 2 utxos to avoid transactions with no change
+      const utxos = (await blockchain.utxos(purse.script)).slice(0, 2)
+      const tx = new Transaction().from(utxos).sign(purse.bsvPrivateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(errors.noOutputs)
     })
 
     it('should throw if fee too low', async () => {
-      const utxo = (await blockchain.utxos(purse.script))[0]
-      const tx = new Transaction().from(utxo).change(purse.address).fee(0).sign(purse.bsvPrivateKey)
+      // take 2 utxos to avoid transactions with no change
+      const utxos = (await blockchain.utxos(purse.script)).slice(0, 2)
+      const tx = new Transaction().from(utxos).change(purse.address).fee(0).sign(purse.bsvPrivateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.feeTooLow)
     })
 
     it('should throw if not signed', async () => {
-      const utxo = (await blockchain.utxos(purse.script))[0]
-      const tx = new Transaction().from(utxo).change(purse.address)
+      // take 2 utxos to avoid transactions with no change
+      const utxos = (await blockchain.utxos(purse.script)).slice(0, 2)
+      const tx = new Transaction().from(utxos).change(purse.address)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.notFullySigned)
     })
 
     it('should throw if duplicate input', async () => {
-      const utxo = (await blockchain.utxos(purse.script))[0]
-      const tx = new Transaction().from(utxo).from(utxo).change(purse.address).sign(purse.bsvPrivateKey)
+      // take 2 utxos to avoid transactions with no change
+      const utxos = (await blockchain.utxos(purse.script)).slice(0, 2)
+      const tx = new Transaction().from(utxos).from(utxos).change(purse.address).sign(purse.bsvPrivateKey)
       await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.duplicateInput)
     })
   })
