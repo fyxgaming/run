@@ -11,7 +11,6 @@ jobs:
     name: Mac Tests
     runs-on: macos-latest
     timeout-minutes: 5
-    if: ${{ false }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -72,38 +71,42 @@ jobs:
 
     - name: Collect Coverage (Testnet + Run)
       run: |
-        env API=run env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
-        sleep 5
+        env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
       env:
         NETWORK: test
+        API: run
         PURSE: ${{ secrets.PURSE_TESTNET }}
 
     - name: Collect Coverage (Testnet + WhatsOnChain)
       run: |
         sleep 5
-        env API=whatsonchain env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+        env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
       env:
         NETWORK: test
+        API: whatsonchain
 
     - name: Collect Coverage (Mainnet + Run)
       run: |
-        env API=run env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+        env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
       env:
         NETWORK: main
+        API: run
 
     - name: Collect Coverage (Mainnet + MatterCloud)
       run: |
         sleep 5
-        env API=mattercloud env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+        env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
       env:
         NETWORK: main
+        API: mattercloud
 
     - name: Collect Coverage (Mainnet + WhatsOnChain)
       run: |
         sleep 5
-        env API=whatsonchain env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
+        env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js
       env:
         NETWORK: main
+        API: whatsonchain
 
     - name: Publish Coverage
       uses: codecov/codecov-action@v1
