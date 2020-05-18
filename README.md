@@ -1,6 +1,6 @@
 # Run
 
-[![Last Commit](https://github.com/runonbitcoin/run/workflows/Last%20Commit/badge.svg)](https://github.com/runonbitcoin/run/actions?query=workflow%3A%22Last+Commit%22) [![Nightly Suite](https://github.com/runonbitcoin/run/workflows/Nightly%20Suite/badge.svg)](https://github.com/runonbitcoin/run/actions?query=workflow%3A%22Nightly+Suite%22) [![codecov](https://codecov.io/gh/runonbitcoin/run/branch/master/graph/badge.svg?token=VPXTBV9CQP)](https://codecov.io/gh/runonbitcoin/sandbox)
+[![tests](https://github.com/runonbitcoin/run/workflows/tests/badge.svg)](https://github.com/runonbitcoin/run/actions) [![codecov](https://codecov.io/gh/runonbitcoin/run/branch/master/graph/badge.svg?token=VPXTBV9CQP)](https://codecov.io/gh/runonbitcoin/sandbox)
 
 ## Commands
 
