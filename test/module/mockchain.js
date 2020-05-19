@@ -30,25 +30,6 @@ mockchain.fund(address, 100000000)
 
 describe('Mockchain', () => {
   describe('block', () => {
-    it('should set blockheight on tx', async () => {
-      const utxo = (await mockchain.utxos(script))[0]
-      const tx = new Transaction().from(utxo).change(address).sign(privkey)
-      await mockchain.broadcast(tx)
-      expect(tx.blockheight).to.equal(-1)
-      mockchain.block()
-      expect(tx.blockheight).to.equal(unmangle(mockchain)._height)
-    })
-
-    it('should set spentHeight on outputs', async () => {
-      const utxo = (await mockchain.utxos(script))[0]
-      const tx = new Transaction().from(utxo).change(address).sign(privkey)
-      await mockchain.broadcast(tx)
-      const prevtx = await mockchain.fetch(utxo.txid)
-      expect(prevtx.outputs[utxo.vout].spentHeight).to.equal(-1)
-      mockchain.block()
-      expect(tx.blockheight).to.equal(unmangle(mockchain)._height)
-    })
-
     it('should respect 25 chain limit', async () => {
       for (let i = 0; i < 25; i++) {
         const utxo = (await mockchain.utxos(script))[0]

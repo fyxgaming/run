@@ -127,14 +127,6 @@ describe('Blockchain', () => {
       expect(tx.hash).to.equal(TEST_DATA.confirmed.txid)
     })
 
-    it('should set time', async () => {
-      const tx = await blockchain.fetch(TEST_DATA.confirmed.txid)
-      expect(tx.time).not.to.equal(undefined)
-      expect(tx.time > new Date('January 3, 2009')).to.equal(true)
-      expect(tx.time <= Date.now()).to.equal(true)
-      expect(tx.time).to.equal(TEST_DATA.confirmed.time)
-    })
-
     it('should cache repeated calls', async () => {
       const requests = []
       for (let i = 0; i < 100; i++) requests.push(blockchain.fetch(TEST_DATA.confirmed.txid))
@@ -160,7 +152,6 @@ describe('Blockchain', () => {
       expect(tx3.outputs[0].spentTxId).to.be.oneOf([undefined, null])
       expect(tx3.outputs[0].spentIndex).to.be.oneOf([undefined, null])
       expect(tx3.outputs[0].spentHeight).to.be.oneOf([undefined, null])
-      expect(tx3.confirmations).to.equal(0)
     })
 
     it('should set spent information for spent unconfirmed tx', async () => {
@@ -182,11 +173,6 @@ describe('Blockchain', () => {
         expect(tx.outputs[n].spentIndex).to.be.oneOf([undefined, output.spentIndex])
         expect(tx.outputs[n].spentHeight).to.be.oneOf([undefined, output.spentHeight])
       })
-      if (TEST_DATA.confirmed.blockhash) {
-        expect(tx.blockhash).to.equal(TEST_DATA.confirmed.blockhash)
-        expect(tx.blocktime).to.equal(TEST_DATA.confirmed.blocktime)
-        expect(tx.confirmations > TEST_DATA.confirmed.minConfirmations).to.equal(true)
-      }
     })
 
     it('should cache spent info when force fetch', async () => {
@@ -245,6 +231,18 @@ describe('Blockchain', () => {
       expect(utxos.length > 1220).to.equal(true)
     })
   })
+
+  describe('time', () => {
+    it.skip('should return transaction time', async () => {
+      const tx = await blockchain.fetch(TEST_DATA.confirmed.txid)
+      expect(tx.time).not.to.equal(undefined)
+      expect(tx.time > new Date('January 3, 2009')).to.equal(true)
+      expect(tx.time <= Date.now()).to.equal(true)
+      expect(tx.time).to.equal(TEST_DATA.confirmed.time)
+    })
+
+    // TODO
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
@@ -277,8 +275,8 @@ async function getMockNetworkTestData (run) {
     time: tx1.time,
     outputIndex: 1,
     vout: [
-      { spentTxId: null, spentIndex: null, spentHeight: null },
-      { spentTxId: tx2.hash, spentIndex: 0, spentHeight: tx2.blockheight }
+      { spentTxId: null, spentIndex: null },
+      { spentTxId: tx2.hash, spentIndex: 0 }
     ]
   }
 
@@ -298,9 +296,6 @@ async function getTestNetworkTestData () {
     txid: '883bcccba28ca185b4d20b90f344f32f7fd9e273f962f661a48cea0849609443',
     time: 1583295191000,
     outputIndex: 0,
-    blockhash: '00000000a95abd6a8d6fed34c0fb07b9ef5c51daa9832a43db98b63d52d8394c',
-    blocktime: 1583295191,
-    minConfirmations: 3,
     vout: [{
       spentTxId: '4350cf2aac66a2b3aef840af70f4fcfddcd85ccc3cb0e3aa62febb2cbfa91e53',
       spentIndex: 0,
@@ -319,9 +314,6 @@ async function getMainNetworkTestData () {
     txid: '8b580cd23c2d2cb0236b888a977a19153eaa9f5ff50b40876699738e747e87ef',
     time: 1583296480000,
     outputIndex: 0,
-    blockhash: '0000000000000000013cd2f234ed8048b58f04e1c3e739be5c1b44518f3f52ce',
-    blocktime: 1583296480,
-    minConfirmations: 3,
     vout: [{
       spentTxId: 'd1506c004f263e351cf0884407bf7665979c45b63266311eb414e6c2682536f5',
       spentIndex: 0,
