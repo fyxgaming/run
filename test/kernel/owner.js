@@ -50,7 +50,7 @@ describe('Owner', () => {
 
         owner () { return this.addr(this.n++) }
 
-        async sign (rawtx, utxos) {
+        async sign (rawtx, parents, locks) {
           const tx = new Transaction(rawtx)
           for (let i = 0; i < this.n; i++) {
             tx.sign(this.master.deriveChild(i).privateKey)
@@ -105,11 +105,11 @@ describe('Owner', () => {
       class CustomOwner {
         owner () { return new OnePlusOneLock() }
 
-        async sign (rawtx, utxos) {
+        async sign (rawtx, parents, locks) {
           const tx = new Transaction(rawtx)
 
           tx.inputs
-            .filter((_, n) => utxos[n] && utxos[n].lock instanceof OnePlusOneLock)
+            .filter((_, n) => locks[n] instanceof OnePlusOneLock)
             .forEach(input => input.setScript('OP_2'))
 
           return tx.toString('hex')
@@ -142,11 +142,11 @@ describe('Owner', () => {
       class CustomOwner {
         owner () { return new OnePlusOneLock() }
 
-        async sign (rawtx, utxos) {
+        async sign (rawtx, parents, locks) {
           const tx = new Transaction(rawtx)
 
           tx.inputs
-            .filter((_, n) => utxos[n] && utxos[n].lock instanceof OnePlusOneLock)
+            .filter((_, n) => locks[n] instanceof OnePlusOneLock)
             .forEach(input => input.setScript('OP_3'))
 
           return tx.toString('hex')

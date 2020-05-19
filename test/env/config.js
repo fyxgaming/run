@@ -74,11 +74,11 @@ if (COVER) {
 const { _populatePreviousOutputs } = util
 
 async function payFor (tx, run) {
-  const txhex = tx.toString('hex')
+  const rawtx = tx.toString('hex')
   const prevtxids = tx.inputs.map(input => input.prevTxId.toString('hex'))
   const prevtxs = await Promise.all(prevtxids.map(txid => run.blockchain.fetch(txid)))
-  const utxos = tx.inputs.map((input, n) => prevtxs[n].outputs[input.outputIndex])
-  const paidhex = await run.purse.pay(txhex, utxos)
+  const parents = tx.inputs.map((input, n) => prevtxs[n].outputs[input.outputIndex])
+  const paidhex = await run.purse.pay(rawtx, parents)
   const paidtx = new Transaction(paidhex)
   await _populatePreviousOutputs(paidtx, run.blockchain)
   return paidtx

@@ -125,7 +125,7 @@ describe('LocalOwner', () => {
       a.set()
       const tx = run.transaction.export()
       const prevtx = await run.blockchain.fetch(a.origin.slice(0, 64))
-      const signed = await run.owner.sign(tx.toString('hex'), [prevtx.outputs[2]])
+      const signed = await run.owner.sign(tx.toString('hex'), [prevtx.outputs[2]], [])
       expect(new Transaction(signed).inputs[0].script.toBuffer().length > 0).to.equal(true)
       run.transaction.rollback()
     })
