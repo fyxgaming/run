@@ -9,7 +9,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { HDPrivateKey } = require('bsv')
+const { HDPrivateKey, Transaction } = require('bsv')
 const { Run } = require('../env/config')
 const { network } = Run.defaults
 const { Jig, PayServer } = Run
@@ -52,6 +52,34 @@ describe('PayServer', () => {
       class A extends Jig { f () { this.n = 1 } }
       const a = new A()
       a.f()
+      await run.sync()
+    })
+
+    it('should pay for non-standard inputs', async () => {
+      class CustomLock {
+        script () { return new Uint8Array([0x01]) }
+        domain () { return 1 }
+      }
+      class CustomKey {
+        owner () { return new CustomLock() }
+        sign (rawtx, parents) {
+          const tx = new Transaction(rawtx)
+          parents[0].lock && tx.inputs[0].setScript('OP_1')
+          return tx.toString('hex')
+        }
+      }
+      const purse = new PayServer(apiKey)
+      const run = new Run({ purse, owner: new CustomKey() })
+      class A extends Jig {
+        send (to) { this.owner = to }
+      }
+      A.deps = { CustomLock }
+      run.transaction.begin()
+      const a = new A()
+      a.send(new CustomLock())
+      run.transaction.end()
+      await run.sync()
+      a.send(new CustomLock())
       await run.sync()
     })
 
