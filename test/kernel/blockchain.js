@@ -13,68 +13,6 @@ const { expect } = chai
 const { Run } = require('../env/config')
 const { PrivateKey, Script, Transaction } = bsv
 
-// Create a transaction with a new random txid
-const randomTx = () => new Transaction().addSafeData(Math.random().toString())
-
-// Error messages
-const ERR_NO_INPUTS = 'tx has no inputs'
-const ERR_NO_OUTPUTS = 'tx has no outputs'
-const ERR_FEE_TOO_LOW = 'tx fee too low'
-const ERR_NOT_SIGNED = 'tx not fully signed'
-const ERR_DUP_INPUT = /transaction input [0-9]* duplicate input/
-const ERR_MISSING_INPUTS = 'Missing inputs'
-const ERR_MEMPOOL_CONFLICT = 'txn-mempool-conflict'
-const ERR_BAD_SIGNATURE = 'tx signature not valid'
-const ERR_TX_NOT_FOUND = 'tx not found'
-
-// Gets a txid that spent output 0 and is confirmed
-async function spentAndConfirmed (blockchain) {
-  switch (blockchain.network) {
-    case 'main': return '8b580cd23c2d2cb0236b888a977a19153eaa9f5ff50b40876699738e747e87ef'
-    case 'test': return '883bcccba28ca185b4d20b90f344f32f7fd9e273f962f661a48cea0849609443'
-    case 'mock': {
-      const privkey = new PrivateKey('testnet')
-      const addr = privkey.toAddress().toString()
-      const aid = blockchain.fund(addr, 10000)
-      const araw = await blockchain.fetch(aid)
-      const atx = new Transaction(araw)
-      const aout = atx.outputs[1]
-      const autxo = { txid: aid, vout: 1, script: aout.script, satoshis: aout.satoshis }
-      const btx = new Transaction().from(autxo).change(addr).sign(privkey)
-      const braw = btx.toString('hex')
-      await blockchain.broadcast(braw)
-      blockchain.block()
-      return aid
-    }
-    default: throw new Error(`No confirmed tx set for network: ${blockchain.network}`)
-  }
-}
-
-async function addressWithManyUtxos (blockchain) {
-  switch (blockchain.network) {
-    case 'main': return '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
-    case 'test': return 'mxAtZKePTbXJC6GkbDV5SePyHANUswfhKK'
-    case 'mock': {
-      const privkey = new PrivateKey()
-      const addr = privkey.toAddress()
-      const fundid = blockchain.fund(addr, 100000000)
-      const fundraw = await blockchain.fetch(fundid)
-      const fundtx = new Transaction(fundraw)
-      const fundout = fundtx.outputs[1]
-      const fundutxo = { txid: fundid, vout: 1, script: fundout.script, satoshis: fundout.satoshis }
-      const largetx = randomTx()
-      largetx.from(fundutxo)
-      for (let i = 0; i < 1500; i++) {
-        largetx.to(addr, Transaction.DUST_AMOUNT)
-      }
-      largetx.sign(privkey)
-      const largeraw = largetx.toString('hex')
-      await blockchain.broadcast(largeraw)
-      return addr
-    }
-  }
-}
-
 // ------------------------------------------------------------------------------------------------
 // Blockchain tests
 // ------------------------------------------------------------------------------------------------
@@ -306,5 +244,71 @@ describe('Blockchain', () => {
     })
   })
 })
+
+// ------------------------------------------------------------------------------------------------
+// Helpers
+// ------------------------------------------------------------------------------------------------
+
+// Create a transaction with a new random txid
+const randomTx = () => new Transaction().addSafeData(Math.random().toString())
+
+// Error messages
+const ERR_NO_INPUTS = 'tx has no inputs'
+const ERR_NO_OUTPUTS = 'tx has no outputs'
+const ERR_FEE_TOO_LOW = 'tx fee too low'
+const ERR_NOT_SIGNED = 'tx not fully signed'
+const ERR_DUP_INPUT = /transaction input [0-9]* duplicate input/
+const ERR_MISSING_INPUTS = 'Missing inputs'
+const ERR_MEMPOOL_CONFLICT = 'txn-mempool-conflict'
+const ERR_BAD_SIGNATURE = 'tx signature not valid'
+const ERR_TX_NOT_FOUND = 'tx not found'
+
+// Gets a txid that spent output 0 and is confirmed
+async function spentAndConfirmed (blockchain) {
+  switch (blockchain.network) {
+    case 'main': return '8b580cd23c2d2cb0236b888a977a19153eaa9f5ff50b40876699738e747e87ef'
+    case 'test': return '883bcccba28ca185b4d20b90f344f32f7fd9e273f962f661a48cea0849609443'
+    case 'mock': {
+      const privkey = new PrivateKey('testnet')
+      const addr = privkey.toAddress().toString()
+      const aid = blockchain.fund(addr, 10000)
+      const araw = await blockchain.fetch(aid)
+      const atx = new Transaction(araw)
+      const aout = atx.outputs[1]
+      const autxo = { txid: aid, vout: 1, script: aout.script, satoshis: aout.satoshis }
+      const btx = new Transaction().from(autxo).change(addr).sign(privkey)
+      const braw = btx.toString('hex')
+      await blockchain.broadcast(braw)
+      blockchain.block()
+      return aid
+    }
+    default: throw new Error(`No confirmed tx set for network: ${blockchain.network}`)
+  }
+}
+
+async function addressWithManyUtxos (blockchain) {
+  switch (blockchain.network) {
+    case 'main': return '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
+    case 'test': return 'mxAtZKePTbXJC6GkbDV5SePyHANUswfhKK'
+    case 'mock': {
+      const privkey = new PrivateKey()
+      const addr = privkey.toAddress()
+      const fundid = blockchain.fund(addr, 100000000)
+      const fundraw = await blockchain.fetch(fundid)
+      const fundtx = new Transaction(fundraw)
+      const fundout = fundtx.outputs[1]
+      const fundutxo = { txid: fundid, vout: 1, script: fundout.script, satoshis: fundout.satoshis }
+      const largetx = randomTx()
+      largetx.from(fundutxo)
+      for (let i = 0; i < 1500; i++) {
+        largetx.to(addr, Transaction.DUST_AMOUNT)
+      }
+      largetx.sign(privkey)
+      const largeraw = largetx.toString('hex')
+      await blockchain.broadcast(largeraw)
+      return addr
+    }
+  }
+}
 
 // ------------------------------------------------------------------------------------------------
