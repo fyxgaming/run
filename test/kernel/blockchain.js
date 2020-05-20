@@ -55,8 +55,8 @@ async function spentAndConfirmed (blockchain) {
 // ------------------------------------------------------------------------------------------------
 
 describe('Blockchain', () => {
-  describe('broadcast', () => {
-    it.only('should broadcast simple transaction', async () => {
+  describe.only('broadcast', () => {
+    it('should broadcast simple transaction', async () => {
       const run = new Run()
       const tx = randomTx()
       const parents = []
@@ -64,7 +64,7 @@ describe('Blockchain', () => {
       await run.blockchain.broadcast(rawtx)
     })
 
-    it.only('should throw if input never existed', async () => {
+    it('should throw if input never existed', async () => {
       const run = new Run()
       const emptytx = new Transaction()
       const parents = []
@@ -75,7 +75,7 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(badraw)).to.be.rejectedWith(ERR_MISSING_INPUTS)
     })
 
-    it.only('should throw if input is already spent and confirmed', async () => {
+    it('should throw if input is already spent and confirmed', async () => {
       const run = new Run()
       const cid = await spentAndConfirmed(run.blockchain)
       const craw = await run.blockchain.fetch(cid)
@@ -87,7 +87,7 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_MISSING_INPUTS)
     })
 
-    it.only('should throw if input is already spent and not confirmed', async () => {
+    it('should throw if input is already spent and not confirmed', async () => {
       const run = new Run()
       const purseutxos = await run.purse.utxos()
       const utxos = purseutxos.slice(0, 2) // take 2 utxos to always have change
@@ -97,14 +97,14 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(btx)).to.be.rejectedWith(ERR_MEMPOOL_CONFLICT)
     })
 
-    it.only('should throw if no inputs', async () => {
+    it('should throw if no inputs', async () => {
       const run = new Run()
       const dummyaddr = new PrivateKey().toAddress().toString()
       const tx = new Transaction().to(dummyaddr, 1000)
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NO_INPUTS)
     })
 
-    it.only('should throw if no outputs', async () => {
+    it('should throw if no outputs', async () => {
       const run = new Run()
       const purseutxos = await run.purse.utxos()
       const utxos = purseutxos.slice(0, 2) // take 2 utxos to always have change
@@ -112,7 +112,7 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NO_OUTPUTS)
     })
 
-    it.only('should throw if fee too low', async () => {
+    it('should throw if fee too low', async () => {
       const run = new Run()
       const purseutxos = await run.purse.utxos()
       const utxos = purseutxos.slice(0, 2) // take 2 utxos to always have change
@@ -120,7 +120,7 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_FEE_TOO_LOW)
     })
 
-    it.only('should throw if not signed', async () => {
+    it('should throw if not signed', async () => {
       const run = new Run()
       const purseutxos = await run.purse.utxos()
       const utxos = purseutxos.slice(0, 2) // take 2 utxos to always have change
@@ -129,10 +129,11 @@ describe('Blockchain', () => {
     })
 
     it('should throw if duplicate input', async () => {
-      // take 2 utxos to avoid transactions with no change
-      const utxos = (await blockchain.utxos(purse.script)).slice(0, 2)
-      const tx = new Transaction().from(utxos).from(utxos).change(purse.address).sign(purse.bsvPrivateKey)
-      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.duplicateInput)
+      const run = new Run()
+      const purseutxos = await run.purse.utxos()
+      const utxos = purseutxos.slice(0, 2) // take 2 utxos to always have change
+      const tx = new Transaction().from(utxos).from(utxos).change(run.purse.address).sign(run.purse.bsvPrivateKey)
+      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_DUP_INPUT)
     })
   })
 
