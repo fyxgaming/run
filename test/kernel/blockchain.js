@@ -184,9 +184,11 @@ describe('Blockchain', () => {
       expect(typeof utxos[0].satoshis).to.equal('number')
     })
 
-    it('should return empty list if no utxos', async () => {
-      const address = new PrivateKey(purse.bsvPrivateKey.network).toAddress()
-      const utxos = await blockchain.utxos(Script.fromAddress(address))
+    it.only('should return empty list if no utxos', async () => {
+      const run = new Run()
+      const address = new PrivateKey().toAddress()
+      const script = Script.fromAddress(address).toHex()
+      const utxos = await run.blockchain.utxos(script)
       expect(utxos.length).to.equal(0)
     })
 
