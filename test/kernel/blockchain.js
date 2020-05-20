@@ -26,6 +26,7 @@ const ERR_NOT_SIGNED = 'tx not fully signed'
 const ERR_DUP_INPUT = /transaction input [0-9]* duplicate input/
 const ERR_MISSING_INPUTS = 'Missing inputs'
 const ERR_MEMPOOL_CONFLICT = 'txn-mempool-conflict'
+const ERR_BAD_SIGNATURE = 'tx signature not valid'
 
 // Gets a txid that spent output 0 and is confirmed
 async function spentAndConfirmed (blockchain) {
@@ -89,10 +90,9 @@ describe('Blockchain', () => {
 
     it('should throw if input is already spent and not confirmed', async () => {
       const run = new Run()
-      const purseutxos = await run.purse.utxos()
-      const utxos = purseutxos.slice(0, 2) // take 2 utxos to always have change
-      const atx = new Transaction().from(utxos).change(run.purse.address).sign(run.purse.bsvPrivateKey)
-      const btx = new Transaction().from(utxos).addSafeData('hello').sign(run.purse.bsvPrivateKey)
+      const utxos = await run.purse.utxos()
+      const atx = new Transaction().from(utxos).addData('1').sign(run.purse.bsvPrivateKey)
+      const btx = new Transaction().from(utxos).addData('2').sign(run.purse.bsvPrivateKey)
       await run.blockchain.broadcast(atx)
       await expect(run.blockchain.broadcast(btx)).to.be.rejectedWith(ERR_MEMPOOL_CONFLICT)
     })
@@ -106,34 +106,38 @@ describe('Blockchain', () => {
 
     it('should throw if no outputs', async () => {
       const run = new Run()
-      const purseutxos = await run.purse.utxos()
-      const utxos = purseutxos.slice(0, 2) // take 2 utxos to always have change
+      const utxos = await run.purse.utxos()
       const tx = new Transaction().from(utxos).sign(run.purse.bsvPrivateKey)
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NO_OUTPUTS)
     })
 
     it('should throw if fee too low', async () => {
       const run = new Run()
-      const purseutxos = await run.purse.utxos()
-      const utxos = purseutxos.slice(0, 2) // take 2 utxos to always have change
+      const utxos = await run.purse.utxos()
       const tx = new Transaction().from(utxos).change(run.purse.address).fee(0).sign(run.purse.bsvPrivateKey)
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_FEE_TOO_LOW)
     })
 
     it('should throw if not signed', async () => {
       const run = new Run()
-      const purseutxos = await run.purse.utxos()
-      const utxos = purseutxos.slice(0, 2) // take 2 utxos to always have change
-      const tx = new Transaction().from(utxos).change(run.purse.address)
+      const utxos = await run.purse.utxos()
+      const tx = new Transaction().from(utxos).addData('')
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NOT_SIGNED)
     })
 
     it('should throw if duplicate input', async () => {
       const run = new Run()
-      const purseutxos = await run.purse.utxos()
-      const utxos = purseutxos.slice(0, 2) // take 2 utxos to always have change
-      const tx = new Transaction().from(utxos).from(utxos).change(run.purse.address).sign(run.purse.bsvPrivateKey)
+      const utxos = await run.purse.utxos()
+      const tx = new Transaction().from(utxos).from(utxos).addData('').sign(run.purse.bsvPrivateKey)
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_DUP_INPUT)
+    })
+
+    it('should throw if bad signature', async () => {
+      const run = new Run()
+      const utxos = await run.purse.utxos()
+      const tx = new Transaction().from(utxos).addData('')
+      tx.inputs[0].setScript('OP_FALSE')
+      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_BAD_SIGNATURE)
     })
   })
 
