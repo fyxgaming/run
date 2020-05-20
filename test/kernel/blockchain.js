@@ -1,7 +1,7 @@
 /**
  * blockchain.js
  *
- * Blockchain API tests that should work across all blockchain implementations.
+ * Blockchain API tests that should work across all blockchain implementations
  */
 
 const bsv = require('bsv')
@@ -17,7 +17,6 @@ const { Jig, BlockchainApi } = Run
 // Helpers
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 const randomTx = () => new Transaction().addSafeData(Math.random().toString())
-const randomRawTx = () => randomTx().toString('hex')
 
 // Error messages
 const ERR_NO_INPUTS = 'tx has no inputs'
@@ -28,7 +27,7 @@ const ERR_DUP_INPUT = /transaction input [0-9]* duplicate input/
 const ERR_MISSING_INPUTS = 'Missing inputs'
 const ERR_MEMPOOL_CONFLICT = 'txn-mempool-conflict'
 
-// Gets a confirmed txid
+// Gets a txid that spent output 0 and is confirmed
 async function spentAndConfirmed (blockchain) {
   switch (blockchain.network) {
     case 'main': return '8b580cd23c2d2cb0236b888a977a19153eaa9f5ff50b40876699738e747e87ef'
@@ -65,7 +64,7 @@ describe('Blockchain', () => {
       await run.blockchain.broadcast(rawtx)
     })
 
-    it.only('should throw missing inputs error if input never existed', async () => {
+    it.only('should throw if input never existed', async () => {
       const run = new Run()
       const emptytx = new Transaction()
       const parents = []
@@ -76,7 +75,7 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(badraw)).to.be.rejectedWith(ERR_MISSING_INPUTS)
     })
 
-    it.only('should throw missing inputs error if input is already spent and confirmed', async () => {
+    it.only('should throw if input is already spent and confirmed', async () => {
       const run = new Run()
       const cid = await spentAndConfirmed(run.blockchain)
       const craw = await run.blockchain.fetch(cid)
@@ -88,7 +87,7 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_MISSING_INPUTS)
     })
 
-    it.only('should throw mempool conflict error if input is already spent and not confirmed', async () => {
+    it.only('should throw if input is already spent and not confirmed', async () => {
       const run = new Run()
       const purseutxos = await run.purse.utxos()
       const utxos = purseutxos.slice(0, 2)
@@ -98,9 +97,11 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(btx)).to.be.rejectedWith(ERR_MEMPOOL_CONFLICT)
     })
 
-    it('should throw if no inputs', async () => {
-      const tx = new Transaction().to(purse.address, 100)
-      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.noInputs)
+    it.only('should throw if no inputs', async () => {
+      const run = new Run()
+      const dummyaddr = new PrivateKey().toAddress().toString()
+      const tx = new Transaction().to(dummyaddr, 1000)
+      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NO_INPUTS)
     })
 
     it('should throw if no outputs', async () => {
