@@ -112,11 +112,12 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NO_OUTPUTS)
     })
 
-    it('should throw if fee too low', async () => {
-      // take 2 utxos to avoid transactions with no change
-      const utxos = (await blockchain.utxos(purse.script)).slice(0, 2)
-      const tx = new Transaction().from(utxos).change(purse.address).fee(0).sign(purse.bsvPrivateKey)
-      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.feeTooLow)
+    it.only('should throw if fee too low', async () => {
+      const run = new Run()
+      const purseutxos = await run.purse.utxos()
+      const utxos = purseutxos.slice(0, 2) // take 2 utxos to always have change
+      const tx = new Transaction().from(utxos).change(run.purse.address).fee(0).sign(run.purse.bsvPrivateKey)
+      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_FEE_TOO_LOW)
     })
 
     it('should throw if not signed', async () => {
