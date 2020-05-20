@@ -27,6 +27,7 @@ const ERR_DUP_INPUT = /transaction input [0-9]* duplicate input/
 const ERR_MISSING_INPUTS = 'Missing inputs'
 const ERR_MEMPOOL_CONFLICT = 'txn-mempool-conflict'
 const ERR_BAD_SIGNATURE = 'tx signature not valid'
+const ERR_TX_NOT_FOUND = 'tx not found'
 
 // Gets a txid that spent output 0 and is confirmed
 async function spentAndConfirmed (blockchain) {
@@ -142,7 +143,7 @@ describe('Blockchain', () => {
   })
 
   describe('fetch', () => {
-    it.only('should get pre-existing transaction', async () => {
+    it.only('should get transaction', async () => {
       const run = new Run()
       const cid = await spentAndConfirmed(run.blockchain)
       const rawtx = await run.blockchain.fetch(cid)
@@ -150,16 +151,24 @@ describe('Blockchain', () => {
       expect(tx.hash).to.equal(cid)
     })
 
-    it('should cache repeated calls', async () => {
-      const requests = []
-      for (let i = 0; i < 100; i++) requests.push(blockchain.fetch(TEST_DATA.confirmed.txid))
-      await Promise.all(requests)
+    it.only('should throw if nonexistant', async () => {
+      const run = new Run()
+      const badid = '0000000000000000000000000000000000000000000000000000000000000000'
+      await expect(run.blockchain.fetch(badid)).to.be.rejectedWith(ERR_TX_NOT_FOUND)
     })
 
-    it('should throw if nonexistant', async () => {
-      const bad = '0000000000000000000000000000000000000000000000000000000000000000'
-      const requests = [bad, bad, bad].map(txid => blockchain.fetch(txid))
-      await expect(Promise.all(requests)).to.be.rejectedWith()
+    it.only('should dedup requests', async () => {
+      const run = new Run()
+      const goodid = await spentAndConfirmed(run.blockchain)
+      const badid = '0000000000000000000000000000000000000000000000000000000000000000'
+      const good = []
+      const bad = []
+      for (let i = 0; i < 1000; i++) {
+        good.push(run.blockchain.fetch(goodid))
+        bad.push(run.blockchain.fetch(badid))
+      }
+      await Promise.all(good)
+      await expect(Promise.all(bad)).to.be.rejectedWith(ERR_TX_NOT_FOUND)
     })
 
     it('should set spent information for unspent unconfirmed tx', async () => {
