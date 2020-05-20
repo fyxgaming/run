@@ -142,9 +142,12 @@ describe('Blockchain', () => {
   })
 
   describe('fetch', () => {
-    it('should get pre-existing transaction', async () => {
-      const tx = await blockchain.fetch(TEST_DATA.confirmed.txid)
-      expect(tx.hash).to.equal(TEST_DATA.confirmed.txid)
+    it.only('should get pre-existing transaction', async () => {
+      const run = new Run()
+      const cid = await spentAndConfirmed(run.blockchain)
+      const rawtx = await run.blockchain.fetch(cid)
+      const tx = new Transaction(rawtx)
+      expect(tx.hash).to.equal(cid)
     })
 
     it('should cache repeated calls', async () => {
