@@ -5,17 +5,15 @@
  */
 
 const bsv = require('bsv')
-const { describe, it, before } = require('mocha')
+const { describe, it } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
-const { Run, payFor } = require('../env/config')
+const { Run } = require('../env/config')
 const { PrivateKey, Script, Transaction } = bsv
-const { Jig, BlockchainApi } = Run
 
-// Helpers
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+// Create a transaction with a new random txid
 const randomTx = () => new Transaction().addSafeData(Math.random().toString())
 
 // Error messages
@@ -82,12 +80,22 @@ async function addressWithManyUtxos (blockchain) {
 // ------------------------------------------------------------------------------------------------
 
 describe('Blockchain', () => {
-  describe.only('broadcast', () => {
+  describe('broadcast', () => {
     it('should broadcast simple transaction', async () => {
       const run = new Run()
       const tx = randomTx()
       const parents = []
       const rawtx = await run.purse.pay(tx, parents)
+      await run.blockchain.broadcast(rawtx)
+      await run.blockchain.broadcast(rawtx)
+    })
+
+    it('should support broadcasting same transaction twice', async () => {
+      const run = new Run()
+      const tx = randomTx()
+      const parents = []
+      const rawtx = await run.purse.pay(tx, parents)
+      await run.blockchain.broadcast(rawtx)
       await run.blockchain.broadcast(rawtx)
     })
 
@@ -167,7 +175,7 @@ describe('Blockchain', () => {
     })
   })
 
-  describe.only('fetch', () => {
+  describe('fetch', () => {
     it('should get raw transaction', async () => {
       const run = new Run()
       const cid = await spentAndConfirmed(run.blockchain)
@@ -198,7 +206,7 @@ describe('Blockchain', () => {
     })
   })
 
-  describe.only('utxos', () => {
+  describe('utxos', () => {
     it('should return utxos', async () => {
       const run = new Run()
       const utxos = await run.blockchain.utxos(run.purse.script)
@@ -256,7 +264,7 @@ describe('Blockchain', () => {
     })
   })
 
-  describe.only('spends', () => {
+  describe('spends', () => {
     it('should return spending txid or null', async () => {
       const run = new Run()
       const tx = randomTx()
@@ -270,7 +278,7 @@ describe('Blockchain', () => {
       expect(await run.blockchain.spends(prevtxid, prevvout)).to.equal(paidtx.hash)
     })
 
-    it('should throw if location is not found', async () => {
+    it('should throw if location not found', async () => {
       const run = new Run()
       const badid = '0000000000000000000000000000000000000000000000000000000000000000'
       await expect(run.blockchain.spends(badid, 0)).to.be.rejected
@@ -278,111 +286,25 @@ describe('Blockchain', () => {
   })
 
   describe('time', () => {
-    it.skip('should return transaction time', async () => {
-      const tx = await blockchain.fetch(TEST_DATA.confirmed.txid)
-      expect(tx.time).not.to.equal(undefined)
-      expect(tx.time > new Date('January 3, 2009')).to.equal(true)
-      expect(tx.time <= Date.now()).to.equal(true)
-      expect(tx.time).to.equal(TEST_DATA.confirmed.time)
+    it('should return transaction time', async () => {
+      const run = new Run()
+      const tx = randomTx()
+      const parents = []
+      const paidraw = await run.purse.pay(tx, parents)
+      await run.blockchain.broadcast(paidraw)
+      const paidtx = new Transaction(paidraw)
+      const time = await run.blockchain.time(paidtx.hash)
+      expect(typeof time).to.equal('number')
+      expect(time > new Date('January 3, 2009')).to.equal(true)
+      expect(time <= Date.now()).to.equal(true)
     })
 
-    // TODO
+    it('should throw if txid not found', async () => {
+      const run = new Run()
+      const badid = '0000000000000000000000000000000000000000000000000000000000000000'
+      await expect(run.blockchain.time(badid)).to.be.rejected
+    })
   })
 })
-
-// ------------------------------------------------------------------------------------------------
-// Per-network test data
-// ------------------------------------------------------------------------------------------------
-
-async function getTestData (run) {
-  /*
-  switch (run.blockchain.network) {
-    case 'mock': return getMockNetworkTestData(run)
-    case 'test': return getTestNetworkTestData()
-    case 'main': return getMainNetworkTestData()
-    default: throw new Error(`No test data for network: ${run.blockchain.network}`)
-  }
-  */
-}
-
-async function getMockNetworkTestData (run) {
-  const { blockchain, purse } = run
-  const utxo1 = (await blockchain.utxos(purse.script))[0]
-  const tx1 = new Transaction().from(utxo1).addSafeData('123').change(purse.address).sign(purse.bsvPrivateKey)
-  await blockchain.broadcast(tx1)
-
-  const utxo2 = { txid: tx1.hash, vout: 1, script: tx1.outputs[1].script, satoshis: tx1.outputs[1].satoshis }
-  const tx2 = randomTx().from(utxo2).change(purse.address).sign(purse.bsvPrivateKey)
-  await blockchain.broadcast(tx2)
-
-  blockchain.block()
-
-  const confirmed = {
-    txid: tx1.hash,
-    time: tx1.time,
-    outputIndex: 1,
-    vout: [
-      { spentTxId: null, spentIndex: null },
-      { spentTxId: tx2.hash, spentIndex: 0 }
-    ]
-  }
-
-  const indexingLatency = 0
-
-  const largeTx = randomTx()
-  const largeAddress = new PrivateKey('testnet').toAddress()
-  for (let i = 0; i < 1500; i++) largeTx.to(largeAddress, Transaction.DUST_AMOUNT)
-  await blockchain.broadcast(await payFor(largeTx, run))
-  const lockingScriptWithManyUtxos = Script.fromAddress(largeAddress)
-
-  return { confirmed, indexingLatency, errors, lockingScriptWithManyUtxos }
-}
-
-async function getTestNetworkTestData () {
-  const confirmed = {
-    txid: '883bcccba28ca185b4d20b90f344f32f7fd9e273f962f661a48cea0849609443',
-    time: 1583295191000,
-    outputIndex: 0,
-    vout: [{
-      spentTxId: '4350cf2aac66a2b3aef840af70f4fcfddcd85ccc3cb0e3aa62febb2cbfa91e53',
-      spentIndex: 0,
-      spentHeight: 1351192
-    }]
-  }
-
-  const indexingLatency = 1000
-  const lockingScriptWithManyUtxos = 'mxAtZKePTbXJC6GkbDV5SePyHANUswfhKK'
-
-  return { confirmed, indexingLatency, errors, lockingScriptWithManyUtxos }
-}
-
-async function getMainNetworkTestData () {
-  const confirmed = {
-    txid: '8b580cd23c2d2cb0236b888a977a19153eaa9f5ff50b40876699738e747e87ef',
-    time: 1583296480000,
-    outputIndex: 0,
-    vout: [{
-      spentTxId: 'd1506c004f263e351cf0884407bf7665979c45b63266311eb414e6c2682536f5',
-      spentIndex: 0,
-      spentHeight: 624716
-    }]
-  }
-
-  const indexingLatency = 1000
-  const lockingScriptWithManyUtxos = '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
-
-  return { confirmed, indexingLatency, errors, lockingScriptWithManyUtxos }
-}
-
-// Expected error strings
-const errors = {
-  noInputs: 'tx has no inputs',
-  noOutputs: 'tx has no outputs',
-  feeTooLow: 'tx fee too low',
-  notFullySigned: 'tx not fully signed',
-  duplicateInput: /transaction input [0-9]* duplicate input/,
-  missingInputs: 'Missing inputs',
-  mempoolConflict: 'txn-mempool-conflict'
-}
 
 // ------------------------------------------------------------------------------------------------

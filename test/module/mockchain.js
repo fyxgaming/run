@@ -11,18 +11,7 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run, PERF } = require('../env/config')
-const { unmangle } = require('../env/unmangle')
 const { Mockchain } = Run
-
-// ------------------------------------------------------------------------------------------------
-// Globals
-// ------------------------------------------------------------------------------------------------
-
-const mockchain = new Mockchain()
-const privkey = new PrivateKey('testnet')
-const address = privkey.toAddress()
-const script = Script.fromAddress(address)
-mockchain.fund(address, 100000000)
 
 // ------------------------------------------------------------------------------------------------
 // Mockchain Functional Tests
@@ -31,12 +20,40 @@ mockchain.fund(address, 100000000)
 describe('Mockchain', () => {
   describe('broadcast', () => {
     it('should support broadcasting bsv transaction', async () => {
-      // TODO
+      const mockchain = new Mockchain()
+      const privkey = new PrivateKey('testnet')
+      const address = privkey.toAddress()
+      const script = Script.fromAddress(address)
+      const fundtxid = mockchain.fund(address, 100000000)
+      const fundraw = await mockchain.fetch(fundtxid)
+      const fundtx = new Transaction(fundraw)
+      const fundout = fundtx.outputs[1]
+      const fundutxo = { txid: fundtxid, vout: 1, satoshis: fundout.satoshis, script: fundout.script}
+      const tx = new Transaction().from(fundutxo).change(address).sign(privkey)
+      await mockchain.broadcast(tx)
+    })
+  })
+
+  describe('utxos', () => {
+    it('should support querying by address and bsv script', async () => {
+      const mockchain = new Mockchain()
+      const privkey = new PrivateKey('testnet')
+      const address = privkey.toAddress()
+      const script = Script.fromAddress(address)
+      await mockchain.utxos(address)
+      await mockchain.utxos(address.toString())
+      await mockchain.utxos(script)
     })
   })
 
   describe('block', () => {
     it('should respect 25 chain limit', async () => {
+      const mockchain = new Mockchain()
+      const privkey = new PrivateKey('testnet')
+      const address = privkey.toAddress()
+      const script = Script.fromAddress(address)
+      mockchain.fund(address, 100000000)
+
       for (let i = 0; i < 25; i++) {
         const utxo = (await mockchain.utxos(script))[0]
         const tx = new Transaction().from(utxo).change(address).sign(privkey)
@@ -52,6 +69,7 @@ describe('Mockchain', () => {
 
   describe('fund', () => {
     it('should directly fund address with amount', async () => {
+      const mockchain = new Mockchain()
       const address = new PrivateKey('testnet').toAddress()
       const txid = mockchain.fund(address, 10000)
       const utxos = await mockchain.utxos(Script.fromAddress(address))
@@ -67,6 +85,12 @@ describe('Mockchain', () => {
 if (PERF) {
   describe('Mockchain Performance', () => {
     it('should support fast broadcsts', async () => {
+      const mockchain = new Mockchain()
+      const privkey = new PrivateKey('testnet')
+      const address = privkey.toAddress()
+      const script = Script.fromAddress(address)
+      mockchain.fund(address, 100000000)
+
       const utxo = (await mockchain.utxos(script))[0]
       const start = new Date()
       const tx = new Transaction().from(utxo).change(address).sign(privkey)
@@ -75,6 +99,12 @@ if (PERF) {
     })
 
     it('should support fast fetches', async () => {
+      const mockchain = new Mockchain()
+      const privkey = new PrivateKey('testnet')
+      const address = privkey.toAddress()
+      const script = Script.fromAddress(address)
+      mockchain.fund(address, 100000000)
+
       let utxo = (await mockchain.utxos(script))[0]
       const earlyTxid = utxo.txid
       const measures = []
@@ -88,6 +118,7 @@ if (PERF) {
         measures.push(new Date() - before)
         mockchain.block()
       }
+
       const start = measures.slice(0, 3).reduce((a, b) => a + b, 0) / 3
       const end = measures.slice(measures.length - 3).reduce((a, b) => a + b, 0) / 3
       expect(start < 10).to.equal(true)
@@ -95,6 +126,8 @@ if (PERF) {
     })
 
     it('should support fast utxo queries', async () => {
+      const mockchain = new Mockchain()
+
       // Generate 10 private keys and fund their addresses
       const privateKeys = []
       for (let i = 0; i < 10; i++) { privateKeys.push(new PrivateKey('testnet')) }
