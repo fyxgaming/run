@@ -52,6 +52,31 @@ async function spentAndConfirmed (blockchain) {
   }
 }
 
+async function addressWithManyUtxos (blockchain) {
+  switch (blockchain.network) {
+    case 'main': return '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
+    case 'test': return 'mxAtZKePTbXJC6GkbDV5SePyHANUswfhKK'
+    case 'mock': {
+      const privkey = new PrivateKey()
+      const addr = privkey.toAddress()
+      const fundid = blockchain.fund(addr, 100000000)
+      const fundraw = await blockchain.fetch(fundid)
+      const fundtx = new Transaction(fundraw)
+      const fundout = fundtx.outputs[1]
+      const fundutxo = { txid: fundid, vout: 1, script: fundout.script, satoshis: fundout.satoshis }
+      const largetx = randomTx()
+      largetx.from(fundutxo)
+      for (let i = 0; i < 1500; i++) {
+        largetx.to(addr, Transaction.DUST_AMOUNT)
+      }
+      largetx.sign(privkey)
+      const largeraw = largetx.toString('hex')
+      await blockchain.broadcast(largeraw)
+      return addr
+    }
+  }
+}
+
 // ------------------------------------------------------------------------------------------------
 // Blockchain tests
 // ------------------------------------------------------------------------------------------------
@@ -173,8 +198,8 @@ describe('Blockchain', () => {
     })
   })
 
-  describe('utxos', () => {
-    it.only('should return utxos', async () => {
+  describe.only('utxos', () => {
+    it('should return utxos', async () => {
       const run = new Run()
       const utxos = await run.blockchain.utxos(run.purse.script)
       expect(utxos.length > 0).to.equal(true)
@@ -184,7 +209,7 @@ describe('Blockchain', () => {
       expect(typeof utxos[0].satoshis).to.equal('number')
     })
 
-    it.only('should return empty list if no utxos', async () => {
+    it('should return empty list if no utxos', async () => {
       const run = new Run()
       const address = new PrivateKey().toAddress()
       const script = Script.fromAddress(address).toHex()
@@ -192,7 +217,7 @@ describe('Blockchain', () => {
       expect(utxos.length).to.equal(0)
     })
 
-    it.only('should not return spent outputs', async () => {
+    it('should not return spent outputs', async () => {
       const run = new Run()
       const randomtx = randomTx()
       const paidraw = await run.purse.pay(randomtx, [])
@@ -205,7 +230,7 @@ describe('Blockchain', () => {
       expect(utxos.some(utxo => utxo.txid === paidtx.hash && utxo.vout === 1)).to.equal(true)
     })
 
-    it.only('should cache repeated requests', async () => {
+    it('should cache repeated requests', async () => {
       const run = new Run()
       const requests = []
       for (let i = 0; i < 1000; i++) {
@@ -214,7 +239,7 @@ describe('Blockchain', () => {
       await Promise.all(requests)
     })
 
-    it.only('should throw for invalid queries', async () => {
+    it('should throw for invalid queries', async () => {
       const run = new Run()
       const cases = ['z', '%', [], 123, null, undefined]
       for (const x of cases) {
@@ -223,7 +248,10 @@ describe('Blockchain', () => {
     })
 
     it('should return large number of UTXOS', async () => {
-      const utxos = await blockchain.utxos(TEST_DATA.lockingScriptWithManyUtxos)
+      const run = new Run()
+      const addr = await addressWithManyUtxos(run.blockchain)
+      const script = Script.fromAddress(addr).toHex()
+      const utxos = await run.blockchain.utxos(script)
       expect(utxos.length > 1220).to.equal(true)
     })
   })
