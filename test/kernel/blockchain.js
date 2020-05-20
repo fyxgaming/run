@@ -11,25 +11,51 @@ const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run, payFor } = require('../env/config')
-const { Transaction, Script, PrivateKey } = bsv
+const { PrivateKey, Script, Transaction } = bsv
 const { Jig, BlockchainApi } = Run
 
+// Helpers
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 const randomTx = () => new Transaction().addSafeData(Math.random().toString())
 const randomRawTx = () => randomTx().toString('hex')
+
+// Error messages
+const ERR_NO_INPUTS = 'tx has no inputs'
+const ERR_NO_OUTPUTS = 'tx has no outputs'
+const ERR_FEE_TOO_LOW = 'tx fee too low'
+const ERR_NOT_SIGNED = 'tx not fully signed'
+const ERR_DUP_INPUT = /transaction input [0-9]* duplicate input/
+const ERR_MISSING_INPUTS = 'Missing inputs'
+const ERR_MEMPOOL_CONFLICT = 'txn-mempool-conflict'
+
+// Gets a confirmed txid
+async function spentAndConfirmed (blockchain) {
+  switch (blockchain.network) {
+    case 'main': return '8b580cd23c2d2cb0236b888a977a19153eaa9f5ff50b40876699738e747e87ef'
+    case 'test': return '883bcccba28ca185b4d20b90f344f32f7fd9e273f962f661a48cea0849609443'
+    case 'mock': {
+      const privkey = new PrivateKey('testnet')
+      const addr = privkey.toAddress().toString()
+      const aid = blockchain.fund(addr, 10000)
+      const araw = await blockchain.fetch(aid)
+      const atx = new Transaction(araw)
+      const aout = atx.outputs[1]
+      const autxo = { txid: aid, vout: 1, script: aout.script, satoshis: aout.satoshis }
+      const btx = new Transaction().from(autxo).change(addr).sign(privkey)
+      const braw = btx.toString('hex')
+      await blockchain.broadcast(braw)
+      blockchain.block()
+      return aid
+    }
+    default: throw new Error(`No confirmed tx set for network: ${blockchain.network}`)
+  }
+}
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain tests
 // ------------------------------------------------------------------------------------------------
 
 describe('Blockchain', () => {
-  /*
-  let TEST_DATA = null
-  before(async () => { TEST_DATA = await getTestData(run) })
-
-  const clearCache = () => blockchain instanceof BlockchainApi && blockchain.cache.clear()
-  */
-
   describe('broadcast', () => {
     it.only('should broadcast simple transaction', async () => {
       const run = new Run()
@@ -39,33 +65,27 @@ describe('Blockchain', () => {
       await run.blockchain.broadcast(rawtx)
     })
 
-    it('should throw if input does not exist', async () => {
-      const tx = await payFor(new Transaction(), run)
-      // Remove the signature, and sign again with a new output index
-      tx.inputs[0].outputIndex = 9999
-      tx.inputs[0].setScript('')
-      tx.sign(purse.bsvPrivateKey)
-      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.missingInputs)
+    it.only('should throw missing inputs error if input never existed', async () => {
+      const run = new Run()
+      const emptytx = new Transaction()
+      const parents = []
+      const paidraw = await run.purse.pay(emptytx, parents)
+      const badtx = new Transaction(paidraw)
+      badtx.inputs[0].outputIndex = 9999
+      const badraw = badtx.toString('hex')
+      await expect(run.blockchain.broadcast(badraw)).to.be.rejectedWith(ERR_MISSING_INPUTS)
     })
 
-    it('should throw if already spent in block', async () => {
-      const prevTx = await blockchain.fetch(TEST_DATA.confirmed.txid)
-      const txid = TEST_DATA.confirmed.txid
-      const vout = TEST_DATA.confirmed.outputIndex
-      const script = prevTx.outputs[TEST_DATA.confirmed.outputIndex].script
-      const satoshis = prevTx.outputs[TEST_DATA.confirmed.outputIndex].satoshis
-      const utxo = { txid, vout, script, satoshis }
-      const tx = randomTx().from(utxo).addSafeData('123').change(run.purse.address)
-      const oldIsFullySigned = Transaction.prototype.isFullySigned
-      const oldIsValidSignature = Transaction.prototype.isValidSignature
-      try {
-        Transaction.prototype.isFullySigned = () => true
-        Transaction.prototype.isValidSignature = () => true
-        await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.missingInputs)
-      } finally {
-        Transaction.prototype.isFullySigned = oldIsFullySigned
-        Transaction.prototype.isValidSignature = oldIsValidSignature
-      }
+    it.only('should throw missing inputs error if input is already spent and confirmed', async () => {
+      const run = new Run()
+      const cid = await spentAndConfirmed(run.blockchain)
+      const craw = await run.blockchain.fetch(cid)
+      const ctx = new Transaction(craw)
+      const cout = ctx.outputs[0]
+      const cutxo = { txid: cid, vout: 0, script: cout.script, satoshis: cout.satoshis }
+      const tx = randomTx().from(cutxo)
+      const rawtx = tx.toString('hex')
+      await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_MISSING_INPUTS)
     })
 
     it('should throw if mempool conflict', async () => {
