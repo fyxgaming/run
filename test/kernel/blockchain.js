@@ -120,11 +120,12 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_FEE_TOO_LOW)
     })
 
-    it('should throw if not signed', async () => {
-      // take 2 utxos to avoid transactions with no change
-      const utxos = (await blockchain.utxos(purse.script)).slice(0, 2)
-      const tx = new Transaction().from(utxos).change(purse.address)
-      await expect(blockchain.broadcast(tx)).to.be.rejectedWith(TEST_DATA.errors.notFullySigned)
+    it.only('should throw if not signed', async () => {
+      const run = new Run()
+      const purseutxos = await run.purse.utxos()
+      const utxos = purseutxos.slice(0, 2) // take 2 utxos to always have change
+      const tx = new Transaction().from(utxos).change(run.purse.address)
+      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NOT_SIGNED)
     })
 
     it('should throw if duplicate input', async () => {
