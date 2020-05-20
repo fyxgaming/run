@@ -142,22 +142,23 @@ describe('Blockchain', () => {
     })
   })
 
-  describe('fetch', () => {
-    it.only('should get transaction', async () => {
+  describe.only('fetch', () => {
+    it('should get raw transaction', async () => {
       const run = new Run()
       const cid = await spentAndConfirmed(run.blockchain)
       const rawtx = await run.blockchain.fetch(cid)
+      expect(typeof rawtx).to.equal('string')
       const tx = new Transaction(rawtx)
       expect(tx.hash).to.equal(cid)
     })
 
-    it.only('should throw if nonexistant', async () => {
+    it('should throw if nonexistant', async () => {
       const run = new Run()
       const badid = '0000000000000000000000000000000000000000000000000000000000000000'
       await expect(run.blockchain.fetch(badid)).to.be.rejectedWith(ERR_TX_NOT_FOUND)
     })
 
-    it.only('should dedup requests', async () => {
+    it('should dedup requests', async () => {
       const run = new Run()
       const goodid = await spentAndConfirmed(run.blockchain)
       const badid = '0000000000000000000000000000000000000000000000000000000000000000'
@@ -170,7 +171,52 @@ describe('Blockchain', () => {
       await Promise.all(good)
       await expect(Promise.all(bad)).to.be.rejectedWith(ERR_TX_NOT_FOUND)
     })
+  })
 
+  describe('utxos', () => {
+    it.only('should return utxos', async () => {
+      const run = new Run()
+      const utxos = await run.blockchain.utxos(run.purse.script)
+      expect(utxos.length > 0).to.equal(true)
+      expect(typeof utxos[0].txid).to.equal('string')
+      expect(typeof utxos[0].vout).to.equal('number')
+      expect(typeof utxos[0].script).to.equal('string')
+      expect(typeof utxos[0].satoshis).to.equal('number')
+    })
+
+    it('should return empty list if no utxos', async () => {
+      const address = new PrivateKey(purse.bsvPrivateKey.network).toAddress()
+      const utxos = await blockchain.utxos(Script.fromAddress(address))
+      expect(utxos.length).to.equal(0)
+    })
+
+    it('should not return spent outputs', async () => {
+      const tx = await payFor(randomTx(), run)
+      await blockchain.broadcast(tx)
+      const utxos = await blockchain.utxos(purse.script)
+      expect(utxos.some(utxo => utxo.txid === tx.inputs[0].prevTxId.toString() &&
+        utxo.vout === tx.inputs[0].outputIndex)).to.equal(false)
+      expect(utxos.some(utxo => utxo.txid === tx.hash && utxo.vout === 1)).to.equal(true)
+    })
+
+    it('should cache repeated calls', async () => {
+      const requests = []
+      for (let i = 0; i < 100; i++) requests.push(blockchain.utxos(purse.script))
+      await Promise.all(requests)
+    })
+
+    it('should throw for invalid queries', async () => {
+      const requests = ['z', '%', [], 123, null, undefined].map(x => blockchain.utxos(x))
+      await expect(Promise.all(requests)).to.be.rejected
+    })
+
+    it('should return large number of UTXOS', async () => {
+      const utxos = await blockchain.utxos(TEST_DATA.lockingScriptWithManyUtxos)
+      expect(utxos.length > 1220).to.equal(true)
+    })
+  })
+
+  describe('spend', () => {
     it('should set spent information for unspent unconfirmed tx', async () => {
       const tx = await payFor(randomTx(), run)
       await blockchain.broadcast(tx)
@@ -219,48 +265,6 @@ describe('Blockchain', () => {
       expect(tx1b.outputs[0].spentTxId).to.equal(tx1.outputs[0].spentTxId)
       expect(tx1b.outputs[0].spentIndex).to.equal(tx1.outputs[0].spentIndex)
       expect(tx1b.outputs[0].spentHeight).to.equal(tx1.outputs[0].spentHeight)
-    })
-  })
-
-  describe('utxos', () => {
-    it('should return utxos', async () => {
-      const utxos = await blockchain.utxos(purse.script)
-      expect(utxos.length > 0).to.equal(true)
-      expect(utxos[0].txid).not.to.equal(undefined)
-      expect(utxos[0].vout).not.to.equal(undefined)
-      expect(utxos[0].script).not.to.equal(undefined)
-      expect(utxos[0].satoshis).not.to.equal(undefined)
-    })
-
-    it('should return empty list if no utxos', async () => {
-      const address = new PrivateKey(purse.bsvPrivateKey.network).toAddress()
-      const utxos = await blockchain.utxos(Script.fromAddress(address))
-      expect(utxos.length).to.equal(0)
-    })
-
-    it('should not return spent outputs', async () => {
-      const tx = await payFor(randomTx(), run)
-      await blockchain.broadcast(tx)
-      const utxos = await blockchain.utxos(purse.script)
-      expect(utxos.some(utxo => utxo.txid === tx.inputs[0].prevTxId.toString() &&
-        utxo.vout === tx.inputs[0].outputIndex)).to.equal(false)
-      expect(utxos.some(utxo => utxo.txid === tx.hash && utxo.vout === 1)).to.equal(true)
-    })
-
-    it('should cache repeated calls', async () => {
-      const requests = []
-      for (let i = 0; i < 100; i++) requests.push(blockchain.utxos(purse.script))
-      await Promise.all(requests)
-    })
-
-    it('should throw for invalid queries', async () => {
-      const requests = ['z', '%', [], 123, null, undefined].map(x => blockchain.utxos(x))
-      await expect(Promise.all(requests)).to.be.rejected
-    })
-
-    it('should return large number of UTXOS', async () => {
-      const utxos = await blockchain.utxos(TEST_DATA.lockingScriptWithManyUtxos)
-      expect(utxos.length > 1220).to.equal(true)
     })
   })
 
