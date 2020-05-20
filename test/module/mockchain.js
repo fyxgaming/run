@@ -23,12 +23,11 @@ describe('Mockchain', () => {
       const mockchain = new Mockchain()
       const privkey = new PrivateKey('testnet')
       const address = privkey.toAddress()
-      const script = Script.fromAddress(address)
       const fundtxid = mockchain.fund(address, 100000000)
       const fundraw = await mockchain.fetch(fundtxid)
       const fundtx = new Transaction(fundraw)
       const fundout = fundtx.outputs[1]
-      const fundutxo = { txid: fundtxid, vout: 1, satoshis: fundout.satoshis, script: fundout.script}
+      const fundutxo = { txid: fundtxid, vout: 1, satoshis: fundout.satoshis, script: fundout.script }
       const tx = new Transaction().from(fundutxo).change(address).sign(privkey)
       await mockchain.broadcast(tx)
     })

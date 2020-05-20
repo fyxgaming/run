@@ -19,7 +19,7 @@ const { PrivateKey, Script, Transaction } = bsv
 
 describe('Blockchain', () => {
   describe('broadcast', () => {
-    it('should broadcast simple transaction', async () => {
+    it.only('should broadcast simple transaction', async () => {
       const run = new Run()
       const tx = randomTx()
       const parents = []
