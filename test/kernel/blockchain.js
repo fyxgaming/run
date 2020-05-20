@@ -256,55 +256,24 @@ describe('Blockchain', () => {
     })
   })
 
-  describe('spend', () => {
-    it('should set spent information for unspent unconfirmed tx', async () => {
-      const tx = await payFor(randomTx(), run)
-      await blockchain.broadcast(tx)
-      const tx2 = await blockchain.fetch(tx.hash)
-      expect(tx2.outputs[0].spentTxId).to.equal(null)
-      expect(tx2.outputs[0].spentIndex).to.equal(null)
-      expect(tx2.outputs[0].spentHeight).to.equal(null)
-      await sleep(TEST_DATA.indexingLatency)
-      clearCache()
-      const tx3 = await blockchain.fetch(tx.hash, true)
-      expect(tx3.outputs[0].spentTxId).to.be.oneOf([undefined, null])
-      expect(tx3.outputs[0].spentIndex).to.be.oneOf([undefined, null])
-      expect(tx3.outputs[0].spentHeight).to.be.oneOf([undefined, null])
+  describe.only('spends', () => {
+    it('should return spending txid or null', async () => {
+      const run = new Run()
+      const tx = randomTx()
+      const parents = []
+      const paidraw = await run.purse.pay(tx, parents)
+      await run.blockchain.broadcast(paidraw)
+      const paidtx = new Transaction(paidraw)
+      expect(await run.blockchain.spends(paidtx.hash, 1)).to.equal(null)
+      const prevtxid = paidtx.inputs[0].prevTxId.toString('hex')
+      const prevvout = paidtx.inputs[0].outputIndex
+      expect(await run.blockchain.spends(prevtxid, prevvout)).to.equal(paidtx.hash)
     })
 
-    it('should set spent information for spent unconfirmed tx', async () => {
-      const tx = await payFor(randomTx(), run)
-      await blockchain.broadcast(tx)
-      await sleep(TEST_DATA.indexingLatency)
-      clearCache()
-      const firstInput = tx.inputs[0]
-      const prev = await blockchain.fetch(firstInput.prevTxId.toString('hex'), true)
-      expect(prev.outputs[firstInput.outputIndex].spentTxId).to.be.oneOf([undefined, tx.hash])
-      expect(prev.outputs[firstInput.outputIndex].spentIndex).to.be.oneOf([undefined, 0])
-      expect(prev.outputs[firstInput.outputIndex].spentHeight).to.be.oneOf([undefined, -1])
-    })
-
-    it('should set spent information for spent confirmed tx', async () => {
-      const tx = await blockchain.fetch(TEST_DATA.confirmed.txid)
-      TEST_DATA.confirmed.vout.forEach((output, n) => {
-        expect(tx.outputs[n].spentTxId).to.be.oneOf([undefined, output.spentTxId])
-        expect(tx.outputs[n].spentIndex).to.be.oneOf([undefined, output.spentIndex])
-        expect(tx.outputs[n].spentHeight).to.be.oneOf([undefined, output.spentHeight])
-      })
-    })
-
-    it('should cache spent info when force fetch', async () => {
-      const privateKey2 = new PrivateKey(purse.bsvPrivateKey.network)
-      const address2 = privateKey2.toAddress()
-      const tx1 = await payFor(randomTx().to(address2, 1000), run)
-      await blockchain.broadcast(tx1)
-      const utxo = { txid: tx1.hash, vout: 1, script: tx1.outputs[1].script, satoshis: 1000 }
-      const tx2 = (await payFor(randomTx().from(utxo), run)).sign(privateKey2)
-      await blockchain.broadcast(tx2)
-      const tx1b = await blockchain.fetch(tx1.hash, true)
-      expect(tx1b.outputs[0].spentTxId).to.equal(tx1.outputs[0].spentTxId)
-      expect(tx1b.outputs[0].spentIndex).to.equal(tx1.outputs[0].spentIndex)
-      expect(tx1b.outputs[0].spentHeight).to.equal(tx1.outputs[0].spentHeight)
+    it('should throw if location is not found', async () => {
+      const run = new Run()
+      const badid = '0000000000000000000000000000000000000000000000000000000000000000'
+      await expect(run.blockchain.spends(badid, 0)).to.be.rejected
     })
   })
 
