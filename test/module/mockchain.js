@@ -29,6 +29,12 @@ mockchain.fund(address, 100000000)
 // ------------------------------------------------------------------------------------------------
 
 describe('Mockchain', () => {
+  describe('broadcast', () => {
+    it('should support broadcasting bsv transaction', async () => {
+      // TODO
+    })
+  })
+
   describe('block', () => {
     it('should respect 25 chain limit', async () => {
       for (let i = 0; i < 25; i++) {

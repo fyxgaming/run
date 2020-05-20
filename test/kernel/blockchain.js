@@ -16,37 +16,27 @@ const { Jig, BlockchainApi } = Run
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 const randomTx = () => new Transaction().addSafeData(Math.random().toString())
+const randomRawTx = () => randomTx().toString('hex')
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain tests
 // ------------------------------------------------------------------------------------------------
 
 describe('Blockchain', () => {
-  const run = new Run()
-  const { blockchain, purse } = run
-
+  /*
   let TEST_DATA = null
   before(async () => { TEST_DATA = await getTestData(run) })
 
   const clearCache = () => blockchain instanceof BlockchainApi && blockchain.cache.clear()
+  */
 
   describe('broadcast', () => {
-    it('should support sending to self', async () => {
-      const tx = await payFor(randomTx(), run)
-      await blockchain.broadcast(tx)
-    })
-
-    it('should support broadcast tx without inputs', async () => {
+    it.only('should broadcast simple transaction', async () => {
       const run = new Run()
-      class Dragon extends Jig { }
-      run.transaction.begin()
-      new Dragon() // eslint-disable-line
-      await run.transaction.pay()
-      await run.transaction.sign()
-      const tx = run.transaction.export()
-      run.transaction.rollback()
-      const tx2 = new bsv.Transaction(tx.toString('hex'))
-      await run.blockchain.broadcast(tx2)
+      const tx = randomTx()
+      const parents = []
+      const rawtx = await run.purse.pay(tx, parents)
+      await run.blockchain.broadcast(rawtx)
     })
 
     it('should throw if input does not exist', async () => {
@@ -250,12 +240,14 @@ describe('Blockchain', () => {
 // ------------------------------------------------------------------------------------------------
 
 async function getTestData (run) {
+  /*
   switch (run.blockchain.network) {
     case 'mock': return getMockNetworkTestData(run)
     case 'test': return getTestNetworkTestData()
     case 'main': return getMainNetworkTestData()
     default: throw new Error(`No test data for network: ${run.blockchain.network}`)
   }
+  */
 }
 
 async function getMockNetworkTestData (run) {
