@@ -88,13 +88,14 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_MISSING_INPUTS)
     })
 
-    it('should throw if mempool conflict', async () => {
-      // take 2 utxos to avoid transactions with no change
-      const utxos = (await blockchain.utxos(purse.script)).slice(0, 2)
-      const tx1 = new Transaction().from(utxos).change(purse.address).sign(purse.bsvPrivateKey)
-      const tx2 = new Transaction().from(utxos).addSafeData('123').sign(purse.bsvPrivateKey)
-      await blockchain.broadcast(tx1)
-      await expect(blockchain.broadcast(tx2)).to.be.rejectedWith(TEST_DATA.mempoolConflict)
+    it.only('should throw mempool conflict error if input is already spent and not confirmed', async () => {
+      const run = new Run()
+      const purseutxos = await run.purse.utxos()
+      const utxos = purseutxos.slice(0, 2)
+      const atx = new Transaction().from(utxos).change(run.purse.address).sign(run.purse.bsvPrivateKey)
+      const btx = new Transaction().from(utxos).addSafeData('hello').sign(run.purse.bsvPrivateKey)
+      await run.blockchain.broadcast(atx)
+      await expect(run.blockchain.broadcast(btx)).to.be.rejectedWith(ERR_MEMPOOL_CONFLICT)
     })
 
     it('should throw if no inputs', async () => {
