@@ -165,7 +165,7 @@ describe('LocalPurse', () => {
       const txBase = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       for (let i = 0; i < 100; i++) {
         const tx2 = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
-        const sameTxId = tx2.inputs[0].prevTxId.toString() === txBase.inputs[0].prevTxId.toString()
+        const sameTxId = tx2.inputs[0].prevTxId.toString('hex') === txBase.inputs[0].prevTxId.toString('hex')
         const sameIndex = tx2.inputs[0].outputIndex === txBase.inputs[0].outputIndex
         if (!sameTxId || !sameIndex) return
       }

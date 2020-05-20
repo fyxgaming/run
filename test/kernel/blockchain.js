@@ -158,7 +158,7 @@ describe('Blockchain', () => {
       await expect(run.blockchain.fetch(badid)).to.be.rejectedWith(ERR_TX_NOT_FOUND)
     })
 
-    it('should dedup requests', async () => {
+    it('should cache repeated requests', async () => {
       const run = new Run()
       const goodid = await spentAndConfirmed(run.blockchain)
       const badid = '0000000000000000000000000000000000000000000000000000000000000000'
@@ -192,24 +192,34 @@ describe('Blockchain', () => {
       expect(utxos.length).to.equal(0)
     })
 
-    it('should not return spent outputs', async () => {
-      const tx = await payFor(randomTx(), run)
-      await blockchain.broadcast(tx)
-      const utxos = await blockchain.utxos(purse.script)
-      expect(utxos.some(utxo => utxo.txid === tx.inputs[0].prevTxId.toString() &&
-        utxo.vout === tx.inputs[0].outputIndex)).to.equal(false)
-      expect(utxos.some(utxo => utxo.txid === tx.hash && utxo.vout === 1)).to.equal(true)
+    it.only('should not return spent outputs', async () => {
+      const run = new Run()
+      const randomtx = randomTx()
+      const paidraw = await run.purse.pay(randomtx, [])
+      const paidtx = new Transaction(paidraw)
+      await run.blockchain.broadcast(paidraw)
+      const utxos = await run.blockchain.utxos(run.purse.script)
+      const prevtxid = paidtx.inputs[0].prevTxId.toString('hex')
+      const prevvout = paidtx.inputs[0].outputIndex
+      expect(utxos.some(utxo => utxo.txid === prevtxid && utxo.vout === prevvout)).to.equal(false)
+      expect(utxos.some(utxo => utxo.txid === paidtx.hash && utxo.vout === 1)).to.equal(true)
     })
 
-    it('should cache repeated calls', async () => {
+    it.only('should cache repeated requests', async () => {
+      const run = new Run()
       const requests = []
-      for (let i = 0; i < 100; i++) requests.push(blockchain.utxos(purse.script))
+      for (let i = 0; i < 1000; i++) {
+        requests.push(run.blockchain.utxos(run.purse.script))
+      }
       await Promise.all(requests)
     })
 
-    it('should throw for invalid queries', async () => {
-      const requests = ['z', '%', [], 123, null, undefined].map(x => blockchain.utxos(x))
-      await expect(Promise.all(requests)).to.be.rejected
+    it.only('should throw for invalid queries', async () => {
+      const run = new Run()
+      const cases = ['z', '%', [], 123, null, undefined]
+      for (const x of cases) {
+        await expect(run.blockchain.utxos(x)).to.be.rejected
+      }
     })
 
     it('should return large number of UTXOS', async () => {
