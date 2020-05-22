@@ -58,7 +58,7 @@ describe('Run', () => {
     describe('blockchain', () => {
       it('should create default blockchain', () => {
         const run = new Run({ network: 'main' })
-        expect(run.blockchain instanceof Run.BlockchainApi).to.equal(true)
+        expect(run.blockchain instanceof Run.RemoteBlockchain).to.equal(true)
         expect(run.blockchain.network).to.equal('main')
         expect(run.blockchain.api).to.equal('run')
       })
@@ -71,7 +71,7 @@ describe('Run', () => {
 
       it('should support setting blockchain api', () => {
         const run = new Run({ api: 'whatsonchain', network: 'test' })
-        expect(run.blockchain instanceof Run.BlockchainApi).to.equal(true)
+        expect(run.blockchain instanceof Run.RemoteBlockchain).to.equal(true)
         expect(run.blockchain.api).to.equal('whatsonchain')
         expect(run.blockchain.network).to.equal('test')
       })

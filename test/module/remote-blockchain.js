@@ -4,63 +4,60 @@
  * Tests for lib/module/blockchain-server.js
  */
 
-const { PrivateKey, Script, Transaction } = require('bsv')
+const { PrivateKey, Script } = require('bsv')
 const { describe, it } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 const { expect } = chai
 chai.use(chaiAsPromised)
-const { unmangle } = require('../env/unmangle')
 const { Run } = require('../env/config')
-const { BlockchainApi } = Run
+const { unmangle } = require('../env/unmangle')
+const { RemoteBlockchain, BlockchainServer } = Run
 const { RequestFailedError } = Run.errors
 
 // ------------------------------------------------------------------------------------------------
-// BlockchainApi tests
+// RemoteBlockchain tests
 // ------------------------------------------------------------------------------------------------
 
-describe('BlockchainApi', () => {
+describe('RemoteBlockchain', () => {
   describe('constructor', () => {
     describe('network', () => {
       it('should default network to main', () => {
-        expect(new BlockchainApi().network).to.equal('main')
+        expect(RemoteBlockchain.create().network).to.equal('main')
       })
 
       it('should throw for bad network', () => {
-        expect(() => new BlockchainApi({ network: 'bad' })).to.throw('Unsupported network: bad')
-        expect(() => new BlockchainApi({ network: 0 })).to.throw('Unsupported network: 0')
-        expect(() => new BlockchainApi({ network: {} })).to.throw('Unsupported network: [object Object]')
-        expect(() => new BlockchainApi({ network: null })).to.throw('Unsupported network: null')
+        expect(() => RemoteBlockchain.create({ network: 'bad' })).to.throw('Unsupported network: bad')
+        expect(() => RemoteBlockchain.create({ network: 0 })).to.throw('Unsupported network: 0')
+        expect(() => RemoteBlockchain.create({ network: {} })).to.throw('Unsupported network: [object Object]')
+        expect(() => RemoteBlockchain.create({ network: null })).to.throw('Unsupported network: null')
       })
     })
 
     describe('api', () => {
       it('should default to run api', () => {
-        expect(unmangle(new BlockchainApi())._remoteBlockchain.constructor).to.equal(BlockchainApi.RunConnect)
+        expect(RemoteBlockchain.create() instanceof BlockchainServer).to.equal(true)
       })
 
       it('should throw for bad api', () => {
-        expect(() => new BlockchainApi({ api: 'bad' })).to.throw('Unknown blockchain API: bad')
-        expect(() => new BlockchainApi({ api: null })).to.throw('Invalid blockchain API: null')
-        expect(() => new BlockchainApi({ api: 123 })).to.throw('Invalid blockchain API: 123')
+        expect(() => RemoteBlockchain.create({ api: 'bad' })).to.throw('Invalid blockchain API: bad')
+        expect(() => RemoteBlockchain.create({ api: null })).to.throw('Invalid blockchain API: null')
+        expect(() => RemoteBlockchain.create({ api: 123 })).to.throw('Invalid blockchain API: 123')
       })
     })
 
     describe('lastBlockchain', () => {
       it('should support passing different last blockchain', () => {
         const lastBlockchain = { cache: {} }
-        expect(new BlockchainApi({ lastBlockchain }).cache).not.to.equal(lastBlockchain.cache)
+        expect(RemoteBlockchain.create({ lastBlockchain }).cache).not.to.equal(lastBlockchain.cache)
       })
 
       it('should only copy cache if same network', async () => {
-        const tx = new Transaction().addData('123').lock()
-        class MockApi { async fetch (txid) { return tx } }
-        const api = new MockApi()
-        const testnet1 = new BlockchainApi({ api, network: 'test' })
+        const testnet1 = RemoteBlockchain.create({ network: 'test' })
         // Fill the cache with one transaction
-        await testnet1.fetch(tx.hash)
-        const testnet2 = new BlockchainApi({ network: 'test', api, lastBlockchain: testnet1 })
-        const mainnet = new BlockchainApi({ network: 'main', api, lastBlockchain: testnet2 })
+        await testnet1.fetch('78db863a75faf35190b3524842abeaa835ed5a5a025df62f275fab63881791bb')
+        const testnet2 = RemoteBlockchain.create({ network: 'test', lastBlockchain: testnet1 })
+        const mainnet = RemoteBlockchain.create({ network: 'main', lastBlockchain: testnet2 })
         expect(testnet2.cache).to.deep.equal(testnet1.cache)
         expect(mainnet.cache).not.to.equal(testnet2.cache)
       })
@@ -68,39 +65,27 @@ describe('BlockchainApi', () => {
 
     describe('timeout', () => {
       it('should time out', async () => {
-        const timeout = 1
-        const { RunConnect } = Run.BlockchainApi
-        const api = new RunConnect({ timeout })
-        const blockchain = new BlockchainApi({ api })
-        expect(unmangle(blockchain)._remoteBlockchain.timeout).to.equal(timeout)
-        const oldFetchWithTimeout = RunConnect.prototype.fetchWithTimeout
-        RunConnect.prototype.fetchWithTimeout = function (url, options) {
-          url = 'http://www.google.com:81'
-          return oldFetchWithTimeout.call(this, url, options)
-        }
-        try {
-          await expect(blockchain.fetch('')).to.be.rejectedWith('Request timed out')
-        } finally {
-          RunConnect.prototype.fetchWithTimeout = oldFetchWithTimeout
-        }
+        const blockchain = RemoteBlockchain.create({ timeout: 1 })
+        expect(blockchain.timeout).to.equal(1)
+        await expect(blockchain.fetch('31b982157ccd5d1a64bfd7c1415b5ed44fb38e153bdc6742c2261a147aeeb744')).to.be.rejectedWith('Request timed out')
       })
 
       it('should default timeout to 10000', () => {
-        expect(unmangle(new BlockchainApi())._remoteBlockchain.timeout).to.equal(10000)
+        expect(RemoteBlockchain.create().timeout).to.equal(10000)
       })
 
       it('should throw for bad timeout', () => {
-        expect(() => new BlockchainApi({ timeout: 'bad' })).to.throw('Invalid timeout: bad')
-        expect(() => new BlockchainApi({ timeout: null })).to.throw('Invalid timeout: null')
-        expect(() => new BlockchainApi({ timeout: -1 })).to.throw('Invalid timeout: -1')
-        expect(() => new BlockchainApi({ timeout: NaN })).to.throw('Invalid timeout: NaN')
+        expect(() => RemoteBlockchain.create({ timeout: 'bad' })).to.throw('Invalid timeout: bad')
+        expect(() => RemoteBlockchain.create({ timeout: null })).to.throw('Invalid timeout: null')
+        expect(() => RemoteBlockchain.create({ timeout: -1 })).to.throw('Invalid timeout: -1')
+        expect(() => RemoteBlockchain.create({ timeout: NaN })).to.throw('Invalid timeout: NaN')
       })
     })
   })
 
   describe('fetch', () => {
     it('should throw RequestFailedError', async () => {
-      const blockchain = new BlockchainApi({ network: 'main' })
+      const blockchain = RemoteBlockchain.create({ network: 'main' })
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
       await expect(blockchain.fetch(txid)).to.be.rejectedWith(RequestFailedError)
     })
@@ -111,62 +96,18 @@ describe('BlockchainApi', () => {
       const address = new PrivateKey('mainnet').toAddress().toString()
       const script = Script.fromAddress(address)
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
-      class MockApi {
-        utxos (script) {
-          const utxo = { txid, vout: 0, satoshis: 0, script: new Script() }
-          return [utxo, utxo]
-        }
+      const blockchain = RemoteBlockchain.create()
+      unmangle(blockchain)._getUtxos = async () => {
+        const utxo = { txid, vout: 0, satoshis: 0, script: '' }
+        return [utxo, utxo]
       }
-      const api = new MockApi()
       let lastWarning = null
       const Log = unmangle(unmangle(unmangle(Run)._util)._Log)
       Log._logger = { warn: (time, tag, ...warning) => { lastWarning = warning.join(' ') } }
-      const blockchain = new BlockchainApi({ network: 'main', api })
       const utxos = await blockchain.utxos(script)
       expect(utxos.length).to.equal(1)
       expect(lastWarning).to.equal(`Duplicate utxo returned from server: ${txid}_o0`)
       Log._logger = Log._defaultLogger
-    })
-
-    it('should throw if API is down', async () => {
-      const api = {}
-      api.utxosUrl = (network, script) => 'bad-url'
-      const blockchain = new BlockchainApi({ network: 'main', api })
-      const address = new PrivateKey('mainnet').toAddress().toString()
-      const script = Script.fromAddress(address)
-      const requests = [blockchain.utxos(script), blockchain.utxos(script)]
-      await expect(Promise.all(requests)).to.be.rejected
-    })
-  })
-})
-
-// ------------------------------------------------------------------------------------------------
-// BlockchainApiCache tests
-// ------------------------------------------------------------------------------------------------
-
-describe('BlockchainApiCache', () => {
-  describe('get', () => {
-    it('should not return expired transactions', async () => {
-      const cache = unmangle(new BlockchainApi.Cache())
-      cache.expiration = 1
-      const tx = new Transaction()
-      cache._fetched(tx)
-      const sleep = ms => { return new Promise(resolve => setTimeout(resolve, ms)) }
-      await sleep(10)
-      expect(cache._get(tx.hash)).not.to.equal(tx)
-    })
-  })
-
-  describe('fetched', () => {
-    it('should flush oldest transcation when full', () => {
-      const cache = unmangle(new BlockchainApi.Cache({ size: 1 }))
-      cache.size = 1
-      const tx1 = new Transaction().addData('1')
-      const tx2 = new Transaction().addData('2')
-      cache._fetched(tx1)
-      cache._fetched(tx2)
-      expect(cache._transactions.size).to.equal(1)
-      expect(cache._transactions.get(tx2.hash)).to.equal(tx2)
     })
   })
 })

@@ -98,8 +98,8 @@ describe('LocalPurse', () => {
       it('should support passing in valid blockchain', () => {
         const mockchain = new Run.Mockchain()
         expect(new LocalPurse({ blockchain: mockchain }).blockchain).to.equal(mockchain)
-        const blockchainApi = new Run.BlockchainApi()
-        expect(new LocalPurse({ blockchain: blockchainApi }).blockchain).to.equal(blockchainApi)
+        const remoteBlockchain = Run.RemoteBlockchain.create()
+        expect(new LocalPurse({ blockchain: remoteBlockchain }).blockchain).to.equal(remoteBlockchain)
       })
 
       it('should throw if pass in invalid blockchain', () => {
