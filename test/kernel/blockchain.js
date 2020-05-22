@@ -135,21 +135,23 @@ describe('Blockchain', () => {
 
     it('should throw if nonexistant', async () => {
       const run = new Run()
-      const badid = '0000000000000000000000000000000000000000000000000000000000000000'
+      const badid = '0000000000000000000000000000000000000000000000000000000000000001'
       await expect(run.blockchain.fetch(badid)).to.be.rejectedWith(ERR_TX_NOT_FOUND)
     })
 
     it('should cache repeated requests', async () => {
       const run = new Run()
       const goodid = await spentAndConfirmed(run.blockchain)
-      const badid = '0000000000000000000000000000000000000000000000000000000000000000'
+      const badid = '0000000000000000000000000000000000000000000000000000000000000001'
       const good = []
-      const bad = []
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) {
         good.push(run.blockchain.fetch(goodid))
-        bad.push(run.blockchain.fetch(badid))
       }
       await Promise.all(good)
+      const bad = []
+      for (let i = 0; i < 100; i++) {
+        bad.push(run.blockchain.fetch(badid))
+      }
       await expect(Promise.all(bad)).to.be.rejectedWith(ERR_TX_NOT_FOUND)
     })
   })
@@ -215,6 +217,10 @@ describe('Blockchain', () => {
   describe('spends', () => {
     it('should return spending txid or null', async () => {
       const run = new Run()
+      if (run.blockchain.api === 'whatsonchain' || run.blockchain.api === 'mattercloud') {
+        // spends API is not supported
+        return
+      }
       const tx = randomTx()
       const parents = []
       const paidraw = await run.purse.pay(tx, parents)
