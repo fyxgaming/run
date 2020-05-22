@@ -108,7 +108,7 @@ describe('LocalOwner', () => {
       run.transaction.rollback()
 
       // Make sure our transaction is not fully signed
-      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith('tx not fully signed')
+      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith('mandatory-script-verify-flag-failed')
 
       // Sign with pubkey 2 and broadcast
       run2.activate()
@@ -215,7 +215,7 @@ describe('LocalOwner', () => {
         run.transaction.rollback()
 
         // Make sure our transaction is not fully signed
-        await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith('tx signature not valid')
+        await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith('mandatory-script-verify-flag-failed')
 
         // Sign with pubkey 2 and broadcast
         run2.activate()

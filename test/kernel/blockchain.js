@@ -19,12 +19,11 @@ const { PrivateKey, Script, Transaction } = bsv
 
 describe('Blockchain', () => {
   describe('broadcast', () => {
-    it.only('should broadcast simple transaction', async () => {
+    it('should broadcast simple transaction', async () => {
       const run = new Run()
       const tx = randomTx()
       const parents = []
       const rawtx = await run.purse.pay(tx, parents)
-      await run.blockchain.broadcast(rawtx)
       await run.blockchain.broadcast(rawtx)
     })
 
@@ -63,8 +62,15 @@ describe('Blockchain', () => {
     it('should throw if input is already spent and not confirmed', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
-      const atx = new Transaction().from(utxos).addData('1').sign(run.purse.bsvPrivateKey)
-      const btx = new Transaction().from(utxos).addData('2').sign(run.purse.bsvPrivateKey)
+      const atx = new Transaction()
+        .from(utxos)
+        .addData('1')
+        .change(run.purse.address)
+        .sign(run.purse.bsvPrivateKey)
+      const btx = new Transaction()
+        .from(utxos).addData('2')
+        .change(run.purse.address)
+        .sign(run.purse.bsvPrivateKey)
       await run.blockchain.broadcast(atx)
       await expect(run.blockchain.broadcast(btx)).to.be.rejectedWith(ERR_MEMPOOL_CONFLICT)
     })
@@ -86,14 +92,18 @@ describe('Blockchain', () => {
     it('should throw if fee too low', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
-      const tx = new Transaction().from(utxos).change(run.purse.address).fee(0).sign(run.purse.bsvPrivateKey)
+      const tx = new Transaction()
+        .from(utxos)
+        .change(run.purse.address)
+        .fee(0)
+        .sign(run.purse.bsvPrivateKey)
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_FEE_TOO_LOW)
     })
 
     it('should throw if not signed', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
-      const tx = new Transaction().from(utxos).addData('')
+      const tx = new Transaction().from(utxos).change(run.purse.address).addData('')
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NOT_SIGNED)
     })
 
@@ -107,7 +117,7 @@ describe('Blockchain', () => {
     it('should throw if bad signature', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
-      const tx = new Transaction().from(utxos).addData('')
+      const tx = new Transaction().from(utxos).change(run.purse.address).addData('')
       tx.inputs[0].setScript('OP_FALSE')
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_BAD_SIGNATURE)
     })
@@ -255,13 +265,13 @@ const randomTx = () => new Transaction().addSafeData(Math.random().toString())
 // Error messages
 const ERR_NO_INPUTS = 'tx has no inputs'
 const ERR_NO_OUTPUTS = 'tx has no outputs'
-const ERR_FEE_TOO_LOW = 'tx fee too low'
-const ERR_NOT_SIGNED = 'tx not fully signed'
+const ERR_FEE_TOO_LOW = 'insufficient priority'
+const ERR_NOT_SIGNED = 'mandatory-script-verify-flag-failed'
 const ERR_DUP_INPUT = /transaction input [0-9]* duplicate input/
 const ERR_MISSING_INPUTS = 'Missing inputs'
 const ERR_MEMPOOL_CONFLICT = 'txn-mempool-conflict'
-const ERR_BAD_SIGNATURE = 'tx signature not valid'
-const ERR_TX_NOT_FOUND = 'tx not found'
+const ERR_BAD_SIGNATURE = 'mandatory-script-verify-flag-failed'
+const ERR_TX_NOT_FOUND = 'No such mempool or blockchain transaction'
 
 // Gets a txid that spent output 0 and is confirmed
 async function spentAndConfirmed (blockchain) {

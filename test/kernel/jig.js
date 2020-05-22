@@ -321,7 +321,7 @@ describe('Jig', () => {
       const tx = await run.blockchain.fetch(a.location.slice(0, 64))
       tx.outputs[2].spentTxId = '123'
       tx.outputs[2].spentIndex = 0
-      await expect(a.sync()).to.be.rejectedWith('tx not found')
+      await expect(a.sync()).to.be.rejectedWith('No such mempool or blockchain transaction')
     })
 
     it('should throw if spentTxId is incorrect', async () => {
@@ -500,7 +500,7 @@ describe('Jig', () => {
       await run.sync()
       const run2 = new Run({ blockchain: new Mockchain() })
       a.f()
-      await expect(run2.sync()).to.be.rejectedWith(`tx not found: ${a.origin.slice(0, 64)}`)
+      await expect(run2.sync()).to.be.rejectedWith('No such mempool or blockchain transaction')
     })
 
     it('should return host intrinsics to user', () => {
@@ -1713,12 +1713,11 @@ describe('Jig', () => {
       const b = new Store()
       // test when just init, no inputs
       expectAction(b, 'init', [], [], [b], [])
-      const suggestion = 'Hint: Is the purse funded to pay for this transaction?'
-      await expect(run.sync()).to.be.rejectedWith(`Broadcast failed: tx has no inputs\n\n${suggestion}`)
+      await expect(run.sync()).to.be.rejectedWith('tx has no inputs')
       // test with a spend, pre-existing inputs
       a.set(1)
       expectAction(a, 'set', [1], [a], [a], [])
-      await expect(run.sync()).to.be.rejectedWith(`Broadcast failed: tx fee too low\n\n${suggestion}`)
+      await expect(run.sync()).to.be.rejectedWith('insufficient priority')
       run.purse.pay = oldPay
     })
 
