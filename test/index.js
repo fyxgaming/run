@@ -22,12 +22,12 @@ require('./kernel/purse')
 require('./kernel/syncer')
 require('./kernel/transaction')
 
+require('./module/local-cache')
 require('./module/local-owner')
 require('./module/local-purse')
 require('./module/mockchain')
 require('./module/pay-server')
 require('./module/remote-blockchain')
-require('./module/state-cache')
 require('./module/viewer')
 
 require('./util/checkpoint')

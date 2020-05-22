@@ -133,11 +133,11 @@ describe('Run', () => {
 
     describe('state', () => {
       it('should default to state cache', () => {
-        expect(new Run().state instanceof Run.StateCache).to.equal(true)
+        expect(new Run().state instanceof Run.LocalCache).to.equal(true)
       })
 
       it('should support custom state', () => {
-        const state = new Run.StateCache()
+        const state = new Run.LocalCache()
         expect(new Run({ state }).state).to.deep.equal(state)
       })
 

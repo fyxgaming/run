@@ -956,7 +956,7 @@ describe('Jig', () => {
       a2.set(2)
       await run.sync()
       // create a new run to not use the state cache
-      const run2 = new Run({ state: new Run.StateCache() })
+      const run2 = new Run({ state: new Run.LocalCache() })
       const oldFetch = run.blockchain.fetch
       try {
         run2.blockchain.fetch = async txid => {
@@ -2172,7 +2172,7 @@ describe('Jig', () => {
       b.set(1)
       await a.sync()
 
-      const run2 = new Run({ state: new Run.StateCache() })
+      const run2 = new Run({ state: new Run.LocalCache() })
       const t0 = Date.now()
       await run2.load(a.location)
       const t1 = Date.now()

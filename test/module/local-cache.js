@@ -1,7 +1,7 @@
 /**
- * state-cache.js
+ * local-cache.js
  *
- * Tests for lib/module/state-cache.js
+ * Tests for lib/module/local-cache.js
  */
 
 const bsv = require('bsv')
@@ -12,20 +12,20 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
-const { Jig, StateCache } = Run
+const { Jig, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
-// StateCache
+// LocalCache
 // ------------------------------------------------------------------------------------------------
 
 const txid = '0000000000000000000000000000000000000000000000000000000000000000'
 
-describe('StateCache', () => {
+describe('LocalCache', () => {
   const stateGets = []
   const stateSets = []
   const stateGetOverrides = new Map()
 
-  class WrappedState extends StateCache {
+  class WrappedState extends LocalCache {
     async get (location) {
       stateGets.push(location)
       if (stateGetOverrides.has(location)) return stateGetOverrides.get(location)
@@ -116,7 +116,7 @@ describe('StateCache', () => {
     })
 
     it('should respect max cache size', async () => {
-      const state = new Run.StateCache({ maxSizeMB: 400 / 1000 / 1000 })
+      const state = new Run.LocalCache({ maxSizeMB: 400 / 1000 / 1000 })
       for (let i = 0; i < 100; i++) {
         await state.set(`${txid}_o` + i, i)
       }
@@ -126,7 +126,7 @@ describe('StateCache', () => {
     })
 
     it('should move existing values to the front of the cache', async () => {
-      const state = new Run.StateCache({ maxSizeMB: 30 })
+      const state = new Run.LocalCache({ maxSizeMB: 30 })
       await state.set(`${txid}_o0`, undefined)
       await state.set(`${txid}_o1`, undefined)
       await state.set(`${txid}_o2`, undefined)
@@ -139,7 +139,7 @@ describe('StateCache', () => {
     })
 
     it('should throw for different values of same key', async () => {
-      const state = new Run.StateCache({ maxSizeMB: 30 })
+      const state = new Run.LocalCache({ maxSizeMB: 30 })
       await state.set(`${txid}_o0`, { n: 1 })
       await expect(state.set(`${txid}_o0`, { n: 2 })).to.be.rejectedWith('Attempt to set different states for the same location')
       await expect(state.set(`${txid}_o0`, { n: 'a' })).to.be.rejectedWith('Attempt to set different states for the same location')
@@ -215,7 +215,7 @@ describe('StateCache', () => {
     })
 
     it('should return undefined if missing', async () => {
-      const state = new Run.StateCache({ maxSizeMB: 30 })
+      const state = new Run.LocalCache({ maxSizeMB: 30 })
       expect(await state.get(`${txid}_o0`)).to.equal(undefined)
     })
 
