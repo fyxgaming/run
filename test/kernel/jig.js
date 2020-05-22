@@ -959,11 +959,11 @@ describe('Jig', () => {
       const run2 = new Run({ state: new Run.LocalCache() })
       const oldFetch = run.blockchain.fetch
       try {
-        run2.blockchain.fetch = async txid => {
-          const tx = await oldFetch.call(run.blockchain, txid)
-          if (txid !== a2.location.slice(0, 64)) tx.time = Date.now() - 6 * 60 * 60 * 1000
-          if (txid === b.location.slice(0, 64)) tx.time = Date.now()
-          return tx
+        run2.blockchain.time = async txid => {
+          const hours = 60 * 60 * 1000
+          if (txid === a.location.slice(0, 64)) return Date.now() - 8 * hours
+          if (txid === a2.location.slice(0, 64)) return Date.now() - 6 * hours
+          if (txid === b.location.slice(0, 64)) return Date.now()
         }
         await expect(run2.load(b.location)).to.be.rejectedWith(`${a.location} is stale. Aborting.`)
       } finally { run.blockchain.fetch = oldFetch }
