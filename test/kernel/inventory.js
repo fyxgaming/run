@@ -64,7 +64,7 @@ describe('Inventory', () => {
       expect(run2.inventory.jigs.length).to.equal(0)
     })
 
-    // If spentTxId is missing
+    // If spend is missing
     // If state cache, don't expect
 
     it('should not add resources without sync', async () => {
