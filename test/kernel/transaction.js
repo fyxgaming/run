@@ -5,6 +5,7 @@
  */
 
 const bsv = require('bsv')
+const { Transaction } = bsv
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 const { expect } = chai
@@ -293,8 +294,8 @@ describe('Transaction', () => {
     let tx = null; let data = null
     const hookRun = run => {
       const origBroadcast = run.blockchain.broadcast.bind(run.blockchain)
-      run.blockchain.broadcast = async txn => {
-        tx = txn
+      run.blockchain.broadcast = async rawtx => {
+        tx = new Transaction(rawtx)
         if (tx.outputs[0].script.isSafeDataOut()) {
           data = _decryptRunData(tx.outputs[0].script.chunks[5].buf.toString('utf8'))
           expect(tx.outputs.length > data.code.length + data.jigs + 1)
@@ -304,7 +305,7 @@ describe('Transaction', () => {
       return run
     }
 
-    it.only('should publish new basic jig', async () => {
+    it('should publish new basic jig', async () => {
       const run = hookRun(new Run())
       const creator = run.owner.address
       class A extends Jig {}
@@ -332,7 +333,7 @@ describe('Transaction', () => {
 
     it('should correctly set satoshis on code and jig outputs', async () => {
       const run = hookRun(new Run())
-      class A extends Jig { f (satoshis) { this.satoshis = satoshis} }
+      class A extends Jig { f (satoshis) { this.satoshis = satoshis } }
       const a = new A()
       await a.sync()
       expect(tx.outputs[1].satoshis).to.equal(bsv.Transaction.DUST_AMOUNT)

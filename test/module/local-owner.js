@@ -5,7 +5,7 @@
  */
 
 const { Address, PrivateKey, PublicKey, Transaction } = require('bsv')
-const { describe, it, beforeEach } = require('mocha')
+const { describe, it, afterEach } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
@@ -18,6 +18,8 @@ const { LocalOwner, Mockchain, Jig, GroupLock, StandardLock } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('LocalOwner', () => {
+  afterEach(() => Run.instance && Run.instance.deactivate())
+
   describe('constructor', () => {
     it('should create with expected properties', () => {
       const privateKey = new PrivateKey('testnet')
@@ -75,11 +77,8 @@ describe('LocalOwner', () => {
   })
 
   describe('sign', () => {
-    const run = new Run()
-    expect(run.owner instanceof LocalOwner).to.equal(true)
-    beforeEach(() => run.activate())
-
     it('should sign with standard lock', async () => {
+      new Run() // eslint-disable-line
       class A extends Jig { set () { this.n = 1 }}
       const a = new A()
       a.set()
@@ -88,6 +87,7 @@ describe('LocalOwner', () => {
     })
 
     it('should not sign standard lock if different address', async () => {
+      const run = new Run()
       const run2 = new Run()
       class A extends Jig {
         init (owner) { this.owner = owner }
@@ -118,6 +118,7 @@ describe('LocalOwner', () => {
     })
 
     it('should sign without locks', async () => {
+      const run = new Run()
       class A extends Jig { set () { this.n = 1 }}
       const a = new A()
       await a.sync()
@@ -132,6 +133,7 @@ describe('LocalOwner', () => {
 
     describe('group lock', () => {
       it('should sign 1-1 group lock', async () => {
+        const run = new Run()
         class A extends Jig {
           init (owner) { this.owner = owner }
           set () { this.n = 1 }
@@ -142,6 +144,7 @@ describe('LocalOwner', () => {
       })
 
       it('should sign 2-3 group lock', async () => {
+        const run = new Run()
         const run2 = new Run()
         const run3 = new Run()
         class A extends Jig {
@@ -171,6 +174,7 @@ describe('LocalOwner', () => {
       })
 
       it('should not sign group lock if already signed', async () => {
+        const run = new Run()
         class A extends Jig {
           init (owner) { this.owner = owner }
           set () { this.n = 1 }
@@ -195,6 +199,7 @@ describe('LocalOwner', () => {
       })
 
       it('should not sign group lock if not our pubkey', async () => {
+        const run = new Run()
         const run2 = new Run()
         class A extends Jig {
           init (owner) { this.owner = owner }
