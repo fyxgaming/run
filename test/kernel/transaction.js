@@ -320,29 +320,34 @@ describe('Transaction', () => {
     it('should correctly set owners on code and jig outputs', async () => {
       const run = hookRun(new Run())
       const address = new bsv.PrivateKey().toAddress()
-      class A extends Jig { f (owner) { this.owner = owner; return this } }
+      class A extends Jig { f (owner) { this.owner = owner } }
       const a = new A()
       await a.sync()
       expect(tx.outputs[1].script.toAddress().toString()).to.equal(run.owner.address)
       expect(tx.outputs[2].script.toAddress().toString()).to.equal(run.owner.address)
-      await a.f(address.toString()).sync()
+      a.f(address.toString())
+      await a.sync()
       expect(tx.outputs[1].script.toAddress().toString()).to.equal(address.toString())
     })
 
     it('should correctly set satoshis on code and jig outputs', async () => {
       const run = hookRun(new Run())
-      class A extends Jig { f (satoshis) { this.satoshis = satoshis; return this } }
+      class A extends Jig { f (satoshis) { this.satoshis = satoshis} }
       const a = new A()
       await a.sync()
       expect(tx.outputs[1].satoshis).to.equal(bsv.Transaction.DUST_AMOUNT)
       expect(tx.outputs[2].satoshis).to.equal(bsv.Transaction.DUST_AMOUNT)
-      await a.f(1).sync()
+      a.f(1)
+      await a.sync()
       expect(tx.outputs[1].satoshis).to.equal(bsv.Transaction.DUST_AMOUNT)
-      await a.f(0).sync()
+      a.f(0)
+      await a.sync()
       expect(tx.outputs[1].satoshis).to.equal(bsv.Transaction.DUST_AMOUNT)
-      await a.f(bsv.Transaction.DUST_AMOUNT).sync()
+      a.f(bsv.Transaction.DUST_AMOUNT)
+      await a.sync()
       expect(tx.outputs[1].satoshis).to.equal(bsv.Transaction.DUST_AMOUNT)
-      await a.f(bsv.Transaction.DUST_AMOUNT + 1).sync()
+      a.f(bsv.Transaction.DUST_AMOUNT + 1)
+      await a.sync()
       expect(tx.outputs[1].satoshis).to.equal(bsv.Transaction.DUST_AMOUNT + 1)
       run.blockchain.fund(run.purse.address, 300000000)
       run.transaction.begin()
@@ -417,13 +422,14 @@ describe('Transaction', () => {
       class A extends Jig {
         init (n) { this.n = n }
 
-        f (a) { this.x = a.n; return this }
+        f (a) { this.x = a.n }
       }
       const a = new A(1)
       await a.sync()
       const b = new A(2)
       await b.sync()
-      await a.f(b).sync()
+      a.f(b)
+      await a.sync()
       const arg = { $ref: '_r0' }
       expect(data.actions).to.deep.equal([{ target: '_i0', method: 'f', args: [arg] }])
       expect(data.refs).to.deep.equal([b.location])
@@ -431,12 +437,13 @@ describe('Transaction', () => {
 
     it('should support passing jigs as args without reading them', async () => {
       hookRun(new Run())
-      class A extends Jig { f (a) { this.a = a; return this } }
+      class A extends Jig { f (a) { this.a = a } }
       const a = new A()
       await a.sync()
       const b = new A()
       await b.sync()
-      await a.f(b, { a }, [b]).sync()
+      a.f(b, { a }, [b])
+      await a.sync()
       const aref = { $ref: '_i0' }
       const bref = { $dup: 0 }
       const dups = [{ $ref: b.location }]
