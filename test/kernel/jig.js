@@ -336,7 +336,8 @@ describe('Jig', () => {
     it('should throw if spend tx does not exist', async () => {
       const run = createHookedRun()
       class A extends Jig { }
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       expectAction(a, 'init', [], [], [a], [])
       run.blockchain.spends = () => '123'
       await expect(a.sync()).to.be.rejectedWith('No such mempool or blockchain transaction')
@@ -1493,7 +1494,8 @@ describe('Jig', () => {
     it('should throw if set to an invalid owner', async () => {
       createHookedRun()
       class A extends Jig { send (owner) { this.owner = owner }}
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       expectAction(a, 'init', [], [], [a], [])
       const publicKey = new PrivateKey().publicKey
       expect(() => a.send(publicKey)).to.throw('is not deployable')
@@ -1505,7 +1507,8 @@ describe('Jig', () => {
     it('should throw if set to address on another network', async () => {
       createHookedRun()
       class A extends Jig { send (addr) { this.owner = addr } }
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       expectAction(a, 'init', [], [], [a], [])
       const addr = new PrivateKey('mainnet').toAddress().toString()
       expect(() => a.send(addr)).to.throw('Invalid owner')
@@ -1831,7 +1834,8 @@ describe('Jig', () => {
 
         f () { this.n = 2 }
       }
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       expectAction(a, 'init', [], [], [a], [])
       const oldSign = run.owner.sign
       run.owner.sign = async (tx) => { return tx }
@@ -1869,7 +1873,8 @@ describe('Jig', () => {
     it('should detect uncaught errors', async () => {
       const run = createHookedRun()
       class A extends Jig { f () { this.n = 1 } }
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       expectAction(a, 'init', [], [], [a], [])
       const oldBroadcast = run.blockchain.broadcast
       run.blockchain.broadcast = async (tx) => { throw new Error() }
@@ -1921,8 +1926,10 @@ describe('Jig', () => {
         init () { this.map = new Map() }
         set (x, y) { this.map.set(x, y) }
       }
-      const a = await new A().sync()
-      const b = await new B().sync()
+      const a = new A()
+      await a.sync()
+      const b = new B()
+      await b.sync()
       const b2 = await run.load(b.location)
       a.set(b, 1)
       a.set(b2, 2)
@@ -2161,7 +2168,8 @@ describe('Jig', () => {
     it('should throw if location is bad', async () => {
       const run = createHookedRun()
       class A extends Jig { }
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       expectAction(a, 'init', [], [], [a], [])
       await expect(run.load(a.location.slice(0, 64) + '_o0')).to.be.rejected
       await expect(run.load(a.location.slice(0, 64) + '_o3')).to.be.rejected
@@ -2206,7 +2214,8 @@ describe('Jig', () => {
     it('should support arguments with different instances of the same jig location', async () => {
       const run = createHookedRun()
       class Num extends Jig { init (n) { this.n = n }}
-      const a = await new Num(10).sync()
+      const a = new Num(10)
+      await a.sync()
       expectAction(a, 'init', [10], [], [a], [])
       const a2 = await run.load(a.location)
       const a3 = await run.load(a.location)
@@ -2220,7 +2229,8 @@ describe('Jig', () => {
     it('should throw if pass different locations of same jig as arguments', async () => {
       const run = createHookedRun()
       class A extends Jig { f (n) { this.n = n; return this }}
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       expectAction(a, 'init', [], [], [a], [])
       await a.f(1).sync()
       expectAction(a, 'f', [1], [a], [a], [])
@@ -2235,7 +2245,8 @@ describe('Jig', () => {
       createHookedRun()
       class A extends Jig { }
       class B extends A { }
-      const b = await new B().sync()
+      const b = new B()
+      await b.sync()
       expectAction(b, 'init', [], [], [b], [])
       const run2 = new Run()
       await run2.load(b.location)
@@ -2245,9 +2256,11 @@ describe('Jig', () => {
       const run = createHookedRun()
       class A extends Jig { init (n) { this.n = n } }
       class B extends Jig { init (a) { this.n = a.n } }
-      const a = await new A(1).sync()
+      const a = new A(1)
+      await a.sync()
       expectAction(a, 'init', [1], [], [a], [])
-      const b = await new B(a).sync()
+      const b = new B(a)
+      await b.sync()
       expectAction(b, 'init', [a], [], [b], [a])
       const b2 = await run.load(b.location)
       expect(b2.n).to.equal(1)
@@ -2265,7 +2278,8 @@ describe('Jig', () => {
       expectAction(a, 'init', [], [], [a], [])
       a.set(1)
       expectAction(a, 'set', [1], [a], [a], [])
-      const b = await new B(a).sync()
+      const b = new B(a)
+      await b.sync()
       expectAction(b, 'init', [a], [], [b], [])
       a.set(2)
       expectAction(a, 'set', [2], [a], [a], [])
@@ -2313,7 +2327,8 @@ describe('Jig', () => {
       createHookedRun()
       class A extends Jig {}
       A.n = 1
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       const run2 = new Run()
       const a2 = await run2.load(a.location)
       expect(a2.constructor.n).to.equal(1)
@@ -2554,7 +2569,8 @@ describe('Jig', () => {
         init () { this.f() }
         f () { this.caller = caller }
       }
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       expect(a.caller).to.equal(a)
       const a2 = await run.load(a.location)
       expect(a2.caller).to.equal(a2)
@@ -2579,7 +2595,8 @@ describe('Jig', () => {
     it('should allow local variables named caller', async () => {
       const run = createHookedRun()
       class A extends Jig { init () { const caller = 2; this.n = caller } }
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       expect(a.n).to.equal(2)
       const a2 = await run.load(a.location)
       expect(a2.n).to.equal(2)
@@ -2590,7 +2607,8 @@ describe('Jig', () => {
       function caller () { return 2 }
       class A extends Jig { init () { this.n = caller() } }
       A.deps = { caller }
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       expect(a.n).to.equal(2)
       const a2 = await run.load(a.location)
       expect(a2.n).to.equal(2)

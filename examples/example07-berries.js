@@ -47,7 +47,9 @@ async function main () {
 
   MyFavoritePost.deps = { TwetchPost, expect: Run.expect }
 
-  const favorite = await new MyFavoritePost(post).sync()
+  const favorite = new MyFavoritePost(post)
+
+  await favorite.sync()
 
   console.log(favorite.post.text)
 }

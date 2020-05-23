@@ -240,7 +240,8 @@ describe('Inventory', () => {
     it('should sync jigs without private key', async () => {
       const run = new Run()
       class A extends Jig {}
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       const run2 = new Run({ blockchain: run.blockchain, owner: run.owner.address })
       await run2.sync()
       expect(run2.owner instanceof Viewer).to.equal(true)

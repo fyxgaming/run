@@ -304,11 +304,12 @@ describe('Transaction', () => {
       return run
     }
 
-    it('should publish new basic jig', async () => {
+    it.only('should publish new basic jig', async () => {
       const run = hookRun(new Run())
       const creator = run.owner.address
       class A extends Jig {}
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       expect(data.code).to.deep.equal([{ text: A.toString(), owner: creator }])
       expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args: [], creator }])
       expect(data.jigs).to.equal(1)
@@ -320,7 +321,8 @@ describe('Transaction', () => {
       const run = hookRun(new Run())
       const address = new bsv.PrivateKey().toAddress()
       class A extends Jig { f (owner) { this.owner = owner; return this } }
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       expect(tx.outputs[1].script.toAddress().toString()).to.equal(run.owner.address)
       expect(tx.outputs[2].script.toAddress().toString()).to.equal(run.owner.address)
       await a.f(address.toString()).sync()
@@ -330,7 +332,8 @@ describe('Transaction', () => {
     it('should correctly set satoshis on code and jig outputs', async () => {
       const run = hookRun(new Run())
       class A extends Jig { f (satoshis) { this.satoshis = satoshis; return this } }
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       expect(tx.outputs[1].satoshis).to.equal(bsv.Transaction.DUST_AMOUNT)
       expect(tx.outputs[2].satoshis).to.equal(bsv.Transaction.DUST_AMOUNT)
       await a.f(1).sync()
@@ -356,7 +359,8 @@ describe('Transaction', () => {
       const creator = run.owner.address
       class A extends Jig {}
       const a = new A()
-      await new A().sync() // eslint-disable-line
+      const a2 = new A()
+      await a2.sync()
       expect(data.code).to.deep.equal([])
       const target = `${a.origin.slice(0, 64)}_o1`
       expect(data.actions).to.deep.equal([{ target, method: 'init', args: [], creator }])
@@ -403,7 +407,8 @@ describe('Transaction', () => {
       const run = hookRun(new Run())
       const creator = run.owner.address
       class A extends Jig { init (a, b) { this.a = a; this.b = b }}
-      await new A(1, { a: 'a' }).sync() // eslint-disable-line
+      const a = new A(1, { a: 'a' })
+      await a.sync()
       expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args: [1, { a: 'a' }], creator }])
     })
 
@@ -414,8 +419,10 @@ describe('Transaction', () => {
 
         f (a) { this.x = a.n; return this }
       }
-      const a = await new A(1).sync()
-      const b = await new A(2).sync()
+      const a = new A(1)
+      await a.sync()
+      const b = new A(2)
+      await b.sync()
       await a.f(b).sync()
       const arg = { $ref: '_r0' }
       expect(data.actions).to.deep.equal([{ target: '_i0', method: 'f', args: [arg] }])
@@ -425,8 +432,10 @@ describe('Transaction', () => {
     it('should support passing jigs as args without reading them', async () => {
       hookRun(new Run())
       class A extends Jig { f (a) { this.a = a; return this } }
-      const a = await new A().sync()
-      const b = await new A().sync()
+      const a = new A()
+      await a.sync()
+      const b = new A()
+      await b.sync()
       await a.f(b, { a }, [b]).sync()
       const aref = { $ref: '_i0' }
       const bref = { $dup: 0 }
@@ -441,23 +450,28 @@ describe('Transaction', () => {
       class A extends Jig {
         init (a) { this.a = a }
 
-        set (x) { this.x = x; return this }
+        set (x) { this.x = x }
       }
       class B { }
       class C extends A { }
-      const a = await new A(A).sync()
+      const a = new A(A)
+      await a.sync()
       const args = [{ $ref: '_o1' }]
       expect(data.code).to.deep.equal([{ text: A.toString(), owner: creator }])
       expect(data.actions).to.deep.equal([{ target: '_o1', method: 'init', args, creator }])
       expect(data.jigs).to.equal(1)
-      await a.set(B).sync()
+      a.set(B)
+      await a.sync()
       expect(data.code).to.deep.equal([{ text: B.toString(), owner: creator }])
       expect(data.actions).to.deep.equal([{ target: '_i0', method: 'set', args: [{ $ref: '_o1' }] }])
       expect(data.jigs).to.equal(1)
-      await new C().sync()
-      await a.set(C).sync()
+      const c = new C()
+      await c.sync()
+      a.set(C)
+      await a.sync()
       expect(data.actions).to.deep.equal([{ target: '_i0', method: 'set', args: [{ $ref: `${C.location}` }] }])
-      await a.set(A).sync()
+      a.set(A)
+      await a.sync()
       expect(data.actions).to.deep.equal([{ target: '_i0', method: 'set', args: [{ $ref: `${A.location}` }] }])
     })
 
@@ -645,9 +659,12 @@ describe('Transaction', () => {
       const run = new Run()
       class B extends Jig { g () { this.n = 1 } }
       class A extends Jig { f (a, b) { this.a = a; b[0].g() }}
-      const b = await new B().sync()
-      const b2 = await new B().sync()
-      const a = await new A().sync()
+      const b = new B()
+      await b.sync()
+      const b2 = new B()
+      await b2.sync()
+      const a = new A()
+      await a.sync()
       const args = [{ $ref: `${b2.location}` }, [{ $ref: '_i1' }]]
       const actions = [{ target: '_i0', method: 'f', args }]
       const txid = await build(run, [], actions, [a.location, b.location], null, 2)
@@ -661,7 +678,8 @@ describe('Transaction', () => {
       const run = new Run()
       bsv.Networks.defaultNetwork = bsv.Networks.mainnet
       class A extends Jig { send (to) { this.owner = to } }
-      const a = await new A().sync()
+      const a = new A()
+      await a.sync()
       const privkey = new bsv.PrivateKey('testnet')
       const actions = [{ target: '_i0', method: 'send', args: [`${privkey.toAddress().toString()}`] }]
       const txid = await build(run, [], actions, [a.location], privkey.toAddress().toString(), 1)
@@ -711,7 +729,8 @@ describe('Transaction', () => {
       it('should throw if bad output target', async () => {
         const run = new Run()
         class A extends Jig { f () { } }
-        const a = await new A().sync()
+        const a = new A()
+        await a.sync()
         const actions = [{ target: '_o1', method: 'f', args: [] }]
         const txid = await build(run, [], actions, [a.location], null, 1)
         await expect(run.load(txid + '_o1')).to.be.rejectedWith('target _o1 missing')
@@ -720,7 +739,8 @@ describe('Transaction', () => {
       it('should throw if bad input target', async () => {
         const run = new Run()
         class A extends Jig { f () { } }
-        const a = await new A().sync()
+        const a = new A()
+        await a.sync()
         const actions = [{ target: '_i1', method: 'f', args: [] }]
         const txid = await build(run, [], actions, [a.location], null, 1)
         const tx = await run.blockchain.fetch(txid)
@@ -732,7 +752,8 @@ describe('Transaction', () => {
       it('should throw if nonexistant target', async () => {
         const run = new Run()
         class A extends Jig { f () { } }
-        const a = await new A().sync()
+        const a = new A()
+        await a.sync()
         const actions = [{ target: 'abc_o1', method: 'f', args: [] }]
         const txid = await build(run, [], actions, [a.location], null, 1)
         await expect(run.load(txid + '_o1')).to.be.rejectedWith() // TODO: check error
@@ -741,7 +762,8 @@ describe('Transaction', () => {
       it('should throw if bad method', async () => {
         const run = new Run()
         class A extends Jig { }
-        const a = await new A().sync()
+        const a = new A()
+        await a.sync()
         const actions = [{ target: '_i0', method: 'f', args: [] }]
         const txid = await build(run, [], actions, [a.location], null, 1)
         await expect(run.load(txid + '_o1')).to.be.rejectedWith() // TODO: check error
@@ -750,7 +772,8 @@ describe('Transaction', () => {
       it('should throw if bad json args', async () => {
         const run = new Run()
         class A extends Jig { f () { } }
-        const a = await new A().sync()
+        const a = new A()
+        await a.sync()
         const actions = [{ target: '_i0', method: 'f', args: 0 }]
         const txid = await build(run, [], actions, [a.location], null, 1)
         await expect(run.load(txid + '_o1')).to.be.rejectedWith() // TODO: check error
@@ -759,7 +782,8 @@ describe('Transaction', () => {
       it('should throw if bad class arg', async () => {
         const run = new Run()
         class A extends Jig { f (n) { this.n = n } }
-        const a = await new A().sync()
+        const a = new A()
+        await a.sync()
         const actions = [{ target: '_i0', method: 'f', args: [{ $class: 'Map' }] }]
         const txid = await build(run, [], actions, [a.location], null, 1)
         await expect(run.load(txid + '_o1')).to.be.rejectedWith('Cannot deserialize [object Object')
@@ -768,7 +792,8 @@ describe('Transaction', () => {
       it('should throw if nonexistant jig arg', async () => {
         const run = new Run()
         class A extends Jig { f (a) { this.a = a } }
-        const a = await new A().sync()
+        const a = new A()
+        await a.sync()
         const nonexistant = { $ref: 'abc_o2' }
         const actions = [{ target: '_i0', method: 'f', args: [nonexistant] }]
         const txid = await build(run, [], actions, [a.location], null, 1)
@@ -778,7 +803,8 @@ describe('Transaction', () => {
       it('bad number of jigs', async () => {
         const run = new Run()
         class A extends Jig { f () { this.n = 1 } }
-        const a = await new A().sync()
+        const a = new A()
+        await a.sync()
         const actions = [{ target: '_i0', method: 'f', args: [] }]
         const txid = await build(run, [], actions, [a.location], null, 0)
         await expect(run.load(txid + '_o1')).to.be.rejected
@@ -789,7 +815,8 @@ describe('Transaction', () => {
         const creator = run.owner.address
         class B extends Jig { }
         class A extends Jig { init (b) { this.n = b.n } }
-        const b = await new B().sync()
+        const b = new B()
+        await b.sync()
         const code = [{ text: A.toString(), owner: creator }]
         const args = [{ $ref: `${b.location}` }]
         const actions = [{ target: '_o1', method: 'init', args, creator }]
@@ -801,8 +828,10 @@ describe('Transaction', () => {
         const run = new Run()
         class B extends Jig { f () { this.n = 1 } }
         class A extends Jig { f (b) { b.f() } }
-        const b = await new B().sync()
-        const a = await new A().sync()
+        const b = new B()
+        await b.sync()
+        const a = new A()
+        await a.sync()
         const args = [{ $ref: `${b.location}` }]
         const actions = [{ target: '_i1', method: 'f', args }]
         const txid = await build(run, [], actions, [a.location], null, 2)
@@ -814,7 +843,8 @@ describe('Transaction', () => {
         const creator = run.owner.address
         class B extends Jig { }
         class A extends Jig { init (b) { this.n = b.n } }
-        const b = await new B().sync()
+        const b = new B()
+        await b.sync()
         const code = [{ text: A.toString(), owner: creator }]
         const args = [{ $ref: '_i0' }]
         const actions = [{ target: '_o1', method: 'init', args, creator }]
@@ -826,8 +856,10 @@ describe('Transaction', () => {
         const run = new Run()
         class B extends Jig { f () { this.n = 1 } }
         class A extends Jig { f (b) { b.f() } }
-        const b = await new B().sync()
-        const a = await new A().sync()
+        const b = new B()
+        await b.sync()
+        const a = new A()
+        await a.sync()
         const args = [{ $ref: '_i0' }]
         const actions = [{ target: '_i1', method: 'f', args }]
         const txid = await build(run, [], actions, [b.location, a.location], null, 2, [], 1)
@@ -837,7 +869,8 @@ describe('Transaction', () => {
       it('should throw if method throws', async () => {
         const run = new Run()
         class A extends Jig { f () { throw new Error() } }
-        const a = await new A().sync()
+        const a = new A()
+        await a.sync()
         const actions = [{ target: '_i0', method: 'f', args: [] }]
         const txid = await build(run, [], actions, [a.location], null, 1)
         await expect(run.load(txid + '_o1')).to.be.rejectedWith('unexpected exception in f')
@@ -882,7 +915,8 @@ describe('Transaction', () => {
       it('should throw if updated jig owner does not match pk script', async () => {
         const run = new Run()
         class A extends Jig { send (to) { this.owner = to } }
-        const a = await new A().sync()
+        const a = new A()
+        await a.sync()
         const privkey1 = new bsv.PrivateKey('testnet')
         const privkey2 = new bsv.PrivateKey('testnet')
         const actions = [{ target: '_i0', method: 'send', args: [`${privkey1.publicKey.toString()}`] }]
@@ -900,7 +934,8 @@ describe('Transaction', () => {
       it('should throw if satoshis amount is incorrect', async () => {
         const run = new Run()
         class A extends Jig { f (satoshis) { this.satoshis = satoshis } }
-        const a = await new A().sync()
+        const a = new A()
+        await a.sync()
         const actions = [{ target: '_i0', method: 'f', args: [1000] }]
         const txid = await build(run, [], actions, [a.location], null, 1, [], 1, [bsv.Transaction.DUST_AMOUNT])
         await expect(run.load(txid + '_o1')).to.be.rejectedWith('bad satoshis on output 1')

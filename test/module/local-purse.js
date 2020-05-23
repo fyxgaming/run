@@ -255,7 +255,8 @@ describe('LocalPurse', () => {
       await run.blockchain.broadcast(send)
       new Run({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain }) // eslint-disable-line
       class A extends Jig { init () { this.satoshis = 888 } }
-      await new A().sync()
+      const a = new A()
+      await a.sync()
       const utxos = await run.blockchain.utxos(run.purse.script)
       const nonJigUtxos = utxos.filter(utxo => utxo.satoshis > 100000)
       const balance = nonJigUtxos.reduce((sum, utxo) => sum + utxo.satoshis, 0)
@@ -267,7 +268,8 @@ describe('LocalPurse', () => {
     it('should return non-jig and non-class utxos', async () => {
       const run2 = new Run({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain })
       class A extends Jig { init () { this.satoshis = 888 } }
-      await new A().sync()
+      const a = new A()
+      await a.sync()
       expect((await run2.purse.utxos()).length).to.equal(10)
     })
   })
