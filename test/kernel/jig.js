@@ -2605,6 +2605,7 @@ describe('Jig', () => {
 
   describe('internal properties and methods', () => {
     it('should support calling a read-only method on an internal property from outside', () => {
+      createHookedRun()
       class A extends Jig {
         init () {
           this.obj = { n: 1 }
@@ -2620,6 +2621,7 @@ describe('Jig', () => {
     })
 
     it('should support calling a read-only method on an internal property from another jig', () => {
+      createHookedRun()
       class A extends Jig {
         init () {
           this.obj = { n: 1 }
@@ -2642,6 +2644,7 @@ describe('Jig', () => {
     })
 
     it('should support calling a write method on an internal property from outside', () => {
+      createHookedRun()
       class A extends Jig {
         init () {
           this.arr = [1, 2, 3]
@@ -2657,6 +2660,7 @@ describe('Jig', () => {
     })
 
     it('should support calling a write method on an internal property from another jig', () => {
+      createHookedRun()
       class A extends Jig {
         init () {
           this.arr = [1, 2, 3]
@@ -2679,6 +2683,7 @@ describe('Jig', () => {
     })
 
     it('should support internal methods that do not require args to be serializable', () => {
+      createHookedRun()
       class A extends Jig { init () { this.arr = [1, 2, 3] } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
@@ -2687,6 +2692,7 @@ describe('Jig', () => {
     })
 
     it('should throw if save an internal property on another jig', () => {
+      createHookedRun()
       class A extends Jig {
         init () {
           this.obj = { n: 1 }
@@ -2711,6 +2717,7 @@ describe('Jig', () => {
     })
 
     it('should throw if save an arbitrary object from another jig', () => {
+      createHookedRun()
       class A extends Jig {
         init () {
           class Blob { f () { return 2 } }
@@ -2728,6 +2735,7 @@ describe('Jig', () => {
     })
 
     it('should not throw if save a copy of an internal property on another jig', () => {
+      createHookedRun()
       class A extends Jig {
         init () {
           this.obj = { n: 1 }

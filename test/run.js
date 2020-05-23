@@ -78,7 +78,14 @@ describe('Run', () => {
 
       it('should accept custom blockchain', () => {
         let fetched = false
-        const blockchain = { broadcast: async () => {}, fetch: async () => { fetched = true }, utxos: async () => {}, network: 'main' }
+        const blockchain = {
+          network: 'main',
+          broadcast: async () => {},
+          fetch: async () => { fetched = true },
+          utxos: async () => {},
+          time: async () => 0,
+          spends: async () => null
+        }
         const run = new Run({ blockchain })
         run.blockchain.fetch()
         expect(fetched).to.equal(true)

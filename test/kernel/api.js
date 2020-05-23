@@ -45,16 +45,32 @@ describe('Blockchain API', () => {
 
   describe('instanceof', () => {
     it('returns true if all required properties are present', () => {
-      const blockchain = { broadcast: () => {}, fetch: () => {}, utxos: () => {}, network: 'test' }
+      const blockchain = {
+        broadcast: () => {},
+        fetch: () => {},
+        utxos: () => {},
+        time: () => {},
+        spends: () => {},
+        network: 'test'
+      }
       expect(blockchain instanceof Blockchain).to.equal(true)
       expect(Object.assign(() => {}, blockchain) instanceof Blockchain).to.equal(true)
     })
 
     it('returns false if required property is missing', () => {
-      const blockchain = { broadcast: () => {}, fetch: () => {}, utxos: () => {}, network: 'test' }
+      const blockchain = {
+        broadcast: () => {},
+        fetch: () => {},
+        utxos: () => {},
+        time: () => {},
+        spends: () => {},
+        network: 'test'
+      }
       expect(Object.assign({}, blockchain, { broadcast: undefined }) instanceof Blockchain).to.equal(false)
       expect(Object.assign({}, blockchain, { fetch: undefined }) instanceof Blockchain).to.equal(false)
       expect(Object.assign({}, blockchain, { utxos: undefined }) instanceof Blockchain).to.equal(false)
+      expect(Object.assign({}, blockchain, { time: undefined }) instanceof Blockchain).to.equal(false)
+      expect(Object.assign({}, blockchain, { spends: undefined }) instanceof Blockchain).to.equal(false)
       expect(Object.assign({}, blockchain, { network: undefined }) instanceof Blockchain).to.equal(false)
     })
 
@@ -63,6 +79,8 @@ describe('Blockchain API', () => {
       expect(Object.assign({}, blockchain, { broadcast: 'method' }) instanceof Blockchain).to.equal(false)
       expect(Object.assign({}, blockchain, { fetch: 123 }) instanceof Blockchain).to.equal(false)
       expect(Object.assign({}, blockchain, { utxos: null }) instanceof Blockchain).to.equal(false)
+      expect(Object.assign({}, blockchain, { time: {} }) instanceof Blockchain).to.equal(false)
+      expect(Object.assign({}, blockchain, { spends: 'abc' }) instanceof Blockchain).to.equal(false)
       expect(Object.assign({}, blockchain, { network: () => {} }) instanceof Blockchain).to.equal(false)
     })
 
