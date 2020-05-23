@@ -170,7 +170,7 @@ describe('Berry', () => {
     const favorite = new Favorite(post)
     await favorite.sync()
     await run.load(favorite.location)
-    run.state.cache.clear()
+    run.cache.clear()
     await run.load(favorite.location)
   }).timeout(10000)
 

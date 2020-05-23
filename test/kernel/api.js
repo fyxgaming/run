@@ -12,7 +12,7 @@ const { expect } = chai
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const { NotImplementedError } = Run.errors
-const { Blockchain, Purse, Logger, State, Lock, Owner } = Run.api
+const { Blockchain, Purse, Logger, Cache, Lock, Owner } = Run.api
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain API
@@ -230,42 +230,42 @@ describe('Logger API', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
-// State API
+// Cache API
 // ------------------------------------------------------------------------------------------------
 
-describe('State API', () => {
+describe('Cache API', () => {
   describe('get', () => {
     it('should throw NotImplementedError by default', async () => {
-      await expect(new State().get()).to.be.rejectedWith(NotImplementedError)
+      await expect(new Cache().get()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
   describe('set', () => {
     it('should throw NotImplementedError by default', async () => {
-      await expect(new State().set()).to.be.rejectedWith(NotImplementedError)
+      await expect(new Cache().set()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
   describe('instanceof', () => {
     it('returns true if set and get functions are present', () => {
-      expect(({ set: () => {}, get: () => {} }) instanceof State).to.equal(true)
-      expect(Object.assign(() => {}, { set: () => {}, get: () => {} }) instanceof State).to.equal(true)
+      expect(({ set: () => {}, get: () => {} }) instanceof Cache).to.equal(true)
+      expect(Object.assign(() => {}, { set: () => {}, get: () => {} }) instanceof Cache).to.equal(true)
     })
 
     it('returns false if set and get are not functions', () => {
-      expect(({ set: false, get: () => {} }) instanceof State).to.equal(false)
-      expect(({ set: () => {}, get: null }) instanceof State).to.equal(false)
-      expect(({ set: () => {} }) instanceof State).to.equal(false)
-      expect(({ get: () => {} }) instanceof State).to.equal(false)
+      expect(({ set: false, get: () => {} }) instanceof Cache).to.equal(false)
+      expect(({ set: () => {}, get: null }) instanceof Cache).to.equal(false)
+      expect(({ set: () => {} }) instanceof Cache).to.equal(false)
+      expect(({ get: () => {} }) instanceof Cache).to.equal(false)
     })
 
     it('returns false for non-objects', () => {
-      expect(0 instanceof State).to.equal(false)
-      expect(true instanceof State).to.equal(false)
-      expect('blockchain' instanceof State).to.equal(false)
-      expect(null instanceof State).to.equal(false)
-      expect(undefined instanceof State).to.equal(false)
-      expect(Symbol.hasInstance instanceof State).to.equal(false)
+      expect(0 instanceof Cache).to.equal(false)
+      expect(true instanceof Cache).to.equal(false)
+      expect('blockchain' instanceof Cache).to.equal(false)
+      expect(null instanceof Cache).to.equal(false)
+      expect(undefined instanceof Cache).to.equal(false)
+      expect(Symbol.hasInstance instanceof Cache).to.equal(false)
     })
   })
 })

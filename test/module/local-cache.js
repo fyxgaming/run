@@ -21,40 +21,40 @@ const { Jig, LocalCache } = Run
 const txid = '0000000000000000000000000000000000000000000000000000000000000000'
 
 describe('LocalCache', () => {
-  const stateGets = []
-  const stateSets = []
-  const stateGetOverrides = new Map()
+  const cacheGets = []
+  const cacheSets = []
+  const cacheGetOverrides = new Map()
 
-  class WrappedState extends LocalCache {
+  class WrappedCache extends LocalCache {
     async get (location) {
-      stateGets.push(location)
-      if (stateGetOverrides.has(location)) return stateGetOverrides.get(location)
+      cacheGets.push(location)
+      if (cacheGetOverrides.has(location)) return cacheGetOverrides.get(location)
       return super.get(location)
     }
 
     async set (location, state) {
-      stateSets.push({ location, state })
+      cacheSets.push({ location, state })
       super.set(location, state)
     }
   }
 
-  function expectStateGet (location) {
-    expect(stateGets.shift()).to.equal(location)
+  function expectCacheGet (location) {
+    expect(cacheGets.shift()).to.equal(location)
   }
 
-  function expectStateSet (location, state) {
-    expect(stateSets.shift()).to.deep.equal({ location, state })
+  function expectCacheSet (location, state) {
+    expect(cacheSets.shift()).to.deep.equal({ location, state })
   }
 
   afterEach(() => {
-    expect(stateGets.length).to.equal(0)
-    expect(stateSets.length).to.equal(0)
+    expect(cacheGets.length).to.equal(0)
+    expect(cacheSets.length).to.equal(0)
   })
 
-  const run = new Run({ state: new WrappedState() })
+  const run = new Run({ cache: new WrappedCache() })
   beforeEach(() => run.activate())
 
-  // Clear the instance after the state tests so that we don't reuse the WrappedState
+  // Clear the instance after the state tests so that we don't reuse the WrappedCache
   after(() => { Run.instance = null })
 
   describe('set', () => {
@@ -62,17 +62,17 @@ describe('LocalCache', () => {
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       await a.sync()
-      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectCacheSet('jig://' + a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
       await a.set([true, null])
       await a.sync()
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: [true, null] } })
+      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: [true, null] } })
     })
 
     it('should cache satoshis', async () => {
       class A extends Jig { init () { this.satoshis = 3000 } }
       const a = new A()
       await a.sync()
-      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 3000 } })
+      expectCacheSet('jig://' + a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 3000 } })
     })
 
     it('should cache owner', async () => {
@@ -80,7 +80,7 @@ describe('LocalCache', () => {
       class A extends Jig { init (owner) { this.owner = owner } }
       const a = new A(owner)
       await a.sync()
-      expectStateSet(a.location, { type: '_o1', state: { owner, satoshis: 0 } })
+      expectCacheSet('jig://' + a.location, { type: '_o1', state: { owner, satoshis: 0 } })
     })
 
     it('should cache new jig references', async () => {
@@ -89,8 +89,8 @@ describe('LocalCache', () => {
       A.deps = { B }
       const a = new A()
       await run.sync()
-      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0, b: { $ref: '_o4' } } })
-      expectStateSet(a.b.location, { type: '_o2', state: { owner: run.owner.address, satoshis: 0 } })
+      expectCacheSet('jig://' + a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0, b: { $ref: '_o4' } } })
+      expectCacheSet('jig://' + a.b.location, { type: '_o2', state: { owner: run.owner.address, satoshis: 0 } })
     })
 
     it('should cache pre-existing jig references', async () => {
@@ -100,9 +100,9 @@ describe('LocalCache', () => {
       const a = new A()
       await a.set(b)
       await run.sync()
-      expectStateSet(b.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, b: { $ref: b.location } } })
+      expectCacheSet('jig://' + b.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, b: { $ref: b.location } } })
     })
 
     it('should cache code references', async () => {
@@ -112,7 +112,7 @@ describe('LocalCache', () => {
       A.deps = { B }
       const a = new A()
       await run.sync()
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0, A: { $ref: '_o1' }, B: { $ref: B.location } } })
+      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0, A: { $ref: '_o1' }, B: { $ref: B.location } } })
     })
 
     it('should respect max cache size', async () => {
@@ -153,11 +153,11 @@ describe('LocalCache', () => {
       const a = new A()
       a.set(1)
       await a.sync()
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
+      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
       const a2 = await run.load(a.location)
-      expectStateGet(a2.location)
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
+      expectCacheGet('jig://' + a2.location)
+      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
     })
 
     it('should return original state', async () => {
@@ -165,14 +165,14 @@ describe('LocalCache', () => {
       const a = new A()
       a.set(1)
       await a.sync()
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
-      stateGetOverrides.set(a.location, undefined)
+      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
+      cacheGetOverrides.set('jig://' + a.location, undefined)
       const a2 = await run.load(a.location)
-      expectStateGet(a2.location)
-      expectStateGet(a2.origin)
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
+      expectCacheGet('jig://' + a2.location)
+      expectCacheGet('jig://' + a2.origin)
+      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
     })
 
     it('should return middle state', async () => {
@@ -183,35 +183,35 @@ describe('LocalCache', () => {
       const middleLocation = a.location
       a.set(a)
       await a.sync()
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      expectStateSet(middleLocation, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: { $ref: '_o1' } } })
-      stateGetOverrides.set(a.location, undefined)
+      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectCacheSet('jig://' + middleLocation, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
+      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: { $ref: '_o1' } } })
+      cacheGetOverrides.set('jig://' + a.location, undefined)
       const a2 = await run.load(a.location)
-      expectStateGet(a2.location)
-      expectStateGet(middleLocation)
-      expectStateSet(middleLocation, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
-      expectStateSet(a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: { $ref: '_o1' } } })
+      expectCacheGet('jig://' + a2.location)
+      expectCacheGet('jig://' + middleLocation)
+      expectCacheSet('jig://' + middleLocation, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
+      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: { $ref: '_o1' } } })
     })
 
     it('should throw if invalid state', async () => {
       class A extends Jig { }
       const a = new A()
       await a.sync()
-      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectCacheSet('jig://' + a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
       // Load without a type property
-      stateGetOverrides.set(a.location, { state: { owner: run.owner.address, satoshis: 0 } })
+      cacheGetOverrides.set('jig://' + a.location, { state: { owner: run.owner.address, satoshis: 0 } })
       await expect(run.load(a.location)).to.be.rejectedWith('Cached state is missing a valid type and/or state property')
-      expectStateGet(a.location)
+      expectCacheGet('jig://' + a.location)
       // Load without a state property
-      stateGetOverrides.set(a.location, { type: A.location })
+      cacheGetOverrides.set('jig://' + a.location, { type: A.location })
       await expect(run.load(a.location)).to.be.rejectedWith('Cached state is missing a valid type and/or state property')
-      expectStateGet(a.location)
+      expectCacheGet('jig://' + a.location)
       // Load correct state
-      stateGetOverrides.clear()
+      cacheGetOverrides.clear()
       await run.load(a.location)
-      expectStateGet(a.location)
-      expectStateSet(a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      expectCacheGet('jig://' + a.location)
+      expectCacheSet('jig://' + a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
     })
 
     it('should return undefined if missing', async () => {
@@ -223,10 +223,10 @@ describe('LocalCache', () => {
       class A extends Jig { }
       const a = new A()
       await a.sync()
-      expectStateSet(a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      stateGetOverrides.set(a.location, { n: 1 })
+      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      cacheGetOverrides.set('jig://' + a.location, { n: 1 })
       await expect(run.load(a.location)).to.be.rejectedWith('hello')
-      expectStateGet(a.location)
+      expectCacheGet('jig://' + a.location)
     })
 
     // TODO: pending state of jigs changed, make sure does not interfere in _publishNext

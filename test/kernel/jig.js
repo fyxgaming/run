@@ -1002,8 +1002,8 @@ describe('Jig', () => {
       const a2 = await run.load(a.location)
       a2.set(2)
       await run.sync()
-      // create a new run to not use the state cache
-      const run2 = new Run({ state: new Run.LocalCache() })
+      // create a new run to not use the cache
+      const run2 = new Run({ cache: new Run.LocalCache() })
       const oldFetch = run.blockchain.fetch
       try {
         run2.blockchain.time = async txid => {
@@ -1917,7 +1917,7 @@ describe('Jig', () => {
       expect(a.set.size).to.equal(1)
       await run.sync()
       await run.load(a.location)
-      run.state.cache.clear()
+      run.cache.clear()
       await run.load(a.location)
     })
 
@@ -1938,7 +1938,7 @@ describe('Jig', () => {
       expect(a.map.size).to.equal(1)
       await run.sync()
       await run.load(a.location)
-      run.state.cache.clear()
+      run.cache.clear()
       await run.load(a.location)
     })
 
@@ -1951,7 +1951,7 @@ describe('Jig', () => {
       await store.sync()
       expect(!!Dragon.location).to.equal(true)
       await run.load(store.location)
-      run.state.cache.clear()
+      run.cache.clear()
       await run.load(store.location)
     })
 
@@ -1966,7 +1966,7 @@ describe('Jig', () => {
       const a = new A()
       await a.sync()
       await run.load(a.location)
-      run.state.cache.clear()
+      run.cache.clear()
       await run.load(a.location)
     })
   })
@@ -2294,7 +2294,7 @@ describe('Jig', () => {
     })
   })
 
-  describe('state cache', () => {
+  describe('cache', () => {
     it('should cache local updates', async () => {
       const run = createHookedRun()
       class A extends Jig {
@@ -2314,13 +2314,13 @@ describe('Jig', () => {
       b.set(1)
       await a.sync()
 
-      const run2 = new Run({ state: new Run.LocalCache() })
+      const run2 = new Run({ cache: new Run.LocalCache() })
       const t0 = Date.now()
       await run2.load(a.location)
       const t1 = Date.now()
       await run2.load(a.location)
       const t2 = Date.now()
-      expect((t1 - t0) / (t2 - t1) > 3).to.equal(true) // Load without state cache is 3x slower
+      expect((t1 - t0) / (t2 - t1) > 3).to.equal(true) // Load without cache is 3x slower
     })
   })
 
