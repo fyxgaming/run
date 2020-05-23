@@ -5,7 +5,7 @@
  */
 
 const { spy } = require('sinon')
-const { describe, it } = require('mocha')
+const { describe, it, afterEach } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
@@ -18,6 +18,8 @@ const { Jig } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('Syncer', () => {
+  afterEach(() => Run.instance && Run.instance.deactivate())
+
   describe('sync', () => {
     it('should broadcast transactions', async () => {
       const run = new Run()
@@ -26,7 +28,6 @@ describe('Syncer', () => {
       const a = new A()
       await a.sync()
       expect(run.blockchain.broadcast.callCount).to.equal(1)
-      run.deactivate()
     })
 
     it('should not force-fetch transactions just broadcasted', async () => {
@@ -36,8 +37,8 @@ describe('Syncer', () => {
       const a = new A()
       await a.sync()
       const txid = a.location.slice(0, 64)
-      expect(run.blockchain.fetch.calledWith(txid, false)).to.equal(true)
-      run.deactivate()
+      const vout = parseInt(a.location.slice(66))
+      expect(run.blockchain.spends.calledWith(txid, vout)).to.equal(true)
     })
 
     it('should not force-fetch transactions just broadcasted (payment channels)', async () => {
@@ -60,9 +61,8 @@ describe('Syncer', () => {
       await jig.sync()
 
       const txid = jig.location.slice(0, 64)
-      expect(run.blockchain.fetch.calledWith(txid, false)).to.equal(true)
-
-      run.deactivate()
+      const vout = parseInt(jig.location.slice(66))
+      expect(run.blockchain.spends.calledWith(txid, vout)).to.equal(true)
     })
 
     it('should not fetch transactions just broadcasted when forward = false', async () => {
@@ -73,7 +73,6 @@ describe('Syncer', () => {
       await a.sync({ forward: false })
       const txid = a.location.slice(0, 64)
       expect(run.blockchain.fetch.calledWith(txid, false)).to.equal(false)
-      run.deactivate()
     })
 
     it('should return immediately when nothing is queued', async () => {
