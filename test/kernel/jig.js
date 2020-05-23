@@ -4,7 +4,7 @@
  * Tests for lib/kernel/jig.js
  */
 
-const { describe, it, afterEach } = require('mocha')
+const { describe, it, afterEach, beforeEach } = require('mocha')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
@@ -579,8 +579,10 @@ describe('Jig', () => {
   })
 
   describe('arguments', () => {
+    const run = createHookedRun()
+    beforeEach(() => run.activate())
+
     async function testArgumentPass (...args) {
-      const run = createHookedRun()
       class A extends Jig { f (...args) { this.args = args } }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
