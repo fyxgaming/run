@@ -108,6 +108,27 @@ describe.only('LocalCache', () => {
       await expect(cache.set('NaN', NaN)).to.be.rejectedWith('Cannot cache number')
       await expect(cache.set('Infinity', Infinity)).to.be.rejectedWith('Cannot cache number')
     })
+
+    it('should throw if set different value', async () => {
+      const cache = new LocalCache()
+      const error = 'Attempt to set different values for the same key'
+      await cache.set('a', { n: 1 })
+      await expect(cache.set('a', 0)).to.be.rejectedWith(error)
+      await expect(cache.set('a', 'hello')).to.be.rejectedWith(error)
+      await expect(cache.set('a', { n: 2 })).to.be.rejectedWith(error)
+      await expect(cache.set('a', { n: 1, m: 2 })).to.be.rejectedWith(error)
+      await cache.set('a', { n: 1 })
+    })
+
+    it('should bump entry to the front', async () => {
+      const cache = new LocalCache()
+      await cache.set('a', 'a')
+      await cache.set('b', 'b')
+      await cache.set('a', 'a')
+      cache.maxSizeMB = 10 / 1000 / 1000
+      expect(await cache.get('a')).to.equal('a')
+      expect(await cache.get('b')).to.equal(undefined)
+    })
   })
 
   describe('clear', () => {
