@@ -15,7 +15,7 @@ const { Jig } = Run
 // Cache
 // ------------------------------------------------------------------------------------------------
 
-describe.only('Cache', () => {
+describe('Cache', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('set', () => {
