@@ -84,18 +84,21 @@ describe.only('Cache', () => {
     expect(run.cache.set.calledWith(`jig://${a.location}`, value3)).to.equal(true)
   })
 
+  it('should cache code references', async () => {
+    const run = new Run()
+    spy(run.cache)
+    class B extends Jig { }
+    run.deploy(B)
+    class A extends Jig { init () { this.A = A; this.B = B } }
+    A.deps = { B }
+    const a = new A()
+    await run.sync()
+    const value = { type: '_o1', state: { owner: run.owner.address, satoshis: 0, A: { $ref: '_o1' }, B: { $ref: B.location } } }
+    expect(run.cache.set.calledWith(`jig://${a.origin}`, value)).to.equal(true)
+  })
+
   /*
   describe('set', () => {
-
-    it('should cache code references', async () => {
-      class B extends Jig { }
-      run.deploy(B)
-      class A extends Jig { init () { this.A = A; this.B = B } }
-      A.deps = { B }
-      const a = new A()
-      await run.sync()
-      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0, A: { $ref: '_o1' }, B: { $ref: B.location } } })
-    })
 
     it('should respect max cache size', async () => {
       const cache = unmangle(new Run.LocalCache({ maxSizeMB: 400 / 1000 / 1000 }))
