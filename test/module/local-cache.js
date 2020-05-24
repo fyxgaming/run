@@ -5,6 +5,7 @@
  */
 
 const { describe, it } = require('mocha')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { LocalCache } = Run
@@ -89,7 +90,19 @@ describe.only('LocalCache', () => {
   })
 
   describe('set', () => {
-    // TODO
+    it('should set json values', async () => {
+      const cache = new LocalCache()
+      await cache.set('number', 1)
+      await cache.set('boolean', true)
+      await cache.set('string', 'abc')
+      await cache.set('object', {})
+      await cache.set('array', [1])
+    })
+
+    it('should throw for non-json values', async () => {
+      const cache = new LocalCache()
+      await expect(cache.set('function', x => x)).to.be.rejectedWith('hello')
+    })
   })
 
   describe('clear', () => {
