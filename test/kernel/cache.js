@@ -24,8 +24,8 @@ describe.only('Cache', () => {
     class A extends Jig { inc () { this.n = (this.n || 0) + 1 } }
     const a = new A()
     await a.sync()
-    const value = { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } }
-    expect(run.cache.set.calledWith(`jig://${a.location}`, value)).to.equal(true)
+    const value1 = { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } }
+    expect(run.cache.set.calledWith(`jig://${a.location}`, value1)).to.equal(true)
     await a.inc()
     await a.sync()
     const value2 = { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } }
@@ -61,26 +61,31 @@ describe.only('Cache', () => {
     A.deps = { B }
     const a = new A()
     await run.sync()
-    const value = { type: '_o1', state: { owner: run.owner.address, satoshis: 0, b: { $ref: '_o4' } } }
+    const value1 = { type: '_o1', state: { owner: run.owner.address, satoshis: 0, b: { $ref: '_o4' } } }
     const value2 = { type: '_o2', state: { owner: run.owner.address, satoshis: 0 } }
-    expect(run.cache.set.calledWith(`jig://${a.location}`, value)).to.equal(true)
+    expect(run.cache.set.calledWith(`jig://${a.location}`, value1)).to.equal(true)
     expect(run.cache.set.calledWith(`jig://${a.b.location}`, value2)).to.equal(true)
+  })
+
+  it('should cache existing jig references', async () => {
+    const run = new Run()
+    spy(run.cache)
+    class B extends Jig { }
+    class A extends Jig { set (b) { this.b = b } }
+    const b = new B()
+    const a = new A()
+    await a.set(b)
+    await run.sync()
+    const value1 = { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } }
+    const value2 = { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } }
+    const value3 = { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, b: { $ref: b.location } } }
+    expect(run.cache.set.calledWith(`jig://${b.location}`, value1)).to.equal(true)
+    expect(run.cache.set.calledWith(`jig://${a.origin}`, value2)).to.equal(true)
+    expect(run.cache.set.calledWith(`jig://${a.location}`, value3)).to.equal(true)
   })
 
   /*
   describe('set', () => {
-
-    it('should cache pre-existing jig references', async () => {
-      class B extends Jig { }
-      class A extends Jig { set (b) { this.b = b } }
-      const b = new B()
-      const a = new A()
-      await a.set(b)
-      await run.sync()
-      expectCacheSet('jig://' + b.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, b: { $ref: b.location } } })
-    })
 
     it('should cache code references', async () => {
       class B extends Jig { }
