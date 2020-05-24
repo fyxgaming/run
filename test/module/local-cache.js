@@ -21,6 +21,57 @@ const { Jig, LocalCache } = Run
 const txid = '0000000000000000000000000000000000000000000000000000000000000000'
 
 describe('LocalCache', () => {
+  describe.only('constructor', () => {
+    it('should accept valid maxSizeMB', () => {
+      new LocalCache({ maxSizeMB: 0 }) // eslint-disable-line
+      new LocalCache({ maxSizeMB: 0.5 }) // eslint-disable-line
+      new LocalCache({ maxSizeMB: 1 }) // eslint-disable-line
+      new LocalCache({ maxSizeMB: 100 }) // eslint-disable-line
+      new LocalCache({ maxSizeMB: Infinity }) // eslint-disable-line
+    })
+
+    it('should throw if invalid maxSizeMB', () => {
+      expect(() => new LocalCache({ maxSizeMB: NaN })).to.throw('Invalid maxSizeMB')
+      expect(() => new LocalCache({ maxSizeMB: -Infinity })).to.throw('Invalid maxSizeMB')
+      expect(() => new LocalCache({ maxSizeMB: -1 })).to.throw('Invalid maxSizeMB')
+      expect(() => new LocalCache({ maxSizeMB: null })).to.throw('Invalid maxSizeMB')
+      expect(() => new LocalCache({ maxSizeMB: '1' })).to.throw('Invalid maxSizeMB')
+      expect(() => new LocalCache({ maxSizeMB: () => 10 })).to.throw('Invalid maxSizeMB')
+    })
+
+    it('should set default maxSizeMB to 10', () => {
+      expect(new LocalCache().maxSizeMB).to.equal(10)
+    })
+  })
+
+  describe.only('maxSizeMB', () => {
+    it('should allow setting valid maxSizeMB', () => {
+      new LocalCache().maxSizeMB = 0
+      new LocalCache().maxSizeMB = 0.5
+      new LocalCache().maxSizeMB = 1
+      new LocalCache().maxSizeMB = 100
+      new LocalCache().maxSizeMB = Infinity
+    })
+
+    it('should throw if set invalid maxSizeMB', () => {
+      expect(() => { new LocalCache().maxSizeMB = NaN }).to.throw('Invalid maxSizeMB')
+      expect(() => { new LocalCache().maxSizeMB = -Infinity }).to.throw('Invalid maxSizeMB')
+      expect(() => { new LocalCache().maxSizeMB = -1 }).to.throw('Invalid maxSizeMB')
+      expect(() => { new LocalCache().maxSizeMB = null }).to.throw('Invalid maxSizeMB')
+      expect(() => { new LocalCache().maxSizeMB = '1' }).to.throw('Invalid maxSizeMB')
+      expect(() => { new LocalCache().maxSizeMB = () => 10 }).to.throw('Invalid maxSizeMB')
+    })
+
+    it('should reduce size if necessary', async () => {
+      const cache = new LocalCache()
+      await cache.set('0', '0')
+      await cache.set('1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+      cache.maxSizeMB = 10
+      expect(await cache.get('0')).to.equal('0')
+      expect(await cache.get('a')).to.equal(undefined)
+    })
+  })
+
   const cacheGets = []
   const cacheSets = []
   const cacheGetOverrides = new Map()
