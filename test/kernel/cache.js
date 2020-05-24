@@ -155,21 +155,6 @@ describe.only('Cache', () => {
       await expect(run.load(a.location)).to.be.rejectedWith('Cached state is missing a valid type and/or state property')
     })
   })
-
-  /*
-  describe('get', () => {
-    it.skip('should throw if hashed state does not match', async () => {
-      class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      cacheGetOverrides.set('jig://' + a.location, { n: 1 })
-      await expect(run.load(a.location)).to.be.rejectedWith('hello')
-      expectCacheGet('jig://' + a.location)
-    })
-    // TODO: pending state of jigs changed, make sure does not interfere in _publishNext
-  })
-  */
 })
 
 // ------------------------------------------------------------------------------------------------
