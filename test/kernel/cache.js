@@ -100,18 +100,22 @@ describe.only('Cache', () => {
   })
 
   describe('get', () => {
-    /*
-    it('should return latest value', async () => {
+    it('should request load location', async () => {
+      const run = new Run()
+      spy(run.cache)
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       a.set(1)
       await a.sync()
-      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
+      const value1 = { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } }
+      const value2 = { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } }
+      expect(run.cache.set.calledWith(`jig://${a.origin}`, value1)).to.equal(true)
+      expect(run.cache.set.calledWith(`jig://${a.location}`, value2)).to.equal(true)
       const a2 = await run.load(a.location)
-      expectCacheGet('jig://' + a2.location)
+      expect(run.cache.get.calledWith(`jig://${a2.location}`)).to.equal(true)
     })
 
+    /*
     it('should return original value', async () => {
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
