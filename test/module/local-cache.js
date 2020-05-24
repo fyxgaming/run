@@ -157,7 +157,6 @@ describe('LocalCache', () => {
       expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
       const a2 = await run.load(a.location)
       expectCacheGet('jig://' + a2.location)
-      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
     })
 
     it('should return original value', async () => {
@@ -171,8 +170,6 @@ describe('LocalCache', () => {
       const a2 = await run.load(a.location)
       expectCacheGet('jig://' + a2.location)
       expectCacheGet('jig://' + a2.origin)
-      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
     })
 
     it('should return middle state', async () => {
@@ -190,8 +187,6 @@ describe('LocalCache', () => {
       const a2 = await run.load(a.location)
       expectCacheGet('jig://' + a2.location)
       expectCacheGet('jig://' + middleLocation)
-      expectCacheSet('jig://' + middleLocation, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
-      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: { $ref: '_o1' } } })
     })
 
     it('should throw if invalid state', async () => {
@@ -211,7 +206,6 @@ describe('LocalCache', () => {
       cacheGetOverrides.clear()
       await run.load(a.location)
       expectCacheGet('jig://' + a.location)
-      expectCacheSet('jig://' + a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
     })
 
     it('should return undefined if missing', async () => {
