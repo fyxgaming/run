@@ -7,6 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const { spy } = require('sinon')
+const { PrivateKey } = require('bsv')
 const { Run } = require('../env/config')
 const { Jig } = Run
 
@@ -41,16 +42,19 @@ describe.only('Cache', () => {
     expect(run.cache.set.calledWith(`jig://${a.location}`, value)).to.equal(true)
   })
 
+  it('should cache owner', async () => {
+    const run = new Run()
+    spy(run.cache)
+    const owner = new PrivateKey().publicKey.toString()
+    class A extends Jig { init (owner) { this.owner = owner } }
+    const a = new A(owner)
+    await a.sync()
+    const value = { type: '_o1', state: { owner, satoshis: 0 } }
+    expect(run.cache.set.calledWith(`jig://${a.location}`, value)).to.equal(true)
+  })
+
   /*
   describe('set', () => {
-    it('should cache owner', async () => {
-      const owner = new bsv.PrivateKey().publicKey.toString()
-      class A extends Jig { init (owner) { this.owner = owner } }
-      const a = new A(owner)
-      await a.sync()
-      expectCacheSet('jig://' + a.location, { type: '_o1', state: { owner, satoshis: 0 } })
-    })
-
     it('should cache new jig references', async () => {
       class B extends Jig { }
       class A extends Jig { init () { this.b = new B() } }
