@@ -4,80 +4,45 @@
  * Cache API tests that should work across all Cache implementations
  */
 
-const { describe, it, afterEach, beforeEach, after } = require('mocha')
+const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const { spy } = require('sinon')
-const bsv = require('bsv')
 const { Run } = require('../env/config')
-const { unmangle } = require('../env/unmangle')
-const { Jig, LocalCache } = Run
+const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Cache
 // ------------------------------------------------------------------------------------------------
 
 describe.only('Cache', () => {
+  afterEach(() => Run.instance && Run.instance.deactivate())
+
   it('should call set for each update after sync', async () => {
     const run = new Run()
     spy(run.cache)
     class A extends Jig { inc () { this.n = (this.n || 0) + 1 } }
     const a = new A()
     await a.sync()
-    const value = { type: '_o1', state: { owner: run.owner.address, satoshis: 0 }}
+    const value = { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } }
     expect(run.cache.set.calledWith(`jig://${a.location}`, value)).to.equal(true)
     await a.inc()
     await a.sync()
-    const value2 = { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 }}
+    const value2 = { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } }
     expect(run.cache.set.calledWith(`jig://${a.location}`, value2)).to.equal(true)
   })
 
-  /*
-  const txid = '0000000000000000000000000000000000000000000000000000000000000000'
-
-  const cacheGets = []
-  const cacheSets = []
-  const cacheGetOverrides = new Map()
-
-  class WrappedCache extends LocalCache {
-    async get (key) {
-      cacheGets.push(key)
-      if (cacheGetOverrides.has(key)) return cacheGetOverrides.get(key)
-      return super.get(key)
-    }
-
-    async set (key, value) {
-      cacheSets.push({ key, value })
-      super.set(key, value)
-    }
-  }
-
-  function expectCacheGet (key) {
-    expect(cacheGets.shift()).to.equal(key)
-  }
-
-  function expectCacheSet (key, value) {
-    expect(cacheSets.shift()).to.deep.equal({ key, value })
-  }
-
-  afterEach(() => {
-    expect(cacheGets.length).to.equal(0)
-    expect(cacheSets.length).to.equal(0)
+  it('should cache satoshis', async () => {
+    const run = new Run()
+    spy(run.cache)
+    class A extends Jig { init () { this.satoshis = 3000 } }
+    const a = new A()
+    await a.sync()
+    const value = { type: '_o1', state: { owner: run.owner.address, satoshis: 3000 } }
+    expect(run.cache.set.calledWith(`jig://${a.location}`, value)).to.equal(true)
   })
 
-  const run = new Run({ cache: new WrappedCache() })
-  beforeEach(() => run.activate())
-
-  // Clear the instance after the cache tests so that we don't reuse the WrappedCache
-  after(() => { Run.instance = null })
-
+  /*
   describe('set', () => {
-    it('should cache satoshis', async () => {
-      class A extends Jig { init () { this.satoshis = 3000 } }
-      const a = new A()
-      await a.sync()
-      expectCacheSet('jig://' + a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 3000 } })
-    })
-
     it('should cache owner', async () => {
       const owner = new bsv.PrivateKey().publicKey.toString()
       class A extends Jig { init (owner) { this.owner = owner } }
