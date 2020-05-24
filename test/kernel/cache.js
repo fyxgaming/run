@@ -131,48 +131,29 @@ describe.only('Cache', () => {
       expect(run.cache.set.calledWith(`jig://${a.origin}`, value1)).to.equal(true)
       expect(run.cache.set.calledWith(`jig://${middleLocation}`, value2)).to.equal(true)
       expect(run.cache.set.calledWith(`jig://${a.location}`, value3)).to.equal(true)
-      stub(run.cache, 'get').withArgs([`jig://${a.location}`]).returns(undefined)
+      stub(run.cache, 'get').withArgs(`jig://${a.location}`).returns(undefined)
       const a2 = await run.load(a.location)
       expect(run.cache.get.calledWith(`jig://${a2.location}`)).to.equal(true)
       expect(run.cache.get.calledWith(`jig://${middleLocation}`)).to.equal(true)
     })
 
-    /*
-    it('should return original value', async () => {
-      class A extends Jig { set (n) { this.n = n } }
-      const a = new A()
-      a.set(1)
-      await a.sync()
-      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
-      cacheGetOverrides.set('jig://' + a.location, undefined)
-      const a2 = await run.load(a.location)
-      expectCacheGet('jig://' + a2.location)
-      expectCacheGet('jig://' + a2.origin)
-    })
-
-    it('should return middle state', async () => {
-    })
-
-    it('should throw if invalid state', async () => {
+    it('should throw if return invalid state', async () => {
+      const run = new Run()
+      spy(run.cache, 'set')
       class A extends Jig { }
       const a = new A()
       await a.sync()
-      expectCacheSet('jig://' + a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
+      const value1 = { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } }
+      expect(run.cache.set.calledWith(`jig://${a.location}`, value1)).to.equal(true)
       // Load without a type property
-      cacheGetOverrides.set('jig://' + a.location, { state: { owner: run.owner.address, satoshis: 0 } })
+      const badValue1 = { state: { owner: run.owner.address, satoshis: 0 } }
+      const stubbedGet = stub(run.cache, 'get').withArgs(`jig://${a.location}`).returns(badValue1)
       await expect(run.load(a.location)).to.be.rejectedWith('Cached state is missing a valid type and/or state property')
-      expectCacheGet('jig://' + a.location)
       // Load without a state property
-      cacheGetOverrides.set('jig://' + a.location, { type: A.location })
+      const badValue2 = { type: A.location }
+      stubbedGet.withArgs(`jig://${a.location}`).returns(badValue2)
       await expect(run.load(a.location)).to.be.rejectedWith('Cached state is missing a valid type and/or state property')
-      expectCacheGet('jig://' + a.location)
-      // Load correct state
-      cacheGetOverrides.clear()
-      await run.load(a.location)
-      expectCacheGet('jig://' + a.location)
     })
-    */
   })
 
   /*
