@@ -26,24 +26,24 @@ describe('LocalCache', () => {
   const cacheGetOverrides = new Map()
 
   class WrappedCache extends LocalCache {
-    async get (location) {
-      cacheGets.push(location)
-      if (cacheGetOverrides.has(location)) return cacheGetOverrides.get(location)
-      return super.get(location)
+    async get (key) {
+      cacheGets.push(key)
+      if (cacheGetOverrides.has(key)) return cacheGetOverrides.get(key)
+      return super.get(key)
     }
 
-    async set (location, state) {
-      cacheSets.push({ location, state })
-      super.set(location, state)
+    async set (key, value) {
+      cacheSets.push({ key, value })
+      super.set(key, value)
     }
   }
 
-  function expectCacheGet (location) {
-    expect(cacheGets.shift()).to.equal(location)
+  function expectCacheGet (key) {
+    expect(cacheGets.shift()).to.equal(key)
   }
 
-  function expectCacheSet (location, state) {
-    expect(cacheSets.shift()).to.deep.equal({ location, state })
+  function expectCacheSet (key, value) {
+    expect(cacheSets.shift()).to.deep.equal({ key, value })
   }
 
   afterEach(() => {
@@ -54,7 +54,7 @@ describe('LocalCache', () => {
   const run = new Run({ cache: new WrappedCache() })
   beforeEach(() => run.activate())
 
-  // Clear the instance after the state tests so that we don't reuse the WrappedCache
+  // Clear the instance after the cache tests so that we don't reuse the WrappedCache
   after(() => { Run.instance = null })
 
   describe('set', () => {
@@ -116,39 +116,39 @@ describe('LocalCache', () => {
     })
 
     it('should respect max cache size', async () => {
-      const state = new Run.LocalCache({ maxSizeMB: 400 / 1000 / 1000 })
+      const cache = new Run.LocalCache({ maxSizeMB: 400 / 1000 / 1000 })
       for (let i = 0; i < 100; i++) {
-        await state.set(`${txid}_o` + i, i)
+        await cache.set(`${txid}_o` + i, i)
       }
-      expect(state.cache.size < 100).to.equal(true)
-      expect(state.cache.has(`${txid}_o99`)).to.equal(true)
-      expect(state.cache.has(`${txid}_o0`)).to.equal(false)
+      expect(cache.map.size < 100).to.equal(true)
+      expect(cache.map.has(`${txid}_o99`)).to.equal(true)
+      expect(cache.map.has(`${txid}_o0`)).to.equal(false)
     })
 
     it('should move existing values to the front of the cache', async () => {
-      const state = new Run.LocalCache({ maxSizeMB: 30 })
-      await state.set(`${txid}_o0`, undefined)
-      await state.set(`${txid}_o1`, undefined)
-      await state.set(`${txid}_o2`, undefined)
-      expect(state.cache.keys().next().value).to.equal(`${txid}_o0`)
-      const sizeBytesBefore = unmangle(state)._sizeBytes
+      const cache = new Run.LocalCache({ maxSizeMB: 30 })
+      await cache.set(`${txid}_o0`, undefined)
+      await cache.set(`${txid}_o1`, undefined)
+      await cache.set(`${txid}_o2`, undefined)
+      expect(cache.map.keys().next().value).to.equal(`${txid}_o0`)
+      const sizeBytesBefore = unmangle(cache)._sizeBytes
       expect(sizeBytesBefore).not.to.equal(0)
-      await state.set(`${txid}_o0`, undefined)
-      expect(unmangle(state)._sizeBytes).to.equal(sizeBytesBefore)
-      expect(state.cache.keys().next().value).to.equal(`${txid}_o1`)
+      await cache.set(`${txid}_o0`, undefined)
+      expect(unmangle(cache)._sizeBytes).to.equal(sizeBytesBefore)
+      expect(cache.map.keys().next().value).to.equal(`${txid}_o1`)
     })
 
     it('should throw for different values of same key', async () => {
-      const state = new Run.LocalCache({ maxSizeMB: 30 })
-      await state.set(`${txid}_o0`, { n: 1 })
-      await expect(state.set(`${txid}_o0`, { n: 2 })).to.be.rejectedWith('Attempt to set different states for the same location')
-      await expect(state.set(`${txid}_o0`, { n: 'a' })).to.be.rejectedWith('Attempt to set different states for the same location')
-      await expect(state.set(`${txid}_o0`, { n: 'a', m: 'b' })).to.be.rejectedWith('Attempt to set different states for the same location')
+      const cache = new Run.LocalCache({ maxSizeMB: 30 })
+      await cache.set(`${txid}_o0`, { n: 1 })
+      await expect(cache.set(`${txid}_o0`, { n: 2 })).to.be.rejectedWith('Attempt to set different values for the same key')
+      await expect(cache.set(`${txid}_o0`, { n: 'a' })).to.be.rejectedWith('Attempt to set different values for the same key')
+      await expect(cache.set(`${txid}_o0`, { n: 'a', m: 'b' })).to.be.rejectedWith('Attempt to set different values for the same key')
     })
   })
 
   describe('get', () => {
-    it('should return latest state', async () => {
+    it('should return latest value', async () => {
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       a.set(1)
@@ -160,7 +160,7 @@ describe('LocalCache', () => {
       expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
     })
 
-    it('should return original state', async () => {
+    it('should return original value', async () => {
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       a.set(1)
@@ -215,8 +215,8 @@ describe('LocalCache', () => {
     })
 
     it('should return undefined if missing', async () => {
-      const state = new Run.LocalCache({ maxSizeMB: 30 })
-      expect(await state.get(`${txid}_o0`)).to.equal(undefined)
+      const cache = new Run.LocalCache({ maxSizeMB: 30 })
+      expect(await cache.get(`${txid}_o0`)).to.equal(undefined)
     })
 
     it.skip('should throw if hashed state does not match', async () => {
