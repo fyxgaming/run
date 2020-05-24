@@ -230,6 +230,8 @@ describe('LocalCache', () => {
     })
 
     // TODO: pending state of jigs changed, make sure does not interfere in _publishNext
+
+    // TODO: Change maxSizeMB
   })
 })
 
