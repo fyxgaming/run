@@ -18,8 +18,8 @@ const { Jig, LocalCache } = Run
 // LocalCache
 // ------------------------------------------------------------------------------------------------
 
-describe('LocalCache', () => {
-  describe.only('constructor', () => {
+describe.only('LocalCache', () => {
+  describe('constructor', () => {
     it('should accept valid maxSizeMB', () => {
       new LocalCache({ maxSizeMB: 0 }) // eslint-disable-line
       new LocalCache({ maxSizeMB: 0.5 }) // eslint-disable-line
@@ -42,7 +42,7 @@ describe('LocalCache', () => {
     })
   })
 
-  describe.only('maxSizeMB', () => {
+  describe('maxSizeMB', () => {
     it('should allow setting valid maxSizeMB', () => {
       new LocalCache().maxSizeMB = 0
       new LocalCache().maxSizeMB = 0.5
@@ -69,7 +69,9 @@ describe('LocalCache', () => {
       expect(await cache.get('a')).to.equal(undefined)
     })
   })
+})
 
+describe('LocalCache (old)', () => {
   const txid = '0000000000000000000000000000000000000000000000000000000000000000'
 
   const cacheGets = []
