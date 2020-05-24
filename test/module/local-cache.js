@@ -116,26 +116,26 @@ describe('LocalCache', () => {
     })
 
     it('should respect max cache size', async () => {
-      const cache = new Run.LocalCache({ maxSizeMB: 400 / 1000 / 1000 })
+      const cache = unmangle(new Run.LocalCache({ maxSizeMB: 400 / 1000 / 1000 }))
       for (let i = 0; i < 100; i++) {
         await cache.set(`${txid}_o` + i, i)
       }
-      expect(cache.map.size < 100).to.equal(true)
-      expect(cache.map.has(`${txid}_o99`)).to.equal(true)
-      expect(cache.map.has(`${txid}_o0`)).to.equal(false)
+      expect(cache._map.size < 100).to.equal(true)
+      expect(cache._map.has(`${txid}_o99`)).to.equal(true)
+      expect(cache._map.has(`${txid}_o0`)).to.equal(false)
     })
 
     it('should move existing values to the front of the cache', async () => {
-      const cache = new Run.LocalCache({ maxSizeMB: 30 })
+      const cache = unmangle(new Run.LocalCache({ maxSizeMB: 30 }))
       await cache.set(`${txid}_o0`, undefined)
       await cache.set(`${txid}_o1`, undefined)
       await cache.set(`${txid}_o2`, undefined)
-      expect(cache.map.keys().next().value).to.equal(`${txid}_o0`)
+      expect(cache._map.keys().next().value).to.equal(`${txid}_o0`)
       const sizeBytesBefore = unmangle(cache)._sizeBytes
       expect(sizeBytesBefore).not.to.equal(0)
       await cache.set(`${txid}_o0`, undefined)
       expect(unmangle(cache)._sizeBytes).to.equal(sizeBytesBefore)
-      expect(cache.map.keys().next().value).to.equal(`${txid}_o1`)
+      expect(cache._map.keys().next().value).to.equal(`${txid}_o1`)
     })
 
     it('should throw for different values of same key', async () => {
