@@ -96,12 +96,17 @@ describe.only('LocalCache', () => {
       await cache.set('boolean', true)
       await cache.set('string', 'abc')
       await cache.set('object', {})
+      await cache.set('null', null)
       await cache.set('array', [1])
     })
 
     it('should throw for non-json values', async () => {
       const cache = new LocalCache()
-      await expect(cache.set('function', x => x)).to.be.rejectedWith('hello')
+      await expect(cache.set('function', x => x)).to.be.rejectedWith('Cannot cache function')
+      await expect(cache.set('symbol', Symbol.hasInstance)).to.be.rejectedWith('Cannot cache symbol')
+      await expect(cache.set('undefined', undefined)).to.be.rejectedWith('Cannot cache undefined')
+      await expect(cache.set('NaN', NaN)).to.be.rejectedWith('Cannot cache number')
+      await expect(cache.set('Infinity', Infinity)).to.be.rejectedWith('Cannot cache number')
     })
   })
 
