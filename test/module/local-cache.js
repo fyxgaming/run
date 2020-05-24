@@ -62,11 +62,57 @@ describe.only('LocalCache', () => {
 
     it('should reduce size if necessary', async () => {
       const cache = new LocalCache()
-      await cache.set('0', '0')
-      await cache.set('1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-      cache.maxSizeMB = 10
-      expect(await cache.get('0')).to.equal('0')
+      await cache.set('0', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+      await cache.set('1', '1')
+      cache.maxSizeMB = 10 / 1000 / 1000
+      expect(await cache.get('0')).to.equal(undefined)
+      expect(await cache.get('1')).to.equal('1')
+    })
+  })
+
+  describe('get', () => {
+    it('should return value previously set', async () => {
+      const cache = new LocalCache()
+      await cache.set('a', 1)
+      expect(await cache.get('a')).to.equal(1)
+    })
+
+    it('should return undefined if missing', async () => {
+      const cache = new LocalCache()
       expect(await cache.get('a')).to.equal(undefined)
+    })
+
+    it('should bump value to the front', async () => {
+      const maxSizeMB = 20 / 1000 / 1000
+      const cache = new LocalCache()
+      await cache.set('a', 'a')
+      await cache.set('b', 'b')
+      await cache.get('a')
+      cache.maxSizeMB = 10 / 1000 / 1000
+      expect(await cache.get('a')).to.equal('a')
+      expect(await cache.get('b')).to.equal(undefined)
+    })
+  })
+
+  describe('set', () => {
+    // TODO
+  })
+
+  describe('clear', () => {
+    it('should remove all entries', async () => {
+      const cache = new LocalCache()
+      await cache.set('a', 1)
+      await cache.clear()
+      expect(await cache.get('a')).to.equal(undefined)
+    })
+
+    it('should reset cache size', async () => {
+      const maxSizeMB = 10 / 1000 / 1000
+      const cache = new LocalCache({ maxSizeMB })
+      await cache.set('a', 'a')
+      cache.clear()
+      await cache.set('b', 'b')
+      expect(await cache.get('b')).to.equal('b')
     })
   })
 })
