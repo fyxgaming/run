@@ -6,7 +6,7 @@
 
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
-const { spy } = require('sinon')
+const { spy, stub } = require('sinon')
 const { PrivateKey } = require('bsv')
 const { Run } = require('../env/config')
 const { Jig } = Run
@@ -115,6 +115,28 @@ describe.only('Cache', () => {
       expect(run.cache.get.calledWith(`jig://${a2.location}`)).to.equal(true)
     })
 
+    it('should request dependent location', async () => {
+      const run = new Run()
+      spy(run.cache, 'set')
+      class A extends Jig { set (n) { this.n = n } }
+      const a = new A()
+      a.set(1)
+      await a.sync()
+      const middleLocation = a.location
+      a.set(a)
+      await a.sync()
+      const value1 = { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } }
+      const value2 = { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } }
+      const value3 = { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: { $ref: '_o1' } } }
+      expect(run.cache.set.calledWith(`jig://${a.origin}`, value1)).to.equal(true)
+      expect(run.cache.set.calledWith(`jig://${middleLocation}`, value2)).to.equal(true)
+      expect(run.cache.set.calledWith(`jig://${a.location}`, value3)).to.equal(true)
+      stub(run.cache, 'get').withArgs([`jig://${a.location}`]).returns(undefined)
+      const a2 = await run.load(a.location)
+      expect(run.cache.get.calledWith(`jig://${a2.location}`)).to.equal(true)
+      expect(run.cache.get.calledWith(`jig://${middleLocation}`)).to.equal(true)
+    })
+
     /*
     it('should return original value', async () => {
       class A extends Jig { set (n) { this.n = n } }
@@ -130,20 +152,6 @@ describe.only('Cache', () => {
     })
 
     it('should return middle state', async () => {
-      class A extends Jig { set (n) { this.n = n } }
-      const a = new A()
-      a.set(1)
-      await a.sync()
-      const middleLocation = a.location
-      a.set(a)
-      await a.sync()
-      expectCacheSet('jig://' + a.origin, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      expectCacheSet('jig://' + middleLocation, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 } })
-      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: { $ref: '_o1' } } })
-      cacheGetOverrides.set('jig://' + a.location, undefined)
-      const a2 = await run.load(a.location)
-      expectCacheGet('jig://' + a2.location)
-      expectCacheGet('jig://' + middleLocation)
     })
 
     it('should throw if invalid state', async () => {
