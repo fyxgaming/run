@@ -14,7 +14,7 @@ const { LocalCache } = Run
 // LocalCache
 // ------------------------------------------------------------------------------------------------
 
-describe.only('LocalCache', () => {
+describe('LocalCache', () => {
   describe('constructor', () => {
     it('should accept valid maxSizeMB', () => {
       new LocalCache({ maxSizeMB: 0 }) // eslint-disable-line

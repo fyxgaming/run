@@ -6,6 +6,7 @@
 
 const { describe, it, afterEach, beforeEach, after } = require('mocha')
 const { expect } = require('chai')
+const { spy } = require('sinon')
 const bsv = require('bsv')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
@@ -15,7 +16,22 @@ const { Jig, LocalCache } = Run
 // Cache
 // ------------------------------------------------------------------------------------------------
 
-describe('Cache', () => {
+describe.only('Cache', () => {
+  it('should call set for each update after sync', async () => {
+    const run = new Run()
+    spy(run.cache)
+    class A extends Jig { inc () { this.n = (this.n || 0) + 1 } }
+    const a = new A()
+    await a.sync()
+    const value = { type: '_o1', state: { owner: run.owner.address, satoshis: 0 }}
+    expect(run.cache.set.calledWith(`jig://${a.location}`, value)).to.equal(true)
+    await a.inc()
+    await a.sync()
+    const value2 = { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: 1 }}
+    expect(run.cache.set.calledWith(`jig://${a.location}`, value2)).to.equal(true)
+  })
+
+  /*
   const txid = '0000000000000000000000000000000000000000000000000000000000000000'
 
   const cacheGets = []
@@ -55,16 +71,6 @@ describe('Cache', () => {
   after(() => { Run.instance = null })
 
   describe('set', () => {
-    it('should call set for each update after sync', async () => {
-      class A extends Jig { set (n) { this.n = n } }
-      const a = new A()
-      await a.sync()
-      expectCacheSet('jig://' + a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0 } })
-      await a.set([true, null])
-      await a.sync()
-      expectCacheSet('jig://' + a.location, { type: A.location, state: { origin: a.origin, owner: run.owner.address, satoshis: 0, n: [true, null] } })
-    })
-
     it('should cache satoshis', async () => {
       class A extends Jig { init () { this.satoshis = 3000 } }
       const a = new A()
@@ -221,9 +227,8 @@ describe('Cache', () => {
     })
 
     // TODO: pending state of jigs changed, make sure does not interfere in _publishNext
-
-    // TODO: Change maxSizeMB
   })
+  */
 })
 
 // ------------------------------------------------------------------------------------------------
