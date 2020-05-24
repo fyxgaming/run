@@ -53,17 +53,22 @@ describe.only('Cache', () => {
     expect(run.cache.set.calledWith(`jig://${a.location}`, value)).to.equal(true)
   })
 
+  it('should cache new jig references', async () => {
+    const run = new Run()
+    spy(run.cache)
+    class B extends Jig { }
+    class A extends Jig { init () { this.b = new B() } }
+    A.deps = { B }
+    const a = new A()
+    await run.sync()
+    const value = { type: '_o1', state: { owner: run.owner.address, satoshis: 0, b: { $ref: '_o4' } } }
+    const value2 = { type: '_o2', state: { owner: run.owner.address, satoshis: 0 } }
+    expect(run.cache.set.calledWith(`jig://${a.location}`, value)).to.equal(true)
+    expect(run.cache.set.calledWith(`jig://${a.b.location}`, value2)).to.equal(true)
+  })
+
   /*
   describe('set', () => {
-    it('should cache new jig references', async () => {
-      class B extends Jig { }
-      class A extends Jig { init () { this.b = new B() } }
-      A.deps = { B }
-      const a = new A()
-      await run.sync()
-      expectCacheSet('jig://' + a.location, { type: '_o1', state: { owner: run.owner.address, satoshis: 0, b: { $ref: '_o4' } } })
-      expectCacheSet('jig://' + a.b.location, { type: '_o2', state: { owner: run.owner.address, satoshis: 0 } })
-    })
 
     it('should cache pre-existing jig references', async () => {
       class B extends Jig { }
