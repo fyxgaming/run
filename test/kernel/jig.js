@@ -29,7 +29,7 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
-      expect(run.code.installs.has(A)).to.equal(true)
+      expect(unmangle(run.code)._installs.has(A)).to.equal(true)
       await run.sync()
       expect(A.origin.length).to.equal(67)
     })
