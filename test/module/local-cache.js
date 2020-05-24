@@ -18,8 +18,6 @@ const { Jig, LocalCache } = Run
 // LocalCache
 // ------------------------------------------------------------------------------------------------
 
-const txid = '0000000000000000000000000000000000000000000000000000000000000000'
-
 describe('LocalCache', () => {
   describe.only('constructor', () => {
     it('should accept valid maxSizeMB', () => {
@@ -71,6 +69,8 @@ describe('LocalCache', () => {
       expect(await cache.get('a')).to.equal(undefined)
     })
   })
+
+  const txid = '0000000000000000000000000000000000000000000000000000000000000000'
 
   const cacheGets = []
   const cacheSets = []
