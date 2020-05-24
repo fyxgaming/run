@@ -6,10 +6,8 @@
 
 const { spy } = require('sinon')
 const { describe, it, afterEach } = require('mocha')
-const chai = require('chai')
-const chaiAsPromised = require('chai-as-promised')
-chai.use(chaiAsPromised)
-const { expect } = chai
+require('chai').use(require('chai-as-promised'))
+const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { Jig } = Run
 

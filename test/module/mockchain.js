@@ -6,10 +6,8 @@
 
 const { PrivateKey, Transaction, Script } = require('bsv')
 const { describe, it } = require('mocha')
-const chai = require('chai')
-const chaiAsPromised = require('chai-as-promised')
-chai.use(chaiAsPromised)
-const { expect } = chai
+require('chai').use(require('chai-as-promised'))
+const { expect } = require('chai')
 const { Run, PERF } = require('../env/config')
 const { Mockchain } = Run
 

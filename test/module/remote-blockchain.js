@@ -6,10 +6,8 @@
 
 const { PrivateKey, Script } = require('bsv')
 const { describe, it } = require('mocha')
-const chai = require('chai')
-const chaiAsPromised = require('chai-as-promised')
-const { expect } = chai
-chai.use(chaiAsPromised)
+require('chai').use(require('chai-as-promised'))
+const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const { RemoteBlockchain, BlockchainServer } = Run

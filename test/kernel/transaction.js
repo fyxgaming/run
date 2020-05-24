@@ -6,10 +6,8 @@
 
 const bsv = require('bsv')
 const { Transaction } = bsv
-const chai = require('chai')
-const chaiAsPromised = require('chai-as-promised')
-const { expect } = chai
-chai.use(chaiAsPromised)
+require('chai').use(require('chai-as-promised'))
+const { expect } = require('chai')
 const { describe, it } = require('mocha')
 const { Run, payFor } = require('../env/config')
 const { Jig } = Run

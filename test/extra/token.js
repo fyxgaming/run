@@ -6,10 +6,8 @@
 
 const bsv = require('bsv')
 const { describe, it, beforeEach } = require('mocha')
-const chai = require('chai')
-const chaiAsPromised = require('chai-as-promised')
-chai.use(chaiAsPromised)
-const { expect } = chai
+require('chai').use(require('chai-as-promised'))
+const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { Token } = Run
 const { unmangle } = require('../env/unmangle')

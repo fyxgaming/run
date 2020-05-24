@@ -5,10 +5,8 @@
  */
 
 const { describe, it, afterEach, beforeEach } = require('mocha')
-const chai = require('chai')
-const chaiAsPromised = require('chai-as-promised')
-chai.use(chaiAsPromised)
-const { expect } = chai
+require('chai').use(require('chai-as-promised'))
+const { expect } = require('chai')
 const { stub } = require('sinon')
 const { PrivateKey } = require('bsv')
 const { Run } = require('../env/config')

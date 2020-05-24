@@ -5,11 +5,9 @@
  */
 
 const { describe, it, beforeEach } = require('mocha')
-const chai = require('chai')
-const chaiAsPromised = require('chai-as-promised')
-chai.use(chaiAsPromised)
+require('chai').use(require('chai-as-promised'))
+const { expect } = require('chai')
 const { stub } = require('sinon')
-const { expect } = chai
 const { Run, COVER } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const { Jig } = Run
