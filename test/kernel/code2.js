@@ -10,7 +10,7 @@ const { describe, it } = require('mocha')
 // Code
 // ------------------------------------------------------------------------------------------------
 
-describe.only('Code', () => {
+describe('Code', () => {
   it('test', () => {
     console.log('hello')
   })

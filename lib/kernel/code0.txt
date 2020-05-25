@@ -17,7 +17,7 @@ const {
   _resourceType,
   _lockify,
   _activeRun,
-  _display,
+  _text,
   _checkOwner
 } = require('../util/misc')
 const Log = require('../util/log')
@@ -56,7 +56,7 @@ class Code {
     // If the code does not need to be deployed, early out
     if (desc._deploying || desc._deployed || desc._native) return desc._S
 
-    Log._info(TAG, 'Deploy', _display(T))
+    Log._info(TAG, 'Deploy', _text(T))
     desc._deploy(options)
 
     return desc._S
@@ -125,7 +125,7 @@ class Code {
 
   _checkValid (T) {
     // Check that this code can be deployed
-    if (!_deployable(T)) throw new Error(`${_display(T)} not deployable`)
+    if (!_deployable(T)) throw new Error(`${_text(T)} not deployable`)
 
     // Check the properties on T are allowed
     this._checkProps()
@@ -155,7 +155,7 @@ class CodeDescriptor {
     // Check this copy shares the same source code. It might be good to check for same props too
     // someday, but as a quick safety check not intended to be bulletproof, this is OK for now.
     if (T.toString() !== this._T.toString()) {
-      throw new Error(`Detected different versions of ${_display(T)}`)
+      throw new Error(`Detected different versions of ${_text(T)}`)
     }
 
     return this
@@ -166,7 +166,7 @@ class CodeDescriptor {
     const run = _activeRun()
     if (run.blockchain.network !== this._code._network) {
       const hint = `Hint: Activate Run instance for ${this._network}`
-      throw new Error(`Cannot deploy ${_display(T)} on the current network\n\n${hint}`)
+      throw new Error(`Cannot deploy ${_text(T)} on the current network\n\n${hint}`)
     }
   }
 
@@ -176,19 +176,19 @@ class CodeDescriptor {
     // Check that deps is an object
     const isBasicObject = (o) => Object.getPrototypeOf(Object.getPrototypeOf(o)) === null
     if (classProps.includes('deps') && !isBasicObject(this._T.deps)) {
-      throw new Error(`deps must be an object on ${_display(this._T)}`)
+      throw new Error(`deps must be an object on ${_text(this._T)}`)
     }
 
     // Check the presets is an object
     if (classProps.includes('presets')) {
       if (typeof T.presets !== 'object' || !T.presets) {
-        throw new Error(`presets must be an object on ${_display(T)}`)
+        throw new Error(`presets must be an object on ${_text(T)}`)
       }
 
       const networkPresets = T.presets[network]
       if (networkPresets) {
         if (typeof networkPresets !== 'object' || !networkPresets) {
-          throw new Error(`presets for ${network} must be an object on ${_display(T)}`)
+          throw new Error(`presets for ${network} must be an object on ${_text(T)}`)
         }
 
         // Check that the network presets either all exist, or none do
@@ -203,7 +203,7 @@ class CodeDescriptor {
           _checkLocation(location)
         } else {
           if (origin || location || owner) {
-            throw new Error(`jig presets for ${network} are not fully defined ${_display(T)}`)
+            throw new Error(`jig presets for ${network} are not fully defined ${_text(T)}`)
           }
         }
       }
@@ -521,7 +521,7 @@ const stringProps = [
     if (this._installs.has(location)) return this._installs.get(location)
     if (_partiallyInstalledCode.has(location)) return _partiallyInstalledCode.get(location)
 
-    Log._info(TAG, 'Installing', _display(def.text), 'from', location)
+    Log._info(TAG, 'Installing', _text(def.text), 'from', location)
 
     // parse the location
     const txid = location.slice(0, 64)
