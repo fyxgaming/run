@@ -64,17 +64,17 @@ class Code {
 
   /**
    * Installs a "native" type that won't be deployed.
-   * 
+   *
    * When using types that depend on native types, the native types must already be installed.
    * Native types do not have the same security at deployed types. Their behavior can be
    * hot-swapped at runtime with different code, and their only identifying feature is their
    * name. It is strongly recommended that you know what you are doing before using native types.
-   * 
+   *
    * Run ships with two native types: Jig and Berry.
-   * 
+   *
    * @param {function} T Native type
    */
-  installNative(T) {
+  installNative (T) {
     this._checkValid(T)
     const desc = new CodeDescriptor()
     desc._T = T
@@ -87,7 +87,7 @@ class Code {
     return desc
   }
 
-  installLocal(T) {
+  installLocal (T) {
     this._checkValid(T)
     const desc = new CodeDescriptor()
     desc._T = T
@@ -103,7 +103,7 @@ class Code {
    * @param {function} T Local type or sandbox
    * @returns {CodeDescriptor} Descriptor object
    */
-  _descriptor(T) {
+  _descriptor (T) {
     // Check if we've already created a descriptor. If so, use it directly.
     const exact = this._localDescriptors.get(T) || this._sandboxDescriptors.get(T)
     if (exact) return exact
@@ -119,11 +119,11 @@ class Code {
     return this.installLocal(T)
   }
 
-  _sandbox(desc) {
+  _sandbox (desc) {
     this._sandboxDescriptors.set(desc._S, desc)
   }
 
-  _checkValid(T) {
+  _checkValid (T) {
     // Check that this code can be deployed
     if (!_deployable(T)) throw new Error(`${_display(T)} not deployable`)
 
@@ -140,7 +140,7 @@ class Code {
  * Manages the sandbox and deployment status of a particular type
  */
 class CodeDescriptor {
-  constructor() {
+  constructor () {
     this._T = null
     this._S = null
     this._locals = [] // All versions of T
@@ -149,7 +149,7 @@ class CodeDescriptor {
     this._native = false
   }
 
-  _addLocalCopy(T) {
+  _addLocalCopy (T) {
     if (this._locals.includes(T)) return
 
     // Check this copy shares the same source code. It might be good to check for same props too
@@ -161,7 +161,7 @@ class CodeDescriptor {
     return this
   }
 
-  _deploy(options = {}) {
+  _deploy (options = {}) {
     // Get the active Run instance, and make sure we can be deploy to its network
     const run = _activeRun()
     if (run.blockchain.network !== this._code._network) {
@@ -170,7 +170,7 @@ class CodeDescriptor {
     }
   }
 
-  _checkProps() {
+  _checkProps () {
     const classProps = Object.keys(this._T)
 
     // Check that deps is an object
@@ -210,7 +210,7 @@ class CodeDescriptor {
     }
   }
 
-  _sandbox(depsOverride = null) {
+  _sandbox (depsOverride = null) {
     /*
     const prev = this._installs.get(T)
     if (prev) return [prev, null]
