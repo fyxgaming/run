@@ -29,6 +29,26 @@ describe('Code', () => {
       expect(desc._native).to.equal(false)
     })
 
+    it('installs and sandboxes type with presets', () => {
+      const code = unmangle(new Code('mock'))
+      class A { }
+      A.presets = {
+        mock: {
+          location: '..',
+          origin: '..',
+          owner: '..'
+        }
+      }
+      const desc = code._install(A)
+      expect(desc._T).to.equal(A)
+      expect(desc._S).not.to.equal(A)
+      expect(desc._S.toString()).to.equal(A.toString())
+      expect(desc._locals.size).to.equal(1)
+      expect(desc._deploying).to.equal(false)
+      expect(desc._deployed).to.equal(true)
+      expect(desc._native).to.equal(false)
+    })
+
     it('returns descriptor if already installed', () => {
       const code = unmangle(new Code('mock'))
       class A { }
