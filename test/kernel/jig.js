@@ -24,7 +24,7 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('constructor', () => {
-    it('should create basic jig', async () => {
+    it.only('should create basic jig', async () => {
       const run = createHookedRun()
       class A extends Jig { }
       const a = new A()
