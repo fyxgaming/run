@@ -14,12 +14,12 @@ const Code = unmangle(Run)._Code
 // Code
 // ------------------------------------------------------------------------------------------------
 
-describe('Code', () => {
+describe.only('Code', () => {
   describe('_install', () => {
     it('installs basic class', () => {
       const code = unmangle(new Code('mock'))
       class A { }
-      const desc = code._install(A)
+      const desc = unmangle(code._install(A))
       expect(desc._T).to.equal(A)
       expect(desc._S).not.to.equal(A)
       expect(desc._S.toString()).to.equal(A.toString())
@@ -32,19 +32,19 @@ describe('Code', () => {
     it('installs function', () => {
       const code = unmangle(new Code('mock'))
       function f () { }
-      const desc = code._install(f)
+      const desc = unmangle(code._install(f))
       expect(desc._T).to.equal(f)
     })
 
     it('installs anonymous class', () => {
       const code = unmangle(new Code('mock'))
-      const desc = code._install(class { })
+      const desc = unmangle(code._install(class { }))
       expect(desc._T.toString()).to.equal(desc._S.toString())
     })
 
     it('installs anonymous function', () => {
       const code = unmangle(new Code('mock'))
-      const desc = code._install(() => {})
+      const desc = unmangle(code._install(() => {}))
       expect(desc._locals.size).to.equal(1)
     })
 
@@ -58,7 +58,7 @@ describe('Code', () => {
           owner: '..'
         }
       }
-      const desc = code._install(A)
+      const desc = unmangle(code._install(A))
       expect(desc._T).to.equal(A)
       expect(desc._S).not.to.equal(A)
       expect(desc._S.toString()).to.equal(A.toString())
@@ -81,7 +81,7 @@ describe('Code', () => {
           owner: '..'
         }
       }
-      const desc = code._install(A)
+      const desc = unmangle(code._install(A))
       expect(desc._T).to.equal(A)
       expect(desc._S).not.to.equal(A)
       expect(desc._S.toString()).to.equal(A.toString())
@@ -107,7 +107,7 @@ describe('Code', () => {
           ARR: [1]
         }
       }
-      const desc = code._install(A)
+      const desc = unmangle(code._install(A))
       expect(desc._S.NUM).to.equal(1)
       expect(desc._S.OBJ).to.deep.equal({ n: 1, o: {} })
       expect(desc._S.ARR).to.deep.equal([1])
@@ -119,7 +119,7 @@ describe('Code', () => {
       class B extends A { }
       class C extends B { }
       code._install(C)
-      const desc = code._find(A)
+      const desc = unmangle(code._find(A))
       expect(desc._T).to.equal(A)
       expect(desc._S).not.to.equal(A)
       expect(desc._deployed).to.equal(false)
@@ -157,9 +157,9 @@ describe('Code', () => {
       const desc = code._install(A)
       const desc2 = code._install(B)
       expect(desc).to.equal(desc2)
-      expect(desc._T).to.equal(A)
-      expect(desc._locals.size).to.equal(2)
-      expect(desc._deployed).to.equal(true)
+      expect(unmangle(desc)._T).to.equal(A)
+      expect(unmangle(desc)._locals.size).to.equal(2)
+      expect(unmangle(desc)._deployed).to.equal(true)
     })
 
     it('throws if not a valid type', () => {
