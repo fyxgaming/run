@@ -16,7 +16,7 @@ const Code = unmangle(Run)._Code
 
 describe('Code', () => {
   describe('_install', () => {
-    it('installs and sandboxes basic new type', () => {
+    it('installs basic class', () => {
       const code = unmangle(new Code('mock'))
       class A { }
       const desc = code._install(A)
@@ -27,6 +27,25 @@ describe('Code', () => {
       expect(desc._deploying).to.equal(false)
       expect(desc._deployed).to.equal(false)
       expect(desc._native).to.equal(false)
+    })
+
+    it('installs function', () => {
+      const code = unmangle(new Code('mock'))
+      function f () { }
+      const desc = code._install(f)
+      expect(desc._T).to.equal(f)
+    })
+
+    it('installs anonymous class', () => {
+      const code = unmangle(new Code('mock'))
+      const desc = code._install(class { })
+      expect(desc._T.toString()).to.equal(desc._S.toString())
+    })
+
+    it('installs anonymous function', () => {
+      const code = unmangle(new Code('mock'))
+      const desc = code._install(() => {})
+      expect(desc._locals.size).to.equal(1)
     })
 
     it('installs and sandboxes type with resource presets', () => {
@@ -149,6 +168,14 @@ describe('Code', () => {
 
     it('throws if presets are invalid', () => {
 
+    })
+
+    it('throws if there is prototype inheritance', () => {
+      const code = unmangle(new Code('mock'))
+      function A () { }
+      function B () { }
+      B.prototype = Object.create(A.prototype)
+      expect(() => code._install(B)).to.throw('Cannot install B')
     })
   })
 })
