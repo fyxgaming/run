@@ -29,7 +29,7 @@ describe('Code', () => {
       expect(desc._native).to.equal(false)
     })
 
-    it('installs and sandboxes type with special presets', () => {
+    it('installs and sandboxes type with resource presets', () => {
       const code = unmangle(new Code('mock'))
       class A { }
       A.presets = {
@@ -76,10 +76,30 @@ describe('Code', () => {
     })
 
     it('returns existing descriptor of a preset copy', () => {
-
+      const code = unmangle(new Code('mock'))
+      class A { }
+      A.presets = {
+        mock: {
+          location: '..',
+          origin: '..',
+          owner: '..'
+        }
+      }
+      class B { }
+      Object.assign(B, A)
+      const desc = code._install(A)
+      const desc2 = code._install(B)
+      expect(desc).to.equal(desc2)
+      expect(desc._T).to.equal(A)
+      expect(desc._locals.size).to.equal(2)
+      expect(desc._deployed).to.equal(true)
     })
 
     it('throws if not a valid type', () => {
+
+    })
+
+    it('throws if presets are invalid', () => {
 
     })
   })
