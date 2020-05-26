@@ -16,7 +16,7 @@ const Code = unmangle(Run)._Code
 
 describe('Code', () => {
   describe('_install', () => {
-    it('installs and sandboxes new type', () => {
+    it('installs and sandboxes basic new type', () => {
       const code = unmangle(new Code('mock'))
       class A { }
       const desc = code._install(A)
@@ -47,9 +47,12 @@ describe('Code', () => {
       expect(desc._deploying).to.equal(false)
       expect(desc._deployed).to.equal(true)
       expect(desc._native).to.equal(false)
+      expect(desc._S.location).to.equal(A.presets.mock.location)
+      expect(desc._S.origin).to.equal(A.presets.mock.origin)
+      expect(desc._S.owner).to.equal(A.presets.mock.owner)
     })
 
-    it('installs and sandboxes type with normal presets', () => {
+    it('applies normal presets to sandbox', () => {
       const code = unmangle(new Code('mock'))
       class A { }
       A.NUM = 2
@@ -68,12 +71,32 @@ describe('Code', () => {
       expect(desc._S.ARR).to.deep.equal([1])
     })
 
+    it('installs parents before children', () => {
+      const code = unmangle(new Code('mock'))
+      class A { }
+      class B extends A { }
+      class C extends B { }
+      code._install(C)
+      const desc = code._find(A)
+      expect(desc._T).to.equal(A)
+      expect(desc._S).not.to.equal(A)
+      expect(desc._deployed).to.equal(false)
+    })
+
+    // Test loop of parents and children
+
     it('returns descriptor if already installed', () => {
       const code = unmangle(new Code('mock'))
       class A { }
       const desc = code._install(A)
       expect(code._install(A)).to.equal(desc)
     })
+
+    it('does not duplicate parents', () => {
+      // Parent
+    })
+
+    // Test dependencies
 
     it('returns existing descriptor of a preset copy', () => {
       const code = unmangle(new Code('mock'))
