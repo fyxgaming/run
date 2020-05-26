@@ -186,6 +186,15 @@ describe.only('Code', () => {
       expect(() => code._install(Math.sin)).to.throw('Cannot install sin')
       expect(() => code._install(parseInt)).to.throw('Cannot install parseInt')
     })
+
+    it('should not install if error', () => {
+      const code = unmangle(new Code('mock'))
+      class A { }
+      A.Date = Date
+      expect(() => code._install(A)).to.throw('Cannot install Date')
+      expect(code._find(A)).to.equal(undefined)
+      expect(code._find(Date)).to.equal(undefined)
+    })
   })
 })
 
