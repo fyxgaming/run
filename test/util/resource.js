@@ -13,7 +13,7 @@ const { unmangle } = require('../env/unmangle')
 const {
   _location,
   _satoshis,
-  _lockify
+  _owner
 } = unmangle(unmangle(Run)._util)
 
 // ------------------------------------------------------------------------------------------------
@@ -50,29 +50,29 @@ describe('_satoshis', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
-// _lockify
+// _owner
 // ------------------------------------------------------------------------------------------------
 
-describe('_lockify', () => {
+describe('_owner', () => {
   it('should support valid owners on different networks', () => {
     for (const bsvNetwork of ['mainnet', 'testnet']) {
       const privkey = new PrivateKey(bsvNetwork)
       const pubkey = privkey.publicKey.toString()
       const addr = privkey.toAddress().toString()
       const bytes = new StandardLock(addr).script()
-      expect(_lockify(pubkey).script()).to.deep.equal(bytes)
-      expect(_lockify(addr).script()).to.deep.equal(bytes)
-      expect(_lockify(new StandardLock(addr)).script()).to.deep.equal(bytes)
+      expect(_owner(pubkey).script()).to.deep.equal(bytes)
+      expect(_owner(addr).script()).to.deep.equal(bytes)
+      expect(_owner(new StandardLock(addr)).script()).to.deep.equal(bytes)
     }
   })
 
   it('should throw if bad owner', () => {
-    expect(() => _lockify()).to.throw('Invalid owner: undefined')
-    expect(() => _lockify(123)).to.throw('Invalid owner: 123')
-    expect(() => _lockify('hello')).to.throw('Invalid owner: "hello"')
-    expect(() => _lockify(new PrivateKey())).to.throw('Invalid owner')
-    expect(() => _lockify(new PrivateKey().publicKey)).to.throw('Invalid owner')
-    expect(() => _lockify([new PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
+    expect(() => _owner()).to.throw('Invalid owner: undefined')
+    expect(() => _owner(123)).to.throw('Invalid owner: 123')
+    expect(() => _owner('hello')).to.throw('Invalid owner: "hello"')
+    expect(() => _owner(new PrivateKey())).to.throw('Invalid owner')
+    expect(() => _owner(new PrivateKey().publicKey)).to.throw('Invalid owner')
+    expect(() => _owner([new PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
   })
 })
 

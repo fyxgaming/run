@@ -19,7 +19,7 @@ const {
   _text,
   _checkOwner
 } = require('../util/misc')
-cosnt { _lockify } = require('../util/props')
+cosnt { _owner } = require('../util/props')
 const Log = require('../util/log')
 const ResourceJSON = require('../util/json')
 
@@ -571,7 +571,7 @@ const stringProps = [
       // Make sure the owner matches the output address
       // TODO: Move this to transaction
       const hex1 = tx.outputs[vout].script.toHex()
-      const hex2 = Buffer.from(_lockify(creator, bsvNetwork).script()).toString('hex')
+      const hex2 = Buffer.from(_owner(creator, bsvNetwork).script()).toString('hex')
       if (hex1 !== hex2) throw new Error(`bad def owner: ${location}`)
 
       // Hydrate class prop resources and apply them to the sandbox
