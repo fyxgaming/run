@@ -29,7 +29,7 @@ describe('Code', () => {
       expect(desc._native).to.equal(false)
     })
 
-    it('installs and sandboxes type with presets', () => {
+    it('installs and sandboxes type with special presets', () => {
       const code = unmangle(new Code('mock'))
       class A { }
       A.presets = {
@@ -47,6 +47,25 @@ describe('Code', () => {
       expect(desc._deploying).to.equal(false)
       expect(desc._deployed).to.equal(true)
       expect(desc._native).to.equal(false)
+    })
+
+    it('installs and sandboxes type with normal presets', () => {
+      const code = unmangle(new Code('mock'))
+      class A { }
+      A.NUM = 2
+      A.OBJ = { m: 2 }
+      A.ARR = [2]
+      A.presets = {
+        mock: {
+          NUM: 1,
+          OBJ: { n: 1, o: {} },
+          ARR: [1]
+        }
+      }
+      const desc = code._install(A)
+      expect(desc._S.NUM).to.equal(1)
+      expect(desc._S.OBJ).to.deep.equal({ n: 1, o: {} })
+      expect(desc._S.ARR).to.deep.equal([1])
     })
 
     it('returns descriptor if already installed', () => {
