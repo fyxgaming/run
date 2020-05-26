@@ -52,6 +52,29 @@ describe('Code', () => {
       expect(desc._S.owner).to.equal(A.presets.mock.owner)
     })
 
+    it('installs type having resource presets on another network', () => {
+      const code = unmangle(new Code('mock'))
+      class A { }
+      A.presets = {
+        test: {
+          location: '..',
+          origin: '..',
+          owner: '..'
+        }
+      }
+      const desc = code._install(A)
+      expect(desc._T).to.equal(A)
+      expect(desc._S).not.to.equal(A)
+      expect(desc._S.toString()).to.equal(A.toString())
+      expect(desc._locals.size).to.equal(1)
+      expect(desc._deploying).to.equal(false)
+      expect(desc._deployed).to.equal(false)
+      expect(desc._native).to.equal(false)
+      expect(desc._S.location).to.equal(undefined)
+      expect(desc._S.origin).to.equal(undefined)
+      expect(desc._S.owner).to.equal(undefined)
+    })
+
     it('applies normal presets to sandbox', () => {
       const code = unmangle(new Code('mock'))
       class A { }
@@ -84,6 +107,8 @@ describe('Code', () => {
     })
 
     // Test loop of parents and children
+
+    // Test for deps, and bad parent dep
 
     it('returns descriptor if already installed', () => {
       const code = unmangle(new Code('mock'))
