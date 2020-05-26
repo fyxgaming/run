@@ -177,6 +177,15 @@ describe('Code', () => {
       B.prototype = Object.create(A.prototype)
       expect(() => code._install(B)).to.throw('Cannot install B')
     })
+
+    it('throws if install built-in type', () => {
+      const code = unmangle(new Code('mock'))
+      expect(() => code._install(Object)).to.throw('Cannot install Object')
+      expect(() => code._install(Date)).to.throw('Cannot install Date')
+      expect(() => code._install(Uint8Array)).to.throw('Cannot install')
+      expect(() => code._install(Math.sin)).to.throw('Cannot install sin')
+      expect(() => code._install(parseInt)).to.throw('Cannot install parseInt')
+    })
   })
 })
 
