@@ -12,7 +12,7 @@ const { StandardLock } = Run
 const { unmangle } = require('../env/unmangle')
 const {
   _location,
-  _checkSatoshis,
+  _satoshis,
   _lockify
 } = unmangle(unmangle(Run)._util)
 
@@ -26,26 +26,26 @@ describe('_location', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
-// _checkSatoshis
+// _satoshis
 // ------------------------------------------------------------------------------------------------
 
-describe('_checkSatoshis', () => {
+describe('_satoshis', () => {
   it('should support allowed values', () => {
-    expect(() => _checkSatoshis(0)).not.to.throw()
-    expect(() => _checkSatoshis(1)).not.to.throw()
-    expect(() => _checkSatoshis(Transaction.DUST_AMOUNT)).not.to.throw()
-    expect(() => _checkSatoshis(100000000)).not.to.throw()
+    expect(() => _satoshis(0)).not.to.throw()
+    expect(() => _satoshis(1)).not.to.throw()
+    expect(() => _satoshis(Transaction.DUST_AMOUNT)).not.to.throw()
+    expect(() => _satoshis(100000000)).not.to.throw()
   })
 
   it('should throw if bad satoshis', () => {
-    expect(() => _checkSatoshis()).to.throw('satoshis must be a number')
-    expect(() => _checkSatoshis(-1)).to.throw('satoshis must be non-negative')
-    expect(() => _checkSatoshis('0')).to.throw('satoshis must be a number')
-    expect(() => _checkSatoshis([0])).to.throw('satoshis must be a number')
-    expect(() => _checkSatoshis(1.5)).to.throw('satoshis must be an integer')
-    expect(() => _checkSatoshis(NaN)).to.throw('satoshis must be an integer')
-    expect(() => _checkSatoshis(Infinity)).to.throw('satoshis must be an integer')
-    expect(() => _checkSatoshis(100000001)).to.throw('satoshis must be <= 100000000')
+    expect(() => _satoshis()).to.throw('satoshis must be a number')
+    expect(() => _satoshis(-1)).to.throw('satoshis must be non-negative')
+    expect(() => _satoshis('0')).to.throw('satoshis must be a number')
+    expect(() => _satoshis([0])).to.throw('satoshis must be a number')
+    expect(() => _satoshis(1.5)).to.throw('satoshis must be an integer')
+    expect(() => _satoshis(NaN)).to.throw('satoshis must be an integer')
+    expect(() => _satoshis(Infinity)).to.throw('satoshis must be an integer')
+    expect(() => _satoshis(100000001)).to.throw('satoshis must be <= 100000000')
   })
 })
 
