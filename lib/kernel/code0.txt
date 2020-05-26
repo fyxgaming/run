@@ -15,11 +15,11 @@ const {
   _networkSuffix,
   _deployable,
   _resourceType,
-  _lockify,
   _activeRun,
   _text,
   _checkOwner
 } = require('../util/misc')
+cosnt { _lockify } = require('../util/props')
 const Log = require('../util/log')
 const ResourceJSON = require('../util/json')
 
