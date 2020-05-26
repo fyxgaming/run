@@ -209,39 +209,6 @@ class CodeDescriptor {
       }
     }
   }
-
-  _sandbox (depsOverride = null) {
-    /*
-    const prev = this._installs.get(T)
-    if (prev) return [prev, null]
-    return Sandbox._instance._sandboxType(T, env)
-    */
-  }
-
-  preset (name) {
-  }
-
-  static _preset (name, T, network) {
-    if (!Object.keys(T).includes('presets')) return
-    const networkPresets = T.presets[network]
-    if (typeof networkPresets !== 'object' || !networkPresets) return
-    return networkPresets[name]
-
-    // What about if the location is on the sandbox, and the sandbox comes from another Run?
-    // Then it won't have a preset. We could prefer the location in this case. Instead of
-    // re-deploying
-
-    // If location is specified, and we don't know about the code, then it is invalid
-    // But what about two Runs on two different networks? We *should* redeploy.
-  }
-
-  /*
-    deployable.preset('location')
-    deployable.sandboxProps()
-    deployable.parent()
-    deployable.completeDeps()
-    deployable.validate()
-    */
 }
 
 // ------------------------------------------------------------------------------------------------
