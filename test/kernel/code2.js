@@ -172,7 +172,26 @@ describe.only('Code', () => {
     })
 
     it('throws if presets are invalid', () => {
-
+      const code = unmangle(new Code('mock'))
+      class A { }
+      A.presets = null
+      expect(() => code._install(A)).to.throw('Cannot install A')
+      A.presets = { mock: null }
+      expect(() => code._install(A)).to.throw('Cannot install A')
+      A.presets = { mock: { location: 'abc_o1' } }
+      expect(() => code._install(A)).to.throw('Cannot install A')
+      A.presets = { mock: { origin: 'abc_o1' } }
+      expect(() => code._install(A)).to.throw('Cannot install A')
+      A.presets = { mock: { owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td' } }
+      expect(() => code._install(A)).to.throw('Cannot install A')
+      A.presets = {
+        mock: {
+          location: '_o1',
+          origin: 'abc_o1',
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+        }
+      }
+      expect(() => code._install(A)).to.throw()
     })
 
     it('throws if there is prototype inheritance', () => {
