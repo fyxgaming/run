@@ -53,9 +53,9 @@ describe.only('Code', () => {
       class A { }
       A.presets = {
         mock: {
-          location: '..',
-          origin: '..',
-          owner: '..'
+          location: 'abc_o1',
+          origin: 'abc_o1',
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
         }
       }
       const desc = unmangle(code._install(A))
@@ -76,9 +76,9 @@ describe.only('Code', () => {
       class A { }
       A.presets = {
         test: {
-          location: '..',
-          origin: '..',
-          owner: '..'
+          location: 'abc_o1',
+          origin: 'abc_o1',
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
         }
       }
       const desc = unmangle(code._install(A))
@@ -147,9 +147,9 @@ describe.only('Code', () => {
       class A { }
       A.presets = {
         mock: {
-          location: '..',
-          origin: '..',
-          owner: '..'
+          location: 'abc_o1',
+          origin: 'abc_o1',
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
         }
       }
       class B { }
