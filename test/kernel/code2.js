@@ -163,7 +163,12 @@ describe.only('Code', () => {
     })
 
     it('throws if not a valid type', () => {
-
+      const code = unmangle(new Code('mock'))
+      expect(() => code._install()).to.throw('Cannot install')
+      expect(() => code._install(0)).to.throw('Cannot install')
+      expect(() => code._install({})).to.throw('Cannot install')
+      expect(() => code._install('class A {}')).to.throw('Cannot install')
+      expect(() => code._install(null)).to.throw('Cannot install')
     })
 
     it('throws if presets are invalid', () => {
