@@ -205,6 +205,15 @@ describe.only('Code', () => {
       expect(() => code._install(A)).to.throw()
     })
 
+    it('throws if parent dependency mismatch', () => {
+      const code = unmangle(new Code('mock'))
+      class A { }
+      class C { }
+      class B extends A { }
+      B.deps = { A: C }
+      expect(() => code._install(B)).to.throw('Parent dependency mismatch')
+    })
+
     it('throws if there is prototype inheritance', () => {
       const code = unmangle(new Code('mock'))
       function A () { }
