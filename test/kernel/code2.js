@@ -171,6 +171,17 @@ describe.only('Code', () => {
       expect(() => code._install(null)).to.throw('Cannot install')
     })
 
+    it('throws if deps are invalid', () => {
+      const code = unmangle(new Code('mock'))
+      class A { }
+      A.deps = null
+      expect(() => code._install(A)).to.throw('Cannot install A')
+      A.deps = '123'
+      expect(() => code._install(A)).to.throw('Cannot install A')
+      A.deps = true
+      expect(() => code._install(A)).to.throw('Cannot install A')
+    })
+
     it('throws if presets are invalid', () => {
       const code = unmangle(new Code('mock'))
       class A { }
