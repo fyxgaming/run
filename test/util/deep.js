@@ -152,6 +152,31 @@ describe('_deepReplace', () => {
     expect(_deepReplace(o, callback)).to.deep.equal({ p: [] })
   })
 
+  it('should replace arrays', () => {
+    const a = [1, 2, []]
+    const callback = stub()
+    callback.withArgs(a[2]).returns(3)
+    expect(_deepReplace(a, callback)).to.deep.equal([1, 2, 3])
+  })
+
+  it('should replace functions', () => {
+    function f () { }
+    f.g = () => {}
+    const h = x => x
+    const callback = stub()
+    callback.withArgs(f.g).returns(h)
+    expect(_deepReplace(f, callback).g).to.equal(h)
+  })
+
+  it('should replace classes', () => {
+    class A { }
+    class B {}
+    const a = new A()
+    const callback = stub()
+    callback.withArgs(A).returns(B)
+    expect(_deepReplace(a, callback).constructor).to.equal(B)
+  })
+
   it('should not replace non-objects and non-functions', () => {
     const callback = fake()
     expect(_deepReplace(1, callback)).to.equal(1)
