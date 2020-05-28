@@ -9,7 +9,7 @@ const { fake, stub } = require('sinon')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
-const { _deepVisit } = unmangle(unmangle(Run)._util)
+const { _deepVisit, _deepReplace } = unmangle(unmangle(Run)._util)
 
 // ------------------------------------------------------------------------------------------------
 // _deepVisit
@@ -138,5 +138,15 @@ describe('_deepVisit', () => {
     expect(callback.args).to.deep.equal([[o], [o.s], [a]])
   })
 })
+
+// ------------------------------------------------------------------------------------------------
+// _deepReplace
+// ------------------------------------------------------------------------------------------------
+
+describe('_deepReplace', () => {
+  console.log(_deepReplace('hello'))
+})
+
+// deepReplace, maintains order in set/map
 
 // ------------------------------------------------------------------------------------------------
