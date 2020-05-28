@@ -144,6 +144,14 @@ describe('_deepVisit', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('_deepReplace', () => {
+  it('should replace objects', () => {
+    const o = {}
+    o.p = {}
+    const callback = stub()
+    callback.withArgs(o.p).returns([])
+    expect(_deepReplace(o, callback)).to.deep.equal({ p: [] })
+  })
+
   it('should not replace non-objects and non-functions', () => {
     const callback = fake()
     expect(_deepReplace(1, callback)).to.equal(1)
