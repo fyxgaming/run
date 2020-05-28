@@ -5,6 +5,7 @@
  */
 
 const { describe, it } = require('mocha')
+const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const JigHandler = unmangle(Run)._JigHandler
@@ -15,7 +16,13 @@ const JigHandler = unmangle(Run)._JigHandler
 
 describe('JigHandler', () => {
   it('should test', () => {
-    console.log(JigHandler)
+    class A { }
+    const A2 = unmangle(JigHandler)._makeCodeJig(A)
+    const a = new A2()
+    // expect(a instanceof A).to.equal(true)
+    // expect(a instanceof A2).to.equal(true)
+    // expect(a.constructor).not.to.equal(A)
+    expect(a.constructor).to.equal(A2)
   })
 })
 
