@@ -144,7 +144,19 @@ describe('_deepVisit', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('_deepReplace', () => {
-  console.log(_deepReplace('hello'))
+  it('should not replace non-objects and non-functions', () => {
+    const callback = fake()
+    expect(_deepReplace(1, callback)).to.equal(1)
+    expect(callback.called).to.equal(false)
+    expect(_deepReplace('abc', callback)).to.equal('abc')
+    expect(callback.called).to.equal(false)
+    expect(_deepReplace(null, callback)).to.equal(null)
+    expect(callback.called).to.equal(false)
+    expect(_deepReplace(undefined, callback)).to.equal(undefined)
+    expect(callback.called).to.equal(false)
+    expect(_deepReplace(Symbol.hasInstance, callback)).to.equal(Symbol.hasInstance)
+    expect(callback.called).to.equal(false)
+  })
 })
 
 // deepReplace, maintains order in set/map
