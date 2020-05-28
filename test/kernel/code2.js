@@ -29,6 +29,22 @@ describe.only('Code', () => {
       expect(desc._native).to.equal(false)
     })
 
+    it('should install code in properties', () => {
+
+    })
+
+    it('should apply deps as globals', () => {
+      const code = unmangle(new Code('mock'))
+      class A { }
+      function f () { return A }
+      f.deps = { A }
+      code._install(f)
+    })
+
+    it('should support circular dependencies', () => {
+
+    })
+
     it('installs function', () => {
       const code = unmangle(new Code('mock'))
       function f () { }
