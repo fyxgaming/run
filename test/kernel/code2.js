@@ -14,7 +14,7 @@ const Code = unmangle(Run)._Code
 // Code
 // ------------------------------------------------------------------------------------------------
 
-describe.only('Code', () => {
+describe('Code', () => {
   describe('_install', () => {
     it('installs basic class', () => {
       const code = unmangle(new Code('mock'))
