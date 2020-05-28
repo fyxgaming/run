@@ -170,11 +170,25 @@ describe('_deepReplace', () => {
 
   it('should replace classes', () => {
     class A { }
-    class B {}
+    class B { get x () { return 1 } }
     const a = new A()
     const callback = stub()
     callback.withArgs(A).returns(B)
-    expect(_deepReplace(a, callback).constructor).to.equal(B)
+    const a2 = _deepReplace(a, callback)
+    expect(a2.constructor).to.equal(B)
+    expect(a2.x).to.equal(1)
+  })
+
+  it('should replace parent classes', () => {
+    class A { cls () { return 'A' } }
+    class B extends A { }
+    class C { cls () { return 'C' } }
+    C.y = 1
+    const b = new B()
+    const callback = stub()
+    callback.withArgs(A).returns(C)
+    const c = _deepReplace(b, callback)
+    expect(c.cls()).to.equal('C')
   })
 
   it('should not replace non-objects and non-functions', () => {
