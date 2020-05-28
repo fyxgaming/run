@@ -191,6 +191,30 @@ describe('_deepReplace', () => {
     expect(c.cls()).to.equal('C')
   })
 
+  it('should replace class properties', () => {
+
+  })
+
+  it('should replace set entries', () => {
+    // maintains order
+  })
+
+  it('should replace map entries', () => {
+    // maintains order
+  })
+
+  it('should not replace circular objects', () => {
+
+  })
+
+  it('should not replace circular classes', () => {
+
+  })
+
+  it('should throw if callback does not return undefined or an object or function', () => {
+
+  })
+
   it('should not replace non-objects and non-functions', () => {
     const callback = fake()
     expect(_deepReplace(1, callback)).to.equal(1)
@@ -205,7 +229,5 @@ describe('_deepReplace', () => {
     expect(callback.called).to.equal(false)
   })
 })
-
-// deepReplace, maintains order in set/map
 
 // ------------------------------------------------------------------------------------------------
