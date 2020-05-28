@@ -268,11 +268,27 @@ describe('_deepReplace', () => {
     expect(b.constructor.B).to.equal(C)
   })
 
-  it('should throw if callback does not return undefined or an object or function', () => {
-
+  it('should allow callback to return non-objects and non-functions', () => {
+    const a = [{}, [], () => {}]
+    const callback = stub()
+    callback.withArgs(a[0]).returns(Symbol.hasInstance)
+    callback.withArgs(a[1]).returns(1)
+    callback.withArgs(a[2]).returns('hello')
+    _deepReplace(a, callback)
+    expect(a).to.deep.equal([Symbol.hasInstance, 1, 'hello'])
   })
 
   it('should recognize sandbox intrinsics', () => {
+    const SI = unmangle(unmangle(Run.sandbox)._instance)._intrinsics
+    new Run() // eslint-disable-line
+    const o = new SI.Object()
+    o.s = new SI.Set()
+    const a = new SI.Array()
+    o.s.add(a)
+    const callback = stub()
+    callback.withArgs(o.s).returns([1])
+    _deepReplace(o, callback)
+    expect(o.s).to.deep.equal([1])
   })
 
   it('should not replace non-objects and non-functions', () => {
