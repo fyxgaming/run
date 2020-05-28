@@ -49,7 +49,7 @@ const reservedNames = [
   // Token, expect, etc. are built-in code must be preserved
   'Token', 'expect', 'asm', 'hex', 'StandardLock', 'GroupLock',
   // ResourceSet/ResourceMap dependency names must be preserved
-  'internal', 'uniqueKey', 'ResourceMap',
+  'internal', 'uniqueKey', 'ResourceSet', 'ResourceMap',
   // Errors
   'NotImplementedError', 'TimeoutError'
 ]
