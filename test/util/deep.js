@@ -192,11 +192,37 @@ describe('_deepReplace', () => {
   })
 
   it('should replace class properties', () => {
+    class A {}
+    A.o = class B { }
+    const a = new A()
+    const callback = stub()
+    callback.withArgs(A.o).returns([])
+    _deepReplace(a, callback)
+    expect(A.o).to.deep.equal([])
+  })
 
+  it('should traverse replaced values', () => {
+    const o = {}
+    o.p = []
+    const callback = stub()
+    function f () { }
+    callback.withArgs(o.p).returns([{}, o, f])
+    callback.withArgs(f).returns(1)
+    _deepReplace(o, callback)
+    expect(o.p).to.deep.equal([{}, o, 1])
   })
 
   it('should replace set entries', () => {
-    // maintains order
+    const s = new Set()
+    const o = {}
+    const m = new Map()
+    s.add(1)
+    s.add(o)
+    s.add(3)
+    const callback = stub()
+    callback.withArgs(o).returns(m)
+    _deepReplace(s, callback)
+    expect(Array.from(s)).to.deep.equal([1, m, 3])
   })
 
   it('should replace map entries', () => {
@@ -213,6 +239,9 @@ describe('_deepReplace', () => {
 
   it('should throw if callback does not return undefined or an object or function', () => {
 
+  })
+
+  it('should recognize sandbox intrinsics', () => {
   })
 
   it('should not replace non-objects and non-functions', () => {
