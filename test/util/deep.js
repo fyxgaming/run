@@ -226,7 +226,22 @@ describe('_deepReplace', () => {
   })
 
   it('should replace map entries', () => {
-    // maintains order
+    const m = new Map()
+    function f () { }
+    class B { }
+    m.set(1, 1)
+    m.set(f, 2)
+    m.set(B, B)
+    m.set(4, 4)
+    m.a = []
+    const callback = stub()
+    callback.withArgs(m.a).returns({})
+    callback.withArgs(f).returns(2)
+    callback.withArgs(B).returns(m)
+    _deepReplace(m, callback)
+    expect(m.a).to.deep.equal({})
+    expect(Array.from(m.keys())).to.deep.equal([1, 2, m, 4])
+    expect(Array.from(m.values())).to.deep.equal([1, 2, m, 4])
   })
 
   it('should not replace circular objects', () => {
