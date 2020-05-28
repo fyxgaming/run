@@ -244,12 +244,28 @@ describe('_deepReplace', () => {
     expect(Array.from(m.values())).to.deep.equal([1, 2, m, 4])
   })
 
-  it('should not replace circular objects', () => {
-
+  it('should replace circular objects', () => {
+    const o = {}
+    o.p = {}
+    o.p.q = o
+    const callback = stub()
+    callback.withArgs(o.p).returns([o])
+    _deepReplace(o, callback)
+    expect(o.p).to.deep.equal([o])
   })
 
-  it('should not replace circular classes', () => {
-
+  it('should replace circular classes', () => {
+    class A {}
+    class B extends A { }
+    A.B = B
+    class C {}
+    C.B = B
+    const b = new B()
+    const callback = stub()
+    callback.withArgs(B).returns(C)
+    _deepReplace(b, callback)
+    expect(b.constructor).to.equal(C)
+    expect(b.constructor.B).to.equal(C)
   })
 
   it('should throw if callback does not return undefined or an object or function', () => {
