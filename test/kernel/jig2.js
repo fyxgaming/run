@@ -17,11 +17,11 @@ const JigHandler = unmangle(Run)._JigHandler
 describe('JigHandler', () => {
   it('should test', () => {
     class A { }
-    const A2 = unmangle(JigHandler)._makeCodeJig(A)
+    const A2 = unmangle(JigHandler)._createProxy(A)
     const a = new A2()
-    // expect(a instanceof A).to.equal(true)
-    // expect(a instanceof A2).to.equal(true)
-    // expect(a.constructor).not.to.equal(A)
+    expect(a instanceof A).to.equal(true)
+    expect(a instanceof A2).to.equal(true)
+    expect(a.constructor).not.to.equal(A)
     expect(a.constructor).to.equal(A2)
   })
 })
