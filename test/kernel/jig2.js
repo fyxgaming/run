@@ -120,6 +120,11 @@ describe('JigHandler', () => {
 
     APROXY.upgrade(B)
 
+    // await APROXY.sync()
+    // APROXY.x = 5
+
+    // Can upgrade change the name? No
+
     console.log(a.g())
 
 
