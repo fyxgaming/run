@@ -47,89 +47,114 @@ describe('JigHandler', () => {
   })
 
   it.only('test upgrade', () => {
-    class A { }
+    // For a refresher on prototypes
+    // See section 2.2.1 in https://2ality.com/2015/02/es6-classes-final.html
 
-    const PROTOTYPE_HACK = {
-        x: 1
+    // Create two classes, A1 and A2. We will upgrade A1 into A2.
+
+    const A1 = class A {
+      f () { return 'f1' }
+      g () { return 'g1' }
     }
 
-    const PROTOTYPE_HACK_PROXY = new Proxy(PROTOTYPE_HACK, {
-        set(target, prop, value) {
-            return false
-        }
+    const A2 = class A {
+      g () { return 'g2' }
+      h () { return 'h2' }
+    }
+
+    // Completely hijack A's proxy. This should be done on a sandbox.
+    // Although we should freeze originals too, to be safe.
+
+    const methodTable = { }
+
+    const methods = Object.getOwnPropertyNames(A1.prototype)
+
+    // Static methods, checks. Not methods.
+    // if (methods.includes('upgrade')) throw new Error('upgrade() must not be defined')
+    // if (methods.includes('sync')) throw new Error('sync() must not be defined')
+    // if (methods.includes('destroy')) throw new Error('destroy() must not be defined')
+
+    methods.forEach(name => {
+      const desc = Object.getOwnPropertyDescriptor(A1.prototype, name)
+      Object.defineProperty(methodTable, name, desc)
+      delete A1.prototype[name]
     })
 
-    Object.setPrototypeOf(A.prototype, PROTOTYPE_HACK_PROXY)
+    const methodAPI = new Proxy(methodTable, {
+      set (target, prop, value) {
+        return false
+      }
+    })
+
+    const protoproto = Object.getPrototypeOf(A1.prototype)
+    Object.setPrototypeOf(methodTable, protoproto)
+    Object.setPrototypeOf(A1.prototype, methodAPI)
+
+    // TODO: Deep freeze method table properties too
+    Object.freeze(A1.prototype)
 
     // Proxy A, as if it were real
     const APROXY_HANDLER = { }
-    const APROXY = new Proxy(A, APROXY_HANDLER)
-    A.prototype.constructor = APROXY
+    const APROXY = new Proxy(A1, APROXY_HANDLER)
+    methodTable.constructor = APROXY
 
     // freeze will make setPrototypeOf fail
-    Object.freeze(A.prototype)
     // Object.setPrototypeOf(A.prototype, {})
 
     // Good, we've hijacked A's prototype
     // We can use this to add methods
-    PROTOTYPE_HACK.f = () => { }
+    // PROTOTYPE_HACK.f = () => { }
 
     // But now PROTOTYPE_HACK is changable. make that not?
-    // Good. Now I have a proxy I control, to se the proxy for A.
+    // Good. Now I have a proxy I control, to se theproxy for A.
     // I can remove all properties of A.prototype.
     // Set them on the parent.
     // Constructor can be the proxy
 
-    console.log(A.prototype.x)
-
     const a = new APROXY()
-    console.log(a.f)
-    console.log(a.constructor === APROXY && a.constructor !== A)
-    console.log(Object.getPrototypeOf(a) === A.prototype)
-
-
-    // So to upgrade a class, I get its prototype
-    // Apply the prototype to our hack'ed prototype in full
-    // This gives you every function
-    
-    class B { g() { return 33 } }
-
-    // Upgrade
-    // Object.assign(PROTOTYPE_HACK, B.prototype)
-    // Object.getOwnPropertyNames(B.prototype).forEach(method => {
-        // PROTOTYPE_HACK[method] = B.prototype[method]
-    // })
-
-    // What about parents?
+    console.log(a.constructor === APROXY && a.constructor !== A1)
+    console.log(Object.getPrototypeOf(a) === A1.prototype)
 
     // To-string
 
     APROXY_HANDLER.get = (target, prop) => {
-        if (prop === 'upgrade') {
-            return T => {
+      if (prop === 'upgrade') {
+        return T => {
+          // Clear the method table
+          Object.getOwnPropertyNames(methodTable).forEach(name => { delete methodTable[name] })
 
-    Object.assign(PROTOTYPE_HACK, T.prototype)
-    Object.getOwnPropertyNames(T.prototype).forEach(method => {
-        PROTOTYPE_HACK[method] = T.prototype[method]
-    })
+          // Install T...
 
-            }
+          Object.getOwnPropertyNames(T.prototype).forEach(name => {
+            const desc = Object.getOwnPropertyDescriptor(T.prototype, name)
+            Object.defineProperty(methodTable, name, desc)
+          })
+
+          methodTable.constructor = APROXY
+
+        //   console.log(Object.getOwnPropertyNames(methodTable))
+          //   const props = Object.getOwnPropertyDescriptors(T.prototype)
+        //   Object.defineProperties(methodTable, T.prototype)
         }
-        return target[prop]
+      }
+      return target[prop]
     }
 
-    APROXY.upgrade(B)
+    APROXY.upgrade(A2)
 
     // await APROXY.sync()
     // APROXY.x = 5
 
     // Can upgrade change the name? No
 
+    // Destroy stops all further upgrades
+    // What is its final location then? An input? A virtual output?
+    // And is destroy the right name? Or unlink? seal?
+
     console.log(a.g())
 
-
-    const A2 = a.constructor
-    const a2 = new A2()
+    const AC = a.constructor
+    const a2 = new AC()
     console.log(a2.g())
   })
 })
