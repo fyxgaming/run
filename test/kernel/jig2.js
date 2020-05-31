@@ -102,40 +102,40 @@ describe('JigHandler', () => {
     // Proxy A, as if it were real
 
     class CodeJigHandler {
-        _init(target, proxy) {
-            this._target = null
-            this._proxy = null
-        }
+      _init (target, proxy) {
+        this._target = target
+        this._proxy = proxy
+      }
 
-        get(target, prop) {
-            if (prop === 'upgrade') return (...args) => this._upgrade(...args)
-            if (prop === 'toString') return (...args) => this._toString(...args)
-            return target[prop]
-        }
+      get (target, prop) {
+        if (prop === 'upgrade') return (...args) => this._upgrade(...args)
+        if (prop === 'toString') return (...args) => this._toString(...args)
+        return target[prop]
+      }
 
-        _upgrade(T) {
-            // Clear the method table
-            Object.getOwnPropertyNames(methodTable).forEach(name => { delete methodTable[name] })
+      _upgrade (T) {
+        // Clear the method table
+        Object.getOwnPropertyNames(methodTable).forEach(name => { delete methodTable[name] })
 
-            // Install T...
-            // T should not have reserved static functions on it: upgrade, sync, destroy
+        // Install T...
+        // T should not have reserved static functions on it: upgrade, sync, destroy
 
-            Object.getOwnPropertyNames(T.prototype).forEach(name => {
-                const desc = Object.getOwnPropertyDescriptor(T.prototype, name)
-                Object.defineProperty(methodTable, name, desc)
-            })
+        Object.getOwnPropertyNames(T.prototype).forEach(name => {
+          const desc = Object.getOwnPropertyDescriptor(T.prototype, name)
+          Object.defineProperty(methodTable, name, desc)
+        })
 
-                const protoproto = Object.getPrototypeOf(T.prototype)
-                Object.setPrototypeOf(methodTable, protoproto)
-                Object.setPrototypeOf(T.prototype, methodAPI)
+        const protoproto = Object.getPrototypeOf(T.prototype)
+        Object.setPrototypeOf(methodTable, protoproto)
+        Object.setPrototypeOf(T.prototype, methodAPI)
 
-            methodTable.constructor = APROXY
-            this._target = T
-        }
+        methodTable.constructor = APROXY
+        this._target = T
+      }
 
-        _toString() {
-            return this._target.toString()
-        }
+      _toString () {
+        return this._target.toString()
+      }
     }
 
     const handler = new CodeJigHandler()
@@ -180,7 +180,6 @@ describe('JigHandler', () => {
     const a2 = new AC()
     console.log(a2.g())
     console.log('z', a2.z())
-
 
     console.log('STR', APROXY.toString())
   })
