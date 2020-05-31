@@ -52,12 +52,20 @@ describe('JigHandler', () => {
 
     // Create two classes, A1 and A2. We will upgrade A1 into A2.
 
-    const A1 = class A {
+    class B1 {
+      z () { return 'z1' }
+    }
+
+    class B2 {
+      z () { return 'z2' }
+    }
+
+    const A1 = class A extends B1 {
       f () { return 'f1' }
       g () { return 'g1' }
     }
 
-    const A2 = class A {
+    const A2 = class A extends B2 {
       g () { return 'g2' }
       h () { return 'h2' }
     }
@@ -65,25 +73,23 @@ describe('JigHandler', () => {
     // Completely hijack A's proxy. This should be done on a sandbox.
     // Although we should freeze originals too, to be safe.
 
+    // ENABLE/DISABLE
+    // SPECIAL PROPS
+
+    class MethodTableHandler {
+      set (target, prop, value) {
+        return false
+      }
+    }
+
     const methodTable = { }
+    const methodAPI = new Proxy(methodTable, new MethodTableHandler())
 
     const methods = Object.getOwnPropertyNames(A1.prototype)
-
-    // Static methods, checks. Not methods.
-    // if (methods.includes('upgrade')) throw new Error('upgrade() must not be defined')
-    // if (methods.includes('sync')) throw new Error('sync() must not be defined')
-    // if (methods.includes('destroy')) throw new Error('destroy() must not be defined')
-
     methods.forEach(name => {
       const desc = Object.getOwnPropertyDescriptor(A1.prototype, name)
       Object.defineProperty(methodTable, name, desc)
       delete A1.prototype[name]
-    })
-
-    const methodAPI = new Proxy(methodTable, {
-      set (target, prop, value) {
-        return false
-      }
     })
 
     const protoproto = Object.getPrototypeOf(A1.prototype)
@@ -94,8 +100,47 @@ describe('JigHandler', () => {
     Object.freeze(A1.prototype)
 
     // Proxy A, as if it were real
-    const APROXY_HANDLER = { }
-    const APROXY = new Proxy(A1, APROXY_HANDLER)
+
+    class CodeJigHandler {
+        _init(target, proxy) {
+            this._target = null
+            this._proxy = null
+        }
+
+        get(target, prop) {
+            if (prop === 'upgrade') return (...args) => this._upgrade(...args)
+            if (prop === 'toString') return (...args) => this._toString(...args)
+            return target[prop]
+        }
+
+        _upgrade(T) {
+            // Clear the method table
+            Object.getOwnPropertyNames(methodTable).forEach(name => { delete methodTable[name] })
+
+            // Install T...
+            // T should not have reserved static functions on it: upgrade, sync, destroy
+
+            Object.getOwnPropertyNames(T.prototype).forEach(name => {
+                const desc = Object.getOwnPropertyDescriptor(T.prototype, name)
+                Object.defineProperty(methodTable, name, desc)
+            })
+
+                const protoproto = Object.getPrototypeOf(T.prototype)
+                Object.setPrototypeOf(methodTable, protoproto)
+                Object.setPrototypeOf(T.prototype, methodAPI)
+
+            methodTable.constructor = APROXY
+            this._target = T
+        }
+
+        _toString() {
+            return this._target.toString()
+        }
+    }
+
+    const handler = new CodeJigHandler()
+    const APROXY = new Proxy(A1, handler)
+    handler._init(A1, APROXY)
     methodTable.constructor = APROXY
 
     // freeze will make setPrototypeOf fail
@@ -112,40 +157,18 @@ describe('JigHandler', () => {
     // Constructor can be the proxy
 
     const a = new APROXY()
+
     console.log(a.constructor === APROXY && a.constructor !== A1)
     console.log(Object.getPrototypeOf(a) === A1.prototype)
-
-    // To-string
-
-    APROXY_HANDLER.get = (target, prop) => {
-      if (prop === 'upgrade') {
-        return T => {
-          // Clear the method table
-          Object.getOwnPropertyNames(methodTable).forEach(name => { delete methodTable[name] })
-
-          // Install T...
-
-          Object.getOwnPropertyNames(T.prototype).forEach(name => {
-            const desc = Object.getOwnPropertyDescriptor(T.prototype, name)
-            Object.defineProperty(methodTable, name, desc)
-          })
-
-          methodTable.constructor = APROXY
-
-        //   console.log(Object.getOwnPropertyNames(methodTable))
-          //   const props = Object.getOwnPropertyDescriptors(T.prototype)
-        //   Object.defineProperties(methodTable, T.prototype)
-        }
-      }
-      return target[prop]
-    }
+    console.log('z', a.z())
+    console.log('STR', APROXY.toString())
 
     APROXY.upgrade(A2)
 
     // await APROXY.sync()
     // APROXY.x = 5
 
-    // Can upgrade change the name? No
+    // Can upgrade change the name? Sure why not.
 
     // Destroy stops all further upgrades
     // What is its final location then? An input? A virtual output?
@@ -156,6 +179,10 @@ describe('JigHandler', () => {
     const AC = a.constructor
     const a2 = new AC()
     console.log(a2.g())
+    console.log('z', a2.z())
+
+
+    console.log('STR', APROXY.toString())
   })
 })
 
