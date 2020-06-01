@@ -1,25 +1,25 @@
 /**
- * code.js
+ * repository.js
  *
- * Tests for lib/kernel/code.js
+ * Tests for lib/kernel/repository.js
  */
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
-const Code = unmangle(Run)._Code
+const Repository = unmangle(Run)._Repository
 
 // ------------------------------------------------------------------------------------------------
 // Code
 // ------------------------------------------------------------------------------------------------
 
-describe('Code', () => {
+describe('Repository', () => {
   describe('_install', () => {
     it('installs basic class', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       class A { }
-      const desc = unmangle(code._install(A))
+      const desc = unmangle(repo._install(A))
       expect(desc._T).to.equal(A)
       expect(desc._S).not.to.equal(A)
       expect(desc._S.toString()).to.equal(A.toString())
@@ -34,11 +34,11 @@ describe('Code', () => {
     })
 
     it('should apply deps as globals', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       class A { }
       function f () { return A }
       f.deps = { A }
-      code._install(f)
+      repo._install(f)
     })
 
     it('should support circular dependencies', () => {
@@ -46,26 +46,26 @@ describe('Code', () => {
     })
 
     it('installs function', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       function f () { }
-      const desc = unmangle(code._install(f))
+      const desc = unmangle(repo._install(f))
       expect(desc._T).to.equal(f)
     })
 
     it('installs anonymous class', () => {
-      const code = unmangle(new Code('mock'))
-      const desc = unmangle(code._install(class { }))
+      const repo = unmangle(new Repository('mock'))
+      const desc = unmangle(repo._install(class { }))
       expect(desc._T.toString()).to.equal(desc._S.toString())
     })
 
     it('installs anonymous function', () => {
-      const code = unmangle(new Code('mock'))
-      const desc = unmangle(code._install(() => {}))
+      const repo = unmangle(new Repository('mock'))
+      const desc = unmangle(repo._install(() => {}))
       expect(desc._locals.size).to.equal(1)
     })
 
     it('installs and sandboxes type with resource presets', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       class A { }
       A.presets = {
         mock: {
@@ -74,7 +74,7 @@ describe('Code', () => {
           owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
         }
       }
-      const desc = unmangle(code._install(A))
+      const desc = unmangle(repo._install(A))
       expect(desc._T).to.equal(A)
       expect(desc._S).not.to.equal(A)
       expect(desc._S.toString()).to.equal(A.toString())
@@ -88,7 +88,7 @@ describe('Code', () => {
     })
 
     it('installs type having resource presets on another network', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       class A { }
       A.presets = {
         test: {
@@ -97,7 +97,7 @@ describe('Code', () => {
           owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
         }
       }
-      const desc = unmangle(code._install(A))
+      const desc = unmangle(repo._install(A))
       expect(desc._T).to.equal(A)
       expect(desc._S).not.to.equal(A)
       expect(desc._S.toString()).to.equal(A.toString())
@@ -111,7 +111,7 @@ describe('Code', () => {
     })
 
     it('applies normal presets to sandbox', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       class A { }
       A.NUM = 2
       A.OBJ = { m: 2 }
@@ -123,19 +123,19 @@ describe('Code', () => {
           ARR: [1]
         }
       }
-      const desc = unmangle(code._install(A))
+      const desc = unmangle(repo._install(A))
       expect(desc._S.NUM).to.equal(1)
       expect(desc._S.OBJ).to.deep.equal({ n: 1, o: {} })
       expect(desc._S.ARR).to.deep.equal([1])
     })
 
     it('installs parents before children', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       class A { }
       class B extends A { }
       class C extends B { }
-      code._install(C)
-      const desc = unmangle(code._find(A))
+      repo._install(C)
+      const desc = unmangle(repo._find(A))
       expect(desc._T).to.equal(A)
       expect(desc._S).not.to.equal(A)
       expect(desc._deployed).to.equal(false)
@@ -146,10 +146,10 @@ describe('Code', () => {
     // Test for deps, and bad parent dep
 
     it('returns descriptor if already installed', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       class A { }
-      const desc = code._install(A)
-      expect(code._install(A)).to.equal(desc)
+      const desc = repo._install(A)
+      expect(repo._install(A)).to.equal(desc)
     })
 
     it('does not duplicate parents', () => {
@@ -159,7 +159,7 @@ describe('Code', () => {
     // Test dependencies
 
     it('returns existing descriptor of a preset copy', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       class A { }
       A.presets = {
         mock: {
@@ -170,8 +170,8 @@ describe('Code', () => {
       }
       class B { }
       Object.assign(B, A)
-      const desc = code._install(A)
-      const desc2 = code._install(B)
+      const desc = repo._install(A)
+      const desc2 = repo._install(B)
       expect(desc).to.equal(desc2)
       expect(unmangle(desc)._T).to.equal(A)
       expect(unmangle(desc)._locals.size).to.equal(2)
@@ -179,38 +179,38 @@ describe('Code', () => {
     })
 
     it('throws if not a valid type', () => {
-      const code = unmangle(new Code('mock'))
-      expect(() => code._install()).to.throw('Cannot install')
-      expect(() => code._install(0)).to.throw('Cannot install')
-      expect(() => code._install({})).to.throw('Cannot install')
-      expect(() => code._install('class A {}')).to.throw('Cannot install')
-      expect(() => code._install(null)).to.throw('Cannot install')
+      const repo = unmangle(new Repository('mock'))
+      expect(() => repo._install()).to.throw('Cannot install')
+      expect(() => repo._install(0)).to.throw('Cannot install')
+      expect(() => repo._install({})).to.throw('Cannot install')
+      expect(() => repo._install('class A {}')).to.throw('Cannot install')
+      expect(() => repo._install(null)).to.throw('Cannot install')
     })
 
     it('throws if deps are invalid', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       class A { }
       A.deps = null
-      expect(() => code._install(A)).to.throw('Cannot install A')
+      expect(() => repo._install(A)).to.throw('Cannot install A')
       A.deps = '123'
-      expect(() => code._install(A)).to.throw('Cannot install A')
+      expect(() => repo._install(A)).to.throw('Cannot install A')
       A.deps = true
-      expect(() => code._install(A)).to.throw('Cannot install A')
+      expect(() => repo._install(A)).to.throw('Cannot install A')
     })
 
     it('throws if presets are invalid', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       class A { }
       A.presets = null
-      expect(() => code._install(A)).to.throw('Cannot install A')
+      expect(() => repo._install(A)).to.throw('Cannot install A')
       A.presets = { mock: null }
-      expect(() => code._install(A)).to.throw('Cannot install A')
+      expect(() => repo._install(A)).to.throw('Cannot install A')
       A.presets = { mock: { location: 'abc_o1' } }
-      expect(() => code._install(A)).to.throw('Cannot install A')
+      expect(() => repo._install(A)).to.throw('Cannot install A')
       A.presets = { mock: { origin: 'abc_o1' } }
-      expect(() => code._install(A)).to.throw('Cannot install A')
+      expect(() => repo._install(A)).to.throw('Cannot install A')
       A.presets = { mock: { owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td' } }
-      expect(() => code._install(A)).to.throw('Cannot install A')
+      expect(() => repo._install(A)).to.throw('Cannot install A')
       A.presets = {
         mock: {
           location: '_o1',
@@ -218,42 +218,42 @@ describe('Code', () => {
           owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
         }
       }
-      expect(() => code._install(A)).to.throw()
+      expect(() => repo._install(A)).to.throw()
     })
 
     it('throws if parent dependency mismatch', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       class A { }
       class C { }
       class B extends A { }
       B.deps = { A: C }
-      expect(() => code._install(B)).to.throw('Parent dependency mismatch')
+      expect(() => repo._install(B)).to.throw('Parent dependency mismatch')
     })
 
     it('throws if there is prototype inheritance', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       function A () { }
       function B () { }
       B.prototype = Object.create(A.prototype)
-      expect(() => code._install(B)).to.throw('Cannot install B')
+      expect(() => repo._install(B)).to.throw('Cannot install B')
     })
 
     it('throws if install built-in type', () => {
-      const code = unmangle(new Code('mock'))
-      expect(() => code._install(Object)).to.throw('Cannot install Object')
-      expect(() => code._install(Date)).to.throw('Cannot install Date')
-      expect(() => code._install(Uint8Array)).to.throw('Cannot install')
-      expect(() => code._install(Math.sin)).to.throw('Cannot install sin')
-      expect(() => code._install(parseInt)).to.throw('Cannot install parseInt')
+      const repo = unmangle(new Repository('mock'))
+      expect(() => repo._install(Object)).to.throw('Cannot install Object')
+      expect(() => repo._install(Date)).to.throw('Cannot install Date')
+      expect(() => repo._install(Uint8Array)).to.throw('Cannot install')
+      expect(() => repo._install(Math.sin)).to.throw('Cannot install sin')
+      expect(() => repo._install(parseInt)).to.throw('Cannot install parseInt')
     })
 
     it('should not install if error', () => {
-      const code = unmangle(new Code('mock'))
+      const repo = unmangle(new Repository('mock'))
       class A { }
       A.Date = Date
-      expect(() => code._install(A)).to.throw('Cannot install Date')
-      expect(code._find(A)).to.equal(undefined)
-      expect(code._find(Date)).to.equal(undefined)
+      expect(() => repo._install(A)).to.throw('Cannot install Date')
+      expect(repo._find(A)).to.equal(undefined)
+      expect(repo._find(Date)).to.equal(undefined)
     })
   })
 })
