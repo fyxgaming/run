@@ -342,16 +342,20 @@ describe('_deepClone', () => {
 
   it('should clone set', () => {
     const s = new Set([false, null, {}, new Map()])
+    s.x = 1
     const s2 = _deepClone(s)
     expect(s2 instanceof Set).to.equal(true)
     expect(Array.from(s2)).to.deep.equal([false, null, {}, new Map()])
+    expect(s2.x).to.equal(1)
   })
 
   it('should clone map', () => {
     const m = new Map([[0, 1], ['a', 'b'], [[], {}], [new Set(), new Map()]])
+    m.o = {}
     const m2 = _deepClone(m)
     expect(m2 instanceof Map).to.equal(true)
     expect(Array.from(m2)).to.deep.equal([[0, 1], ['a', 'b'], [[], {}], [new Set(), new Map()]])
+    expect(m2.o).to.deep.equal({})
   })
 
   it('should clone function as code', () => {
