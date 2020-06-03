@@ -9,7 +9,7 @@ const { fake, stub } = require('sinon')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
-const { _deepVisit, _deepReplace } = unmangle(unmangle(Run)._util)
+const { _deepVisit, _deepReplace, _deepClone } = unmangle(unmangle(Run)._util)
 
 // ------------------------------------------------------------------------------------------------
 // _deepVisit
@@ -303,6 +303,24 @@ describe('_deepReplace', () => {
     expect(callback.called).to.equal(false)
     expect(_deepReplace(Symbol.hasInstance, callback)).to.equal(Symbol.hasInstance)
     expect(callback.called).to.equal(false)
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// _deepClone
+// ------------------------------------------------------------------------------------------------
+
+describe('_deepClone', () => {
+  it('should clone primitives', () => {
+    expect(_deepClone(0)).to.equal(0)
+    expect(_deepClone(1)).to.equal(1)
+    expect(_deepClone(Infinity)).to.equal(Infinity)
+    expect(_deepClone(true)).to.equal(true)
+    expect(_deepClone(false)).to.equal(false)
+    expect(_deepClone('')).to.equal('')
+    expect(_deepClone('abc')).to.equal('abc')
+    expect(_deepClone(Symbol.hasInstance)).to.equal(Symbol.hasInstance)
+    expect(_deepClone(null)).to.equal(null)
   })
 })
 
