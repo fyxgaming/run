@@ -389,7 +389,16 @@ describe('_deepClone', () => {
     expect(_deepClone(berry)).to.equal(berry)
   })
 
-  // Sandbox test should test uint8array
+  it('should clone circular references', () => {
+  })
+
+  it('should clone from sandbox intrinsics', () => {
+    // TODO: Uint8Array
+  })
+
+  it('should clone to sandbox intrinsics', () => {
+    // TODO: Uint8Array
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
