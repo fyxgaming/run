@@ -15,14 +15,30 @@ const Code = Run._Code
 
 describe('Code', () => {
   describe('new', () => {
-    it('installs basic class', () => {
+    it('creates from class', () => {
       new Run() // eslint-disable-line
       class A { }
       const SA = new Code(A)
       expect(SA.toString()).to.equal(A.toString())
     })
 
-    it('dedups installs', () => {
+    it('creates from function', () => {
+      new Run() // eslint-disable-line
+      function f () { }
+      new Code(f) // eslint-disable-line
+    })
+
+    it('creates from anonymous class', () => {
+      new Run() // eslint-disable-line
+      new Code(class {}) // eslint-disable-line
+    })
+
+    it('creates from anonymous function', () => {
+      new Run() // eslint-disable-line
+      new Code(() => {}) // eslint-disable-line
+    })
+
+    it('dedups', () => {
       new Run() // eslint-disable-line
       class A { }
       const SA1 = new Code(A)
@@ -44,25 +60,6 @@ describe('Code', () => {
 
     it('should support circular dependencies', () => {
 
-    })
-
-    it('installs function', () => {
-      const repo = unmangle(new Repository('mock'))
-      function f () { }
-      const desc = unmangle(repo._install(f))
-      expect(desc._T).to.equal(f)
-    })
-
-    it('installs anonymous class', () => {
-      const repo = unmangle(new Repository('mock'))
-      const desc = unmangle(repo._install(class { }))
-      expect(desc._T.toString()).to.equal(desc._S.toString())
-    })
-
-    it('installs anonymous function', () => {
-      const repo = unmangle(new Repository('mock'))
-      const desc = unmangle(repo._install(() => {}))
-      expect(desc._locals.size).to.equal(1)
     })
 
     it('installs and sandboxes type with resource presets', () => {
