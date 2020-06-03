@@ -46,6 +46,15 @@ describe('Code', () => {
       expect(SA1).to.equal(SA2)
     })
 
+    it('throws if not a valid type', () => {
+      new Run() // eslint-disable-line
+      expect(() => new Code()).to.throw('Cannot install')
+      expect(() => new Code(0)).to.throw('Cannot install')
+      expect(() => new Code({})).to.throw('Cannot install')
+      expect(() => new Code('class A {}')).to.throw('Cannot install')
+      expect(() => new Code(null)).to.throw('Cannot install')
+    })
+
     it('throws if install built-in type', () => {
       new Run() // eslint-disable-line
       expect(() => new Code(Object)).to.throw('Cannot install Object')
@@ -232,15 +241,6 @@ describe('Code', () => {
       expect(unmangle(desc)._T).to.equal(A)
       expect(unmangle(desc)._locals.size).to.equal(2)
       expect(unmangle(desc)._deployed).to.equal(true)
-    })
-
-    it('throws if not a valid type', () => {
-      const repo = unmangle(new Repository('mock'))
-      expect(() => repo._install()).to.throw('Cannot install')
-      expect(() => repo._install(0)).to.throw('Cannot install')
-      expect(() => repo._install({})).to.throw('Cannot install')
-      expect(() => repo._install('class A {}')).to.throw('Cannot install')
-      expect(() => repo._install(null)).to.throw('Cannot install')
     })
 
     it('throws if deps are invalid', () => {
