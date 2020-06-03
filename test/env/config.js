@@ -63,8 +63,7 @@ setMangled(MANGLED)
 const util = unmangle(unmangle(Run)._util)
 
 if (COVER) {
-  Run.sandbox.excludes = [Run.Jig, Run.Berry, Run.Token, Run.expect, util._SafeSet, util._SafeMap,
-    Run.StandardLock, Run.GroupLock]
+  Run.sandbox.excludes = [Run.Token, Run.expect, Run.StandardLock, Run.GroupLock]
 }
 
 // ------------------------------------------------------------------------------------------------

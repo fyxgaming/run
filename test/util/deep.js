@@ -127,7 +127,7 @@ describe('_deepVisit', () => {
   })
 
   it('should recognize sandbox intrinsics', () => {
-    const SI = unmangle(unmangle(Run.sandbox)._instance)._intrinsics
+    const SI = unmangle(Run.sandbox)._intrinsics
     new Run() // eslint-disable-line
     const o = new SI.Object()
     o.s = new SI.Set()
@@ -279,7 +279,7 @@ describe('_deepReplace', () => {
   })
 
   it('should recognize sandbox intrinsics', () => {
-    const SI = unmangle(unmangle(Run.sandbox)._instance)._intrinsics
+    const SI = unmangle(Run.sandbox)._intrinsics
     new Run() // eslint-disable-line
     const o = new SI.Object()
     o.s = new SI.Set()

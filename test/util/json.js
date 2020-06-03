@@ -17,8 +17,8 @@ const ResourceJSON = unmangle(unmangle(Run)._util)._ResourceJSON
 // ------------------------------------------------------------------------------------------------
 
 const run = new Run()
-const sandbox = unmangle(Run.sandbox)._instance
-const sandboxIntrinsics = unmangle(sandbox)._intrinsics
+const sandbox = unmangle(Run.sandbox)
+const sandboxIntrinsics = sandbox._intrinsics
 
 const _serialize = unmangle(ResourceJSON)._serialize
 const _deserialize = unmangle(ResourceJSON)._deserialize
@@ -31,7 +31,7 @@ const _findAllResourceRefsInResourceJSON = unmangle(ResourceJSON)._findAllResour
 // ------------------------------------------------------------------------------------------------
 
 const defaultOpts = mangle({
-  _sandboxIntrinsics: unmangle(sandbox)._hostIntrinsics
+  _sandboxIntrinsics: sandbox._hostIntrinsics
 })
 
 function serializePass (x, y, opts = defaultOpts) {
@@ -475,7 +475,7 @@ describe('ResourceJSON', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const opts = mangle({
-        _outputIntrinsics: unmangle(sandbox)._hostIntrinsics,
+        _outputIntrinsics: sandbox._hostIntrinsics,
         _replacer: _replace._resources(resource => '123'),
         _reviver: _revive._resources(ref => dragon)
       })
