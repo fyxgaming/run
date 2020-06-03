@@ -354,6 +354,22 @@ describe('_deepClone', () => {
     expect(Array.from(m2)).to.deep.equal([[0, 1], ['a', 'b'], [[], {}], [new Set(), new Map()]])
   })
 
+  it('should clone function as code', () => {
+    function f () { }
+    const f2 = _deepClone(f)
+    expect(f).not.to.equal(f2)
+    expect(f.toString()).to.equal(f2.toString())
+  })
+
+  it('should clone arbitrary objects', () => {
+    class A { }
+    const a = new A()
+    const a2 = _deepClone(a)
+    expect(a).to.deep.equal(a2)
+    expect(A).not.to.equal(a2.constructor)
+    expect(A.toString()).to.equal(a2.constructor.toString())
+  })
+
   // Sandbox test should test uint8array
 })
 
