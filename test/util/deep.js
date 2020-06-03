@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 const { fake, stub } = require('sinon')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
-const { Jig } = Run
+const { Jig, Berry } = Run
 const { unmangle } = require('../env/unmangle')
 const { _deepVisit, _deepReplace, _deepClone } = unmangle(unmangle(Run)._util)
 
@@ -380,6 +380,13 @@ describe('_deepClone', () => {
     class A extends Jig { }
     const a = new A()
     expect(_deepClone(a)).to.equal(a)
+  })
+
+  it('should pass berries through', async () => {
+    const run = new Run()
+    class A extends Berry { static pluck () { return new A() } }
+    const berry = await run.load('123', A)
+    expect(_deepClone(berry)).to.equal(berry)
   })
 
   // Sandbox test should test uint8array
