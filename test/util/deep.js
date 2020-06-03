@@ -347,6 +347,13 @@ describe('_deepClone', () => {
     expect(Array.from(s2)).to.deep.equal([false, null, {}, new Map()])
   })
 
+  it('should clone map', () => {
+    const m = new Map([[0, 1], ['a', 'b'], [[], {}], [new Set(), new Map()]])
+    const m2 = _deepClone(m)
+    expect(m2 instanceof Map).to.equal(true)
+    expect(Array.from(m2)).to.deep.equal([[0, 1], ['a', 'b'], [[], {}], [new Set(), new Map()]])
+  })
+
   // Sandbox test should test uint8array
 })
 
