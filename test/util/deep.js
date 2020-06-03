@@ -322,6 +322,12 @@ describe('_deepClone', () => {
     expect(_deepClone(Symbol.hasInstance)).to.equal(Symbol.hasInstance)
     expect(_deepClone(null)).to.equal(null)
   })
+
+  it('should clone basic objects', () => {
+    const o = {}
+    o.p = { m: 1 }
+    expect(_deepClone(o)).to.deep.equal({ p: { m: 1 } })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
