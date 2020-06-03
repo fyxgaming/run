@@ -46,6 +46,15 @@ describe('Code', () => {
       expect(SA1).to.equal(SA2)
     })
 
+    it('throws if install built-in type', () => {
+      new Run() // eslint-disable-line
+      expect(() => new Code(Object)).to.throw('Cannot install Object')
+      expect(() => new Code(Date)).to.throw('Cannot install Date')
+      expect(() => new Code(Uint8Array)).to.throw('Cannot install')
+      expect(() => new Code(Math.sin)).to.throw('Cannot install sin')
+      expect(() => new Code(parseInt)).to.throw('Cannot install parseInt')
+    })
+
     it('throws if parent dependency mismatch', () => {
       new Run() // eslint-disable-line
       class A { }
@@ -234,15 +243,6 @@ describe('Code', () => {
       function B () { }
       B.prototype = Object.create(A.prototype)
       expect(() => repo._install(B)).to.throw('Cannot install B')
-    })
-
-    it('throws if install built-in type', () => {
-      const repo = unmangle(new Repository('mock'))
-      expect(() => repo._install(Object)).to.throw('Cannot install Object')
-      expect(() => repo._install(Date)).to.throw('Cannot install Date')
-      expect(() => repo._install(Uint8Array)).to.throw('Cannot install')
-      expect(() => repo._install(Math.sin)).to.throw('Cannot install sin')
-      expect(() => repo._install(parseInt)).to.throw('Cannot install parseInt')
     })
 
     it('should not install if error', () => {
