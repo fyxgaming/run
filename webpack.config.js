@@ -48,8 +48,8 @@ const reservedNames = [
   'Jig', 'Berry', 'Context', 'JigControl', 'BerryControl',
   // Token, expect, etc. are built-in code must be preserved
   'Token', 'expect', 'asm', 'hex', 'StandardLock', 'GroupLock',
-  // ResourceSet/ResourceMap dependency names must be preserved
-  'internal', 'uniqueKey', 'ResourceSet', 'ResourceMap',
+  // SafeSet/SafeMap dependency names must be preserved
+  'internal', 'uniqueKey', 'SafeSet', 'SafeMap',
   // Errors
   'NotImplementedError', 'TimeoutError'
 ]

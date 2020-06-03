@@ -1899,7 +1899,7 @@ describe('Jig', () => {
       })
     })
 
-    it('should use ResourceSet', async () => {
+    it('should use SafeSet', async () => {
       const run = createHookedRun()
       class B extends Jig {}
       class A extends Jig {
@@ -1919,7 +1919,7 @@ describe('Jig', () => {
       await run.load(a.location)
     })
 
-    it('should use ResourceMap', async () => {
+    it('should use SafeMap', async () => {
       const run = createHookedRun()
       class B extends Jig {}
       class A extends Jig {

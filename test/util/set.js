@@ -11,8 +11,8 @@ const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const util = unmangle(unmangle(Run)._util)
 const Location = util._Location
-const ResourceSet = util._ResourceSet
-const ResourceMap = util._ResourceMap
+const SafeSet = util._SafeSet
+const SafeMap = util._SafeMap
 
 // ------------------------------------------------------------------------------------------------
 // A temporary resource for testing
@@ -37,29 +37,29 @@ const testResource = (origin, location) => {
 }
 
 // ------------------------------------------------------------------------------------------------
-// ResourceMap
+// SafeMap
 // ------------------------------------------------------------------------------------------------
 
-describe('ResourceMap', () => {
+describe('SafeMap', () => {
   const run = new Run()
   beforeEach(() => run.activate())
 
   describe('constructor', () => {
     it('should create empty map', () => {
-      expect(new ResourceMap().size).to.equal(0)
+      expect(new SafeMap().size).to.equal(0)
     })
 
     it('should create map from array', () => {
       const arr = [[1, 2], ['a', 'b']]
-      const map = new ResourceMap(arr)
+      const map = new SafeMap(arr)
       expect(map.size).to.equal(arr.length)
       arr.forEach(x => expect(map.has(x[0])).to.equal(true))
     })
 
     it('should create map from map', () => {
       const arr = [[null, null]]
-      const map = new ResourceMap(arr)
-      const map2 = new ResourceMap(map)
+      const map = new SafeMap(arr)
+      const map2 = new SafeMap(map)
       expect(map2.size).to.equal(arr.length)
       arr.forEach(([x]) => expect(map2.has(x)).to.equal(true))
       arr.forEach(([x, y]) => expect(map2.get(x)).to.equal(y))
@@ -68,11 +68,11 @@ describe('ResourceMap', () => {
 
   describe('clear', () => {
     it('should not throw on empty map', () => {
-      expect(() => new ResourceMap().clear()).not.to.throw()
+      expect(() => new SafeMap().clear()).not.to.throw()
     })
 
     it('should empty contents', () => {
-      const map = new ResourceMap()
+      const map = new SafeMap()
       map.set(1, 2)
       map.clear()
       expect(map.size).to.equal(0)
@@ -81,7 +81,7 @@ describe('ResourceMap', () => {
     it('should clear resource states', () => {
       const a = testResource()
       const b = testResource().deploy().publish()
-      const map = new ResourceMap([[a, 1], [b, 2]])
+      const map = new SafeMap([[a, 1], [b, 2]])
       map.clear()
       expect(map.size).to.equal(0)
       a.publish()
@@ -94,20 +94,20 @@ describe('ResourceMap', () => {
 
   describe('delete', () => {
     it('should return false if item is not present', () => {
-      expect(new ResourceMap().delete(1)).to.equal(false)
-      expect(new ResourceMap().delete(testResource())).to.equal(false)
-      expect(new ResourceMap().delete(testResource().deploy())).to.equal(false)
-      expect(new ResourceMap().delete(testResource().deploy().publish())).to.equal(false)
+      expect(new SafeMap().delete(1)).to.equal(false)
+      expect(new SafeMap().delete(testResource())).to.equal(false)
+      expect(new SafeMap().delete(testResource().deploy())).to.equal(false)
+      expect(new SafeMap().delete(testResource().deploy().publish())).to.equal(false)
     })
 
     it('should delete item and return true if item is present', () => {
-      expect(new ResourceMap([[1, 1]]).delete(1)).to.equal(true)
+      expect(new SafeMap([[1, 1]]).delete(1)).to.equal(true)
     })
 
     it('should clear resource states', () => {
       const a = testResource()
       const b = testResource().deploy()
-      const map = new ResourceMap([[a, 1], [b, 1]])
+      const map = new SafeMap([[a, 1], [b, 1]])
       map.delete(a)
       map.delete(b)
       expect(map.size).to.equal(0)
@@ -119,7 +119,7 @@ describe('ResourceMap', () => {
 
     it('should throw for same resources at different states', () => {
       const a = testResource().deploy().publish()
-      const map = new ResourceMap([[a, a]])
+      const map = new SafeMap([[a, a]])
       const a2 = a.duplicate().update()
       expect(() => map.delete(a2)).to.throw('Inconsistent worldview')
     })
@@ -128,7 +128,7 @@ describe('ResourceMap', () => {
   describe('entries', () => {
     it('should iterate across entries', () => {
       const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
-      const map = new ResourceMap(entries)
+      const map = new SafeMap(entries)
       for (const entry of map.entries()) {
         const next = entries.shift()
         expect(entry).to.deep.equal(next)
@@ -139,7 +139,7 @@ describe('ResourceMap', () => {
   describe('forEach', () => {
     it('should execute function for each entry', () => {
       const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
-      const map = new ResourceMap(entries)
+      const map = new SafeMap(entries)
       class A {
         constructor () { this.arr = [] }
         push (x, y) { this.arr.push([x, y]) }
@@ -153,19 +153,19 @@ describe('ResourceMap', () => {
   describe('get', () => {
     it('should return values for basic types and objects in set', () => {
       const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
-      const map = new ResourceMap(entries)
+      const map = new SafeMap(entries)
       entries.forEach(entry => expect(map.get(entry[0])).to.equal(entry[1]))
     })
 
     it('should return undefined for basic types and objects not in set', () => {
       const entries = [1, 'a', false, {}, []]
-      const map = new ResourceMap()
+      const map = new SafeMap()
       entries.forEach(entry => expect(map.get(entry)).to.equal(undefined))
     })
 
     it('should return undefined after object is deleted', () => {
       const obj = {}
-      const map = new ResourceMap([[obj, 1]])
+      const map = new SafeMap([[obj, 1]])
       expect(map.get(obj)).to.equal(1)
       map.delete(obj)
       expect(map.get(obj)).to.equal(undefined)
@@ -175,7 +175,7 @@ describe('ResourceMap', () => {
       const a = testResource()
       const b = testResource().deploy()
       const c = testResource().deploy().publish()
-      const map = new ResourceMap([[a, 'abc'], [b, 'def'], [c, 'ghi']])
+      const map = new SafeMap([[a, 'abc'], [b, 'def'], [c, 'ghi']])
       expect(map.get(a)).to.equal('abc')
       expect(map.get(b)).to.equal('def')
       expect(map.get(c)).to.equal('ghi')
@@ -188,14 +188,14 @@ describe('ResourceMap', () => {
     })
 
     it('should return undefined for missing resources', () => {
-      expect(new ResourceMap().get(testResource().deploy())).to.equal(undefined)
+      expect(new SafeMap().get(testResource().deploy())).to.equal(undefined)
     })
 
     it('should throw for same resources at different states', () => {
       const a = testResource()
       const b = testResource().deploy()
       const c = testResource().deploy().publish()
-      const map = new ResourceMap([[a, 1], [b, 2], [c, 3]])
+      const map = new SafeMap([[a, 1], [b, 2], [c, 3]])
       expect(map.get(a)).to.equal(1)
       expect(map.get(b)).to.equal(2)
       expect(map.get(c)).to.equal(3)
@@ -211,19 +211,19 @@ describe('ResourceMap', () => {
   describe('has', () => {
     it('should return true for basic types and objects in set', () => {
       const entries = [[1, 2], ['a', 'b'], [false, true], [{}, []]]
-      const map = new ResourceMap(entries)
+      const map = new SafeMap(entries)
       entries.forEach(entry => expect(map.has(entry[0])).to.equal(true))
     })
 
     it('should return false for basic types and objects not in set', () => {
       const entries = [1, 'a', false, {}, []]
-      const map = new ResourceMap()
+      const map = new SafeMap()
       entries.forEach(entry => expect(map.has(entry)).to.equal(false))
     })
 
     it('should return false after object is deleted', () => {
       const obj = {}
-      const map = new ResourceMap([[obj, 1]])
+      const map = new SafeMap([[obj, 1]])
       expect(map.has(obj)).to.equal(true)
       map.delete(obj)
       expect(map.has(obj)).to.equal(false)
@@ -232,22 +232,22 @@ describe('ResourceMap', () => {
     it('should return true for resources in map', () => {
       const a = testResource()
       const b = testResource().deploy().publish().update()
-      const map = new ResourceMap([[a, {}], [b, {}]])
+      const map = new SafeMap([[a, {}], [b, {}]])
       expect(map.has(a)).to.equal(true)
       expect(map.has(b)).to.equal(true)
       expect(map.has(b.duplicate())).to.equal(true)
     })
 
     it('should return false for missing resources', () => {
-      expect(new ResourceMap().has(testResource())).to.equal(false)
-      expect(new ResourceMap().has(testResource().deploy())).to.equal(false)
-      expect(new ResourceMap().has(testResource().deploy().publish())).to.equal(false)
-      expect(new ResourceMap().has(testResource().deploy().publish().update())).to.equal(false)
+      expect(new SafeMap().has(testResource())).to.equal(false)
+      expect(new SafeMap().has(testResource().deploy())).to.equal(false)
+      expect(new SafeMap().has(testResource().deploy().publish())).to.equal(false)
+      expect(new SafeMap().has(testResource().deploy().publish().update())).to.equal(false)
     })
 
     it('should throw for same resources at different states', () => {
       const a = testResource().deploy().publish().update().publish()
-      const map = new ResourceMap([[a, []]])
+      const map = new SafeMap([[a, []]])
       expect(map.has(a)).to.equal(true)
       expect(() => map.has(a.duplicate().update())).to.throw('Inconsistent worldview')
     })
@@ -255,13 +255,13 @@ describe('ResourceMap', () => {
 
   describe('set', () => {
     it('should return map regardless', () => {
-      const map = new ResourceMap()
+      const map = new SafeMap()
       expect(map.set(1, 1)).to.equal(map)
       expect(map.set(1, 1)).to.equal(map)
     })
 
     it('should set basic types and objects as keys once', () => {
-      const map = new ResourceMap()
+      const map = new SafeMap()
       const entries = [[1, 2], ['abc', 'def'], [true, false], [{}, []]]
       entries.forEach(([x, y]) => map.set(x, y))
       entries.forEach(([x, y]) => map.set(x, y))
@@ -270,7 +270,7 @@ describe('ResourceMap', () => {
 
     it('should set resources once', () => {
       const a = testResource().deploy().publish()
-      const map = new ResourceMap()
+      const map = new SafeMap()
       map.set(a, 0)
       const a2 = a.duplicate()
       map.set(a2, 1)
@@ -281,7 +281,7 @@ describe('ResourceMap', () => {
     it('should throw if add two of the same resources at different states', () => {
       const a = testResource().deploy().publish()
       const a2 = a.duplicate().update()
-      const map = new ResourceMap()
+      const map = new SafeMap()
       map.set(a2, a2)
       expect(() => map.set(a, {})).to.throw('Inconsistent worldview')
     })
@@ -290,7 +290,7 @@ describe('ResourceMap', () => {
   describe('values', () => {
     it('should return values iterator', () => {
       const entries = [[1, 2], [3, 4]]
-      const map = new ResourceMap(entries)
+      const map = new SafeMap(entries)
       const arr = []
       for (const val of map.values()) { arr.push(val) }
       expect(arr).to.deep.equal([2, 4])
@@ -298,37 +298,37 @@ describe('ResourceMap', () => {
   })
 
   describe('misc', () => {
-    it('should return ResourceMap for Symbol.species', () => {
-      expect(new ResourceMap()[Symbol.species]).to.equal(ResourceMap)
+    it('should return SafeMap for Symbol.species', () => {
+      expect(new SafeMap()[Symbol.species]).to.equal(SafeMap)
     })
 
     it('should return iterator for Symbol.iterator', () => {
-      expect(new ResourceMap()[Symbol.species]).to.equal(ResourceMap)
+      expect(new SafeMap()[Symbol.species]).to.equal(SafeMap)
     })
   })
 })
 
 // ------------------------------------------------------------------------------------------------
-// ResourceSet
+// SafeSet
 // ------------------------------------------------------------------------------------------------
 
-describe('ResourceSet', () => {
+describe('SafeSet', () => {
   describe('constructor', () => {
     it('should create empty set', () => {
-      expect(new ResourceSet().size).to.equal(0)
+      expect(new SafeSet().size).to.equal(0)
     })
 
     it('should create set from array', () => {
       const arr = [null]
-      const set = new ResourceSet(arr)
+      const set = new SafeSet(arr)
       expect(set.size).to.equal(arr.length)
       arr.forEach(x => expect(set.has(x)).to.equal(true))
     })
 
     it('should create set from set', () => {
       const arr = [1, 2, 3]
-      const set = new ResourceSet(arr)
-      const set2 = new ResourceSet(set)
+      const set = new SafeSet(arr)
+      const set2 = new SafeSet(set)
       expect(set2.size).to.equal(arr.length)
       arr.forEach(x => expect(set2.has(x)).to.equal(true))
     })
@@ -336,13 +336,13 @@ describe('ResourceSet', () => {
 
   describe('add', () => {
     it('should return set regardless', () => {
-      const set = new ResourceSet()
+      const set = new SafeSet()
       expect(set.add(1)).to.equal(set)
       expect(set.add(1)).to.equal(set)
     })
 
     it('should add basic types and objects once', () => {
-      const set = new ResourceSet()
+      const set = new SafeSet()
       const entries = [1, 'abc', true, {}, []]
       entries.forEach(entry => set.add(entry))
       entries.forEach(entry => set.add(entry))
@@ -352,7 +352,7 @@ describe('ResourceSet', () => {
     it('should add resources once', async () => {
       const a = testResource()
       const b = testResource().deploy().publish()
-      const set = new ResourceSet()
+      const set = new SafeSet()
       set.add(a)
       set.add(b)
       set.add(b.duplicate())
@@ -362,7 +362,7 @@ describe('ResourceSet', () => {
     it('should throw if add two of the same resources at different states', () => {
       const a = testResource()
       const b = testResource().deploy().publish()
-      const set = new ResourceSet()
+      const set = new SafeSet()
       set.add(a)
       set.add(b)
       const a2 = a.deploy().publish().duplicate().update()
@@ -374,18 +374,18 @@ describe('ResourceSet', () => {
 
   describe('clear', () => {
     it('should not throw on empty set', () => {
-      expect(() => new ResourceSet().clear()).not.to.throw()
+      expect(() => new SafeSet().clear()).not.to.throw()
     })
 
     it('should empty contents', () => {
-      const set = new ResourceSet()
+      const set = new SafeSet()
       set.add(1)
       set.clear()
       expect(set.size).to.equal(0)
     })
 
     it('should clear resource states', () => {
-      const set = new ResourceSet()
+      const set = new SafeSet()
       const a = testResource().deploy()
       const b = testResource().deploy().publish()
       set.add(a)
@@ -400,17 +400,17 @@ describe('ResourceSet', () => {
 
   describe('delete', () => {
     it('should return false if item is not present', () => {
-      expect(new ResourceSet().delete(1)).to.equal(false)
-      expect(new ResourceSet().delete(testResource())).to.equal(false)
-      expect(new ResourceSet().delete(testResource().deploy().publish())).to.equal(false)
+      expect(new SafeSet().delete(1)).to.equal(false)
+      expect(new SafeSet().delete(testResource())).to.equal(false)
+      expect(new SafeSet().delete(testResource().deploy().publish())).to.equal(false)
     })
 
     it('should delete item and return true if item is present', () => {
-      expect(new ResourceSet([1]).delete(1)).to.equal(true)
+      expect(new SafeSet([1]).delete(1)).to.equal(true)
     })
 
     it('should clear resource states', () => {
-      const set = new ResourceSet()
+      const set = new SafeSet()
       const resource = testResource().deploy().publish()
       set.add(resource)
       set.delete(resource)
@@ -421,7 +421,7 @@ describe('ResourceSet', () => {
     it('should throw for same resources at different states', () => {
       const a = testResource()
       const b = testResource().deploy().publish()
-      const set = new ResourceSet([a, b])
+      const set = new SafeSet([a, b])
       expect(() => set.delete(a.deploy().publish().duplicate().update())).to.throw('Inconsistent worldview')
       expect(() => set.delete(b.duplicate().update().publish())).to.throw('Inconsistent worldview')
     })
@@ -430,7 +430,7 @@ describe('ResourceSet', () => {
   describe('entries', () => {
     it('should iterate across entries', () => {
       const arr = [1, 2, 3]
-      const set = new ResourceSet(arr)
+      const set = new SafeSet(arr)
       for (const entry of set.entries()) {
         const next = arr.shift()
         expect(entry).to.deep.equal([next, next])
@@ -440,7 +440,7 @@ describe('ResourceSet', () => {
 
   describe('forEach', () => {
     it('should execute function for each entry', () => {
-      const set = new ResourceSet([1, 2, 3])
+      const set = new SafeSet([1, 2, 3])
       class A {
         constructor () { this.arr = [] }
         push (x) { this.arr.push(x) }
@@ -454,19 +454,19 @@ describe('ResourceSet', () => {
   describe('has', () => {
     it('should return true for basic types and objects in set', () => {
       const entries = [1, 'a', false, {}, []]
-      const set = new ResourceSet(entries)
+      const set = new SafeSet(entries)
       entries.forEach(entry => expect(set.has(entry)).to.equal(true))
     })
 
     it('should return false for basic types and objects not in set', () => {
       const entries = [1, 'a', false, {}, []]
-      const set = new ResourceSet()
+      const set = new SafeSet()
       entries.forEach(entry => expect(set.has(entry)).to.equal(false))
     })
 
     it('should return false after object is deleted', () => {
       const obj = {}
-      const set = new ResourceSet([obj])
+      const set = new SafeSet([obj])
       expect(set.has(obj)).to.equal(true)
       set.delete(obj)
       expect(set.has(obj)).to.equal(false)
@@ -474,21 +474,21 @@ describe('ResourceSet', () => {
 
     it('should return true for resources in set', () => {
       const a = testResource().deploy().publish()
-      const set = new ResourceSet([a])
+      const set = new SafeSet([a])
       expect(set.has(a)).to.equal(true)
       expect(set.has(a.duplicate())).to.equal(true)
     })
 
     it('should return false for missing resources', () => {
-      expect(new ResourceSet().has(testResource())).to.equal(false)
-      expect(new ResourceSet().has(testResource().deploy())).to.equal(false)
-      expect(new ResourceSet().has(testResource().deploy().publish())).to.equal(false)
+      expect(new SafeSet().has(testResource())).to.equal(false)
+      expect(new SafeSet().has(testResource().deploy())).to.equal(false)
+      expect(new SafeSet().has(testResource().deploy().publish())).to.equal(false)
     })
 
     it('should throw for same resources at different states', () => {
       const a = testResource().deploy()
       const b = testResource().deploy().publish().update()
-      const set = new ResourceSet([a, b])
+      const set = new SafeSet([a, b])
       expect(set.has(a)).to.equal(true)
       expect(set.has(b)).to.equal(true)
       expect(() => set.has(a.publish().duplicate().update())).to.throw('Inconsistent worldview')
@@ -499,19 +499,19 @@ describe('ResourceSet', () => {
   describe('values', () => {
     it('should return values iterator', () => {
       const arr = []
-      const set = new ResourceSet([1, 2, 3])
+      const set = new SafeSet([1, 2, 3])
       for (const val of set.values()) { arr.push(val) }
       expect(arr).to.deep.equal([1, 2, 3])
     })
   })
 
   describe('misc', () => {
-    it('should return ResourceSet for Symbol.species', () => {
-      expect(new ResourceSet()[Symbol.species]).to.equal(ResourceSet)
+    it('should return SafeSet for Symbol.species', () => {
+      expect(new SafeSet()[Symbol.species]).to.equal(SafeSet)
     })
 
     it('should return iterator for Symbol.iterator', () => {
-      expect(new ResourceSet()[Symbol.species]).to.equal(ResourceSet)
+      expect(new SafeSet()[Symbol.species]).to.equal(SafeSet)
     })
   })
 })
