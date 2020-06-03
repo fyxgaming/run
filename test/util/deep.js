@@ -324,9 +324,13 @@ describe('_deepClone', () => {
   })
 
   it('should clone basic objects', () => {
-    const o = {}
-    o.p = { m: 1 }
+    const o = { p: { m: 1 } }
     expect(_deepClone(o)).to.deep.equal({ p: { m: 1 } })
+  })
+
+  it('should clone basic array', () => {
+    const a = [1, false, [], {}]
+    expect(_deepClone(a)).to.deep.equal([1, false, [], {}])
   })
 })
 
