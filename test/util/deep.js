@@ -8,6 +8,7 @@ const { describe, it } = require('mocha')
 const { fake, stub } = require('sinon')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
+const { Jig } = Run
 const { unmangle } = require('../env/unmangle')
 const { _deepVisit, _deepReplace, _deepClone } = unmangle(unmangle(Run)._util)
 
@@ -372,6 +373,13 @@ describe('_deepClone', () => {
     expect(a).to.deep.equal(a2)
     expect(A).not.to.equal(a2.constructor)
     expect(A.toString()).to.equal(a2.constructor.toString())
+  })
+
+  it('should pass jigs through', () => {
+    new Run() // eslint-disable-line
+    class A extends Jig { }
+    const a = new A()
+    expect(_deepClone(a)).to.equal(a)
   })
 
   // Sandbox test should test uint8array
