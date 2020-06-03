@@ -332,6 +332,15 @@ describe('_deepClone', () => {
     const a = [1, false, [], {}]
     expect(_deepClone(a)).to.deep.equal([1, false, [], {}])
   })
+
+  it('should clone uint8array', () => {
+    const b = new Uint8Array([0, 1, 255])
+    const b2 = _deepClone(b)
+    expect(b2 instanceof Uint8Array).to.equal(true)
+    expect(Array.from(b2)).to.deep.equal([0, 1, 255])
+  })
+
+  // Sandbox test should test uint8array
 })
 
 // ------------------------------------------------------------------------------------------------
