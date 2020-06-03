@@ -164,6 +164,24 @@ describe('Code', () => {
       expect(() => new Code(A)).to.throw()
     })
 
+    it('returns existing code for a preset copy', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: 'abc_o1',
+          origin: 'abc_o1',
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+        }
+      }
+      class B { }
+      Object.assign(B, A)
+      const SA = new Code(A)
+      const SB = new Code(B)
+      expect(SA).to.equal(SB)
+    })
+
     it('creates parents', () => {
       new Run() // eslint-disable-line
       class A { }
@@ -192,34 +210,19 @@ describe('Code', () => {
       expect(SA1).to.equal(SA2)
     })
 
-    it('returns existing code for a preset copy', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      A.presets = {
-        [network]: {
-          location: 'abc_o1',
-          origin: 'abc_o1',
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
-        }
-      }
-      class B { }
-      Object.assign(B, A)
-      const SA = new Code(A)
-      const SB = new Code(B)
-      expect(SA).to.equal(SB)
-    })
-
-    /*
-    it('should install Code in properties', () => {
-    })
-
-    it('should apply deps as globals', () => {
-      const repo = unmangle(new Repository('mock'))
+    it('should set deps as globals', () => {
+      new Run() // eslint-disable-line
       class A { }
       function f () { return A }
       f.deps = { A }
-      repo._install(f)
+      const sf = new Code(f)
+      expect(sf()).to.equal(new Code(A))
+    })
+
+    // is deps available?
+
+    /*
+    it('should install Code in properties', () => {
     })
 
     it('should support circular dependencies', () => {
