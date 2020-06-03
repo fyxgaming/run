@@ -64,6 +64,14 @@ describe('Code', () => {
       expect(() => new Code(B)).to.throw('Parent dependency mismatch')
     })
 
+    it('throws if there is prototype inheritance', () => {
+      new Run() // eslint-disable-line
+      function A () { }
+      function B () { }
+      B.prototype = Object.create(A.prototype)
+      expect(() => new Code(B)).to.throw('Cannot install B')
+    })
+
     /*
     it('should install Code in properties', () => {
     })
@@ -235,14 +243,6 @@ describe('Code', () => {
         }
       }
       expect(() => repo._install(A)).to.throw()
-    })
-
-    it('throws if there is prototype inheritance', () => {
-      const repo = unmangle(new Repository('mock'))
-      function A () { }
-      function B () { }
-      B.prototype = Object.create(A.prototype)
-      expect(() => repo._install(B)).to.throw('Cannot install B')
     })
 
     it('should not install if error', () => {
