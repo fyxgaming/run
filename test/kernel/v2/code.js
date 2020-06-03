@@ -192,6 +192,24 @@ describe('Code', () => {
       expect(SA1).to.equal(SA2)
     })
 
+    it('returns existing code for a preset copy', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: 'abc_o1',
+          origin: 'abc_o1',
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+        }
+      }
+      class B { }
+      Object.assign(B, A)
+      const SA = new Code(A)
+      const SB = new Code(B)
+      expect(SA).to.equal(SB)
+    })
+
     /*
     it('should install Code in properties', () => {
     })
@@ -208,29 +226,6 @@ describe('Code', () => {
 
     })
 
-    it('installs type having resource presets on another network', () => {
-      const repo = unmangle(new Repository('mock'))
-      class A { }
-      A.presets = {
-        test: {
-          location: 'abc_o1',
-          origin: 'abc_o1',
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
-        }
-      }
-      const desc = unmangle(repo._install(A))
-      expect(desc._T).to.equal(A)
-      expect(desc._S).not.to.equal(A)
-      expect(desc._S.toString()).to.equal(A.toString())
-      expect(desc._locals.size).to.equal(1)
-      expect(desc._deploying).to.equal(false)
-      expect(desc._deployed).to.equal(false)
-      expect(desc._native).to.equal(false)
-      expect(desc._S.location).to.equal(undefined)
-      expect(desc._S.origin).to.equal(undefined)
-      expect(desc._S.owner).to.equal(undefined)
-    })
-
     // Test loop of parents and children
 
     // Test for deps, and bad parent dep
@@ -240,26 +235,6 @@ describe('Code', () => {
     })
 
     // Test dependencies
-
-    it('returns existing descriptor of a preset copy', () => {
-      const repo = unmangle(new Repository('mock'))
-      class A { }
-      A.presets = {
-        mock: {
-          location: 'abc_o1',
-          origin: 'abc_o1',
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
-        }
-      }
-      class B { }
-      Object.assign(B, A)
-      const desc = repo._install(A)
-      const desc2 = repo._install(B)
-      expect(desc).to.equal(desc2)
-      expect(unmangle(desc)._T).to.equal(A)
-      expect(unmangle(desc)._locals.size).to.equal(2)
-      expect(unmangle(desc)._deployed).to.equal(true)
-    })
 
     it('throws if deps are invalid', () => {
       const repo = unmangle(new Repository('mock'))
