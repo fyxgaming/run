@@ -412,11 +412,16 @@ describe('_deepClone', () => {
     expect(o2.m.m).to.equal(o2.m)
   })
 
-  it('should clone from sandbox intrinsics', () => {
-    // TODO: Uint8Array
+  it('should clone to sandbox intrinsics', () => {
+    const SI = unmangle(Run.sandbox)._intrinsics
+    expect(_deepClone(new Set(), SI) instanceof SI.Set).to.equal(true)
+    expect(_deepClone(new Map(), SI) instanceof SI.Map).to.equal(true)
+    expect(_deepClone(new Uint8Array(), SI) instanceof SI.Uint8Array).to.equal(true)
+    expect(Object.getPrototypeOf(_deepClone([], SI))).to.equal(SI.Array.prototype)
+    expect(Object.getPrototypeOf(_deepClone({}, SI))).to.equal(SI.Object.prototype)
   })
 
-  it('should clone to sandbox intrinsics', () => {
+  it('should clone from sandbox intrinsics', () => {
     // TODO: Uint8Array
   })
 })
