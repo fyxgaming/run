@@ -38,12 +38,21 @@ describe('Code', () => {
       new Code(() => {}) // eslint-disable-line
     })
 
-    it('dedups', () => {
+    it('dedups code', () => {
       new Run() // eslint-disable-line
       class A { }
       const SA1 = new Code(A)
       const SA2 = new Code(A)
       expect(SA1).to.equal(SA2)
+    })
+
+    it('throws if parent dependency mismatch', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      class C { }
+      class B extends A { }
+      B.deps = { A: C }
+      expect(() => new Code(B)).to.throw('Parent dependency mismatch')
     })
 
     /*
@@ -62,7 +71,7 @@ describe('Code', () => {
 
     })
 
-    it('installs and sandboxes type with resource presets', () => {
+    it('installs and sandboxes type with jig presets', () => {
       const repo = unmangle(new Repository('mock'))
       class A { }
       A.presets = {
@@ -217,15 +226,6 @@ describe('Code', () => {
         }
       }
       expect(() => repo._install(A)).to.throw()
-    })
-
-    it('throws if parent dependency mismatch', () => {
-      const repo = unmangle(new Repository('mock'))
-      class A { }
-      class C { }
-      class B extends A { }
-      B.deps = { A: C }
-      expect(() => repo._install(B)).to.throw('Parent dependency mismatch')
     })
 
     it('throws if there is prototype inheritance', () => {
