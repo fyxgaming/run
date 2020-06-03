@@ -390,6 +390,26 @@ describe('_deepClone', () => {
   })
 
   it('should clone circular references', () => {
+    const o = {}
+    o.o = o
+    o.a = []
+    o.a.push(o.a)
+    o.s = new Set()
+    o.s.add(o)
+    o.m = new Map()
+    o.m.set(o.m, o.m)
+    o.z = new class A {}()
+    o.z.z = o.z
+    o.s.s = o.s
+    o.m.m = o.m
+    const o2 = _deepClone(o)
+    expect(o2.o).to.equal(o2)
+    expect(o2.a[0]).to.equal(o2.a)
+    expect(o2.s.has(o2)).to.equal(true)
+    expect(o2.m.get(o2.m)).to.equal(o2.m)
+    expect(o2.z.z).to.equal(o2.z)
+    expect(o2.s.s).to.equal(o2.s)
+    expect(o2.m.m).to.equal(o2.m)
   })
 
   it('should clone from sandbox intrinsics', () => {
