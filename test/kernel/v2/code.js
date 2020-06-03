@@ -162,6 +162,10 @@ describe('Code', () => {
         test: null
       }
       expect(() => new Code(A)).to.throw()
+      A.presets = []
+      expect(() => new Code(A)).to.throw()
+      A.presets = { [network]: new class Presets {}() }
+      expect(() => new Code(A)).to.throw()
     })
 
     it('returns existing code for a preset copy', () => {
@@ -232,6 +236,19 @@ describe('Code', () => {
       expect(SA.o()).to.deep.equal(A.deps.o)
     })
 
+    it('throws if deps invalid', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      A.deps = null
+      expect(() => new Code(A)).to.throw('Cannot install A')
+      A.deps = '123'
+      expect(() => new Code(A)).to.throw('Cannot install A')
+      A.deps = []
+      expect(() => new Code(A)).to.throw('Cannot install A')
+      A.deps = new class Deps {}()
+      expect(() => new Code(A)).to.throw('Cannot install A')
+    })
+
     // parent deps not in children
     // parent presets don't go down
 
@@ -254,17 +271,6 @@ describe('Code', () => {
     })
 
     // Test dependencies
-
-    it('throws if deps are invalid', () => {
-      const repo = unmangle(new Repository('mock'))
-      class A { }
-      A.deps = null
-      expect(() => repo._install(A)).to.throw('Cannot install A')
-      A.deps = '123'
-      expect(() => repo._install(A)).to.throw('Cannot install A')
-      A.deps = true
-      expect(() => repo._install(A)).to.throw('Cannot install A')
-    })
 
     it('should not create if error creating dependent code', () => {
       const repo = unmangle(new Repository('mock'))
