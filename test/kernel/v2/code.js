@@ -38,6 +38,26 @@ describe('Code', () => {
       new Code(() => {}) // eslint-disable-line
     })
 
+    it('creates with presets', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: 'abc_o1',
+          origin: 'abc_o1',
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+        }
+      }
+      const SA = new Code(A)
+      expect(SA.location).to.equal(A.presets[network].location)
+      expect(SA.origin).to.equal(A.presets[network].origin)
+      expect(SA.owner).to.equal(A.presets[network].owner)
+      expect(typeof SA.presets).to.equal('undefined')
+
+      // TODO: check the presets are a copy
+    })
+
     it('dedups code', () => {
       new Run() // eslint-disable-line
       class A { }
@@ -82,20 +102,21 @@ describe('Code', () => {
     })
 
     it('throws if presets are invalid', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
+      const network = run.blockchain.network
       class A { }
       A.presets = null
       expect(() => new Code(A)).to.throw('Cannot install A')
-      A.presets = { mock: null }
+      A.presets = { [network]: null }
       expect(() => new Code(A)).to.throw('Cannot install A')
-      A.presets = { mock: { location: 'abc_o1' } }
+      A.presets = { [network]: { location: 'abc_o1' } }
       expect(() => new Code(A)).to.throw('Cannot install A')
-      A.presets = { mock: { origin: 'abc_o1' } }
+      A.presets = { [network]: { origin: 'abc_o1' } }
       expect(() => new Code(A)).to.throw('Cannot install A')
-      A.presets = { mock: { owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td' } }
+      A.presets = { [network]: { owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td' } }
       expect(() => new Code(A)).to.throw('Cannot install A')
       A.presets = {
-        mock: {
+        [network]: {
           location: '_o1',
           origin: 'abc_o1',
           owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
@@ -103,7 +124,7 @@ describe('Code', () => {
       }
       expect(() => new Code(A)).to.throw()
       A.presets = {
-        mock: {
+        [network]: {
           location: 'abc_o1',
           origin: 'abc_o1',
           owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
@@ -127,29 +148,6 @@ describe('Code', () => {
 
     it('should support circular dependencies', () => {
 
-    })
-
-    it('installs and sandboxes type with jig presets', () => {
-      const repo = unmangle(new Repository('mock'))
-      class A { }
-      A.presets = {
-        mock: {
-          location: 'abc_o1',
-          origin: 'abc_o1',
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
-        }
-      }
-      const desc = unmangle(repo._install(A))
-      expect(desc._T).to.equal(A)
-      expect(desc._S).not.to.equal(A)
-      expect(desc._S.toString()).to.equal(A.toString())
-      expect(desc._locals.size).to.equal(1)
-      expect(desc._deploying).to.equal(false)
-      expect(desc._deployed).to.equal(true)
-      expect(desc._native).to.equal(false)
-      expect(desc._S.location).to.equal(A.presets.mock.location)
-      expect(desc._S.origin).to.equal(A.presets.mock.origin)
-      expect(desc._S.owner).to.equal(A.presets.mock.owner)
     })
 
     it('installs type having resource presets on another network', () => {
