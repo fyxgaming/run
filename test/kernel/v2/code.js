@@ -7,6 +7,8 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../../env/config')
+const { Jig, Berry } = Run
+const { unmangle } = require('../../env/unmangle')
 const Code = Run._Code
 
 // ------------------------------------------------------------------------------------------------
@@ -38,7 +40,7 @@ describe('Code', () => {
       new Code(() => {}) // eslint-disable-line
     })
 
-    it('creates with presets', () => {
+    it('creates with resource presets', () => {
       const run = new Run()
       const network = run.blockchain.network
       class A { }
@@ -54,16 +56,52 @@ describe('Code', () => {
       expect(SA.origin).to.equal(A.presets[network].origin)
       expect(SA.owner).to.equal(A.presets[network].owner)
       expect(typeof SA.presets).to.equal('undefined')
-
-      // TODO: check the presets are a copy
     })
 
-    it('dedups code', () => {
-      new Run() // eslint-disable-line
+    it('clones object presets', () => {
+      const run = new Run()
+      const network = run.blockchain.network
       class A { }
-      const SA1 = new Code(A)
-      const SA2 = new Code(A)
-      expect(SA1).to.equal(SA2)
+      A.presets = { [network]: { a: [], s: new Set() } }
+      const SA = new Code(A)
+      const SI = unmangle(Run.sandbox)._intrinsics
+      expect(SA.a).not.to.equal(A.presets[network].a)
+      expect(SA.s).not.to.equal(A.presets[network].s)
+      expect(SA.a instanceof SI.Array).to.equal(true)
+      expect(SA.s instanceof SI.Set).to.equal(true)
+    })
+
+    it('copies jigs in presets', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      class B extends Jig { }
+      const b = new B()
+      A.presets = { [network]: { b } }
+      const SA = new Code(A)
+      expect(SA.b).to.equal(b)
+    })
+
+    it('copies berries in presets', async () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      class B extends Berry { static pluck () { return new B() } }
+      const b = await run.load('', B)
+      A.presets = { [network]: { b } }
+      const SA = new Code(A)
+      expect(SA.b).to.equal(b)
+    })
+
+    it('installs code in presets', async () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      class B { }
+      A.presets = { [network]: { B } }
+      const SA = new Code(A)
+      expect(SA.B).not.to.equal(B)
+      expect(SA.B.toString()).to.equal(B.toString())
     })
 
     it('throws if not a valid type', () => {
@@ -75,7 +113,7 @@ describe('Code', () => {
       expect(() => new Code(null)).to.throw('Cannot install')
     })
 
-    it('throws if install built-in type', () => {
+    it('throws if create built-in type', () => {
       new Run() // eslint-disable-line
       expect(() => new Code(Object)).to.throw('Cannot install Object')
       expect(() => new Code(Date)).to.throw('Cannot install Date')
@@ -93,15 +131,7 @@ describe('Code', () => {
       expect(() => new Code(B)).to.throw('Parent dependency mismatch')
     })
 
-    it('throws if there is prototype inheritance', () => {
-      new Run() // eslint-disable-line
-      function A () { }
-      function B () { }
-      B.prototype = Object.create(A.prototype)
-      expect(() => new Code(B)).to.throw('Cannot install B')
-    })
-
-    it('throws if presets are invalid', () => {
+    it('throws if presets invalid', () => {
       const run = new Run()
       const network = run.blockchain.network
       class A { }
@@ -132,6 +162,34 @@ describe('Code', () => {
         test: null
       }
       expect(() => new Code(A)).to.throw()
+    })
+
+    it('creates parents', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      class B extends A { }
+      class C extends B { }
+      const SC = new Code(C)
+      const SB = new Code(B)
+      const SA = new Code(A)
+      expect(Object.getPrototypeOf(SC)).to.equal(SB)
+      expect(Object.getPrototypeOf(SB)).to.equal(SA)
+    })
+
+    it('throws if prototype inheritance', () => {
+      new Run() // eslint-disable-line
+      function A () { }
+      function B () { }
+      B.prototype = Object.create(A.prototype)
+      expect(() => new Code(B)).to.throw('Cannot install B')
+    })
+
+    it('creates only once', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      const SA1 = new Code(A)
+      const SA2 = new Code(A)
+      expect(SA1).to.equal(SA2)
     })
 
     /*
@@ -173,47 +231,9 @@ describe('Code', () => {
       expect(desc._S.owner).to.equal(undefined)
     })
 
-    it('applies normal presets to sandbox', () => {
-      const repo = unmangle(new Repository('mock'))
-      class A { }
-      A.NUM = 2
-      A.OBJ = { m: 2 }
-      A.ARR = [2]
-      A.presets = {
-        mock: {
-          NUM: 1,
-          OBJ: { n: 1, o: {} },
-          ARR: [1]
-        }
-      }
-      const desc = unmangle(repo._install(A))
-      expect(desc._S.NUM).to.equal(1)
-      expect(desc._S.OBJ).to.deep.equal({ n: 1, o: {} })
-      expect(desc._S.ARR).to.deep.equal([1])
-    })
-
-    it('installs parents before children', () => {
-      const repo = unmangle(new Repository('mock'))
-      class A { }
-      class B extends A { }
-      class C extends B { }
-      repo._install(C)
-      const desc = unmangle(repo._find(A))
-      expect(desc._T).to.equal(A)
-      expect(desc._S).not.to.equal(A)
-      expect(desc._deployed).to.equal(false)
-    })
-
     // Test loop of parents and children
 
     // Test for deps, and bad parent dep
-
-    it('returns descriptor if already installed', () => {
-      const repo = unmangle(new Repository('mock'))
-      class A { }
-      const desc = repo._install(A)
-      expect(repo._install(A)).to.equal(desc)
-    })
 
     it('does not duplicate parents', () => {
       // Parent
@@ -252,7 +272,7 @@ describe('Code', () => {
       expect(() => repo._install(A)).to.throw('Cannot install A')
     })
 
-    it('should not install if error', () => {
+    it('should not create if error creating dependent code', () => {
       const repo = unmangle(new Repository('mock'))
       class A { }
       A.Date = Date
