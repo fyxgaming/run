@@ -72,6 +72,38 @@ describe('Code', () => {
       expect(() => new Code(B)).to.throw('Cannot install B')
     })
 
+    it('throws if presets are invalid', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      A.presets = null
+      expect(() => new Code(A)).to.throw('Cannot install A')
+      A.presets = { mock: null }
+      expect(() => new Code(A)).to.throw('Cannot install A')
+      A.presets = { mock: { location: 'abc_o1' } }
+      expect(() => new Code(A)).to.throw('Cannot install A')
+      A.presets = { mock: { origin: 'abc_o1' } }
+      expect(() => new Code(A)).to.throw('Cannot install A')
+      A.presets = { mock: { owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td' } }
+      expect(() => new Code(A)).to.throw('Cannot install A')
+      A.presets = {
+        mock: {
+          location: '_o1',
+          origin: 'abc_o1',
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+        }
+      }
+      expect(() => new Code(A)).to.throw()
+      A.presets = {
+        mock: {
+          location: 'abc_o1',
+          origin: 'abc_o1',
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+        },
+        test: null
+      }
+      expect(() => new Code(A)).to.throw()
+    })
+
     /*
     it('should install Code in properties', () => {
     })
@@ -220,29 +252,6 @@ describe('Code', () => {
       expect(() => repo._install(A)).to.throw('Cannot install A')
       A.deps = true
       expect(() => repo._install(A)).to.throw('Cannot install A')
-    })
-
-    it('throws if presets are invalid', () => {
-      const repo = unmangle(new Repository('mock'))
-      class A { }
-      A.presets = null
-      expect(() => repo._install(A)).to.throw('Cannot install A')
-      A.presets = { mock: null }
-      expect(() => repo._install(A)).to.throw('Cannot install A')
-      A.presets = { mock: { location: 'abc_o1' } }
-      expect(() => repo._install(A)).to.throw('Cannot install A')
-      A.presets = { mock: { origin: 'abc_o1' } }
-      expect(() => repo._install(A)).to.throw('Cannot install A')
-      A.presets = { mock: { owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td' } }
-      expect(() => repo._install(A)).to.throw('Cannot install A')
-      A.presets = {
-        mock: {
-          location: '_o1',
-          origin: 'abc_o1',
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
-        }
-      }
-      expect(() => repo._install(A)).to.throw()
     })
 
     it('should not install if error', () => {
