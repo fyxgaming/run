@@ -19,7 +19,7 @@ const {
   _text,
   _checkOwner
 } = require('../util/misc')
-cosnt { _owner } = require('../util/props')
+const { _owner } = require('../util/props')
 const Log = require('../util/log')
 const ResourceJSON = require('../util/json')
 

@@ -14,7 +14,7 @@ const Code = Run._Code
 
 describe('Code', () => {
   it('basic test', () => {
-        new Run() // eslint-disable-line
+    new Run() // eslint-disable-line
     class A {}
     const ACode = new Code(A)
     console.log(ACode)
