@@ -219,6 +219,22 @@ describe('Code', () => {
       expect(sf()).to.equal(new Code(A))
     })
 
+    it('should support non-resource deps', () => {
+      new Run() // eslint-disable-line
+      class A {
+        static n () { return n } // eslint-disable-line
+        static o () { return o } // eslint-disable-line
+      }
+      A.deps = { n: 1, o: { a: [] } }
+      const SA = new Code(A)
+      expect(SA.n()).to.equal(1)
+      expect(SA.o()).not.to.equal(A.deps.o)
+      expect(SA.o()).to.deep.equal(A.deps.o)
+    })
+
+    // parent deps not in children
+    // parent presets don't go down
+
     // is deps available?
 
     /*
