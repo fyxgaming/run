@@ -20,8 +20,8 @@ describe('Code', () => {
     it('creates from class', () => {
       new Run() // eslint-disable-line
       class A { }
-      const SA = new Code(A)
-      expect(SA.toString()).to.equal(A.toString())
+      const CA = new Code(A)
+      expect(CA.toString()).to.equal(A.toString())
     })
 
     it('creates from function', () => {
@@ -51,11 +51,11 @@ describe('Code', () => {
           owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
         }
       }
-      const SA = new Code(A)
-      expect(SA.location).to.equal(A.presets[network].location)
-      expect(SA.origin).to.equal(A.presets[network].origin)
-      expect(SA.owner).to.equal(A.presets[network].owner)
-      expect(typeof SA.presets).to.equal('undefined')
+      const CA = new Code(A)
+      expect(CA.location).to.equal(A.presets[network].location)
+      expect(CA.origin).to.equal(A.presets[network].origin)
+      expect(CA.owner).to.equal(A.presets[network].owner)
+      expect(typeof CA.presets).to.equal('undefined')
     })
 
     it('clones object presets', () => {
@@ -63,12 +63,12 @@ describe('Code', () => {
       const network = run.blockchain.network
       class A { }
       A.presets = { [network]: { a: [], s: new Set() } }
-      const SA = new Code(A)
+      const CA = new Code(A)
       const SI = unmangle(Run.sandbox)._intrinsics
-      expect(SA.a).not.to.equal(A.presets[network].a)
-      expect(SA.s).not.to.equal(A.presets[network].s)
-      expect(SA.a instanceof SI.Array).to.equal(true)
-      expect(SA.s instanceof SI.Set).to.equal(true)
+      expect(CA.a).not.to.equal(A.presets[network].a)
+      expect(CA.s).not.to.equal(A.presets[network].s)
+      expect(CA.a instanceof SI.Array).to.equal(true)
+      expect(CA.s instanceof SI.Set).to.equal(true)
     })
 
     it('copies jigs in presets', () => {
@@ -78,8 +78,8 @@ describe('Code', () => {
       class B extends Jig { }
       const b = new B()
       A.presets = { [network]: { b } }
-      const SA = new Code(A)
-      expect(SA.b).to.equal(b)
+      const CA = new Code(A)
+      expect(CA.b).to.equal(b)
     })
 
     it('copies berries in presets', async () => {
@@ -89,8 +89,8 @@ describe('Code', () => {
       class B extends Berry { static pluck () { return new B() } }
       const b = await run.load('', B)
       A.presets = { [network]: { b } }
-      const SA = new Code(A)
-      expect(SA.b).to.equal(b)
+      const CA = new Code(A)
+      expect(CA.b).to.equal(b)
     })
 
     it('installs code in presets', async () => {
@@ -99,9 +99,9 @@ describe('Code', () => {
       class A { }
       class B { }
       A.presets = { [network]: { B } }
-      const SA = new Code(A)
-      expect(SA.B).not.to.equal(B)
-      expect(SA.B.toString()).to.equal(B.toString())
+      const CA = new Code(A)
+      expect(CA.B).not.to.equal(B)
+      expect(CA.B.toString()).to.equal(B.toString())
     })
 
     it('throws if not a valid type', () => {
@@ -181,12 +181,10 @@ describe('Code', () => {
       }
       class B { }
       Object.assign(B, A)
-      const SA = new Code(A)
-      const SB = new Code(B)
-      expect(SA).to.equal(SB)
+      const CA = new Code(A)
+      const CB = new Code(B)
+      expect(CA).to.equal(CB)
     })
-
-    // TODO: SA -> CA
 
     it('should not have presets on code jig', () => {
 
@@ -205,11 +203,11 @@ describe('Code', () => {
       class A { }
       class B extends A { }
       class C extends B { }
-      const SC = new Code(C)
-      const SB = new Code(B)
-      const SA = new Code(A)
-      expect(Object.getPrototypeOf(SC)).to.equal(SB)
-      expect(Object.getPrototypeOf(SB)).to.equal(SA)
+      const CC = new Code(C)
+      const CB = new Code(B)
+      const CA = new Code(A)
+      expect(Object.getPrototypeOf(CC)).to.equal(CB)
+      expect(Object.getPrototypeOf(CB)).to.equal(CA)
     })
 
     it('throws if prototype inheritance', () => {
@@ -223,9 +221,9 @@ describe('Code', () => {
     it('creates only once', () => {
       new Run() // eslint-disable-line
       class A { }
-      const SA1 = new Code(A)
-      const SA2 = new Code(A)
-      expect(SA1).to.equal(SA2)
+      const CA1 = new Code(A)
+      const CA2 = new Code(A)
+      expect(CA1).to.equal(CA2)
     })
 
     it('should set deps as globals', () => {
@@ -244,10 +242,10 @@ describe('Code', () => {
         static o () { return o } // eslint-disable-line
       }
       A.deps = { n: 1, o: { a: [] } }
-      const SA = new Code(A)
-      expect(SA.n()).to.equal(1)
-      expect(SA.o()).not.to.equal(A.deps.o)
-      expect(SA.o()).to.deep.equal(A.deps.o)
+      const CA = new Code(A)
+      expect(CA.n()).to.equal(1)
+      expect(CA.o()).not.to.equal(A.deps.o)
+      expect(CA.o()).to.deep.equal(A.deps.o)
     })
 
     it('should include deps on code jig', () => {
@@ -255,8 +253,8 @@ describe('Code', () => {
       class A { }
       class B { }
       A.deps = { B }
-      const SA = new Code(A)
-      expect(SA.deps.B).to.equal(new Code(B))
+      const CA = new Code(A)
+      expect(CA.deps.B).to.equal(new Code(B))
     })
 
     it('throws if deps invalid', () => {
