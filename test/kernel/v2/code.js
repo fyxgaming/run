@@ -311,21 +311,44 @@ describe('Code', () => {
       expect(() => new Code(E)).to.throw('Cannot install E')
     })
 
+    it('should create code for props', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      class B { }
+      A.B = B
+      const CA = new Code(A)
+      expect(CA.B).to.equal(new Code(B))
+    })
+
+    it('should install circular prop code', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      class B { }
+      A.B = B
+      B.A = A
+      const CA = new Code(A)
+      const CB = new Code(B)
+      expect(CA.B).to.equal(CB)
+      expect(CB.A).to.equal(CA)
+    })
+
+    it('should install circular parent-child code', () => {
+      new Run() // eslint-disable-line
+      class B { }
+      class A extends B { }
+      B.A = A
+      const CA = new Code(A)
+      const CB = new Code(B)
+      expect(Object.getPrototypeOf(CA)).to.equal(CB)
+      expect(CB.A).to.equal(CA)
+    })
+
     // parent deps not in children
     // parent presets don't go down
 
     // is deps available?
 
     /*
-    it('should install Code in properties', () => {
-    })
-
-    it('should support circular dependencies', () => {
-
-    })
-
-    // Test loop of parents and children
-
     // Test for deps, and bad parent dep
 
     it('does not duplicate parents', () => {
