@@ -187,15 +187,30 @@ describe('Code', () => {
     })
 
     it('should not have presets on code jig', () => {
-
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: 'abc_o1',
+          origin: 'abc_o1',
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+        }
+      }
+      const CA = new Code(A)
+      expect(CA.presets).to.equal(undefined)
     })
 
-    it('should throw if presets contains deps', () => {
-
-    })
-
-    it('should throw if presets contains reserved properties', () => {
-
+    it('throws if presets contains reserved properties', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { deps: {} } }
+      expect(() => new Code(A)).to.throw()
+      A.presets = { [network]: { presets: {} } }
+      expect(() => new Code(A)).to.throw()
+      A.presets = { [network]: { upgrade: () => {} } }
+      expect(() => new Code(A)).to.throw()
     })
 
     it('creates parents', () => {
