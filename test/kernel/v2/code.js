@@ -263,7 +263,7 @@ describe('Code', () => {
       expect(CA.o()).to.deep.equal(A.deps.o)
     })
 
-    it('should include deps on code jig', () => {
+    it('should set deps on code jig', () => {
       new Run() // eslint-disable-line
       class A { }
       class B { }
@@ -343,20 +343,30 @@ describe('Code', () => {
       expect(CB.A).to.equal(CA)
     })
 
+    it.only('installs parent that is code jig', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      const CA = new Code(A)
+      class B extends CA { }
+      // B.deps = { A }
+      const CB = new Code(B)
+      expect(Object.getPrototypeOf(CB)).to.equal(CA)
+    })
+
+    it.only('should set prototype constructor to code jig', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      const CA = new Code(A)
+      expect(CA.prototype.constructor).to.equal(CA)
+    })
+
     // parent deps not in children
     // parent presets don't go down
 
-    // is deps available?
-
     /*
-    // Test for deps, and bad parent dep
-
     it('does not duplicate parents', () => {
       // Parent
     })
-
-    // Test dependencies
-
     */
   })
 })
