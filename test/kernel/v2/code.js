@@ -186,6 +186,20 @@ describe('Code', () => {
       expect(SA).to.equal(SB)
     })
 
+    // TODO: SA -> CA
+
+    it('should not have presets on code jig', () => {
+
+    })
+
+    it('should throw if presets contains deps', () => {
+
+    })
+
+    it('should throw if presets contains reserved properties', () => {
+
+    })
+
     it('creates parents', () => {
       new Run() // eslint-disable-line
       class A { }
@@ -234,6 +248,15 @@ describe('Code', () => {
       expect(SA.n()).to.equal(1)
       expect(SA.o()).not.to.equal(A.deps.o)
       expect(SA.o()).to.deep.equal(A.deps.o)
+    })
+
+    it('should include deps on code jig', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      class B { }
+      A.deps = { B }
+      const SA = new Code(A)
+      expect(SA.deps.B).to.equal(new Code(B))
     })
 
     it('throws if deps invalid', () => {
