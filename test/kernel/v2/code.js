@@ -9,7 +9,7 @@ const { expect } = require('chai')
 const { Run } = require('../../env/config')
 const { Jig, Berry } = Run
 const { unmangle } = require('../../env/unmangle')
-const Code = Run._Code
+const Code = unmangle(Run)._Code
 
 // ------------------------------------------------------------------------------------------------
 // Code
