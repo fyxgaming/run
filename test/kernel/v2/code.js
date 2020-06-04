@@ -11,6 +11,8 @@ const { Jig, Berry } = Run
 const { unmangle } = require('../../env/unmangle')
 const Code = unmangle(Run)._Code
 
+const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
+
 // ------------------------------------------------------------------------------------------------
 // Code
 // ------------------------------------------------------------------------------------------------
@@ -30,24 +32,14 @@ describe('Code', () => {
       new Code(f) // eslint-disable-line
     })
 
-    it('creates from anonymous class', () => {
-      new Run() // eslint-disable-line
-      new Code(class {}) // eslint-disable-line
-    })
-
-    it('creates from anonymous function', () => {
-      new Run() // eslint-disable-line
-      new Code(() => {}) // eslint-disable-line
-    })
-
     it('creates with resource presets', () => {
       const run = new Run()
       const network = run.blockchain.network
       class A { }
       A.presets = {
         [network]: {
-          location: 'abc_o1',
-          origin: 'abc_o1',
+          location: randomLocation(),
+          origin: randomLocation(),
           owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
         }
       }
@@ -111,6 +103,8 @@ describe('Code', () => {
       expect(() => new Code({})).to.throw('Cannot install')
       expect(() => new Code('class A {}')).to.throw('Cannot install')
       expect(() => new Code(null)).to.throw('Cannot install')
+      expect(() => new Code(() => {})).to.throw('Cannot install')
+      expect(() => new Code(class {})).to.throw('Cannot install')
     })
 
     it('throws if create built-in type', () => {
@@ -139,24 +133,24 @@ describe('Code', () => {
       expect(() => new Code(A)).to.throw('Cannot install A')
       A.presets = { [network]: null }
       expect(() => new Code(A)).to.throw('Cannot install A')
-      A.presets = { [network]: { location: 'abc_o1' } }
+      A.presets = { [network]: { location: randomLocation() } }
       expect(() => new Code(A)).to.throw('Cannot install A')
-      A.presets = { [network]: { origin: 'abc_o1' } }
+      A.presets = { [network]: { origin: randomLocation() } }
       expect(() => new Code(A)).to.throw('Cannot install A')
       A.presets = { [network]: { owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td' } }
       expect(() => new Code(A)).to.throw('Cannot install A')
       A.presets = {
         [network]: {
           location: '_o1',
-          origin: 'abc_o1',
+          origin: randomLocation(),
           owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
         }
       }
       expect(() => new Code(A)).to.throw()
       A.presets = {
         [network]: {
-          location: 'abc_o1',
-          origin: 'abc_o1',
+          location: randomLocation(),
+          origin: randomLocation(),
           owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
         },
         test: null
@@ -174,8 +168,8 @@ describe('Code', () => {
       class A { }
       A.presets = {
         [network]: {
-          location: 'abc_o1',
-          origin: 'abc_o1',
+          location: randomLocation(),
+          origin: randomLocation(),
           owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
         }
       }
@@ -192,8 +186,8 @@ describe('Code', () => {
       class A { }
       A.presets = {
         [network]: {
-          location: 'abc_o1',
-          origin: 'abc_o1',
+          location: randomLocation(),
+          origin: randomLocation(),
           owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
         }
       }
@@ -343,17 +337,17 @@ describe('Code', () => {
       expect(CB.A).to.equal(CA)
     })
 
-    it.only('installs parent that is code jig', () => {
+    it('installs parent that is code jig', () => {
       new Run() // eslint-disable-line
-      class A { }
-      const CA = new Code(A)
-      class B extends CA { }
-      // B.deps = { A }
+      class B { }
       const CB = new Code(B)
-      expect(Object.getPrototypeOf(CB)).to.equal(CA)
+      class A extends CB { }
+      B.deps = { A }
+      const CA = new Code(A)
+      expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
-    it.only('should set prototype constructor to code jig', () => {
+    it('should set prototype constructor to code jig', () => {
       new Run() // eslint-disable-line
       class A { }
       const CA = new Code(A)
@@ -363,12 +357,33 @@ describe('Code', () => {
     // parent deps not in children
     // parent presets don't go down
     // test read only
+    // Parent can be an anonymous class?
+    // Parent can be a function?
 
     /*
     it('does not duplicate parents', () => {
       // Parent
     })
     */
+  })
+
+  describe('toString', () => {
+    it('should return same string as original code', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      const CA = new Code(A)
+      expect(CA.toString()).to.equal(A.toString())
+      expect(A.toString().replace(/\s/g, '')).to.equal('classA{}')
+    })
+
+    it('should return same string as original code with code jig parent', () => {
+      new Run() // eslint-disable-line
+      class B { }
+      const CB = new Code(B)
+      class A extends CB { }
+      const CA = new Code(A)
+      expect(CA.toString().replace(/\s/g, '')).to.equal('classAextendsB{}')
+    })
   })
 })
 
