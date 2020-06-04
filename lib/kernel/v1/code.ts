@@ -169,46 +169,6 @@ class CodeDescriptor {
       throw new Error(`Cannot deploy ${_text(T)} on the current network\n\n${hint}`)
     }
   }
-
-  _checkProps () {
-    const classProps = Object.keys(this._T)
-
-    // Check that deps is an object
-    const isBasicObject = (o) => Object.getPrototypeOf(Object.getPrototypeOf(o)) === null
-    if (classProps.includes('deps') && !isBasicObject(this._T.deps)) {
-      throw new Error(`deps must be an object on ${_text(this._T)}`)
-    }
-
-    // Check the presets is an object
-    if (classProps.includes('presets')) {
-      if (typeof T.presets !== 'object' || !T.presets) {
-        throw new Error(`presets must be an object on ${_text(T)}`)
-      }
-
-      const networkPresets = T.presets[network]
-      if (networkPresets) {
-        if (typeof networkPresets !== 'object' || !networkPresets) {
-          throw new Error(`presets for ${network} must be an object on ${_text(T)}`)
-        }
-
-        // Check that the network presets either all exist, or none do
-        const origin = networkPresets.location
-        const location = networkPresets.location
-        const owner = networkPresets.location
-        const hasJigPresets = !!owner && !!localStorage && !!owner
-
-        if (hasJigPresets) {
-          _checkOwner(owner)
-          _checkLocation(origin)
-          _checkLocation(location)
-        } else {
-          if (origin || location || owner) {
-            throw new Error(`jig presets for ${network} are not fully defined ${_text(T)}`)
-          }
-        }
-      }
-    }
-  }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -221,11 +181,6 @@ function deployed (T) {
   if (T.origin[0] === '_') return false
   if (T.location[0] === '_') return false
   return true
-}
-
-function _checkLocation(x) {
-  if (typeof x !== 'string') throw new Error(`${x} is not a string`)
-  if (x.length < 67) throw new Error(`${x} is an invalid location`)
 }
 
 function allDeps(T) {

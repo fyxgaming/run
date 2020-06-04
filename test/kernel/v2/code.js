@@ -362,6 +362,7 @@ describe('Code', () => {
 
     // parent deps not in children
     // parent presets don't go down
+    // test read only
 
     /*
     it('does not duplicate parents', () => {
