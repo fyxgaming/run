@@ -249,6 +249,15 @@ describe('Code', () => {
       expect(() => new Code(A)).to.throw('Cannot install A')
     })
 
+    it('throws if error creating dependent code', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      A.Date = Date
+      expect(() => new Code(A)).to.throw('Cannot install Date')
+      expect(Code._get(A)).to.equal(undefined)
+      expect(Code._get(Date)).to.equal(undefined)
+    })
+
     it('throws if contains reserved properties', () => {
       new Run() // eslint-disable-line
       class A { }
@@ -289,14 +298,6 @@ describe('Code', () => {
 
     // Test dependencies
 
-    it('should not create if error creating dependent code', () => {
-      const repo = unmangle(new Repository('mock'))
-      class A { }
-      A.Date = Date
-      expect(() => repo._install(A)).to.throw('Cannot install Date')
-      expect(repo._find(A)).to.equal(undefined)
-      expect(repo._find(Date)).to.equal(undefined)
-    })
     */
   })
 })
