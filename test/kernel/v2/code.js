@@ -249,6 +249,23 @@ describe('Code', () => {
       expect(() => new Code(A)).to.throw('Cannot install A')
     })
 
+    it('throws if contains reserved properties', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      A.toString = () => 'hello'
+      expect(() => new Code(A)).to.throw('Cannot install A')
+      class B { static deploy () { } }
+      expect(() => new Code(B)).to.throw('Cannot install B')
+      class C { }
+      C.upgrade = 1
+      expect(() => new Code(C)).to.throw('Cannot install C')
+      class D { }
+      D.sync = undefined
+      expect(() => new Code(D)).to.throw('Cannot install D')
+      class E { static get release () { } }
+      expect(() => new Code(E)).to.throw('Cannot install E')
+    })
+
     // parent deps not in children
     // parent presets don't go down
 
