@@ -152,7 +152,6 @@ describe('Code', () => {
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
-    // parent presets don't go down
     // test read only
     // Parent can be an anonymous class?
     // Parent can be a function?
@@ -377,6 +376,23 @@ describe('Code', () => {
       expect(() => new Code(A)).to.throw()
       A.presets = { [network]: { upgrade: () => {} } }
       expect(() => new Code(A)).to.throw()
+    })
+
+    it('should install presets separately on child', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class B { }
+      B.presets = { [network]: { n: 1, m: 0 } }
+      class A extends B { }
+      A.presets = { [network]: { n: 2 } }
+      const CB = new Code(B)
+      const CA = new Code(A)
+      expect(CB.n).to.equal(1)
+      expect(CB.m).to.equal(0)
+      expect(CA.n).to.equal(2)
+      expect(CA.m).to.equal(0)
+      expect(Object.getOwnPropertyNames(CA).includes('n')).to.equal(true)
+      expect(Object.getOwnPropertyNames(CA).includes('m')).to.equal(false)
     })
   })
 
