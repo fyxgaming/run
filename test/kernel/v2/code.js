@@ -367,8 +367,18 @@ describe('Code', () => {
     */
   })
 
+  describe('name', () => {
+    it('returns class or function name', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      expect(new Code(A).name).to.equal('A')
+      function f () { }
+      expect(new Code(f).name).to.equal('f')
+    })
+  })
+
   describe('toString', () => {
-    it('should return same string as original code', () => {
+    it('returns same string as original code', () => {
       new Run() // eslint-disable-line
       class A { }
       const CA = new Code(A)
@@ -376,7 +386,7 @@ describe('Code', () => {
       expect(A.toString().replace(/\s/g, '')).to.equal('classA{}')
     })
 
-    it('should return same string as original code with code jig parent', () => {
+    it('returns same code as original code but with code parent', () => {
       new Run() // eslint-disable-line
       class B { }
       const CB = new Code(B)
