@@ -152,7 +152,6 @@ describe('Code', () => {
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
-    // parent deps not in children
     // parent presets don't go down
     // test read only
     // Parent can be an anonymous class?
@@ -208,6 +207,19 @@ describe('Code', () => {
       expect(() => new Code(A)).to.throw('Cannot install A')
       A.deps = new class Deps {}()
       expect(() => new Code(A)).to.throw('Cannot install A')
+    })
+
+    it('should not install parent deps on child', () => {
+      new Run() // eslint-disable-line
+      class B { f () { return n } } // eslint-disable-line
+      class A extends B { g () { return n } } // eslint-disable-line
+      B.deps = { n: 1 }
+      const CB = new Code(B)
+      const b = new CB()
+      expect(b.f()).to.equal(1)
+      const CA = new Code(A)
+      const a = new CA()
+      expect(() => a.g()).to.throw()
     })
   })
 
