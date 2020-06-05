@@ -152,15 +152,22 @@ describe('Code', () => {
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
-    // test read only
-    // Parent can be an anonymous class?
-    // Parent can be a function?
-
-    /*
-    it('does not duplicate parents', () => {
-      // Parent
+    it('should add code functions', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      const CA = new Code(A)
+      expect(typeof CA.deploy).to.equal('function')
+      expect(typeof CA.upgrade).to.equal('function')
+      expect(typeof CA.sync).to.equal('function')
+      expect(typeof CA.release).to.equal('function')
+      expect(Object.getOwnPropertyNames(CA).includes('deploy')).to.equal(true)
+      expect(Object.getOwnPropertyNames(CA).includes('upgrade')).to.equal(true)
+      expect(Object.getOwnPropertyNames(CA).includes('sync')).to.equal(true)
+      expect(Object.getOwnPropertyNames(CA).includes('release')).to.equal(true)
     })
-    */
+
+    // test read only
+    // upgrade
   })
 
   describe('deps', () => {
