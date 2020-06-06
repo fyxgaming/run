@@ -256,8 +256,9 @@ describe('Code', () => {
       const CA = new Code(A)
       expect(CA.a).not.to.equal(A.presets[network].a)
       expect(CA.s).not.to.equal(A.presets[network].s)
-      expect(CA.a instanceof Array).to.equal(true)
-      expect(CA.s instanceof Set).to.equal(true)
+      const SI = unmangle(Run.sandbox)._intrinsics
+      expect(CA.a instanceof SI.Array).to.equal(true)
+      expect(CA.s instanceof SI.Set).to.equal(true)
     })
 
     it('copies jigs in presets', () => {
@@ -302,7 +303,7 @@ describe('Code', () => {
       expect(() => new Code(B)).to.throw('Parent dependency mismatch')
     })
 
-    it('throws if presets invalid', () => {
+    it('throws if presets are invalid', () => {
       const run = new Run()
       const network = run.blockchain.network
       class A { }
@@ -357,7 +358,7 @@ describe('Code', () => {
       expect(CA).to.equal(CB)
     })
 
-    it('should not have presets on code jig', () => {
+    it('should not have any presets on returned code jig', () => {
       const run = new Run()
       const network = run.blockchain.network
       class A { }
@@ -400,6 +401,10 @@ describe('Code', () => {
       expect(Object.getOwnPropertyNames(CA).includes('n')).to.equal(true)
       expect(Object.getOwnPropertyNames(CA).includes('m')).to.equal(false)
     })
+
+    it('should allow code jigs as code presets', () => {
+
+    })
   })
 
   describe('prototype', () => {
@@ -430,7 +435,7 @@ describe('Code', () => {
       expect(A.toString().replace(/\s/g, '')).to.equal('classA{}')
     })
 
-    it('returns same code as original code but with code parent', () => {
+    it('returns same code as original code when there is a parent', () => {
       new Run() // eslint-disable-line
       class B { }
       const CB = new Code(B)
@@ -438,6 +443,20 @@ describe('Code', () => {
       const CA = new Code(A)
       expect(CA.toString().replace(/\s/g, '')).to.equal('classAextendsB{}')
     })
+  })
+
+  describe('get', () => {
+  })
+  
+  describe('functions', () => {
+  })
+
+  describe('deploy', () => {
+
+  })
+
+  describe('upgrade', () => {
+
   })
 })
 
