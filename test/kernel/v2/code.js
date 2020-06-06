@@ -254,11 +254,10 @@ describe('Code', () => {
       class A { }
       A.presets = { [network]: { a: [], s: new Set() } }
       const CA = new Code(A)
-      const SI = unmangle(Run.sandbox)._intrinsics
       expect(CA.a).not.to.equal(A.presets[network].a)
       expect(CA.s).not.to.equal(A.presets[network].s)
-      expect(CA.a instanceof SI.Array).to.equal(true)
-      expect(CA.s instanceof SI.Set).to.equal(true)
+      expect(CA.a instanceof Array).to.equal(true)
+      expect(CA.s instanceof Set).to.equal(true)
     })
 
     it('copies jigs in presets', () => {
