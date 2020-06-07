@@ -6,6 +6,7 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+const { PrivateKey } = require('bsv')
 const { Run } = require('../../env/config')
 const { Jig, Berry } = Run
 const { unmangle } = require('../../env/unmangle')
@@ -14,6 +15,7 @@ const Membrane = unmangle(Run)._Membrane
 const SI = unmangle(Run.sandbox)._intrinsics
 
 const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
+const randomOwner = () => new PrivateKey().toAddress().toString()
 
 // test read only
 
@@ -105,6 +107,16 @@ describe('Code', () => {
       expect(() => new Code(D)).to.throw('Cannot install D')
       class E { static get release () { } }
       expect(() => new Code(E)).to.throw('Cannot install E')
+    })
+
+    it('throws if contains bindings', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      A.location = randomLocation()
+      A.origin = randomLocation()
+      A.owner = randomOwner()
+      A.satoshis = 0
+      expect(() => new Code(A)).to.throw('Cannot install A')
     })
 
     it('creates parents', () => {
@@ -257,7 +269,7 @@ describe('Code', () => {
         [network]: {
           location: randomLocation(),
           origin: randomLocation(),
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+          owner: randomOwner(),
           satoshis: 0
         }
       }
@@ -307,7 +319,7 @@ describe('Code', () => {
         [network]: {
           location: randomLocation(),
           origin: randomLocation(),
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+          owner: randomOwner(),
           satoshis: 0
         }
       }
@@ -323,7 +335,7 @@ describe('Code', () => {
         [network]: {
           location: randomLocation(),
           origin: randomLocation(),
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+          owner: randomOwner(),
           satoshis: 0
         }
       }
@@ -372,7 +384,7 @@ describe('Code', () => {
         [network]: {
           location: '_o1',
           origin: randomLocation(),
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+          owner: randomOwner(),
           satoshis: 0
         }
       }
@@ -381,7 +393,7 @@ describe('Code', () => {
         [network]: {
           location: '_o1',
           origin: randomLocation(),
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+          owner: randomOwner(),
           satoshis: 0
         }
       }
@@ -390,7 +402,7 @@ describe('Code', () => {
         [network]: {
           location: randomLocation(),
           origin: randomLocation(),
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+          owner: randomOwner(),
           satoshis: 0
         },
         test: null
@@ -409,7 +421,7 @@ describe('Code', () => {
       const npresets = {
         location: '_o1',
         origin: randomLocation(),
-        owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+        owner: randomOwner(),
         satoshis: 0
       }
       for (const key of Object.keys(npresets)) {
