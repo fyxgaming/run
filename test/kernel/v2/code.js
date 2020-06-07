@@ -32,7 +32,29 @@ describe('Code', () => {
       new Code(f) // eslint-disable-line
     })
 
-    it('throws if not a valid type', () => {
+    it('adds code functions', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      const CA = new Code(A)
+      expect(typeof CA.deploy).to.equal('function')
+      expect(typeof CA.upgrade).to.equal('function')
+      expect(typeof CA.sync).to.equal('function')
+      expect(typeof CA.release).to.equal('function')
+      expect(Object.getOwnPropertyNames(CA).includes('deploy')).to.equal(true)
+      expect(Object.getOwnPropertyNames(CA).includes('upgrade')).to.equal(true)
+      expect(Object.getOwnPropertyNames(CA).includes('sync')).to.equal(true)
+      expect(Object.getOwnPropertyNames(CA).includes('release')).to.equal(true)
+    })
+
+    it('creates only once', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      const CA1 = new Code(A)
+      const CA2 = new Code(A)
+      expect(CA1).to.equal(CA2)
+    })
+
+    it('throws if not a function', () => {
       new Run() // eslint-disable-line
       expect(() => new Code()).to.throw('Cannot install')
       expect(() => new Code(0)).to.throw('Cannot install')
@@ -47,25 +69,13 @@ describe('Code', () => {
       expect(() => new Code(class {})).to.throw('Cannot install')
     })
 
-    it('throws if create built-in type', () => {
+    it('throws if built-in', () => {
       new Run() // eslint-disable-line
       expect(() => new Code(Object)).to.throw('Cannot install Object')
       expect(() => new Code(Date)).to.throw('Cannot install Date')
       expect(() => new Code(Uint8Array)).to.throw('Cannot install')
       expect(() => new Code(Math.sin)).to.throw('Cannot install sin')
       expect(() => new Code(parseInt)).to.throw('Cannot install parseInt')
-    })
-
-    it('creates parents', () => {
-      new Run() // eslint-disable-line
-      class A { }
-      class B extends A { }
-      class C extends B { }
-      const CC = new Code(C)
-      const CB = new Code(B)
-      const CA = new Code(A)
-      expect(Object.getPrototypeOf(CC)).to.equal(CB)
-      expect(Object.getPrototypeOf(CB)).to.equal(CA)
     })
 
     it('throws if prototype inheritance', () => {
@@ -76,24 +86,7 @@ describe('Code', () => {
       expect(() => new Code(B)).to.throw('Cannot install B')
     })
 
-    it('creates only once', () => {
-      new Run() // eslint-disable-line
-      class A { }
-      const CA1 = new Code(A)
-      const CA2 = new Code(A)
-      expect(CA1).to.equal(CA2)
-    })
-
-    it('throws if error creating dependent code', () => {
-      new Run() // eslint-disable-line
-      class A { }
-      A.Date = Date
-      expect(() => new Code(A)).to.throw('Cannot install Date')
-      expect(Code._get(A)).to.equal(undefined)
-      expect(Code._get(Date)).to.equal(undefined)
-    })
-
-    it('throws if contains reserved properties', () => {
+    it('throws if contains reserved words', () => {
       new Run() // eslint-disable-line
       class A { }
       A.toString = () => 'hello'
@@ -108,6 +101,27 @@ describe('Code', () => {
       expect(() => new Code(D)).to.throw('Cannot install D')
       class E { static get release () { } }
       expect(() => new Code(E)).to.throw('Cannot install E')
+    })
+
+    it('creates parents', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      class B extends A { }
+      class C extends B { }
+      const CC = new Code(C)
+      const CB = new Code(B)
+      const CA = new Code(A)
+      expect(Object.getPrototypeOf(CC)).to.equal(CB)
+      expect(Object.getPrototypeOf(CB)).to.equal(CA)
+    })
+
+    it('throws if error creating dependency', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      A.Date = Date
+      expect(() => new Code(A)).to.throw('Cannot install Date')
+      expect(Code._get(A)).to.equal(undefined)
+      expect(Code._get(Date)).to.equal(undefined)
     })
 
     it('should create code for props', () => {
@@ -150,20 +164,6 @@ describe('Code', () => {
       B.deps = { A }
       const CA = new Code(A)
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
-    })
-
-    it('should add code functions', () => {
-      new Run() // eslint-disable-line
-      class A { }
-      const CA = new Code(A)
-      expect(typeof CA.deploy).to.equal('function')
-      expect(typeof CA.upgrade).to.equal('function')
-      expect(typeof CA.sync).to.equal('function')
-      expect(typeof CA.release).to.equal('function')
-      expect(Object.getOwnPropertyNames(CA).includes('deploy')).to.equal(true)
-      expect(Object.getOwnPropertyNames(CA).includes('upgrade')).to.equal(true)
-      expect(Object.getOwnPropertyNames(CA).includes('sync')).to.equal(true)
-      expect(Object.getOwnPropertyNames(CA).includes('release')).to.equal(true)
     })
 
     // test read only
@@ -215,7 +215,7 @@ describe('Code', () => {
       expect(() => new Code(A)).to.throw('Cannot install A')
     })
 
-    it('should not install parent deps on child', () => {
+    it('doesnt install parent deps on child', () => {
       new Run() // eslint-disable-line
       class B { f () { return n } } // eslint-disable-line
       class A extends B { g () { return n } } // eslint-disable-line
@@ -230,7 +230,7 @@ describe('Code', () => {
   })
 
   describe('presets', () => {
-    it('creates with resource presets', () => {
+    it('uses resource presets', () => {
       const run = new Run()
       const network = run.blockchain.network
       class A { }
@@ -248,7 +248,7 @@ describe('Code', () => {
       expect(typeof CA.presets).to.equal('undefined')
     })
 
-    it('clones objects in presets', () => {
+    it('clones javascript objects in presets', () => {
       const run = new Run()
       const network = run.blockchain.network
       class A { }
@@ -261,37 +261,72 @@ describe('Code', () => {
       expect(CA.s instanceof SI.Set).to.equal(true)
     })
 
-    it('copies jigs in presets', () => {
+    it('copies blockchain objects in presets', async () => {
       const run = new Run()
       const network = run.blockchain.network
-      class A { }
-      class B extends Jig { }
-      const b = new B()
-      A.presets = { [network]: { b } }
-      const CA = new Code(A)
-      expect(CA.b).to.equal(b)
-    })
-
-    it('copies berries in presets', async () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
+      class J extends Jig { }
+      const j = new J()
       class B extends Berry { static pluck () { return new B() } }
       const b = await run.load('', B)
-      A.presets = { [network]: { b } }
+      class C {}
+      class A { }
+      A.presets = { [network]: { b, j, C } }
       const CA = new Code(A)
       expect(CA.b).to.equal(b)
+      expect(CA.j).to.equal(j)
+      expect(CA.C).not.to.equal(C)
+      expect(CA.C.toString()).to.equal(C.toString())
+      expect(CA.C).to.equal(new Code(C))
     })
 
-    it('installs code in presets', async () => {
+    it('does not add presets to code jig', () => {
       const run = new Run()
       const network = run.blockchain.network
       class A { }
-      class B { }
-      A.presets = { [network]: { B } }
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+        }
+      }
       const CA = new Code(A)
-      expect(CA.B).not.to.equal(B)
-      expect(CA.B.toString()).to.equal(B.toString())
+      expect(CA.presets).to.equal(undefined)
+    })
+
+    it('returns existing code for a copy with same presets', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+        }
+      }
+      class B { }
+      Object.assign(B, A)
+      const CA = new Code(A)
+      const CB = new Code(B)
+      expect(CA).to.equal(CB)
+    })
+
+    it('installs separate presets for parent and child', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class B { }
+      B.presets = { [network]: { n: 1, m: 0 } }
+      class A extends B { }
+      A.presets = { [network]: { n: 2 } }
+      const CB = new Code(B)
+      const CA = new Code(A)
+      expect(CB.n).to.equal(1)
+      expect(CB.m).to.equal(0)
+      expect(CA.n).to.equal(2)
+      expect(CA.m).to.equal(0)
+      expect(Object.getOwnPropertyNames(CA).includes('n')).to.equal(true)
+      expect(Object.getOwnPropertyNames(CA).includes('m')).to.equal(false)
     })
 
     it('throws if parent dependency mismatch', () => {
@@ -340,39 +375,6 @@ describe('Code', () => {
       expect(() => new Code(A)).to.throw()
     })
 
-    it('returns existing code for a preset copy', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      A.presets = {
-        [network]: {
-          location: randomLocation(),
-          origin: randomLocation(),
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
-        }
-      }
-      class B { }
-      Object.assign(B, A)
-      const CA = new Code(A)
-      const CB = new Code(B)
-      expect(CA).to.equal(CB)
-    })
-
-    it('should not have any presets on returned code jig', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      A.presets = {
-        [network]: {
-          location: randomLocation(),
-          origin: randomLocation(),
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
-        }
-      }
-      const CA = new Code(A)
-      expect(CA.presets).to.equal(undefined)
-    })
-
     it('throws if presets contains reserved properties', () => {
       const run = new Run()
       const network = run.blockchain.network
@@ -383,27 +385,6 @@ describe('Code', () => {
       expect(() => new Code(A)).to.throw()
       A.presets = { [network]: { upgrade: () => {} } }
       expect(() => new Code(A)).to.throw()
-    })
-
-    it('should install presets separately on child', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class B { }
-      B.presets = { [network]: { n: 1, m: 0 } }
-      class A extends B { }
-      A.presets = { [network]: { n: 2 } }
-      const CB = new Code(B)
-      const CA = new Code(A)
-      expect(CB.n).to.equal(1)
-      expect(CB.m).to.equal(0)
-      expect(CA.n).to.equal(2)
-      expect(CA.m).to.equal(0)
-      expect(Object.getOwnPropertyNames(CA).includes('n')).to.equal(true)
-      expect(Object.getOwnPropertyNames(CA).includes('m')).to.equal(false)
-    })
-
-    it('should allow code jigs as code presets', () => {
-
     })
   })
 
