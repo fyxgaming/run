@@ -1,7 +1,7 @@
 /**
- * resource.js
+ * jsbo.js
  *
- * Tests for lib/util/resource.js
+ * Tests for lib/util/jsbo.js
  */
 
 const { PrivateKey, Transaction } = require('bsv')
@@ -109,30 +109,6 @@ describe('_location', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
-// _satoshis
-// ------------------------------------------------------------------------------------------------
-
-describe('_satoshis', () => {
-  it('should support allowed values', () => {
-    expect(() => _satoshis(0)).not.to.throw()
-    expect(() => _satoshis(1)).not.to.throw()
-    expect(() => _satoshis(Transaction.DUST_AMOUNT)).not.to.throw()
-    expect(() => _satoshis(100000000)).not.to.throw()
-  })
-
-  it('should throw if bad satoshis', () => {
-    expect(() => _satoshis()).to.throw('satoshis must be a number')
-    expect(() => _satoshis(-1)).to.throw('satoshis must be non-negative')
-    expect(() => _satoshis('0')).to.throw('satoshis must be a number')
-    expect(() => _satoshis([0])).to.throw('satoshis must be a number')
-    expect(() => _satoshis(1.5)).to.throw('satoshis must be an integer')
-    expect(() => _satoshis(NaN)).to.throw('satoshis must be an integer')
-    expect(() => _satoshis(Infinity)).to.throw('satoshis must be an integer')
-    expect(() => _satoshis(100000001)).to.throw('satoshis must be <= 100000000')
-  })
-})
-
-// ------------------------------------------------------------------------------------------------
 // _owner
 // ------------------------------------------------------------------------------------------------
 
@@ -156,6 +132,30 @@ describe('_owner', () => {
     expect(() => _owner(new PrivateKey())).to.throw('Invalid owner')
     expect(() => _owner(new PrivateKey().publicKey)).to.throw('Invalid owner')
     expect(() => _owner([new PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// _satoshis
+// ------------------------------------------------------------------------------------------------
+
+describe('_satoshis', () => {
+  it('should support allowed values', () => {
+    expect(() => _satoshis(0)).not.to.throw()
+    expect(() => _satoshis(1)).not.to.throw()
+    expect(() => _satoshis(Transaction.DUST_AMOUNT)).not.to.throw()
+    expect(() => _satoshis(100000000)).not.to.throw()
+  })
+
+  it('should throw if bad satoshis', () => {
+    expect(() => _satoshis()).to.throw('satoshis must be a number')
+    expect(() => _satoshis(-1)).to.throw('satoshis must be non-negative')
+    expect(() => _satoshis('0')).to.throw('satoshis must be a number')
+    expect(() => _satoshis([0])).to.throw('satoshis must be a number')
+    expect(() => _satoshis(1.5)).to.throw('satoshis must be an integer')
+    expect(() => _satoshis(NaN)).to.throw('satoshis must be an integer')
+    expect(() => _satoshis(Infinity)).to.throw('satoshis must be an integer')
+    expect(() => _satoshis(100000001)).to.throw('satoshis must be <= 100000000')
   })
 })
 
