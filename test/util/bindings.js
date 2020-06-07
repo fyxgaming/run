@@ -40,11 +40,12 @@ describe('_location', () => {
     expect(_location('_o0_def')).to.deep.equal({ vout: 0, path: 'def' })
     expect(_location('_i0_def_o2')).to.deep.equal({ vin: 0, path: 'def_o2' })
     // Errors
-    expect(_location('err://')).to.deep.equal({ error: '' })
-    expect(_location('err://Something bad happened')).to.deep.equal({ error: 'Something bad happened' })
+    expect(_location('error://')).to.deep.equal({ error: '' })
+    expect(_location('error://Something bad happened')).to.deep.equal({ error: 'Something bad happened' })
+    expect(_location('error://line1\nline2')).to.deep.equal({ error: 'line1\nline2' })
     // Temporary locations
-    expect(_location('tmp://abc_o1')).to.deep.equal({ txid: 'abc', vout: 1, temp: true })
-    expect(_location('tmp://_i2')).to.deep.equal({ vin: 2, temp: true })
+    expect(_location('temp://abc_o1')).to.deep.equal({ txid: 'abc', vout: 1, temp: true })
+    expect(_location('temp://_i2')).to.deep.equal({ vin: 2, temp: true })
   })
 
   it('should throw for invalid locations', () => {
@@ -60,17 +61,17 @@ describe('_location', () => {
     expect(() => _location('abc_i')).to.throw()
     expect(() => _location('abc_0')).to.throw()
     expect(() => _location('_abc_o0')).to.throw()
-    expect(() => _location('tmp://abc_o')).to.throw()
-    expect(() => _location('tmp://abc_0')).to.throw()
+    expect(() => _location('temp://abc_o')).to.throw()
+    expect(() => _location('temp://abc_0')).to.throw()
     // Invalid chars
     expect(() => _location('$_o1')).to.throw()
     expect(() => _location('abc_o*')).to.throw()
     expect(() => _location('abc-o1')).to.throw()
     // Bad protocols
-    expect(() => _location('tmp:abc_o1')).to.throw()
-    expect(() => _location('temp://abc_o1')).to.throw()
-    expect(() => _location('err:/abc_o1')).to.throw()
-    expect(() => _location('error://abc_o1')).to.throw()
+    expect(() => _location('temp:abc_o1')).to.throw()
+    expect(() => _location('tmp://abc_o1')).to.throw()
+    expect(() => _location('error:/abc_o1')).to.throw()
+    expect(() => _location('err://abc_o1')).to.throw()
   })
 
   it('should accept matching flags', () => {
@@ -78,7 +79,7 @@ describe('_location', () => {
     _location('abc_o1', JIG)
     _location('_o1', JIG)
     _location('_i2', JIG)
-    _location('tmp://abc_o1', JIG)
+    _location('temp://abc_o1', JIG)
     // Berry
     _location('abc_o1_', BERRY)
     _location('abc_o1_def', BERRY)
@@ -97,7 +98,7 @@ describe('_location', () => {
     // Berry
     expect(() => _location('abc_o1', BERRY)).to.throw()
     expect(() => _location('error://', BERRY)).to.throw()
-    expect(() => _location('tmp://abc_o1_def', BERRY)).to.throw()
+    expect(() => _location('temp://abc_o1_def', BERRY)).to.throw()
     // User
     expect(() => _location('_o1', USER)).to.throw()
     expect(() => _location('_i1', USER)).to.throw()

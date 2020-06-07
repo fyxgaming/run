@@ -174,13 +174,13 @@ describe('Code', () => {
       new Run() // eslint-disable-line
       class A { }
       const CA = new Code(A)
-      expect(() => CA.location).to.throw('Cannot read location')
-      expect(() => CA.origin).to.throw('Cannot read origin')
-      expect(() => CA.owner).to.throw('Cannot read owner')
-      expect(() => CA.satoshis).to.throw('Cannot read satoshis')
+      expect(() => CA.location).to.throw('Cannot read location: Not deployed')
+      expect(() => CA.origin).to.throw('Cannot read origin: Not deployed')
+      expect(() => CA.owner).to.throw('Cannot read owner: Not bound')
+      expect(() => CA.satoshis).to.throw('Cannot read satoshis: Not bound')
       Membrane._sudo(() => {
-        expect(CA.location).to.equal('error://Not deployed')
-        expect(CA.origin).to.equal('error://Not deployed')
+        expect(CA.location).to.equal('error://Not deployed\n\nHint: Deploy the code first to assign location')
+        expect(CA.origin).to.equal('error://Not deployed\n\nHint: Deploy the code first to assign origin')
         expect(unmangle(CA.owner)._value).to.equal(undefined)
         expect(unmangle(CA.satoshis)._value).to.equal(0)
       })
