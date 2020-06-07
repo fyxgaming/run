@@ -1,7 +1,7 @@
 /**
- * jsbo.js
+ * bindings.js
  *
- * Tests for lib/util/jsbo.js
+ * Tests for lib/util/binding.js
  */
 
 const { PrivateKey, Transaction } = require('bsv')
