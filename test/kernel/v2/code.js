@@ -233,7 +233,7 @@ describe('Code', () => {
   })
 
   describe('presets', () => {
-    it('uses resource presets', () => {
+    it('uses blockchain presets', () => {
       const run = new Run()
       const network = run.blockchain.network
       class A { }
