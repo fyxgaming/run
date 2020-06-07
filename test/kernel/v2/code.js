@@ -10,6 +10,7 @@ const { Run } = require('../../env/config')
 const { Jig, Berry } = Run
 const { unmangle } = require('../../env/unmangle')
 const Code = unmangle(Run)._Code
+const SI = unmangle(Run.sandbox)._intrinsics
 
 const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
 
@@ -180,7 +181,7 @@ describe('Code', () => {
       expect(sf()).to.equal(new Code(A))
     })
 
-    it('should support non-resource deps', () => {
+    it('should support javascript values as deps', () => {
       new Run() // eslint-disable-line
       class A {
         static n () { return n } // eslint-disable-line
@@ -191,9 +192,11 @@ describe('Code', () => {
       expect(CA.n()).to.equal(1)
       expect(CA.o()).not.to.equal(A.deps.o)
       expect(CA.o()).to.deep.equal(A.deps.o)
+      expect(CA.o() instanceof SI.Object).to.equal(true)
+      expect(CA.o().a instanceof SI.Array).to.equal(true)
     })
 
-    it('should set deps on code jig', () => {
+    it('should set deps on returned code jig', () => {
       new Run() // eslint-disable-line
       class A { }
       class B { }
@@ -248,7 +251,7 @@ describe('Code', () => {
       expect(typeof CA.presets).to.equal('undefined')
     })
 
-    it('clones javascript objects in presets', () => {
+    it('clones javascript objects for sandbox', () => {
       const run = new Run()
       const network = run.blockchain.network
       class A { }
@@ -256,12 +259,11 @@ describe('Code', () => {
       const CA = new Code(A)
       expect(CA.a).not.to.equal(A.presets[network].a)
       expect(CA.s).not.to.equal(A.presets[network].s)
-      const SI = unmangle(Run.sandbox)._intrinsics
       expect(CA.a instanceof SI.Array).to.equal(true)
       expect(CA.s instanceof SI.Set).to.equal(true)
     })
 
-    it('copies blockchain objects in presets', async () => {
+    it('copies blockchain objects', async () => {
       const run = new Run()
       const network = run.blockchain.network
       class J extends Jig { }
