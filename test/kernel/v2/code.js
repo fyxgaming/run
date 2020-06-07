@@ -170,15 +170,20 @@ describe('Code', () => {
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
-    it.only('should set initial bindings', () => {
+    it('should set initial bindings', () => {
       new Run() // eslint-disable-line
       class A { }
       const CA = new Code(A)
-      console.log(CA)
-
-      // console.log(CA.location)
-      console.log(Membrane._sudo(() => CA.satoshis))
-      // console.log(CA.satoshis)
+      expect(() => CA.location).to.throw('Cannot read location')
+      expect(() => CA.origin).to.throw('Cannot read origin')
+      expect(() => CA.owner).to.throw('Cannot read owner')
+      expect(() => CA.satoshis).to.throw('Cannot read satoshis')
+      Membrane._sudo(() => {
+        expect(CA.location).to.equal('error://Not deployed')
+        expect(CA.origin).to.equal('error://Not deployed')
+        expect(unmangle(CA.owner)._value).to.equal(undefined)
+        expect(unmangle(CA.satoshis)._value).to.equal(0)
+      })
     })
   })
 
