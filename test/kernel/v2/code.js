@@ -241,13 +241,15 @@ describe('Code', () => {
         [network]: {
           location: randomLocation(),
           origin: randomLocation(),
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+          satoshis: 0
         }
       }
       const CA = new Code(A)
       expect(CA.location).to.equal(A.presets[network].location)
       expect(CA.origin).to.equal(A.presets[network].origin)
       expect(CA.owner).to.equal(A.presets[network].owner)
+      expect(CA.satoshis).to.equal(A.presets[network].satoshis)
       expect(typeof CA.presets).to.equal('undefined')
     })
 
@@ -289,7 +291,8 @@ describe('Code', () => {
         [network]: {
           location: randomLocation(),
           origin: randomLocation(),
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+          satoshis: 0
         }
       }
       const CA = new Code(A)
@@ -304,7 +307,8 @@ describe('Code', () => {
         [network]: {
           location: randomLocation(),
           origin: randomLocation(),
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+          satoshis: 0
         }
       }
       class B { }
@@ -348,17 +352,21 @@ describe('Code', () => {
       expect(() => new Code(A)).to.throw('Cannot install A')
       A.presets = { [network]: null }
       expect(() => new Code(A)).to.throw('Cannot install A')
-      A.presets = { [network]: { location: randomLocation() } }
-      expect(() => new Code(A)).to.throw('Cannot install A')
-      A.presets = { [network]: { origin: randomLocation() } }
-      expect(() => new Code(A)).to.throw('Cannot install A')
-      A.presets = { [network]: { owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td' } }
+      A.presets = {
+        [network]: {
+          location: '_o1',
+          origin: randomLocation(),
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+          satoshis: 0
+        }
+      }
       expect(() => new Code(A)).to.throw('Cannot install A')
       A.presets = {
         [network]: {
           location: '_o1',
           origin: randomLocation(),
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+          satoshis: 0
         }
       }
       expect(() => new Code(A)).to.throw()
@@ -366,7 +374,8 @@ describe('Code', () => {
         [network]: {
           location: randomLocation(),
           origin: randomLocation(),
-          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td'
+          owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+          satoshis: 0
         },
         test: null
       }
@@ -375,6 +384,23 @@ describe('Code', () => {
       expect(() => new Code(A)).to.throw()
       A.presets = { [network]: new class Presets {}() }
       expect(() => new Code(A)).to.throw()
+    })
+
+    it('throws if presets are incomplete', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      const npresets = {
+        location: '_o1',
+        origin: randomLocation(),
+        owner: '1MS5QUfk9DJAJE5WQxikME1tkMCeabw6Td',
+        satoshis: 0
+      }
+      for (const key of Object.keys(npresets)) {
+        A.presets = { [network]: Object.assign({}, npresets) }
+        delete A.presets[network][key]
+        expect(() => new Code(A)).to.throw('Cannot install A')
+      }
     })
 
     it('throws if presets contains reserved properties', () => {
@@ -430,7 +456,7 @@ describe('Code', () => {
 
   describe('get', () => {
   })
-  
+
   describe('functions', () => {
   })
 

@@ -1,6 +1,6 @@
 /**
  * membrane.js
- * 
+ *
  * Tests for lib/kernel/membrane.js
  */
 
@@ -15,9 +15,9 @@ const Membrane = unmangle(Run)._Membrane
 // ------------------------------------------------------------------------------------------------
 
 describe('Membrane', () => {
-    describe('constructor', () => {
+  describe('constructor', () => {
 
-    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
