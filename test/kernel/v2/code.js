@@ -10,9 +10,12 @@ const { Run } = require('../../env/config')
 const { Jig, Berry } = Run
 const { unmangle } = require('../../env/unmangle')
 const Code = unmangle(Run)._Code
+const Membrane = unmangle(Run)._Membrane
 const SI = unmangle(Run.sandbox)._intrinsics
 
 const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
+
+// test read only
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -167,8 +170,16 @@ describe('Code', () => {
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
-    // test read only
-    // upgrade
+    it.only('should set initial bindings', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      const CA = new Code(A)
+      console.log(CA)
+
+      // console.log(CA.location)
+      console.log(Membrane._sudo(() => CA.satoshis))
+      // console.log(CA.satoshis)
+    })
   })
 
   describe('deps', () => {
