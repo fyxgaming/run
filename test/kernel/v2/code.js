@@ -38,7 +38,7 @@ describe('Code', () => {
       new Code(f) // eslint-disable-line
     })
 
-    it('adds code functions', () => {
+    it('adds invisible code functions', () => {
       new Run() // eslint-disable-line
       class A { }
       const CA = new Code(A)
@@ -46,10 +46,10 @@ describe('Code', () => {
       expect(typeof CA.upgrade).to.equal('function')
       expect(typeof CA.sync).to.equal('function')
       expect(typeof CA.release).to.equal('function')
-      expect(Object.getOwnPropertyNames(CA).includes('deploy')).to.equal(true)
-      expect(Object.getOwnPropertyNames(CA).includes('upgrade')).to.equal(true)
-      expect(Object.getOwnPropertyNames(CA).includes('sync')).to.equal(true)
-      expect(Object.getOwnPropertyNames(CA).includes('release')).to.equal(true)
+      expect(Object.getOwnPropertyNames(CA).includes('deploy')).to.equal(false)
+      expect(Object.getOwnPropertyNames(CA).includes('upgrade')).to.equal(false)
+      expect(Object.getOwnPropertyNames(CA).includes('sync')).to.equal(false)
+      expect(Object.getOwnPropertyNames(CA).includes('release')).to.equal(false)
     })
 
     it('creates only once', () => {
@@ -486,10 +486,11 @@ describe('Code', () => {
   })
 
   describe('functions', () => {
+    // Code functions are not available inside functions
   })
 
   describe('deploy', () => {
-    it.only('should deploy', () => {
+    it('should deploy', () => {
       new Run() // eslint-disable-line
       class A {}
       class B extends A {}
