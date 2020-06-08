@@ -41,5 +41,6 @@ require('./util/misc')
 require('./util/opreturn')
 require('./util/rest')
 require('./util/set')
+require('./util/type')
 
 require('./run')
