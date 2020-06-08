@@ -12,7 +12,6 @@ const { unmangle } = require('../env/unmangle')
 const {
   _bsvNetwork,
   _deployable,
-  _text,
   _resourceType,
   _SerialTaskQueue
 } = unmangle(unmangle(Run)._util)
