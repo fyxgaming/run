@@ -490,7 +490,7 @@ describe('Code', () => {
   })
 
   describe('deploy', () => {
-    it('should deploy', () => {
+    it.only('should deploy', () => {
       new Run() // eslint-disable-line
       class A {}
       class B extends A {}
