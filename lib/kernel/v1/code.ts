@@ -16,9 +16,9 @@ const {
   _deployable,
   _resourceType,
   _activeRun,
-  _text,
   _checkOwner
 } = require('../util/misc')
+const { _text } = require('../util/type')
 const { _owner } = require('../util/props')
 const Log = require('../util/log')
 const ResourceJSON = require('../util/json')
