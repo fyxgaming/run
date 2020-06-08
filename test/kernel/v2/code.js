@@ -489,7 +489,13 @@ describe('Code', () => {
   })
 
   describe('deploy', () => {
-
+    it.only('should deploy', () => {
+      new Run() // eslint-disable-line
+      class A {}
+      class B extends A {}
+      const CB = new Code(B)
+      CB.deploy()
+    })
   })
 
   describe('upgrade', () => {
