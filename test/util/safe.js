@@ -1,7 +1,7 @@
 /**
- * set.js
+ * safe.js
  *
- * Tests for lib/util/set.js
+ * Tests for lib/util/safe.js
  */
 
 const { describe, it, beforeEach } = require('mocha')
