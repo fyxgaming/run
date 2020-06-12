@@ -60,15 +60,18 @@ describe('Changes', () => {
     it('adds to set', () => {
       const changes = unmangle(new Changes())
       const s = new Set()
-      s.a = 1
-      changes._delete(s, s, 'a')
-      expect('a' in s).to.equal(false)
-      expect(typeof s.a).to.equal('undefined')
+      changes._setAdd(s, s, 'a')
+      expect(s.has('a')).to.equal(true)
     })
   })
 
   describe('setDelete', () => {
-    // TODO
+    it('deletes from set', () => {
+      const changes = unmangle(new Changes())
+      const s = new Set([1])
+      changes._setDelete(s, s, 'a')
+      expect(s.has('a')).to.equal(false)
+    })
   })
 
   describe('setClear', () => {
