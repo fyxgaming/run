@@ -25,15 +25,38 @@ describe('Changes', () => {
 
     it('makes changes to arrays', () => {
       const changes = unmangle(new Changes())
-      const o = {}
-      changes._set(o, o, 'a', 1)
-      expect(o.a).to.equal(1)
+      const a = []
+      changes._set(a, a, 0, 1)
+      expect(a[0]).to.equal(1)
     })
   })
 
   describe('rollback', () => {
-    it('rolls back object sets while preserving order', () => {
+    it('rolls back objects', () => {
+      const changes = unmangle(new Changes())
+      const o = { a: 1, b: 2 }
+      changes._set(o, o, 'b', 3)
+      changes._delete(o, o, 'a')
+      changes._rollback()
+      expect(o).to.deep.equal({ a: 1, b: 2 })
+    })
 
+    it('rolls back arrays', () => {
+      const changes = unmangle(new Changes())
+      const a = [1]
+      changes._set(a, a, 3, 3)
+      changes._rollback()
+      expect(a).to.deep.equal([1])
+    })
+
+    it('fixes key ordering', () => {
+      const changes = unmangle(new Changes())
+      const o = { a: 1, b: 2 }
+      changes._delete(o, o, 'a')
+      changes._set(o, o, 'a', 1)
+      expect(Object.keys(o)).to.deep.equal(['b', 'a'])
+      changes._rollback()
+      expect(Object.keys(o)).to.deep.equal(['a', 'b'])
     })
   })
 
