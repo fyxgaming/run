@@ -163,7 +163,16 @@ describe('Changes', () => {
     })
 
     it('preserves set order', () => {
-
+      const changes = unmangle(new Changes())
+      const s = new Set()
+      s.add(1)
+      s.add(2)
+      changes._setClear(s, s)
+      changes._setAdd(s, s, 2)
+      changes._setAdd(s, s, 1)
+      expect(s).to.deep.equal(new Set([2, 1]))
+      changes._rollback()
+      expect(s).to.deep.equal(new Set([1, 2]))
     })
 
     it('rolls back cleared sets', () => {
