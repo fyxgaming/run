@@ -153,7 +153,13 @@ describe('Changes', () => {
     })
 
     it('rolls back changed sets', () => {
-
+      const changes = unmangle(new Changes())
+      const s = new Set()
+      s.add(1)
+      changes._setAdd(s, s, 2)
+      changes._setDelete(s, s, 1)
+      changes._rollback()
+      expect(s).to.deep.equal(new Set([1]))
     })
 
     it('preserves set order', () => {
@@ -164,8 +170,18 @@ describe('Changes', () => {
 
     })
 
-    it('rolls back changed maps', () => {
+    it('rolls back set properties', () => {
 
+    })
+
+    it('rolls back changed maps', () => {
+      const changes = unmangle(new Changes())
+      const m = new Map()
+      m.set(1, 2)
+      changes._mapSet(m, m, 3, 4)
+      changes._mapDelete(m, m, 1)
+      changes._rollback()
+      expect(m).to.deep.equal(new Map([[1, 2]]))
     })
 
     it('preserves map order', () => {
@@ -173,10 +189,6 @@ describe('Changes', () => {
     })
 
     it('rolls back cleared maps', () => {
-
-    })
-
-    it('rolls back set properties', () => {
 
     })
 
@@ -262,7 +274,7 @@ describe('Changes', () => {
       const m = new Map()
       m.set('a', 'b')
       expect(changes._mapSet(m, m, 'a', 'b')).to.equal(m)
-      expect(changes.diff()).not.to.equal(new Set([]))
+      expect(changes._diff()).not.to.equal(new Set([]))
     })
 
     it('detects set reorders', () => {
