@@ -227,7 +227,11 @@ describe('Changes', () => {
 
     })
 
-    it('detects cleared maps', () => {
+    it('detects cleared sets', () => {
+
+    })
+
+    it('detects clears on empty sets', () => {
 
     })
 
@@ -263,7 +267,11 @@ describe('Changes', () => {
 
     })
 
-    it('detects cleared sets', () => {
+    it('detects cleared maps', () => {
+
+    })
+
+    it('detects clears on empty maps', () => {
 
     })
   })
