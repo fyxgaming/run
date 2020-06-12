@@ -60,7 +60,7 @@ describe('Changes', () => {
     it('adds to set', () => {
       const changes = unmangle(new Changes())
       const s = new Set()
-      changes._setAdd(s, s, 'a')
+      expect(changes._setAdd(s, s, 'a')).to.equal(s)
       expect(s.has('a')).to.equal(true)
     })
   })
@@ -69,8 +69,15 @@ describe('Changes', () => {
     it('deletes from set', () => {
       const changes = unmangle(new Changes())
       const s = new Set([1])
-      changes._setDelete(s, s, 'a')
-      expect(s.has('a')).to.equal(false)
+      expect(changes._setDelete(s, s, 1)).to.equal(true)
+      expect(s.has(1)).to.equal(false)
+    })
+
+    it('does not delete missing entry', () => {
+      const changes = unmangle(new Changes())
+      const s = new Set([1])
+      expect(changes._setDelete(s, s, 'a')).to.equal(false)
+      expect(s.has(1)).to.equal(true)
     })
   })
 
@@ -84,15 +91,37 @@ describe('Changes', () => {
   })
 
   describe('mapSet', () => {
-    // TODO
+    it('sets to map', () => {
+      const changes = unmangle(new Changes())
+      const m = new Map()
+      expect(changes._mapSet(m, m, 'a', 'b')).to.equal(m)
+      expect(m.get('a')).to.equal('b')
+    })
   })
 
   describe('mapDelete', () => {
-    // TODO
+    it('deletes from map', () => {
+      const changes = unmangle(new Changes())
+      const m = new Map([[1, 2]])
+      expect(changes._mapDelete(m, m, 1)).to.equal(true)
+      expect(m.has(1)).to.equal(false)
+    })
+
+    it('does not delete missing entry', () => {
+      const changes = unmangle(new Changes())
+      const m = new Map([[1, 2]])
+      expect(changes._mapDelete(m, m, 'a')).to.equal(false)
+      expect(m.has(1)).to.equal(true)
+    })
   })
 
   describe('mapClear', () => {
-    // TODO
+    it('clears map', () => {
+      const changes = unmangle(new Changes())
+      const m = new Map([[1, 2], [[], {}]])
+      changes._mapClear(m, m)
+      expect(m.size).to.equal(0)
+    })
   })
 
   describe('rollback', () => {
