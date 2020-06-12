@@ -185,7 +185,12 @@ describe('Changes', () => {
     })
 
     it('rolls back set properties', () => {
-
+      const changes = unmangle(new Changes())
+      const s = new Set()
+      s.n = 1
+      changes._delete(s, s, 'n')
+      changes._rollback()
+      expect(s.n).to.equal(1)
     })
 
     it('rolls back changed maps', () => {
@@ -221,7 +226,11 @@ describe('Changes', () => {
     })
 
     it('rolls back map properties', () => {
-
+      const changes = unmangle(new Changes())
+      const m = new Map()
+      changes._set(m, m, 'n', 1)
+      changes._rollback()
+      expect('n' in m).to.equal(false)
     })
 
     it('should roll back changes in different owners', () => {
