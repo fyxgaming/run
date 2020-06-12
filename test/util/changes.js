@@ -249,6 +249,13 @@ describe('Changes', () => {
       expect(changes._diff()).to.deep.equal(new Set([o]))
     })
 
+    it('detects no change if set same value', () => {
+      const changes = unmangle(new Changes())
+      const o = { a: 1 }
+      changes._set(o, o, 'a', 1)
+      expect(changes._diff()).to.deep.equal(new Set([]))
+    })
+
     it('detects object deletes', () => {
       const changes = unmangle(new Changes())
       const o = { a: 1 }
