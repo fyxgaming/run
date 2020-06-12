@@ -183,6 +183,9 @@ describe('Changes', () => {
     it('rolls back map properties', () => {
 
     })
+
+    it('should roll back changes in different owners', () => {
+    })
   })
 
   describe('diff', () => {
@@ -345,9 +348,15 @@ describe('Changes', () => {
       changes._delete(m, m, 'n')
       expect(changes._diff()).to.deep.equal(new Set([m]))
     })
-  })
 
-  // Different owner tests
+    it('should detect changes in different owner', () => {
+      const changes = unmangle(new Changes())
+      const o = {}
+      const p = {}
+      changes._set(p, o, 'n', 1)
+      expect(changes._diff()).to.deep.equal(new Set([p]))
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
