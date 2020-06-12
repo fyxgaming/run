@@ -29,6 +29,20 @@ describe('Changes', () => {
       changes._set(a, a, 0, 1)
       expect(a[0]).to.equal(1)
     })
+
+    it('sets on sets', () => {
+      const changes = unmangle(new Changes())
+      const s = new Set()
+      changes._set(s, s, 'a', 1)
+      expect(s.a).to.equal(1)
+    })
+
+    it('sets on maps', () => {
+      const changes = unmangle(new Changes())
+      const m = new Map()
+      changes._set(m, m, 'm', m)
+      expect(m.m).to.equal(m)
+    })
   })
 
   describe('rollback', () => {
