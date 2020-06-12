@@ -226,11 +226,17 @@ describe('Changes', () => {
     })
 
     it('detects array changes', () => {
-      // TODO: Sparse
+      const changes = unmangle(new Changes())
+      const a = [0]
+      changes._set(a, a, 1000, 'a')
+      expect(changes._diff()).to.deep.equal(new Set([a]))
     })
 
     it('detects array changes to custom properties', () => {
-      // TODO: Sparse
+      const changes = unmangle(new Changes())
+      const a = [0]
+      changes._set(a, a, 'n', 1)
+      expect(changes._diff()).to.deep.equal(new Set([a]))
     })
 
     it('detect set properties', () => {
