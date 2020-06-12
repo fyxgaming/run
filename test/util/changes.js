@@ -60,11 +60,21 @@ describe('Changes', () => {
     })
 
     it('detects object reorders', () => {
-
+      const changes = unmangle(new Changes())
+      const o = { a: 1, b: 2 }
+      changes._delete(o, o, 'a')
+      changes._set(o, o, 'a', 1)
+      expect(changes._diff()).to.deep.equal(new Set([o]))
     })
 
     it('detects reverts', () => {
-
+      const changes = unmangle(new Changes())
+      const o = { a: 1, b: 2 }
+      changes._delete(o, o, 'a')
+      changes._set(o, o, 'a', 1)
+      changes._delete(o, o, 'b')
+      changes._set(o, o, 'b', 2)
+      expect(changes._diff()).to.deep.equal(new Set([]))
     })
   })
 })
