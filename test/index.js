@@ -33,6 +33,7 @@ require('./module/remote-blockchain')
 require('./module/viewer')
 
 require('./util/bindings')
+require('./util/changes')
 require('./util/checkpoint')
 require('./util/deep')
 require('./util/json')
