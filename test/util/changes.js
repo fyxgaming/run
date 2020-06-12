@@ -194,7 +194,16 @@ describe('Changes', () => {
     })
 
     it('preserves map order', () => {
-
+      const changes = unmangle(new Changes())
+      const m = new Map()
+      m.set(1, 2)
+      m.set(3, 4)
+      changes._setClear(m, m)
+      changes._mapSet(m, m, 3, 4)
+      changes._mapSet(m, m, 1, 2)
+      expect(m).to.deep.equal(new Map([[3, 4], [1, 2]]))
+      changes._rollback()
+      expect(m).to.deep.equal(new Map([[1, 2], [3, 4]]))
     })
 
     it('rolls back cleared maps', () => {
