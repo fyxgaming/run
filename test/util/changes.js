@@ -295,10 +295,18 @@ describe('Changes', () => {
       expect(changes._diff()).to.deep.equal(new Set([]))
     })
 
-    it('detects map sets', () => {
+    it('detects map adds', () => {
       const changes = unmangle(new Changes())
       const m = new Map()
       changes._mapSet(m, m, 'n', 1)
+      expect(changes._diff()).to.deep.equal(new Set([m]))
+    })
+
+    it('detects map changes', () => {
+      const changes = unmangle(new Changes())
+      const m = new Map()
+      m.set('n', 1)
+      changes._mapSet(m, m, 'n', 2)
       expect(changes._diff()).to.deep.equal(new Set([m]))
     })
 
