@@ -263,6 +263,13 @@ describe('Changes', () => {
       expect(changes._diff()).to.deep.equal(new Set([o]))
     })
 
+    it('detects no change if delete nonexistant', () => {
+      const changes = unmangle(new Changes())
+      const o = { }
+      changes._delete(o, o, 'a')
+      expect(changes._diff()).to.deep.equal(new Set([]))
+    })
+
     it('detects object reorders', () => {
       const changes = unmangle(new Changes())
       const o = { a: 1, b: 2 }
