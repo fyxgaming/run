@@ -239,14 +239,6 @@ describe('Changes', () => {
       expect(changes._diff()).to.deep.equal(new Set([a]))
     })
 
-    it('detect set properties', () => {
-
-    })
-
-    it('detect map properties', () => {
-
-    })
-
     it('detects cleared sets', () => {
 
     })
@@ -264,6 +256,10 @@ describe('Changes', () => {
     })
 
     it('detects set reorders', () => {
+
+    })
+
+    it('detect set properties', () => {
 
     })
 
@@ -292,6 +288,10 @@ describe('Changes', () => {
     })
 
     it('detects clears on empty maps', () => {
+
+    })
+
+    it('detect map properties', () => {
 
     })
   })
