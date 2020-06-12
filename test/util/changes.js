@@ -176,7 +176,12 @@ describe('Changes', () => {
     })
 
     it('rolls back cleared sets', () => {
-
+      const changes = unmangle(new Changes())
+      const s = new Set()
+      s.add(1)
+      changes._setClear(s, s)
+      changes._rollback()
+      expect(s).to.deep.equal(new Set([1]))
     })
 
     it('rolls back set properties', () => {
@@ -207,7 +212,12 @@ describe('Changes', () => {
     })
 
     it('rolls back cleared maps', () => {
-
+      const changes = unmangle(new Changes())
+      const m = new Map()
+      m.set(1, 2)
+      changes._mapClear(m, m)
+      changes._rollback()
+      expect(m).to.deep.equal(new Map([[1, 2]]))
     })
 
     it('rolls back map properties', () => {
