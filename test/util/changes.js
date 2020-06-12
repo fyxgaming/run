@@ -232,9 +232,6 @@ describe('Changes', () => {
       changes._rollback()
       expect('n' in m).to.equal(false)
     })
-
-    it('should roll back changes in different owners', () => {
-    })
   })
 
   describe('diff', () => {
