@@ -46,7 +46,14 @@ describe('Changes', () => {
   })
 
   describe('delete', () => {
-    // TODO
+    it('delete properties', () => {
+      const changes = unmangle(new Changes())
+      const s = new Set()
+      s.a = 1
+      changes._delete(s, s, 'a')
+      expect('a' in s).to.equal(false)
+      expect(typeof s.a).to.equal('undefined')
+    })
   })
 
   describe('setAdd', () => {
