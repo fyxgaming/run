@@ -152,21 +152,35 @@ describe('Changes', () => {
       expect(Object.keys(o)).to.deep.equal(['a', 'b'])
     })
 
-    it('rolls back set properties', () => {
+    it('rolls back changed sets', () => {
 
     })
 
-    it('rolls back map properties', () => {
+    it('preserves set order', () => {
 
     })
-
-    // TODO: See below
 
     it('rolls back cleared sets', () => {
 
     })
 
+    it('rolls back changed maps', () => {
+
+    })
+
+    it('preserves map order', () => {
+
+    })
+
     it('rolls back cleared maps', () => {
+
+    })
+
+    it('rolls back set properties', () => {
+
+    })
+
+    it('rolls back map properties', () => {
 
     })
   })
