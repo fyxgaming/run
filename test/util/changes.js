@@ -57,7 +57,14 @@ describe('Changes', () => {
   })
 
   describe('setAdd', () => {
-    // TODO
+    it('adds to set', () => {
+      const changes = unmangle(new Changes())
+      const s = new Set()
+      s.a = 1
+      changes._delete(s, s, 'a')
+      expect('a' in s).to.equal(false)
+      expect(typeof s.a).to.equal('undefined')
+    })
   })
 
   describe('setDelete', () => {
@@ -157,6 +164,14 @@ describe('Changes', () => {
       expect(changes._diff()).to.deep.equal(new Set([]))
     })
 
+    it('detects array changes', () => {
+      // TODO: Sparse
+    })
+
+    it('detects array changes to custom properties', () => {
+      // TODO: Sparse
+    })
+
     it('detect set properties', () => {
 
     })
@@ -164,7 +179,41 @@ describe('Changes', () => {
     it('detect map properties', () => {
 
     })
+
+    it('detects set adds', () => {
+
+    })
+
+    it('detects set deletes', () => {
+
+    })
+
+    it('detects set reorders', () => {
+
+    })
+
+    it('detects reverted set changes', () => {
+
+    })
+
+    it('detects map sets', () => {
+
+    })
+
+    it('detects map deletes', () => {
+
+    })
+
+    it('detects map reorders', () => {
+
+    })
+
+    it('detects reverted map changes', () => {
+
+    })
   })
+
+  // Different owner tests
 })
 
 // ------------------------------------------------------------------------------------------------
