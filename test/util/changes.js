@@ -239,36 +239,64 @@ describe('Changes', () => {
       expect(changes._diff()).to.deep.equal(new Set([a]))
     })
 
-    it('detects cleared sets', () => {
-
-    })
-
-    it('detects clears on empty sets', () => {
-
-    })
-
     it('detects set adds', () => {
-
+      const changes = unmangle(new Changes())
+      const s = new Set()
+      changes._setAdd(s, s, 'n')
+      expect(changes._diff()).to.deep.equal(new Set([s]))
     })
 
     it('detects set deletes', () => {
-
+      const changes = unmangle(new Changes())
+      const a = []
+      const s = new Set([a])
+      changes._setDelete(s, s, a)
+      expect(changes._diff()).to.deep.equal(new Set([s]))
     })
 
     it('detects set reorders', () => {
+      const changes = unmangle(new Changes())
+      const s = new Set([1, 2])
+      changes._setClear(s, s)
+      changes._setAdd(s, s, 2)
+      changes._setAdd(s, s, 1)
+      expect(changes._diff()).to.deep.equal(new Set([s]))
+    })
 
+    it('detects cleared sets', () => {
+      const changes = unmangle(new Changes())
+      const s = new Set([1, 2])
+      changes._setClear(s, s)
+      expect(changes._diff()).to.deep.equal(new Set([s]))
+    })
+
+    it('detects clears on empty sets', () => {
+      const changes = unmangle(new Changes())
+      const s = new Set()
+      changes._setClear(s, s)
+      expect(changes._diff()).to.deep.equal(new Set([]))
     })
 
     it('detect set properties', () => {
-
+      const changes = unmangle(new Changes())
+      const s = new Set()
+      changes._set(s, s, 'a', 1)
+      expect(changes._diff()).to.deep.equal(new Set([s]))
     })
 
     it('detects reverted set changes', () => {
-
+      const changes = unmangle(new Changes())
+      const s = new Set()
+      changes._setAdd(s, s, 'a')
+      changes._setDelete(s, s, 'a')
+      expect(changes._diff()).to.deep.equal(new Set([]))
     })
 
     it('detects map sets', () => {
-
+      const changes = unmangle(new Changes())
+      const m = new Map()
+      changes._mapSet(m, m, 'n', 1)
+      expect(changes._diff()).to.deep.equal(new Set([m]))
     })
 
     it('detects map deletes', () => {
