@@ -257,6 +257,14 @@ describe('Changes', () => {
       expect(changes._diff()).to.deep.equal(new Set([s]))
     })
 
+    it('does not set map if same value', () => {
+      const changes = unmangle(new Changes())
+      const m = new Map()
+      m.set('a', 'b')
+      expect(changes._mapSet(m, m, 'a', 'b')).to.equal(m)
+      expect(changes.diff()).not.to.equal(new Set([]))
+    })
+
     it('detects set reorders', () => {
       const changes = unmangle(new Changes())
       const s = new Set([1, 2])
