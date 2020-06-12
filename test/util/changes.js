@@ -75,7 +75,12 @@ describe('Changes', () => {
   })
 
   describe('setClear', () => {
-    // TODO
+    it('clears set', () => {
+      const changes = unmangle(new Changes())
+      const s = new Set([1, 2])
+      changes._setClear(s, s)
+      expect(s.size).to.equal(0)
+    })
   })
 
   describe('mapSet', () => {
@@ -123,6 +128,16 @@ describe('Changes', () => {
     })
 
     it('rolls back map properties', () => {
+
+    })
+
+    // TODO: See below
+
+    it('rolls back cleared sets', () => {
+
+    })
+
+    it('rolls back cleared maps', () => {
 
     })
   })
@@ -183,6 +198,10 @@ describe('Changes', () => {
 
     })
 
+    it('detects cleared maps', () => {
+
+    })
+
     it('detects set adds', () => {
 
     })
@@ -212,6 +231,10 @@ describe('Changes', () => {
     })
 
     it('detects reverted map changes', () => {
+
+    })
+
+    it('detects cleared sets', () => {
 
     })
   })
