@@ -353,8 +353,10 @@ describe('Changes', () => {
       const changes = unmangle(new Changes())
       const o = {}
       const p = {}
-      changes._set(p, o, 'n', 1)
-      expect(changes._diff()).to.deep.equal(new Set([p]))
+      const q = {}
+      changes._set(o, p, 'n', 1)
+      changes._set(o, q, 'n', 2)
+      expect(changes._diff()).to.deep.equal(new Set([o]))
     })
   })
 })
