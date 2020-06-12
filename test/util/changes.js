@@ -300,27 +300,50 @@ describe('Changes', () => {
     })
 
     it('detects map deletes', () => {
-
+      const changes = unmangle(new Changes())
+      const m = new Map([[1, 2]])
+      changes._mapDelete(m, m, 1)
+      expect(changes._diff()).to.deep.equal(new Set([m]))
     })
 
     it('detects map reorders', () => {
-
+      const changes = unmangle(new Changes())
+      const m = new Map([[1, 2], [3, 4]])
+      changes._mapDelete(m, m, 1)
+      changes._mapDelete(m, m, 3)
+      changes._mapSet(m, m, 3, 4)
+      changes._mapSet(m, m, 1, 2)
+      expect(changes._diff()).to.deep.equal(new Set([m]))
     })
 
     it('detects reverted map changes', () => {
-
+      const changes = unmangle(new Changes())
+      const m = new Map([[1, 2]])
+      changes._mapDelete(m, m, 1)
+      changes._mapSet(m, m, 1, 2)
+      expect(changes._diff()).to.deep.equal(new Set([]))
     })
 
     it('detects cleared maps', () => {
-
+      const changes = unmangle(new Changes())
+      const m = new Map([[1, 2]])
+      changes._mapClear(m, m)
+      expect(changes._diff()).to.deep.equal(new Set([m]))
     })
 
     it('detects clears on empty maps', () => {
-
+      const changes = unmangle(new Changes())
+      const m = new Map([])
+      changes._mapClear(m, m)
+      expect(changes._diff()).to.deep.equal(new Set([]))
     })
 
     it('detect map properties', () => {
-
+      const changes = unmangle(new Changes())
+      const m = new Map([])
+      m.n = 1
+      changes._delete(m, m, 'n')
+      expect(changes._diff()).to.deep.equal(new Set([m]))
     })
   })
 
