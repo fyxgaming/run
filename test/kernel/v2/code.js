@@ -490,12 +490,14 @@ describe('Code', () => {
   })
 
   describe('deploy', () => {
-    it.only('should deploy', () => {
+    it('should deploy', () => {
       new Run() // eslint-disable-line
       class A {}
       class B extends A {}
       const CB = new Code(B)
       CB.deploy()
+      expect(A.location.startsWith('record://'))
+      expect(B.location.startsWith('record://'))
     })
   })
 
