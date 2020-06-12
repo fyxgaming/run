@@ -45,6 +45,34 @@ describe('Changes', () => {
     })
   })
 
+  describe('delete', () => {
+    // TODO
+  })
+
+  describe('setAdd', () => {
+    // TODO
+  })
+
+  describe('setDelete', () => {
+    // TODO
+  })
+
+  describe('setClear', () => {
+    // TODO
+  })
+
+  describe('mapSet', () => {
+    // TODO
+  })
+
+  describe('mapDelete', () => {
+    // TODO
+  })
+
+  describe('mapClear', () => {
+    // TODO
+  })
+
   describe('rollback', () => {
     it('rolls back objects', () => {
       const changes = unmangle(new Changes())
@@ -71,6 +99,14 @@ describe('Changes', () => {
       expect(Object.keys(o)).to.deep.equal(['b', 'a'])
       changes._rollback()
       expect(Object.keys(o)).to.deep.equal(['a', 'b'])
+    })
+
+    it('rolls back set properties', () => {
+
+    })
+
+    it('rolls back map properties', () => {
+
     })
   })
 
@@ -112,6 +148,14 @@ describe('Changes', () => {
       changes._delete(o, o, 'b')
       changes._set(o, o, 'b', 2)
       expect(changes._diff()).to.deep.equal(new Set([]))
+    })
+
+    it('detect set properties', () => {
+
+    })
+
+    it('detect map properties', () => {
+
     })
   })
 })
