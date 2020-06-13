@@ -501,7 +501,7 @@ describe('Code', () => {
   })
 
   describe('deploy', () => {
-    it.only('deploys parent and child', () => {
+    it('deploys parent and child', () => {
       new Run() // eslint-disable-line
       class A {}
       class B extends A {}
@@ -511,6 +511,8 @@ describe('Code', () => {
       // expect(record._deploy.called).to.equal(true)
       expect(A.location.startsWith('record://'))
       expect(B.location.startsWith('record://'))
+      expect(A.location.endsWith('_o2'))
+      expect(B.location.endsWith('_o1'))
     })
 
     // Does not deploy if already deployed
