@@ -269,6 +269,7 @@ describe('Code', () => {
         [network]: {
           location: randomLocation(),
           origin: randomLocation(),
+          nonce: 2,
           owner: randomOwner(),
           satoshis: 0
         }
@@ -319,6 +320,7 @@ describe('Code', () => {
         [network]: {
           location: randomLocation(),
           origin: randomLocation(),
+          nonce: 2,
           owner: randomOwner(),
           satoshis: 0
         }
@@ -335,6 +337,7 @@ describe('Code', () => {
         [network]: {
           location: randomLocation(),
           origin: randomLocation(),
+          nonce: 2,
           owner: randomOwner(),
           satoshis: 0
         }
@@ -384,6 +387,7 @@ describe('Code', () => {
         [network]: {
           location: '_o1',
           origin: randomLocation(),
+          nonce: 2,
           owner: randomOwner(),
           satoshis: 0
         }
@@ -393,6 +397,7 @@ describe('Code', () => {
         [network]: {
           location: '_o1',
           origin: randomLocation(),
+          nonce: 2,
           owner: randomOwner(),
           satoshis: 0
         }
@@ -402,11 +407,17 @@ describe('Code', () => {
         [network]: {
           location: randomLocation(),
           origin: randomLocation(),
+          nonce: 2,
           owner: randomOwner(),
           satoshis: 0
         },
         test: null
       }
+      expect(() => new Code(A)).to.throw()
+      delete A.presets.test
+      A.presets[network].nonce = 0
+      expect(() => new Code(A)).to.throw()
+      A.presets[network].nonce = null
       expect(() => new Code(A)).to.throw()
       A.presets = []
       expect(() => new Code(A)).to.throw()
@@ -490,7 +501,7 @@ describe('Code', () => {
   })
 
   describe('deploy', () => {
-    it.only('deploys parent and child', () => {
+    it('deploys parent and child', () => {
       new Run() // eslint-disable-line
       class A {}
       class B extends A {}
@@ -504,7 +515,7 @@ describe('Code', () => {
 
     // Does not deploy if already deployed
 
-    it.skip('deploys with custom lock', () => {
+    it('deploys with custom lock', () => {
       class L {
         script () { return new Uint8Array() }
         domain () { return 0 }
@@ -525,6 +536,10 @@ describe('Code', () => {
 
   describe('upgrade', () => {
 
+  })
+
+  describe('sync', () => {
+    // Only waits for current record
   })
 })
 
