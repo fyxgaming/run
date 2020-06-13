@@ -10,11 +10,7 @@ const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { StandardLock } = Run
 const { unmangle } = require('../env/unmangle')
-const {
-  _location,
-  _satoshis,
-  _owner
-} = unmangle(unmangle(Run)._util)
+const { _location, _nonce, _satoshis, _owner } = unmangle(unmangle(Run)._util)
 
 // ------------------------------------------------------------------------------------------------
 // _location
@@ -106,6 +102,28 @@ describe('_location', () => {
     // Jig and User
     expect(() => _location('abc_o1_', USER | JIG)).to.throw()
     expect(() => _location('_o1', USER | JIG)).to.throw()
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// _nonce
+// ------------------------------------------------------------------------------------------------
+
+describe('_nonce', () => {
+  it('supports valid nonce', () => {
+    _nonce(1)
+    _nonce(Number.MAX_SAFE_INTEGER)
+  })
+
+  it('throws if invalid nonce', () => {
+    expect(() => _nonce(0)).to.throw()
+    expect(() => _nonce(-1)).to.throw()
+    expect(() => _nonce(1.5)).to.throw()
+    expect(() => _nonce(Infinity)).to.throw()
+    expect(() => _nonce(NaN)).to.throw()
+    expect(() => _nonce(null)).to.throw()
+    expect(() => _nonce()).to.throw()
+    expect(() => _nonce('2')).to.throw()
   })
 })
 
