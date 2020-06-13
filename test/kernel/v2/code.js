@@ -140,7 +140,7 @@ describe('Code', () => {
       expect(Code._get(Date)).to.equal(undefined)
     })
 
-    it('should create code for props', () => {
+    it('creates code for props', () => {
       new Run() // eslint-disable-line
       class A { }
       class B { }
@@ -149,7 +149,7 @@ describe('Code', () => {
       expect(CA.B).to.equal(new Code(B))
     })
 
-    it('should install circular prop code', () => {
+    it('installs circular prop code', () => {
       new Run() // eslint-disable-line
       class A { }
       class B { }
@@ -161,7 +161,7 @@ describe('Code', () => {
       expect(CB.A).to.equal(CA)
     })
 
-    it('should install circular parent-child code', () => {
+    it('installs circular parent-child code', () => {
       new Run() // eslint-disable-line
       class B { }
       class A extends B { }
@@ -182,7 +182,7 @@ describe('Code', () => {
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
-    it('should set initial bindings', () => {
+    it('sets initial bindings', () => {
       new Run() // eslint-disable-line
       class A { }
       const CA = new Code(A)
@@ -200,7 +200,7 @@ describe('Code', () => {
   })
 
   describe('deps', () => {
-    it('should make deps globals', () => {
+    it('makes deps globals', () => {
       new Run() // eslint-disable-line
       class A { }
       function f () { return A }
@@ -209,7 +209,7 @@ describe('Code', () => {
       expect(sf()).to.equal(new Code(A))
     })
 
-    it('should support javascript values as deps', () => {
+    it('supports normal javascript values as deps', () => {
       new Run() // eslint-disable-line
       class A {
         static n () { return n } // eslint-disable-line
@@ -224,7 +224,7 @@ describe('Code', () => {
       expect(CA.o().a instanceof SI.Array).to.equal(true)
     })
 
-    it('should set deps on returned code jig', () => {
+    it('sets deps on returned code jig', () => {
       new Run() // eslint-disable-line
       class A { }
       class B { }
@@ -445,7 +445,7 @@ describe('Code', () => {
   })
 
   describe('prototype', () => {
-    it('should set prototype constructor to code jig', () => {
+    it('sets prototype constructor to code jig', () => {
       new Run() // eslint-disable-line
       class A { }
       const CA = new Code(A)
@@ -490,7 +490,7 @@ describe('Code', () => {
   })
 
   describe('deploy', () => {
-    it('should deploy', () => {
+    it.only('deploys parent and child', () => {
       new Run() // eslint-disable-line
       class A {}
       class B extends A {}
@@ -498,6 +498,24 @@ describe('Code', () => {
       CB.deploy()
       expect(A.location.startsWith('record://'))
       expect(B.location.startsWith('record://'))
+    })
+
+    it.skip('deploys with custom lock', () => {
+      class L {
+        script () { return new Uint8Array() }
+        domain () { return 0 }
+      }
+      new Run() // eslint-disable-line
+      class A {
+        static send (to) { this.owner = to }
+      }
+      A.send = () => { throw new Error('Must call methods on jigs') }
+      const CA = new Code(A)
+      // A.send(1)
+      CA.send(new L())
+      CA.deploy()
+      console.log(A)
+      expect(A.location.startsWith('record://'))
     })
   })
 
