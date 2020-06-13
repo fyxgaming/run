@@ -496,9 +496,13 @@ describe('Code', () => {
       class B extends A {}
       const CB = new Code(B)
       CB.deploy()
+      // const record = unmangle(stub(record))
+      // expect(record._deploy.called).to.equal(true)
       expect(A.location.startsWith('record://'))
       expect(B.location.startsWith('record://'))
     })
+
+    // Does not deploy if already deployed
 
     it.skip('deploys with custom lock', () => {
       class L {
