@@ -453,6 +453,57 @@ describe('Code', () => {
       A.presets = { [network]: { upgrade: () => {} } }
       expect(() => new Code(A)).to.throw()
     })
+
+    it('requires parent approval by default', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      A.options = { utility: true }
+      const CA = new Code(A)
+      CA.deploy()
+      new Run() // eslint-disable-line
+      class C extends A { }
+      const CC = new Code(C)
+      CC.deploy()
+      // TODO: Parent approval
+    })
+  })
+
+  describe('options', () => {
+    it('allows utility classes', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      A.options = { utility: true }
+      const CA = new Code(A)
+      CA.deploy()
+      class B extends A { }
+      const CB = new Code(B)
+      CB.deploy()
+      new Run() // eslint-disable-line
+      class C extends A { }
+      const CC = new Code(C)
+      CC.deploy()
+    })
+
+    it('throws if invalid options', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      A.options = null
+      expect(() => new Code(A)).to.throw('options must be an object')
+    })
+
+    it('throws if unknown option', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      A.options = { red: 1 }
+      expect(() => new Code(A)).to.throw('Unknown option: red')
+    })
+
+    it('throws if invalid utility', () => {
+      new Run() // eslint-disable-line
+      class A { }
+      A.options = { utility: 2 }
+      expect(() => new Code(A)).to.throw('utility must be a boolean')
+    })
   })
 
   describe('prototype', () => {
