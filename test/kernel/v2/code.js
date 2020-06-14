@@ -597,8 +597,8 @@ describe('Code', () => {
     it.only('publishes after dependent transaction', () => {
       new Run() // eslint-disable-line
       class A {}
-      // const CA = new Code(A)
-      // CA.deploy()
+      const CA = new Code(A)
+      CA.deploy()
       class B extends A { }
       const CB = new Code(B)
       CB.deploy()
