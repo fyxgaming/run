@@ -501,7 +501,7 @@ describe('Code', () => {
   })
 
   describe('deploy', () => {
-    it.only('deploys parent and child', () => {
+    it('deploys parent and child', () => {
       new Run() // eslint-disable-line
       class A {}
       class B extends A {}
@@ -542,6 +542,16 @@ describe('Code', () => {
 
   describe('sync', () => {
     // Only waits for current record
+
+    it.only('publishes after dependent transaction', () => {
+      new Run() // eslint-disable-line
+      class A {}
+      const CA = new Code(A)
+      CA.deploy()
+      class B extends A { }
+      const CB = new Code(B)
+      CB.deploy()
+    })
   })
 })
 
