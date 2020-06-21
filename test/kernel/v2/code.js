@@ -415,7 +415,7 @@ describe('Code', () => {
       }
       expect(() => new Code(A)).to.throw()
       delete A.presets.test
-      A.presets[network].nonce = 0
+      A.presets[network].nonce = 1
       expect(() => new Code(A)).to.throw()
       A.presets[network].nonce = null
       expect(() => new Code(A)).to.throw()
