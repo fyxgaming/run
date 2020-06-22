@@ -529,7 +529,8 @@ describe('Codec', () => {
       const a = new A2()
       a.n = 1
       const json = codec._encode(a)
-      expect(json).to.deep.equal({ $arb: { n: 1 }, T: { $jig: 0 } })
+      const expected = { $arb: { n: 1 }, T: { $jig: 0 } }
+      expect(json).to.deep.equal(expected)
       expect(codec._decode(json)).to.deep.equal(a)
     })
 
@@ -543,22 +544,27 @@ describe('Codec', () => {
       const a = new A2()
       a.a = a
       const json = codec._encode(a)
-      expect(json).to.deep.equal({ $top: { $dup: 0 }, dups: [{ $arb: { a: { $dup: 0 } }, T: { $jig: 0 } }] })
+      const expected = { $top: { $dup: 0 }, dups: [{ $arb: { a: { $dup: 0 } }, T: { $jig: 0 } }] }
+      expect(json).to.deep.equal(expected)
       expect(codec._decode(json)).to.deep.equal(a)
     })
 
-    /*
     it('should support arbitrary objects with duplicate inners', () => {
       new Run() // eslint-disable-line
-      const $ref = resources.length
+      const jigs = []
+      const codec = unmangle(new Codec())
+        ._saveJigs(x => { jigs.push(x); return jigs.length - 1 })
+        ._loadJigs(x => jigs[x])
       const o = {}
-      class A { }
-      const a = new A()
+      const A2 = new Code(class A { })
+      const a = new A2()
       a.o1 = o
       a.o2 = o
-      encodePass(a, { $top: { $arb: { o1: { $dup: 0 }, o2: { $dup: 0 } }, T: { $ref } }, dups: [{ }] })
+      const expected = { $top: { $arb: { o1: { $dup: 0 }, o2: { $dup: 0 } }, T: { $jig: 0 } }, dups: [{ }] }
+      const json = codec._encode(a)
+      expect(json).to.deep.equal(expected)
+      expect(codec._decode(json)).to.deep.equal(a)
     })
-    */
   })
 })
 
