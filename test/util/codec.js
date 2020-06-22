@@ -309,62 +309,62 @@ describe('Codec', () => {
       expect(codec._encode([o, o]).dups[0].constructor).to.equal(SI.Object)
     })
 
-    /*
     it('should fail for raw intrinsics', () => {
       new Run() // eslint-disable-line
-      serializeFail(console)
-      serializeFail(Object)
-      serializeFail(Function)
-      serializeFail(Error)
-      serializeFail(Math)
-      serializeFail(Buffer)
-      serializeFail(Date)
-      serializeFail(JSON)
-      serializeFail(Promise)
-      serializeFail(Proxy)
-      serializeFail(Int8Array)
-      serializeFail(Int16Array)
-      serializeFail(Int32Array)
-      serializeFail(Uint8Array)
-      serializeFail(Uint16Array)
-      serializeFail(Uint32Array)
-      serializeFail(Uint8ClampedArray)
-      serializeFail(Float32Array)
-      serializeFail(Float64Array)
-      if (typeof BigInt64Array !== 'undefined') serializeFail(BigInt64Array) // eslint-disable-line
-      if (typeof BigUint64Array !== 'undefined') serializeFail(BigUint64Array) // eslint-disable-line
-      if (typeof BigInt !== 'undefined') serializeFail(BigInt) // eslint-disable-line
-      if (typeof WebAssembly !== 'undefined') serializeFail(WebAssembly) // eslint-disable-line
-      serializeFail(sandboxIntrinsics.Object)
-      serializeFail(sandboxIntrinsics.Array)
-      serializeFail(sandboxIntrinsics.Set)
-      serializeFail(sandboxIntrinsics.Map)
-      serializeFail(sandboxIntrinsics.Uint8Array)
+      encodeFail(console)
+      encodeFail(Object)
+      encodeFail(Function)
+      encodeFail(Error)
+      encodeFail(Math)
+      encodeFail(Buffer)
+      encodeFail(Date)
+      encodeFail(JSON)
+      encodeFail(Promise)
+      encodeFail(Proxy)
+      encodeFail(Int8Array)
+      encodeFail(Int16Array)
+      encodeFail(Int32Array)
+      encodeFail(Uint8Array)
+      encodeFail(Uint16Array)
+      encodeFail(Uint32Array)
+      encodeFail(Uint8ClampedArray)
+      encodeFail(Float32Array)
+      encodeFail(Float64Array)
+      if (typeof BigInt64Array !== 'undefined') encodeFail(BigInt64Array) // eslint-disable-line
+      if (typeof BigUint64Array !== 'undefined') encodeFail(BigUint64Array) // eslint-disable-line
+      if (typeof BigInt !== 'undefined') encodeFail(BigInt) // eslint-disable-line
+      if (typeof WebAssembly !== 'undefined') encodeFail(WebAssembly) // eslint-disable-line
+      encodeFail(SI.Object)
+      encodeFail(SI.Array)
+      encodeFail(SI.Set)
+      encodeFail(SI.Map)
+      encodeFail(SI.Uint8Array)
     })
 
+    /*
     it('should fail for unsupported objects intrinsics', () => {
       new Run() // eslint-disable-line
-      serializeFail(new Date())
-      serializeFail(new WeakSet())
-      serializeFail(new WeakMap())
-      serializeFail(new Promise((resolve, reject) => {}))
-      serializeFail(new RegExp())
-      serializeFail(/^abc/)
-      serializeFail(new Error())
-      serializeFail(Buffer.alloc(0))
+      encodeFail(new Date())
+      encodeFail(new WeakSet())
+      encodeFail(new WeakMap())
+      encodeFail(new Promise((resolve, reject) => {}))
+      encodeFail(new RegExp())
+      encodeFail(/^abc/)
+      encodeFail(new Error())
+      encodeFail(Buffer.alloc(0))
     })
 
     it('should fail for unrecognized intrinsics', () => {
       new Run() // eslint-disable-line
       // Use sandbox intrinsics, but don't set them
-      serializeFail(new sandboxIntrinsics.Set())
-      serializeFail(new sandboxIntrinsics.Map())
-      serializeFail(new sandboxIntrinsics.Uint8Array())
+      encodeFail(new sandboxIntrinsics.Set())
+      encodeFail(new sandboxIntrinsics.Map())
+      encodeFail(new sandboxIntrinsics.Uint8Array())
       // Use host intrinsics, but set them to sandbox
       const opts = mangle({ _hostIntrinsics: sandboxIntrinsics })
-      serializeFail(new Set(), opts)
-      serializeFail(new Map(), opts)
-      serializeFail(new Uint8Array(), opts)
+      encodeFail(new Set(), opts)
+      encodeFail(new Map(), opts)
+      encodeFail(new Uint8Array(), opts)
     })
 
     it('should support custom replacer', () => {
