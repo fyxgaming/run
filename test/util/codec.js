@@ -12,7 +12,8 @@ const { unmangle } = require('../env/unmangle')
 const Codec = unmangle(unmangle(Run)._util)._Codec
 const SI = unmangle(Run.sandbox)._intrinsics
 const HI = unmangle(Run.sandbox)._hostIntrinsics
-const { Jig } = Run
+const { Jig, Berry } = Run
+const Code = unmangle(Run)._Code
 
 // ------------------------------------------------------------------------------------------------
 // Helpers
@@ -462,73 +463,63 @@ describe('Codec', () => {
       expect(codec._decode({ $jig: '123' })).to.equal(dragon)
     })
 
-    /*
-    it('should replace and revive jigs in complex structures', () => {
+    it('should save and load jigs in complex structures', () => {
       new Run() // eslint-disable-line
       class Dragon extends Jig { }
       const dragon = new Dragon()
-      const opts = mangle({
-        _outputIntrinsics: sandbox._hostIntrinsics,
-        _replacer: _replace._resources(resource => '123'),
-        _reviver: _revive._resources(ref => dragon)
-      })
+      const codec = unmangle(new Codec())._saveJigs(x => '123')._loadJigs(x => dragon)
       const x = [dragon, { dragon }, new Set([dragon])]
-      const json = _serialize(x, opts)
+      const json = codec._encode(x)
       const parsed = JSON.parse(JSON.stringify(json))
-      const output = new Codec()._decode(parsed, opts)
+      const output = codec._decode(parsed)
       expect(output).to.deep.equal(x)
     })
 
     it('should fail to deserialize bad ref', () => {
       new Run() // eslint-disable-line
-      const opts = mangle({ _reviver: _revive._resources(ref => {}) })
-      decodeFail({ $ref: 1, $ref2: 2 }, opts)
-      decodeFail({ $ref: '123' })
+      const codec = unmangle(new Codec())._loadJigs(x => {})
+      expect(() => codec._decode({ $jig: 1, $jig2: 2 })).to.throw()
+      expect(() => codec._decode({ $jig: '123' })).to.throw()
     })
 
-    it('should replace deployables with location ref', () => {
+    it('should replace code jigs with location', () => {
       new Run() // eslint-disable-line
-      const opts = mangle({ _replacer: _replace._resources(x => '123') })
-      expect(_serialize(class {}, opts)).to.deep.equal({ $ref: '123' })
-      expect(_serialize(class A {}, opts)).to.deep.equal({ $ref: '123' })
-      expect(_serialize(class { method () { return null } }, opts)).to.deep.equal({ $ref: '123' })
-      expect(_serialize(class B { constructor () { this.x = 1 } }, opts)).to.deep.equal({ $ref: '123' })
-      expect(_serialize(function f () {}, opts)).to.deep.equal({ $ref: '123' })
-      expect(_serialize(function add (a, b) { return a + b }, opts)).to.deep.equal({ $ref: '123' })
-      expect(_serialize(function () {}, opts)).to.deep.equal({ $ref: '123' })
-      expect(_serialize(() => {}, opts)).to.deep.equal({ $ref: '123' })
-      expect(_serialize(x => x, opts)).to.deep.equal({ $ref: '123' })
-    })
-
-    it('should fail to serialize built-in functions', () => {
-      new Run() // eslint-disable-line
-      const opts = mangle({ _replacer: _replace._resources(x => '123') })
-      expect(() => _serialize(Math.random, opts)).to.throw('Cannot serialize')
-      expect(() => _serialize(Array.prototype.indexOf, opts)).to.throw('Cannot serialize')
-      expect(() => _serialize(WeakSet.prototype.has, opts)).to.throw('Cannot serialize')
-      expect(() => _serialize(String.prototype.endsWith, opts)).to.throw('Cannot serialize')
-      expect(() => _serialize(isNaN, opts)).to.throw('Cannot serialize')
-      expect(() => _serialize(isFinite, opts)).to.throw('Cannot serialize')
-      expect(() => _serialize(parseInt, opts)).to.throw('Cannot serialize')
-      expect(() => _serialize(escape, opts)).to.throw('Cannot serialize')
-      expect(() => _serialize(eval, opts)).to.throw('Cannot serialize') // eslint-disable-line
+      const codec = unmangle(new Codec())._saveJigs(x => '123')
+      expect(codec._encode(new Code(class B { constructor () { this.x = 1 } }))).to.deep.equal({ $jig: '123' })
+      expect(codec._encode(new Code(function add (a, b) { return a + b }))).to.deep.equal({ $jig: '123' })
     })
 
     it('should replace and revive berries', async () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class CustomBerry extends Berry { }
       const CustomBerrySandbox = await run.load(await run.deploy(CustomBerry))
       const berry = { location: '_o1' }
       Object.setPrototypeOf(berry, CustomBerrySandbox.prototype)
-      const opts = mangle({
-        _replacer: _replace._resources(resource => '123'),
-        _reviver: _revive._resources(ref => berry)
-      })
-      encodePass(berry, { $ref: '123' }, opts)
+      const codec = unmangle(new Codec())._saveJigs(x => '123')
+      const json = codec._encode(berry)
+      expect(json).to.deep.equal({ $jig: '123' })
+    })
+
+    it('should fail to serialize functions that are not code jigs', () => {
+      new Run() // eslint-disable-line
+      const codec = unmangle(new Codec())._saveJigs(x => '123')
+      expect(() => codec._encode(Math.random)).to.throw('Cannot encode')
+      expect(() => codec._encode(Array.prototype.indexOf)).to.throw('Cannot encode')
+      expect(() => codec._encode(WeakSet.prototype.has)).to.throw('Cannot encode')
+      expect(() => codec._encode(String.prototype.endsWith)).to.throw('Cannot encode')
+      expect(() => codec._encode(isNaN)).to.throw('Cannot encode')
+      expect(() => codec._encode(isFinite)).to.throw('Cannot encode')
+      expect(() => codec._encode(parseInt)).to.throw('Cannot encode')
+      expect(() => codec._encode(escape)).to.throw('Cannot encode')
+      expect(() => codec._encode(eval)).to.throw('Cannot encode') // eslint-disable-line
+      expect(() => codec._encode(() => {})).to.throw('Cannot encode')
+      expect(() => codec._encode(function a () { })).to.throw('Cannot encode')
+      expect(() => codec._encode(class A { })).to.throw('Cannot encode')
     })
   })
 
   describe('arbitrary objects', () => {
+    /*
     const resources = []
     const opts = mangle({
       _replacer: _replace._multiple(
@@ -547,7 +538,7 @@ describe('Codec', () => {
       class A { }
       const a = new A()
       a.n = 1
-      encodePass(a, { $arb: { n: 1 }, T: { $ref } }, opts)
+      encodePass(a, { $arb: { n: 1 }, T: { $ref } })
     })
 
     it('should support arbitrary objects with circular references', () => {
@@ -556,7 +547,7 @@ describe('Codec', () => {
       class A { }
       const a = new A()
       a.a = a
-      encodePass(a, { $top: { $dup: 0 }, dups: [{ $arb: { a: { $dup: 0 } }, T: { $ref } }] }, opts)
+      encodePass(a, { $top: { $dup: 0 }, dups: [{ $arb: { a: { $dup: 0 } }, T: { $ref } }] })
     })
 
     it('should support arbitrary objects with duplicate inners', () => {
@@ -567,7 +558,7 @@ describe('Codec', () => {
       const a = new A()
       a.o1 = o
       a.o2 = o
-      encodePass(a, { $top: { $arb: { o1: { $dup: 0 }, o2: { $dup: 0 } }, T: { $ref } }, dups: [{ }] }, opts)
+      encodePass(a, { $top: { $arb: { o1: { $dup: 0 }, o2: { $dup: 0 } }, T: { $ref } }, dups: [{ }] })
     })
     */
   })
