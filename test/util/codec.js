@@ -446,7 +446,7 @@ describe('Codec', () => {
       expect(json.constructor).to.equal(HI.Object)
     })
 
-    it('should serialize to sandbox', () => {
+    it('should encode to sandbox', () => {
       new Run() // eslint-disable-line
       class Dragon extends Jig { }
       const dragon = new Dragon()
@@ -475,7 +475,7 @@ describe('Codec', () => {
       expect(output).to.deep.equal(x)
     })
 
-    it('should fail to deserialize bad ref', () => {
+    it('should fail to decode bad ref', () => {
       new Run() // eslint-disable-line
       const codec = unmangle(new Codec())._loadJigs(x => {})
       expect(() => codec._decode({ $jig: 1, $jig2: 2 })).to.throw()
@@ -500,7 +500,7 @@ describe('Codec', () => {
       expect(json).to.deep.equal({ $jig: '123' })
     })
 
-    it('should fail to serialize functions that are not code jigs', () => {
+    it('should fail to encode functions that are not code jigs', () => {
       new Run() // eslint-disable-line
       const codec = unmangle(new Codec())._saveJigs(x => '123')
       expect(() => codec._encode(Math.random)).to.throw('Cannot encode')
