@@ -38,8 +38,8 @@ function encodePass (x, y) {
   expect(decoded).to.deep.equal(x)
 }
 
-const encodeFail = (x) => expect(() => unmangle(new Codec())._encode(x)).to.throw('Cannot encode')
-// const deserializeFail = (y, opts = defaultOpts) => expect(() => _deserialize(y, opts)).to.throw('Cannot deserialize')
+const encodeFail = x => expect(() => unmangle(new Codec())._encode(x)).to.throw('Cannot encode')
+const decodeFail = y => expect(() => unmangle(new Codec())._decode(y)).to.throw('Cannot decode')
 
 // ------------------------------------------------------------------------------------------------
 // Codec
@@ -361,80 +361,69 @@ describe('Codec', () => {
       encodeFail(new VMMap())
       encodeFail(new VMUint8Array())
     })
-
-    /*
-    it('should support custom replacer', () => {
-      new Run() // eslint-disable-line
-      class A {}
-      const a = new A()
-      expect(() => _serialize(a)).to.throw('Cannot serialize')
-      expect(_serialize(a, mangle({
-        _replacer: x => { if (x instanceof A) return { $a: 1 } }
-      }))).to.deep.equal({ $a: 1 })
-      expect(() => _serialize(a, { _replacer: () => {} })).to.throw('Cannot serialize')
-    })
   })
 
-  describe('_deserialize', () => {
-    it('should fail to deserialize unsupported types', () => {
+  describe('_decode', () => {
+    it('should fail to decode unsupported types', () => {
       new Run() // eslint-disable-line
       // Undefined
-      deserializeFail(undefined)
+      decodeFail(undefined)
       // Numbers
-      deserializeFail(-0)
-      deserializeFail(NaN)
-      deserializeFail(Infinity)
-      deserializeFail(-Infinity)
+      decodeFail(-0)
+      decodeFail(NaN)
+      decodeFail(Infinity)
+      decodeFail(-Infinity)
       // Symbols
-      deserializeFail(Symbol.iterator)
-      deserializeFail(Symbol.hasInstance)
+      decodeFail(Symbol.iterator)
+      decodeFail(Symbol.hasInstance)
       // Functions
-      deserializeFail(class A {})
-      deserializeFail(function f () { })
+      decodeFail(class A {})
+      decodeFail(function f () { })
       // Objects
-      deserializeFail({ $: 1 })
-      deserializeFail({ $err: 1 })
-      deserializeFail({ $und: 1, $nan: 1 })
-      deserializeFail({ $obj: null })
+      decodeFail({ $: 1 })
+      decodeFail({ $err: 1 })
+      decodeFail({ $und: 1, $nan: 1 })
+      decodeFail({ $obj: null })
       // Array
-      deserializeFail([{ $und: undefined }])
-      deserializeFail({ $arr: 1 })
-      deserializeFail({ $arr: [] })
+      decodeFail([{ $und: undefined }])
+      decodeFail({ $arr: 1 })
+      decodeFail({ $arr: [] })
       // Set
-      deserializeFail({ $set: null })
-      deserializeFail({ $set: {} })
-      deserializeFail({ $set: new Set() })
-      deserializeFail({ $set: [{ $err: 1 }] })
-      deserializeFail({ $set: new Uint8Array() })
-      deserializeFail({ $set: [], props: 0 })
-      deserializeFail({ $set: [], props: [] })
+      decodeFail({ $set: null })
+      decodeFail({ $set: {} })
+      decodeFail({ $set: new Set() })
+      decodeFail({ $set: [{ $err: 1 }] })
+      decodeFail({ $set: new Uint8Array() })
+      decodeFail({ $set: [], props: 0 })
+      decodeFail({ $set: [], props: [] })
       // Map
-      deserializeFail({ $map: null })
-      deserializeFail({ $map: {} })
-      deserializeFail({ $map: new Map() })
-      deserializeFail({ $map: [{}] })
-      deserializeFail({ $map: [[]] })
-      deserializeFail({ $map: [[1]] })
-      deserializeFail({ $map: [[1, 2, 3]] })
-      deserializeFail({ $map: [], props: 0 })
-      deserializeFail({ $map: [], props: [] })
+      decodeFail({ $map: null })
+      decodeFail({ $map: {} })
+      decodeFail({ $map: new Map() })
+      decodeFail({ $map: [{}] })
+      decodeFail({ $map: [[]] })
+      decodeFail({ $map: [[1]] })
+      decodeFail({ $map: [[1, 2, 3]] })
+      decodeFail({ $map: [], props: 0 })
+      decodeFail({ $map: [], props: [] })
       // Uint8Array
-      deserializeFail({ $ui8a: null })
-      deserializeFail({ $ui8a: [] })
-      deserializeFail({ $ui8a: {} })
-      deserializeFail({ $ui8a: '*' })
-      deserializeFail({ $ui8a: new Uint8Array() })
+      decodeFail({ $ui8a: null })
+      decodeFail({ $ui8a: [] })
+      decodeFail({ $ui8a: {} })
+      decodeFail({ $ui8a: '*' })
+      decodeFail({ $ui8a: new Uint8Array() })
       // Dedup
-      deserializeFail({ $top: null })
-      deserializeFail({ $top: {} })
-      deserializeFail({ $top: {}, dups: {} })
-      deserializeFail({ $top: { $dup: 0 }, dups: [] })
-      deserializeFail({ $top: { $dup: 1 }, dups: [{}] })
-      deserializeFail({ $top: { $dup: 0 }, dups: [{ $dup: 1 }] })
-      deserializeFail({ $top: { $top: { }, dups: [] }, dups: [] })
-      deserializeFail({ $top: { $dup: '0' }, dups: [] })
+      decodeFail({ $top: null })
+      decodeFail({ $top: {} })
+      decodeFail({ $top: {}, dups: {} })
+      decodeFail({ $top: { $dup: 0 }, dups: [] })
+      decodeFail({ $top: { $dup: 1 }, dups: [{}] })
+      decodeFail({ $top: { $dup: 0 }, dups: [{ $dup: 1 }] })
+      decodeFail({ $top: { $top: { }, dups: [] }, dups: [] })
+      decodeFail({ $top: { $dup: '0' }, dups: [] })
     })
 
+    /*
     it('should default to sandbox intrinsics', () => {
       new Run() // eslint-disable-line
       expect(_deserialize({}).constructor).to.equal(sandboxIntrinsics.Object)
@@ -508,8 +497,8 @@ describe('Codec', () => {
     it('should fail to deserialize bad ref', () => {
       new Run() // eslint-disable-line
       const opts = mangle({ _reviver: _revive._resources(ref => {}) })
-      deserializeFail({ $ref: 1, $ref2: 2 }, opts)
-      deserializeFail({ $ref: '123' })
+      decodeFail({ $ref: 1, $ref2: 2 }, opts)
+      decodeFail({ $ref: '123' })
     })
 
     it('should replace deployables with location ref', () => {
