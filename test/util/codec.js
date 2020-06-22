@@ -16,12 +16,9 @@ const Codec = unmangle(unmangle(Run)._util)._Codec
 // ------------------------------------------------------------------------------------------------
 
 /*
-const run = new Run()
 const sandbox = unmangle(Run.sandbox)
 const sandboxIntrinsics = sandbox._intrinsics
 
-const _serialize = unmangle(ResourceJSON)._serialize
-const _deserialize = unmangle(ResourceJSON)._deserialize
 const _replace = unmangle(unmangle(ResourceJSON)._replace)
 const _revive = unmangle(unmangle(ResourceJSON)._revive)
 */
@@ -259,10 +256,16 @@ describe('Codec', () => {
       o[3] = 3
       o[2] = 2
       o.n = 3
-      const encoded = _encode(o)
+      const encoded = new Codec()._encode(o)
       const json = JSON.parse(JSON.stringify(encoded))
-      const o2 = _deserialize(json)
+      const o2 = new Codec()._decode(json)
       expect(Object.keys(o)).to.deep.equal(Object.keys(o2))
+    })
+
+    it('should default to host intrinsics', () => {
+      new Run() // eslint-disable-line
+      expect(unmangle(new Codec())._encode({}).constructor).to.equal(Object)
+      expect(unmangle(new Codec())._encode([]).constructor).to.equal(Array)
     })
 
     /*
@@ -304,12 +307,6 @@ describe('Codec', () => {
       expect(_serialize([o, o], opts).$top.constructor).to.equal(sandboxIntrinsics.Array)
       expect(_serialize([o, o], opts).dups.constructor).to.equal(sandboxIntrinsics.Array)
       expect(_serialize([o, o], opts).dups[0].constructor).to.equal(sandboxIntrinsics.Object)
-    })
-
-    it('should default to host intrinsics', () => {
-      new Run() // eslint-disable-line
-      expect(_serialize({}).constructor).to.equal(Object)
-      expect(_serialize([]).constructor).to.equal(Array)
     })
 
     it('should fail for raw intrinsics', () => {
