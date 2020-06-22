@@ -519,28 +519,20 @@ describe('Codec', () => {
   })
 
   describe('arbitrary objects', () => {
-    /*
-    const resources = []
-    const opts = mangle({
-      _replacer: _replace._multiple(
-        _replace._resources(x => { resources.push(x); return resources.length - 1 }),
-        _replace._arbitraryObjects()
-      ),
-      _reviver: _revive._multiple(
-        _revive._resources(x => resources[x]),
-        _revive._arbitraryObjects()
-      )
-    })
-
     it('should support basic arbitrary objects', () => {
       new Run() // eslint-disable-line
-      const $ref = resources.length
-      class A { }
-      const a = new A()
+      const jigs = []
+      const codec = unmangle(new Codec())
+        ._saveJigs(x => { jigs.push(x); return jigs.length - 1 })
+        ._loadJigs(x => jigs[x])
+      const A2 = new Code(class A { })
+      const a = new A2()
       a.n = 1
-      encodePass(a, { $arb: { n: 1 }, T: { $ref } })
+      const json = codec._encode(a)
+      expect(json).to.deep.equal({ $arb: { n: 1 }, T: { $jig: 0 } })
     })
 
+    /*
     it('should support arbitrary objects with circular references', () => {
       new Run() // eslint-disable-line
       const $ref = resources.length
