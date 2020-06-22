@@ -11,6 +11,8 @@ const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const Codec = unmangle(unmangle(Run)._util)._Codec
 const SI = unmangle(Run.sandbox)._intrinsics
+const HI = unmangle(Run.sandbox)._hostIntrinsics
+const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Helpers
@@ -433,30 +435,34 @@ describe('Codec', () => {
   })
 
   describe('jigs', () => {
+    it('should save jigs with location', () => {
+      new Run() // eslint-disable-line
+      class Dragon extends Jig { }
+      const dragon = new Dragon()
+      const codec = unmangle(new Codec())._saveJigs(x => '123')
+      const json = codec._encode(dragon)
+      expect(json).to.deep.equal({ $jig: '123' })
+      expect(json.constructor).to.equal(HI.Object)
+    })
+
+    it('should serialize to sandbox', () => {
+      new Run() // eslint-disable-line
+      class Dragon extends Jig { }
+      const dragon = new Dragon()
+      const codec = unmangle(new Codec())._toSandbox()._saveJigs(x => '123')
+      const json = codec._encode(dragon)
+      expect(json.constructor).to.equal(SI.Object)
+    })
+
+    it('should load jigs from location', () => {
+      new Run() // eslint-disable-line
+      class Dragon extends Jig { }
+      const dragon = new Dragon()
+      const codec = unmangle(new Codec())._loadJigs(x => dragon)
+      expect(codec._decode({ $jig: '123' })).to.equal(dragon)
+    })
+
     /*
-    it('should replace jigs with location ref', () => {
-      new Run() // eslint-disable-line
-      class Dragon extends Jig { }
-      const dragon = new Dragon()
-      const opts = mangle({
-        _outputIntrinsics: sandboxIntrinsics,
-        _replacer: _replace._resources(resource => '123')
-      })
-      const json = _serialize(dragon, opts)
-      expect(json).to.deep.equal({ $ref: '123' })
-      expect(json.constructor).to.equal(sandboxIntrinsics.Object)
-    })
-
-    it('should revive jigs from location ref', () => {
-      new Run() // eslint-disable-line
-      class Dragon extends Jig { }
-      const dragon = new Dragon()
-      const opts = mangle({
-        _reviver: _revive._resources(ref => dragon)
-      })
-      expect(new Codec()._decode({ $ref: '123' }, opts)).to.equal(dragon)
-    })
-
     it('should replace and revive jigs in complex structures', () => {
       new Run() // eslint-disable-line
       class Dragon extends Jig { }
