@@ -6,6 +6,7 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+const bsv = require('bsv')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const Codec = unmangle(unmangle(Run)._util)._Codec
@@ -157,7 +158,6 @@ describe('Codec', () => {
       encodePass([o, o, p, [o, p], { z: p }], { $top: [d0, d0, d1, [d0, d1], { z: d1 }], dups: [{}, [1]] })
     })
 
-    /*
     it('should support circular references', () => {
       new Run() // eslint-disable-line
       const o = {}
@@ -265,6 +265,7 @@ describe('Codec', () => {
       expect(Object.keys(o)).to.deep.equal(Object.keys(o2))
     })
 
+    /*
     it('should use output intrinsics', () => {
       new Run() // eslint-disable-line
       const opts = mangle({ _outputIntrinsics: sandboxIntrinsics })
