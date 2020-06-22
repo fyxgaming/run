@@ -10,6 +10,7 @@ const bsv = require('bsv')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const Codec = unmangle(unmangle(Run)._util)._Codec
+const SI = unmangle(Run.sandbox)._intrinsics
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -268,47 +269,47 @@ describe('Codec', () => {
       expect(unmangle(new Codec())._encode([]).constructor).to.equal(Array)
     })
 
-    /*
-    it('should use output intrinsics', () => {
+    it('may serialize to sandbox intrinsics', () => {
       new Run() // eslint-disable-line
-      const opts = mangle({ _outputIntrinsics: sandboxIntrinsics })
+      const codec = unmangle(new Codec())._toSandbox()
       // Primitives
-      expect(_serialize({}, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(_serialize({ $: 1 }, opts).$obj.constructor).to.equal(sandboxIntrinsics.Object)
-      expect(_serialize(undefined, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(_serialize(-0, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(_serialize(NaN, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(_serialize(Infinity, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(_serialize(-Infinity, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(codec._encode({}).constructor).to.equal(SI.Object)
+      expect(codec._encode({ $: 1 }).$obj.constructor).to.equal(SI.Object)
+      expect(codec._encode(undefined).constructor).to.equal(SI.Object)
+      expect(codec._encode(-0).constructor).to.equal(SI.Object)
+      expect(codec._encode(NaN).constructor).to.equal(SI.Object)
+      expect(codec._encode(Infinity).constructor).to.equal(SI.Object)
+      expect(codec._encode(-Infinity).constructor).to.equal(SI.Object)
       // Array
-      expect(_serialize([], opts).constructor).to.equal(sandboxIntrinsics.Array)
+      expect(codec._encode([]).constructor).to.equal(SI.Array)
       const a = []
       a.x = 1
-      expect(_serialize(a, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(_serialize(a, opts).$arr.constructor).to.equal(sandboxIntrinsics.Object)
+      expect(codec._encode(a).constructor).to.equal(SI.Object)
+      expect(codec._encode(a).$arr.constructor).to.equal(SI.Object)
       // Set
       const s = new Set()
       s.x = 1
-      expect(_serialize(s, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(_serialize(s, opts).$set.constructor).to.equal(sandboxIntrinsics.Array)
-      expect(_serialize(s, opts).props.constructor).to.equal(sandboxIntrinsics.Object)
+      expect(codec._encode(s).constructor).to.equal(SI.Object)
+      expect(codec._encode(s).$set.constructor).to.equal(SI.Array)
+      expect(codec._encode(s).props.constructor).to.equal(SI.Object)
       // Map
       const m = new Map()
       m.x = 1
-      expect(_serialize(m, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(_serialize(m, opts).$map.constructor).to.equal(sandboxIntrinsics.Array)
-      expect(_serialize(m, opts).props.constructor).to.equal(sandboxIntrinsics.Object)
+      expect(codec._encode(m).constructor).to.equal(SI.Object)
+      expect(codec._encode(m).$map.constructor).to.equal(SI.Array)
+      expect(codec._encode(m).props.constructor).to.equal(SI.Object)
       // Uint8Array
       const b = new Uint8Array()
-      expect(_serialize(b, opts).constructor).to.equal(sandboxIntrinsics.Object)
+      expect(codec._encode(b).constructor).to.equal(SI.Object)
       // Dedup
       const o = { }
-      expect(_serialize([o, o], opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(_serialize([o, o], opts).$top.constructor).to.equal(sandboxIntrinsics.Array)
-      expect(_serialize([o, o], opts).dups.constructor).to.equal(sandboxIntrinsics.Array)
-      expect(_serialize([o, o], opts).dups[0].constructor).to.equal(sandboxIntrinsics.Object)
+      expect(codec._encode([o, o]).constructor).to.equal(SI.Object)
+      expect(codec._encode([o, o]).$top.constructor).to.equal(SI.Array)
+      expect(codec._encode([o, o]).dups.constructor).to.equal(SI.Array)
+      expect(codec._encode([o, o]).dups[0].constructor).to.equal(SI.Object)
     })
 
+    /*
     it('should fail for raw intrinsics', () => {
       new Run() // eslint-disable-line
       serializeFail(console)
