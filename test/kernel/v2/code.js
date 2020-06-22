@@ -594,7 +594,7 @@ describe('Code', () => {
   describe('sync', () => {
     // Only waits for current record
 
-    it.only('publishes after dependent transaction', () => {
+    it('publishes after dependent transaction', () => {
       new Run() // eslint-disable-line
       class A {}
       const CA = new Code(A)

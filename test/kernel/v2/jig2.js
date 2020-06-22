@@ -6,8 +6,8 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { Run } = require('../env/config')
-const { unmangle } = require('../env/unmangle')
+const { Run } = require('../../env/config')
+const { unmangle } = require('../../env/unmangle')
 const JigHandler = unmangle(Run)._JigHandler
 
 // ------------------------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ describe('JigHandler', () => {
     console.log('s', A2.toString())
   })
 
-  it.only('test upgrade', () => {
+  it('test upgrade', () => {
     // For a refresher on prototypes
     // See section 2.2.1 in https://2ality.com/2015/02/es6-classes-final.html
 
