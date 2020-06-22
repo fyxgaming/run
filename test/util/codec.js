@@ -341,7 +341,6 @@ describe('Codec', () => {
       encodeFail(SI.Uint8Array)
     })
 
-    /*
     it('should fail for unsupported objects intrinsics', () => {
       new Run() // eslint-disable-line
       encodeFail(new Date())
@@ -356,17 +355,14 @@ describe('Codec', () => {
 
     it('should fail for unrecognized intrinsics', () => {
       new Run() // eslint-disable-line
-      // Use sandbox intrinsics, but don't set them
-      encodeFail(new sandboxIntrinsics.Set())
-      encodeFail(new sandboxIntrinsics.Map())
-      encodeFail(new sandboxIntrinsics.Uint8Array())
-      // Use host intrinsics, but set them to sandbox
-      const opts = mangle({ _hostIntrinsics: sandboxIntrinsics })
-      encodeFail(new Set(), opts)
-      encodeFail(new Map(), opts)
-      encodeFail(new Uint8Array(), opts)
+      const vm = require('vm')
+      const [VMSet, VMMap, VMUint8Array] = vm.runInNewContext('[Set, Map, Uint8Array]')
+      encodeFail(new VMSet())
+      encodeFail(new VMMap())
+      encodeFail(new VMUint8Array())
     })
 
+    /*
     it('should support custom replacer', () => {
       new Run() // eslint-disable-line
       class A {}
