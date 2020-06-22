@@ -530,7 +530,7 @@ describe('Codec', () => {
       a.n = 1
       const json = codec._encode(a)
       expect(json).to.deep.equal({ $arb: { n: 1 }, T: { $jig: 0 } })
-      // TODO: decode
+      expect(codec._decode(json)).to.deep.equal(a)
     })
 
     it('should support arbitrary objects with circular references', () => {
@@ -544,7 +544,7 @@ describe('Codec', () => {
       a.a = a
       const json = codec._encode(a)
       expect(json).to.deep.equal({ $top: { $dup: 0 }, dups: [{ $arb: { a: { $dup: 0 } }, T: { $jig: 0 } }] })
-      // TODO: decode
+      expect(codec._decode(json)).to.deep.equal(a)
     })
 
     /*
