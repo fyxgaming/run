@@ -269,46 +269,6 @@ describe('Codec', () => {
       expect(unmangle(new Codec())._encode([]).constructor).to.equal(Array)
     })
 
-    it('may serialize to sandbox intrinsics', () => {
-      new Run() // eslint-disable-line
-      const codec = unmangle(new Codec())._toSandbox()
-      // Primitives
-      expect(codec._encode({}).constructor).to.equal(SI.Object)
-      expect(codec._encode({ $: 1 }).$obj.constructor).to.equal(SI.Object)
-      expect(codec._encode(undefined).constructor).to.equal(SI.Object)
-      expect(codec._encode(-0).constructor).to.equal(SI.Object)
-      expect(codec._encode(NaN).constructor).to.equal(SI.Object)
-      expect(codec._encode(Infinity).constructor).to.equal(SI.Object)
-      expect(codec._encode(-Infinity).constructor).to.equal(SI.Object)
-      // Array
-      expect(codec._encode([]).constructor).to.equal(SI.Array)
-      const a = []
-      a.x = 1
-      expect(codec._encode(a).constructor).to.equal(SI.Object)
-      expect(codec._encode(a).$arr.constructor).to.equal(SI.Object)
-      // Set
-      const s = new Set()
-      s.x = 1
-      expect(codec._encode(s).constructor).to.equal(SI.Object)
-      expect(codec._encode(s).$set.constructor).to.equal(SI.Array)
-      expect(codec._encode(s).props.constructor).to.equal(SI.Object)
-      // Map
-      const m = new Map()
-      m.x = 1
-      expect(codec._encode(m).constructor).to.equal(SI.Object)
-      expect(codec._encode(m).$map.constructor).to.equal(SI.Array)
-      expect(codec._encode(m).props.constructor).to.equal(SI.Object)
-      // Uint8Array
-      const b = new Uint8Array()
-      expect(codec._encode(b).constructor).to.equal(SI.Object)
-      // Dedup
-      const o = { }
-      expect(codec._encode([o, o]).constructor).to.equal(SI.Object)
-      expect(codec._encode([o, o]).$top.constructor).to.equal(SI.Array)
-      expect(codec._encode([o, o]).dups.constructor).to.equal(SI.Array)
-      expect(codec._encode([o, o]).dups[0].constructor).to.equal(SI.Object)
-    })
-
     it('should fail for raw intrinsics', () => {
       new Run() // eslint-disable-line
       encodeFail(console)
@@ -423,38 +383,69 @@ describe('Codec', () => {
       decodeFail({ $top: { $dup: '0' }, dups: [] })
     })
 
-    /*
-    it('should default to sandbox intrinsics', () => {
+    it('should default to host intrinsics', () => {
       new Run() // eslint-disable-line
-      expect(_deserialize({}).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(_deserialize([]).constructor).to.equal(sandboxIntrinsics.Array)
+      expect(new Codec()._decode({}).constructor).to.equal(Object)
+      expect(new Codec()._decode([]).constructor).to.equal(Array)
+    })
+  })
+
+  describe('_toSandbox', () => {
+    it('encodes to sandbox intrinsics', () => {
+      new Run() // eslint-disable-line
+      const codec = unmangle(new Codec())._toSandbox()
+      // Primitives
+      expect(codec._encode({}).constructor).to.equal(SI.Object)
+      expect(codec._encode({ $: 1 }).$obj.constructor).to.equal(SI.Object)
+      expect(codec._encode(undefined).constructor).to.equal(SI.Object)
+      expect(codec._encode(-0).constructor).to.equal(SI.Object)
+      expect(codec._encode(NaN).constructor).to.equal(SI.Object)
+      expect(codec._encode(Infinity).constructor).to.equal(SI.Object)
+      expect(codec._encode(-Infinity).constructor).to.equal(SI.Object)
+      // Array
+      expect(codec._encode([]).constructor).to.equal(SI.Array)
+      const a = []
+      a.x = 1
+      expect(codec._encode(a).constructor).to.equal(SI.Object)
+      expect(codec._encode(a).$arr.constructor).to.equal(SI.Object)
+      // Set
+      const s = new Set()
+      s.x = 1
+      expect(codec._encode(s).constructor).to.equal(SI.Object)
+      expect(codec._encode(s).$set.constructor).to.equal(SI.Array)
+      expect(codec._encode(s).props.constructor).to.equal(SI.Object)
+      // Map
+      const m = new Map()
+      m.x = 1
+      expect(codec._encode(m).constructor).to.equal(SI.Object)
+      expect(codec._encode(m).$map.constructor).to.equal(SI.Array)
+      expect(codec._encode(m).props.constructor).to.equal(SI.Object)
+      // Uint8Array
+      const b = new Uint8Array()
+      expect(codec._encode(b).constructor).to.equal(SI.Object)
+      // Dedup
+      const o = { }
+      expect(codec._encode([o, o]).constructor).to.equal(SI.Object)
+      expect(codec._encode([o, o]).$top.constructor).to.equal(SI.Array)
+      expect(codec._encode([o, o]).dups.constructor).to.equal(SI.Array)
+      expect(codec._encode([o, o]).dups[0].constructor).to.equal(SI.Object)
     })
 
-    it('should use output intrinsics', () => {
+    it('decodes to sandbox intrinsics', () => {
       new Run() // eslint-disable-line
-      const opts = mangle({ _outputIntrinsics: sandboxIntrinsics })
-      expect(_deserialize({}, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(_deserialize({ $obj: {} }, opts).constructor).to.equal(sandboxIntrinsics.Object)
-      expect(_deserialize([], opts).constructor).to.equal(sandboxIntrinsics.Array)
-      expect(_deserialize({ $arr: {} }, opts).constructor).to.equal(sandboxIntrinsics.Array)
-      expect(_deserialize({ $set: [] }, opts).constructor).to.equal(sandboxIntrinsics.Set)
-      expect(_deserialize({ $map: [] }, opts).constructor).to.equal(sandboxIntrinsics.Map)
-      expect(_deserialize({ $ui8a: '' }, opts).constructor).to.equal(sandboxIntrinsics.Uint8Array)
-    })
-
-    it('should support custom reviver', () => {
-      new Run() // eslint-disable-line
-      class A {}
-      const a = new A()
-      expect(() => _deserialize({ $a: 1 })).to.throw('Cannot deserialize')
-      expect(_deserialize({ $a: 1 }, mangle({
-        _reviver: x => { if (x.$a === 1) return a }
-      }))).to.equal(a)
-      expect(() => _deserialize(a, { _reviver: () => {} })).to.throw('Cannot deserialize')
+      const codec = unmangle(new Codec())._toSandbox()
+      expect(codec._decode({}).constructor).to.equal(SI.Object)
+      expect(codec._decode({ $obj: {} }).constructor).to.equal(SI.Object)
+      expect(codec._decode([]).constructor).to.equal(SI.Array)
+      expect(codec._decode({ $arr: {} }).constructor).to.equal(SI.Array)
+      expect(codec._decode({ $set: [] }).constructor).to.equal(SI.Set)
+      expect(codec._decode({ $map: [] }).constructor).to.equal(SI.Map)
+      expect(codec._decode({ $ui8a: '' }).constructor).to.equal(SI.Uint8Array)
     })
   })
 
   describe('resources', () => {
+    /*
     it('should replace jigs with location ref', () => {
       new Run() // eslint-disable-line
       class Dragon extends Jig { }
@@ -475,7 +466,7 @@ describe('Codec', () => {
       const opts = mangle({
         _reviver: _revive._resources(ref => dragon)
       })
-      expect(_deserialize({ $ref: '123' }, opts)).to.equal(dragon)
+      expect(new Codec()._decode({ $ref: '123' }, opts)).to.equal(dragon)
     })
 
     it('should replace and revive jigs in complex structures', () => {
@@ -490,7 +481,7 @@ describe('Codec', () => {
       const x = [dragon, { dragon }, new Set([dragon])]
       const json = _serialize(x, opts)
       const parsed = JSON.parse(JSON.stringify(json))
-      const output = _deserialize(parsed, opts)
+      const output = new Codec()._decode(parsed, opts)
       expect(output).to.deep.equal(x)
     })
 
