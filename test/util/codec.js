@@ -1,7 +1,7 @@
 /**
- * json.js
+ * codec.js
  *
- * Tests for lib/util/json.js
+ * Tests for lib/util/codec.js
  */
 
 const { describe, it } = require('mocha')
@@ -11,18 +11,6 @@ const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const Codec = unmangle(unmangle(Run)._util)._Codec
 const SI = unmangle(Run.sandbox)._intrinsics
-
-// ------------------------------------------------------------------------------------------------
-// Globals
-// ------------------------------------------------------------------------------------------------
-
-/*
-const sandbox = unmangle(Run.sandbox)
-const sandboxIntrinsics = sandbox._intrinsics
-
-const _replace = unmangle(unmangle(ResourceJSON)._replace)
-const _revive = unmangle(unmangle(ResourceJSON)._revive)
-*/
 
 // ------------------------------------------------------------------------------------------------
 // Helpers
@@ -444,7 +432,7 @@ describe('Codec', () => {
     })
   })
 
-  describe('resources', () => {
+  describe('jigs', () => {
     /*
     it('should replace jigs with location ref', () => {
       new Run() // eslint-disable-line
