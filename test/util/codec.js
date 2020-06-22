@@ -147,6 +147,12 @@ describe('Codec', () => {
       encodePass([o, o, p, [o, p], { z: p }], { $top: [d0, d0, d1, [d0, d1], { z: d1 }], dups: [{}, [1]] })
     })
 
+    it('should support duplicate $ objects', () => {
+      new Run() // eslint-disable-line
+      const o = { $n: 1 }
+      encodePass([o, o], { $top: [{ $dup: 0 }, { $dup: 0 }], dups: [{ $obj: { $n: 1 } }] })
+    })
+
     it('should support circular references', () => {
       new Run() // eslint-disable-line
       const o = {}
