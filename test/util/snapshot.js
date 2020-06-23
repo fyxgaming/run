@@ -5,7 +5,7 @@
  */
 
 const { describe, it } = require('mocha')
-// const { expect } = require('chai')
+const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const Snapshot = unmangle(unmangle(Run)._util)._Snapshot
@@ -29,7 +29,10 @@ describe('Snapshot', () => {
     })
 
     it('should throw if not a jig', () => {
-      console.log(Snapshot)
+      expect(() => new Snapshot()).to.throw()
+      expect(() => new Snapshot(null)).to.throw()
+      expect(() => new Snapshot({})).to.throw()
+      expect(() => new Snapshot(class A { })).to.throw()
     })
   })
 })
