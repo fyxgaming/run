@@ -7,6 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { Run } = require('../env/config')
+const { Berry } = Run
 const { unmangle } = require('../env/unmangle')
 const Snapshot = unmangle(unmangle(Run)._util)._Snapshot
 
@@ -24,8 +25,17 @@ describe('Snapshot', () => {
 
     })
 
-    it('should snapshot berries', () => {
-
+    it('should snapshot berries', async () => {
+      const run = new Run()
+      class A extends Berry {
+        init () { this.n = 1 }
+        static pluck () { return new A() }
+      }
+      const berry = await run.load('123', A)
+      const snapshot = new Snapshot(berry)
+      expect(unmangle(snapshot)._type).to.equal('berry')
+      expect(unmangle(snapshot)._props.n).to.equal(1)
+      expect(unmangle(snapshot)._props.location).to.equal('!A not deployed')
     })
 
     it('should throw if not a jig', () => {
