@@ -43,6 +43,7 @@ require('./util/misc')
 require('./util/opreturn')
 require('./util/rest')
 require('./util/safe')
+require('./util/snapshot')
 require('./util/type')
 
 require('./run')
