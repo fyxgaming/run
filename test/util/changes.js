@@ -45,6 +45,21 @@ describe('Changes', () => {
     })
   })
 
+  describe('setOriginalValue', () => {
+    it('should alter the rollback value', () => {
+      const changes = unmangle(new Changes())
+      const o = { n: 1 }
+      changes._set(o, o, 'n', 2)
+      expect(o.n).to.equal(2)
+      expect(changes._diff()).to.deep.equal(new Set([o]))
+      changes._setOriginalValue(o, o, 'n', 2)
+      expect(changes._diff()).to.deep.equal(new Set())
+      changes._setOriginalValue(o, o, 'n', 3)
+      changes._rollback()
+      expect(o.n).to.equal(3)
+    })
+  })
+
   describe('delete', () => {
     it('delete properties', () => {
       const changes = unmangle(new Changes())
