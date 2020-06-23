@@ -40,8 +40,7 @@ describe('_location', () => {
     expect(_location('error://Something bad happened')).to.deep.equal({ error: 'Something bad happened' })
     expect(_location('error://line1\nline2')).to.deep.equal({ error: 'line1\nline2' })
     // Record locations
-    expect(_location('record://abc_o1')).to.deep.equal({ txid: 'abc', vout: 1, record: true })
-    expect(_location('record://_i2')).to.deep.equal({ vin: 2, record: true })
+    expect(_location('record://abc_o1')).to.deep.equal({ record: 'record://abc', vout: 1 })
   })
 
   it('should throw for invalid locations', () => {
@@ -59,6 +58,8 @@ describe('_location', () => {
     expect(() => _location('_abc_o0')).to.throw()
     expect(() => _location('record://abc_o')).to.throw()
     expect(() => _location('record://abc_0')).to.throw()
+    expect(() => _location('record://_o1')).to.throw()
+    expect(() => _location('record://_i2')).to.throw()
     // Invalid chars
     expect(() => _location('$_o1')).to.throw()
     expect(() => _location('abc_o*')).to.throw()
