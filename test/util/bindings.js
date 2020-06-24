@@ -25,22 +25,27 @@ describe('_location', () => {
     // Jigs
     expect(_location('abc_o0')).to.deep.equal({ txid: 'abc', vout: 0 })
     expect(_location('abc_i1')).to.deep.equal({ txid: 'abc', vin: 1 })
+    expect(_location('abc_d0')).to.deep.equal({ txid: 'abc', vdel: 0 })
     // Partial jigs
     expect(_location('_o10')).to.deep.equal({ vout: 10 })
     expect(_location('_i20')).to.deep.equal({ vin: 20 })
+    expect(_location('_d1')).to.deep.equal({ vdel: 1 })
     // Berries
     expect(_location('abc_o0_')).to.deep.equal({ txid: 'abc', vout: 0, path: '' })
     expect(_location('abc_o0_def')).to.deep.equal({ txid: 'abc', vout: 0, path: 'def' })
     expect(_location('abc_o0_def_o2')).to.deep.equal({ txid: 'abc', vout: 0, path: 'def_o2' })
+    expect(_location('abc_d0_def')).to.deep.equal({ txid: 'abc', vdel: 0, path: 'def' })
     // Partial berries
     expect(_location('_o0_def')).to.deep.equal({ vout: 0, path: 'def' })
     expect(_location('_i0_def_o2')).to.deep.equal({ vin: 0, path: 'def_o2' })
+    expect(_location('_d2_def')).to.deep.equal({ vdel: 2, path: 'def' })
     // Errors
     expect(_location('error://')).to.deep.equal({ error: '' })
     expect(_location('error://Something bad happened')).to.deep.equal({ error: 'Something bad happened' })
     expect(_location('error://line1\nline2')).to.deep.equal({ error: 'line1\nline2' })
     // Record locations
     expect(_location('record://abc_o1')).to.deep.equal({ record: 'record://abc', vout: 1 })
+    expect(_location('record://abc_d1')).to.deep.equal({ record: 'record://abc', vdel: 1 })
   })
 
   it('should throw for invalid locations', () => {
@@ -55,6 +60,7 @@ describe('_location', () => {
     expect(() => _location('abc_o')).to.throw()
     expect(() => _location('abc_i')).to.throw()
     expect(() => _location('abc_0')).to.throw()
+    expect(() => _location('abc_a0')).to.throw()
     expect(() => _location('_abc_o0')).to.throw()
     expect(() => _location('record://abc_o')).to.throw()
     expect(() => _location('record://abc_0')).to.throw()
@@ -84,6 +90,7 @@ describe('_location', () => {
     // User
     _location('abc_o1', USER)
     _location('abc_o1_def', USER)
+    _location('abc_d2', USER)
     // Jig and User
     _location('abc_o1', USER)
   })
