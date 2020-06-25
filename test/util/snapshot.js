@@ -68,7 +68,7 @@ describe('Snapshot', () => {
   describe('rollback', () => {
     it('should rollback instance jigs', () => {
       new Run() // eslint-disable-line
-      class A extends Jig { f() { this.n = 1 } }
+      class A extends Jig { f () { this.n = 1 } }
       const a = new A()
       const snapshot = new Snapshot(a)
       a.f()
