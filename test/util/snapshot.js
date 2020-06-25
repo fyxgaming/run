@@ -64,6 +64,19 @@ describe('Snapshot', () => {
       expect(() => new Snapshot(class A { })).to.throw()
     })
   })
+
+  describe('rollback', () => {
+    it('should rollback instance jigs', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f() { this.n = 1 } }
+      const a = new A()
+      const snapshot = new Snapshot(a)
+      a.f()
+      expect(a.n).to.equal(1)
+      unmangle(snapshot)._rollback()
+      expect('n' in a).to.equal(false)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
