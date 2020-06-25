@@ -13,7 +13,6 @@ const Codec = unmangle(unmangle(Run)._util)._Codec
 const SI = unmangle(Run.sandbox)._intrinsics
 const HI = unmangle(Run.sandbox)._hostIntrinsics
 const { Jig, Berry } = Run
-const Code = unmangle(Run)._Code
 
 // ------------------------------------------------------------------------------------------------
 // Helpers
@@ -489,10 +488,10 @@ describe('Codec', () => {
     })
 
     it('should replace code jigs with location', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       const codec = unmangle(new Codec())._saveJigs(x => '123')
-      expect(codec._encode(new Code(class B { constructor () { this.x = 1 } }))).to.deep.equal({ $jig: '123' })
-      expect(codec._encode(new Code(function add (a, b) { return a + b }))).to.deep.equal({ $jig: '123' })
+      expect(codec._encode(run.install(class B { constructor () { this.x = 1 } }))).to.deep.equal({ $jig: '123' })
+      expect(codec._encode(run.install(function add (a, b) { return a + b }))).to.deep.equal({ $jig: '123' })
     })
 
     it('should replace and revive berries', async () => {
@@ -526,12 +525,12 @@ describe('Codec', () => {
 
   describe('arbitrary objects', () => {
     it('should support basic arbitrary objects', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       const jigs = []
       const codec = unmangle(new Codec())
         ._saveJigs(x => { jigs.push(x); return jigs.length - 1 })
         ._loadJigs(x => jigs[x])
-      const A2 = new Code(class A { })
+      const A2 = run.install(class A { })
       const a = new A2()
       a.n = 1
       const json = codec._encode(a)
@@ -541,12 +540,12 @@ describe('Codec', () => {
     })
 
     it('should support arbitrary objects with circular references', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       const jigs = []
       const codec = unmangle(new Codec())
         ._saveJigs(x => { jigs.push(x); return jigs.length - 1 })
         ._loadJigs(x => jigs[x])
-      const A2 = new Code(class A { })
+      const A2 = run.install(class A { })
       const a = new A2()
       a.a = a
       const json = codec._encode(a)
@@ -556,13 +555,13 @@ describe('Codec', () => {
     })
 
     it('should support arbitrary objects with duplicate inners', () => {
-      new Run() // eslint-disable-line
+      const run = new Run() // eslint-disable-line
       const jigs = []
       const codec = unmangle(new Codec())
         ._saveJigs(x => { jigs.push(x); return jigs.length - 1 })
         ._loadJigs(x => jigs[x])
       const o = {}
-      const A2 = new Code(class A { })
+      const A2 = run.install(class A { })
       const a = new A2()
       a.o1 = o
       a.o2 = o

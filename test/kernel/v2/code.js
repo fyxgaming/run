@@ -10,7 +10,6 @@ const { PrivateKey } = require('bsv')
 const { Run } = require('../../env/config')
 const { Jig, Berry } = Run
 const { unmangle } = require('../../env/unmangle')
-const Code = unmangle(Run)._Code
 const Membrane = unmangle(Run)._Membrane
 const SI = unmangle(Run.sandbox)._intrinsics
 
@@ -26,22 +25,22 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 describe('Code', () => {
   describe('new', () => {
     it('creates from class', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
-      const CA = new Code(A)
+      const CA = run.install(A)
       expect(CA.toString()).to.equal(A.toString())
     })
 
     it('creates from function', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       function f () { }
-      new Code(f) // eslint-disable-line
+      run.install(f)
     })
 
     it('adds invisible code functions', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
-      const CA = new Code(A)
+      const CA = run.install(A)
       expect(typeof CA.deploy).to.equal('function')
       expect(typeof CA.upgrade).to.equal('function')
       expect(typeof CA.sync).to.equal('function')
@@ -53,139 +52,137 @@ describe('Code', () => {
     })
 
     it('creates only once', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
-      const CA1 = new Code(A)
-      const CA2 = new Code(A)
+      const CA1 = run.install(A)
+      const CA2 = run.install(A)
       expect(CA1).to.equal(CA2)
     })
 
     it('throws if not a function', () => {
-      new Run() // eslint-disable-line
-      expect(() => new Code()).to.throw('Cannot install')
-      expect(() => new Code(0)).to.throw('Cannot install')
-      expect(() => new Code({})).to.throw('Cannot install')
-      expect(() => new Code('class A {}')).to.throw('Cannot install')
-      expect(() => new Code(null)).to.throw('Cannot install')
+      const run = new Run()
+      expect(() => run.install()).to.throw('Cannot install')
+      expect(() => run.install(0)).to.throw('Cannot install')
+      expect(() => run.install({})).to.throw('Cannot install')
+      expect(() => run.install('class A {}')).to.throw('Cannot install')
+      expect(() => run.install(null)).to.throw('Cannot install')
     })
 
     it('throw if anonymous', () => {
-      new Run() // eslint-disable-line
-      expect(() => new Code(() => {})).to.throw('Cannot install')
-      expect(() => new Code(class {})).to.throw('Cannot install')
+      const run = new Run()
+      expect(() => run.install(() => {})).to.throw('Cannot install')
+      expect(() => run.install(class {})).to.throw('Cannot install')
     })
 
     it('throws if built-in', () => {
-      new Run() // eslint-disable-line
-      expect(() => new Code(Object)).to.throw('Cannot install Object')
-      expect(() => new Code(Date)).to.throw('Cannot install Date')
-      expect(() => new Code(Uint8Array)).to.throw('Cannot install')
-      expect(() => new Code(Math.sin)).to.throw('Cannot install sin')
-      expect(() => new Code(parseInt)).to.throw('Cannot install parseInt')
+      const run = new Run()
+      expect(() => run.install(Object)).to.throw('Cannot install Object')
+      expect(() => run.install(Date)).to.throw('Cannot install Date')
+      expect(() => run.install(Uint8Array)).to.throw('Cannot install')
+      expect(() => run.install(Math.sin)).to.throw('Cannot install sin')
+      expect(() => run.install(parseInt)).to.throw('Cannot install parseInt')
     })
 
     it('throws if prototype inheritance', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       function A () { }
       function B () { }
       B.prototype = Object.create(A.prototype)
-      expect(() => new Code(B)).to.throw('Cannot install B')
+      expect(() => run.install(B)).to.throw('Cannot install B')
     })
 
     it('throws if contains reserved words', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       A.toString = () => 'hello'
-      expect(() => new Code(A)).to.throw('Cannot install A')
+      expect(() => run.install(A)).to.throw('Cannot install A')
       class B { static deploy () { } }
-      expect(() => new Code(B)).to.throw('Cannot install B')
+      expect(() => run.install(B)).to.throw('Cannot install B')
       class C { }
       C.upgrade = 1
-      expect(() => new Code(C)).to.throw('Cannot install C')
+      expect(() => run.install(C)).to.throw('Cannot install C')
       class D { }
       D.sync = undefined
-      expect(() => new Code(D)).to.throw('Cannot install D')
+      expect(() => run.install(D)).to.throw('Cannot install D')
       class E { static get release () { } }
-      expect(() => new Code(E)).to.throw('Cannot install E')
+      expect(() => run.install(E)).to.throw('Cannot install E')
     })
 
     it('throws if contains bindings', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       A.location = randomLocation()
       A.origin = randomLocation()
       A.owner = randomOwner()
       A.satoshis = 0
-      expect(() => new Code(A)).to.throw('Cannot install A')
+      expect(() => run.install(A)).to.throw('Cannot install A')
     })
 
     it('creates parents', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       class B extends A { }
       class C extends B { }
-      const CC = new Code(C)
-      const CB = new Code(B)
-      const CA = new Code(A)
+      const CC = run.install(C)
+      const CB = run.install(B)
+      const CA = run.install(A)
       expect(Object.getPrototypeOf(CC)).to.equal(CB)
       expect(Object.getPrototypeOf(CB)).to.equal(CA)
     })
 
     it('throws if error creating dependency', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       A.Date = Date
-      expect(() => new Code(A)).to.throw('Cannot install Date')
-      expect(Code._get(A)).to.equal(undefined)
-      expect(Code._get(Date)).to.equal(undefined)
+      expect(() => run.install(A)).to.throw('Cannot install Date')
     })
 
     it('creates code for props', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       class B { }
       A.B = B
-      const CA = new Code(A)
-      expect(CA.B).to.equal(new Code(B))
+      const CA = run.install(A)
+      expect(CA.B).to.equal(run.install(B))
     })
 
     it('installs circular prop code', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       class B { }
       A.B = B
       B.A = A
-      const CA = new Code(A)
-      const CB = new Code(B)
+      const CA = run.install(A)
+      const CB = run.install(B)
       expect(CA.B).to.equal(CB)
       expect(CB.A).to.equal(CA)
     })
 
     it('installs circular parent-child code', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class B { }
       class A extends B { }
       B.A = A
-      const CA = new Code(A)
-      const CB = new Code(B)
+      const CA = run.install(A)
+      const CB = run.install(B)
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
       expect(CB.A).to.equal(CA)
     })
 
     it('installs parent that is code jig', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class B { }
-      const CB = new Code(B)
+      const CB = run.install(B)
       class A extends CB { }
       B.deps = { A }
-      const CA = new Code(A)
+      const CA = run.install(A)
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
     it('sets initial bindings', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
-      const CA = new Code(A)
+      const CA = run.install(A)
       expect(() => CA.location).to.throw('Cannot read location: Not deployed')
       expect(() => CA.origin).to.throw('Cannot read origin: Not deployed')
       expect(() => CA.owner).to.throw('Cannot read owner: Not bound')
@@ -201,22 +198,22 @@ describe('Code', () => {
 
   describe('deps', () => {
     it('makes deps globals', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       function f () { return A }
       f.deps = { A }
-      const sf = new Code(f)
-      expect(sf()).to.equal(new Code(A))
+      const sf = run.install(f)
+      expect(sf()).to.equal(run.install(A))
     })
 
     it('supports normal javascript values as deps', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A {
         static n () { return n } // eslint-disable-line
         static o () { return o } // eslint-disable-line
       }
       A.deps = { n: 1, o: { a: [] } }
-      const CA = new Code(A)
+      const CA = run.install(A)
       expect(CA.n()).to.equal(1)
       expect(CA.o()).not.to.equal(A.deps.o)
       expect(CA.o()).to.deep.equal(A.deps.o)
@@ -225,36 +222,36 @@ describe('Code', () => {
     })
 
     it('sets deps on returned code jig', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       class B { }
       A.deps = { B }
-      const CA = new Code(A)
-      expect(CA.deps.B).to.equal(new Code(B))
+      const CA = run.install(A)
+      expect(CA.deps.B).to.equal(run.install(B))
     })
 
     it('throws if deps invalid', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       A.deps = null
-      expect(() => new Code(A)).to.throw('Cannot install A')
+      expect(() => run.install(A)).to.throw('Cannot install A')
       A.deps = '123'
-      expect(() => new Code(A)).to.throw('Cannot install A')
+      expect(() => run.install(A)).to.throw('Cannot install A')
       A.deps = []
-      expect(() => new Code(A)).to.throw('Cannot install A')
+      expect(() => run.install(A)).to.throw('Cannot install A')
       A.deps = new class Deps {}()
-      expect(() => new Code(A)).to.throw('Cannot install A')
+      expect(() => run.install(A)).to.throw('Cannot install A')
     })
 
     it('doesnt install parent deps on child', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class B { f () { return n } } // eslint-disable-line
       class A extends B { g () { return n } } // eslint-disable-line
       B.deps = { n: 1 }
-      const CB = new Code(B)
+      const CB = run.install(B)
       const b = new CB()
       expect(b.f()).to.equal(1)
-      const CA = new Code(A)
+      const CA = run.install(A)
       const a = new CA()
       expect(() => a.g()).to.throw()
     })
@@ -274,7 +271,7 @@ describe('Code', () => {
           satoshis: 0
         }
       }
-      const CA = new Code(A)
+      const CA = run.install(A)
       expect(CA.location).to.equal(A.presets[network].location)
       expect(CA.origin).to.equal(A.presets[network].origin)
       expect(CA.owner).to.equal(A.presets[network].owner)
@@ -287,7 +284,7 @@ describe('Code', () => {
       const network = run.blockchain.network
       class A { }
       A.presets = { [network]: { a: [], s: new Set() } }
-      const CA = new Code(A)
+      const CA = run.install(A)
       expect(CA.a).not.to.equal(A.presets[network].a)
       expect(CA.s).not.to.equal(A.presets[network].s)
       expect(CA.a instanceof SI.Array).to.equal(true)
@@ -304,12 +301,12 @@ describe('Code', () => {
       class C {}
       class A { }
       A.presets = { [network]: { b, j, C } }
-      const CA = new Code(A)
+      const CA = run.install(A)
       expect(CA.b).to.equal(b)
       expect(CA.j).to.equal(j)
       expect(CA.C).not.to.equal(C)
       expect(CA.C.toString()).to.equal(C.toString())
-      expect(CA.C).to.equal(new Code(C))
+      expect(CA.C).to.equal(run.install(C))
     })
 
     it('does not add presets to code jig', () => {
@@ -325,7 +322,7 @@ describe('Code', () => {
           satoshis: 0
         }
       }
-      const CA = new Code(A)
+      const CA = run.install(A)
       expect(CA.presets).to.equal(undefined)
     })
 
@@ -344,8 +341,8 @@ describe('Code', () => {
       }
       class B { }
       Object.assign(B, A)
-      const CA = new Code(A)
-      const CB = new Code(B)
+      const CA = run.install(A)
+      const CB = run.install(B)
       expect(CA).to.equal(CB)
     })
 
@@ -356,8 +353,8 @@ describe('Code', () => {
       B.presets = { [network]: { n: 1, m: 0 } }
       class A extends B { }
       A.presets = { [network]: { n: 2 } }
-      const CB = new Code(B)
-      const CA = new Code(A)
+      const CB = run.install(B)
+      const CA = run.install(A)
       expect(CB.n).to.equal(1)
       expect(CB.m).to.equal(0)
       expect(CA.n).to.equal(2)
@@ -367,12 +364,12 @@ describe('Code', () => {
     })
 
     it('throws if parent dependency mismatch', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       class C { }
       class B extends A { }
       B.deps = { A: C }
-      expect(() => new Code(B)).to.throw('Parent dependency mismatch')
+      expect(() => run.install(B)).to.throw('Parent dependency mismatch')
     })
 
     it('throws if presets are invalid', () => {
@@ -380,9 +377,9 @@ describe('Code', () => {
       const network = run.blockchain.network
       class A { }
       A.presets = null
-      expect(() => new Code(A)).to.throw('Cannot install A')
+      expect(() => run.install(A)).to.throw('Cannot install A')
       A.presets = { [network]: null }
-      expect(() => new Code(A)).to.throw('Cannot install A')
+      expect(() => run.install(A)).to.throw('Cannot install A')
       A.presets = {
         [network]: {
           location: '_o1',
@@ -392,7 +389,7 @@ describe('Code', () => {
           satoshis: 0
         }
       }
-      expect(() => new Code(A)).to.throw('Cannot install A')
+      expect(() => run.install(A)).to.throw('Cannot install A')
       A.presets = {
         [network]: {
           location: '_o1',
@@ -402,7 +399,7 @@ describe('Code', () => {
           satoshis: 0
         }
       }
-      expect(() => new Code(A)).to.throw()
+      expect(() => run.install(A)).to.throw()
       A.presets = {
         [network]: {
           location: randomLocation(),
@@ -413,16 +410,16 @@ describe('Code', () => {
         },
         test: null
       }
-      expect(() => new Code(A)).to.throw()
+      expect(() => run.install(A)).to.throw()
       delete A.presets.test
       A.presets[network].nonce = 1
-      expect(() => new Code(A)).to.throw()
+      expect(() => run.install(A)).to.throw()
       A.presets[network].nonce = null
-      expect(() => new Code(A)).to.throw()
+      expect(() => run.install(A)).to.throw()
       A.presets = []
-      expect(() => new Code(A)).to.throw()
+      expect(() => run.install(A)).to.throw()
       A.presets = { [network]: new class Presets {}() }
-      expect(() => new Code(A)).to.throw()
+      expect(() => run.install(A)).to.throw()
     })
 
     it('throws if presets are incomplete', () => {
@@ -438,7 +435,7 @@ describe('Code', () => {
       for (const key of Object.keys(npresets)) {
         A.presets = { [network]: Object.assign({}, npresets) }
         delete A.presets[network][key]
-        expect(() => new Code(A)).to.throw('Cannot install A')
+        expect(() => run.install(A)).to.throw('Cannot install A')
       }
     })
 
@@ -447,22 +444,21 @@ describe('Code', () => {
       const network = run.blockchain.network
       class A { }
       A.presets = { [network]: { deps: {} } }
-      expect(() => new Code(A)).to.throw()
+      expect(() => run.install(A)).to.throw()
       A.presets = { [network]: { presets: {} } }
-      expect(() => new Code(A)).to.throw()
+      expect(() => run.install(A)).to.throw()
       A.presets = { [network]: { upgrade: () => {} } }
-      expect(() => new Code(A)).to.throw()
+      expect(() => run.install(A)).to.throw()
     })
 
     it('requires parent approval by default', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       A.options = { utility: true }
-      const CA = new Code(A)
+      const CA = run.install(A)
       CA.deploy()
-      new Run() // eslint-disable-line
       class C extends A { }
-      const CC = new Code(C)
+      const CC = run.install(C)
       CC.deploy()
       // TODO: Parent approval
     })
@@ -470,76 +466,75 @@ describe('Code', () => {
 
   describe('options', () => {
     it('allows utility classes', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       A.options = { utility: true }
-      const CA = new Code(A)
+      const CA = run.install(A)
       CA.deploy()
       class B extends A { }
-      const CB = new Code(B)
+      const CB = run.install(B)
       CB.deploy()
-      new Run() // eslint-disable-line
       class C extends A { }
-      const CC = new Code(C)
+      const CC = run.install(C)
       CC.deploy()
     })
 
     it('throws if invalid options', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       A.options = null
-      expect(() => new Code(A)).to.throw('options must be an object')
+      expect(() => run.install(A)).to.throw('options must be an object')
     })
 
     it('throws if unknown option', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       A.options = { red: 1 }
-      expect(() => new Code(A)).to.throw('Unknown option: red')
+      expect(() => run.install(A)).to.throw('Unknown option: red')
     })
 
     it('throws if invalid utility', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       A.options = { utility: 2 }
-      expect(() => new Code(A)).to.throw('utility must be a boolean')
+      expect(() => run.install(A)).to.throw('utility must be a boolean')
     })
   })
 
   describe('prototype', () => {
     it('sets prototype constructor to code jig', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
-      const CA = new Code(A)
+      const CA = run.install(A)
       expect(CA.prototype.constructor).to.equal(CA)
     })
   })
 
   describe('name', () => {
     it('returns class or function name', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
-      expect(new Code(A).name).to.equal('A')
+      expect(run.install(A).name).to.equal('A')
       function f () { }
-      expect(new Code(f).name).to.equal('f')
+      expect(run.install(f).name).to.equal('f')
     })
   })
 
   describe('toString', () => {
     it('returns same string as original code', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
-      const CA = new Code(A)
+      const CA = run.install(A)
       expect(CA.toString()).to.equal(A.toString())
       expect(A.toString().replace(/\s/g, '')).to.equal('classA{}')
     })
 
     it('returns same code as original code when there is a parent', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class B { }
-      const CB = new Code(B)
+      const CB = run.install(B)
       class A extends CB { }
-      const CA = new Code(A)
+      const CA = run.install(A)
       expect(CA.toString().replace(/\s/g, '')).to.equal('classAextendsB{}')
     })
   })
@@ -553,10 +548,10 @@ describe('Code', () => {
 
   describe('deploy', () => {
     it('deploys parent and child', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A {}
       class B extends A {}
-      const CB = new Code(B)
+      const CB = run.install(B)
       CB.deploy()
       // const record = unmangle(stub(record))
       // expect(record._deploy.called).to.equal(true)
@@ -573,12 +568,12 @@ describe('Code', () => {
         script () { return new Uint8Array() }
         domain () { return 0 }
       }
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A {
         static send (to) { this.owner = to }
       }
       A.send = () => { throw new Error('Must call methods on jigs') }
-      const CA = new Code(A)
+      const CA = run.install(A)
       // A.send(1)
       CA.send(new L())
       CA.deploy()
@@ -595,12 +590,12 @@ describe('Code', () => {
     // Only waits for current record
 
     it.only('publishes after dependent transaction', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A {}
-      const CA = new Code(A)
+      const CA = run.install(A)
       CA.deploy()
       class B extends A { }
-      const CB = new Code(B)
+      const CB = run.install(B)
       CB.deploy()
     })
   })

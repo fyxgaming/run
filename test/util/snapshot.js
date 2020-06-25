@@ -9,7 +9,6 @@ const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { Jig, Berry } = Run
 const { unmangle } = require('../env/unmangle')
-const Code = unmangle(Run)._Code
 const Snapshot = unmangle(unmangle(Run)._util)._Snapshot
 
 // ------------------------------------------------------------------------------------------------
@@ -32,11 +31,11 @@ describe('Snapshot', () => {
     })
 
     it('should snapshot code', () => {
-      new Run() // eslint-disable-line
+      const run = new Run()
       class A { }
       A.n = null
       A.m = undefined
-      const CA = new Code(A)
+      const CA = run.install(A)
       const snapshot = new Snapshot(CA)
       expect(unmangle(snapshot)._type).to.equal('code')
       expect(unmangle(snapshot)._props.n).to.equal(null)

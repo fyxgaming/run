@@ -10,7 +10,6 @@ const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { Jig, Berry } = Run
 const { unmangle } = require('../env/unmangle')
-const Code = unmangle(Run)._Code
 const { _deepVisit, _deepReplace, _deepClone } = unmangle(unmangle(Run)._util)
 
 // ------------------------------------------------------------------------------------------------
@@ -361,9 +360,9 @@ describe('_deepClone', () => {
   })
 
   it('should clone arbitrary objects', () => {
-    new Run() // eslint-disable-line
+    const run = new Run()
     class A { }
-    const A2 = new Code(A)
+    const A2 = run.install(A)
     const a = new A2()
     const a2 = _deepClone(a)
     expect(a).to.deep.equal(a2)
@@ -378,9 +377,9 @@ describe('_deepClone', () => {
   })
 
   it('should pass code jigs through', () => {
-    new Run() // eslint-disable-line
+    const run = new Run()
     function f () { }
-    const f2 = new Code(f)
+    const f2 = run.install(f)
     const f3 = _deepClone(f2)
     expect(f3).to.equal(f2)
   })
@@ -400,7 +399,7 @@ describe('_deepClone', () => {
   })
 
   it('should clone circular references', () => {
-    new Run() // eslint-disable-line
+    const run = new Run()
     const o = {}
     o.o = o
     o.a = []
@@ -409,7 +408,7 @@ describe('_deepClone', () => {
     o.s.add(o)
     o.m = new Map()
     o.m.set(o.m, o.m)
-    const A2 = new Code(class A {})
+    const A2 = run.install(class A {})
     o.z = new A2()
     o.z.z = o.z
     o.s.s = o.s
