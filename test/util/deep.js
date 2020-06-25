@@ -10,6 +10,7 @@ const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { Jig, Berry } = Run
 const { unmangle } = require('../env/unmangle')
+const Code = unmangle(Run)._Code
 const { _deepVisit, _deepReplace, _deepClone } = unmangle(unmangle(Run)._util)
 
 // ------------------------------------------------------------------------------------------------
@@ -359,20 +360,14 @@ describe('_deepClone', () => {
     expect(m2.o).to.deep.equal({})
   })
 
-  it('should clone function as code', () => {
-    function f () { }
-    const f2 = _deepClone(f)
-    expect(f).not.to.equal(f2)
-    expect(f.toString()).to.equal(f2.toString())
-  })
-
   it('should clone arbitrary objects', () => {
+    new Run() // eslint-disable-line
     class A { }
-    const a = new A()
+    const A2 = new Code(A)
+    const a = new A2()
     const a2 = _deepClone(a)
     expect(a).to.deep.equal(a2)
-    expect(A).not.to.equal(a2.constructor)
-    expect(A.toString()).to.equal(a2.constructor.toString())
+    expect(A2).to.equal(a2.constructor)
   })
 
   it('should pass jigs through', () => {
@@ -380,6 +375,21 @@ describe('_deepClone', () => {
     class A extends Jig { }
     const a = new A()
     expect(_deepClone(a)).to.equal(a)
+  })
+
+  it('should pass code jigs through', () => {
+    new Run() // eslint-disable-line
+    function f () { }
+    const f2 = new Code(f)
+    const f3 = _deepClone(f2)
+    expect(f3).to.equal(f2)
+  })
+
+  it('should throw for non-jig code', () => {
+    function f () { }
+    expect(() => _deepClone(f)).to.throw('Cannot clone non-jig function')
+    class A { }
+    expect(() => _deepClone(A)).to.throw('Cannot clone non-jig function')
   })
 
   it('should pass berries through', async () => {
@@ -390,6 +400,7 @@ describe('_deepClone', () => {
   })
 
   it('should clone circular references', () => {
+    new Run() // eslint-disable-line
     const o = {}
     o.o = o
     o.a = []
@@ -398,7 +409,8 @@ describe('_deepClone', () => {
     o.s.add(o)
     o.m = new Map()
     o.m.set(o.m, o.m)
-    o.z = new class A {}()
+    const A2 = new Code(class A {})
+    o.z = new A2()
     o.z.z = o.z
     o.s.s = o.s
     o.m.m = o.m
