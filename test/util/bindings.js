@@ -26,6 +26,7 @@ describe('_location', () => {
     expect(_location('abc_o0')).to.deep.equal({ txid: 'abc', vout: 0 })
     expect(_location('abc_i1')).to.deep.equal({ txid: 'abc', vin: 1 })
     expect(_location('abc_d0')).to.deep.equal({ txid: 'abc', vdel: 0 })
+    expect(_location('native://Jig')).to.deep.equal({ native: 'Jig' })
     // Partial jigs
     expect(_location('_o10')).to.deep.equal({ vout: 10 })
     expect(_location('_i20')).to.deep.equal({ vin: 20 })
@@ -66,6 +67,8 @@ describe('_location', () => {
     expect(() => _location('record://abc_0')).to.throw()
     expect(() => _location('record://_o1')).to.throw()
     expect(() => _location('record://_i2')).to.throw()
+    expect(() => _location('native://')).to.throw()
+    expect(() => _location('native://!')).to.throw()
     // Invalid chars
     expect(() => _location('$_o1')).to.throw()
     expect(() => _location('abc_o*')).to.throw()
@@ -75,6 +78,7 @@ describe('_location', () => {
     expect(() => _location('tmp://abc_o1')).to.throw()
     expect(() => _location('error:/abc_o1')).to.throw()
     expect(() => _location('err://abc_o1')).to.throw()
+    expect(() => _location('nat://Jig')).to.throw()
   })
 
   it('should accept matching flags', () => {
@@ -83,6 +87,8 @@ describe('_location', () => {
     _location('_o1', JIG)
     _location('_i2', JIG)
     _location('record://abc_o1', JIG)
+    _location('native://Jig', JIG)
+    _location('native://Berry', JIG)
     // Berry
     _location('abc_o1_', BERRY)
     _location('abc_o1_def', BERRY)
@@ -91,6 +97,8 @@ describe('_location', () => {
     _location('abc_o1', USER)
     _location('abc_o1_def', USER)
     _location('abc_d2', USER)
+    _location('native://Jig', USER)
+    _location('native://Berry', USER)
     // Jig and User
     _location('abc_o1', USER)
   })
@@ -103,6 +111,7 @@ describe('_location', () => {
     expect(() => _location('abc_o1', BERRY)).to.throw()
     expect(() => _location('error://', BERRY)).to.throw()
     expect(() => _location('record://abc_o1_def', BERRY)).to.throw()
+    expect(() => _location('native://Berry', BERRY)).to.throw()
     // User
     expect(() => _location('_o1', USER)).to.throw()
     expect(() => _location('_i1', USER)).to.throw()
