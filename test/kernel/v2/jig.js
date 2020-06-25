@@ -13,7 +13,7 @@ const { Jig2 } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('Jig', () => {
-  it.only('should create basic jig', () => {
+  it('should create basic jig', () => {
     new Run() // eslint-disable-line
     console.log(Jig2.location)
   })
