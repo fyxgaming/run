@@ -24,10 +24,11 @@ describe('Snapshot', () => {
       const a = new A()
       const b = new B(a)
       const snapshot = new Snapshot(b)
-      expect(unmangle(snapshot)._type).to.equal('jig')
+      expect(unmangle(snapshot)._kind).to.equal('jig')
       expect(unmangle(snapshot)._props.a).to.equal(a)
       expect(unmangle(snapshot)._props.arr).to.deep.equal(b.arr)
       expect(unmangle(snapshot)._props.arr).not.to.equal(b.arr)
+      expect(unmangle(snapshot)._cls).to.equal(b.constructor)
     })
 
     it('should snapshot code', () => {
@@ -37,9 +38,10 @@ describe('Snapshot', () => {
       A.m = undefined
       const CA = run.install(A)
       const snapshot = new Snapshot(CA)
-      expect(unmangle(snapshot)._type).to.equal('code')
+      expect(unmangle(snapshot)._kind).to.equal('code')
       expect(unmangle(snapshot)._props.n).to.equal(null)
       expect(unmangle(snapshot)._props.m).to.equal(undefined)
+      expect(unmangle(snapshot)._src).to.equal(A.toString())
     })
 
     it('should snapshot berries', async () => {
@@ -50,9 +52,10 @@ describe('Snapshot', () => {
       }
       const berry = await run.load('123', A)
       const snapshot = new Snapshot(berry)
-      expect(unmangle(snapshot)._type).to.equal('berry')
+      expect(unmangle(snapshot)._kind).to.equal('berry')
       expect(unmangle(snapshot)._props.n).to.equal(1)
       expect(unmangle(snapshot)._props.location).to.equal('!A not deployed')
+      expect(unmangle(snapshot)._cls).to.equal(berry.constructor)
     })
 
     it('should throw if not a jig', () => {
@@ -74,6 +77,14 @@ describe('Snapshot', () => {
       expect(a.n).to.equal(1)
       unmangle(snapshot)._rollback()
       expect('n' in a).to.equal(false)
+    })
+  })
+
+  describe('code should evaluate the same in every environment', () => {
+    it('should save deterministic code', () => {
+      const test = s => expect(eval(`${s};A`).toString()).to.equal(s) // eslint-disable-line
+      test('class A {    \n      f() { return      1 }  }')
+      test('class     A        {}')
     })
   })
 })
