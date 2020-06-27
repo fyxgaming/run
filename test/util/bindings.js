@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { StandardLock } = Run
 const { unmangle } = require('../env/unmangle')
-const { _location, _nonce, _satoshis, _owner } = unmangle(unmangle(Run)._util)
+const { _location, _nonce, _satoshis, _owner, _init } = unmangle(unmangle(Run)._util)
 
 // ------------------------------------------------------------------------------------------------
 // _location
@@ -22,32 +22,29 @@ describe('_location', () => {
   it('should parse valid locations', () => {
     // Jigs
     expect(_location('abc_o0')).to.deep.equal({ txid: 'abc', vout: 0 })
-    expect(_location('abc_d1')).to.deep.equal({ txid: 'abc', vdel: 0 })
+    expect(_location('abc_d1')).to.deep.equal({ txid: 'abc', vdel: 1 })
     expect(_location('native://Jig')).to.deep.equal({ native: 'Jig' })
     // Local jigs
     expect(_location('_o10')).to.deep.equal({ vout: 10 })
     expect(_location('_d1')).to.deep.equal({ vdel: 1 })
     // Berries
-    expect(_location('abc_o0_')).to.deep.equal({ txid: 'abc', vout: 0, path: '' })
-    expect(_location('abc_o0_def')).to.deep.equal({ txid: 'abc', vout: 0, path: 'def' })
-    expect(_location('abc_o0_def_o2')).to.deep.equal({ txid: 'abc', vout: 0, path: 'def_o2' })
-    expect(_location('abc_d0_def')).to.deep.equal({ txid: 'abc', vdel: 0, path: 'def' })
+    expect(_location('abc_o0_')).to.deep.equal({ txid: 'abc', vout: 0, berry: '' })
+    expect(_location('abc_o0_def')).to.deep.equal({ txid: 'abc', vout: 0, berry: 'def' })
+    expect(_location('abc_o0_def_o2')).to.deep.equal({ txid: 'abc', vout: 0, berry: 'def_o2' })
+    expect(_location('abc_d0_def')).to.deep.equal({ txid: 'abc', vdel: 0, berry: 'def' })
     // Partial berries
-    expect(_location('_o0_def')).to.deep.equal({ vout: 0, path: 'def' })
-    expect(_location('_i0_def_o2')).to.deep.equal({ vin: 0, path: 'def_o2' })
-    expect(_location('_d2_')).to.deep.equal({ vdel: 2, path: '' })
+    expect(_location('_o0_def')).to.deep.equal({ vout: 0, berry: 'def' })
+    expect(_location('_d0_def_o2')).to.deep.equal({ vdel: 0, berry: 'def_o2' })
+    expect(_location('_d2_')).to.deep.equal({ vdel: 2, berry: '' })
     // Errors
     expect(_location('error://')).to.deep.equal({ error: '' })
     expect(_location('error://Something bad happened')).to.deep.equal({ error: 'Something bad happened' })
     expect(_location('error://line1\nline2')).to.deep.equal({ error: 'line1\nline2' })
     // Record locations
-    expect(_location('record://abc_o1')).to.deep.equal({ record: 'record://abc', vout: 1 })
-    expect(_location('record://abc_d1')).to.deep.equal({ record: 'record://abc', vdel: 1 })
+    expect(_location('record://abc_j1')).to.deep.equal({ record: 'record://abc', vjig: 1 })
   })
 
   it('should throw for invalid locations', () => {
-    expect(_location('abc_i1')).to.deep.equal({ txid: 'abc', vin: 1 })
-    expect(_location('_i20')).to.deep.equal({ vin: 20 })
     // Invalid types
     expect(() => _location()).to.throw()
     expect(() => _location(1)).to.throw()
@@ -56,13 +53,20 @@ describe('_location', () => {
     // Bad structure
     expect(() => _location('abc')).to.throw()
     expect(() => _location('abc_')).to.throw()
+    expect(() => _location('abc_i0')).to.throw()
+    expect(() => _location('abc_r0')).to.throw()
+    expect(() => _location('abc_j0')).to.throw()
     expect(() => _location('abc_o')).to.throw()
     expect(() => _location('abc_i')).to.throw()
     expect(() => _location('abc_0')).to.throw()
     expect(() => _location('abc_a0')).to.throw()
     expect(() => _location('_abc_o0')).to.throw()
+    expect(() => _location('_i0')).to.throw()
+    expect(() => _location('_r0')).to.throw()
     expect(() => _location('record://abc_o')).to.throw()
+    expect(() => _location('record://abc_o1')).to.throw()
     expect(() => _location('record://abc_0')).to.throw()
+    expect(() => _location('record://abc_d1')).to.throw()
     expect(() => _location('record://_o1')).to.throw()
     expect(() => _location('record://_i2')).to.throw()
     expect(() => _location('native://')).to.throw()
@@ -164,6 +168,22 @@ describe('_satoshis', () => {
     expect(() => _satoshis(NaN)).to.throw('satoshis must be an integer')
     expect(() => _satoshis(Infinity)).to.throw('satoshis must be an integer')
     expect(() => _satoshis(100000001)).to.throw('satoshis must be <= 100000000')
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// _init
+// ------------------------------------------------------------------------------------------------
+
+describe('_init', () => {
+  it('should initialize undeployed bindings', () => {
+    const o = {}
+    _init(o)
+    expect(o.origin).to.equal('error://Not deployed')
+    expect(o.location).to.equal('error://Not deployed')
+    expect(o.nonce).to.equal(-1)
+    expect(o.owner).to.deep.equal({ _value: undefined })
+    expect(o.satoshis).to.deep.equal({ _value: undefined })
   })
 })
 
