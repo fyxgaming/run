@@ -227,14 +227,6 @@ describe('LocalPurse', () => {
       expect(tx2.outputs.length).to.equal(0)
     })
 
-    it('should pay without optimized tx.signature method', async () => {
-      const run = new Run()
-      const savedSignatureMethod = Transaction.prototype.signature
-      delete Transaction.prototype.signature
-      await payFor(new Transaction().to(run.owner.address, 10000), run)
-      Transaction.prototype.signature = savedSignatureMethod
-    })
-
     it('should not pay with jig utxo', async () => {
       const run = new Run()
       class Dragon extends Jig { }
