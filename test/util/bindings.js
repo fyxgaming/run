@@ -179,8 +179,8 @@ describe('_init', () => {
   it('should initialize undeployed bindings', () => {
     const o = {}
     _init(o)
-    expect(o.origin).to.equal('error://Not deployed')
-    expect(o.location).to.equal('error://Not deployed')
+    expect(o.origin).to.equal('error://Undeployed')
+    expect(o.location).to.equal('error://Undeployed')
     expect(o.nonce).to.equal(-1)
     expect(o.owner).to.deep.equal({ _value: undefined })
     expect(o.satoshis).to.deep.equal({ _value: undefined })
