@@ -5,9 +5,9 @@
  */
 
 const { describe, it } = require('mocha')
-const { Run } = require('../env/config')
+const { Run } = require('../../test/env/config')
 const { Jig } = Run
-const { unmangle } = require('../env/unmangle')
+const { unmangle } = require('../../test/env/unmangle')
 const Checkpoint = unmangle(unmangle(Run)._util)._Checkpoint
 
 // ------------------------------------------------------------------------------------------------

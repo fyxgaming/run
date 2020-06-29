@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { spy } = require('sinon')
 const { Transaction } = require('bsv')
-const { Run } = require('../env/config')
+const { Run } = require('../../test/env/config')
 const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------

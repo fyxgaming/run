@@ -7,7 +7,7 @@
 const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { Run } = require('../env/config')
+const { Run } = require('../../test/env/config')
 const { StandardLock } = Run
 
 // ------------------------------------------------------------------------------------------------

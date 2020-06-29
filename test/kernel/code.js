@@ -1,598 +1,611 @@
 /**
  * code.js
  *
- * Tests for lib/code.js
+ * Tests for lib/kernel/code.js
  */
 
-const { describe, it, beforeEach } = require('mocha')
-require('chai').use(require('chai-as-promised'))
+const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { stub } = require('sinon')
-const { Run, COVER } = require('../env/config')
+const { PrivateKey } = require('bsv')
+const { Run } = require('../env/config')
+const { Jig, Berry } = Run
 const { unmangle } = require('../env/unmangle')
-const { Jig } = Run
-const { _resourceType } = unmangle(unmangle(Run)._util)
+const Membrane = unmangle(Run)._Membrane
+const SI = unmangle(Run.sandbox)._intrinsics
+
+const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
+const randomOwner = () => new PrivateKey().toAddress().toString()
+
+// test read only
 
 // ------------------------------------------------------------------------------------------------
-// Code tests
+// Code
 // ------------------------------------------------------------------------------------------------
 
 describe('Code', () => {
-  const run = new Run()
-  beforeEach(() => run.activate())
-  beforeEach(() => run.blockchain.block())
-
-  describe('deploy', () => {
-    it('should deploy a basic class', async () => {
+  describe('new', () => {
+    it('creates from class', () => {
+      const run = new Run()
       class A { }
-      await run.deploy(A)
-      expect(A.location).not.to.equal(undefined)
-      expect(A.location).to.equal(A.origin)
-      expect(A.originMocknet).to.equal(A.origin)
-      expect(A.locationMocknet).to.equal(A.origin)
-      expect(A.owner).to.equal(run.owner.address)
-      expect(A.ownerMocknet).to.equal(run.owner.address)
+      const CA = run.install(A)
+      expect(CA.toString()).to.equal(A.toString())
     })
 
-    it('should support custom owners', async () => {
-      class CustomOwner {
-        script () { return new Uint8Array() }
-        domain () { return 1 }
-      }
-      const run = new Run({ owner: new CustomOwner() })
-      class A { }
-      await run.deploy(A)
-      expect(A.owner instanceof CustomOwner).to.equal(true)
-    })
-
-    it('should not deploy previous install', async () => {
-      class A { }
-      const loc = await run.deploy(A)
-      expect(loc).to.equal(await run.deploy(A))
-    })
-
-    it('should deploy functions', async () => {
-      function f (a, b) { return a + b }
-      const loc = await run.deploy(f)
-      expect(f.origin).to.equal(loc)
-      expect(f.location).to.equal(loc)
-    })
-
-    it('should throw for non-deployables', async () => {
-      await expect(run.deploy(2)).to.be.rejected
-      await expect(run.deploy('abc')).to.be.rejected
-      await expect(run.deploy({ n: 1 })).to.be.rejected
-      await expect(run.deploy(Math.random)).to.be.rejected
-    })
-
-    it('should throw if parent dep mismatch', async () => {
-      class C { }
-      class B { }
-      class A extends B { }
-      A.deps = { B: C }
-      await expect(run.deploy(A)).to.be.rejectedWith('unexpected parent dependency B')
-    })
-
-    it('should support parent dep set to its sandbox', async () => {
-      class B { }
-      const B2 = await run.load(await run.deploy(B))
-      class A extends B { }
-      A.deps = { B: B2 }
-      await run.deploy(A)
-    })
-
-    it('should deploy parents', async () => {
-      class Grandparent { }
-      class Parent extends Grandparent { f () { this.n = 1 } }
-      class Child extends Parent { f () { super.f(); this.n += 1 } }
-      const Child2 = await run.load(await run.deploy(Child))
-      const child = new Child2()
-      child.f()
-      expect(child.n).to.equal(2)
-      expect(unmangle(run.code)._installs.has(Parent)).to.equal(true)
-      expect(unmangle(run.code)._installs.has(Grandparent)).to.equal(true)
-    })
-
-    it('should deploy dependencies', async () => {
-      class A { createB () { return new B() } }
-      class B { constructor () { this.n = 1 } }
-      A.deps = { B }
-      const A2 = await run.load(await run.deploy(A))
-      expect(new A2().createB().n).to.equal(1)
-    })
-
-    it('should always deploy parents', async () => {
+    it('creates from function', () => {
+      const run = new Run()
       function f () { }
-      class A { callF () { f() } }
-      A.deps = { f }
-      class B extends A { callF2 () { f() } }
-      const B2 = await run.load(await run.deploy(B))
-      const b = new B2()
-      expect(() => b.callF()).not.to.throw()
-      expect(() => b.callF2()).to.throw()
+      run.install(f)
     })
 
-    it('should return deployed dependencies in jigs', async () => {
-      class B { }
-      class A {
-        bInstanceofB () { return new B() instanceof B }
-        bPrototype () { return Object.getPrototypeOf(new B()) }
-        nameOfB () { return B.name }
-      }
-      A.deps = { B }
-      const A2 = await run.load(await run.deploy(A))
-      expect(new A2().nameOfB()).to.equal('B')
-      const B2 = await run.load(await run.deploy(B))
-      expect(new A2().bPrototype()).to.equal(B2.prototype)
-    })
-
-    it('should support renaming dependencies', async () => {
-      class A { createB() { return new B() } } // eslint-disable-line
-      class C { constructor () { this.n = 1 } }
-      A.deps = { B: C }
-      const A2 = await run.load(await run.deploy(A))
-      expect(new A2().createB().n).to.equal(1)
-    })
-
-    it('should throw for undefined dependencies', async () => {
-      class B { }
-      class A { createB () { return new B() } }
-      const A2 = await run.load(await run.deploy(A))
-      expect(() => new A2().createB()).to.throw('B is not defined')
-    })
-
-    it('should support circular dependencies', async () => {
-      class A { createB () { return new B() } }
-      class B { createA () { return new A() } }
-      A.deps = { B }
-      B.deps = { A }
-      const A2 = await run.load(await run.deploy(A))
-      const B2 = await run.load(await run.deploy(B))
-      expect(new A2().createB()).to.be.instanceOf(B2)
-      expect(new B2().createA()).to.be.instanceOf(A2)
-    })
-
-    it('should set temporary origins and locations before sync', async () => {
-      class B { }
+    it('adds invisible code functions', () => {
+      const run = new Run()
       class A { }
-      A.deps = { B }
-      const locationPromise = run.deploy(A)
-      expect(B.origin).to.equal('_d1')
-      expect(A.origin).to.equal('_d0')
-      expect(B.location).to.equal('_d1')
-      expect(A.location).to.equal('_d0')
-      expect(B.originMocknet).to.equal('_d1')
-      expect(A.originMocknet).to.equal('_d0')
-      expect(B.locationMocknet).to.equal('_d1')
-      expect(A.locationMocknet).to.equal('_d0')
-      const location = await locationPromise
-      expect(location.startsWith('_')).to.equal(false)
-      expect(B.origin.startsWith('_')).to.equal(false)
-      expect(A.origin.startsWith('_')).to.equal(false)
-      expect(B.location.startsWith('_')).to.equal(false)
-      expect(A.location.startsWith('_')).to.equal(false)
-      expect(B.originMocknet.startsWith('_')).to.equal(false)
-      expect(A.originMocknet.startsWith('_')).to.equal(false)
-      expect(B.locationMocknet.startsWith('_')).to.equal(false)
-      expect(A.locationMocknet.startsWith('_')).to.equal(false)
+      const CA = run.install(A)
+      expect(typeof CA.deploy).to.equal('function')
+      expect(typeof CA.upgrade).to.equal('function')
+      expect(typeof CA.sync).to.equal('function')
+      expect(typeof CA.release).to.equal('function')
+      expect(Object.getOwnPropertyNames(CA).includes('deploy')).to.equal(false)
+      expect(Object.getOwnPropertyNames(CA).includes('upgrade')).to.equal(false)
+      expect(Object.getOwnPropertyNames(CA).includes('sync')).to.equal(false)
+      expect(Object.getOwnPropertyNames(CA).includes('release')).to.equal(false)
     })
 
-    it('should support batch deploys', async () => {
+    it('creates only once', () => {
+      const run = new Run()
       class A { }
-      class B { }
+      const CA1 = run.install(A)
+      const CA2 = run.install(A)
+      expect(CA1).to.equal(CA2)
+    })
+
+    it('throws if not a function', () => {
+      const run = new Run()
+      expect(() => run.install()).to.throw('Cannot install')
+      expect(() => run.install(0)).to.throw('Cannot install')
+      expect(() => run.install({})).to.throw('Cannot install')
+      expect(() => run.install('class A {}')).to.throw('Cannot install')
+      expect(() => run.install(null)).to.throw('Cannot install')
+    })
+
+    it('throw if anonymous', () => {
+      const run = new Run()
+      expect(() => run.install(() => {})).to.throw('Cannot install')
+      expect(() => run.install(class {})).to.throw('Cannot install')
+    })
+
+    it('throws if built-in', () => {
+      const run = new Run()
+      expect(() => run.install(Object)).to.throw('Cannot install Object')
+      expect(() => run.install(Date)).to.throw('Cannot install Date')
+      expect(() => run.install(Uint8Array)).to.throw('Cannot install')
+      expect(() => run.install(Math.sin)).to.throw('Cannot install sin')
+      expect(() => run.install(parseInt)).to.throw('Cannot install parseInt')
+    })
+
+    it('throws if prototype inheritance', () => {
+      const run = new Run()
+      function A () { }
+      function B () { }
+      B.prototype = Object.create(A.prototype)
+      expect(() => run.install(B)).to.throw('Cannot install B')
+    })
+
+    it('throws if contains reserved words', () => {
+      const run = new Run()
+      class A { }
+      A.toString = () => 'hello'
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      class B { static deploy () { } }
+      expect(() => run.install(B)).to.throw('Cannot install B')
       class C { }
-      run.transaction.begin()
-      run.deploy(A)
-      run.deploy(B)
-      run.deploy(C)
-      run.transaction.end()
-      expect(A.origin).to.equal('_d0')
-      expect(B.origin).to.equal('_d1')
-      expect(C.origin).to.equal('_d2')
-      expect(A.location).to.equal('_d0')
-      expect(B.location).to.equal('_d1')
-      expect(C.location).to.equal('_d2')
-      expect(A.originMocknet).to.equal('_d0')
-      expect(B.originMocknet).to.equal('_d1')
-      expect(C.originMocknet).to.equal('_d2')
-      expect(A.locationMocknet).to.equal('_d0')
-      expect(B.locationMocknet).to.equal('_d1')
-      expect(C.locationMocknet).to.equal('_d2')
-      await run.sync()
-      const txid = A.origin.split('_')[0]
-      expect(A.origin.startsWith(txid)).to.equal(true)
-      expect(B.origin.startsWith(txid)).to.equal(true)
-      expect(C.origin.startsWith(txid)).to.equal(true)
-      expect(A.location.startsWith(txid)).to.equal(true)
-      expect(B.location.startsWith(txid)).to.equal(true)
-      expect(C.location.startsWith(txid)).to.equal(true)
-      expect(A.originMocknet.startsWith(txid)).to.equal(true)
-      expect(B.originMocknet.startsWith(txid)).to.equal(true)
-      expect(C.originMocknet.startsWith(txid)).to.equal(true)
-      expect(A.locationMocknet.startsWith(txid)).to.equal(true)
-      expect(B.locationMocknet.startsWith(txid)).to.equal(true)
-      expect(C.locationMocknet.startsWith(txid)).to.equal(true)
+      C.upgrade = 1
+      expect(() => run.install(C)).to.throw('Cannot install C')
+      class D { }
+      D.sync = undefined
+      expect(() => run.install(D)).to.throw('Cannot install D')
+      class E { static get release () { } }
+      expect(() => run.install(E)).to.throw('Cannot install E')
     })
 
-    it('should deploy all queued', async () => {
-      class A { }
-      class B { }
-      run.deploy(A)
-      run.deploy(B)
-      await run.sync()
-      expect(A.origin.split('_')[0]).not.to.equal(B.origin.split('_')[0])
-      expect(A.location.split('_')[0]).not.to.equal(B.location.split('_')[0])
-    })
-
-    it('should revert metadata for deploy failures', async () => {
-      const run = new Run()
-      stub(run.purse, 'pay').returns()
-      class A { }
-      await expect(run.deploy(A)).to.be.rejected
-      expect(A.origin).to.equal(undefined)
-      expect(A.location).to.equal(undefined)
-      expect(A.originMocknet).to.equal(undefined)
-      expect(A.locationMocknet).to.equal(undefined)
-    })
-
-    // TODO: Re-enable
-    it.skip('should revert metadata for queued deploy failures', async () => {
-      const run = new Run()
-      stub(run.purse, 'pay').callThrough().onSecondCall().returns()
-      class A { }
-      class B { }
-      run.deploy(A).catch(e => {})
-      run.deploy(B).catch(e => {})
-      expect(A.origin.startsWith('_')).to.equal(true)
-      expect(B.origin.startsWith('_')).to.equal(true)
-      expect(A.location.startsWith('_')).to.equal(true)
-      expect(B.location.startsWith('_')).to.equal(true)
-      expect(A.originMocknet.startsWith('_')).to.equal(true)
-      expect(B.originMocknet.startsWith('_')).to.equal(true)
-      expect(A.locationMocknet.startsWith('_')).to.equal(true)
-      expect(B.locationMocknet.startsWith('_')).to.equal(true)
-      await expect(run.sync()).to.be.rejectedWith('tx has no inputs')
-      expect(A.origin.endsWith('_o1')).to.equal(true)
-      expect(A.originMocknet.endsWith('_o1')).to.equal(true)
-      expect(B.origin).to.equal(undefined)
-      expect(B.originMocknet).to.equal(undefined)
-      expect(A.location.endsWith('_o1')).to.equal(true)
-      expect(A.locationMocknet.endsWith('_o1')).to.equal(true)
-      expect(B.location).to.equal(undefined)
-      expect(B.locationMocknet).to.equal(undefined)
-    })
-
-    it('should support presets', async () => {
+    it('throws if contains bindings', () => {
       const run = new Run()
       class A { }
-      await run.deploy(A)
-      delete A.location
-      delete A.origin
-      run.deactivate()
-      const run2 = new Run()
-      const oldBroadcast = run2.blockchain.broadcast
-      run2.blockchain.broadcast = () => { throw new Error('unexpected broadcast') }
-      try {
-        const location = await run2.deploy(A)
-        const networkSuffix = unmangle(unmangle(Run)._util)._networkSuffix(run2.blockchain.network)
-        expect(A.origin).to.equal(A[`origin${networkSuffix}`])
-        expect(A.location).to.equal(A[`location${networkSuffix}`])
-        expect(location).to.equal(A[`location${networkSuffix}`])
-      } finally {
-        run2.blockchain.broadcast = oldBroadcast
-      }
+      A.location = randomLocation()
+      A.origin = randomLocation()
+      A.owner = randomOwner()
+      A.satoshis = 0
+      expect(() => run.install(A)).to.throw('Cannot install A')
     })
 
-    it('should support origin-only presets', async () => {
+    it('creates parents', () => {
       const run = new Run()
-      class A { }
-      await run.deploy(A)
-      delete A.location
-      delete A.origin
-      run.deactivate()
-      const run2 = new Run()
-      const oldBroadcast = run2.blockchain.broadcast
-      run2.blockchain.broadcast = () => { throw new Error('unexpected broadcast') }
-      try {
-        const location = await run2.deploy(A)
-        const networkSuffix = unmangle(unmangle(Run)._util)._networkSuffix(run2.blockchain.network)
-        expect(A.origin).to.equal(A[`origin${networkSuffix}`])
-        expect(A.location).to.equal(A[`location${networkSuffix}`])
-        expect(location).to.equal(A[`location${networkSuffix}`])
-      } finally {
-        run2.blockchain.broadcast = oldBroadcast
-      }
-    })
-
-    it('should support location-only presets', async () => {
-      const run = new Run()
-      class A { }
-      await run.deploy(A)
-      run.deactivate()
-      const run2 = new Run()
-      const oldBroadcast = run2.blockchain.broadcast
-      run2.blockchain.broadcast = () => { throw new Error('unexpected broadcast') }
-      try {
-        delete A.location
-        delete A.origin
-        const networkSuffix = unmangle(unmangle(Run)._util)._networkSuffix(run2.blockchain.network)
-        delete A[`origin${networkSuffix}`]
-        const location = await run2.deploy(A)
-        expect(A.origin).to.equal(undefined)
-        expect(A.location).to.equal(A[`location${networkSuffix}`])
-        expect(location).to.equal(A[`location${networkSuffix}`])
-      } finally {
-        run2.blockchain.broadcast = oldBroadcast
-      }
-    })
-  })
-
-  describe('load', () => {
-    it('should load from cache', async () => {
-      class A { f () { return 1 } }
-      const A2 = await run.load(await run.deploy(A))
-      expect(await run.load(A.origin)).to.equal(A2)
-    })
-
-    it('should load from mockchain when cached', async () => {
-      class A { f () { return 1 } }
-      const A2 = await run.load(await run.deploy(A))
-      const run2 = new Run()
-      const A3 = await run2.load(A.origin)
-      expect(A2).to.equal(A3)
-    })
-
-    it('should load from mockchain when uncached', async () => {
-      class A { f () { return 1 } }
-      const A2 = await run.load(await run.deploy(A))
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      const A3 = await run2.load(A.origin)
-      expect(A2.owner).to.equal(run.owner.address)
-      expect(A2.owner).to.equal(A2.ownerMocknet)
-      expect(A3.owner).to.equal(A2.owner)
-    })
-
-    it('should throw if load temporary location', async () => {
-      class A { f () { return 1 } }
-      run.deploy(A).catch(e => {})
-      await expect(run.load(A.locationMocknet)).to.be.rejected
-    })
-
-    it('should load functions', async () => {
-      function f (a, b) { return a + b }
-      const f2 = await run.load(await run.deploy(f))
-      expect(f(1, 2)).to.equal(f2(1, 2))
-    })
-
-    it('should load after deploy with preset', async () => {
-      // get a location
-      class A { }
-      await run.deploy(A)
-      // deactivating, which will leave A.location set
-      run.deactivate()
-      expect(typeof A.location).to.equal('string')
-      // deploy the same code again
-      const run2 = new Run({ blockchain: run.blockchain })
-      await run2.deploy(A)
-      // find the sandbox directly, without using load, because we want to make sure deploy works correctly.
-      // and using load, make sure the sandboxes are the same
-      expect(unmangle(run2.code)._installs.get(A)).to.equal(await run2.load(A.location))
-    })
-
-    it('should support dependencies in different transactions', async () => {
-      class A {}
-      class B extends A {}
-      class C {}
-      C.B1 = B
-      C.B2 = B
-      run.deploy(A)
-      run.deploy(B)
-      run.deploy(C)
-      await run.sync()
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      await run2.load(C.location)
-    })
-  })
-
-  describe('static props', () => {
-    async function testStaticPropPass (x) {
-      // Test with a child class and various properties to ensure variation
       class A { }
       class B extends A { }
-      B.x = x
-      B.y = [x]
-      B.s = new Set()
-      B.s.x = x
-      const B2 = await run.load(await run.deploy(B))
-      const props = [B2.x, B2.y[0], B2.s.x]
-      props.forEach(y => {
-        if (_resourceType(y)) {
-          expect(y.origin).to.equal(x.origin)
-          expect(y.location).to.equal(x.location)
-        } else {
-          expect(y).to.deep.equal(x)
-        }
-      })
-    }
+      class C extends B { }
+      const CC = run.install(C)
+      const CB = run.install(B)
+      const CA = run.install(A)
+      expect(Object.getPrototypeOf(CC)).to.equal(CB)
+      expect(Object.getPrototypeOf(CB)).to.equal(CA)
+    })
 
-    it('should support static prop that is zero', () => testStaticPropPass(0))
-    it('should support static prop that is negative number', () => testStaticPropPass(-1))
-    it('should support static prop that is max integer', () => testStaticPropPass(Number.MAX_SAFE_INTEGER))
-    it('should support static prop that is NaN', () => testStaticPropPass(NaN))
-    it('should support static prop that is negative infinity', () => testStaticPropPass(-Infinity))
-    it('should support static prop that is true', () => testStaticPropPass(true))
-    it('should support static prop that is false', () => testStaticPropPass(false))
-    it('should support static prop that is null', () => testStaticPropPass(null))
-    it('should support static prop that is empty string', () => testStaticPropPass(''))
-    it('should support static prop that is emoji string', () => testStaticPropPass('😊'))
-    it('should support static prop that is object', () => testStaticPropPass({ m: 1, n: 2, o: [] }))
-    it('should support static prop that is array', () => testStaticPropPass([1, 2, 3]))
-    it('should support static prop that is buffer', () => testStaticPropPass(new Uint8Array([0, 1, 2])))
-    it('should support static prop that is class', () => testStaticPropPass(class A { }))
-    it('should support static prop that is anonymous class', () => testStaticPropPass(class { }))
-    it('should support static prop that is anonymous function', () => testStaticPropPass(function () { }))
-    it('should support static prop that is a jig', () => testStaticPropPass(new (class A extends Jig {})()))
-    it('should support static prop that is a arbitrary object', () =>
-      testStaticPropPass(new (class A { constructor () { this.n = 1 }})()))
-
-    it('should support static prop that is self-reference', async () => {
+    it('throws if error creating dependency', () => {
+      const run = new Run()
       class A { }
-      A.A = A
-      const A2 = await run.load(await run.deploy(A))
-      expect(A2.A).to.equal(A2)
+      A.Date = Date
+      expect(() => run.install(A)).to.throw('Cannot install Date')
     })
 
-    it('should dedup set and map keys in static props', async () => {
-      class A extends Jig { }
-      const a1 = new A()
-      await run.sync()
-      const a2 = await run.load(a1.location)
-      function b () { }
-      b.set = new Set([a1, a2, null])
-      b.map = new Map([[a1, 0], [a2, 1]])
-      const b2 = await run.load(await run.deploy(b))
-      expect(b2.set.size).to.equal(2)
-      expect(b2.map.size).to.equal(1)
+    it('creates code for props', () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      A.B = B
+      const CA = run.install(A)
+      expect(CA.B).to.equal(run.install(B))
     })
 
-    it('should support circular props', async () => {
-      class A extends Jig { }
-      class B extends Jig { }
+    it('installs circular prop code', () => {
+      const run = new Run()
+      class A { }
+      class B { }
       A.B = B
       B.A = A
-      await run.deploy(A)
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      const A2 = await run2.load(A.location)
-      const B2 = await run2.load(B.location)
-      expect(A2.B).to.equal(B2)
-      expect(B2.A).to.equal(A2)
+      const CA = run.install(A)
+      const CB = run.install(B)
+      expect(CA.B).to.equal(CB)
+      expect(CB.A).to.equal(CA)
     })
 
-    it('should throw for bad deps', async () => {
+    it('installs circular parent-child code', () => {
+      const run = new Run()
       class B { }
-      class A extends Jig { }
-      A.deps = [B]
-      await expect(run.deploy(A)).to.be.rejectedWith('deps must be an object')
-      A.deps = B
-      await expect(run.deploy(A)).to.be.rejectedWith('deps must be an object')
+      class A extends B { }
+      B.A = A
+      const CA = run.install(A)
+      const CB = run.install(B)
+      expect(Object.getPrototypeOf(CA)).to.equal(CB)
+      expect(CB.A).to.equal(CA)
     })
 
-    it('should throw for bad strings', async () => {
-      class A extends Jig { }
-      const stringProps = ['origin', 'location', 'originMainnet', 'locationMainnet', 'originTestnet',
-        'locationTestnet', 'originStn', 'locationStn', 'originMocknet', 'locationMocknet']
-      for (const s of stringProps) {
-        A[s] = {}
-        await expect(run.deploy(A)).to.be.rejectedWith(`${s} must be a string`)
-        A[s] = 123
-        await expect(run.deploy(A)).to.be.rejectedWith(`${s} must be a string`)
-        delete A[s]
-      }
+    it('installs parent that is code jig', () => {
+      const run = new Run()
+      class B { }
+      const CB = run.install(B)
+      class A extends CB { }
+      B.deps = { A }
+      const CA = run.install(A)
+      expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
-    async function testStaticPropFail (x) {
+    it('sets initial bindings', () => {
+      const run = new Run()
       class A { }
-      A.x = x
-      await expect(run.deploy(A)).to.be.rejectedWith('A static property of A is not supported')
-    }
-
-    it('should throw for static prop that is a Date', () => testStaticPropFail(new Date()))
-    it('should throw for static prop that is the Math intrinsic', () => testStaticPropFail(Math))
-    it('should throw for static prop that is a WeakSet', () => testStaticPropFail(new WeakSet()))
-    it('should throw for static prop that is a Int32Array', () => testStaticPropFail(new Int32Array()))
+      const CA = run.install(A)
+      expect(() => CA.location).to.throw('Cannot read location: Undeployed')
+      expect(() => CA.origin).to.throw('Cannot read origin: Undeployed')
+      expect(() => CA.owner).to.throw('Cannot read owner: Not bound')
+      expect(() => CA.satoshis).to.throw('Cannot read satoshis: Not bound')
+      Membrane._sudo(() => {
+        expect(CA.location).to.equal('error://Undeployed\n\nHint: Deploy the code first to assign location')
+        expect(CA.origin).to.equal('error://Undeployed\n\nHint: Deploy the code first to assign origin')
+        expect(unmangle(CA.owner)._value).to.equal(undefined)
+        expect(unmangle(CA.satoshis)._value).to.equal(0)
+      })
+    })
   })
 
-  describe('sandbox', () => {
-    it('should sandbox methods from locals', async () => {
-      const s = 'abc'
-      class A {
-        add (n) { return n + 1 }
-
-        break () { return s }
-      }
-      const A2 = await run.load(await run.deploy(A))
-      expect(new A2().add(1)).to.equal(2)
-      expect(new A().break()).to.equal('abc')
-      expect(() => new A2().break()).to.throw()
+  describe('deps', () => {
+    it('makes deps globals', () => {
+      const run = new Run()
+      class A { }
+      function f () { return A }
+      f.deps = { A }
+      const sf = run.install(f)
+      expect(sf()).to.equal(run.install(A))
     })
 
-    it('should sandbox methods from globals', async () => {
+    it('supports normal javascript values as deps', () => {
+      const run = new Run()
       class A {
-        isUndefined (x) {
-          if (typeof window !== 'undefined') return typeof window[x] === 'undefined'
-          if (typeof global !== 'undefined') return typeof global[x] === 'undefined'
-          return true
+        static n () { return n } // eslint-disable-line
+        static o () { return o } // eslint-disable-line
+      }
+      A.deps = { n: 1, o: { a: [] } }
+      const CA = run.install(A)
+      expect(CA.n()).to.equal(1)
+      expect(CA.o()).not.to.equal(A.deps.o)
+      expect(CA.o()).to.deep.equal(A.deps.o)
+      expect(CA.o() instanceof SI.Object).to.equal(true)
+      expect(CA.o().a instanceof SI.Array).to.equal(true)
+    })
+
+    it('sets deps on returned code jig', () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      A.deps = { B }
+      const CA = run.install(A)
+      expect(CA.deps.B).to.equal(run.install(B))
+    })
+
+    it('throws if deps invalid', () => {
+      const run = new Run()
+      class A { }
+      A.deps = null
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      A.deps = '123'
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      A.deps = []
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      A.deps = new class Deps {}()
+      expect(() => run.install(A)).to.throw('Cannot install A')
+    })
+
+    it('doesnt install parent deps on child', () => {
+      const run = new Run()
+      class B { f () { return n } } // eslint-disable-line
+      class A extends B { g () { return n } } // eslint-disable-line
+      B.deps = { n: 1 }
+      const CB = run.install(B)
+      const b = new CB()
+      expect(b.f()).to.equal(1)
+      const CA = run.install(A)
+      const a = new CA()
+      expect(() => a.g()).to.throw()
+    })
+  })
+
+  describe('presets', () => {
+    it('uses blockchain presets', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
         }
       }
-      const A1 = await run.load(await run.deploy(A))
-      const a1 = new A1()
-      const bad = ['Date', 'Math', 'eval', 'XMLHttpRequest', 'FileReader', 'WebSocket', 'setTimeout', 'setInterval']
-      bad.forEach(x => expect(a1.isUndefined(x)).to.equal(true))
-      await run.sync()
-      const run2 = new Run()
-      const A2 = await run2.load(A.origin)
-      const a2 = new A2()
-      bad.forEach(x => expect(a2.isUndefined(x)).to.equal(true))
-    })
-  })
-
-  describe('misc', () => {
-    it('should pass instanceof checks', async () => {
-      class A { }
-      const A2 = await run.load(await run.deploy(A))
-      expect(new A()).to.be.instanceOf(A)
-      expect(new A()).not.to.be.instanceOf(A2)
-      expect(new A2()).not.to.be.instanceOf(A)
-      expect(new A2()).to.be.instanceOf(A2)
-    })
-  })
-
-  describe('activate', () => {
-    it.skip('should support activating different network', async () => {
-      if (Run.instance) Run.instance.deactivate()
-      const run = new Run() // Create a new run to have a new code cache
-      class A { }
-      await run.deploy(A)
-      expect(A.location.length).to.equal(67)
-      expect(A.location).to.equal(A.locationMocknet)
-      expect(A.owner).to.equal(run.owner.address)
-      expect(A.ownerMocknet).to.equal(run.owner.address)
-      const run2 = new Run({ network: 'test' })
-      expect(A.location).to.equal(undefined)
-      expect(A.locationMocknet.length).to.equal(67)
-      expect(A.owner).to.equal(undefined)
-      expect(A.ownerMocknet).to.equal(run.owner.address)
-      await run2.deploy(A)
-      expect(A.location.length).to.equal(67)
-      expect(A.location).to.equal(A.locationTestnet)
-      expect(A.owner).to.equal(A.ownerTestnet)
-      run.activate()
-      expect(A.location.length).to.equal(67)
-      expect(A.location).to.equal(A.locationMocknet)
-      expect(A.owner).to.equal(A.ownerMocknet)
-      expect(unmangle(run.code)._installs.size).to.equal(COVER ? 7 : 8)
+      const CA = run.install(A)
+      expect(CA.location).to.equal(A.presets[network].location)
+      expect(CA.origin).to.equal(A.presets[network].origin)
+      expect(CA.owner).to.equal(A.presets[network].owner)
+      expect(CA.satoshis).to.equal(A.presets[network].satoshis)
+      expect(typeof CA.presets).to.equal('undefined')
     })
 
-    it.skip('should set correct owner for different networks', async () => {
+    it('clones javascript objects for sandbox', () => {
+      const run = new Run()
+      const network = run.blockchain.network
       class A { }
-      class B extends Jig { init () { if (this.owner !== A.owner) throw new Error() } }
-      B.deps = { A }
-      for (const network of ['test', 'mock']) {
-        const run = new Run({ network })
-        run.transaction.begin()
-        run.deploy(A)
-        run.deploy(B)
-        run.transaction.end()
-        await run.sync()
-        const b = new B()
-        await b.sync()
-        run.deactivate()
-        const run2 = new Run({ network, owner: run.owner.privkey })
-        await run2.sync()
+      A.presets = { [network]: { a: [], s: new Set() } }
+      const CA = run.install(A)
+      expect(CA.a).not.to.equal(A.presets[network].a)
+      expect(CA.s).not.to.equal(A.presets[network].s)
+      expect(CA.a instanceof SI.Array).to.equal(true)
+      expect(CA.s instanceof SI.Set).to.equal(true)
+    })
+
+    it('copies blockchain objects', async () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class J extends Jig { }
+      const j = new J()
+      class B extends Berry { static pluck () { return new B() } }
+      const b = await run.load('', B)
+      class C {}
+      class A { }
+      A.presets = { [network]: { b, j, C } }
+      const CA = run.install(A)
+      expect(CA.b).to.equal(b)
+      expect(CA.j).to.equal(j)
+      expect(CA.C).not.to.equal(C)
+      expect(CA.C.toString()).to.equal(C.toString())
+      expect(CA.C).to.equal(run.install(C))
+    })
+
+    it('does not add presets to code jig', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
       }
+      const CA = run.install(A)
+      expect(CA.presets).to.equal(undefined)
+    })
+
+    it('returns existing code for a copy with same presets', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      class B { }
+      Object.assign(B, A)
+      const CA = run.install(A)
+      const CB = run.install(B)
+      expect(CA).to.equal(CB)
+    })
+
+    it('installs separate presets for parent and child', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class B { }
+      B.presets = { [network]: { n: 1, m: 0 } }
+      class A extends B { }
+      A.presets = { [network]: { n: 2 } }
+      const CB = run.install(B)
+      const CA = run.install(A)
+      expect(CB.n).to.equal(1)
+      expect(CB.m).to.equal(0)
+      expect(CA.n).to.equal(2)
+      expect(CA.m).to.equal(0)
+      expect(Object.getOwnPropertyNames(CA).includes('n')).to.equal(true)
+      expect(Object.getOwnPropertyNames(CA).includes('m')).to.equal(false)
+    })
+
+    it('throws if parent dependency mismatch', () => {
+      const run = new Run()
+      class A { }
+      class C { }
+      class B extends A { }
+      B.deps = { A: C }
+      expect(() => run.install(B)).to.throw('Parent dependency mismatch')
+    })
+
+    it('throws if presets are invalid', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = null
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      A.presets = { [network]: null }
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      A.presets = {
+        [network]: {
+          location: '_o1',
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      A.presets = {
+        [network]: {
+          location: '_o1',
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      expect(() => run.install(A)).to.throw()
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        },
+        test: null
+      }
+      expect(() => run.install(A)).to.throw()
+      delete A.presets.test
+      A.presets[network].nonce = 1
+      expect(() => run.install(A)).to.throw()
+      A.presets[network].nonce = null
+      expect(() => run.install(A)).to.throw()
+      A.presets = []
+      expect(() => run.install(A)).to.throw()
+      A.presets = { [network]: new class Presets {}() }
+      expect(() => run.install(A)).to.throw()
+    })
+
+    it('throws if presets are incomplete', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      const npresets = {
+        location: '_o1',
+        origin: randomLocation(),
+        owner: randomOwner(),
+        satoshis: 0
+      }
+      for (const key of Object.keys(npresets)) {
+        A.presets = { [network]: Object.assign({}, npresets) }
+        delete A.presets[network][key]
+        expect(() => run.install(A)).to.throw('Cannot install A')
+      }
+    })
+
+    it('throws if presets contains reserved properties', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { deps: {} } }
+      expect(() => run.install(A)).to.throw()
+      A.presets = { [network]: { presets: {} } }
+      expect(() => run.install(A)).to.throw()
+      A.presets = { [network]: { upgrade: () => {} } }
+      expect(() => run.install(A)).to.throw()
+    })
+
+    it('requires parent approval by default', () => {
+      const run = new Run()
+      class A { }
+      A.options = { utility: true }
+      const CA = run.install(A)
+      CA.deploy()
+      class C extends A { }
+      const CC = run.install(C)
+      CC.deploy()
+      // TODO: Parent approval
+    })
+  })
+
+  describe('options', () => {
+    it('allows utility classes', () => {
+      const run = new Run()
+      class A { }
+      A.options = { utility: true }
+      const CA = run.install(A)
+      CA.deploy()
+      class B extends A { }
+      const CB = run.install(B)
+      CB.deploy()
+      class C extends A { }
+      const CC = run.install(C)
+      CC.deploy()
+    })
+
+    it('throws if invalid options', () => {
+      const run = new Run()
+      class A { }
+      A.options = null
+      expect(() => run.install(A)).to.throw('options must be an object')
+    })
+
+    it('throws if unknown option', () => {
+      const run = new Run()
+      class A { }
+      A.options = { red: 1 }
+      expect(() => run.install(A)).to.throw('Unknown option: red')
+    })
+
+    it('throws if invalid utility', () => {
+      const run = new Run()
+      class A { }
+      A.options = { utility: 2 }
+      expect(() => run.install(A)).to.throw('utility must be a boolean')
+    })
+  })
+
+  describe('prototype', () => {
+    it('sets prototype constructor to code jig', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.install(A)
+      expect(CA.prototype.constructor).to.equal(CA)
+    })
+  })
+
+  describe('name', () => {
+    it('returns class or function name', () => {
+      const run = new Run()
+      class A { }
+      expect(run.install(A).name).to.equal('A')
+      function f () { }
+      expect(run.install(f).name).to.equal('f')
+    })
+  })
+
+  describe('toString', () => {
+    it('returns same string as original code', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.install(A)
+      expect(CA.toString()).to.equal(A.toString())
+      expect(A.toString().replace(/\s/g, '')).to.equal('classA{}')
+    })
+
+    it('returns same code as original code when there is a parent', () => {
+      const run = new Run()
+      class B { }
+      const CB = run.install(B)
+      class A extends CB { }
+      const CA = run.install(A)
+      expect(CA.toString().replace(/\s/g, '')).to.equal('classAextendsB{}')
+    })
+  })
+
+  describe('get', () => {
+  })
+
+  describe('functions', () => {
+    // Code functions are not available inside functions
+  })
+
+  describe('deploy', () => {
+    it('deploys parent and child', () => {
+      const run = new Run()
+      class A {}
+      class B extends A {}
+      const CB = run.install(B)
+      CB.deploy()
+      // const record = unmangle(stub(record))
+      // expect(record._deploy.called).to.equal(true)
+      expect(A.location.startsWith('record://'))
+      expect(B.location.startsWith('record://'))
+      expect(A.location.endsWith('_o2'))
+      expect(B.location.endsWith('_o1'))
+    })
+
+    // Does not deploy if already deployed
+
+    it('deploys with custom lock', () => {
+      class L {
+        script () { return new Uint8Array() }
+        domain () { return 0 }
+      }
+      const run = new Run()
+      class A {
+        static send (to) { this.owner = to }
+      }
+      A.send = () => { throw new Error('Must call methods on jigs') }
+      const CA = run.install(A)
+      // A.send(1)
+      CA.send(new L())
+      CA.deploy()
+      console.log(A)
+      expect(A.location.startsWith('record://'))
+    })
+  })
+
+  describe('upgrade', () => {
+
+  })
+
+  describe('sync', () => {
+    // Only waits for current record
+
+    it.only('publishes after dependent transaction', async () => {
+      const run = new Run()
+      class A {}
+      const CA = run.install(A)
+      CA.deploy()
+      class B extends A { }
+      const CB = run.install(B)
+      CB.deploy()
+
+      await CB.sync()
+
+      console.log(B.location)
+
+      const B2 = await run.load2(B.location)
+
+      console.log(B2)
+      console.log(B2.toString())
     })
   })
 })

@@ -7,8 +7,8 @@
 const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
-const { Run } = require('../env/config')
-const { unmangle } = require('../env/unmangle')
+const { Run } = require('../../test/env/config')
+const { unmangle } = require('../../test/env/unmangle')
 const util = unmangle(unmangle(Run)._util)
 const Location = util._Location
 const SafeSet = util._SafeSet

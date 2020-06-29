@@ -7,11 +7,11 @@
 const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
-const { Run } = require('./env/config')
+const { Run } = require('../../test/env/config')
 const { Jig, LocalOwner, LocalPurse } = Run
 const bsv = require('bsv')
 const { PrivateKey } = bsv
-const packageInfo = require('../package.json')
+const packageInfo = require('../../package.json')
 
 // ------------------------------------------------------------------------------------------------
 // Run

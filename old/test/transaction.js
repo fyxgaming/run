@@ -9,9 +9,9 @@ const { Transaction } = bsv
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { describe, it } = require('mocha')
-const { Run, payFor } = require('../env/config')
+const { Run, payFor } = require('../../test/env/config')
 const { Jig } = Run
-const { unmangle } = require('../env/unmangle')
+const { unmangle } = require('../../test/env/unmangle')
 const { _extractRunData, _encryptRunData, _decryptRunData, _bsvNetwork } = unmangle(unmangle(Run)._util)
 
 // ------------------------------------------------------------------------------------------------

@@ -7,8 +7,8 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
-const { Run } = require('../env/config')
-const { unmangle } = require('../env/unmangle')
+const { Run } = require('../../test/env/config')
+const { unmangle } = require('../../test/env/unmangle')
 const Codec = unmangle(unmangle(Run)._util)._Codec
 const SI = unmangle(Run.sandbox)._intrinsics
 const HI = unmangle(Run.sandbox)._hostIntrinsics
