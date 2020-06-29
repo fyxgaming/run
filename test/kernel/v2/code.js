@@ -589,7 +589,7 @@ describe('Code', () => {
   describe('sync', () => {
     // Only waits for current record
 
-    it.only('publishes after dependent transaction', () => {
+    it.only('publishes after dependent transaction', async () => {
       const run = new Run()
       class A {}
       const CA = run.install(A)
@@ -597,6 +597,8 @@ describe('Code', () => {
       class B extends A { }
       const CB = run.install(B)
       CB.deploy()
+
+      await CB.sync()
     })
   })
 })
