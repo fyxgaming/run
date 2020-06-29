@@ -597,8 +597,12 @@ describe('Code', () => {
       class B extends A { }
       const CB = run.install(B)
       CB.deploy()
+      
+      // Try sleeping, then syncing
 
+      console.log('1')
       await CB.sync()
+      console.log('2')
 
       console.log(B.location)
 
