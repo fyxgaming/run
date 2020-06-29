@@ -600,13 +600,11 @@ describe('Code', () => {
       
       // Try sleeping, then syncing
 
-      console.log('1')
       await CB.sync()
-      console.log('2')
 
       console.log(B.location)
 
-      const B2 = await run.load2(B.location)
+      const B2 = await run.load(B.location)
 
       console.log(B2)
       console.log(B2.toString())
