@@ -599,6 +599,8 @@ describe('Code', () => {
       CB.deploy()
 
       await CB.sync()
+
+      console.log(B.location)
     })
   })
 })
