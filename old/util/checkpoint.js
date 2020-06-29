@@ -5,8 +5,8 @@
  */
 
 const ResourceJSON = require('./json')
-const { JigControl } = require('../kernel/jig')
-const { _resourceType } = require('./misc')
+const { JigControl } = require('../jig')
+const { _resourceType } = require('../../lib/kernel/misc')
 
 class Checkpoint {
   constructor (x, code, owner) {

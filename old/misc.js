@@ -5,8 +5,8 @@
  */
 
 const bsv = require('bsv')
-const { Jig, JigControl } = require('../kernel/jig')
-const { Berry } = require('../kernel/berry')
+const { Jig, JigControl } = require('../../old/jig')
+const { Berry } = require('../../old/berry')
 const { _text } = require('./type')
 const { InternalError } = require('./errors')
 
@@ -33,7 +33,7 @@ function _activeRun () {
  * Returns the active kernel
  */
 function _kernel () {
-  const Kernel = require('../kernel/kernel')
+  const Kernel = require('./kernel')
   if (!Kernel._instance) throw new Error('Run instance not active')
   return Kernel._instance
 }
@@ -106,8 +106,8 @@ function _deployable (T) {
  * @returns {?string} Ether 'jig', 'berry', code', or undefined if not a resource
  */
 function _resourceType (x) {
-  const Membrane = require('../kernel/v2/membrane')
-  const Code = require('../kernel/v2/code')
+  const Membrane = require('./membrane')
+  const Code = require('./code')
   return Membrane._sudo(() => JigControl._disableSafeguards(() => {
     if (!x) return
     if (x instanceof Jig) return 'jig'
@@ -290,7 +290,7 @@ var _txToTxo = function (tx, options) {
 function _cloneForHost (x) {
   // TODO: A direct deepClone method would be faster, but this is safe for now.
 
-  const ResourceJSON = require('./json')
+  const ResourceJSON = require('../../old/util/json')
   const Sandbox = require('./sandbox')
   const refs = []
 
@@ -316,7 +316,7 @@ function _cloneForHost (x) {
 function _cloneForSandbox (x) {
   // TODO: A direct deepClone method would be faster, but this is safe for now.
 
-  const ResourceJSON = require('./json')
+  const ResourceJSON = require('../../old/util/json')
   const Sandbox = require('./sandbox')
   const refs = []
 

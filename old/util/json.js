@@ -41,10 +41,10 @@
  * to represent the Resource JSON serialized form of 'x'.
  */
 
-const { _resourceType } = require('./misc')
-const { _text, _protoLen, _isBasicObject, _isBasicArray, _isUndefined } = require('./type')
+const { _resourceType } = require('../../lib/kernel/misc')
+const { _text, _protoLen, _isBasicObject, _isBasicArray, _isUndefined } = require('../../lib/kernel/type')
 const { SafeMap, SafeSet } = require('./safe')
-const Sandbox = require('./sandbox')
+const Sandbox = require('../../lib/kernel/sandbox')
 
 // ------------------------------------------------------------------------------------------------
 // ResourceJSON

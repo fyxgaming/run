@@ -5,8 +5,8 @@
  */
 
 const Location = require('./location')
-const { JigControl } = require('../kernel/jig')
-const { _resourceType } = require('./misc')
+const { JigControl } = require('../jig')
+const { _resourceType } = require('../../lib/kernel/misc')
 
 // ------------------------------------------------------------------------------------------------
 // SafeMap
@@ -92,8 +92,8 @@ SafeSet.deps = { internal, SafeMap }
 // uniqueKey
 // ------------------------------------------------------------------------------------------------
 
-const resourceOrigin = x => require('../kernel/v2/membrane')._sudo(() => JigControl._disableSafeguards(() => x.origin || x.location))
-const resourceLocation = x => require('../kernel/v2/membrane')._sudo(() => JigControl._disableSafeguards(() => x.location))
+const resourceOrigin = x => require('../../lib/kernel/membrane')._sudo(() => JigControl._disableSafeguards(() => x.origin || x.location))
+const resourceLocation = x => require('../../lib/kernel/membrane')._sudo(() => JigControl._disableSafeguards(() => x.location))
 const deployed = x => { try { return !!Location.parse(resourceOrigin(x)).txid } catch (e) { return false } }
 
 let allowInconsistentWorldview = false

@@ -5,10 +5,12 @@
  */
 
 const bsv = require('bsv')
-const { SafeSet, _allowInconsistentWorldview } = require('../../old/util/safe')
-const { _text } = require('./type')
-const { _owner } = require('./bindings')
-const Log = require('./log')
+const { JigControl } = require('../../old/jig')
+const { SafeSet, _allowInconsistentWorldview } = require('../util/safe')
+const { _resourceType } = require('../util/misc')
+const { _text } = require('../util/type')
+const { _owner } = require('../util/bindings')
+const Log = require('../util/log')
 
 // ------------------------------------------------------------------------------------------------
 // Inventory
