@@ -7,7 +7,7 @@
 require('dotenv').config()
 const path = require('path')
 const { Transaction } = require('bsv')
-const { setMangled, unmangle } = require('./unmangle')
+const { setMangled } = require('./unmangle')
 
 // ------------------------------------------------------------------------------------------------
 // Load test-specific environment variables
@@ -60,8 +60,6 @@ Run.configure({
 
 setMangled(MANGLED)
 
-const util = unmangle(unmangle(Run)._util)
-
 if (COVER) {
   Run.sandbox.excludes = [Run.Token, Run.expect, Run.GroupLock]
 }
@@ -70,8 +68,6 @@ if (COVER) {
 // payFor
 // ------------------------------------------------------------------------------------------------
 
-const { _populatePreviousOutputs } = util
-
 async function payFor (tx, run) {
   const rawtx = tx.toString('hex')
   const prevtxids = tx.inputs.map(input => input.prevTxId.toString('hex'))
@@ -79,7 +75,6 @@ async function payFor (tx, run) {
   const parents = tx.inputs.map((input, n) => prevtxs[n].outputs[input.outputIndex])
   const paidhex = await run.purse.pay(rawtx, parents)
   const paidtx = new Transaction(paidhex)
-  await _populatePreviousOutputs(paidtx, run.blockchain)
   return paidtx
 }
 

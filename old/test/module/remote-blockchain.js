@@ -100,7 +100,7 @@ describe('RemoteBlockchain', () => {
         return [utxo, utxo]
       }
       let lastWarning = null
-      const Log = unmangle(unmangle(unmangle(Run)._util)._Log)
+      const Log = unmangle(unmangle(Run)._Log)
       Log._logger = { warn: (time, tag, ...warning) => { lastWarning = warning.join(' ') } }
       const utxos = await blockchain.utxos(script)
       expect(utxos.length).to.equal(1)
