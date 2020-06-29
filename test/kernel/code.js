@@ -599,6 +599,7 @@ describe('Code', () => {
       CB.deploy()
 
       // Try sleeping, then syncing
+      await new Promise((resolve, reject) => setTimeout(resolve, 200))
 
       await CB.sync()
 
