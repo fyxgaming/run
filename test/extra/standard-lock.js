@@ -1,7 +1,7 @@
 /**
  * standard-lock.js
  *
- * Tests for lib/util/standard-lock.js
+ * Tests for lib/kernel/standard-lock.js
  */
 
 const bsv = require('bsv')
