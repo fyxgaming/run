@@ -593,7 +593,14 @@ describe('Code', () => {
       const run = new Run()
       class A {}
       const CA = run.install(A)
+
+      // console.log(A.location)
+      // await new Promise((resolve, reject) => setTimeout(resolve, 2000))
+
       CA.deploy()
+
+      await CA.sync()
+
       class B extends A { }
       const CB = run.install(B)
       CB.deploy()
