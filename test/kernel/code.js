@@ -601,6 +601,11 @@ describe('Code', () => {
 
       await CA.sync()
 
+      const A2 = await run.load(A.location)
+
+      console.log(A2)
+
+      /*
       class B extends A { }
       const CB = run.install(B)
       CB.deploy()
@@ -616,6 +621,7 @@ describe('Code', () => {
 
       console.log(B2)
       console.log(B2.toString())
+      */
     })
   })
 })
