@@ -601,6 +601,11 @@ describe('Code', () => {
       await CB.sync()
 
       console.log(B.location)
+
+      const B2 = await run.load2(B.location)
+
+      console.log(B2)
+      console.log(B2.toString())
     })
   })
 })
