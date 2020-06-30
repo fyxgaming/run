@@ -594,20 +594,11 @@ describe('Code', () => {
 
       class A {}
 
-      const AC = run.install(A)
-      console.log(AC)
-
       await run.deploy(A)
-
-      await AC.sync()
-
-      console.log('--------')
-      console.log(A.location)
-      console.log('--------')
 
       const A2 = await run.load(A.location)
 
-      console.log(A2)
+      console.log('---', A2)
 
       /*
       class B extends A { }
