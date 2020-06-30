@@ -591,15 +591,12 @@ describe('Code', () => {
 
     it.only('publishes after dependent transaction', async () => {
       const run = new Run()
+
       class A {}
-      const CA = run.install(A)
 
-      // console.log(A.location)
-      // await new Promise((resolve, reject) => setTimeout(resolve, 2000))
+      await run.deploy(A)
 
-      CA.deploy()
-
-      await CA.sync()
+      console.log(A.location)
 
       const A2 = await run.load(A.location)
 
