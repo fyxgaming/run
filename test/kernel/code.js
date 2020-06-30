@@ -588,39 +588,35 @@ describe('Code', () => {
 
   describe('sync', () => {
     // Only waits for current record
+    // TODO: Check records
 
-    it.only('publishes after dependent transaction', async () => {
+    it('deploys a class and syncs it', async () => {
       const run = new Run()
-
       class A {}
-
       await run.deploy(A)
-
       const A2 = await run.load(A.location)
-
       expect(A2.toString()).to.equal(A.toString())
       expect(A2.origin).to.equal(A.origin)
       expect(A2.location).to.equal(A.location)
-
       console.log(A2)
+    })
 
-      /*
-      class B extends A { }
-      const CB = run.install(B)
-      CB.deploy()
+    it.only('publishes after dependent transaction', async () => {
+      const run = new Run()
+      class A {}
+      await run.deploy(A)
 
       // Try sleeping, then syncing
       await new Promise((resolve, reject) => setTimeout(resolve, 200))
 
-      await CB.sync()
+      class B extends A { }
+      await run.deploy(B)
 
       console.log(B.location)
+      // const B2 = await run.load(B.location)
 
-      const B2 = await run.load(B.location)
-
-      console.log(B2)
-      console.log(B2.toString())
-      */
+      // console.log(B2)
+      // console.log(B2.toString())
     })
   })
 })
