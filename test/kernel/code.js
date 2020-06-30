@@ -598,7 +598,7 @@ describe('Code', () => {
 
       const A2 = await run.load(A.location)
 
-      console.log('---', A2)
+      expect(A2.toString()).to.equal(A.toString())
 
       /*
       class B extends A { }
