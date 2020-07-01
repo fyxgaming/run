@@ -617,8 +617,17 @@ describe('Code', () => {
 
       console.log(A.origin, A.location)
 
-      const A2 = run.install(A)
+      // const A2 = run.install(A)
+      // console.log(A2)
+
+      // await A2.sync()
+      // console.log(A2)
+
+      const A2 = await run.load(A.origin)
       console.log(A2)
+      await A2.sync()
+      console.log(A2)
+
       // const B2 = await run.load(B.location)
 
       // console.log(B2)
