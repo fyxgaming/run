@@ -616,6 +616,9 @@ describe('Code', () => {
       console.log(B.location)
 
       console.log(A.origin, A.location)
+
+      const A2 = run.install(A)
+      console.log(A2)
       // const B2 = await run.load(B.location)
 
       // console.log(B2)
