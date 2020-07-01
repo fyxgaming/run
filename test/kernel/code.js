@@ -628,6 +628,8 @@ describe('Code', () => {
       await A2.sync()
       console.log(A2)
 
+      console.log(A2.deps.A === A2)
+
       // const B2 = await run.load(B.location)
 
       // console.log(B2)
