@@ -605,13 +605,16 @@ describe('Code', () => {
       const run = new Run()
       class A {}
       // const CA = run.install(A)
+      const t1 = new Date()
       await run.deploy(A)
+      const t2 = new Date()
 
       // Try sleeping, then syncing
-      await new Promise((resolve, reject) => setTimeout(resolve, 200))
+      // await new Promise((resolve, reject) => setTimeout(resolve, 200))
 
       class B extends A { }
       await run.deploy(B)
+      const t3 = new Date()
 
       console.log(B.location)
 
@@ -624,9 +627,16 @@ describe('Code', () => {
       // console.log(A2)
 
       const A2 = await run.load(A.origin)
+      const t4 = new Date()
       console.log(A2)
       await A2.sync()
+      const t5 = new Date()
       console.log(A2)
+
+      console.log(t2 - t1, 'deploy')
+      console.log(t3 - t2, 'deploy')
+      console.log(t4 - t3, 'load')
+      console.log(t5 - t4, 'sync')
 
       // const B2 = await run.load(B.location)
 
