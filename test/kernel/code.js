@@ -625,7 +625,6 @@ describe('Code', () => {
 
       const A2 = await run.load(A.origin)
       console.log(A2)
-      console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
       await A2.sync()
       console.log(A2)
 
