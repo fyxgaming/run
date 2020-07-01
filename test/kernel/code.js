@@ -604,6 +604,7 @@ describe('Code', () => {
     it.only('publishes after dependent transaction', async () => {
       const run = new Run()
       class A {}
+      // const CA = run.install(A)
       await run.deploy(A)
 
       // Try sleeping, then syncing
@@ -613,6 +614,8 @@ describe('Code', () => {
       await run.deploy(B)
 
       console.log(B.location)
+
+      console.log(A.origin, A.location)
       // const B2 = await run.load(B.location)
 
       // console.log(B2)
