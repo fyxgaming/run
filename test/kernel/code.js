@@ -626,7 +626,7 @@ describe('Code', () => {
       // await A2.sync()
       // console.log(A2)
 
-      const A2 = await run.load(A.origin)
+      const A2 = await run.load(A.origin.slice(0, 64) + '_o10')
       const t4 = new Date()
       console.log(A2)
 
