@@ -616,9 +616,10 @@ describe('Code', () => {
       await run.deploy(B)
       const t3 = new Date()
 
+      console.log('---')
       console.log(B.location)
-
       console.log(A.origin, A.location)
+      console.log('---')
 
       // const A2 = run.install(A)
       // console.log(A2)
@@ -626,7 +627,7 @@ describe('Code', () => {
       // await A2.sync()
       // console.log(A2)
 
-      const A2 = await run.load(A.origin)
+      const A2 = await run.load(B.location)
       const t4 = new Date()
       console.log(A2)
 
