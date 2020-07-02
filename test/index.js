@@ -5,4 +5,5 @@
  */
 
 require('./kernel/log.js')
+require('./kernel/misc.js')
 require('./kernel/repository.js')

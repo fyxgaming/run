@@ -6,8 +6,8 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { Run } = require('../env/config')
-const { unmangle } = require('../env/unmangle')
+const Run = require('../env/run')
+const unmangle = require('../env/unmangle')
 const { _bsvNetwork } = unmangle(unmangle(Run)._misc)
 
 // ------------------------------------------------------------------------------------------------
