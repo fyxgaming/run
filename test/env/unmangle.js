@@ -8,11 +8,11 @@ let mangledProps = {}
 try { mangledProps = require('../../dist/name-cache.json').props.props } catch (e) { }
 
 // ------------------------------------------------------------------------------------------------
-// setMangled
+// enable
 // ------------------------------------------------------------------------------------------------
 
 let mangled = false
-function setMangled (enable) { mangled = enable }
+function enable (enable) { mangled = enable }
 
 // ------------------------------------------------------------------------------------------------
 // unmangle
@@ -63,4 +63,7 @@ function mangle (x) {
 
 // ------------------------------------------------------------------------------------------------
 
-module.exports = { setMangled, unmangle, mangle }
+unmangle.enable = enable
+unmangle.mangle = mangle
+
+module.exports = unmangle
