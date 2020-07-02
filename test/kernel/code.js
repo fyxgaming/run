@@ -606,13 +606,14 @@ describe('Code', () => {
       class A {}
       // const CA = run.install(A)
       const t1 = new Date()
-      await run.deploy(A)
+      // await run.deploy(A)
       const t2 = new Date()
 
       // Try sleeping, then syncing
       // await new Promise((resolve, reject) => setTimeout(resolve, 200))
 
       class B extends A { }
+      A.B = B
       await run.deploy(B)
       const t3 = new Date()
 
