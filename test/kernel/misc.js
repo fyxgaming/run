@@ -10,10 +10,42 @@ const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const Sandbox = Run.sandbox
 const {
-  _bsvNetwork, _parent, _text, _sourceCode, _isBasicObject, _isBasicArray, _isUndefined, _protoLen
+  _kernel, _assert, _bsvNetwork, _parent, _text, _sourceCode, _isBasicObject, _isBasicArray,
+  _isUndefined, _isBoolean, _protoLen
 } = unmangle(unmangle(Run)._misc)
 
 describe('Misc', () => {
+  // ----------------------------------------------------------------------------------------------
+  // _kernel
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_kernel', () => {
+    it('return active run kernel', () => {
+      const run = unmangle(new Run())
+      expect(_kernel()).to.equal(run._kernel)
+    })
+
+    it('should throw if no run instance is active', () => {
+      new Run().deactivate() // eslint-disable-line
+      expect(() => _kernel()).to.throw('Run instance not active')
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _assert
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_kernel', () => {
+    it('should not throw if assert passes', () => {
+      _assert(true)
+      _assert(1)
+    })
+
+    it('should throw if assert fails', () => {
+      expect(() => _assert(false)).to.throw()
+    })
+  })
+
   // ----------------------------------------------------------------------------------------------
   // _bsvNetwork
   // ----------------------------------------------------------------------------------------------
@@ -98,6 +130,21 @@ describe('Misc', () => {
       expect(_isUndefined(null)).to.equal(false)
       expect(_isUndefined(0)).to.equal(false)
       expect(_isUndefined({})).to.equal(false)
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _isBoolean
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_isBoolean', () => {
+    it('should return whether value is a boolean', () => {
+      expect(_isBoolean(true)).to.equal(true)
+      expect(_isBoolean(false)).to.equal(true)
+      expect(_isBoolean()).to.equal(false)
+      expect(_isBoolean('true')).to.equal(false)
+      expect(_isBoolean(null)).to.equal(false)
+      expect(_isBoolean(0)).to.equal(false)
     })
   })
 
