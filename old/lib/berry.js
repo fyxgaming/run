@@ -105,7 +105,7 @@ const BerryControl = {
 // ------------------------------------------------------------------------------------------------
 
 async function _pluckBerry (location, blockchain, code, BerryClass) {
-  const { _txToTxo } = require('../lib/kernel/misc')
+  const { _txToTxo } = require('../../lib/kernel/misc')
   const Location = require('./util/location')
 
   // TODO: Make fetch and pluck secure, as well as txo above

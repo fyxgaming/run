@@ -10,7 +10,7 @@ const Record = require('./v2/record')
 const Publisher = require('./publisher')
 const Syncer = require('./syncer')
 const Inventory = require('./inventory')
-const Transaction = require('../../old/transaction')
+const Transaction = require('./transaction')
 const { _bsvNetwork, _SerialTaskQueue, _assert } = require('../util/misc')
 const { _location } = require('../util/bindings')
 

@@ -5,7 +5,7 @@
  */
 
 const { Jig } = require('../jig')
-const expect = require('../../lib/extra/expect')
+const expect = require('../../../lib/extra/expect')
 
 // ------------------------------------------------------------------------------------------------
 // Token

@@ -5,7 +5,7 @@
  */
 
 const bsv = require('bsv')
-const { JigControl } = require('../../old/jig')
+const { JigControl } = require('./jig')
 const { SafeSet, _allowInconsistentWorldview } = require('../util/safe')
 const { _resourceType } = require('../util/misc')
 const { _text } = require('../util/type')

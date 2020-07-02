@@ -10,16 +10,16 @@
 
 const { Jig, JigControl, _JigDeps } = require('./jig')
 const { Berry, _BerryDeps } = require('./berry')
-const Sandbox = require('../lib/kernel/sandbox')
+const Sandbox = require('../../lib/kernel/sandbox')
 const {
   _networkSuffix,
   _deployable,
   _resourceType,
   _activeRun
-} = require('../lib/kernel/misc')
+} = require('../../lib/kernel/misc')
 const { _text } = require('../lib/kernel/type')
-const { _owner } = require('../lib/kernel/bindings')
-const Log = require('../lib/kernel/log')
+const { _owner } = require('../../lib/kernel/bindings')
+const Log = require('../../lib/kernel/log')
 const ResourceJSON = require('./util/json')
 
 // ------------------------------------------------------------------------------------------------

@@ -8,9 +8,9 @@ const { JigControl } = require('./jig')
 const Location = require('./util/location')
 const { _pluckBerry } = require('./berry')
 const ResourceJSON = require('./util/json')
-const Log = require('../lib/kernel/log')
-const Record = require('../lib/kernel/record')
-const { _activeRun } = require('../lib/kernel/misc')
+const Log = require('../../lib/kernel/log')
+const Record = require('../../lib/kernel/record')
+const { _activeRun } = require('../../lib/kernel/misc')
 const { _outputType } = require('./util/opreturn')
 
 // ------------------------------------------------------------------------------------------------

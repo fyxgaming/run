@@ -5,7 +5,7 @@
  */
 
 const bsv = require('bsv')
-const { Jig, JigControl } = require('../../old/jig')
+const { Jig, JigControl } = require('./jig')
 const { Berry } = require('../../old/berry')
 const { _text } = require('./type')
 const { InternalError } = require('./errors')
@@ -20,7 +20,7 @@ const { InternalError } = require('./errors')
  * TODO: DEPRECATED, REMOVE
  */
 function _activeRun () {
-  const Run = require('..')
+  const Run = require('../../dist/run.node.min')
   if (!Run.instance) throw new Error('Run not instantiated')
   return Run.instance
 }
