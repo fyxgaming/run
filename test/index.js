@@ -7,3 +7,4 @@
 require('./kernel/log.js')
 require('./kernel/misc.js')
 require('./kernel/repository.js')
+require('./kernel/standard-lock.js')
