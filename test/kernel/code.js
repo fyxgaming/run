@@ -633,10 +633,20 @@ describe('Code', () => {
       const t5 = new Date()
       console.log(A2)
 
+      class C extends A { }
+      await run.deploy(C)
+      const t6 = new Date()
+
+      await A2.sync()
+      const t7 = new Date()
+      console.log(A2)
+
       console.log(t2 - t1, 'deploy')
       console.log(t3 - t2, 'deploy')
       console.log(t4 - t3, 'load')
       console.log(t5 - t4, 'sync')
+      console.log(t6 - t5, 'deploy')
+      console.log(t7 - t6, 'sync')
 
       // const B2 = await run.load(B.location)
 
