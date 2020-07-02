@@ -603,60 +603,21 @@ describe('Code', () => {
 
     it.only('publishes after dependent transaction', async () => {
       const run = new Run()
+
       class A {}
-      // const CA = run.install(A)
-      const t1 = new Date()
-      // await run.deploy(A)
-      const t2 = new Date()
-
-      // Try sleeping, then syncing
-      // await new Promise((resolve, reject) => setTimeout(resolve, 200))
-
       class B extends A { }
       A.B = B
-      await run.deploy(B)
-      const t3 = new Date()
 
-      console.log('---')
-      console.log(B.location)
-      console.log(A.origin, A.location)
-      console.log('---')
+      await run.deploy(A)
 
-      // const A2 = run.install(A)
-      // console.log(A2)
+      const A2 = await run.load(A.location)
+      const B2 = await run.load(B.location)
 
-      // await A2.sync()
-      // console.log(A2)
-
-      const A2 = await run.load(B.location)
-      const t4 = new Date()
-      console.log(A2)
-
-      /*
-      await A2.sync()
-      const t5 = new Date()
-      console.log(A2)
-
-      class C extends A { }
+      class C extends B2 { }
       await run.deploy(C)
-      const t6 = new Date()
 
-      await A2.sync()
-      const t7 = new Date()
-      console.log(A2)
-      */
-
-      console.log(t2 - t1, 'deploy')
-      console.log(t3 - t2, 'deploy')
-      console.log(t4 - t3, 'load')
-      // console.log(t5 - t4, 'sync')
-      // console.log(t6 - t5, 'deploy')
-      // console.log(t7 - t6, 'sync')
-
-      // const B2 = await run.load(B.location)
-
-      // console.log(B2)
-      // console.log(B2.toString())
+      // Deploy C fails
+      console.log(C.location, A2)
     })
   })
 })
