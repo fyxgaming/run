@@ -108,7 +108,7 @@ describe('Misc', () => {
   describe('_isBasicArray', () => {
     it('should return whether value is a basic array', () => {
       expect(_isBasicArray([])).to.equal(true)
-      expect(_isBasicArray(new Sandbox._intrinsics.Array())).to.equal(true)
+      expect(_isBasicArray(new (unmangle(Sandbox)._intrinsics.Array)())).to.equal(true)
       expect(_isBasicArray(new class C extends Array {}())).to.equal(false)
       expect(_isBasicArray({})).to.equal(false)
       expect(_isBasicArray(null)).to.equal(false)

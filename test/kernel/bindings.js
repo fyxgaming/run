@@ -168,8 +168,8 @@ describe('Bindings', () => {
       expect(o.origin).to.equal('error://Undeployed')
       expect(o.location).to.equal('error://Undeployed')
       expect(o.nonce).to.equal(-1)
-      expect(o.owner).to.deep.equal({ _value: undefined })
-      expect(o.satoshis).to.deep.equal({ _value: undefined })
+      expect(o.owner).to.deep.equal(unmangle.mangle({ _value: undefined }))
+      expect(o.satoshis).to.deep.equal(unmangle.mangle({ _value: undefined }))
     })
   })
 
