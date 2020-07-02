@@ -7,8 +7,8 @@
 const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
-const { Run } = require('../env/config')
-const { unmangle } = require('../env/unmangle')
+const Run = require('../env/run')
+const unmangle = require('../env/unmangle')
 const { NotImplementedError } = Run.errors
 const { Blockchain, Purse, Logger, Cache, Lock, Owner } = Run.api
 
