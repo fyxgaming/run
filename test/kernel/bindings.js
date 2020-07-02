@@ -18,10 +18,8 @@ describe('Bindings', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_location', () => {
-    const USER = 1
-
     it('should parse valid locations', () => {
-    // Jigs
+      // Jigs
       expect(_location('abc_o0')).to.deep.equal({ txid: 'abc', vout: 0 })
       expect(_location('abc_d1')).to.deep.equal({ txid: 'abc', vdel: 1 })
       expect(_location('native://Jig')).to.deep.equal({ native: 'native://Jig' })
@@ -41,6 +39,7 @@ describe('Bindings', () => {
       expect(_location('error://')).to.deep.equal({ error: '' })
       expect(_location('error://Something bad happened')).to.deep.equal({ error: 'Something bad happened' })
       expect(_location('error://line1\nline2')).to.deep.equal({ error: 'line1\nline2' })
+      expect(_location('error://Undeployed')).to.deep.equal({ error: 'Undeployed', undeployed: true })
       // Record locations
       expect(_location('record://abc_j1')).to.deep.equal({ record: 'record://abc', vjig: 1 })
     })
@@ -82,18 +81,6 @@ describe('Bindings', () => {
       expect(() => _location('error:/abc_o1')).to.throw()
       expect(() => _location('err://abc_o1')).to.throw()
       expect(() => _location('nat://Jig')).to.throw()
-    })
-
-    it('should accept matching flags', () => {
-      _location('abc_o1', USER)
-      _location('abc_o1_def', USER)
-      _location('abc_d2', USER)
-    })
-
-    it('should throw when flags dont match', () => {
-      expect(() => _location('_o1', USER)).to.throw()
-      expect(() => _location('_d1', USER)).to.throw()
-      expect(() => _location('_o1_def', USER)).to.throw()
     })
   })
 
