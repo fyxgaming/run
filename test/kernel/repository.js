@@ -336,6 +336,26 @@ describe('Repository', () => {
       const CA = run.install(A)
       expect(CA.presets).to.equal(undefined)
     })
+
+    it('returns different code for a copy with same presets', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      class B { }
+      Object.assign(B, A)
+      const CA = run.install(A)
+      const CB = run.install(B)
+      expect(CA).not.to.equal(CB)
+    })
   })
 })
 

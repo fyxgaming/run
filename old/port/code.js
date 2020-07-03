@@ -20,26 +20,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('presets', () => {
-    it('returns existing code for a copy with same presets', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      A.presets = {
-        [network]: {
-          location: randomLocation(),
-          origin: randomLocation(),
-          nonce: 2,
-          owner: randomOwner(),
-          satoshis: 0
-        }
-      }
-      class B { }
-      Object.assign(B, A)
-      const CA = run.install(A)
-      const CB = run.install(B)
-      expect(CA).to.equal(CB)
-    })
-
     it('installs separate presets for parent and child', () => {
       const run = new Run()
       const network = run.blockchain.network
