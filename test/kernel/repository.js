@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
-const { Code, sandbox } = Run
+const { Code, Jig, Berry, sandbox } = Run
 const unmangle = require('../env/unmangle')
 const SI = unmangle(sandbox)._intrinsics
 const Membrane = unmangle(unmangle(Run)._Membrane)
@@ -300,6 +300,41 @@ describe('Repository', () => {
       expect(CA.s).not.to.equal(A.presets[network].s)
       expect(CA.a instanceof SI.Array).to.equal(true)
       expect(CA.s instanceof SI.Set).to.equal(true)
+    })
+
+    it.skip('copies jigs', async () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class J extends Jig { }
+      const j = new J()
+      class B extends Berry { static pluck () { return new B() } }
+      const b = await run.load('', B)
+      class C {}
+      class A { }
+      A.presets = { [network]: { b, j, C } }
+      const CA = run.install(A)
+      expect(CA.b).to.equal(b)
+      expect(CA.j).to.equal(j)
+      expect(CA.C).not.to.equal(C)
+      expect(CA.C.toString()).to.equal(C.toString())
+      expect(CA.C).to.equal(run.install(C))
+    })
+
+    it('does not add presets to code jig', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      const CA = run.install(A)
+      expect(CA.presets).to.equal(undefined)
     })
   })
 })
