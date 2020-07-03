@@ -621,10 +621,11 @@ describe('Repository', () => {
       const run = new Run()
       class A { f () { } }
       const CA = run.install(A)
-      console.log(CA.prototype.f, CA.prototype.g)
+      console.log(CA.prototype.f, CA.prototype.g, CA.toString())
+
       class B { g () { } }
       CA.upgrade(B)
-      console.log(CA.prototype.f, CA.prototype.g)
+      console.log(CA.prototype.f, CA.prototype.g, CA.toString())
     })
   })
 })
