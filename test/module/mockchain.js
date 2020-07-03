@@ -8,7 +8,8 @@ const { PrivateKey, Transaction, Script } = require('bsv')
 const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
-const { Run, PERF } = require('../env/config')
+const Run = require('../env/run')
+const { PERF } = require('../env/config')
 const { Mockchain } = Run
 
 // ------------------------------------------------------------------------------------------------

@@ -6,7 +6,10 @@
 
 require('./kernel/api.js')
 require('./kernel/bindings.js')
+require('./kernel/blockchain')
 require('./kernel/log.js')
 require('./kernel/misc.js')
 require('./kernel/repository.js')
 require('./kernel/standard-lock.js')
+
+require('./module/mockchain')
