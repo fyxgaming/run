@@ -23,15 +23,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('deps', () => {
-    it('sets deps on returned code jig', () => {
-      const run = new Run()
-      class A { }
-      class B { }
-      A.deps = { B }
-      const CA = run.install(A)
-      expect(CA.deps.B).to.equal(run.install(B))
-    })
-
     it('throws if deps invalid', () => {
       const run = new Run()
       class A { }

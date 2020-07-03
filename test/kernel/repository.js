@@ -230,6 +230,15 @@ describe('Repository', () => {
       expect(CA.o() instanceof SI.Object).to.equal(true)
       expect(CA.o().a instanceof SI.Array).to.equal(true)
     })
+
+    it('sets deps on returned code jig', () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      A.deps = { B }
+      const CA = run.install(A)
+      expect(CA.deps.B).to.equal(run.install(B))
+    })
   })
 })
 
