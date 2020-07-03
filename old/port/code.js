@@ -24,18 +24,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('new', () => {
-    it('installs circular prop code', () => {
-      const run = new Run()
-      class A { }
-      class B { }
-      A.B = B
-      B.A = A
-      const CA = run.install(A)
-      const CB = run.install(B)
-      expect(CA.B).to.equal(CB)
-      expect(CB.A).to.equal(CA)
-    })
-
     it('installs circular parent-child code', () => {
       const run = new Run()
       class B { }

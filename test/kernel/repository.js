@@ -152,6 +152,18 @@ describe('Repository', () => {
       const CA = run.install(A)
       expect(CA.B).to.equal(run.install(B))
     })
+
+    it('installs circular prop code', () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      A.B = B
+      B.A = A
+      const CA = run.install(A)
+      const CB = run.install(B)
+      expect(CA.B).to.equal(CB)
+      expect(CB.A).to.equal(CA)
+    })
   })
 })
 
