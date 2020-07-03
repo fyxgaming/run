@@ -497,7 +497,7 @@ describe('Repository', () => {
   })
 
   describe('prototype', () => {
-    it('sets prototype constructor to Code', () => {
+    it.only('sets prototype constructor to Code', () => {
       const run = new Run()
       class A { }
       const CA = run.install(A)
@@ -618,25 +618,38 @@ describe('Repository', () => {
   })
 
   describe('upgrade', () => {
-    it.only('should replace code', () => {
+    it('should replace code', () => {
       const run = new Run()
+
       class A { f () { } }
       const CA = run.install(A)
-      console.log(CA.prototype.f, CA.prototype.g, CA.toString())
+
+      expect(typeof CA.prototype.f).to.equal('function')
+      expect(CA.toString()).to.equal(A.toString())
+      expect(CA.name).to.equal(A.name)
 
       const x = new CA()
-      console.log(x.f, x.g)
+
+      expect(x instanceof CA).to.equal(true)
+      expect(typeof x.f).to.equal('function')
 
       class B { g () { } }
       CA.upgrade(B)
-      console.log(CA.prototype.f, CA.prototype.g, CA.toString())
+
+      expect(typeof CA.prototype.f).to.equal('undefined')
+      expect(typeof CA.prototype.g).to.equal('function')
+      expect(CA.toString()).to.equal(B.toString())
+      expect(CA.name).to.equal(B.name)
 
       const y = new CA()
 
-      console.log(x, y, x instanceof CA, y instanceof CA, x instanceof A, y instanceof B)
-      console.log(x.f, x.g, y.f, y.g)
+      expect(y instanceof CA).to.equal(true)
+      expect(typeof y.f).to.equal('undefined')
+      expect(typeof y.g).to.equal('function')
 
-      // TODO second instanceof ... possible?
+      expect(x instanceof CA).to.equal(true)
+      expect(typeof x.f).to.equal('undefined')
+      expect(typeof x.g).to.equal('function')
     })
 
     it('should upgrade functions', () => {
