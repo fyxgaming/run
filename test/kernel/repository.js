@@ -60,6 +60,15 @@ describe('Repository', () => {
       const CA2 = run.install(A)
       expect(CA1).to.equal(CA2)
     })
+
+    it('throws if not a function', () => {
+      const run = new Run()
+      expect(() => run.install()).to.throw('Cannot install')
+      expect(() => run.install(0)).to.throw('Cannot install')
+      expect(() => run.install({})).to.throw('Cannot install')
+      expect(() => run.install('class A {}')).to.throw('Cannot install')
+      expect(() => run.install(null)).to.throw('Cannot install')
+    })
   })
 })
 
