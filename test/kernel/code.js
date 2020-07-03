@@ -619,12 +619,12 @@ describe('Repository', () => {
   describe('upgrade', () => {
     it.only('should replace code', () => {
       const run = new Run()
-      class A { }
+      class A { f () { } }
       const CA = run.install(A)
-      console.log(CA.toString())
-      class B { }
+      console.log(CA.prototype.f, CA.prototype.g)
+      class B { g () { } }
       CA.upgrade(B)
-      console.log(CA.toString())
+      console.log(CA.prototype.f, CA.prototype.g)
     })
   })
 })
