@@ -35,6 +35,18 @@ describe('Blockchain API', () => {
     })
   })
 
+  describe('time', () => {
+    it('should throw NotImplementedError by default', async () => {
+      await expect(new Blockchain().time()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
+  describe('spends', () => {
+    it('should throw NotImplementedError by default', async () => {
+      await expect(new Blockchain().spends()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
   describe('network', () => {
     it('should throw NotImplementedError by default', async () => {
       expect(() => new Blockchain().network).to.throw(NotImplementedError)
@@ -164,6 +176,12 @@ describe('Owner API', () => {
       expect(({ owner: () => '', get sign () { } }) instanceof Owner).to.equal(false)
     })
 
+    it('returns false if owner is not a function', () => {
+      expect(({ sign: () => '' }) instanceof Owner).to.equal(false)
+      expect(({ sign: () => '', owner: 123 }) instanceof Owner).to.equal(false)
+      expect(({ sign: () => '', get owner () { } }) instanceof Owner).to.equal(false)
+    })
+
     it('returns false for non-objects', () => {
       expect(0 instanceof Owner).to.equal(false)
       expect(true instanceof Owner).to.equal(false)
@@ -279,6 +297,12 @@ describe('Lock API', () => {
     })
   })
 
+  describe('domain', () => {
+    it('should throw NotImplementedError by default', () => {
+      expect(() => new Lock().domain()).to.throw(NotImplementedError)
+    })
+  })
+
   describe('instanceof', () => {
     it('returns true if script is a function on class', () => {
       class CustomLock {
@@ -339,7 +363,10 @@ describe('Lock API', () => {
     })
 
     it('returns false if domain is a property', () => {
-      class CustomLock { script () { return new Uint8Array() } }
+      class CustomLock {
+        script () { return new Uint8Array() }
+        domain () { return 123 }
+      }
       const lock = new CustomLock()
       lock.domain = 1
       expect(lock instanceof Lock).to.equal(false)

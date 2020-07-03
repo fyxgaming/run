@@ -45,7 +45,7 @@ describe('Bindings', () => {
     })
 
     it('should throw for invalid locations', () => {
-    // Invalid types
+      // Invalid types
       expect(() => _location()).to.throw()
       expect(() => _location(1)).to.throw()
       expect(() => _location({})).to.throw()
