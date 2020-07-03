@@ -164,6 +164,17 @@ describe('Repository', () => {
       expect(CA.B).to.equal(CB)
       expect(CB.A).to.equal(CA)
     })
+
+    it('installs circular parent-child code', () => {
+      const run = new Run()
+      class B { }
+      class A extends B { }
+      B.A = A
+      const CA = run.install(A)
+      const CB = run.install(B)
+      expect(Object.getPrototypeOf(CA)).to.equal(CB)
+      expect(CB.A).to.equal(CA)
+    })
   })
 })
 
