@@ -529,18 +529,13 @@ describe('Repository', () => {
   describe('deploy', () => {
     // Does not deploy if already deployed
 
-    it('deploys parent and child', () => {
+    it('deploys parent and child', async () => {
       const run = new Run()
       class A {}
       class B extends A {}
-      const CB = run.install(B)
-      CB.deploy()
-      // const record = unmangle(stub(record))
-      // expect(record._deploy.called).to.equal(true)
-      expect(A.location.startsWith('record://'))
-      expect(B.location.startsWith('record://'))
-      expect(A.location.endsWith('_o2'))
-      expect(B.location.endsWith('_o1'))
+      await run.deploy(B)
+      expect(A.location.endsWith('_o1'))
+      expect(B.location.endsWith('_o2'))
     })
 
     it.skip('sealed by default', () => {
