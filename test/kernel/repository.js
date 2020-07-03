@@ -175,6 +175,16 @@ describe('Repository', () => {
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
       expect(CB.A).to.equal(CA)
     })
+
+    it('installs parent that is code jig', () => {
+      const run = new Run()
+      class B { }
+      const CB = run.install(B)
+      class A extends CB { }
+      B.deps = { A }
+      const CA = run.install(A)
+      expect(Object.getPrototypeOf(CA)).to.equal(CB)
+    })
   })
 })
 

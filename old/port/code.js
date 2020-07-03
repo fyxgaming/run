@@ -24,16 +24,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('new', () => {
-    it('installs parent that is code jig', () => {
-      const run = new Run()
-      class B { }
-      const CB = run.install(B)
-      class A extends CB { }
-      B.deps = { A }
-      const CA = run.install(A)
-      expect(Object.getPrototypeOf(CA)).to.equal(CB)
-    })
-
     it('sets initial bindings', () => {
       const run = new Run()
       class A { }
