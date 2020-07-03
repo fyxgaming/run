@@ -617,7 +617,7 @@ describe('Repository', () => {
   })
 
   describe('upgrade', () => {
-    it.only('should replace code', () => {
+    it('should replace code', () => {
       const run = new Run()
       class A { f () { } }
       const CA = run.install(A)
@@ -626,6 +626,14 @@ describe('Repository', () => {
       class B { g () { } }
       CA.upgrade(B)
       console.log(CA.prototype.f, CA.prototype.g, CA.toString())
+    })
+  })
+
+  describe('native', () => {
+    it('should not return source code', () => {
+      console.log(Jig.toString())
+      console.log(Code.toString())
+      console.log(Berry.toString())
     })
   })
 })
