@@ -572,7 +572,6 @@ describe('Repository', () => {
       await run.deploy(CA)
       CA.send(new L())
       await CA.sync()
-      console.log(A)
       expect(A.location.startsWith('record://'))
     })
   })
@@ -600,7 +599,6 @@ describe('Repository', () => {
       expect(A2.toString()).to.equal(A.toString())
       expect(A2.origin).to.equal(A.origin)
       expect(A2.location).to.equal(A.location)
-      console.log(A2)
     })
 
     it('publishes after dependent transaction', async () => {
@@ -612,20 +610,15 @@ describe('Repository', () => {
 
       await run.deploy(A)
 
-      const t0 = new Date()
-      const A2 = await run.load(A.location)
+      await run.load(A.location)
       const B2 = await run.load(B.location)
-      console.log(new Date() - t0)
 
       class C extends B2 { }
       await run.deploy(C)
 
       // Deploy C fails
-      console.log(C.location, A2)
     })
   })
-
-  // Extend from code ... not possible
 })
 
 // ------------------------------------------------------------------------------------------------
