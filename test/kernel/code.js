@@ -583,10 +583,6 @@ describe('Repository', () => {
     // Code functions are not available inside functions
   })
 
-  describe('upgrade', () => {
-
-  })
-
   describe('sync', () => {
     // Only waits for current record
     // TODO: Check records
@@ -617,6 +613,18 @@ describe('Repository', () => {
       await run.deploy(C)
 
       // Deploy C fails
+    })
+  })
+
+  describe('upgrade', () => {
+    it.only('should replace code', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.install(A)
+      console.log(CA.toString())
+      class B { }
+      CA.upgrade(B)
+      console.log(CA.toString())
     })
   })
 })
