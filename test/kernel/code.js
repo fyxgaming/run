@@ -472,7 +472,7 @@ describe('Repository', () => {
       const CA = run.install(A)
       await run.deploy(A)
       run.deactivate()
-      const run2 = new Run()
+      const run2 = new Run({ blockchain: run.blockchain })
       await run2.deploy(B)
       await CA.sync()
       expect(CA.origin).to.equal(CA.location)
@@ -616,6 +616,8 @@ describe('Repository', () => {
       console.log(C.location, A2)
     })
   })
+
+  // Extend from code ... not possible
 })
 
 // ------------------------------------------------------------------------------------------------
