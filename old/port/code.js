@@ -24,20 +24,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('new', () => {
-    it('adds invisible code functions', () => {
-      const run = new Run()
-      class A { }
-      const CA = run.install(A)
-      expect(typeof CA.deploy).to.equal('function')
-      expect(typeof CA.upgrade).to.equal('function')
-      expect(typeof CA.sync).to.equal('function')
-      expect(typeof CA.release).to.equal('function')
-      expect(Object.getOwnPropertyNames(CA).includes('deploy')).to.equal(false)
-      expect(Object.getOwnPropertyNames(CA).includes('upgrade')).to.equal(false)
-      expect(Object.getOwnPropertyNames(CA).includes('sync')).to.equal(false)
-      expect(Object.getOwnPropertyNames(CA).includes('release')).to.equal(false)
-    })
-
     it('creates only once', () => {
       const run = new Run()
       class A { }
