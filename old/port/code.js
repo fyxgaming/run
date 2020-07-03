@@ -9,8 +9,6 @@ const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const { Run } = require('../../test/env/config')
 const { Jig, Berry } = Run
-const { unmangle } = require('../../test/env/unmangle')
-const SI = unmangle(Run.sandbox)._intrinsics
 
 const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
 const randomOwner = () => new PrivateKey().toAddress().toString()
@@ -23,18 +21,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('presets', () => {
-    it('clones javascript objects for sandbox', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      A.presets = { [network]: { a: [], s: new Set() } }
-      const CA = run.install(A)
-      expect(CA.a).not.to.equal(A.presets[network].a)
-      expect(CA.s).not.to.equal(A.presets[network].s)
-      expect(CA.a instanceof SI.Array).to.equal(true)
-      expect(CA.s instanceof SI.Set).to.equal(true)
-    })
-
     it('copies blockchain objects', async () => {
       const run = new Run()
       const network = run.blockchain.network

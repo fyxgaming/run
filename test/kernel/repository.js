@@ -289,6 +289,18 @@ describe('Repository', () => {
       expect(CA.satoshis).to.equal(A.presets[network].satoshis)
       expect(typeof CA.presets).to.equal('undefined')
     })
+
+    it('clones javascript objects for sandbox', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { a: [], s: new Set() } }
+      const CA = run.install(A)
+      expect(CA.a).not.to.equal(A.presets[network].a)
+      expect(CA.s).not.to.equal(A.presets[network].s)
+      expect(CA.a instanceof SI.Array).to.equal(true)
+      expect(CA.s instanceof SI.Set).to.equal(true)
+    })
   })
 })
 
