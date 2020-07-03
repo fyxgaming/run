@@ -489,7 +489,7 @@ describe('Repository', () => {
   })
 
   describe('prototype', () => {
-    it('sets prototype constructor to code jig', () => {
+    it('sets prototype constructor to Code', () => {
       const run = new Run()
       class A { }
       const CA = run.install(A)
