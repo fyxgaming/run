@@ -382,6 +382,56 @@ describe('Repository', () => {
       B.deps = { A: C }
       expect(() => run.install(B)).to.throw('Parent dependency mismatch')
     })
+
+    it('throws if presets are invalid', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = null
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      A.presets = { [network]: null }
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      A.presets = {
+        [network]: {
+          location: '_o1',
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      A.presets = {
+        [network]: {
+          location: '_o1',
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      expect(() => run.install(A)).to.throw()
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        },
+        test: null
+      }
+      expect(() => run.install(A)).to.throw()
+      delete A.presets.test
+      A.presets[network].nonce = -1
+      expect(() => run.install(A)).to.throw()
+      A.presets[network].nonce = null
+      expect(() => run.install(A)).to.throw()
+      A.presets = []
+      expect(() => run.install(A)).to.throw()
+      A.presets = { [network]: new class Presets {}() }
+      expect(() => run.install(A)).to.throw()
+    })
   })
 })
 
