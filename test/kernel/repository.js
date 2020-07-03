@@ -252,6 +252,19 @@ describe('Repository', () => {
       A.deps = new class Deps {}()
       expect(() => run.install(A)).to.throw('Cannot install A')
     })
+
+    it('doesnt install parent deps on child', () => {
+      const run = new Run()
+      class B { f () { return n } } // eslint-disable-line
+      class A extends B { g () { return n } } // eslint-disable-line
+      B.deps = { n: 1 }
+      const CB = run.install(B)
+      const b = new CB()
+      expect(b.f()).to.equal(1)
+      const CA = run.install(A)
+      const a = new CA()
+      expect(() => a.g()).to.throw()
+    })
   })
 })
 
