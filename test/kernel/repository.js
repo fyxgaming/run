@@ -239,6 +239,19 @@ describe('Repository', () => {
       const CA = run.install(A)
       expect(CA.deps.B).to.equal(run.install(B))
     })
+
+    it('throws if deps invalid', () => {
+      const run = new Run()
+      class A { }
+      A.deps = null
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      A.deps = '123'
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      A.deps = []
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      A.deps = new class Deps {}()
+      expect(() => run.install(A)).to.throw('Cannot install A')
+    })
   })
 })
 

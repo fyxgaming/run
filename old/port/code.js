@@ -23,19 +23,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('deps', () => {
-    it('throws if deps invalid', () => {
-      const run = new Run()
-      class A { }
-      A.deps = null
-      expect(() => run.install(A)).to.throw('Cannot install A')
-      A.deps = '123'
-      expect(() => run.install(A)).to.throw('Cannot install A')
-      A.deps = []
-      expect(() => run.install(A)).to.throw('Cannot install A')
-      A.deps = new class Deps {}()
-      expect(() => run.install(A)).to.throw('Cannot install A')
-    })
-
     it('doesnt install parent deps on child', () => {
       const run = new Run()
       class B { f () { return n } } // eslint-disable-line
