@@ -124,6 +124,18 @@ describe('Repository', () => {
       A.nonce = 1
       expect(() => run.install(A)).to.throw('Cannot install A')
     })
+
+    it('installs parents', () => {
+      const run = new Run()
+      class A { }
+      class B extends A { }
+      class C extends B { }
+      const CC = run.install(C)
+      const CB = run.install(B)
+      const CA = run.install(A)
+      expect(Object.getPrototypeOf(CC)).to.equal(CB)
+      expect(Object.getPrototypeOf(CB)).to.equal(CA)
+    })
   })
 })
 
