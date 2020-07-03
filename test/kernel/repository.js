@@ -52,6 +52,14 @@ describe('Repository', () => {
       expect(Object.getOwnPropertyNames(CA).includes('sync')).to.equal(false)
       expect(Object.getOwnPropertyNames(CA).includes('destroy')).to.equal(false)
     })
+
+    it('creates local code only once', () => {
+      const run = new Run()
+      class A { }
+      const CA1 = run.install(A)
+      const CA2 = run.install(A)
+      expect(CA1).to.equal(CA2)
+    })
   })
 })
 

@@ -24,14 +24,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('new', () => {
-    it('creates only once', () => {
-      const run = new Run()
-      class A { }
-      const CA1 = run.install(A)
-      const CA2 = run.install(A)
-      expect(CA1).to.equal(CA2)
-    })
-
     it('throws if not a function', () => {
       const run = new Run()
       expect(() => run.install()).to.throw('Cannot install')
