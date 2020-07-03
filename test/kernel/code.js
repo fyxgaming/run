@@ -635,6 +635,18 @@ describe('Repository', () => {
 
       console.log(x, y, x instanceof CA, y instanceof CA, x instanceof A, y instanceof B)
       console.log(x.f, x.g, y.f, y.g)
+
+      // TODO second instanceof ... possible?
+    })
+
+    it('should upgrade functions', () => {
+      const run = new Run()
+      function f () { return 1 }
+      const c = run.install(f)
+      expect(c()).to.equal(1)
+      function g () { return 2 }
+      c.upgrade(g)
+      expect(c()).to.equal(2)
     })
   })
 
