@@ -9,7 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const bsv = require('bsv')
 const { PrivateKey, Script } = bsv
-const { Run } = require('../env/config')
+const Run = require('../env/run')
 const { GroupLock } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -20,8 +20,10 @@ describe('GroupLock', () => {
   function testScript (m, n) {
     const pubkeys = []
     for (let i = 0; i < n; i++) pubkeys.push(new PrivateKey().publicKey.toString())
-    const script = new GroupLock(pubkeys, m).script()
+    const lock = new GroupLock(pubkeys, m)
+    const script = lock.script()
     const asm = new Script(bsv.deps.Buffer.from(script)).toASM()
+    expect(lock.domain()).to.equal(1 + 74 * m)
     expect(asm).to.equal(`OP_${m} ${pubkeys.join(' ')} OP_${n} OP_CHECKMULTISIG`)
   }
 

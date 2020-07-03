@@ -7,9 +7,9 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
-const { Run } = require('../env/config')
+const { Run } = require('../../test/env/config')
 const { Jig, Berry } = Run
-const { unmangle } = require('../env/unmangle')
+const { unmangle } = require('../../test/env/unmangle')
 const Membrane = unmangle(Run)._Membrane
 const SI = unmangle(Run.sandbox)._intrinsics
 

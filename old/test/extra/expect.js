@@ -6,7 +6,7 @@
 
 const { describe, it, beforeEach } = require('mocha')
 const { expect } = require('chai')
-const { Run } = require('../env/config')
+const { Run } = require('../../../test/env/config')
 const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------

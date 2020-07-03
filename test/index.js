@@ -4,6 +4,8 @@
  * Master list of test modules
  */
 
+require('./extra/group-lock.js')
+
 require('./kernel/api.js')
 require('./kernel/bindings.js')
 require('./kernel/blockchain')
