@@ -24,14 +24,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('new', () => {
-    it('throws if prototype inheritance', () => {
-      const run = new Run()
-      function A () { }
-      function B () { }
-      B.prototype = Object.create(A.prototype)
-      expect(() => run.install(B)).to.throw('Cannot install B')
-    })
-
     it('throws if contains reserved words', () => {
       const run = new Run()
       class A { }

@@ -87,6 +87,14 @@ describe('Repository', () => {
       expect(() => run.install(parseInt)).to.throw('Cannot install parseInt')
       expect(() => run.install(SI.Object)).to.throw('Cannot install Object')
     })
+
+    it('throws if prototype inheritance', () => {
+      const run = new Run()
+      function A () { }
+      function B () { }
+      B.prototype = Object.create(A.prototype)
+      expect(() => run.install(B)).to.throw('Cannot install B')
+    })
   })
 })
 
