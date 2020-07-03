@@ -24,23 +24,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('new', () => {
-    it('throws if contains reserved words', () => {
-      const run = new Run()
-      class A { }
-      A.toString = () => 'hello'
-      expect(() => run.install(A)).to.throw('Cannot install A')
-      class B { static deploy () { } }
-      expect(() => run.install(B)).to.throw('Cannot install B')
-      class C { }
-      C.upgrade = 1
-      expect(() => run.install(C)).to.throw('Cannot install C')
-      class D { }
-      D.sync = undefined
-      expect(() => run.install(D)).to.throw('Cannot install D')
-      class E { static get release () { } }
-      expect(() => run.install(E)).to.throw('Cannot install E')
-    })
-
     it('throws if contains bindings', () => {
       const run = new Run()
       class A { }

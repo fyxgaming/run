@@ -95,6 +95,20 @@ describe('Repository', () => {
       B.prototype = Object.create(A.prototype)
       expect(() => run.install(B)).to.throw('Cannot install B')
     })
+
+    it('throws if contains reserved words', () => {
+      const run = new Run()
+      class A { }
+      A.toString = () => 'hello'
+      expect(() => run.install(A)).to.throw('Cannot install A')
+      class B { }
+      B.upgrade = 1
+      expect(() => run.install(B)).to.throw('Cannot install B')
+      class C { static sync () { }}
+      expect(() => run.install(C)).to.throw('Cannot install C')
+      class D { static get destroy () { } }
+      expect(() => run.install(D)).to.throw('Cannot install D')
+    })
   })
 })
 
