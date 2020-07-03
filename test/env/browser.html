@@ -46,6 +46,12 @@
           }
       })
 
+      function pollLogs() {
+        const logs = this.logs
+        this.logs = []
+        return logs
+      }
+
     </script>
 
     <script src="../../dist/bsv.browser.min.js"></script>

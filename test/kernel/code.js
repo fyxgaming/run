@@ -607,6 +607,7 @@ describe('Repository', () => {
       await run.deploy(A)
 
       await run.load(A.location)
+
       const B2 = await run.load(B.location)
 
       class C extends B2 { }
