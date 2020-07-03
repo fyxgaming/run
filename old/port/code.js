@@ -24,12 +24,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('new', () => {
-    it('throw if anonymous', () => {
-      const run = new Run()
-      expect(() => run.install(() => {})).to.throw('Cannot install')
-      expect(() => run.install(class {})).to.throw('Cannot install')
-    })
-
     it('throws if built-in', () => {
       const run = new Run()
       expect(() => run.install(Object)).to.throw('Cannot install Object')

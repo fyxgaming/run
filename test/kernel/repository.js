@@ -69,6 +69,12 @@ describe('Repository', () => {
       expect(() => run.install('class A {}')).to.throw('Cannot install')
       expect(() => run.install(null)).to.throw('Cannot install')
     })
+
+    it('throw if anonymous', () => {
+      const run = new Run()
+      expect(() => run.install(() => {})).to.throw('Cannot install')
+      expect(() => run.install(class {})).to.throw('Cannot install')
+    })
   })
 })
 
