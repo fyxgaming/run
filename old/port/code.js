@@ -24,19 +24,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('new', () => {
-    it('creates from class', () => {
-      const run = new Run()
-      class A { }
-      const CA = run.install(A)
-      expect(CA.toString()).to.equal(A.toString())
-    })
-
-    it('creates from function', () => {
-      const run = new Run()
-      function f () { }
-      run.install(f)
-    })
-
     it('adds invisible code functions', () => {
       const run = new Run()
       class A { }

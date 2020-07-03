@@ -20,6 +20,13 @@ describe('Repository', () => {
       const CA = run.install(A)
       expect(CA.toString()).to.equal(A.toString())
     })
+
+    it('creates from function', () => {
+      const run = new Run()
+      function f () { }
+      const f2 = run.install(f)
+      expect(f2.toString()).to.equal(f.toString())
+    })
   })
 })
 
