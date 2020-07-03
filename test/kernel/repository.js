@@ -432,6 +432,23 @@ describe('Repository', () => {
       A.presets = { [network]: new class Presets {}() }
       expect(() => run.install(A)).to.throw()
     })
+
+    it('throws if presets are incomplete', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      const npresets = {
+        location: '_o1',
+        origin: randomLocation(),
+        owner: randomOwner(),
+        satoshis: 0
+      }
+      for (const key of Object.keys(npresets)) {
+        A.presets = { [network]: Object.assign({}, npresets) }
+        delete A.presets[network][key]
+        expect(() => run.install(A)).to.throw('Cannot install A')
+      }
+    })
   })
 })
 

@@ -6,13 +6,7 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { PrivateKey } = require('bsv')
 const { Run } = require('../../test/env/config')
-
-const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
-const randomOwner = () => new PrivateKey().toAddress().toString()
-
-// test read only
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -20,23 +14,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('presets', () => {
-    it('throws if presets are incomplete', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      const npresets = {
-        location: '_o1',
-        origin: randomLocation(),
-        owner: randomOwner(),
-        satoshis: 0
-      }
-      for (const key of Object.keys(npresets)) {
-        A.presets = { [network]: Object.assign({}, npresets) }
-        delete A.presets[network][key]
-        expect(() => run.install(A)).to.throw('Cannot install A')
-      }
-    })
-
     it('throws if presets contains reserved properties', () => {
       const run = new Run()
       const network = run.blockchain.network
