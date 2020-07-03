@@ -24,13 +24,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('new', () => {
-    it('throws if error creating dependency', () => {
-      const run = new Run()
-      class A { }
-      A.Date = Date
-      expect(() => run.install(A)).to.throw('Cannot install Date')
-    })
-
     it('creates code for props', () => {
       const run = new Run()
       class A { }

@@ -136,6 +136,13 @@ describe('Repository', () => {
       expect(Object.getPrototypeOf(CC)).to.equal(CB)
       expect(Object.getPrototypeOf(CB)).to.equal(CA)
     })
+
+    it('throws if error creating dependency', () => {
+      const run = new Run()
+      class A { }
+      A.Date = Date
+      expect(() => run.install(A)).to.throw('Cannot install Date')
+    })
   })
 })
 
