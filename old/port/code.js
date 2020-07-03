@@ -10,7 +10,6 @@ const { PrivateKey } = require('bsv')
 const { Run } = require('../../test/env/config')
 const { Jig, Berry } = Run
 const { unmangle } = require('../../test/env/unmangle')
-const Membrane = unmangle(Run)._Membrane
 const SI = unmangle(Run.sandbox)._intrinsics
 
 const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
@@ -23,24 +22,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 // ------------------------------------------------------------------------------------------------
 
 describe('Code', () => {
-  describe('new', () => {
-    it('sets initial bindings', () => {
-      const run = new Run()
-      class A { }
-      const CA = run.install(A)
-      expect(() => CA.location).to.throw('Cannot read location: Undeployed')
-      expect(() => CA.origin).to.throw('Cannot read origin: Undeployed')
-      expect(() => CA.owner).to.throw('Cannot read owner: Not bound')
-      expect(() => CA.satoshis).to.throw('Cannot read satoshis: Not bound')
-      Membrane._sudo(() => {
-        expect(CA.location).to.equal('error://Undeployed\n\nHint: Deploy the code first to assign location')
-        expect(CA.origin).to.equal('error://Undeployed\n\nHint: Deploy the code first to assign origin')
-        expect(unmangle(CA.owner)._value).to.equal(undefined)
-        expect(unmangle(CA.satoshis)._value).to.equal(0)
-      })
-    })
-  })
-
   describe('deps', () => {
     it('makes deps globals', () => {
       const run = new Run()

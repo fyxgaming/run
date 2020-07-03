@@ -11,6 +11,7 @@ const Run = require('../env/run')
 const { Code, sandbox } = Run
 const unmangle = require('../env/unmangle')
 const SI = unmangle(sandbox)._intrinsics
+const Membrane = unmangle(unmangle(Run)._Membrane)
 
 const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
 const randomOwner = () => new PrivateKey().toAddress().toString()
@@ -184,6 +185,24 @@ describe('Repository', () => {
       B.deps = { A }
       const CA = run.install(A)
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
+    })
+
+    it('sets initial bindings', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.install(A)
+      expect(() => CA.location).to.throw('Cannot read location: Undeployed')
+      expect(() => CA.origin).to.throw('Cannot read origin: Undeployed')
+      expect(() => CA.nonce).to.throw('Cannot read nonce: Undeployed')
+      expect(() => CA.owner).to.throw('Cannot read owner: Not bound')
+      expect(() => CA.satoshis).to.throw('Cannot read satoshis: Not bound')
+      Membrane._sudo(() => {
+        expect(CA.location).to.equal('error://Undeployed\n\nHint: Deploy the code first to assign location')
+        expect(CA.origin).to.equal('error://Undeployed\n\nHint: Deploy the code first to assign origin')
+        expect(CA.nonce).to.equal(-1)
+        expect(unmangle(CA.owner)._value).to.equal(undefined)
+        expect(unmangle(CA.satoshis)._value).to.equal(0)
+      })
     })
   })
 })
