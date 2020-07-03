@@ -497,7 +497,7 @@ describe('Repository', () => {
   })
 
   describe('prototype', () => {
-    it.only('sets prototype constructor to Code', () => {
+    it('sets prototype constructor to Code', () => {
       const run = new Run()
       class A { }
       const CA = run.install(A)
@@ -640,6 +640,7 @@ describe('Repository', () => {
       expect(typeof CA.prototype.g).to.equal('function')
       expect(CA.toString()).to.equal(B.toString())
       expect(CA.name).to.equal(B.name)
+      expect(CA.prototype.constructor).to.equal(CA)
 
       const y = new CA()
 
