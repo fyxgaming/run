@@ -182,7 +182,6 @@ describe('Repository', () => {
       class B { }
       const CB = run.install(B)
       class A extends CB { }
-      B.deps = { A }
       const CA = run.install(A)
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
