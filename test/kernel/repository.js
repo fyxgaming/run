@@ -449,6 +449,32 @@ describe('Repository', () => {
         expect(() => run.install(A)).to.throw('Cannot install A')
       }
     })
+
+    it('throws if presets contains reserved properties', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { deps: {} } }
+      expect(() => run.install(A)).to.throw()
+      A.presets = { [network]: { presets: {} } }
+      expect(() => run.install(A)).to.throw()
+      A.presets = { [network]: { upgrade: () => {} } }
+      expect(() => run.install(A)).to.throw()
+    })
+  })
+
+  describe('deploy', () => {
+    it.skip('requires parent approval by default', () => {
+      const run = new Run()
+      class A { }
+      A.options = { utility: true }
+      const CA = run.install(A)
+      CA.deploy()
+      class C extends A { }
+      const CC = run.install(C)
+      CC.deploy()
+      // TODO: Parent approval
+    })
   })
 })
 

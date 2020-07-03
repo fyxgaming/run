@@ -13,32 +13,6 @@ const { Run } = require('../../test/env/config')
 // ------------------------------------------------------------------------------------------------
 
 describe('Code', () => {
-  describe('presets', () => {
-    it('throws if presets contains reserved properties', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      A.presets = { [network]: { deps: {} } }
-      expect(() => run.install(A)).to.throw()
-      A.presets = { [network]: { presets: {} } }
-      expect(() => run.install(A)).to.throw()
-      A.presets = { [network]: { upgrade: () => {} } }
-      expect(() => run.install(A)).to.throw()
-    })
-
-    it('requires parent approval by default', () => {
-      const run = new Run()
-      class A { }
-      A.options = { utility: true }
-      const CA = run.install(A)
-      CA.deploy()
-      class C extends A { }
-      const CC = run.install(C)
-      CC.deploy()
-      // TODO: Parent approval
-    })
-  })
-
   describe('options', () => {
     it('allows utility classes', () => {
       const run = new Run()
