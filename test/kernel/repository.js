@@ -356,6 +356,23 @@ describe('Repository', () => {
       const CB = run.install(B)
       expect(CA).not.to.equal(CB)
     })
+
+    it('installs separate presets for parent and child', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class B { }
+      B.presets = { [network]: { n: 1, m: 0 } }
+      class A extends B { }
+      A.presets = { [network]: { n: 2 } }
+      const CB = run.install(B)
+      const CA = run.install(A)
+      expect(CB.n).to.equal(1)
+      expect(CB.m).to.equal(0)
+      expect(CA.n).to.equal(2)
+      expect(CA.m).to.equal(0)
+      expect(Object.getOwnPropertyNames(CA).includes('n')).to.equal(true)
+      expect(Object.getOwnPropertyNames(CA).includes('m')).to.equal(false)
+    })
   })
 })
 
