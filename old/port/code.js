@@ -24,16 +24,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('new', () => {
-    it('throws if contains bindings', () => {
-      const run = new Run()
-      class A { }
-      A.location = randomLocation()
-      A.origin = randomLocation()
-      A.owner = randomOwner()
-      A.satoshis = 0
-      expect(() => run.install(A)).to.throw('Cannot install A')
-    })
-
     it('creates parents', () => {
       const run = new Run()
       class A { }

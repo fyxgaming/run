@@ -6,10 +6,14 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { Code, sandbox } = Run
 const unmangle = require('../env/unmangle')
 const SI = unmangle(sandbox)._intrinsics
+
+const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
+const randomOwner = () => new PrivateKey().toAddress().toString()
 
 // ------------------------------------------------------------------------------------------------
 // Repository
@@ -108,6 +112,17 @@ describe('Repository', () => {
       expect(() => run.install(C)).to.throw('Cannot install C')
       class D { static get destroy () { } }
       expect(() => run.install(D)).to.throw('Cannot install D')
+    })
+
+    it('throws if contains bindings', () => {
+      const run = new Run()
+      class A { }
+      A.location = randomLocation()
+      A.origin = randomLocation()
+      A.owner = randomOwner()
+      A.satoshis = 0
+      A.nonce = 1
+      expect(() => run.install(A)).to.throw('Cannot install A')
     })
   })
 })
