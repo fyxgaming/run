@@ -7,7 +7,9 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Code } = Run
+const { Code, sandbox } = Run
+const unmangle = require('../env/unmangle')
+const SI = unmangle(sandbox)._intrinsics
 
 // ------------------------------------------------------------------------------------------------
 // Repository
@@ -74,6 +76,16 @@ describe('Repository', () => {
       const run = new Run()
       expect(() => run.install(() => {})).to.throw('Cannot install')
       expect(() => run.install(class {})).to.throw('Cannot install')
+    })
+
+    it('throws if built-in', () => {
+      const run = new Run()
+      expect(() => run.install(Object)).to.throw('Cannot install Object')
+      expect(() => run.install(Date)).to.throw('Cannot install Date')
+      expect(() => run.install(Uint8Array)).to.throw('Cannot install')
+      expect(() => run.install(Math.sin)).to.throw('Cannot install sin')
+      expect(() => run.install(parseInt)).to.throw('Cannot install parseInt')
+      expect(() => run.install(SI.Object)).to.throw('Cannot install Object')
     })
   })
 })

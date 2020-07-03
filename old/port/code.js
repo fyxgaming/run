@@ -24,15 +24,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('new', () => {
-    it('throws if built-in', () => {
-      const run = new Run()
-      expect(() => run.install(Object)).to.throw('Cannot install Object')
-      expect(() => run.install(Date)).to.throw('Cannot install Date')
-      expect(() => run.install(Uint8Array)).to.throw('Cannot install')
-      expect(() => run.install(Math.sin)).to.throw('Cannot install sin')
-      expect(() => run.install(parseInt)).to.throw('Cannot install parseInt')
-    })
-
     it('throws if prototype inheritance', () => {
       const run = new Run()
       function A () { }
