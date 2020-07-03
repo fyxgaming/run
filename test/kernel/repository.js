@@ -205,6 +205,17 @@ describe('Repository', () => {
       })
     })
   })
+
+  describe('deps', () => {
+    it('makes deps globals', () => {
+      const run = new Run()
+      class A { }
+      function f () { return A }
+      f.deps = { A }
+      const sf = run.install(f)
+      expect(sf()).to.equal(run.install(A))
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
