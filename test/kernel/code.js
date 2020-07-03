@@ -555,20 +555,20 @@ describe('Repository', () => {
       // TODO: Parent approval
     })
 
-    it('deploys with custom lock', () => {
+    it.skip('deploys with custom lock', async () => {
+      const run = new Run()
       class L {
         script () { return new Uint8Array() }
         domain () { return 0 }
       }
-      const run = new Run()
       class A {
         static send (to) { this.owner = to }
       }
       A.send = () => { throw new Error('Must call methods on jigs') }
       const CA = run.install(A)
-      // A.send(1)
+      await run.deploy(CA)
       CA.send(new L())
-      CA.deploy()
+      await CA.sync()
       console.log(A)
       expect(A.location.startsWith('record://'))
     })
