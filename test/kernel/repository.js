@@ -373,6 +373,15 @@ describe('Repository', () => {
       expect(Object.getOwnPropertyNames(CA).includes('n')).to.equal(true)
       expect(Object.getOwnPropertyNames(CA).includes('m')).to.equal(false)
     })
+
+    it('throws if parent dependency mismatch', () => {
+      const run = new Run()
+      class A { }
+      class C { }
+      class B extends A { }
+      B.deps = { A: C }
+      expect(() => run.install(B)).to.throw('Parent dependency mismatch')
+    })
   })
 })
 

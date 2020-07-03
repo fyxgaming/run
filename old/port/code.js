@@ -20,15 +20,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('presets', () => {
-    it('throws if parent dependency mismatch', () => {
-      const run = new Run()
-      class A { }
-      class C { }
-      class B extends A { }
-      B.deps = { A: C }
-      expect(() => run.install(B)).to.throw('Parent dependency mismatch')
-    })
-
     it('throws if presets are invalid', () => {
       const run = new Run()
       const network = run.blockchain.network
