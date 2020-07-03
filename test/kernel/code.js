@@ -618,15 +618,23 @@ describe('Repository', () => {
   })
 
   describe('upgrade', () => {
-    it('should replace code', () => {
+    it.only('should replace code', () => {
       const run = new Run()
       class A { f () { } }
       const CA = run.install(A)
       console.log(CA.prototype.f, CA.prototype.g, CA.toString())
 
+      const x = new CA()
+      console.log(x.f, x.g)
+
       class B { g () { } }
       CA.upgrade(B)
       console.log(CA.prototype.f, CA.prototype.g, CA.toString())
+
+      const y = new CA()
+
+      console.log(x, y, x instanceof CA, y instanceof CA, x instanceof A, y instanceof B)
+      console.log(x.f, x.g, y.f, y.g)
     })
   })
 
