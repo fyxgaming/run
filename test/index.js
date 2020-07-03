@@ -13,3 +13,4 @@ require('./kernel/repository.js')
 require('./kernel/standard-lock.js')
 
 require('./module/mockchain')
+require('./module/viewer')

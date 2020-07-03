@@ -7,7 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { PrivateKey, PublicKey, Transaction } = require('bsv')
-const { Run } = require('../env/config')
+const Run = require('../env/run')
 const { Viewer, StandardLock } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -48,7 +48,7 @@ describe('Viewer', () => {
     })
   })
 
-  describe('locks', () => {
+  describe('owner', () => {
     it('should always return the lock', () => {
       class CustomLock {
         script () { return new Uint8Array([0, 1, 2]) }
@@ -56,7 +56,7 @@ describe('Viewer', () => {
       }
       const lock = new CustomLock()
       const viewer = new Viewer(lock)
-      expect(viewer.lock).to.equal(lock)
+      expect(viewer.owner()).to.equal(lock)
     })
   })
 
