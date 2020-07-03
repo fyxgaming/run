@@ -23,30 +23,6 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('deps', () => {
-    it('makes deps globals', () => {
-      const run = new Run()
-      class A { }
-      function f () { return A }
-      f.deps = { A }
-      const sf = run.install(f)
-      expect(sf()).to.equal(run.install(A))
-    })
-
-    it('supports normal javascript values as deps', () => {
-      const run = new Run()
-      class A {
-        static n () { return n } // eslint-disable-line
-        static o () { return o } // eslint-disable-line
-      }
-      A.deps = { n: 1, o: { a: [] } }
-      const CA = run.install(A)
-      expect(CA.n()).to.equal(1)
-      expect(CA.o()).not.to.equal(A.deps.o)
-      expect(CA.o()).to.deep.equal(A.deps.o)
-      expect(CA.o() instanceof SI.Object).to.equal(true)
-      expect(CA.o().a instanceof SI.Array).to.equal(true)
-    })
-
     it('sets deps on returned code jig', () => {
       const run = new Run()
       class A { }
