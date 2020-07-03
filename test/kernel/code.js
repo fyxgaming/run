@@ -204,6 +204,15 @@ describe('Repository', () => {
         expect(unmangle(CA.satoshis)._value).to.equal(undefined)
       })
     })
+
+    it('cannot reference Code directly', () => {
+      const run = new Run()
+      class A extends Code { }
+      expect(() => run.install(A)).to.throw()
+      class B {}
+      B.Code = Code
+      expect(() => run.install(B)).to.throw()
+    })
   })
 
   describe('deps', () => {
