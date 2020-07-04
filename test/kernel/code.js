@@ -618,7 +618,7 @@ describe('Repository', () => {
   })
 
   describe('upgrade', () => {
-    it('should replace code', () => {
+    it.only('should replace code', async () => {
       const run = new Run()
 
       class A { f () { } }
@@ -632,6 +632,11 @@ describe('Repository', () => {
 
       expect(x instanceof CA).to.equal(true)
       expect(typeof x.f).to.equal('function')
+
+      // TODO remove
+      // await run.deploy(A)
+      await CA.sync()
+      console.log('---')
 
       class B { g () { } }
       CA.upgrade(B)
@@ -669,6 +674,7 @@ describe('Repository', () => {
     // TODO: Upgrade with different parent
     // TODO: Same for props
     // TODO: Upgrade and change name
+    // TODO: Cannot upgrade undeployed code
   })
 
   describe('native', () => {
