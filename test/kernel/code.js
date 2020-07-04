@@ -490,9 +490,9 @@ describe('Repository', () => {
       const run = new Run()
       class A { }
       A.sealed = null
-      expect(() => run.install(A)).to.throw('sealed must be a boolean')
+      expect(() => run.install(A)).to.throw('Invalid sealed option: null')
       A.sealed = 1
-      expect(() => run.install(A)).to.throw('sealed must be a boolean')
+      expect(() => run.install(A)).to.throw('Invalid sealed option: 1')
     })
   })
 
@@ -662,6 +662,9 @@ describe('Repository', () => {
       c.upgrade(g)
       expect(c()).to.equal(2)
     })
+
+    // TODO: Upgrade with parent
+    // TODO: Upgrade with props
   })
 
   describe('native', () => {
