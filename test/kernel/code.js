@@ -8,12 +8,13 @@ const { describe, it } = require('mocha')
 const { stub } = require('sinon')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
-const { PrivateKey } = require('bsv')
+const { Transaction, PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { Code, Jig, Berry, sandbox } = Run
 const unmangle = require('../env/unmangle')
 const SI = unmangle(sandbox)._intrinsics
 const Membrane = unmangle(unmangle(Run)._Membrane)
+const { payFor } = require('../env/misc')
 
 const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
 const randomOwner = () => new PrivateKey().toAddress().toString()
@@ -617,6 +618,23 @@ describe('Repository', () => {
       class C extends B2 { }
       run.deploy(C)
       await run.sync()
+    })
+
+    it.only('should sync with warning when UTXO is incorrectly spent', async () => {
+      const run = new Run()
+
+      class A { }
+      const C = run.deploy(A)
+
+      await C.sync()
+
+      const utxos = await run.blockchain.utxos(run.owner.address)
+      const tx = new Transaction().from(utxos)
+      const paid = await payFor(tx, run)
+      const signed = paid.sign(run.owner.privkey)
+      await run.blockchain.broadcast(signed.toString('hex'))
+
+      await C.sync()
     })
   })
 

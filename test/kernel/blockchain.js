@@ -159,10 +159,12 @@ describe('Blockchain', () => {
       const run = new Run()
       const utxos = await run.blockchain.utxos(run.purse.script)
       expect(utxos.length > 0).to.equal(true)
-      expect(typeof utxos[0].txid).to.equal('string')
-      expect(typeof utxos[0].vout).to.equal('number')
-      expect(typeof utxos[0].script).to.equal('string')
-      expect(typeof utxos[0].satoshis).to.equal('number')
+      utxos.forEach(utxo => {
+        expect(typeof utxo.txid).to.equal('string')
+        expect(typeof utxo.vout).to.equal('number')
+        expect(typeof utxo.script).to.equal('string')
+        expect(typeof utxo.satoshis).to.equal('number')
+      })
     })
 
     it('should return empty list if no utxos', async () => {
