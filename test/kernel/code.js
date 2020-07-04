@@ -5,6 +5,8 @@
  */
 
 const { describe, it } = require('mocha')
+const { stub } = require('sinon')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
@@ -190,11 +192,11 @@ describe('Repository', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
-      expect(() => CA.location).to.throw('Cannot read location: Undetermined. Please sync.')
-      expect(() => CA.origin).to.throw('Cannot read origin: Undetermined. Please sync.')
-      expect(() => CA.nonce).to.throw('Cannot read nonce: Undetermined. Please sync.')
-      expect(() => CA.owner).to.throw('Cannot read owner: Not bound')
-      expect(() => CA.satoshis).to.throw('Cannot read satoshis: Not bound')
+      expect(() => CA.location).to.throw('Cannot read location: undetermined')
+      expect(() => CA.origin).to.throw('Cannot read origin: undetermined')
+      expect(() => CA.nonce).to.throw('Cannot read nonce: undetermined')
+      expect(() => CA.owner).to.throw('Cannot read owner: unbound')
+      expect(() => CA.satoshis).to.throw('Cannot read satoshis: unbound')
       Membrane._sudo(() => {
         expect(CA.location.startsWith('record://')).to.equal(true)
         expect(CA.origin.startsWith('record://')).to.equal(true)
@@ -601,7 +603,7 @@ describe('Repository', () => {
     it('publishes after dependent transaction', async () => {
       const run = new Run()
 
-      class A {}
+      class A { }
       class B extends A { }
       A.B = B
 
@@ -708,6 +710,22 @@ describe('Repository', () => {
       expect(() => run.deploy(C)).to.throw('Inconsistent worldview')
     })
 
+    it('should rollback upgrade', async () => {
+      const run = new Run()
+      class A { }
+      A.x = 1
+      const C = run.deploy(A)
+      await C.sync()
+      class B { }
+      B.y = 2
+      stub(run.purse, 'pay').callsFake(x => x)
+      C.upgrade(B)
+      await expect(C.sync()).to.be.rejected
+      expect(C.toString()).to.equal(A.toString())
+      expect(C.x).to.equal(1)
+      expect(C.y).to.equal(undefined)
+    })
+
     // TODO: Upgrade with parent
     // TODO: Upgrade with props (deployed and not)
     // TODO: Upgrade and remove parent
@@ -716,14 +734,14 @@ describe('Repository', () => {
     // TODO: Upgrade and change name
     // TODO: Cannot upgrade undeployed code
     // TODO: Does not deploy if already deployed
-    // TODO: Rollback
+    // TODO: Rollback with multiple transactions in a batch
   })
 
   describe('native', () => {
     it('should not return source code', () => {
-      console.log(Jig.toString())
-      console.log(Code.toString())
-      console.log(Berry.toString())
+      expect(Jig.toString().indexOf('[native code]')).not.to.equal(-1)
+      expect(Code.toString().indexOf('[native code]')).not.to.equal(-1)
+      expect(Berry.toString().indexOf('[native code]')).not.to.equal(-1)
     })
   })
 })
