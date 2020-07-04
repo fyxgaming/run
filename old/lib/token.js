@@ -4,8 +4,8 @@
  * Token jig that provides ERC-20 like support
  */
 
-const { Jig } = require('../jig')
-const expect = require('../../../lib/extra/expect')
+const { Jig } = require('./jig')
+const expect = require('../../lib/extra/expect')
 
 // ------------------------------------------------------------------------------------------------
 // Token

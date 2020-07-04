@@ -5,7 +5,7 @@
  */
 
 const Location = require('./location')
-const { JigControl } = require('../jig')
+const { JigControl } = require('./jig')
 const { _resourceType } = require('../../lib/kernel/misc')
 
 // ------------------------------------------------------------------------------------------------
