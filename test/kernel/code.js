@@ -21,29 +21,29 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 // ------------------------------------------------------------------------------------------------
 
 describe('Repository', () => {
-  describe('install', () => {
+  describe('deploy', () => {
     it('creates from class', () => {
       const run = new Run()
       class A { }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       expect(CA.toString()).to.equal(A.toString())
     })
 
     it('creates from function', () => {
       const run = new Run()
       function f () { }
-      const f2 = run.install(f)
+      const f2 = run.deploy(f)
       expect(f2.toString()).to.equal(f.toString())
     })
 
     it('is instanceof Code', () => {
       const run = new Run()
       class A { }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       expect(A instanceof Code).to.equal(false)
       expect(CA instanceof Code).to.equal(true)
       function f () { }
-      const f2 = run.install(f)
+      const f2 = run.deploy(f)
       expect(f instanceof Code).to.equal(false)
       expect(f2 instanceof Code).to.equal(true)
     })
@@ -51,7 +51,7 @@ describe('Repository', () => {
     it('adds invisible Code functions', () => {
       const run = new Run()
       class A { }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       expect(typeof CA.upgrade).to.equal('function')
       expect(typeof CA.sync).to.equal('function')
       expect(typeof CA.destroy).to.equal('function')
@@ -63,34 +63,34 @@ describe('Repository', () => {
     it('creates local code only once', () => {
       const run = new Run()
       class A { }
-      const CA1 = run.install(A)
-      const CA2 = run.install(A)
+      const CA1 = run.deploy(A)
+      const CA2 = run.deploy(A)
       expect(CA1).to.equal(CA2)
     })
 
     it('throws if not a function', () => {
       const run = new Run()
-      expect(() => run.install()).to.throw('Cannot install')
-      expect(() => run.install(0)).to.throw('Cannot install')
-      expect(() => run.install({})).to.throw('Cannot install')
-      expect(() => run.install('class A {}')).to.throw('Cannot install')
-      expect(() => run.install(null)).to.throw('Cannot install')
+      expect(() => run.deploy()).to.throw('Cannot install')
+      expect(() => run.deploy(0)).to.throw('Cannot install')
+      expect(() => run.deploy({})).to.throw('Cannot install')
+      expect(() => run.deploy('class A {}')).to.throw('Cannot install')
+      expect(() => run.deploy(null)).to.throw('Cannot install')
     })
 
     it('throw if anonymous', () => {
       const run = new Run()
-      expect(() => run.install(() => {})).to.throw('Cannot install')
-      expect(() => run.install(class {})).to.throw('Cannot install')
+      expect(() => run.deploy(() => {})).to.throw('Cannot install')
+      expect(() => run.deploy(class {})).to.throw('Cannot install')
     })
 
     it('throws if built-in', () => {
       const run = new Run()
-      expect(() => run.install(Object)).to.throw('Cannot install Object')
-      expect(() => run.install(Date)).to.throw('Cannot install Date')
-      expect(() => run.install(Uint8Array)).to.throw('Cannot install')
-      expect(() => run.install(Math.sin)).to.throw('Cannot install sin')
-      expect(() => run.install(parseInt)).to.throw('Cannot install parseInt')
-      expect(() => run.install(SI.Object)).to.throw('Cannot install Object')
+      expect(() => run.deploy(Object)).to.throw('Cannot install Object')
+      expect(() => run.deploy(Date)).to.throw('Cannot install Date')
+      expect(() => run.deploy(Uint8Array)).to.throw('Cannot install')
+      expect(() => run.deploy(Math.sin)).to.throw('Cannot install sin')
+      expect(() => run.deploy(parseInt)).to.throw('Cannot install parseInt')
+      expect(() => run.deploy(SI.Object)).to.throw('Cannot install Object')
     })
 
     it('throws if prototype inheritance', () => {
@@ -98,21 +98,21 @@ describe('Repository', () => {
       function A () { }
       function B () { }
       B.prototype = Object.create(A.prototype)
-      expect(() => run.install(B)).to.throw('Cannot install B')
+      expect(() => run.deploy(B)).to.throw('Cannot install B')
     })
 
     it('throws if contains reserved words', () => {
       const run = new Run()
       class A { }
       A.toString = () => 'hello'
-      expect(() => run.install(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw('Cannot install A')
       class B { }
       B.upgrade = 1
-      expect(() => run.install(B)).to.throw('Cannot install B')
+      expect(() => run.deploy(B)).to.throw('Cannot install B')
       class C { static sync () { }}
-      expect(() => run.install(C)).to.throw('Cannot install C')
+      expect(() => run.deploy(C)).to.throw('Cannot install C')
       class D { static get destroy () { } }
-      expect(() => run.install(D)).to.throw('Cannot install D')
+      expect(() => run.deploy(D)).to.throw('Cannot install D')
     })
 
     it('throws if contains bindings', () => {
@@ -123,7 +123,7 @@ describe('Repository', () => {
       A.owner = randomOwner()
       A.satoshis = 0
       A.nonce = 1
-      expect(() => run.install(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw('Cannot install A')
     })
 
     it('installs parents', () => {
@@ -131,9 +131,9 @@ describe('Repository', () => {
       class A { }
       class B extends A { }
       class C extends B { }
-      const CC = run.install(C)
-      const CB = run.install(B)
-      const CA = run.install(A)
+      const CC = run.deploy(C)
+      const CB = run.deploy(B)
+      const CA = run.deploy(A)
       expect(Object.getPrototypeOf(CC)).to.equal(CB)
       expect(Object.getPrototypeOf(CB)).to.equal(CA)
     })
@@ -142,7 +142,7 @@ describe('Repository', () => {
       const run = new Run()
       class A { }
       A.Date = Date
-      expect(() => run.install(A)).to.throw('Cannot install Date')
+      expect(() => run.deploy(A)).to.throw('Cannot install Date')
     })
 
     it('creates code for props', () => {
@@ -150,8 +150,8 @@ describe('Repository', () => {
       class A { }
       class B { }
       A.B = B
-      const CA = run.install(A)
-      expect(CA.B).to.equal(run.install(B))
+      const CA = run.deploy(A)
+      expect(CA.B).to.equal(run.deploy(B))
     })
 
     it('installs circular prop code', () => {
@@ -160,8 +160,8 @@ describe('Repository', () => {
       class B { }
       A.B = B
       B.A = A
-      const CA = run.install(A)
-      const CB = run.install(B)
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
       expect(CA.B).to.equal(CB)
       expect(CB.A).to.equal(CA)
     })
@@ -171,8 +171,8 @@ describe('Repository', () => {
       class B { }
       class A extends B { }
       B.A = A
-      const CA = run.install(A)
-      const CB = run.install(B)
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
       expect(CB.A).to.equal(CA)
     })
@@ -180,25 +180,25 @@ describe('Repository', () => {
     it('installs parent that is code jig', () => {
       const run = new Run()
       class B { }
-      const CB = run.install(B)
+      const CB = run.deploy(B)
       class A extends CB { }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
     it('sets initial bindings', () => {
       const run = new Run()
       class A { }
-      const CA = run.install(A)
-      expect(() => CA.location).to.throw('Cannot read location: Undeployed')
-      expect(() => CA.origin).to.throw('Cannot read origin: Undeployed')
-      expect(() => CA.nonce).to.throw('Cannot read nonce: Undeployed')
+      const CA = run.deploy(A)
+      expect(() => CA.location).to.throw('Cannot read location: Undetermined. Please sync.')
+      expect(() => CA.origin).to.throw('Cannot read origin: Undetermined. Please sync.')
+      expect(() => CA.nonce).to.throw('Cannot read nonce: Undetermined. Please sync.')
       expect(() => CA.owner).to.throw('Cannot read owner: Not bound')
       expect(() => CA.satoshis).to.throw('Cannot read satoshis: Not bound')
       Membrane._sudo(() => {
-        expect(CA.location).to.equal('error://Undeployed')
-        expect(CA.origin).to.equal('error://Undeployed')
-        expect(CA.nonce).to.equal(-1)
+        expect(CA.location.startsWith('record://')).to.equal(true)
+        expect(CA.origin.startsWith('record://')).to.equal(true)
+        expect(CA.nonce).to.equal(0)
         expect(unmangle(CA.owner)._value).to.equal(undefined)
         expect(unmangle(CA.satoshis)._value).to.equal(undefined)
       })
@@ -207,10 +207,10 @@ describe('Repository', () => {
     it('cannot reference Code directly', () => {
       const run = new Run()
       class A extends Code { }
-      expect(() => run.install(A)).to.throw()
+      expect(() => run.deploy(A)).to.throw()
       class B {}
       B.Code = Code
-      expect(() => run.install(B)).to.throw()
+      expect(() => run.deploy(B)).to.throw()
     })
   })
 
@@ -220,8 +220,8 @@ describe('Repository', () => {
       class A { }
       function f () { return A }
       f.deps = { A }
-      const sf = run.install(f)
-      expect(sf()).to.equal(run.install(A))
+      const sf = run.deploy(f)
+      expect(sf()).to.equal(run.deploy(A))
     })
 
     it('supports normal javascript values as deps', () => {
@@ -231,7 +231,7 @@ describe('Repository', () => {
         static o () { return o } // eslint-disable-line
       }
       A.deps = { n: 1, o: { a: [] } }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       expect(CA.n()).to.equal(1)
       expect(CA.o()).not.to.equal(A.deps.o)
       expect(CA.o()).to.deep.equal(A.deps.o)
@@ -244,21 +244,21 @@ describe('Repository', () => {
       class A { }
       class B { }
       A.deps = { B }
-      const CA = run.install(A)
-      expect(CA.deps.B).to.equal(run.install(B))
+      const CA = run.deploy(A)
+      expect(CA.deps.B).to.equal(run.deploy(B))
     })
 
     it('throws if deps invalid', () => {
       const run = new Run()
       class A { }
       A.deps = null
-      expect(() => run.install(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw('Cannot install A')
       A.deps = '123'
-      expect(() => run.install(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw('Cannot install A')
       A.deps = []
-      expect(() => run.install(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw('Cannot install A')
       A.deps = new class Deps {}()
-      expect(() => run.install(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw('Cannot install A')
     })
 
     it('doesnt install parent deps on child', () => {
@@ -266,10 +266,10 @@ describe('Repository', () => {
       class B { f () { return n } } // eslint-disable-line
       class A extends B { g () { return n } } // eslint-disable-line
       B.deps = { n: 1 }
-      const CB = run.install(B)
+      const CB = run.deploy(B)
       const b = new CB()
       expect(b.f()).to.equal(1)
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       const a = new CA()
       expect(() => a.g()).to.throw()
     })
@@ -289,7 +289,7 @@ describe('Repository', () => {
           satoshis: 0
         }
       }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       expect(CA.location).to.equal(A.presets[network].location)
       expect(CA.origin).to.equal(A.presets[network].origin)
       expect(CA.nonce).to.equal(A.presets[network].nonce)
@@ -303,7 +303,7 @@ describe('Repository', () => {
       const network = run.blockchain.network
       class A { }
       A.presets = { [network]: { a: [], s: new Set() } }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       expect(CA.a).not.to.equal(A.presets[network].a)
       expect(CA.s).not.to.equal(A.presets[network].s)
       expect(CA.a instanceof SI.Array).to.equal(true)
@@ -320,12 +320,12 @@ describe('Repository', () => {
       class C {}
       class A { }
       A.presets = { [network]: { b, j, C } }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       expect(CA.b).to.equal(b)
       expect(CA.j).to.equal(j)
       expect(CA.C).not.to.equal(C)
       expect(CA.C.toString()).to.equal(C.toString())
-      expect(CA.C).to.equal(run.install(C))
+      expect(CA.C).to.equal(run.deploy(C))
     })
 
     it('does not add presets to code jig', () => {
@@ -341,7 +341,7 @@ describe('Repository', () => {
           satoshis: 0
         }
       }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       expect(CA.presets).to.equal(undefined)
     })
 
@@ -360,8 +360,8 @@ describe('Repository', () => {
       }
       class B { }
       Object.assign(B, A)
-      const CA = run.install(A)
-      const CB = run.install(B)
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
       expect(CA).not.to.equal(CB)
     })
 
@@ -372,8 +372,8 @@ describe('Repository', () => {
       B.presets = { [network]: { n: 1, m: 0 } }
       class A extends B { }
       A.presets = { [network]: { n: 2 } }
-      const CB = run.install(B)
-      const CA = run.install(A)
+      const CB = run.deploy(B)
+      const CA = run.deploy(A)
       expect(CB.n).to.equal(1)
       expect(CB.m).to.equal(0)
       expect(CA.n).to.equal(2)
@@ -388,7 +388,7 @@ describe('Repository', () => {
       class C { }
       class B extends A { }
       B.deps = { A: C }
-      expect(() => run.install(B)).to.throw('Parent dependency mismatch')
+      expect(() => run.deploy(B)).to.throw('Parent dependency mismatch')
     })
 
     it('throws if presets are invalid', () => {
@@ -396,9 +396,9 @@ describe('Repository', () => {
       const network = run.blockchain.network
       class A { }
       A.presets = null
-      expect(() => run.install(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw('Cannot install A')
       A.presets = { [network]: null }
-      expect(() => run.install(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw('Cannot install A')
       A.presets = {
         [network]: {
           location: '_o1',
@@ -408,7 +408,7 @@ describe('Repository', () => {
           satoshis: 0
         }
       }
-      expect(() => run.install(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw('Cannot install A')
       A.presets = {
         [network]: {
           location: '_o1',
@@ -418,7 +418,7 @@ describe('Repository', () => {
           satoshis: 0
         }
       }
-      expect(() => run.install(A)).to.throw()
+      expect(() => run.deploy(A)).to.throw()
       A.presets = {
         [network]: {
           location: randomLocation(),
@@ -429,16 +429,16 @@ describe('Repository', () => {
         },
         test: null
       }
-      expect(() => run.install(A)).to.throw()
+      expect(() => run.deploy(A)).to.throw()
       delete A.presets.test
       A.presets[network].nonce = -1
-      expect(() => run.install(A)).to.throw()
+      expect(() => run.deploy(A)).to.throw()
       A.presets[network].nonce = null
-      expect(() => run.install(A)).to.throw()
+      expect(() => run.deploy(A)).to.throw()
       A.presets = []
-      expect(() => run.install(A)).to.throw()
+      expect(() => run.deploy(A)).to.throw()
       A.presets = { [network]: new class Presets {}() }
-      expect(() => run.install(A)).to.throw()
+      expect(() => run.deploy(A)).to.throw()
     })
 
     it('throws if presets are incomplete', () => {
@@ -454,7 +454,7 @@ describe('Repository', () => {
       for (const key of Object.keys(npresets)) {
         A.presets = { [network]: Object.assign({}, npresets) }
         delete A.presets[network][key]
-        expect(() => run.install(A)).to.throw('Cannot install A')
+        expect(() => run.deploy(A)).to.throw('Cannot install A')
       }
     })
 
@@ -463,11 +463,11 @@ describe('Repository', () => {
       const network = run.blockchain.network
       class A { }
       A.presets = { [network]: { deps: {} } }
-      expect(() => run.install(A)).to.throw()
+      expect(() => run.deploy(A)).to.throw()
       A.presets = { [network]: { presets: {} } }
-      expect(() => run.install(A)).to.throw()
+      expect(() => run.deploy(A)).to.throw()
       A.presets = { [network]: { upgrade: () => {} } }
-      expect(() => run.install(A)).to.throw()
+      expect(() => run.deploy(A)).to.throw()
     })
   })
 
@@ -477,8 +477,8 @@ describe('Repository', () => {
       class A { }
       A.sealed = false
       class B extends A { }
-      const CA = run.install(A)
-      await run.deploy(A)
+      const CA = run.deploy(A)
+      await run.sync()
       run.deactivate()
       const run2 = new Run({ blockchain: run.blockchain })
       await run2.deploy(B)
@@ -490,9 +490,9 @@ describe('Repository', () => {
       const run = new Run()
       class A { }
       A.sealed = null
-      expect(() => run.install(A)).to.throw('Invalid sealed option: null')
+      expect(() => run.deploy(A)).to.throw('Invalid sealed option: null')
       A.sealed = 1
-      expect(() => run.install(A)).to.throw('Invalid sealed option: 1')
+      expect(() => run.deploy(A)).to.throw('Invalid sealed option: 1')
     })
   })
 
@@ -500,7 +500,7 @@ describe('Repository', () => {
     it('sets prototype constructor to Code', () => {
       const run = new Run()
       class A { }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       expect(CA.prototype.constructor).to.equal(CA)
     })
   })
@@ -509,9 +509,9 @@ describe('Repository', () => {
     it('returns class or function name', () => {
       const run = new Run()
       class A { }
-      expect(run.install(A).name).to.equal('A')
+      expect(run.deploy(A).name).to.equal('A')
       function f () { }
-      expect(run.install(f).name).to.equal('f')
+      expect(run.deploy(f).name).to.equal('f')
     })
   })
 
@@ -519,7 +519,7 @@ describe('Repository', () => {
     it('returns same string as original code', () => {
       const run = new Run()
       class A { }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       expect(CA.toString()).to.equal(A.toString())
       expect(A.toString().replace(/\s/g, '')).to.equal('classA{}')
     })
@@ -527,9 +527,9 @@ describe('Repository', () => {
     it('returns same code as original code when there is a parent', () => {
       const run = new Run()
       class B { }
-      const CB = run.install(B)
+      const CB = run.deploy(B)
       class A extends CB { }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       expect(CA.toString().replace(/\s/g, '')).to.equal('classAextendsB{}')
     })
   })
@@ -541,7 +541,8 @@ describe('Repository', () => {
       const run = new Run()
       class A {}
       class B extends A {}
-      await run.deploy(B)
+      run.deploy(B)
+      await run.sync()
       expect(A.location.endsWith('_o1'))
       expect(B.location.endsWith('_o2'))
     })
@@ -550,10 +551,10 @@ describe('Repository', () => {
       const run = new Run()
       class A { }
       A.options = { utility: true }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
       CA.deploy()
       class C extends A { }
-      const CC = run.install(C)
+      const CC = run.deploy(C)
       CC.deploy()
       // TODO: Parent approval
     })
@@ -568,8 +569,9 @@ describe('Repository', () => {
         static send (to) { this.owner = to }
       }
       A.send = () => { throw new Error('Must call methods on jigs') }
-      const CA = run.install(A)
-      await run.deploy(CA)
+      const CA = run.deploy(A)
+      run.deploy(CA)
+      await run.sync()
       CA.send(new L())
       await CA.sync()
       expect(A.location.startsWith('record://'))
@@ -590,7 +592,8 @@ describe('Repository', () => {
     it('deploys a class and syncs it', async () => {
       const run = new Run()
       class A {}
-      await run.deploy(A)
+      run.deploy(A)
+      await run.sync()
       const A2 = await run.load(A.location)
       expect(A2.toString()).to.equal(A.toString())
       expect(A2.origin).to.equal(A.origin)
@@ -604,14 +607,16 @@ describe('Repository', () => {
       class B extends A { }
       A.B = B
 
-      await run.deploy(A)
+      run.deploy(A)
+      await run.sync()
 
       await run.load(A.location)
 
       const B2 = await run.load(B.location)
 
       class C extends B2 { }
-      await run.deploy(C)
+      run.deploy(C)
+      await run.sync()
 
       // Deploy C fails
     })
@@ -622,7 +627,7 @@ describe('Repository', () => {
       const run = new Run()
 
       class A { f () { } }
-      const CA = run.install(A)
+      const CA = run.deploy(A)
 
       expect(typeof CA.prototype.f).to.equal('function')
       expect(CA.toString()).to.equal(A.toString())
@@ -633,10 +638,8 @@ describe('Repository', () => {
       expect(x instanceof CA).to.equal(true)
       expect(typeof x.f).to.equal('function')
 
-      // TODO remove
-      // await run.deploy(A)
+      run.deploy(A)
       await CA.sync()
-      console.log('---')
 
       class B { g () { } }
       CA.upgrade(B)
@@ -661,7 +664,7 @@ describe('Repository', () => {
     it('should upgrade functions', () => {
       const run = new Run()
       function f () { return 1 }
-      const c = run.install(f)
+      const c = run.deploy(f)
       expect(c()).to.equal(1)
       function g () { return 2 }
       c.upgrade(g)
