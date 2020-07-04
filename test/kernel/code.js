@@ -766,7 +766,7 @@ describe('Repository', () => {
   })
 
   describe('destroy', () => {
-    it('destroys code', async () => {
+    it.only('destroys code', async () => {
       const run = new Run()
       class A { }
       const C = run.deploy(A)
