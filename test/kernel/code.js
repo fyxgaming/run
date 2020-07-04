@@ -665,6 +665,10 @@ describe('Repository', () => {
 
     // TODO: Upgrade with parent
     // TODO: Upgrade with props
+    // TODO: Upgrade and remove parent
+    // TODO: Upgrade with different parent
+    // TODO: Same for props
+    // TODO: Upgrade and change name
   })
 
   describe('native', () => {
