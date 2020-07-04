@@ -771,9 +771,10 @@ describe('Repository', () => {
       class A { }
       const CA = run.deploy(A)
       await CA.sync()
+
       CA.destroy()
       await CA.sync()
-      console.log(CA)
+      expect(CA.location.endsWith('_d0')).to.equal(true)
 
       // run.deactivate()
       // const run2 = new Run({ blockchain: run.blockchain })
