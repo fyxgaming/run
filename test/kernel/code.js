@@ -621,7 +621,7 @@ describe('Repository', () => {
   })
 
   describe('upgrade', () => {
-    it('should replace code', async () => {
+    it.only('should replace code', async () => {
       const run = new Run()
 
       class A { f () { } }
@@ -657,6 +657,17 @@ describe('Repository', () => {
       expect(x instanceof CA).to.equal(true)
       expect(typeof x.f).to.equal('undefined')
       expect(typeof x.g).to.equal('function')
+
+      // Load with cache
+      await run.sync()
+      console.log(await run.load(CA.origin))
+      console.log(await run.load(CA.location))
+
+      // Load without cache
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      console.log(await run2.load(CA.origin))
+      console.log(await run2.load(CA.location))
     })
 
     it('should upgrade functions', () => {
