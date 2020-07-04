@@ -615,8 +615,6 @@ describe('Repository', () => {
       class C extends B2 { }
       run.deploy(C)
       await run.sync()
-
-      // Deploy C fails
     })
   })
 
@@ -718,6 +716,7 @@ describe('Repository', () => {
     // TODO: Upgrade and change name
     // TODO: Cannot upgrade undeployed code
     // TODO: Does not deploy if already deployed
+    // TODO: Rollback
   })
 
   describe('native', () => {
