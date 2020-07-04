@@ -621,7 +621,7 @@ describe('Repository', () => {
   })
 
   describe('upgrade', () => {
-    it.only('should replace code', async () => {
+    it('should replace code', async () => {
       const run = new Run()
 
       class A { f () { } }
@@ -660,14 +660,14 @@ describe('Repository', () => {
 
       // Load with cache
       await run.sync()
-      console.log(await run.load(CA.origin))
-      console.log(await run.load(CA.location))
+      await run.load(CA.origin)
+      await run.load(CA.location)
 
       // Load without cache
       run.deactivate()
       const run2 = new Run({ blockchain: run.blockchain })
-      console.log(await run2.load(CA.origin))
-      console.log(await run2.load(CA.location))
+      await run2.load(CA.origin)
+      await run2.load(CA.location)
     })
 
     it('should upgrade functions', () => {
@@ -680,8 +680,38 @@ describe('Repository', () => {
       expect(c()).to.equal(2)
     })
 
+    it('should upgrade with dependencies', async () => {
+      const run = new Run()
+      class A { }
+      class D { }
+      class B extends D { }
+      class C { }
+      B.C = C
+      const CA = run.deploy(A)
+      CA.upgrade(B)
+      await run.sync()
+      await run.load(CA.location)
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      await run2.load(CA.location)
+    })
+
+    it('should throw if inconsistent world after upgrade', async () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      const CA = run.deploy(A)
+      CA.upgrade(B)
+      await run.sync()
+      const A1 = await run.load(CA.origin)
+      class C { }
+      C.A1 = A1
+      C.A2 = CA
+      expect(() => run.deploy(C)).to.throw('Inconsistent worldview')
+    })
+
     // TODO: Upgrade with parent
-    // TODO: Upgrade with props
+    // TODO: Upgrade with props (deployed and not)
     // TODO: Upgrade and remove parent
     // TODO: Upgrade with different parent
     // TODO: Same for props
