@@ -620,13 +620,14 @@ describe('Repository', () => {
       await run.sync()
     })
 
-    it.only('should sync with warning when UTXO is incorrectly spent', async () => {
+    it('should sync with warning when UTXO is incorrectly spent', async () => {
       const run = new Run()
 
       class A { }
       const C = run.deploy(A)
 
       await C.sync()
+      const location = C.location
 
       const utxos = await run.blockchain.utxos(run.owner.address)
       const tx = new Transaction().from(utxos)
@@ -635,6 +636,7 @@ describe('Repository', () => {
       await run.blockchain.broadcast(signed.toString('hex'))
 
       await C.sync()
+      expect(C.location).to.equal(location)
     })
   })
 
