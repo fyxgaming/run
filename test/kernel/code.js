@@ -764,6 +764,22 @@ describe('Repository', () => {
       expect(Berry.toString().indexOf('[native code]')).not.to.equal(-1)
     })
   })
+
+  describe('destroy', () => {
+    it.only('destroys code', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+      CA.destroy()
+      await CA.sync()
+      console.log(CA)
+
+      // run.deactivate()
+      // const run2 = new Run({ blockchain: run.blockchain })
+      // await run.load(CA.location)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
