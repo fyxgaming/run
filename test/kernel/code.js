@@ -535,8 +535,6 @@ describe('Repository', () => {
   })
 
   describe('deploy', () => {
-    // Does not deploy if already deployed
-
     it('deploys parent and child', async () => {
       const run = new Run()
       class A {}
@@ -623,7 +621,7 @@ describe('Repository', () => {
   })
 
   describe('upgrade', () => {
-    it.only('should replace code', async () => {
+    it('should replace code', async () => {
       const run = new Run()
 
       class A { f () { } }
@@ -678,6 +676,7 @@ describe('Repository', () => {
     // TODO: Same for props
     // TODO: Upgrade and change name
     // TODO: Cannot upgrade undeployed code
+    // TODO: Does not deploy if already deployed
   })
 
   describe('native', () => {
