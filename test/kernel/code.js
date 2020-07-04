@@ -769,16 +769,21 @@ describe('Repository', () => {
     it.only('destroys code', async () => {
       const run = new Run()
       class A { }
-      const CA = run.deploy(A)
-      await CA.sync()
+      const C = run.deploy(A)
+      await C.sync()
 
-      CA.destroy()
-      await CA.sync()
-      expect(CA.location.endsWith('_d0')).to.equal(true)
+      C.destroy()
+      await C.sync()
+      expect(C.location.endsWith('_d0')).to.equal(true)
 
-      // run.deactivate()
-      // const run2 = new Run({ blockchain: run.blockchain })
-      // await run.load(CA.location)
+      // Load from state cache
+      await run.load(C.origin)
+      await run.load(C.location)
+
+      // Load via replay
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      await run2.load(C.location)
     })
   })
 })
