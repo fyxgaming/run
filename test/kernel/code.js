@@ -808,6 +808,28 @@ describe('Code', () => {
       expect(CA2.B.A).to.equal(CA2)
     })
   })
+
+  describe('auth', () => {
+    it('auths code', async () => {
+      const run = new Run()
+      class A { }
+      const C = run.deploy(A)
+      await C.sync()
+
+      C.auth()
+      await C.sync()
+      expect(C.origin).not.to.equal(C.location)
+
+      // Load from state cache
+      await run.load(C.origin)
+      await run.load(C.location)
+
+      // Load via replay
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      await run2.load(C.location)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
