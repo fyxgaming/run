@@ -797,13 +797,15 @@ describe('Code', () => {
       run.deploy(A)
       await run.sync()
 
+      // Load from cache
       const CA = await run.load(A.location)
       expect(CA.B.A).to.equal(CA)
 
-      // Load from cache
+      // Load via replay
       run.deactivate()
       const run2 = new Run({ blockchain: run.blockchain })
       const CA2 = await run2.load(A.location)
+      expect(CA2.B.A).to.equal(CA2)
     })
   })
 })
