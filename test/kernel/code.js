@@ -728,7 +728,7 @@ describe('Code', () => {
       expect(() => run.deploy(C)).to.throw('Inconsistent worldview')
     })
 
-    it.only('should rollback upgrade', async () => {
+    it('should rollback upgrade', async () => {
       const run = new Run()
       class A { f () { } }
       A.x = 1
