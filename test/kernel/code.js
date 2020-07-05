@@ -786,7 +786,7 @@ describe('Code', () => {
   })
 
   describe('load', () => {
-    it.only('loads circular jig props', async () => {
+    it('loads circular jig props', async () => {
       const run = new Run()
 
       class A { }
