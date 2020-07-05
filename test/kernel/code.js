@@ -730,20 +730,29 @@ describe('Code', () => {
 
     it('should rollback upgrade', async () => {
       const run = new Run()
-      class A { f () { } }
+      class A { f () { } static t () { }}
       A.x = 1
       const C = run.deploy(A)
       await C.sync()
-      class B { g () { }}
+      expect(typeof C.t).to.equal('function')
+      expect(typeof C.u).to.equal('undefined')
+
+      class B { g () { } static u () { }}
       B.y = 2
       stub(run.purse, 'pay').callsFake(x => x)
       C.upgrade(B)
+      expect(typeof C.t).to.equal('undefined')
+      expect(typeof C.u).to.equal('function')
+
       await expect(C.sync()).to.be.rejected
+
       expect(C.toString()).to.equal(A.toString())
       expect(C.x).to.equal(1)
       expect(C.y).to.equal(undefined)
       expect(typeof C.prototype.f).to.equal('function')
       expect(typeof C.prototype.g).to.equal('undefined')
+      expect(typeof C.t).to.equal('function')
+      expect(typeof C.u).to.equal('undefined')
     })
 
     // TODO: Upgrade with parent
