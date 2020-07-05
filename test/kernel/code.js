@@ -728,13 +728,13 @@ describe('Code', () => {
       expect(() => run.deploy(C)).to.throw('Inconsistent worldview')
     })
 
-    it('should rollback upgrade', async () => {
+    it.only('should rollback upgrade', async () => {
       const run = new Run()
-      class A { }
+      class A { f () { } }
       A.x = 1
       const C = run.deploy(A)
       await C.sync()
-      class B { }
+      class B { g () { }}
       B.y = 2
       stub(run.purse, 'pay').callsFake(x => x)
       C.upgrade(B)
@@ -742,6 +742,8 @@ describe('Code', () => {
       expect(C.toString()).to.equal(A.toString())
       expect(C.x).to.equal(1)
       expect(C.y).to.equal(undefined)
+      expect(typeof C.prototype.f).to.equal('function')
+      expect(typeof C.prototype.g).to.equal('undefined')
     })
 
     // TODO: Upgrade with parent
