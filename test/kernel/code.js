@@ -1,5 +1,5 @@
 /**
- * repository.js
+ * code.js
  *
  * Tests for lib/kernel/code.js and lib/kernel/repository.js
  */
@@ -20,10 +20,10 @@ const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
 const randomOwner = () => new PrivateKey().toAddress().toString()
 
 // ------------------------------------------------------------------------------------------------
-// Repository
+// Code
 // ------------------------------------------------------------------------------------------------
 
-describe('Repository', () => {
+describe('Code', () => {
   describe('deploy', () => {
     it('creates from class', () => {
       const run = new Run()
@@ -39,7 +39,7 @@ describe('Repository', () => {
       expect(f2.toString()).to.equal(f.toString())
     })
 
-    it('is instanceof Code', () => {
+    it('returns instanceof Code', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -214,6 +214,34 @@ describe('Repository', () => {
       class B {}
       B.Code = Code
       expect(() => run.deploy(B)).to.throw()
+    })
+
+    it('deploys parent and child', async () => {
+      const run = new Run()
+      class A {}
+      class B extends A {}
+      run.deploy(B)
+      await run.sync()
+      expect(A.location.endsWith('_o1'))
+      expect(B.location.endsWith('_o2'))
+    })
+
+    it.skip('deploys with custom lock', async () => {
+      const run = new Run()
+      class L {
+        script () { return new Uint8Array() }
+        domain () { return 0 }
+      }
+      class A {
+        static send (to) { this.owner = to }
+      }
+      A.send = () => { throw new Error('Must call methods on jigs') }
+      const CA = run.deploy(A)
+      run.deploy(CA)
+      await run.sync()
+      CA.send(new L())
+      await CA.sync()
+      expect(A.location.startsWith('record://'))
     })
   })
 
@@ -475,6 +503,18 @@ describe('Repository', () => {
   })
 
   describe('sealed', () => {
+    it.skip('sealed by default', () => {
+      const run = new Run()
+      class A { }
+      A.options = { utility: true }
+      const CA = run.deploy(A)
+      CA.deploy()
+      class C extends A { }
+      const CC = run.deploy(C)
+      CC.deploy()
+      // TODO: Parent approval
+    })
+
     it('allows unsealing', async () => {
       const run = new Run()
       class A { }
@@ -534,48 +574,6 @@ describe('Repository', () => {
       class A extends CB { }
       const CA = run.deploy(A)
       expect(CA.toString().replace(/\s/g, '')).to.equal('classAextendsB{}')
-    })
-  })
-
-  describe('deploy', () => {
-    it('deploys parent and child', async () => {
-      const run = new Run()
-      class A {}
-      class B extends A {}
-      run.deploy(B)
-      await run.sync()
-      expect(A.location.endsWith('_o1'))
-      expect(B.location.endsWith('_o2'))
-    })
-
-    it.skip('sealed by default', () => {
-      const run = new Run()
-      class A { }
-      A.options = { utility: true }
-      const CA = run.deploy(A)
-      CA.deploy()
-      class C extends A { }
-      const CC = run.deploy(C)
-      CC.deploy()
-      // TODO: Parent approval
-    })
-
-    it.skip('deploys with custom lock', async () => {
-      const run = new Run()
-      class L {
-        script () { return new Uint8Array() }
-        domain () { return 0 }
-      }
-      class A {
-        static send (to) { this.owner = to }
-      }
-      A.send = () => { throw new Error('Must call methods on jigs') }
-      const CA = run.deploy(A)
-      run.deploy(CA)
-      await run.sync()
-      CA.send(new L())
-      await CA.sync()
-      expect(A.location.startsWith('record://'))
     })
   })
 
@@ -784,6 +782,28 @@ describe('Repository', () => {
       run.deactivate()
       const run2 = new Run({ blockchain: run.blockchain })
       await run2.load(C.location)
+    })
+  })
+
+  describe('load', () => {
+    it.only('loads circular jig props', async () => {
+      const run = new Run()
+
+      class A { }
+      class B { }
+      A.B = B
+      B.A = A
+
+      run.deploy(A)
+      await run.sync()
+
+      const CA = await run.load(A.location)
+      expect(CA.B.A).to.equal(CA)
+
+      // Load from cache
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      const CA2 = await run2.load(A.location)
     })
   })
 })
