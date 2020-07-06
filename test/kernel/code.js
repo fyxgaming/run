@@ -764,6 +764,7 @@ describe('Code', () => {
     // TODO: Cannot upgrade undeployed code
     // TODO: Does not deploy if already deployed
     // TODO: Rollback with multiple transactions in a batch
+    // TODO: Rollback upgrade itself, not publish error
   })
 
   describe('native', () => {
