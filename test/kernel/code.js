@@ -768,7 +768,19 @@ describe('Code', () => {
   })
 
   describe('activate', () => {
-    // TODO
+    it('simple activate test', async () => {
+      const run = new Run()
+      class A { }
+      run.deploy(A)
+      await run.sync()
+      const location = A.location
+
+      run.deactivate()
+      expect(typeof A.location).to.equal('undefined')
+
+      run.activate()
+      expect(A.location).to.equal(location)
+    })
   })
 
   describe('native', () => {
