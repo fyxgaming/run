@@ -767,6 +767,10 @@ describe('Code', () => {
     // TODO: Rollback upgrade itself, not publish error
   })
 
+  describe('activate', () => {
+    // TODO
+  })
+
   describe('native', () => {
     it('should not return source code', () => {
       expect(Jig.toString().indexOf('[native code]')).not.to.equal(-1)
