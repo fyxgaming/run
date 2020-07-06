@@ -840,6 +840,9 @@ describe('Code', () => {
       const run2 = new Run({ blockchain: run.blockchain })
       await run2.load(C.location)
     })
+
+    // Auth fails on new jigs, or when owner transfers in a batch
+    // Auth is allowed when unbound and undefined, but a different transaction
   })
 })
 
