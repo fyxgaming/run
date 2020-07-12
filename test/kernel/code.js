@@ -861,6 +861,38 @@ describe('Code', () => {
     // Auth fails on new jigs, or when owner transfers in a batch
     // Auth is allowed when unbound and undefined, but a different transaction
   })
+
+  describe('call', () => {
+    it('calls static method on jig', async () => {
+    })
+
+    it('calls static method on non-jig', async () => {
+    })
+  })
+
+  describe('get', () => {
+    it.only('returns the same method twice', async () => {
+      const run = new Run()
+      class A { static f () { return 123 } }
+      const C = run.deploy(A)
+      await C.sync()
+      expect(C.f).to.equal(C.f)
+      expect(C.f()).to.equal(123)
+
+      // Move these to separate tests
+      // C.f.x = 1
+      /*
+      class B {
+        static g () { this.x = 1 }
+        static h () { this.g.x = 1 }
+      }
+      const D = run.deploy(B)
+      await D.sync()
+      // D.g()
+      D.h()
+      */
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
