@@ -867,11 +867,12 @@ describe('Code', () => {
     })
 
     it('calls static method on non-jig', async () => {
+      // No this...
     })
   })
 
   describe('get', () => {
-    it.only('returns the same method twice', async () => {
+    it('returns the same method twice', async () => {
       const run = new Run()
       class A { static f () { return 123 } }
       const C = run.deploy(A)
