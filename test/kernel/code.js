@@ -862,7 +862,7 @@ describe('Code', () => {
     // Auth is allowed when unbound and undefined, but a different transaction
   })
 
-  describe('call', () => {
+  describe.only('call', () => {
     it('calls static get method on jig', async () => {
       const run = new Run()
       class A extends Jig { static f (x) { return 123 + x } }
@@ -872,7 +872,7 @@ describe('Code', () => {
       expect(C.origin).to.equal(C.location)
     })
 
-    it.only('calls static set method on jig', async () => {
+    it('calls static set method on jig', async () => {
       const run = new Run()
       class A extends Jig { static f (x) { this.x = x } }
       const C = run.deploy(A)
