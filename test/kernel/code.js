@@ -901,6 +901,11 @@ describe('Code', () => {
       */
     })
   })
+
+  // TODO: Delete a parent class property from a child?
+
+  // Test set properties on child when there is a similar property on parent class
+  // Same for delete. There's a comment in membrane about this.
 })
 
 // ------------------------------------------------------------------------------------------------
