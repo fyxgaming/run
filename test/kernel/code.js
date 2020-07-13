@@ -872,7 +872,7 @@ describe('Code', () => {
       expect(C.origin).to.equal(C.location)
     })
 
-    it('calls static set method on jig', async () => {
+    it.only('calls static set method on jig', async () => {
       const run = new Run()
       class A extends Jig { static f (x) { this.x = x } }
       const C = run.deploy(A)
@@ -913,20 +913,18 @@ describe('Code', () => {
       expect(C.f(Symbol.hasInstance)).to.equal(Symbol.iterator)
     })
 
-    it.only('can only call static methods on class they are from', async () => {
+    it('can only call static methods on class they are from', async () => {
       const run = new Run()
+
       class A extends Jig {
         static f () { this.f = 'a' }
         static g () { this.g = 'a' }
       }
-      class B extends Jig {
+
+      class B extends A {
         static g () { this.g = 'b' }
         static h () { this.h = 'b' }
       }
-      // class B extends A {
-      // static g () { this.g = 'b' }
-      // static h () { this.h = 'b' }
-      // }
 
       const CA = run.deploy(A)
       await CA.sync()
@@ -963,6 +961,9 @@ describe('Code', () => {
     })
   })
 
+  // Get tests working
+  // Pull parentRegex out
+  // Clean up loader
   // Spend all stack when set
   // Spend all stack when delete
   // Spend all stack when create too
