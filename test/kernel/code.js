@@ -865,16 +865,16 @@ describe('Code', () => {
   describe('call', () => {
     it('calls static get method on jig', async () => {
       const run = new Run()
-      class A { static f (x) { return 123 + x } }
+      class A extends Jig { static f (x) { return 123 + x } }
       const C = run.deploy(A)
       await C.sync()
       expect(C.f(1)).to.equal(124)
       expect(C.origin).to.equal(C.location)
     })
 
-    it('calls static set method on jig', async () => {
+    it.only('calls static set method on jig', async () => {
       const run = new Run()
-      class A { static f (x) { this.x = x } }
+      class A extends Jig { static f (x) { this.x = x } }
       const C = run.deploy(A)
       await C.sync()
       C.f(1)
@@ -890,7 +890,7 @@ describe('Code', () => {
       expect(C.x).to.equal(C2.x)
     })
 
-    it.only('calls static method with passthrough and without this on non-jig', async () => {
+    it('calls static method with passthrough and without this on non-jig', async () => {
       const run = new Run()
       class A {
         static f (x) {
@@ -935,6 +935,7 @@ describe('Code', () => {
   // Handle auth and destroy
   // Handle non-jig classes
   // Borrowing
+  // Cache protocol
 
   // TODO: Delete a parent class property from a child?
   // Classes should always operate on themselves
@@ -942,6 +943,8 @@ describe('Code', () => {
   // Test set properties on child when there is a similar property on parent class
   // Same for delete. There's a comment in membrane about this.
   // Call auth in a jig
+
+  // Owner is parent ... for new jigs
 })
 
 // ------------------------------------------------------------------------------------------------
