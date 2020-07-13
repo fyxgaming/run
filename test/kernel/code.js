@@ -890,6 +890,7 @@ describe('Code', () => {
       expect(C.x).to.equal(C2.x)
     })
 
+    // TODO: Move to deploy
     it('allowed to set native class as dependency', async () => {
       const run = new Run()
       class A extends Jig { static f (x) { this.x = x } }
@@ -898,7 +899,7 @@ describe('Code', () => {
       await C.sync()
     })
 
-    it('calls static method with passthrough and without this on non-jig', async () => {
+    it.only('calls static method with passthrough and without this on non-jig', async () => {
       const run = new Run()
       class A {
         static f (x) {
@@ -944,6 +945,7 @@ describe('Code', () => {
   // Handle non-jig classes
   // Borrowing
   // Cache protocol
+  // Inheritance and upgrading parents
 
   // TODO: Delete a parent class property from a child?
   // Classes should always operate on themselves
