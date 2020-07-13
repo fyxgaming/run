@@ -884,7 +884,10 @@ describe('Code', () => {
 
       run.deactivate()
       const run2 = new Run({ blockchain: run.blockchain })
-      await run2.load(C.location)
+      const C2 = await run2.load(C.location)
+
+      expect(C.location).to.equal(C2.location)
+      expect(C.x).to.equal(C2.x)
     })
 
     it('calls static method on non-jig', async () => {
