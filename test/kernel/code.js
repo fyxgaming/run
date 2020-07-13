@@ -863,7 +863,7 @@ describe('Code', () => {
   })
 
   describe('call', () => {
-    it.only('calls static get method on jig', async () => {
+    it('calls static get method on jig', async () => {
       const run = new Run()
       class A { static f (x) { return 123 + x } }
       const C = run.deploy(A)
@@ -873,12 +873,13 @@ describe('Code', () => {
 
     it.only('calls static set method on jig', async () => {
       const run = new Run()
-      // TODO: Change back to A
-      class B { static f (x) { this.x = x } }
-      const C = run.deploy(B)
+      class A { static f (x) { this.x = x } }
+      const C = run.deploy(A)
       await C.sync()
       C.f(1)
-      console.log(C.x)
+      expect(C.x).to.equal(1)
+      await C.sync()
+      expect(C.location).not.to.equal(C.origin)
     })
 
     it('calls static method on non-jig', async () => {
@@ -910,10 +911,14 @@ describe('Code', () => {
     })
   })
 
+  // Spend all stack when set
+  // Spend all stack when create too
+
   // TODO: Delete a parent class property from a child?
 
   // Test set properties on child when there is a similar property on parent class
   // Same for delete. There's a comment in membrane about this.
+  // Call auth in a jig
 })
 
 // ------------------------------------------------------------------------------------------------
