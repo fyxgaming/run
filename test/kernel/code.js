@@ -869,6 +869,7 @@ describe('Code', () => {
       const C = run.deploy(A)
       await C.sync()
       expect(C.f(1)).to.equal(124)
+      expect(C.origin).to.equal(C.location)
     })
 
     it.only('calls static set method on jig', async () => {
@@ -880,6 +881,10 @@ describe('Code', () => {
       expect(C.x).to.equal(1)
       await C.sync()
       expect(C.location).not.to.equal(C.origin)
+
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      await run2.load(C.location)
     })
 
     it('calls static method on non-jig', async () => {
