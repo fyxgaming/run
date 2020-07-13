@@ -863,7 +863,15 @@ describe('Code', () => {
   })
 
   describe('call', () => {
-    it.only('calls static method on jig', async () => {
+    it.only('calls static get method on jig', async () => {
+      const run = new Run()
+      class A { static f (x) { return 123 + x } }
+      const C = run.deploy(A)
+      await C.sync()
+      expect(C.f(1)).to.equal(124)
+    })
+
+    it.only('calls static set method on jig', async () => {
       const run = new Run()
       class A { static f (x) { return 123 + x } }
       const C = run.deploy(A)
