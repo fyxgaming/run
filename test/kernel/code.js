@@ -866,11 +866,9 @@ describe('Code', () => {
     it.only('calls static method on jig', async () => {
       const run = new Run()
       class A { static f (x) { return 123 + x } }
-      console.log('===')
       const C = run.deploy(A)
       await C.sync()
-      // console.log('---')
-      // console.log(C.f(1))
+      console.log(C.f(1))
     })
 
     it('calls static method on non-jig', async () => {
