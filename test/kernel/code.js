@@ -942,7 +942,6 @@ describe('Code', () => {
   // Spend all stack when delete
   // Spend all stack when create too
   // Handle auth and destroy
-  // Handle non-jig classes
   // Borrowing
   // Cache protocol
   // Inheritance and upgrading parents
