@@ -872,7 +872,7 @@ describe('Code', () => {
       expect(C.origin).to.equal(C.location)
     })
 
-    it.only('calls static set method on jig', async () => {
+    it('calls static set method on jig', async () => {
       const run = new Run()
       class A extends Jig { static f (x) { this.x = x } }
       const C = run.deploy(A)
@@ -899,7 +899,7 @@ describe('Code', () => {
       await C.sync()
     })
 
-    it.only('calls static method with passthrough and without this on non-jig', async () => {
+    it('calls static method with passthrough and without this on non-jig', async () => {
       const run = new Run()
       class A {
         static f (x) {
@@ -911,6 +911,31 @@ describe('Code', () => {
       const C = run.deploy(A)
       await C.sync()
       expect(C.f(Symbol.hasInstance)).to.equal(Symbol.iterator)
+    })
+
+    it.only('can only call static methods on class they are from', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () { this.f = 'a' }
+        static g () { this.g = 'a' }
+      }
+      class B extends Jig {
+        static g () { this.g = 'b' }
+        static h () { this.h = 'b' }
+      }
+      // class B extends A {
+      // static g () { this.g = 'b' }
+      // static h () { this.h = 'b' }
+      // }
+
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      const CB = run.deploy(B)
+      await CB.sync()
+      // CB.h()
+      // await CB.sync()
+      // console.log(CB)
     })
   })
 
