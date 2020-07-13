@@ -874,10 +874,11 @@ describe('Code', () => {
     it.only('calls static set method on jig', async () => {
       const run = new Run()
       // TODO: Change back to A
-      class B { static f (x) { return 123 + x } }
+      class B { static f (x) { this.x = x } }
       const C = run.deploy(B)
       await C.sync()
-      console.log(C.f(1))
+      C.f(1)
+      console.log(C.x)
     })
 
     it('calls static method on non-jig', async () => {
