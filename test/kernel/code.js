@@ -872,7 +872,7 @@ describe('Code', () => {
       expect(C.origin).to.equal(C.location)
     })
 
-    it.only('calls static set method on jig', async () => {
+    it('calls static set method on jig', async () => {
       const run = new Run()
       class A { static f (x) { this.x = x } }
       const C = run.deploy(A)
@@ -890,8 +890,18 @@ describe('Code', () => {
       expect(C.x).to.equal(C2.x)
     })
 
-    it('calls static method on non-jig', async () => {
-      // No this...
+    it.only('calls static method with passthrough and without this on non-jig', async () => {
+      const run = new Run()
+      class A {
+        static f (x) {
+          if (x !== Symbol.hasInstance) throw new Error()
+          if (this) throw new Error()
+          return Symbol.iterator
+        }
+      }
+      const C = run.deploy(A)
+      await C.sync()
+      expect(C.f(Symbol.hasInstance)).to.equal(Symbol.iterator)
     })
   })
 
@@ -920,9 +930,14 @@ describe('Code', () => {
   })
 
   // Spend all stack when set
+  // Spend all stack when delete
   // Spend all stack when create too
+  // Handle auth and destroy
+  // Handle non-jig classes
+  // Borrowing
 
   // TODO: Delete a parent class property from a child?
+  // Classes should always operate on themselves
 
   // Test set properties on child when there is a similar property on parent class
   // Same for delete. There's a comment in membrane about this.
