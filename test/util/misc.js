@@ -156,6 +156,7 @@ describe('Misc', () => {
       expect(_isBasicSet(new Set())).to.equal(true)
       expect(_isBasicSet(new Set([1, 2, 3]))).to.equal(true)
       expect(_isBasicSet(new SI.Set())).to.equal(true)
+      expect(_isBasicSet(new (class Set2 extends Set {})())).to.equal(false)
       expect(_isBasicSet([])).to.equal(false)
       expect(_isBasicSet(new Map())).to.equal(false)
       expect(_isBasicSet(new (class Set {})())).to.equal(false)
@@ -170,7 +171,15 @@ describe('Misc', () => {
 
   describe('_isBasicMap', () => {
     it('should return whether value is a basic map', () => {
+      expect(_isBasicMap(new Map())).to.equal(true)
+      expect(_isBasicMap(new Map([[1, 2]]))).to.equal(true)
+      expect(_isBasicMap(new SI.Map())).to.equal(true)
+      expect(_isBasicMap(new (class Map2 extends Map {})())).to.equal(false)
       expect(_isBasicMap([])).to.equal(false)
+      expect(_isBasicMap(new Set())).to.equal(false)
+      expect(_isBasicMap(new (class Map {})())).to.equal(false)
+      expect(_isBasicMap(null)).to.equal(false)
+      expect(_isBasicMap('Map')).to.equal(false)
     })
   })
 
