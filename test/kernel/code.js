@@ -862,7 +862,7 @@ describe('Code', () => {
     // Auth is allowed when unbound and undefined, but a different transaction
   })
 
-  describe.only('call', () => {
+  describe('call', () => {
     it('calls static get method on jig', async () => {
       const run = new Run()
       class A extends Jig { static f (x) { return 123 + x } }
