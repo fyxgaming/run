@@ -210,7 +210,7 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_isArbitraryObject', () => {
-    it.only('should return whether value is an arbitrary object', async () => {
+    it('should return whether value is an arbitrary object', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
