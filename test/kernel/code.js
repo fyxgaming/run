@@ -961,8 +961,6 @@ describe('Code', () => {
     })
   })
 
-  // Get tests working
-  // Pull parentRegex out
   // Clean up loader
   // Spend all stack when set
   // Spend all stack when delete
