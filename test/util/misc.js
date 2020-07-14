@@ -11,7 +11,8 @@ const unmangle = require('../env/unmangle')
 const Sandbox = Run.sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _text, _sourceCode, _isBasicObject,
-  _isBasicArray, _isUndefined, _isBoolean, _protoLen
+  _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
+  _isUndefined, _isBoolean, _protoLen
 } = unmangle(unmangle(Run)._misc)
 
 describe('Misc', () => {
@@ -142,6 +143,46 @@ describe('Misc', () => {
       expect(_isBasicArray('hello')).to.equal(false)
       expect(_isBasicArray(Symbol.hasInstance)).to.equal(false)
       expect(_isBasicArray(class A { })).to.equal(false)
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _isBasicSet
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_isBasicSet', () => {
+    it('should return whether value is a basic set', () => {
+      expect(_isBasicSet([])).to.equal(false)
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _isBasicMap
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_isBasicMap', () => {
+    it('should return whether value is a basic map', () => {
+      expect(_isBasicMap([])).to.equal(false)
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _isBasicUint8Array
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_isBasicUint8Array', () => {
+    it('should return whether value is a basic uint8array', () => {
+      expect(_isBasicUint8Array([])).to.equal(false)
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _isArbitraryObject
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_isArbitraryObject', () => {
+    it('should return whether value is an arbitrary object', () => {
+      expect(_isArbitraryObject([])).to.equal(false)
     })
   })
 
