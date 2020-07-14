@@ -7,6 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const Sandbox = Run.sandbox
 const {
@@ -209,8 +210,24 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_isArbitraryObject', () => {
-    it('should return whether value is an arbitrary object', () => {
-      expect(_isArbitraryObject([])).to.equal(false)
+    it('should return whether value is an arbitrary object', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+      class B extends Jig { }
+      const CB = run.deploy(B)
+      class C extends Berry { static pluck () { return new C() } }
+      const berry = await run.load('123', C)
+      expect(_isArbitraryObject(new CA())).to.equal(true)
+      expect(_isArbitraryObject(new A())).to.equal(false)
+      expect(_isArbitraryObject(new CB())).to.equal(false)
+      expect(_isArbitraryObject(new B())).to.equal(false)
+      expect(_isArbitraryObject(berry)).to.equal(false)
+      expect(_isArbitraryObject(new Map())).to.equal(false)
+      expect(_isArbitraryObject(new Set())).to.equal(false)
+      expect(_isArbitraryObject(null)).to.equal(false)
+      expect(_isArbitraryObject({ $arb: 1 })).to.equal(false)
     })
   })
 

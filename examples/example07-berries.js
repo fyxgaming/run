@@ -35,7 +35,7 @@ async function main () {
   // Deploy the twetch protocol to mainnet. In a production app, we would pre-deploy the protocol.
   await run.deploy(TwetchPost)
 
-  // We use the { protocol } syntax to specify this Twetch protocol is to be used
+  // We pass the TwetchPost class as the second parameter to load the berry
   const post = await run.load(twetchPostTxid, TwetchPost)
 
   class MyFavoritePost extends Jig {
