@@ -189,7 +189,18 @@ describe('Misc', () => {
 
   describe('_isBasicUint8Array', () => {
     it('should return whether value is a basic uint8array', () => {
+      expect(_isBasicUint8Array(new Uint8Array())).to.equal(true)
+      expect(_isBasicUint8Array(new Uint8Array([1, 2, 3]))).to.equal(true)
+      expect(_isBasicUint8Array(new SI.Uint8Array())).to.equal(true)
+      expect(_isBasicMap(new (class Buffer extends Uint8Array {})())).to.equal(false)
+      expect(_isBasicUint8Array(Buffer.alloc(1))).to.equal(false)
       expect(_isBasicUint8Array([])).to.equal(false)
+      expect(_isBasicUint8Array({})).to.equal(false)
+      expect(_isBasicUint8Array(null)).to.equal(false)
+      expect(_isBasicUint8Array(new class {}())).to.equal(false)
+      expect(_isBasicUint8Array('hello')).to.equal(false)
+      expect(_isBasicUint8Array(Symbol.hasInstance)).to.equal(false)
+      expect(_isBasicUint8Array(class A { })).to.equal(false)
     })
   })
 
