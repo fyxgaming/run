@@ -14,6 +14,7 @@ const {
   _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
   _isUndefined, _isBoolean, _protoLen
 } = unmangle(unmangle(Run)._misc)
+const SI = unmangle(Sandbox)._intrinsics
 
 describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
@@ -135,7 +136,7 @@ describe('Misc', () => {
   describe('_isBasicArray', () => {
     it('should return whether value is a basic array', () => {
       expect(_isBasicArray([])).to.equal(true)
-      expect(_isBasicArray(new (unmangle(Sandbox)._intrinsics.Array)())).to.equal(true)
+      expect(_isBasicArray(new SI.Array())).to.equal(true)
       expect(_isBasicArray(new class C extends Array {}())).to.equal(false)
       expect(_isBasicArray({})).to.equal(false)
       expect(_isBasicArray(null)).to.equal(false)
@@ -152,7 +153,14 @@ describe('Misc', () => {
 
   describe('_isBasicSet', () => {
     it('should return whether value is a basic set', () => {
+      expect(_isBasicSet(new Set())).to.equal(true)
+      expect(_isBasicSet(new Set([1, 2, 3]))).to.equal(true)
+      expect(_isBasicSet(new SI.Set())).to.equal(true)
       expect(_isBasicSet([])).to.equal(false)
+      expect(_isBasicSet(new Map())).to.equal(false)
+      expect(_isBasicSet(new (class Set {})())).to.equal(false)
+      expect(_isBasicSet(null)).to.equal(false)
+      expect(_isBasicSet('Set')).to.equal(false)
     })
   })
 
