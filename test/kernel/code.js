@@ -961,6 +961,8 @@ describe('Code', () => {
     })
   })
 
+  // Constructing Code objects inside... they would normally construct sandbox. How to do base?
+  //      Need for arb objects
   // Clean up loader
   // Spend all stack when set
   // Spend all stack when delete

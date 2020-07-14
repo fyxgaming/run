@@ -210,19 +210,21 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_isArbitraryObject', () => {
-    it('should return whether value is an arbitrary object', async () => {
+    it.only('should return whether value is an arbitrary object', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
       await CA.sync()
       class B extends Jig { }
       const CB = run.deploy(B)
+      await CB.sync()
       class C extends Berry { static pluck () { return new C() } }
       const berry = await run.load('123', C)
       expect(_isArbitraryObject(new CA())).to.equal(true)
       expect(_isArbitraryObject(new A())).to.equal(false)
       expect(_isArbitraryObject(new CB())).to.equal(false)
       expect(_isArbitraryObject(new B())).to.equal(false)
+      expect(berry.constructor instanceof Run.Code).to.equal(true)
       expect(_isArbitraryObject(berry)).to.equal(false)
       expect(_isArbitraryObject(new Map())).to.equal(false)
       expect(_isArbitraryObject(new Set())).to.equal(false)
