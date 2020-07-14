@@ -10,8 +10,8 @@ const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const Sandbox = Run.sandbox
 const {
-  _kernel, _assert, _bsvNetwork, _parent, _text, _sourceCode, _isBasicObject, _isBasicArray,
-  _isUndefined, _isBoolean, _protoLen
+  _kernel, _assert, _bsvNetwork, _parent, _parentName, _text, _sourceCode, _isBasicObject,
+  _isBasicArray, _isUndefined, _isBoolean, _protoLen
 } = unmangle(unmangle(Run)._misc)
 
 describe('Misc', () => {
@@ -82,6 +82,32 @@ describe('Misc', () => {
       expect(_parent(0)).to.equal(undefined)
       expect(_parent('hello')).to.equal(undefined)
       expect(_parent([])).to.equal(undefined)
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _parentName
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_parentName', () => {
+    it('should return null if no parent', () => {
+      const src = 'class A { }'
+      expect(_parentName(src)).to.equal(null)
+    })
+
+    it('should return null for functions', () => {
+      const src = 'function f() { }'
+      expect(_parentName(src)).to.equal(null)
+    })
+
+    it('should return parent name if there is a parent', () => {
+      const src = 'class A extends B { }'
+      expect(_parentName(src)).to.equal('B')
+    })
+
+    it('should support multi-line class definitions', () => {
+      const src = 'class A\nextends B\n{ }'
+      expect(_parentName(src)).to.equal('B')
     })
   })
 
