@@ -9,7 +9,7 @@
 // ------------------------------------------------------------------------------------------------
 
 class Context {
-  static get _Code () { return require('./code') }
+  static get _Code () { return require('./code.js.txt') }
   static get _sync () { return require('../sync') }
 }
 
@@ -79,6 +79,7 @@ CodeJig.sealed = false
 
 CodeJig.toString() // Preserves the class name during compilation
 
+const NativeCodeJig = Context.Repository._installNativeCodeJig(CodeJig)
 const NativeCodeJig = Context._Code._fromNative(CodeJig)
 
 module.exports = NativeCodeJig
