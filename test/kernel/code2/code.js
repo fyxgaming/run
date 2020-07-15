@@ -6,7 +6,7 @@ describe('Code', () => {
   it('should create', () => {
     const code = new Code()
     console.log(code._jig.toString())
-    code._setType(class A { })
+    code._setType(class A {})
     console.log(code._jig.toString())
   })
 })
