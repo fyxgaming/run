@@ -9,4 +9,6 @@ describe('Code', () => {
     code._setType(class A {})
     console.log(code._jig.toString())
   })
+
+  // Test method table, changeability, etc.
 })
