@@ -25,7 +25,7 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('deploy', () => {
-    it('creates from class', () => {
+    it.only('creates from class', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
