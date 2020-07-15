@@ -11,8 +11,8 @@ const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const Sandbox = Run.sandbox
 const {
-  _kernel, _assert, _bsvNetwork, _parent, _parentName, _text, _sourceCode, _isBasicObject,
-  _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
+  _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sourceCode,
+  _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
   _isUndefined, _isBoolean, _protoLen
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
@@ -111,6 +111,42 @@ describe('Misc', () => {
     it('should support multi-line class definitions', () => {
       const src = 'class A\nextends B\n{ }'
       expect(_parentName(src)).to.equal('B')
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _extendsFrom
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_extendsFrom', () => {
+    it('should return true when class is an ancestor', () => {
+      class A { }
+      class B extends A { }
+      class C extends B { }
+      expect(_extendsFrom(B, A)).to.equal(true)
+      expect(_extendsFrom(C, A)).to.equal(true)
+      expect(_extendsFrom(C, B)).to.equal(true)
+    })
+
+    it('should return false when class is not an ancestor', () => {
+      class A { }
+      class B extends A { }
+      class C { }
+      expect(_extendsFrom(B, C)).to.equal(false)
+      expect(_extendsFrom(C, B)).to.equal(false)
+      expect(_extendsFrom(A, B)).to.equal(false)
+    })
+
+    it('should return false for self', () => {
+      class A { }
+      expect(_extendsFrom(A, A)).to.equal(false)
+    })
+
+    it('should return false when args are not classes', () => {
+      expect(_extendsFrom()).to.equal(false)
+      expect(_extendsFrom(class A { })).to.equal(false)
+      expect(_extendsFrom(null, class B { })).to.equal(false)
+      expect(_extendsFrom(1, 2)).to.equal(false)
     })
   })
 
