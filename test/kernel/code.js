@@ -638,7 +638,7 @@ describe('Code', () => {
     })
   })
 
-  describe.only('upgrade', () => {
+  describe('upgrade', () => {
     it('should replace code', async () => {
       const run = new Run()
 
@@ -698,7 +698,7 @@ describe('Code', () => {
       expect(c()).to.equal(2)
     })
 
-    it.only('should upgrade with dependencies', async () => {
+    it('should upgrade with dependencies', async () => {
       const run = new Run()
       class A { }
       class D { }
