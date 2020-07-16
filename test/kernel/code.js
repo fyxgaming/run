@@ -129,7 +129,7 @@ describe('Code', () => {
       expect(() => run.deploy(A)).to.throw()
     })
 
-    it.only('installs parents', () => {
+    it('installs parents', () => {
       const run = new Run()
       class A { }
       class B extends A { }
