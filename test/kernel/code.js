@@ -639,7 +639,7 @@ describe('Code', () => {
   })
 
   describe('upgrade', () => {
-    it('should replace code', async () => {
+    it.only('should replace code', async () => {
       const run = new Run()
 
       class A { f () { } }
