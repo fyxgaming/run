@@ -189,7 +189,7 @@ describe('Code', () => {
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
-    it.only('sets initial bindings', () => {
+    it('sets initial bindings', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
