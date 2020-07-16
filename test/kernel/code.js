@@ -68,7 +68,7 @@ describe('Code', () => {
       class A { }
       const CA1 = run.deploy(A)
       const CA2 = run.deploy(A)
-      expect(CA1).to.equal(CA2)
+      expect(CA1 === CA2).to.equal(true)
     })
 
     it('throws if not a function', () => {
