@@ -216,7 +216,7 @@ describe('Code', () => {
       expect(() => run.deploy(B)).to.throw()
     })
 
-    it('deploys parent and child', async () => {
+    it.only('deploys parent and child', async () => {
       const run = new Run()
       class A {}
       class B extends A {}
