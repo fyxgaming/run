@@ -73,27 +73,27 @@ describe('Code', () => {
 
     it('throws if not a function', () => {
       const run = new Run()
-      expect(() => run.deploy()).to.throw('Cannot install')
-      expect(() => run.deploy(0)).to.throw('Cannot install')
-      expect(() => run.deploy({})).to.throw('Cannot install')
-      expect(() => run.deploy('class A {}')).to.throw('Cannot install')
-      expect(() => run.deploy(null)).to.throw('Cannot install')
+      expect(() => run.deploy()).to.throw()
+      expect(() => run.deploy(0)).to.throw()
+      expect(() => run.deploy({})).to.throw()
+      expect(() => run.deploy('class A {}')).to.throw()
+      expect(() => run.deploy(null)).to.throw()
     })
 
     it('throw if anonymous', () => {
       const run = new Run()
-      expect(() => run.deploy(() => {})).to.throw('Cannot install')
-      expect(() => run.deploy(class {})).to.throw('Cannot install')
+      expect(() => run.deploy(() => {})).to.throw()
+      expect(() => run.deploy(class {})).to.throw()
     })
 
     it('throws if built-in', () => {
       const run = new Run()
-      expect(() => run.deploy(Object)).to.throw('Cannot install Object')
-      expect(() => run.deploy(Date)).to.throw('Cannot install Date')
-      expect(() => run.deploy(Uint8Array)).to.throw('Cannot install')
-      expect(() => run.deploy(Math.sin)).to.throw('Cannot install sin')
-      expect(() => run.deploy(parseInt)).to.throw('Cannot install parseInt')
-      expect(() => run.deploy(SI.Object)).to.throw('Cannot install Object')
+      expect(() => run.deploy(Object)).to.throw()
+      expect(() => run.deploy(Date)).to.throw()
+      expect(() => run.deploy(Uint8Array)).to.throw()
+      expect(() => run.deploy(Math.sin)).to.throw()
+      expect(() => run.deploy(parseInt)).to.throw()
+      expect(() => run.deploy(SI.Object)).to.throw()
     })
 
     it('throws if prototype inheritance', () => {
