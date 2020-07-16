@@ -101,21 +101,21 @@ describe('Code', () => {
       function A () { }
       function B () { }
       B.prototype = Object.create(A.prototype)
-      expect(() => run.deploy(B)).to.throw('Cannot install B')
+      expect(() => run.deploy(B)).to.throw()
     })
 
     it('throws if contains reserved words', () => {
       const run = new Run()
       class A { }
       A.toString = () => 'hello'
-      expect(() => run.deploy(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw()
       class B { }
       B.upgrade = 1
-      expect(() => run.deploy(B)).to.throw('Cannot install B')
+      expect(() => run.deploy(B)).to.throw()
       class C { static sync () { }}
-      expect(() => run.deploy(C)).to.throw('Cannot install C')
+      expect(() => run.deploy(C)).to.throw()
       class D { static get destroy () { } }
-      expect(() => run.deploy(D)).to.throw('Cannot install D')
+      expect(() => run.deploy(D)).to.throw()
     })
 
     it('throws if contains bindings', () => {
@@ -126,7 +126,7 @@ describe('Code', () => {
       A.owner = randomOwner()
       A.satoshis = 0
       A.nonce = 1
-      expect(() => run.deploy(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw()
     })
 
     it('installs parents', () => {
@@ -145,7 +145,7 @@ describe('Code', () => {
       const run = new Run()
       class A { }
       A.Date = Date
-      expect(() => run.deploy(A)).to.throw('Cannot install Date')
+      expect(() => run.deploy(A)).to.throw()
     })
 
     it('creates code for props', () => {
@@ -283,13 +283,13 @@ describe('Code', () => {
       const run = new Run()
       class A { }
       A.deps = null
-      expect(() => run.deploy(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw()
       A.deps = '123'
-      expect(() => run.deploy(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw()
       A.deps = []
-      expect(() => run.deploy(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw()
       A.deps = new class Deps {}()
-      expect(() => run.deploy(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw()
     })
 
     it('doesnt install parent deps on child', () => {
@@ -427,9 +427,9 @@ describe('Code', () => {
       const network = run.blockchain.network
       class A { }
       A.presets = null
-      expect(() => run.deploy(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw()
       A.presets = { [network]: null }
-      expect(() => run.deploy(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw()
       A.presets = {
         [network]: {
           location: '_o1',
@@ -439,7 +439,7 @@ describe('Code', () => {
           satoshis: 0
         }
       }
-      expect(() => run.deploy(A)).to.throw('Cannot install A')
+      expect(() => run.deploy(A)).to.throw()
       A.presets = {
         [network]: {
           location: '_o1',
@@ -485,7 +485,7 @@ describe('Code', () => {
       for (const key of Object.keys(npresets)) {
         A.presets = { [network]: Object.assign({}, npresets) }
         delete A.presets[network][key]
-        expect(() => run.deploy(A)).to.throw('Cannot install A')
+        expect(() => run.deploy(A)).to.throw()
       }
     })
 
