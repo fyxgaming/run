@@ -588,7 +588,7 @@ describe('Code', () => {
     // Only waits for current record
     // TODO: Check records
 
-    it('deploys a class and syncs it', async () => {
+    it.only('deploys a class and syncs it', async () => {
       const run = new Run()
       class A {}
       run.deploy(A)
