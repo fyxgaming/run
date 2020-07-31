@@ -11,7 +11,7 @@ const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const Sandbox = Run.sandbox
 const {
-  _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sourceCode,
+  _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
   _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
   _isUndefined, _isBoolean, _protoLen
 } = unmangle(unmangle(Run)._misc)
@@ -358,17 +358,18 @@ describe('Misc', () => {
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _sourceCode
+  // _sandboxSourceCode
   // ----------------------------------------------------------------------------------------------
 
-  describe('_sourceCode', () => {
-  // Node 8 and Node 12 have slightly different spacing for getNormalizedSourceCode('function () { return 1 }')
-  // We don't need the normalized code to always be exactly the same, as long as it functions the same.
-  // Compiled build also add semicolons, so we normlize that too.
+  describe('_sandboxSourceCode', () => {
+    // Node 8 and Node 12 have slightly different spacing for getNormalizedSourceCode('function () { return 1 }')
+    // We don't need the normalized code to always be exactly the same, as long as it functions the same.
+    // Compiled build also add semicolons, so we normlize that too.
 
-    function expectNormalizedSourceCode (type, text) {
-      const normalize = str => str.replace(/\s+/g, '').replace(/;/g, '')
-      expect(normalize(_sourceCode(type))).to.equal(normalize(text))
+    function expectNormalizedSourceCode (T, src) {
+      const normalize = s => s.replace(/\s+/g, '').replace(/;/g, '')
+      const sandboxSrc = _sandboxSourceCode(T.toString(), T)
+      expect(normalize(sandboxSrc)).to.equal(normalize(src))
     }
 
     it('should get code for basic class', () => {
