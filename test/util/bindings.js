@@ -41,7 +41,7 @@ describe('Bindings', () => {
       expect(_location('error://line1\nline2')).to.deep.equal({ error: 'line1\nline2' })
       expect(_location('error://Undeployed')).to.deep.equal({ error: 'Undeployed', undeployed: true })
       // Record locations
-      expect(_location('record://abc_j1')).to.deep.equal({ record: 'record://abc', vjig: 1 })
+      expect(_location('commit://abc_j1')).to.deep.equal({ commit: 'commit://abc', vjig: 1 })
     })
 
     it('should throw for invalid locations', () => {
@@ -63,12 +63,12 @@ describe('Bindings', () => {
       expect(() => _location('_abc_o0')).to.throw()
       expect(() => _location('_i0')).to.throw()
       expect(() => _location('_r0')).to.throw()
-      expect(() => _location('record://abc_o')).to.throw()
-      expect(() => _location('record://abc_o1')).to.throw()
-      expect(() => _location('record://abc_0')).to.throw()
-      expect(() => _location('record://abc_d1')).to.throw()
-      expect(() => _location('record://_o1')).to.throw()
-      expect(() => _location('record://_i2')).to.throw()
+      expect(() => _location('commit://abc_o')).to.throw()
+      expect(() => _location('commit://abc_o1')).to.throw()
+      expect(() => _location('commit://abc_0')).to.throw()
+      expect(() => _location('commit://abc_d1')).to.throw()
+      expect(() => _location('commit://_o1')).to.throw()
+      expect(() => _location('commit://_i2')).to.throw()
       expect(() => _location('native://')).to.throw()
       expect(() => _location('native://!')).to.throw()
       // Invalid chars
@@ -76,7 +76,7 @@ describe('Bindings', () => {
       expect(() => _location('abc_o*')).to.throw()
       expect(() => _location('abc-o1')).to.throw()
       // Bad protocols
-      expect(() => _location('record:abc_o1')).to.throw()
+      expect(() => _location('commit:abc_o1')).to.throw()
       expect(() => _location('tmp://abc_o1')).to.throw()
       expect(() => _location('error:/abc_o1')).to.throw()
       expect(() => _location('err://abc_o1')).to.throw()

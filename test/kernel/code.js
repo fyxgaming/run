@@ -199,8 +199,8 @@ describe('Code', () => {
       expect(() => CA.owner).to.throw('Cannot read owner: unbound')
       expect(() => CA.satoshis).to.throw('Cannot read satoshis: unbound')
       Membrane._sudo(() => {
-        expect(CA.location.startsWith('record://')).to.equal(true)
-        expect(CA.origin.startsWith('record://')).to.equal(true)
+        expect(CA.location.startsWith('commit://')).to.equal(true)
+        expect(CA.origin.startsWith('commit://')).to.equal(true)
         expect(CA.nonce).to.equal(0)
         expect(unmangle(CA.owner)._value).to.equal(undefined)
         expect(unmangle(CA.satoshis)._value).to.equal(undefined)
@@ -241,7 +241,7 @@ describe('Code', () => {
       await run.sync()
       CA.send(new L())
       await CA.sync()
-      expect(A.location.startsWith('record://'))
+      expect(A.location.startsWith('commit://'))
     })
   })
 
