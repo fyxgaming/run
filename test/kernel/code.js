@@ -25,7 +25,7 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('deploy', () => {
-    it('creates from class', () => {
+    it.only('creates from class', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -588,7 +588,7 @@ describe('Code', () => {
     // Only waits for current record
     // TODO: Check records
 
-    it.only('deploys a class and syncs it', async () => {
+    it('deploys a class and syncs it', async () => {
       const run = new Run()
       class A {}
       run.deploy(A)
