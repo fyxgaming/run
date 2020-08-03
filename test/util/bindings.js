@@ -41,7 +41,7 @@ describe('Bindings', () => {
       expect(_location('error://line1\nline2')).to.deep.equal({ error: 'line1\nline2' })
       expect(_location('error://Undeployed')).to.deep.equal({ error: 'Undeployed', undeployed: true })
       // Record locations
-      expect(_location('commit://abc_j1')).to.deep.equal({ commit: 'commit://abc', vjig: 1 })
+      expect(_location('commit://abc_j1')).to.deep.equal({ commitId: 'commit://abc', vjig: 1 })
     })
 
     it('should throw for invalid locations', () => {

@@ -25,11 +25,13 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('deploy', () => {
-    it.only('creates from class', () => {
+    it.only('creates from class', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
       expect(CA.toString()).to.equal(A.toString())
+
+      await CA.sync()
     })
 
     it('creates from function', () => {
