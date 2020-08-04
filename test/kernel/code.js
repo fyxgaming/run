@@ -830,10 +830,10 @@ describe('Code', () => {
       expect(CA.B.A).to.equal(CA)
 
       // Load via replay
-      // run.deactivate()
-      // const run2 = new Run({ blockchain: run.blockchain })
-      // const CA2 = await run2.load(A.location)
-      // expect(CA2.B.A).to.equal(CA2)
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      const CA2 = await run2.load(A.location)
+      expect(CA2.B.A).to.equal(CA2)
     })
   })
 
