@@ -178,8 +178,8 @@ class Transaction {
     // The transaction test "update class property jig in initializer" uses this
     if (typeof vin !== 'undefined') {
       const tx = await this._kernel._blockchain.fetch(txid)
-      const prevTxId = tx.inputs[vin].prevTxId.toString('hex')
-      return this.load(`${prevTxId}_o${tx.inputs[vin].outputIndex}`, { cachedRefs })
+      const prevtxid = tx.inputs[vin].prevTxId.toString('hex')
+      return this.load(`${prevtxid}_o${tx.inputs[vin].outputIndex}`, { cachedRefs })
     }
 
     // check the cache so we only have to load each jig once

@@ -163,9 +163,9 @@ describe('LocalPurse', () => {
       const txBase = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       for (let i = 0; i < 100; i++) {
         const tx2 = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
-        const sameTxId = tx2.inputs[0].prevTxId.toString('hex') === txBase.inputs[0].prevTxId.toString('hex')
-        const sameIndex = tx2.inputs[0].outputIndex === txBase.inputs[0].outputIndex
-        if (!sameTxId || !sameIndex) return
+        const sametxid = tx2.inputs[0].prevTxId.toString('hex') === txBase.inputs[0].prevTxId.toString('hex')
+        const samevout = tx2.inputs[0].outputIndex === txBase.inputs[0].outputIndex
+        if (!sametxid || !samevout) return
       }
       throw new Error('Did not shuffle UTXOs')
     })

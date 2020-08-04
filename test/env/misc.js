@@ -20,12 +20,12 @@ async function populatePreviousOutputs (tx, blockchain) {
     const input = tx.inputs[i]
 
     if (!input.output) {
-      const prevTxId = input.prevTxId.toString('hex')
-      const prevRawTx = await blockchain.fetch(prevTxId)
-      const prevTx = new Transaction(prevRawTx)
+      const prevtxid = input.prevTxId.toString('hex')
+      const prevraw = await blockchain.fetch(prevtxid)
+      const prevtx = new Transaction(prevraw)
 
       // Add the output, which gives us the script and satoshis
-      input.output = prevTx.outputs[input.outputIndex]
+      input.output = prevtx.outputs[input.outputIndex]
 
       // Set the type of the input if we can determine it.
       // Run doesn't require this to work but it may help users.
