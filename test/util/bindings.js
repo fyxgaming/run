@@ -22,7 +22,7 @@ describe('Bindings', () => {
       // Jigs
       expect(_location('abc_o0')).to.deep.equal({ txid: 'abc', vout: 0 })
       expect(_location('abc_d1')).to.deep.equal({ txid: 'abc', vdel: 1 })
-      expect(_location('native://Jig')).to.deep.equal({ native: 'Jig' })
+      expect(_location('native://Jig')).to.deep.equal({ nativeid: 'native://Jig' })
       // Local jigs
       expect(_location('_o10')).to.deep.equal({ vout: 10 })
       expect(_location('_d1')).to.deep.equal({ vdel: 1 })
