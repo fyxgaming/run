@@ -180,7 +180,7 @@ describe('Code', () => {
       expect(CB.A).to.equal(CA)
     })
 
-    it.only('installs parent that is code jig', () => {
+    it('installs parent that is code jig', () => {
       const run = new Run()
       class B { }
       const CB = run.deploy(B)
@@ -189,7 +189,7 @@ describe('Code', () => {
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
-    it.only('sets initial bindings', () => {
+    it('sets initial bindings', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
