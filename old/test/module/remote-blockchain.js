@@ -11,7 +11,7 @@ const { expect } = require('chai')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const { RemoteBlockchain, BlockchainServer } = Run
-const { RequestFailedError } = Run.errors
+const { RequestError } = Run.errors
 
 // ------------------------------------------------------------------------------------------------
 // RemoteBlockchain tests
@@ -82,10 +82,10 @@ describe('RemoteBlockchain', () => {
   })
 
   describe('fetch', () => {
-    it('should throw RequestFailedError', async () => {
+    it('should throw RequestError', async () => {
       const blockchain = RemoteBlockchain.create({ network: 'main' })
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
-      await expect(blockchain.fetch(txid)).to.be.rejectedWith(RequestFailedError)
+      await expect(blockchain.fetch(txid)).to.be.rejectedWith(RequestError)
     })
   })
 

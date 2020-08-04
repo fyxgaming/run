@@ -12,7 +12,7 @@ const { PrivateKey } = require('bsv')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
 const { Jig, Mockchain } = Run
-const { NotImplementedError } = Run.errors
+const { UnimplementedError } = Run.errors
 
 // ------------------------------------------------------------------------------------------------
 // Jig tests
@@ -311,7 +311,7 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       await a.sync() // pending transactions must publish first
-      run.blockchain.spends = async () => { throw new NotImplementedError('spends') }
+      run.blockchain.spends = async () => { throw new UnimplementedError('spends') }
       await expect(a.sync()).to.be.rejectedWith('Failed to forward sync jig')
     })
 
