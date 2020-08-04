@@ -25,13 +25,11 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('deploy', () => {
-    it.only('creates from class', async () => {
+    it('creates from class', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
       expect(CA.toString()).to.equal(A.toString())
-
-      await CA.sync()
     })
 
     it('creates from function', () => {
@@ -182,7 +180,7 @@ describe('Code', () => {
       expect(CB.A).to.equal(CA)
     })
 
-    it('installs parent that is code jig', () => {
+    it.only('installs parent that is code jig', () => {
       const run = new Run()
       class B { }
       const CB = run.deploy(B)
@@ -191,7 +189,7 @@ describe('Code', () => {
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
-    it('sets initial bindings', () => {
+    it.only('sets initial bindings', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
