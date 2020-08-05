@@ -22,6 +22,26 @@ describe('File', () => {
       expect(file._type.toString()).to.equal('function Base() {}')
     })
   })
+
+  describe('_set', () => {
+    // Only allow functions
+    // Is a file a util?
+
+    it('should change source code', () => {
+      const file = new File()
+
+      class A { }
+      file._set(A)
+      console.log(file._type.toString())
+
+      function f () { }
+      file._set(f)
+      console.log(file._type.toString())
+    })
+
+    // Old functions are removed
+    // Prototype can't be changed
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
