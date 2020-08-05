@@ -18,14 +18,14 @@ describe('File', () => {
   describe('constructor', () => {
     it('creates base type', () => {
       const file = new File()
-      expect(typeof file._type === 'function').to.equal(true)
-      expect(file._type.toString()).to.equal('function Base() {}')
+      expect(typeof file._Outer === 'function').to.equal(true)
+      expect(file._Outer.toString()).to.equal('function Base() {}')
     })
 
     // Create with custom base type
   })
 
-  describe('_set', () => {
+  describe('_setInnerType', () => {
     // Only allow functions
     // Is a file a util?
 
@@ -33,12 +33,16 @@ describe('File', () => {
       const file = new File()
 
       class A { f () { } }
-      file._set(A)
-      console.log(file._type.toString())
-      console.log(file._type.prototype)
-      console.log(Object.keys(file._type.prototype))
-      console.log(Object.keys(Object.getPrototypeOf(file._type.prototype)))
-      console.log(file._type.prototype.f)
+      file._setInnerType(A)
+      console.log(file._Outer.toString())
+      console.log(file._Outer.prototype)
+      console.log('1', Object.getOwnPropertyNames(file._Outer.prototype))
+      console.log('2', Object.getOwnPropertyNames(Object.getPrototypeOf(file._Outer.prototype)))
+      console.log(file._Outer.prototype.f)
+
+      console.log('---')
+      console.log(Object.getOwnPropertyNames(A.prototype))
+      console.log('---')
 
     //   function f () { }
     //   file._set(f)
