@@ -6,13 +6,11 @@
 
 const bsv = require('bsv')
 const Code = require('./code')
-const Record = require('./v2/record')
 const Publisher = require('./publisher')
 const Syncer = require('./syncer')
 const Inventory = require('./inventory')
 const Transaction = require('./transaction')
-const { _bsvNetwork, _SerialTaskQueue, _assert } = require('../util/misc')
-const { _location } = require('../util/bindings')
+const { _bsvNetwork, _SerialTaskQueue } = require('../util/misc')
 
 // ------------------------------------------------------------------------------------------------
 // Kernel
