@@ -1,25 +1,25 @@
 /**
- * file.js
+ * dynamic.js
  *
- * Tests for lib/kernel/file.js
+ * Tests for lib/util/dynamic.js
  */
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const File = unmangle(Run)._File
+const Dynamic = unmangle(Run)._Dynamic
 
 // ------------------------------------------------------------------------------------------------
-// File
+// Dynamic
 // ------------------------------------------------------------------------------------------------
 
-describe('File', () => {
+describe('Dynamic', () => {
   describe('constructor', () => {
     it('creates base type', () => {
-      const file = new File()
-      expect(typeof file._Outer === 'function').to.equal(true)
-      expect(file._Outer.toString()).to.equal('function Base() {}')
+      const D = new Dynamic()
+      expect(typeof D === 'function').to.equal(true)
+      expect(D.toString()).to.equal('function dynamic() { [native code] }')
     })
 
     // Create with custom base type
@@ -30,15 +30,18 @@ describe('File', () => {
     // Is a file a util?
 
     it('should change source code', () => {
-      const file = new File()
-
+      const D = new Dynamic()
       class A { f () { } }
-      file._setInnerType(A)
-      console.log(file._Outer.toString())
-      console.log(file._Outer.prototype)
-      console.log('1', Object.getOwnPropertyNames(file._Outer.prototype))
-      console.log('2', Object.getOwnPropertyNames(Object.getPrototypeOf(file._Outer.prototype)))
-      console.log(file._Outer.prototype.f)
+      D.__type__ = A
+
+      // Can't name using __type__
+      // Jigs aren't allowed to have the dynamic type returned. Only they can do it, through upgrade.
+
+      console.log(D.toString())
+      console.log(D.prototype)
+      console.log('1', Object.getOwnPropertyNames(D.prototype))
+      console.log('2', Object.getOwnPropertyNames(Object.getPrototypeOf(D.prototype)))
+      console.log(D.prototype.f)
 
       console.log('---')
       console.log(Object.getOwnPropertyNames(A.prototype))
