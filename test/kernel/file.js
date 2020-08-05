@@ -21,6 +21,8 @@ describe('File', () => {
       expect(typeof file._type === 'function').to.equal(true)
       expect(file._type.toString()).to.equal('function Base() {}')
     })
+
+    // Create with custom base type
   })
 
   describe('_set', () => {
@@ -35,6 +37,7 @@ describe('File', () => {
       console.log(file._type.toString())
       console.log(file._type.prototype)
       console.log(Object.keys(file._type.prototype))
+      console.log(Object.keys(Object.getPrototypeOf(file._type.prototype)))
       console.log(file._type.prototype.f)
 
     //   function f () { }
