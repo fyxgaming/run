@@ -30,17 +30,21 @@ describe('File', () => {
     it('should change source code', () => {
       const file = new File()
 
-      class A { }
+      class A { f () { } }
       file._set(A)
       console.log(file._type.toString())
+      console.log(file._type.prototype)
+      console.log(Object.keys(file._type.prototype))
+      console.log(file._type.prototype.f)
 
-      function f () { }
-      file._set(f)
-      console.log(file._type.toString())
+    //   function f () { }
+    //   file._set(f)
+    //   console.log(file._type.toString())
     })
 
     // Old functions are removed
     // Prototype can't be changed
+    // Create instances, upgrades as we go
   })
 })
 
