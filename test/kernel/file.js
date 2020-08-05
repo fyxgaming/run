@@ -5,6 +5,7 @@
  */
 
 const { describe, it } = require('mocha')
+const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const File = unmangle(Run)._File
@@ -15,8 +16,10 @@ const File = unmangle(Run)._File
 
 describe('File', () => {
   describe('constructor', () => {
-    it('test', () => {
-      console.log(File)
+    it('creates base type', () => {
+      const file = new File()
+      expect(typeof file._type === 'function').to.equal(true)
+      expect(file._type.toString()).to.equal('function Base() {}')
     })
   })
 })
