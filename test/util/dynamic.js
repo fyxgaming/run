@@ -25,7 +25,7 @@ describe('Dynamic', () => {
     // Create with custom base type
   })
 
-  describe('_setInnerType', () => {
+  describe.skip('_setInnerType', () => {
     // Only allow functions
     // Is a file a util?
 
@@ -60,7 +60,54 @@ describe('Dynamic', () => {
     // Create instances, upgrades as we go
   })
 
-  describe.only('instance', () => {
+  describe('__type__', () => {
+    it('initially gets base type', () => {
+      const D = new Dynamic()
+      expect(typeof D.__type__).to.equal('function')
+    })
+
+    it('cannot set to non-function', () => {
+      const D = new Dynamic()
+      const error = 'Inner type must be a function type'
+      expect(() => { D.__type__ = 1 }).to.throw(error)
+      expect(() => { D.__type__ = null }).to.throw(error)
+      expect(() => { D.__type__ = undefined }).to.throw(error)
+      expect(() => { D.__type__ = 'function' }).to.throw(error)
+      expect(() => { D.__type__ = true }).to.throw(error)
+    })
+
+    it('cannot change classes to functions', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      expect(() => { D.__type__ = function f () { } }).to.throw()
+    })
+
+    it('cannot change functions to classes', () => {
+      const D = new Dynamic()
+      D.__type__ = function f () { }
+      expect(() => { D.__type__ = class A { } }).to.throw()
+    })
+
+    it('cannot have __type__ property', () => {
+      const D = new Dynamic()
+      const error = '__type__ is a reserved property'
+      class A { }
+      A.__type__ = function f () { }
+      expect(() => { D.__type__ = A }).to.throw(error)
+      class B { static get __type__ () { } }
+      expect(() => { D.__type__ = B }).to.throw(error)
+      function f () { }
+      f.__type__ = undefined
+      expect(() => { D.__type__ = f }).to.throw(error)
+    })
+
+    // TODO: Check constructor
+
+    // Upgrade multiple functions
+    // Upgrade multiple classes
+  })
+
+  describe('instance', () => {
     it('is instanceof dynamic type', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
@@ -115,11 +162,10 @@ describe('Dynamic', () => {
     })
   })
 
-  it('__type__', () => {
-    // TODO: Check constructor
-  })
+  // Function
+  // Extends
 
-  it('proxy2', () => {
+  it.skip('proxy2', () => {
     const D = new Dynamic()
 
     D.__type__ = class A { }
@@ -140,7 +186,7 @@ describe('Dynamic', () => {
     console.log(E.toString())
   })
 
-  it('inside another proxy', () => {
+  it.skip('inside another proxy', () => {
     const D = new Dynamic()
 
     class A { static f () { console.log('f()'); this.n = 1 } }
