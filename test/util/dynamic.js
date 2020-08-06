@@ -74,9 +74,19 @@ describe('Dynamic', () => {
     })
 
     it('can change functions', () => {
+      const D = new Dynamic()
+      D.__type__ = function f () { }
+      D.__type__ = function g () { }
+      D.__type__ = function h () { }
+      expect(D.name).to.equal('h')
     })
 
     it('can change classes', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      D.__type__ = class B { }
+      D.__type__ = class C { }
+      expect(D.name).to.equal('C')
     })
 
     it('cannot set to non-function', () => {
@@ -127,9 +137,6 @@ describe('Dynamic', () => {
       const g = () => { }
       expect(() => { D.__type__ = g }).to.throw(error)
     })
-
-    // Upgrade multiple functions ... and call
-    // Upgrade multiple classes
   })
 
   describe('apply', () => {
