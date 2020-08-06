@@ -232,6 +232,19 @@ describe('Dynamic', () => {
       D.__type__ = A
       expect(D.toString()).to.equal(A.toString())
     })
+
+    it('should get on child class', () => {
+      class A { }
+      class B extends A { }
+      B.n = 2
+      A.n = 1
+      const DA = new Dynamic()
+      DA.__type__ = A
+      const DB = new Dynamic()
+      DB.__type__ = B
+      expect(DA.n).to.equal(1)
+      expect(DB.n).to.equal(2)
+    })
   })
 
   describe('prototype', () => {
