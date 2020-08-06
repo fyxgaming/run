@@ -247,6 +247,18 @@ describe('Dynamic', () => {
     })
   })
 
+  describe('getOwnPropertyDescriptor', () => {
+    it('should get property descriptor of inner type', () => {
+      const D = new Dynamic()
+      class A { static f () { } }
+      D.__type__ = A
+      const descA = Object.getOwnPropertyDescriptor(A, 'f')
+      const descD = Object.getOwnPropertyDescriptor(D, 'f')
+      expect(descA.value).to.equal(A.f)
+      expect(descA).to.deep.equal(descD)
+    })
+  })
+
   describe('prototype', () => {
     it('should always return base prototype', () => {
       const D = new Dynamic()
@@ -319,9 +331,6 @@ describe('Dynamic', () => {
       expect(D.toString).not.to.equal(123)
     })
   })
-
-  // setPrototypeOf
-  // The other handlers
 
   describe('instance', () => {
     it('is instanceof dynamic type', () => {
@@ -553,6 +562,9 @@ describe('Dynamic', () => {
     // Prototype can't be changed
     // Create instances, upgrades as we go
   })
+
+  // setPrototypeOf
+  // The other handlers
 })
 
 // ------------------------------------------------------------------------------------------------
