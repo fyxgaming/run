@@ -348,12 +348,30 @@ describe('Dynamic', () => {
       expect(D.n).to.equal(1)
     })
 
-    it('can call methods on instance', () => {
+    it('can call methods that set on instance', () => {
       const D = new Dynamic()
       D.__type__ = class A { f () { this.n = 1 } }
       const d = new D()
       d.f()
       expect(d.n).to.equal(1)
+    })
+
+    it('can call methods that define properties on instance', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { f () { Object.defineProperty(this, 'n', { value: 1 }) } }
+      const d = new D()
+      d.f()
+      expect(d.n).to.equal(1)
+    })
+
+    it('can call methods that delete on instance', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { f () { delete this.n } }
+      const d = new D()
+      d.n = 1
+      expect(d.n).to.equal(1)
+      d.f()
+      expect(d.n).to.equal(undefined)
     })
   })
 
