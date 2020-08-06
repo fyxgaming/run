@@ -278,6 +278,22 @@ describe('Dynamic', () => {
     })
   })
 
+  describe('getPrototypeOf', () => {
+    it('should return inner type parent', () => {
+      class A { }
+      class B extends A { }
+      const D = new Dynamic()
+      D.__type__ = B
+      expect(Object.getPrototypeOf(D)).to.equal(A)
+    })
+
+    it('should return Function.prototype for base functions', () => {
+      const D = new Dynamic()
+      D.__type__ = function f () { }
+      expect(Object.getPrototypeOf(D)).to.equal(Function.prototype)
+    })
+  })
+
   describe('prototype', () => {
     it('should always return base prototype', () => {
       const D = new Dynamic()
