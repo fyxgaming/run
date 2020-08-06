@@ -89,6 +89,15 @@ describe('Dynamic', () => {
       expect(D.name).to.equal('C')
     })
 
+    it('can set class with extension', () => {
+      const D = new Dynamic()
+      class A { f () { } }
+      class B extends A { }
+      D.__type__ = B
+      expect(D.name).to.equal('B')
+      expect(typeof new D().f).to.equal('function')
+    })
+
     it('cannot set to non-function', () => {
       const D = new Dynamic()
       const error = 'Inner type must be a function type'
@@ -124,7 +133,7 @@ describe('Dynamic', () => {
       expect(() => { D.__type__ = f }).to.throw(error)
     })
 
-    it('cannot set to anonymous types', () => {
+    it('cannot set anonymous types', () => {
       const D = new Dynamic()
       const error = 'Types must not be anonymous'
       const A = class { }
@@ -249,7 +258,6 @@ describe('Dynamic', () => {
     })
   })
 
-  // Function
   // Extends
 
   it.skip('proxy2', () => {
