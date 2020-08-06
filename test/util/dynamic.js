@@ -120,6 +120,11 @@ describe('Dynamic', () => {
       class B extends A { }
       expect(() => { D.__type__ = B }).to.throw(error)
     })
+
+    it('cannot be non-extensible', () => {
+      // And parent
+      // TODO
+    })
   })
 
   describe('apply', () => {
@@ -301,6 +306,15 @@ describe('Dynamic', () => {
       expect('n' in D).to.equal(true)
       D.__type__ = class A { }
       expect('n' in D).to.equal(false)
+    })
+  })
+
+  describe('preventExtensions', () => {
+    it('cannot prevent extensions', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      expect(() => Object.preventExtensions(D)).to.throw()
+      expect(Object.isExtensible(D)).to.equal(true)
     })
   })
 
