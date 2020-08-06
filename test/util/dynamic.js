@@ -146,6 +146,13 @@ describe('Dynamic', () => {
       const g = () => { }
       expect(() => { D.__type__ = g }).to.throw(error)
     })
+
+    it('cannot have toString function', () => {
+      const D = new Dynamic()
+      const error = 'toString is a reserved property'
+      class A { static toString () { } }
+      expect(() => { D.__type__ = A }).to.throw(error)
+    })
   })
 
   describe('apply', () => {
@@ -175,7 +182,7 @@ describe('Dynamic', () => {
   })
 
   describe('defineProperty', () => {
-    it('sets on inner type', () => {
+    it('defines on inner type', () => {
       const D = new Dynamic()
       class A { }
       D.__type__ = A
@@ -184,12 +191,19 @@ describe('Dynamic', () => {
       expect(A.x).to.equal(1)
     })
 
-    it('cannot set prototype', () => {
+    it('cannot define prototype', () => {
       const D = new Dynamic()
       class A { }
       D.__type__ = A
       expect(() => Object.defineProperty(D, 'prototype', { value: 123 })).to.throw()
       expect(D.prototype).not.to.equal(123)
+    })
+
+    it('cannot define toString', () => {
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      expect(() => Object.defineProperty(D, 'toString', { value: 123 })).to.throw()
     })
   })
 
@@ -282,12 +296,11 @@ describe('Dynamic', () => {
       expect(A.prototype).not.to.equal(123)
     })
 
-    it('can set toString', () => {
+    it('cannot set toString', () => {
       const D = new Dynamic()
       class A { }
       D.__type__ = A
-      D.toString = () => '123'
-      expect(D.toString()).to.equal('123')
+      expect(() => { D.toString = () => '123' }).to.throw()
     })
   })
 
@@ -407,6 +420,18 @@ describe('Dynamic', () => {
       const b = new DB()
       expect(b instanceof DB).to.equal(true)
       expect(b instanceof DA).to.equal(true)
+    })
+
+    it('toString is correct for child class', () => {
+      const DA = new Dynamic()
+      DA.__type__ = class A { }
+      const DB = new Dynamic()
+      DB.__type__ = class B extends DA { }
+      const DC = new Dynamic()
+      DC.__type__ = class C extends DA { }
+      expect(DA.toString().startsWith('class A')).to.equal(true)
+      expect(DB.toString().startsWith('class B')).to.equal(true)
+      expect(DC.toString().startsWith('class C')).to.equal(true)
     })
   })
 
