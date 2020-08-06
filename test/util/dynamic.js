@@ -130,6 +130,12 @@ describe('Dynamic', () => {
       class B extends A {}
       expect(() => { D.__type__ = B }).to.throw(error)
     })
+
+    it('supports types from sandbox', () => {
+      const f = unmangle(Run.sandbox)._evaluate('function f() { }')[0]
+      const D = new Dynamic()
+      D.__type__ = f
+    })
   })
 
   describe('apply', () => {
