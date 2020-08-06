@@ -257,6 +257,25 @@ describe('Dynamic', () => {
       expect(descA.value).to.equal(A.f)
       expect(descA).to.deep.equal(descD)
     })
+
+    it('should get property descriptor of child class', () => {
+      class A { static f () { }}
+      class B extends A { static f () { } }
+      const DA = new Dynamic()
+      DA.__type__ = A
+      const DB = new Dynamic()
+      DB.__type__ = B
+      const descA = Object.getOwnPropertyDescriptor(A, 'f')
+      const descB = Object.getOwnPropertyDescriptor(B, 'f')
+      const descDA = Object.getOwnPropertyDescriptor(DA, 'f')
+      const descDB = Object.getOwnPropertyDescriptor(DB, 'f')
+      expect(descA.value).to.equal(A.f)
+      expect(descB.value).to.equal(B.f)
+      expect(descA).to.deep.equal(descDA)
+      expect(descB).to.deep.equal(descDB)
+      expect(descA).not.to.deep.equal(descB)
+      expect(descDA).not.to.deep.equal(descDB)
+    })
   })
 
   describe('prototype', () => {
