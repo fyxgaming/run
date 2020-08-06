@@ -371,7 +371,9 @@ describe('Dynamic', () => {
       expect(() => Object.setPrototypeOf(D.prototype, {})).to.throw()
       expect(Object.getPrototypeOf(D.prototype)).to.equal(protoproto)
     })
+  })
 
+  describe('method table', () => {
     it('method table properties cannot be set', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
@@ -403,6 +405,14 @@ describe('Dynamic', () => {
       const protoprotoproto = Object.getPrototypeOf(protoproto)
       expect(() => Object.setPrototypeOf(protoproto, {})).to.throw()
       expect(Object.getPrototypeOf(protoproto)).to.equal(protoprotoproto)
+    })
+
+    it('method table prototype cannot be made unextensible', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      const protoproto = Object.getPrototypeOf(D.prototype)
+      expect(() => Object.preventExtensions(protoproto)).to.throw()
+      expect(Object.isExtensible(protoproto)).to.equal(true)
     })
   })
 
