@@ -25,7 +25,7 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('deploy', () => {
-    it('creates from class', async () => {
+    it.only('creates from class', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -814,7 +814,7 @@ describe('Code', () => {
   })
 
   describe('load', () => {
-    it.only('loads circular jig props', async () => {
+    it('loads circular jig props', async () => {
       const run = new Run()
 
       class A { }
