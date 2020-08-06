@@ -60,7 +60,7 @@ describe('Dynamic', () => {
     // Create instances, upgrades as we go
   })
 
-  describe.only('new', () => {
+  describe.only('instance', () => {
     it('is instanceof dynamic type', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
@@ -104,6 +104,14 @@ describe('Dynamic', () => {
       const d = new D()
       D.__type__ = class B {}
       expect(d.constructor).to.equal(D)
+    })
+
+    it('can set dynamic class properties', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { f () { this.constructor.n = 1 } }
+      const d = new D()
+      d.f()
+      expect(D.n).to.equal(1)
     })
   })
 
