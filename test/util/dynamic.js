@@ -60,14 +60,35 @@ describe('Dynamic', () => {
     // Create instances, upgrades as we go
   })
 
-  describe('instances', () => {
-    it.only('are the same type', () => {
+  describe.only('new', () => {
+    it('is instanceof dynamic type', () => {
       const D = new Dynamic()
-      class A { }
-      D.__type__ = A
+      D.__type__ = class A { }
       const d = new D()
-      console.log(d instanceof D)
-      console.log(d instanceof A)
+      expect(d instanceof D).to.equal(true)
+    })
+
+    it('is not instance of original type', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      const d = new D()
+      expect(d instanceof D.__type__).to.equal(false)
+    })
+
+    it('has dynamic prototype', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      const d = new D()
+      expect(Object.getPrototypeOf(d)).to.equal(D.prototype)
+    })
+
+    it('can change methods on instance', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { f () { } }
+      const d = new D()
+      D.__type__ = class B { g () { } }
+      expect(typeof d.f).to.equal('undefined')
+      expect(typeof d.g).to.equal('function')
     })
   })
 
