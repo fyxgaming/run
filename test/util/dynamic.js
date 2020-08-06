@@ -646,9 +646,6 @@ describe('Dynamic', () => {
     // Prototype can't be changed
     // Create instances, upgrades as we go
   })
-
-  // setPrototypeOf
-  // The other handlers
 })
 
 // ------------------------------------------------------------------------------------------------
