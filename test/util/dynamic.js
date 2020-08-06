@@ -122,8 +122,13 @@ describe('Dynamic', () => {
     })
 
     it('cannot be non-extensible', () => {
-      // And parent
-      // TODO
+      const D = new Dynamic()
+      const error = 'Types must be extensible'
+      class A { }
+      Object.preventExtensions(A)
+      expect(() => { D.__type__ = A }).to.throw(error)
+      class B extends A {}
+      expect(() => { D.__type__ = B }).to.throw(error)
     })
   })
 
