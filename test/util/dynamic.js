@@ -174,6 +174,41 @@ describe('Dynamic', () => {
     })
   })
 
+  describe('delete', () => {
+    it('deletes on inner type', () => {
+      const D = new Dynamic()
+      class A { }
+      A.n = 1
+      D.__type__ = A
+      delete D.n
+      expect(A.n).to.equal(undefined)
+    })
+
+    it('cannot delete prototype', () => {
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      delete D.prototype
+      expect(D.prototype).not.to.equal(undefined)
+    })
+
+    it('cannot delete toString', () => {
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      delete D.toString
+      expect(D.toString).not.to.equal(undefined)
+    })
+
+    it('cannot delete __type__', () => {
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      delete D.__type__
+      expect(D.__type__).not.to.equal(undefined)
+    })
+  })
+
   describe('get', () => {
     it('should get basic property', () => {
       const D = new Dynamic()
