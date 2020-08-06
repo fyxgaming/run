@@ -21,43 +21,6 @@ describe('Dynamic', () => {
       expect(typeof D === 'function').to.equal(true)
       expect(D.toString()).to.equal('function dynamic() {}')
     })
-
-    // Create with custom base type
-  })
-
-  describe.skip('_setInnerType', () => {
-    // Only allow functions
-    // Is a file a util?
-
-    it('should change source code', () => {
-      const D = new Dynamic()
-      class A { f () { } }
-      D.__type__ = A
-
-      D.prototype = 123
-      console.log('===', A.prototype)
-
-      // Can't name using __type__
-      // Jigs aren't allowed to have the dynamic type returned. Only they can do it, through upgrade.
-
-      console.log(D.toString())
-      console.log(D.prototype)
-      console.log('1', Object.getOwnPropertyNames(D.prototype))
-      console.log('2', Object.getOwnPropertyNames(Object.getPrototypeOf(D.prototype)))
-      console.log(D.prototype.f)
-
-      console.log('---')
-      console.log(Object.getOwnPropertyNames(A.prototype))
-      console.log('---')
-
-    //   function f () { }
-    //   file._set(f)
-    //   console.log(file._type.toString())
-    })
-
-    // Old functions are removed
-    // Prototype can't be changed
-    // Create instances, upgrades as we go
   })
 
   describe('__type__', () => {
@@ -304,7 +267,8 @@ describe('Dynamic', () => {
       const D = new Dynamic()
       class A { }
       D.__type__ = A
-      expect(() => { D.toString = () => '123' }).to.throw()
+      D.toString = 123
+      expect(D.toString).not.to.equal(123)
     })
   })
 
@@ -505,6 +469,41 @@ describe('Dynamic', () => {
     D.__type__ = G// class G { }
 
     console.log(D.n)
+  })
+
+  describe.skip('_setInnerType', () => {
+    // Only allow functions
+    // Is a file a util?
+
+    it('should change source code', () => {
+      const D = new Dynamic()
+      class A { f () { } }
+      D.__type__ = A
+
+      D.prototype = 123
+      console.log('===', A.prototype)
+
+      // Can't name using __type__
+      // Jigs aren't allowed to have the dynamic type returned. Only they can do it, through upgrade.
+
+      console.log(D.toString())
+      console.log(D.prototype)
+      console.log('1', Object.getOwnPropertyNames(D.prototype))
+      console.log('2', Object.getOwnPropertyNames(Object.getPrototypeOf(D.prototype)))
+      console.log(D.prototype.f)
+
+      console.log('---')
+      console.log(Object.getOwnPropertyNames(A.prototype))
+      console.log('---')
+
+    //   function f () { }
+    //   file._set(f)
+    //   console.log(file._type.toString())
+    })
+
+    // Old functions are removed
+    // Prototype can't be changed
+    // Create instances, upgrades as we go
   })
 })
 
