@@ -59,6 +59,85 @@ describe('Dynamic', () => {
     // Prototype can't be changed
     // Create instances, upgrades as we go
   })
+
+  describe('instances', () => {
+    it.only('are the same type', () => {
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      const d = new D()
+      console.log(d instanceof D)
+      console.log(d instanceof A)
+    })
+  })
+
+  it('proxy2', () => {
+    const D = new Dynamic()
+
+    D.__type__ = class A { }
+
+    const E = new Proxy(D, {
+      set (target, prop, value, receiver) {
+        console.log(prop)
+        target[prop] = value
+
+        if (prop === '__type__') {
+          // throw new Error('NOT ALLOWED')
+        }
+      }
+    })
+
+    E.__type__ = class B { }
+
+    console.log(E.toString())
+  })
+
+  it('inside another proxy', () => {
+    const D = new Dynamic()
+
+    class A { static f () { console.log('f()'); this.n = 1 } }
+
+    // 1. Sandbox class
+    // 2. Make class a jig with a membrane
+    // 3. Set the class on the dynamic
+    // But then the dynamic is the jig. That's backwards.
+    // Because __type__ can be set then.
+
+    // Type is not on the prototype. It's on the class.
+    // Meaning the dynamic can be wrapped too.
+
+    // When getting an instance method, it should be applied to the object
+
+    /*
+    const A2 = new Proxy(A, {
+      get (target, prop, receiver) {
+        console.log('get', prop)
+        return target[prop]
+      },
+
+      set (target, prop, value, receiver) {
+        console.log('set', prop, value)
+        target[prop] = value
+        return true
+      }
+    })
+    */
+
+    D.__type__ = A
+
+    console.log('f')
+    D.f()
+
+    console.log(D.n)
+
+    const G = class { }
+    console.log(G.name)
+    console.log(G.toString())
+
+    D.__type__ = G// class G { }
+
+    console.log(D.n)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
