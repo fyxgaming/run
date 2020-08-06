@@ -101,6 +101,20 @@ describe('Dynamic', () => {
       expect(() => { D.__type__ = f }).to.throw(error)
     })
 
+    it('cannot set to anonymous types', () => {
+      const D = new Dynamic()
+      const error = 'Types must not be anonymous'
+      const A = class { }
+      expect(() => { D.__type__ = A }).to.throw(error)
+      class B2 { }
+      const B = class extends B2 { }
+      expect(() => { D.__type__ = B }).to.throw(error)
+      const f = function () { }
+      expect(() => { D.__type__ = f }).to.throw(error)
+      const g = () => { }
+      expect(() => { D.__type__ = g }).to.throw(error)
+    })
+
     // TODO: Check constructor
 
     // Upgrade multiple functions
