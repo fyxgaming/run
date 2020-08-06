@@ -235,6 +235,25 @@ describe('Dynamic', () => {
       expect(D.prototype instanceof A).to.equal(true)
       expect(D.prototype instanceof B).to.equal(true)
     })
+
+    it('prototype cannot be changed', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      D.prototype.x = 1
+      expect(D.prototype.x).to.equal(undefined)
+      expect(() => Object.defineProperty(D.prototype, 'y', { value: 2 })).to.throw()
+      expect(D.prototype.y).to.equal(undefined)
+    })
+
+    it('method table cannot be changed', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      const protoproto = Object.getPrototypeOf(D.prototype)
+      protoproto.x = 1
+      expect(protoproto.x).to.equal(undefined)
+      expect(() => Object.defineProperty(protoproto, 'y', { value: 2 })).to.throw()
+      expect(protoproto.y).to.equal(undefined)
+    })
   })
 
   describe('set', () => {
