@@ -375,7 +375,40 @@ describe('Dynamic', () => {
     })
   })
 
-  // Extends
+  describe('extends', () => {
+    it('can call instance methods that set', () => {
+      const DA = new Dynamic()
+      DA.__type__ = class A { f () { this.n = 1 } }
+      const DB = new Dynamic()
+      DB.__type__ = class B extends DA { g () { this.m = 2 }}
+      const b = new DB()
+      b.f()
+      b.g()
+      expect(b.n).to.equal(1)
+      expect(b.m).to.equal(2)
+    })
+
+    it('cannot change prototypes', () => {
+      const DA = new Dynamic()
+      DA.__type__ = class A { }
+      const DB = new Dynamic()
+      DB.__type__ = class B extends DA { }
+      Object.getPrototypeOf(DA.prototype).x = 1
+      expect(Object.getPrototypeOf(DA.prototype).x).to.equal(undefined)
+      Object.getPrototypeOf(DB.prototype).y = 2
+      expect(Object.getPrototypeOf(DB.prototype).y).to.equal(undefined)
+    })
+
+    it('instances are from both child and parent class', () => {
+      const DA = new Dynamic()
+      DA.__type__ = class A { f () { this.n = 1 } }
+      const DB = new Dynamic()
+      DB.__type__ = class B extends DA { g () { this.m = 2 }}
+      const b = new DB()
+      expect(b instanceof DB).to.equal(true)
+      expect(b instanceof DA).to.equal(true)
+    })
+  })
 
   it.skip('proxy2', () => {
     const D = new Dynamic()
