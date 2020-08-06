@@ -131,6 +131,8 @@ describe('Dynamic', () => {
       function f () { }
       f.__type__ = undefined
       expect(() => { D.__type__ = f }).to.throw(error)
+      class C extends B { }
+      expect(() => { D.__type__ = C }).to.throw(error)
     })
 
     it('cannot set anonymous types', () => {
@@ -147,11 +149,13 @@ describe('Dynamic', () => {
       expect(() => { D.__type__ = g }).to.throw(error)
     })
 
-    it('cannot have toString function', () => {
+    it('cannot have toString static function', () => {
       const D = new Dynamic()
       const error = 'toString is a reserved property'
       class A { static toString () { } }
       expect(() => { D.__type__ = A }).to.throw(error)
+      class B extends A { }
+      expect(() => { D.__type__ = B }).to.throw(error)
     })
   })
 
