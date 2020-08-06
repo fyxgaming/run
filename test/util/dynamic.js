@@ -350,23 +350,42 @@ describe('Dynamic', () => {
       expect(D.prototype instanceof B).to.equal(true)
     })
 
-    it('prototype cannot be changed', () => {
+    it('prototype properties cannot be set', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
       D.prototype.x = 1
       expect(D.prototype.x).to.equal(undefined)
-      expect(() => Object.defineProperty(D.prototype, 'y', { value: 2 })).to.throw()
-      expect(D.prototype.y).to.equal(undefined)
     })
 
-    it('method table cannot be changed', () => {
+    it('prototype properties cannot be defined', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      expect(() => Object.defineProperty(D.prototype, 'x', { value: 1 })).to.throw()
+      expect(D.prototype.x).to.equal(undefined)
+    })
+
+    it('method table properties cannot be set', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
       const protoproto = Object.getPrototypeOf(D.prototype)
       protoproto.x = 1
       expect(protoproto.x).to.equal(undefined)
-      expect(() => Object.defineProperty(protoproto, 'y', { value: 2 })).to.throw()
-      expect(protoproto.y).to.equal(undefined)
+    })
+
+    it('method table properties cannot be defined', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      const protoproto = Object.getPrototypeOf(D.prototype)
+      expect(() => Object.defineProperty(protoproto, 'x', { value: 1 })).to.throw()
+      expect(protoproto.x).to.equal(undefined)
+    })
+
+    it('method table properties cannot be deleted', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { f () { } }
+      const protoproto = Object.getPrototypeOf(D.prototype)
+      delete protoproto.f
+      expect(typeof protoproto.f).to.equal('function')
     })
   })
 
