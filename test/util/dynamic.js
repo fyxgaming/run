@@ -68,14 +68,14 @@ describe('Dynamic', () => {
       expect(d instanceof D).to.equal(true)
     })
 
-    it('is not instance of original type', () => {
+    it('is not instance of inner type', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
       const d = new D()
       expect(d instanceof D.__type__).to.equal(false)
     })
 
-    it('has dynamic prototype', () => {
+    it('has same prototype of as dynamic', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
       const d = new D()
@@ -90,6 +90,17 @@ describe('Dynamic', () => {
       expect(typeof d.f).to.equal('undefined')
       expect(typeof d.g).to.equal('function')
     })
+
+    it('has same constructor as dynamic', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { f () { } }
+      const d = new D()
+      expect(d.constructor).to.equal(D)
+    })
+  })
+
+  it('__type__', () => {
+    // TODO: Check constructor
   })
 
   it('proxy2', () => {
