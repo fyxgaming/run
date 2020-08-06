@@ -405,6 +405,17 @@ describe('Dynamic', () => {
     })
   })
 
+  describe('setPrototypeOf', () => {
+    it('cannot change prototype', () => {
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      const proto = Object.getPrototypeOf(A)
+      expect(() => Object.setPrototypeOf(D, class B { })).to.throw()
+      expect(Object.getPrototypeOf(D)).to.equal(proto)
+    })
+  })
+
   describe('instance', () => {
     it('is instanceof dynamic type', () => {
       const D = new Dynamic()
