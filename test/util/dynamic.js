@@ -256,6 +256,14 @@ describe('Dynamic', () => {
       d.f()
       expect(D.n).to.equal(1)
     })
+
+    it('can call methods on instance', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { f () { this.n = 1 } }
+      const d = new D()
+      d.f()
+      expect(d.n).to.equal(1)
+    })
   })
 
   // Extends
