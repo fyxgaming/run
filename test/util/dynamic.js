@@ -19,7 +19,7 @@ describe('Dynamic', () => {
     it('creates base type', () => {
       const D = new Dynamic()
       expect(typeof D === 'function').to.equal(true)
-      expect(D.toString()).to.equal('function dynamic() { [native code] }')
+      expect(D.toString()).to.equal('function dynamic() {}')
     })
 
     // Create with custom base type
@@ -33,6 +33,9 @@ describe('Dynamic', () => {
       const D = new Dynamic()
       class A { f () { } }
       D.__type__ = A
+
+      D.prototype = 123
+      console.log('===', A.prototype)
 
       // Can't name using __type__
       // Jigs aren't allowed to have the dynamic type returned. Only they can do it, through upgrade.
