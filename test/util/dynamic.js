@@ -309,6 +309,15 @@ describe('Dynamic', () => {
     })
   })
 
+  describe('ownKeys', () => {
+    it('returns own keys on the inner type', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      D.n = 1
+      expect(Object.getOwnPropertyNames(D).includes('n')).to.equal(true)
+    })
+  })
+
   describe('preventExtensions', () => {
     it('cannot prevent extensions', () => {
       const D = new Dynamic()
