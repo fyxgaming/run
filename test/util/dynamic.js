@@ -121,6 +121,35 @@ describe('Dynamic', () => {
     // Upgrade multiple classes
   })
 
+  describe('set', () => {
+    it('sets on inner type', () => {
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      D.n = 1
+      expect(A.n).to.equal(1)
+    })
+
+    it('old properties are not on new type', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      D.n = 1
+      D.__type__ = class B { }
+      expect(D.n).to.equal(undefined)
+    })
+
+    it('cannot set prototype', () => {
+
+    })
+
+    it('can set toString', () => {
+
+    })
+  })
+
+  // setPrototypeOf
+  // The other handlers
+
   describe('instance', () => {
     it('is instanceof dynamic type', () => {
       const D = new Dynamic()
