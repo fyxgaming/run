@@ -216,12 +216,24 @@ describe('Dynamic', () => {
       D.__type__ = A
       expect(D.toString()).to.equal(A.toString())
     })
+  })
 
+  describe('prototype', () => {
     it('should always return base prototype', () => {
       const D = new Dynamic()
       const basePrototype = D.prototype
       D.__type__ = class A {}
       expect(D.prototype).to.equal(basePrototype)
+    })
+
+    it('should have prototypes of parents', () => {
+      const D = new Dynamic()
+      class A {}
+      class B extends A {}
+      class C extends B { }
+      D.__type__ = C
+      expect(D.prototype instanceof A).to.equal(true)
+      expect(D.prototype instanceof B).to.equal(true)
     })
   })
 
