@@ -66,6 +66,19 @@ describe('Dynamic', () => {
       expect(typeof D.__type__).to.equal('function')
     })
 
+    it('returns changed type', () => {
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      expect(D.__type__).to.equal(A)
+    })
+
+    it('can change functions', () => {
+    })
+
+    it('can change classes', () => {
+    })
+
     it('cannot set to non-function', () => {
       const D = new Dynamic()
       const error = 'Inner type must be a function type'
@@ -115,10 +128,34 @@ describe('Dynamic', () => {
       expect(() => { D.__type__ = g }).to.throw(error)
     })
 
-    // TODO: Check constructor
-
-    // Upgrade multiple functions
+    // Upgrade multiple functions ... and call
     // Upgrade multiple classes
+  })
+
+  describe('apply', () => {
+    it('can call changed functions', () => {
+      const D = new Dynamic()
+      function f () { return 1 }
+      function g () { return 2 }
+      D.__type__ = f
+      expect(D()).to.equal(1)
+      D.__type__ = g
+      expect(D()).to.equal(2)
+    })
+
+    it('can call functions with custom thisArg', () => {
+      const D = new Dynamic()
+      function f () { return this.n }
+      D.__type__ = f
+      expect(Reflect.apply(D, { n: 1 }, [])).to.equal(1)
+    })
+
+    it('cannot call classes', () => {
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      expect(() => D()).to.throw()
+    })
   })
 
   describe('set', () => {
