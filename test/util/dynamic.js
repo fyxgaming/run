@@ -395,6 +395,15 @@ describe('Dynamic', () => {
       delete protoproto.f
       expect(typeof protoproto.f).to.equal('function')
     })
+
+    it('method table prototype cannot be changed', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      const protoproto = Object.getPrototypeOf(D.prototype)
+      const protoprotoproto = Object.getPrototypeOf(protoproto)
+      expect(() => Object.setPrototypeOf(protoproto, {})).to.throw()
+      expect(Object.getPrototypeOf(protoproto)).to.equal(protoprotoproto)
+    })
   })
 
   describe('set', () => {
