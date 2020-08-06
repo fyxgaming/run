@@ -93,8 +93,16 @@ describe('Dynamic', () => {
 
     it('has same constructor as dynamic', () => {
       const D = new Dynamic()
-      D.__type__ = class A { f () { } }
+      D.__type__ = class A { }
       const d = new D()
+      expect(d.constructor).to.equal(D)
+    })
+
+    it('has same constructor as dynamic after type change', () => {
+      const D = new Dynamic()
+      D.__type__ = class A { }
+      const d = new D()
+      D.__type__ = class B {}
       expect(d.constructor).to.equal(D)
     })
   })
