@@ -294,6 +294,16 @@ describe('Dynamic', () => {
     })
   })
 
+  describe('has', () => {
+    it('returns has on the inner type', () => {
+      const D = new Dynamic()
+      D.n = 1
+      expect('n' in D).to.equal(true)
+      D.__type__ = class A { }
+      expect('n' in D).to.equal(false)
+    })
+  })
+
   describe('prototype', () => {
     it('should always return base prototype', () => {
       const D = new Dynamic()
