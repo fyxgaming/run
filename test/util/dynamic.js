@@ -174,6 +174,57 @@ describe('Dynamic', () => {
     })
   })
 
+  describe('defineProperty', () => {
+    it('sets on inner type', () => {
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      Object.defineProperty(D, 'x', { value: 1 })
+      expect(D.x).to.equal(1)
+      expect(A.x).to.equal(1)
+    })
+
+    it('cannot set prototype', () => {
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      expect(() => Object.defineProperty(D, 'prototype', { value: 123 })).to.throw()
+      expect(D.prototype).not.to.equal(123)
+    })
+  })
+
+  describe('get', () => {
+    it('should get basic property', () => {
+      const D = new Dynamic()
+      class A { }
+      A.x = 1
+      D.__type__ = A
+      expect(A.x).to.equal(1)
+    })
+
+    it('should bind functions to dynamic', () => {
+      const D = new Dynamic()
+      class A { static f () { this.thisInF = this } }
+      D.__type__ = A
+      D.f()
+      expect(D.thisInF).to.equal(D)
+    })
+
+    it('toString should be bound to inner type', () => {
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      expect(D.toString()).to.equal(A.toString())
+    })
+
+    it('should always return base prototype', () => {
+      const D = new Dynamic()
+      const basePrototype = D.prototype
+      D.__type__ = class A {}
+      expect(D.prototype).to.equal(basePrototype)
+    })
+  })
+
   describe('set', () => {
     it('sets on inner type', () => {
       const D = new Dynamic()
@@ -192,11 +243,20 @@ describe('Dynamic', () => {
     })
 
     it('cannot set prototype', () => {
-
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      D.prototype = 123
+      expect(D.prototype).not.to.equal(123)
+      expect(A.prototype).not.to.equal(123)
     })
 
     it('can set toString', () => {
-
+      const D = new Dynamic()
+      class A { }
+      D.__type__ = A
+      D.toString = () => '123'
+      expect(D.toString()).to.equal('123')
     })
   })
 
