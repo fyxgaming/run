@@ -121,16 +121,6 @@ describe('Dynamic', () => {
       expect(() => { D.__type__ = B }).to.throw(error)
     })
 
-    it('cannot be non-extensible', () => {
-      const D = new Dynamic()
-      const error = 'Types must be extensible'
-      class A { }
-      Object.preventExtensions(A)
-      expect(() => { D.__type__ = A }).to.throw(error)
-      class B extends A {}
-      expect(() => { D.__type__ = B }).to.throw(error)
-    })
-
     it('supports types from sandbox', () => {
       const f = unmangle(Run.sandbox)._evaluate('function f() { }')[0]
       const D = new Dynamic()
@@ -300,6 +290,20 @@ describe('Dynamic', () => {
       expect(descA).not.to.deep.equal(descB)
       expect(descDA).not.to.deep.equal(descDB)
     })
+
+    it('should return prototype of base type', () => {
+      const D = new Dynamic()
+      const desc = Object.getOwnPropertyDescriptor(D, 'prototype')
+      D.__type__ = class A { }
+      expect(Object.getOwnPropertyDescriptor(D, 'prototype')).to.deep.equal(desc)
+    })
+
+    it('should return undefined for __type__', () => {
+      const D = new Dynamic()
+      expect(Object.getOwnPropertyDescriptor(D, '__type__')).to.equal(undefined)
+      D.__type__ = class A { }
+      expect(Object.getOwnPropertyDescriptor(D, '__type__')).to.equal(undefined)
+    })
   })
 
   describe('getPrototypeOf', () => {
@@ -328,6 +332,21 @@ describe('Dynamic', () => {
     })
   })
 
+  describe('isExtensible', () => {
+    it('is initially true', () => {
+      const D = new Dynamic()
+      expect(Object.isExtensible(D)).to.equal(true)
+    })
+
+    it('changes with inner type', () => {
+      const D = new Dynamic()
+      class A { }
+      Object.preventExtensions(A)
+      D.__type__ = A
+      expect(Object.isExtensible(D)).to.equal(false)
+    })
+  })
+
   describe('ownKeys', () => {
     it('returns own keys on the inner type', () => {
       const D = new Dynamic()
@@ -338,11 +357,17 @@ describe('Dynamic', () => {
   })
 
   describe('preventExtensions', () => {
-    it('cannot prevent extensions', () => {
+    it('makes non-extensible permanently', () => {
       const D = new Dynamic()
-      D.__type__ = class A { }
-      expect(() => Object.preventExtensions(D)).to.throw()
-      expect(Object.isExtensible(D)).to.equal(true)
+      class A { }
+      class B { }
+      D.__type__ = A
+      Object.preventExtensions(D)
+      expect(Object.isExtensible(D)).to.equal(false)
+      expect(Object.isExtensible(A)).to.equal(false)
+      D.__type__ = B
+      expect(Object.isExtensible(D)).to.equal(false)
+      expect(Object.isExtensible(B)).to.equal(false)
     })
   })
 
