@@ -232,17 +232,19 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('getOwnPropertyDescriptor', () => {
+  describe('getOwnPropertyDescriptor', () => {
     it('should get property descriptor of inner type', () => {
       const D = new Dynamic()
       class A { static f () { } }
-      D.__type__ = A
+      Dynamic._setInnerType(D, A)
       const descA = Object.getOwnPropertyDescriptor(A, 'f')
       const descD = Object.getOwnPropertyDescriptor(D, 'f')
       expect(descA.value).to.equal(A.f)
       expect(descA).to.deep.equal(descD)
     })
+  })
 
+  describe.skip('getOwnPropertyDescriptor', () => {
     it('should get property descriptor of child class', () => {
       class A { static f () { }}
       class B extends A { static f () { } }
