@@ -37,15 +37,17 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('_setInnerType', () => {
+  describe('_setInnerType', () => {
     it('can change functions', () => {
       const D = new Dynamic()
-      D.__type__ = function f () { }
-      D.__type__ = function g () { }
-      D.__type__ = function h () { }
+      Dynamic._setInnerType(D, function f () { })
+      Dynamic._setInnerType(D, function g () { })
+      Dynamic._setInnerType(D, function h () { })
       expect(D.name).to.equal('h')
     })
+  })
 
+  describe.skip('uncat', () => {
     it('can change classes', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
