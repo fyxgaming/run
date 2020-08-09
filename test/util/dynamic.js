@@ -261,16 +261,16 @@ describe('Dynamic', () => {
       expect(descA).not.to.deep.equal(descB)
       expect(descDA).not.to.deep.equal(descDB)
     })
-  })
 
-  describe.skip('getOwnPropertyDescriptor', () => {
     it('should return prototype of base type', () => {
       const D = new Dynamic()
       const desc = Object.getOwnPropertyDescriptor(D, 'prototype')
-      D.__type__ = class A { }
+      Dynamic._setInnerType(D, class A { })
       expect(Object.getOwnPropertyDescriptor(D, 'prototype')).to.deep.equal(desc)
     })
+  })
 
+  describe.skip('getOwnPropertyDescriptor', () => {
     it('should return undefined for __type__', () => {
       const D = new Dynamic()
       expect(Object.getOwnPropertyDescriptor(D, '__type__')).to.equal(undefined)
