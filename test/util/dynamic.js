@@ -286,12 +286,12 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('has', () => {
+  describe('has', () => {
     it('returns has on the inner type', () => {
       const D = new Dynamic()
       D.n = 1
       expect('n' in D).to.equal(true)
-      D.__type__ = class A { }
+      Dynamic._setInnerType(D, class A { })
       expect('n' in D).to.equal(false)
     })
   })
