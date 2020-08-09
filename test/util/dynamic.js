@@ -392,17 +392,17 @@ describe('Dynamic', () => {
       expect(() => Object.defineProperty(protoproto, 'x', { value: 1 })).to.throw()
       expect(protoproto.x).to.equal(undefined)
     })
-  })
 
-  describe.skip('method table', () => {
     it('method table properties cannot be deleted', () => {
       const D = new Dynamic()
-      D.__type__ = class A { f () { } }
+      Dynamic._setInnerType(D, class A { f () { } })
       const protoproto = Object.getPrototypeOf(D.prototype)
       delete protoproto.f
       expect(typeof protoproto.f).to.equal('function')
     })
+  })
 
+  describe.skip('method table', () => {
     it('method table prototype cannot be changed', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
