@@ -35,6 +35,10 @@ describe('Dynamic', () => {
       Dynamic._setInnerType(D, A)
       expect(Dynamic._getInnerType(D)).to.equal(A)
     })
+
+    it('throws if not a dynamic type', () => {
+      expect(() => Dynamic._getInnerType({})).to.throw('Not a dynamic type')
+    })
   })
 
   describe('_setInnerType', () => {
@@ -112,6 +116,10 @@ describe('Dynamic', () => {
       const f = unmangle(Run.sandbox)._evaluate('function f() { }')[0]
       const D = new Dynamic()
       Dynamic._setInnerType(D, f)
+    })
+
+    it('throws if not a dynamic type', () => {
+      expect(() => Dynamic._setInnerType({}, class A { })).to.throw('Not a dynamic type')
     })
   })
 
@@ -608,21 +616,24 @@ describe('Dynamic', () => {
   })
 
   describe('proxy', () => {
-    it('may wrap to prevent changing type', () => {
-      /*
+    it('may wrap to add additional behavior', () => {
       const D = new Dynamic()
+      class A { }
       Dynamic._setInnerType(D, A)
       const P = new Proxy(D, {
         set (target, prop, value, receiver) {
-          if (prop === '__type__') throw new Error()
+          if (prop === 'n') throw new Error()
           target[prop] = value
           return true
+        },
+        get (target, prop, receiver) {
+          if (prop === 'm') return 2
+          return target[prop]
         }
       })
-      P.n = 1
-      expect(D.n).to.equal(1)
-      expect(() => { Dynamic._setInnerType(P, class B { }) }).to.throw()
-      */
+      expect(() => { P.n = 1 }).to.throw()
+      expect(P.m).to.equal(2)
+      expect(() => Dynamic._setInnerType(P, class C { })).to.throw()
     })
 
     it('may set inner type to proxy', () => {
