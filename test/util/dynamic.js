@@ -78,44 +78,29 @@ describe('Dynamic', () => {
       Dynamic._setInnerType(D, class A { })
       expect(() => { Dynamic._setInnerType(D, function f () { }) }).to.throw()
     })
-  })
 
-  describe.skip('uncat', () => {
     it('cannot change functions to classes', () => {
       const D = new Dynamic()
-      D.__type__ = function f () { }
-      expect(() => { D.__type__ = class A { } }).to.throw()
-    })
-
-    it('cannot have __type__ property', () => {
-      const D = new Dynamic()
-      const error = '__type__ is a reserved property'
-      class A { }
-      A.__type__ = function f () { }
-      expect(() => { D.__type__ = A }).to.throw(error)
-      class B { static get __type__ () { } }
-      expect(() => { D.__type__ = B }).to.throw(error)
-      function f () { }
-      f.__type__ = undefined
-      expect(() => { D.__type__ = f }).to.throw(error)
-      class C extends B { }
-      expect(() => { D.__type__ = C }).to.throw(error)
+      Dynamic._setInnerType(D, function f () { })
+      expect(() => { Dynamic._setInnerType(D, class A { }) }).to.throw()
     })
 
     it('cannot set anonymous types', () => {
       const D = new Dynamic()
       const error = 'Types must not be anonymous'
       const A = class { }
-      expect(() => { D.__type__ = A }).to.throw(error)
+      expect(() => { Dynamic._setInnerType(D, A) }).to.throw(error)
       class B2 { }
       const B = class extends B2 { }
-      expect(() => { D.__type__ = B }).to.throw(error)
+      expect(() => { Dynamic._setInnerType(D, B) }).to.throw(error)
       const f = function () { }
-      expect(() => { D.__type__ = f }).to.throw(error)
+      expect(() => { Dynamic._setInnerType(D, f) }).to.throw(error)
       const g = () => { }
-      expect(() => { D.__type__ = g }).to.throw(error)
+      expect(() => { Dynamic._setInnerType(D, g) }).to.throw(error)
     })
+  })
 
+  describe.skip('uncat', () => {
     it('cannot have toString static function', () => {
       const D = new Dynamic()
       const error = 'toString is a reserved property'
