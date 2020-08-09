@@ -125,16 +125,16 @@ describe('Dynamic', () => {
       Dynamic._setInnerType(D, g)
       expect(D()).to.equal(2)
     })
-  })
 
-  describe.skip('apply', () => {
     it('can call functions with custom thisArg', () => {
       const D = new Dynamic()
       function f () { return this.n }
-      D.__type__ = f
+      Dynamic._setInnerType(D, f)
       expect(Reflect.apply(D, { n: 1 }, [])).to.equal(1)
     })
+  })
 
+  describe.skip('apply', () => {
     it('cannot call classes', () => {
       const D = new Dynamic()
       class A { }
