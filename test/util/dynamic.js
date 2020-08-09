@@ -335,14 +335,16 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('prototype', () => {
+  describe('prototype', () => {
     it('should always return base prototype', () => {
       const D = new Dynamic()
       const basePrototype = D.prototype
-      D.__type__ = class A {}
+      Dynamic._setInnerType(D, class A { })
       expect(D.prototype).to.equal(basePrototype)
     })
+  })
 
+  describe.skip('prototype', () => {
     it('should have prototypes of parents', () => {
       const D = new Dynamic()
       class A {}
