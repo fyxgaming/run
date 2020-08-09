@@ -496,16 +496,16 @@ describe('Dynamic', () => {
       expect(typeof d.f).to.equal('undefined')
       expect(typeof d.g).to.equal('function')
     })
-  })
 
-  describe.skip('instance', () => {
     it('has same constructor as dynamic', () => {
       const D = new Dynamic()
-      D.__type__ = class A { }
+      Dynamic._setInnerType(D, class A { })
       const d = new D()
       expect(d.constructor).to.equal(D)
     })
+  })
 
+  describe.skip('instance', () => {
     it('has same constructor as dynamic after type change', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
