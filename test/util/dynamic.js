@@ -409,12 +409,10 @@ describe('Dynamic', () => {
       expect(() => Object.setPrototypeOf(protoproto, {})).to.throw()
       expect(Object.getPrototypeOf(protoproto)).to.equal(protoprotoproto)
     })
-  })
 
-  describe.skip('method table', () => {
     it('method table prototype cannot be made unextensible', () => {
       const D = new Dynamic()
-      D.__type__ = class A { }
+      Dynamic._setInnerType(D, class A { })
       const protoproto = Object.getPrototypeOf(D.prototype)
       expect(() => Object.preventExtensions(protoproto)).to.throw()
       expect(Object.isExtensible(protoproto)).to.equal(true)
