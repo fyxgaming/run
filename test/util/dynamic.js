@@ -465,14 +465,16 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('instance', () => {
+  describe('instance', () => {
     it('is instanceof dynamic type', () => {
       const D = new Dynamic()
-      D.__type__ = class A { }
+      Dynamic._setInnerType(D, class A { })
       const d = new D()
       expect(d instanceof D).to.equal(true)
     })
+  })
 
+  describe.skip('instance', () => {
     it('is not instance of inner type', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
