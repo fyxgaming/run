@@ -62,19 +62,19 @@ describe('Dynamic', () => {
       expect(D.name).to.equal('B')
       expect(typeof new D().f).to.equal('function')
     })
+
+    it('cannot set to non-function type', () => {
+      const D = new Dynamic()
+      const error = 'Inner type must be a function type'
+      expect(() => { Dynamic._setInnerType(D, 1) }).to.throw(error)
+      expect(() => { Dynamic._setInnerType(D, null) }).to.throw(error)
+      expect(() => { Dynamic._setInnerType(D, undefined) }).to.throw(error)
+      expect(() => { Dynamic._setInnerType(D, 'function') }).to.throw(error)
+      expect(() => { Dynamic._setInnerType(D, true) }).to.throw(error)
+    })
   })
 
   describe.skip('uncat', () => {
-    it('cannot set to non-function', () => {
-      const D = new Dynamic()
-      const error = 'Inner type must be a function type'
-      expect(() => { D.__type__ = 1 }).to.throw(error)
-      expect(() => { D.__type__ = null }).to.throw(error)
-      expect(() => { D.__type__ = undefined }).to.throw(error)
-      expect(() => { D.__type__ = 'function' }).to.throw(error)
-      expect(() => { D.__type__ = true }).to.throw(error)
-    })
-
     it('cannot change classes to functions', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
