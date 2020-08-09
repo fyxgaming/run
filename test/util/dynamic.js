@@ -107,13 +107,11 @@ describe('Dynamic', () => {
       class B extends A { }
       expect(() => { Dynamic._setInnerType(D, B) }).to.throw(error)
     })
-  })
 
-  describe.skip('uncat', () => {
     it('supports types from sandbox', () => {
       const f = unmangle(Run.sandbox)._evaluate('function f() { }')[0]
       const D = new Dynamic()
-      D.__type__ = f
+      Dynamic._setInnerType(D, f)
     })
   })
 
