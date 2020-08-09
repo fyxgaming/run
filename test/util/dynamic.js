@@ -311,10 +311,10 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('ownKeys', () => {
+  describe('ownKeys', () => {
     it('returns own keys on the inner type', () => {
       const D = new Dynamic()
-      D.__type__ = class A { }
+      Dynamic._setInnerType(D, class A { })
       D.n = 1
       expect(Object.getOwnPropertyNames(D).includes('n')).to.equal(true)
     })
