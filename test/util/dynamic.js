@@ -320,16 +320,16 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('preventExtensions', () => {
+  describe('preventExtensions', () => {
     it('makes non-extensible permanently', () => {
       const D = new Dynamic()
       class A { }
       class B { }
-      D.__type__ = A
+      Dynamic._setInnerType(D, A)
       Object.preventExtensions(D)
       expect(Object.isExtensible(D)).to.equal(false)
       expect(Object.isExtensible(A)).to.equal(false)
-      D.__type__ = B
+      Dynamic._setInnerType(D, B)
       expect(Object.isExtensible(D)).to.equal(false)
       expect(Object.isExtensible(B)).to.equal(false)
     })
