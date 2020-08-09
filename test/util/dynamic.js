@@ -480,16 +480,16 @@ describe('Dynamic', () => {
       const d = new D()
       expect(d instanceof A).to.equal(false)
     })
-  })
 
-  describe.skip('instance', () => {
-    it('has same prototype of as dynamic', () => {
+    it('has same prototype as dynamic', () => {
       const D = new Dynamic()
-      D.__type__ = class A { }
+      Dynamic._setInnerType(D, class A { })
       const d = new D()
       expect(Object.getPrototypeOf(d)).to.equal(D.prototype)
     })
+  })
 
+  describe.skip('instance', () => {
     it('can change methods on instance', () => {
       const D = new Dynamic()
       D.__type__ = class A { f () { } }
