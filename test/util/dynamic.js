@@ -427,17 +427,17 @@ describe('Dynamic', () => {
       D.n = 1
       expect(A.n).to.equal(1)
     })
+
+    it('old properties are not on new type', () => {
+      const D = new Dynamic()
+      Dynamic._setInnerType(D, class A { })
+      D.n = 1
+      Dynamic._setInnerType(D, class B { })
+      expect(D.n).to.equal(undefined)
+    })
   })
 
   describe.skip('set', () => {
-    it('old properties are not on new type', () => {
-      const D = new Dynamic()
-      D.__type__ = class A { }
-      D.n = 1
-      D.__type__ = class B { }
-      expect(D.n).to.equal(undefined)
-    })
-
     it('cannot set prototype', () => {
       const D = new Dynamic()
       class A { }
