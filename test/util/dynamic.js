@@ -514,22 +514,24 @@ describe('Dynamic', () => {
 
     it('can set dynamic class properties', () => {
       const D = new Dynamic()
-      Dynamic._setInnerType(D, class A { f () { this.constructor.n = 1 } })
+      class A { f () { this.constructor.n = 1 } }
+      Dynamic._setInnerType(D, A)
       const d = new D()
       d.f()
       expect(D.n).to.equal(1)
     })
-  })
 
-  describe.skip('instance', () => {
     it('can call methods that set on instance', () => {
       const D = new Dynamic()
-      D.__type__ = class A { f () { this.n = 1 } }
+      class A { f () { this.n = 1 } }
+      Dynamic._setInnerType(D, A)
       const d = new D()
       d.f()
       expect(d.n).to.equal(1)
     })
+  })
 
+  describe.skip('instance', () => {
     it('can call methods that define properties on instance', () => {
       const D = new Dynamic()
       D.__type__ = class A { f () { Object.defineProperty(this, 'n', { value: 1 }) } }
