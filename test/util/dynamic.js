@@ -511,17 +511,17 @@ describe('Dynamic', () => {
       Dynamic._setInnerType(D, class B {})
       expect(d.constructor).to.equal(D)
     })
-  })
 
-  describe.skip('instance', () => {
     it('can set dynamic class properties', () => {
       const D = new Dynamic()
-      D.__type__ = class A { f () { this.constructor.n = 1 } }
+      Dynamic._setInnerType(D, class A { f () { this.constructor.n = 1 } })
       const d = new D()
       d.f()
       expect(D.n).to.equal(1)
     })
+  })
 
+  describe.skip('instance', () => {
     it('can call methods that set on instance', () => {
       const D = new Dynamic()
       D.__type__ = class A { f () { this.n = 1 } }
