@@ -487,18 +487,18 @@ describe('Dynamic', () => {
       const d = new D()
       expect(Object.getPrototypeOf(d)).to.equal(D.prototype)
     })
-  })
 
-  describe.skip('instance', () => {
     it('can change methods on instance', () => {
       const D = new Dynamic()
-      D.__type__ = class A { f () { } }
+      Dynamic._setInnerType(D, class A { f () { } })
       const d = new D()
-      D.__type__ = class B { g () { } }
+      Dynamic._setInnerType(D, class A { g () { } })
       expect(typeof d.f).to.equal('undefined')
       expect(typeof d.g).to.equal('function')
     })
+  })
 
+  describe.skip('instance', () => {
     it('has same constructor as dynamic', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
