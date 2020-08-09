@@ -167,16 +167,18 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('delete', () => {
+  describe('delete', () => {
     it('deletes on inner type', () => {
       const D = new Dynamic()
       class A { }
       A.n = 1
-      D.__type__ = A
+      Dynamic._setInnerType(D, A)
       delete D.n
       expect(A.n).to.equal(undefined)
     })
+  })
 
+  describe.skip('delete', () => {
     it('cannot delete prototype', () => {
       const D = new Dynamic()
       class A { }
