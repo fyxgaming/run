@@ -551,19 +551,23 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('extends', () => {
+  describe('extends', () => {
     it('can call instance methods that set', () => {
       const DA = new Dynamic()
-      DA.__type__ = class A { f () { this.n = 1 } }
+      class A { f () { this.n = 1 } }
+      Dynamic._setInnerType(DA, A)
       const DB = new Dynamic()
-      DB.__type__ = class B extends DA { g () { this.m = 2 }}
+      class B extends DA { g () { this.m = 2 }}
+      Dynamic._setInnerType(DB, B)
       const b = new DB()
       b.f()
       b.g()
       expect(b.n).to.equal(1)
       expect(b.m).to.equal(2)
     })
+  })
 
+  describe.skip('extends', () => {
     it('cannot change prototypes', () => {
       const DA = new Dynamic()
       DA.__type__ = class A { }
