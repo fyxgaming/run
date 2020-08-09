@@ -565,20 +565,22 @@ describe('Dynamic', () => {
       expect(b.n).to.equal(1)
       expect(b.m).to.equal(2)
     })
-  })
 
-  describe.skip('extends', () => {
     it('cannot change prototypes', () => {
       const DA = new Dynamic()
-      DA.__type__ = class A { }
+      class A { }
+      Dynamic._setInnerType(DA, A)
       const DB = new Dynamic()
-      DB.__type__ = class B extends DA { }
+      class B extends DA { }
+      Dynamic._setInnerType(DB, B)
       Object.getPrototypeOf(DA.prototype).x = 1
       expect(Object.getPrototypeOf(DA.prototype).x).to.equal(undefined)
       Object.getPrototypeOf(DB.prototype).y = 2
       expect(Object.getPrototypeOf(DB.prototype).y).to.equal(undefined)
     })
+  })
 
+  describe.skip('extends', () => {
     it('instances are from both child and parent class', () => {
       const DA = new Dynamic()
       DA.__type__ = class A { f () { this.n = 1 } }
