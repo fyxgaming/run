@@ -132,13 +132,11 @@ describe('Dynamic', () => {
       Dynamic._setInnerType(D, f)
       expect(Reflect.apply(D, { n: 1 }, [])).to.equal(1)
     })
-  })
 
-  describe.skip('apply', () => {
     it('cannot call classes', () => {
       const D = new Dynamic()
       class A { }
-      D.__type__ = A
+      Dynamic._setInnerType(D, A)
       expect(() => D()).to.throw()
     })
   })
