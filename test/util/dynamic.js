@@ -278,12 +278,10 @@ describe('Dynamic', () => {
       Dynamic._setInnerType(D, B)
       expect(Object.getPrototypeOf(D)).to.equal(A)
     })
-  })
 
-  describe.skip('getPrototypeOf', () => {
     it('should return Function.prototype for base functions', () => {
       const D = new Dynamic()
-      D.__type__ = function f () { }
+      Dynamic._setInnerType(D, function f () { })
       expect(Object.getPrototypeOf(D)).to.equal(Function.prototype)
     })
   })
