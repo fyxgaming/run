@@ -301,14 +301,12 @@ describe('Dynamic', () => {
       const D = new Dynamic()
       expect(Object.isExtensible(D)).to.equal(true)
     })
-  })
 
-  describe.skip('isExtensible', () => {
     it('changes with inner type', () => {
       const D = new Dynamic()
       class A { }
       Object.preventExtensions(A)
-      D.__type__ = A
+      Dynamic._setInnerType(D, A)
       expect(Object.isExtensible(D)).to.equal(false)
     })
   })
