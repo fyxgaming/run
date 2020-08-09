@@ -342,19 +342,19 @@ describe('Dynamic', () => {
       Dynamic._setInnerType(D, class A { })
       expect(D.prototype).to.equal(basePrototype)
     })
-  })
 
-  describe.skip('prototype', () => {
     it('should have prototypes of parents', () => {
       const D = new Dynamic()
       class A {}
       class B extends A {}
       class C extends B { }
-      D.__type__ = C
+      Dynamic._setInnerType(D, C)
       expect(D.prototype instanceof A).to.equal(true)
       expect(D.prototype instanceof B).to.equal(true)
     })
+  })
 
+  describe.skip('prototype', () => {
     it('prototype properties cannot be set', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
