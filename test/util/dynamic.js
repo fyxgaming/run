@@ -98,18 +98,18 @@ describe('Dynamic', () => {
       const g = () => { }
       expect(() => { Dynamic._setInnerType(D, g) }).to.throw(error)
     })
-  })
 
-  describe.skip('uncat', () => {
     it('cannot have toString static function', () => {
       const D = new Dynamic()
       const error = 'toString is a reserved property'
       class A { static toString () { } }
-      expect(() => { D.__type__ = A }).to.throw(error)
+      expect(() => { Dynamic._setInnerType(D, A) }).to.throw(error)
       class B extends A { }
-      expect(() => { D.__type__ = B }).to.throw(error)
+      expect(() => { Dynamic._setInnerType(D, B) }).to.throw(error)
     })
+  })
 
+  describe.skip('uncat', () => {
     it('supports types from sandbox', () => {
       const f = unmangle(Run.sandbox)._evaluate('function f() { }')[0]
       const D = new Dynamic()
