@@ -270,24 +270,17 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('getOwnPropertyDescriptor', () => {
-    it('should return undefined for __type__', () => {
-      const D = new Dynamic()
-      expect(Object.getOwnPropertyDescriptor(D, '__type__')).to.equal(undefined)
-      D.__type__ = class A { }
-      expect(Object.getOwnPropertyDescriptor(D, '__type__')).to.equal(undefined)
-    })
-  })
-
-  describe.skip('getPrototypeOf', () => {
+  describe('getPrototypeOf', () => {
     it('should return inner type parent', () => {
       class A { }
       class B extends A { }
       const D = new Dynamic()
-      D.__type__ = B
+      Dynamic._setInnerType(D, B)
       expect(Object.getPrototypeOf(D)).to.equal(A)
     })
+  })
 
+  describe.skip('getPrototypeOf', () => {
     it('should return Function.prototype for base functions', () => {
       const D = new Dynamic()
       D.__type__ = function f () { }
