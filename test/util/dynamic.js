@@ -578,19 +578,21 @@ describe('Dynamic', () => {
       Object.getPrototypeOf(DB.prototype).y = 2
       expect(Object.getPrototypeOf(DB.prototype).y).to.equal(undefined)
     })
-  })
 
-  describe.skip('extends', () => {
     it('instances are from both child and parent class', () => {
       const DA = new Dynamic()
-      DA.__type__ = class A { f () { this.n = 1 } }
+      class A { f () { this.n = 1 } }
+      Dynamic._setInnerType(DA, A)
       const DB = new Dynamic()
-      DB.__type__ = class B extends DA { g () { this.m = 2 }}
+      class B extends DA { g () { this.m = 2 }}
+      Dynamic._setInnerType(DB, B)
       const b = new DB()
       expect(b instanceof DB).to.equal(true)
       expect(b instanceof DA).to.equal(true)
     })
+  })
 
+  describe.skip('extends', () => {
     it('toString is correct for child class', () => {
       const DA = new Dynamic()
       DA.__type__ = class A { }
