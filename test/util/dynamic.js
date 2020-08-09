@@ -444,13 +444,11 @@ describe('Dynamic', () => {
       expect(D.prototype).not.to.equal(123)
       expect(A.prototype).not.to.equal(123)
     })
-  })
 
-  describe.skip('set', () => {
     it('cannot set toString', () => {
       const D = new Dynamic()
       class A { }
-      D.__type__ = A
+      Dynamic._setInnerType(D, A)
       D.toString = 123
       expect(D.toString).not.to.equal(123)
     })
