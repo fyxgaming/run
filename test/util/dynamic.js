@@ -366,12 +366,10 @@ describe('Dynamic', () => {
       expect(() => Object.defineProperty(D.prototype, 'x', { value: 1 })).to.throw()
       expect(D.prototype.x).to.equal(undefined)
     })
-  })
 
-  describe.skip('prototype', () => {
     it('prototype prototype cannot be changed', () => {
       const D = new Dynamic()
-      D.__type__ = class A { }
+      Dynamic._setInnerType(D, class A { })
       const protoproto = Object.getPrototypeOf(D.prototype)
       expect(() => Object.setPrototypeOf(D.prototype, {})).to.throw()
       expect(Object.getPrototypeOf(D.prototype)).to.equal(protoproto)
