@@ -296,12 +296,14 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('isExtensible', () => {
+  describe('isExtensible', () => {
     it('is initially true', () => {
       const D = new Dynamic()
       expect(Object.isExtensible(D)).to.equal(true)
     })
+  })
 
+  describe.skip('isExtensible', () => {
     it('changes with inner type', () => {
       const D = new Dynamic()
       class A { }
