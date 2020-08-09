@@ -158,21 +158,11 @@ describe('Dynamic', () => {
       expect(() => Object.defineProperty(D, 'prototype', { value: 123 })).to.throw()
       expect(D.prototype).not.to.equal(123)
     })
-  })
-
-  describe.skip('defineProperty', () => {
-    it('cannot define __type__', () => {
-      const D = new Dynamic()
-      class A { }
-      D.__type__ = A
-      expect(() => Object.defineProperty(D, '__type__', { value: 123 })).to.throw()
-      expect(D.__type__).to.equal(A)
-    })
 
     it('cannot define toString', () => {
       const D = new Dynamic()
       class A { }
-      D.__type__ = A
+      Dynamic._setInnerType(D, A)
       expect(() => Object.defineProperty(D, 'toString', { value: 123 })).to.throw()
     })
   })
