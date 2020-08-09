@@ -538,12 +538,11 @@ describe('Dynamic', () => {
       d.f()
       expect(d.n).to.equal(1)
     })
-  })
 
-  describe.skip('instance', () => {
     it('can call methods that delete on instance', () => {
       const D = new Dynamic()
-      D.__type__ = class A { f () { delete this.n } }
+      class A { f () { delete this.n } }
+      Dynamic._setInnerType(D, A)
       const d = new D()
       d.n = 1
       expect(d.n).to.equal(1)
