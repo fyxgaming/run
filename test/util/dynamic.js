@@ -184,17 +184,17 @@ describe('Dynamic', () => {
       delete D.prototype
       expect(D.prototype).not.to.equal(undefined)
     })
-  })
 
-  describe.skip('delete', () => {
     it('cannot delete toString', () => {
       const D = new Dynamic()
       class A { }
-      D.__type__ = A
+      Dynamic._setInnerType(D, A)
       delete D.toString
       expect(D.toString).not.to.equal(undefined)
     })
+  })
 
+  describe.skip('delete', () => {
     it('cannot delete __type__', () => {
       const D = new Dynamic()
       class A { }
