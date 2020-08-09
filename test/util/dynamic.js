@@ -472,16 +472,17 @@ describe('Dynamic', () => {
       const d = new D()
       expect(d instanceof D).to.equal(true)
     })
+
+    it('is not instance of inner type', () => {
+      const D = new Dynamic()
+      class A { }
+      Dynamic._setInnerType(D, A)
+      const d = new D()
+      expect(d instanceof A).to.equal(false)
+    })
   })
 
   describe.skip('instance', () => {
-    it('is not instance of inner type', () => {
-      const D = new Dynamic()
-      D.__type__ = class A { }
-      const d = new D()
-      expect(d instanceof D.__type__).to.equal(false)
-    })
-
     it('has same prototype of as dynamic', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
