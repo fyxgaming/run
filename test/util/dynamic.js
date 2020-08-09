@@ -210,13 +210,11 @@ describe('Dynamic', () => {
       D.f()
       expect(D.thisInF).to.equal(D)
     })
-  })
 
-  describe.skip('get', () => {
     it('toString should be bound to inner type', () => {
       const D = new Dynamic()
       class A { }
-      D.__type__ = A
+      Dynamic._setInnerType(D, A)
       expect(D.toString()).to.equal(A.toString())
     })
 
@@ -226,9 +224,9 @@ describe('Dynamic', () => {
       B.n = 2
       A.n = 1
       const DA = new Dynamic()
-      DA.__type__ = A
+      Dynamic._setInnerType(DA, A)
       const DB = new Dynamic()
-      DB.__type__ = B
+      Dynamic._setInnerType(DB, B)
       expect(DA.n).to.equal(1)
       expect(DB.n).to.equal(2)
     })
