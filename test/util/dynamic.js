@@ -141,16 +141,18 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('defineProperty', () => {
+  describe('defineProperty', () => {
     it('defines on inner type', () => {
       const D = new Dynamic()
       class A { }
-      D.__type__ = A
+      Dynamic._setInnerType(D, A)
       Object.defineProperty(D, 'x', { value: 1 })
       expect(D.x).to.equal(1)
       expect(A.x).to.equal(1)
     })
+  })
 
+  describe.skip('defineProperty', () => {
     it('cannot define prototype', () => {
       const D = new Dynamic()
       class A { }
