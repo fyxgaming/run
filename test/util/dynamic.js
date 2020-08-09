@@ -242,16 +242,14 @@ describe('Dynamic', () => {
       expect(descA.value).to.equal(A.f)
       expect(descA).to.deep.equal(descD)
     })
-  })
 
-  describe.skip('getOwnPropertyDescriptor', () => {
     it('should get property descriptor of child class', () => {
       class A { static f () { }}
       class B extends A { static f () { } }
       const DA = new Dynamic()
-      DA.__type__ = A
+      Dynamic._setInnerType(DA, A)
       const DB = new Dynamic()
-      DB.__type__ = B
+      Dynamic._setInnerType(DB, B)
       const descA = Object.getOwnPropertyDescriptor(A, 'f')
       const descB = Object.getOwnPropertyDescriptor(B, 'f')
       const descDA = Object.getOwnPropertyDescriptor(DA, 'f')
@@ -263,7 +261,9 @@ describe('Dynamic', () => {
       expect(descA).not.to.deep.equal(descB)
       expect(descDA).not.to.deep.equal(descDB)
     })
+  })
 
+  describe.skip('getOwnPropertyDescriptor', () => {
     it('should return prototype of base type', () => {
       const D = new Dynamic()
       const desc = Object.getOwnPropertyDescriptor(D, 'prototype')
