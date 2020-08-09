@@ -376,15 +376,17 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('method table', () => {
+  describe('method table', () => {
     it('method table properties cannot be set', () => {
       const D = new Dynamic()
-      D.__type__ = class A { }
+      Dynamic._setInnerType(D, class A { })
       const protoproto = Object.getPrototypeOf(D.prototype)
       protoproto.x = 1
       expect(protoproto.x).to.equal(undefined)
     })
+  })
 
+  describe.skip('method table', () => {
     it('method table properties cannot be defined', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
