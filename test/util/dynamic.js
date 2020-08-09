@@ -194,15 +194,17 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('get', () => {
+  describe('get', () => {
     it('should get basic property', () => {
       const D = new Dynamic()
       class A { }
       A.x = 1
-      D.__type__ = A
+      Dynamic._setInnerType(D, A)
       expect(A.x).to.equal(1)
     })
+  })
 
+  describe.skip('get', () => {
     it('should bind functions to dynamic', () => {
       const D = new Dynamic()
       class A { static f () { this.thisInF = this } }
