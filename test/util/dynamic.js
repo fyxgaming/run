@@ -590,16 +590,17 @@ describe('Dynamic', () => {
       expect(b instanceof DB).to.equal(true)
       expect(b instanceof DA).to.equal(true)
     })
-  })
 
-  describe.skip('extends', () => {
     it('toString is correct for child class', () => {
       const DA = new Dynamic()
-      DA.__type__ = class A { }
+      class A { }
+      Dynamic._setInnerType(DA, A)
       const DB = new Dynamic()
-      DB.__type__ = class B extends DA { }
+      class B extends DA { }
+      Dynamic._setInnerType(DB, B)
       const DC = new Dynamic()
-      DC.__type__ = class C extends DA { }
+      class C extends DA { }
+      Dynamic._setInnerType(DC, C)
       expect(DA.toString().startsWith('class A')).to.equal(true)
       expect(DB.toString().startsWith('class B')).to.equal(true)
       expect(DC.toString().startsWith('class C')).to.equal(true)
