@@ -53,18 +53,18 @@ describe('Dynamic', () => {
       Dynamic._setInnerType(D, class C { })
       expect(D.name).to.equal('C')
     })
-  })
 
-  describe.skip('uncat', () => {
-    it('can set class with extension', () => {
+    it('can set child class', () => {
       const D = new Dynamic()
       class A { f () { } }
       class B extends A { }
-      D.__type__ = B
+      Dynamic._setInnerType(D, B)
       expect(D.name).to.equal('B')
       expect(typeof new D().f).to.equal('function')
     })
+  })
 
+  describe.skip('uncat', () => {
     it('cannot set to non-function', () => {
       const D = new Dynamic()
       const error = 'Inner type must be a function type'
