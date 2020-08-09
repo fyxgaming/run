@@ -194,16 +194,6 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('delete', () => {
-    it('cannot delete __type__', () => {
-      const D = new Dynamic()
-      class A { }
-      D.__type__ = A
-      delete D.__type__
-      expect(D.__type__).not.to.equal(undefined)
-    })
-  })
-
   describe.skip('get', () => {
     it('should get basic property', () => {
       const D = new Dynamic()
