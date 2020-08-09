@@ -607,10 +607,11 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('proxy', () => {
+  describe('proxy', () => {
     it('may wrap to prevent changing type', () => {
+      /*
       const D = new Dynamic()
-      D.__type__ = class A { }
+      Dynamic._setInnerType(D, A)
       const P = new Proxy(D, {
         set (target, prop, value, receiver) {
           if (prop === '__type__') throw new Error()
@@ -620,7 +621,8 @@ describe('Dynamic', () => {
       })
       P.n = 1
       expect(D.n).to.equal(1)
-      expect(() => { P.__type__ = class B { } }).to.throw()
+      expect(() => { Dynamic._setInnerType(P, class B { }) }).to.throw()
+      */
     })
 
     it('may set inner type to proxy', () => {
@@ -635,7 +637,7 @@ describe('Dynamic', () => {
           return true
         }
       })
-      D.__type__ = P
+      Dynamic._setInnerType(D, P)
       D.n = 1
       expect(D.n).to.equal(2)
     })
