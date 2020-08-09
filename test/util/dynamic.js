@@ -16,19 +16,21 @@ const Dynamic = unmangle(Run)._Dynamic
 
 describe('Dynamic', () => {
   describe('constructor', () => {
-    it('creates base type', () => {
+    it.only('creates base type', () => {
       const D = new Dynamic()
       expect(typeof D === 'function').to.equal(true)
       expect(D.toString()).to.equal('function dynamic() {}')
     })
   })
 
-  describe('__type__', () => {
+  describe('_getInnerType', () => {
     it('initially gets base type', () => {
       const D = new Dynamic()
       expect(typeof D.__type__).to.equal('function')
     })
+  })
 
+  describe('_setInnerType', () => {
     it('returns changed type', () => {
       const D = new Dynamic()
       class A { }
