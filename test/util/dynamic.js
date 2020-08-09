@@ -419,15 +419,17 @@ describe('Dynamic', () => {
     })
   })
 
-  describe.skip('set', () => {
+  describe('set', () => {
     it('sets on inner type', () => {
       const D = new Dynamic()
       class A { }
-      D.__type__ = A
+      Dynamic._setInnerType(D, A)
       D.n = 1
       expect(A.n).to.equal(1)
     })
+  })
 
+  describe.skip('set', () => {
     it('old properties are not on new type', () => {
       const D = new Dynamic()
       D.__type__ = class A { }
