@@ -16,8 +16,15 @@ const SI = unmangle(sandbox)._intrinsics
 const Membrane = unmangle(unmangle(Run)._Membrane)
 const { payFor } = require('../env/misc')
 
+// ------------------------------------------------------------------------------------------------
+// Globals
+// ------------------------------------------------------------------------------------------------
+
 const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
 const randomOwner = () => new PrivateKey().toAddress().toString()
+
+// Methods available on all code instances
+const CODE_METHODS = ['upgrade', 'sync', 'destroy', 'auth']
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -47,17 +54,13 @@ describe('Code', () => {
         const run = new Run()
         class A { }
         const CA = run.deploy(A)
-        expect(typeof CA.upgrade).to.equal('function')
-        expect(typeof CA.sync).to.equal('function')
-        expect(typeof CA.destroy).to.equal('function')
-        expect(typeof CA.auth).to.equal('function')
-        expect(Object.getOwnPropertyNames(CA).includes('upgrade')).to.equal(false)
-        expect(Object.getOwnPropertyNames(CA).includes('sync')).to.equal(false)
-        expect(Object.getOwnPropertyNames(CA).includes('destroy')).to.equal(false)
-        expect(Object.getOwnPropertyNames(CA).includes('auth')).to.equal(false)
+        CODE_METHODS.forEach(name => expect(typeof CA[name]).to.equal('function'))
+        CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(CA).includes(name)).to.equal(false))
       })
 
       // TODO: Check code methods are the same each time, dependable
+      // Frozen
+      // Cannot be deleted, or redefined, either from inside or outside
     })
 
     describe('function', () => {
@@ -76,6 +79,14 @@ describe('Code', () => {
         expect(f instanceof Code).to.equal(false)
         expect(cf instanceof Code).to.equal(true)
         expect(typeof cf).to.equal('function')
+      })
+
+      it('adds invisible code methods', () => {
+        const run = new Run()
+        function f () { }
+        const cf = run.deploy(f)
+        CODE_METHODS.forEach(name => expect(typeof cf[name]).to.equal('function'))
+        CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(cf).includes(name)).to.equal(false))
       })
     })
   })
