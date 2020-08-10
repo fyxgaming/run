@@ -54,6 +54,8 @@ async function runTests () {
 
   // Poll function to read logs
   async function poll () {
+    const { done } = await driver.executeScript('return { done }')
+
     try {
       const logs = await driver.executeScript('return pollLogs()')
       for (const log of logs) console.log(...log)
@@ -61,7 +63,6 @@ async function runTests () {
       console.error('Error reading logs:', e)
     }
 
-    const { done } = await driver.executeScript('return { done }')
     return !done
   }
 
