@@ -653,6 +653,46 @@ describe('Dynamic', () => {
       expect(D.n).to.equal(2)
     })
   })
+
+  describe('getOuterType', () => {
+    it('initially returns dynamic', () => {
+      const D = new Dynamic()
+      expect(Dynamic._getOuterType(D)).to.equal(D)
+    })
+
+    it('returns changed outer type', () => {
+      const D = new Dynamic()
+      const P = new Proxy(D, {})
+      Dynamic._setOuterType(D, P)
+      expect(Dynamic._getOuterType(D)).to.equal(P)
+    })
+  })
+
+  describe('setOuterType', () => {
+    it('changes prototype constructor', () => {
+      const D = new Dynamic()
+      const P = new Proxy(D, {})
+      Dynamic._setOuterType(D, P)
+      expect(D.prototype.constructor).to.equal(P)
+    })
+
+    it('changes instance constructor', () => {
+      const D = new Dynamic()
+      const P = new Proxy(D, {})
+      Dynamic._setOuterType(D, P)
+      const p = new P()
+      expect(p.constructor).to.equal(P)
+    })
+
+    it('calls toString on inner type', () => {
+      const D = new Dynamic()
+      const P = new Proxy(D, {})
+      class A { }
+      Dynamic._setInnerType(D, A)
+      Dynamic._setOuterType(D, P)
+      expect(P.toString()).to.equal(A.toString())
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
