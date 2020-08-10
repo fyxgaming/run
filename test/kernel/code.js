@@ -25,55 +25,62 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('deploy', () => {
-    it('returns new code', async () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      expect(typeof CA).to.equal('function')
-      expect(CA instanceof Code)
-      expect(CA).not.to.equal(A)
+    describe('class', () => {
+      it('creates new code', async () => {
+        const run = new Run()
+        class A { }
+        const CA = run.deploy(A)
+        expect(CA.toString()).to.equal(A.toString())
+        expect(CA).not.to.equal(A)
+      })
+
+      it('returns instanceof Code', () => {
+        const run = new Run()
+        class A { }
+        const CA = run.deploy(A)
+        expect(A instanceof Code).to.equal(false)
+        expect(CA instanceof Code).to.equal(true)
+        expect(typeof CA).to.equal('function')
+      })
+
+      it('adds invisible code methods', () => {
+        const run = new Run()
+        class A { }
+        const CA = run.deploy(A)
+        expect(typeof CA.upgrade).to.equal('function')
+        expect(typeof CA.sync).to.equal('function')
+        expect(typeof CA.destroy).to.equal('function')
+        expect(typeof CA.auth).to.equal('function')
+        expect(Object.getOwnPropertyNames(CA).includes('upgrade')).to.equal(false)
+        expect(Object.getOwnPropertyNames(CA).includes('sync')).to.equal(false)
+        expect(Object.getOwnPropertyNames(CA).includes('destroy')).to.equal(false)
+        expect(Object.getOwnPropertyNames(CA).includes('auth')).to.equal(false)
+      })
+
+      // TODO: Check code methods are the same each time, dependable
     })
 
-    it('creates from class', async () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      expect(CA.toString()).to.equal(A.toString())
-    })
+    describe('function', () => {
+      it('creates new code', () => {
+        const run = new Run()
+        function f () { }
+        const cf = run.deploy(f)
+        expect(cf.toString()).to.equal(f.toString())
+        expect(cf).not.to.equal(f)
+      })
 
-    it('creates from function', () => {
-      const run = new Run()
-      function f () { }
-      const cf = run.deploy(f)
-      expect(cf.toString()).to.equal(f.toString())
+      it('returns instanceof Code', () => {
+        const run = new Run()
+        function f () { }
+        const cf = run.deploy(f)
+        expect(f instanceof Code).to.equal(false)
+        expect(cf instanceof Code).to.equal(true)
+        expect(typeof cf).to.equal('function')
+      })
     })
   })
 
   describe.skip('deploy', () => {
-    it('returns instanceof Code', () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      expect(A instanceof Code).to.equal(false)
-      expect(CA instanceof Code).to.equal(true)
-      function f () { }
-      const f2 = run.deploy(f)
-      expect(f instanceof Code).to.equal(false)
-      expect(f2 instanceof Code).to.equal(true)
-    })
-
-    it('adds invisible Code functions', () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      expect(typeof CA.upgrade).to.equal('function')
-      expect(typeof CA.sync).to.equal('function')
-      expect(typeof CA.destroy).to.equal('function')
-      expect(Object.getOwnPropertyNames(CA).includes('upgrade')).to.equal(false)
-      expect(Object.getOwnPropertyNames(CA).includes('sync')).to.equal(false)
-      expect(Object.getOwnPropertyNames(CA).includes('destroy')).to.equal(false)
-    })
-
     it('creates local code only once', () => {
       const run = new Run()
       class A { }
