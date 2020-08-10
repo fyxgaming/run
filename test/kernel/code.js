@@ -21,6 +21,10 @@ const { payFor } = require('../env/misc')
 // Jig
 //  - Code methods not present
 //  - Can assign properties to code methods (only upgrade)
+//
+// Code
+//  - defineProperty disabled
+//  - getters and setters either allowed, or not allowed
 
 // ------------------------------------------------------------------------------------------------
 // Globals
