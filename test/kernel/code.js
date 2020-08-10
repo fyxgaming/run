@@ -25,7 +25,7 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('deploy', () => {
-    it('returns code', async () => {
+    it('returns new code', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -33,9 +33,7 @@ describe('Code', () => {
       expect(CA instanceof Code)
       expect(CA).not.to.equal(A)
     })
-  })
 
-  describe.skip('deploy', () => {
     it('creates from class', async () => {
       const run = new Run()
       class A { }
@@ -46,10 +44,12 @@ describe('Code', () => {
     it('creates from function', () => {
       const run = new Run()
       function f () { }
-      const f2 = run.deploy(f)
-      expect(f2.toString()).to.equal(f.toString())
+      const cf = run.deploy(f)
+      expect(cf.toString()).to.equal(f.toString())
     })
+  })
 
+  describe.skip('deploy', () => {
     it('returns instanceof Code', () => {
       const run = new Run()
       class A { }
