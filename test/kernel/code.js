@@ -16,6 +16,12 @@ const SI = unmangle(sandbox)._intrinsics
 const Membrane = unmangle(unmangle(Run)._Membrane)
 const { payFor } = require('../env/misc')
 
+// Tests:
+//
+// Jig
+//  - Code methods not present
+//  - Can assign properties to code methods (only upgrade)
+
 // ------------------------------------------------------------------------------------------------
 // Globals
 // ------------------------------------------------------------------------------------------------
@@ -89,6 +95,27 @@ describe('Code', () => {
         CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(cf).includes(name)).to.equal(false))
       })
     })
+  })
+
+  describe('get', () => {
+    it('code methods are same for same code', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      CODE_METHODS.forEach(name => expect(CA[name]).to.equal(CA[name]))
+    })
+
+    it('code methods are different for different code', () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      expect(CA.upgrade).to.equal(CA.upgrade)
+      expect(CA.sync).to.equal(CB.sync)
+    })
+
+    // TODO
   })
 
   describe('getOwnPropertyDescriptor', () => {
