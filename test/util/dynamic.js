@@ -599,6 +599,11 @@ describe('Dynamic', () => {
       expect(b instanceof DA).to.equal(true)
     })
 
+    // TODO
+    // - construct with args
+    // - construct child class not a dynamic type
+    // - other things with child class that is not a dynamic type
+
     it('toString is correct for child class', () => {
       const DA = new Dynamic()
       class A { }
