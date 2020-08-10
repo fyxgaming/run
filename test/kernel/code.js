@@ -56,14 +56,6 @@ describe('Code', () => {
         expect(typeof CA).to.equal('function')
       })
 
-      it('adds invisible code methods', () => {
-        const run = new Run()
-        class A { }
-        const CA = run.deploy(A)
-        CODE_METHODS.forEach(name => expect(typeof CA[name]).to.equal('function'))
-        CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(CA).includes(name)).to.equal(false))
-      })
-
       // TODO: Check code methods are the same each time, dependable
       // Frozen
       // Cannot be deleted, or redefined, either from inside or outside
@@ -86,13 +78,19 @@ describe('Code', () => {
         expect(cf instanceof Code).to.equal(true)
         expect(typeof cf).to.equal('function')
       })
+    })
 
-      it('adds invisible code methods', () => {
+    describe('error', () => {
+      it('cannot deploy non-functions', () => {
         const run = new Run()
-        function f () { }
-        const cf = run.deploy(f)
-        CODE_METHODS.forEach(name => expect(typeof cf[name]).to.equal('function'))
-        CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(cf).includes(name)).to.equal(false))
+        run.deploy()
+      })
+
+      it('cannot deploy native code', () => {
+        const run = new Run()
+        const error = 'Cannot deploy native code'
+        expect(() => run.deploy(Jig)).to.throw(error)
+        expect(() => run.deploy(Berry)).to.throw(error)
       })
     })
   })
@@ -100,21 +98,45 @@ describe('Code', () => {
   // TODO: NativeCode methods
 
   describe('get', () => {
-    it('code methods are same for same code', () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      CODE_METHODS.forEach(name => expect(CA[name]).to.equal(CA[name]))
+    describe('class', () => {
+      it('code methods are same for same code', () => {
+        const run = new Run()
+        class A { }
+        const CA = run.deploy(A)
+        CODE_METHODS.forEach(name => expect(CA[name]).to.equal(CA[name]))
+      })
+
+      it('code methods are different for different code', () => {
+        const run = new Run()
+        class A { }
+        class B { }
+        const CA = run.deploy(A)
+        const CB = run.deploy(B)
+        expect(CA.upgrade).to.equal(CA.upgrade)
+        expect(CA.sync).to.equal(CB.sync)
+      })
+
+      it('adds invisible code methods', () => {
+        const run = new Run()
+        class A { }
+        const CA = run.deploy(A)
+        CODE_METHODS.forEach(name => expect(typeof CA[name]).to.equal('function'))
+        CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(CA).includes(name)).to.equal(false))
+      })
     })
 
-    it('code methods are different for different code', () => {
-      const run = new Run()
-      class A { }
-      class B { }
-      const CA = run.deploy(A)
-      const CB = run.deploy(B)
-      expect(CA.upgrade).to.equal(CA.upgrade)
-      expect(CA.sync).to.equal(CB.sync)
+    describe('function', () => {
+      it('has invisible code methods', () => {
+        const run = new Run()
+        function f () { }
+        const cf = run.deploy(f)
+        CODE_METHODS.forEach(name => expect(typeof cf[name]).to.equal('function'))
+        CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(cf).includes(name)).to.equal(false))
+      })
+    })
+
+    describe('native', () => {
+
     })
 
     // TODO
