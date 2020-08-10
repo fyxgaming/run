@@ -25,7 +25,18 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 
 describe('Code', () => {
   describe('deploy', () => {
-    it.only('creates from class', async () => {
+    it('returns code', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      expect(typeof CA).to.equal('function')
+      expect(CA instanceof Code)
+      expect(CA).not.to.equal(A)
+    })
+  })
+
+  describe.skip('deploy', () => {
+    it('creates from class', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -245,7 +256,7 @@ describe('Code', () => {
     })
   })
 
-  describe('deps', () => {
+  describe.skip('deps', () => {
     it('makes deps globals', () => {
       const run = new Run()
       class A { }
@@ -306,7 +317,7 @@ describe('Code', () => {
     })
   })
 
-  describe('presets', () => {
+  describe.skip('presets', () => {
     it('uses blockchain presets', () => {
       const run = new Run()
       const network = run.blockchain.network
@@ -502,7 +513,7 @@ describe('Code', () => {
     })
   })
 
-  describe('sealed', () => {
+  describe.skip('sealed', () => {
     it.skip('sealed by default', () => {
       const run = new Run()
       class A { }
@@ -539,7 +550,7 @@ describe('Code', () => {
     })
   })
 
-  describe('prototype', () => {
+  describe.skip('prototype', () => {
     it('sets prototype constructor to Code', () => {
       const run = new Run()
       class A { }
@@ -548,7 +559,7 @@ describe('Code', () => {
     })
   })
 
-  describe('name', () => {
+  describe.skip('name', () => {
     it('returns class or function name', () => {
       const run = new Run()
       class A { }
@@ -558,7 +569,7 @@ describe('Code', () => {
     })
   })
 
-  describe('toString', () => {
+  describe.skip('toString', () => {
     it('returns same string as original code', () => {
       const run = new Run()
       class A { }
@@ -577,14 +588,14 @@ describe('Code', () => {
     })
   })
 
-  describe('get', () => {
+  describe.skip('get', () => {
   })
 
-  describe('methods', () => {
+  describe.skip('methods', () => {
     // Code functions are not available inside functions
   })
 
-  describe('sync', () => {
+  describe.skip('sync', () => {
     // Only waits for current record
     // TODO: Check records
 
@@ -638,7 +649,7 @@ describe('Code', () => {
     })
   })
 
-  describe('upgrade', () => {
+  describe.skip('upgrade', () => {
     it('should replace code', async () => {
       const run = new Run()
 
@@ -767,7 +778,7 @@ describe('Code', () => {
     // TODO: Rollback upgrade itself, not publish error
   })
 
-  describe('activate', () => {
+  describe.skip('activate', () => {
     it('simple activate test', async () => {
       const run = new Run()
       class A { }
@@ -783,7 +794,7 @@ describe('Code', () => {
     })
   })
 
-  describe('native', () => {
+  describe.skip('native', () => {
     it('should not return source code', () => {
       expect(Jig.toString().indexOf('[native code]')).not.to.equal(-1)
       expect(Code.toString().indexOf('[native code]')).not.to.equal(-1)
@@ -791,7 +802,7 @@ describe('Code', () => {
     })
   })
 
-  describe('destroy', () => {
+  describe.skip('destroy', () => {
     it('destroys code', async () => {
       const run = new Run()
       class A { }
@@ -813,7 +824,7 @@ describe('Code', () => {
     })
   })
 
-  describe('load', () => {
+  describe.skip('load', () => {
     it('loads circular jig props', async () => {
       const run = new Run()
 
@@ -837,7 +848,7 @@ describe('Code', () => {
     })
   })
 
-  describe('auth', () => {
+  describe.skip('auth', () => {
     it('auths code', async () => {
       const run = new Run()
       class A { }
@@ -862,7 +873,7 @@ describe('Code', () => {
     // Auth is allowed when unbound and undefined, but a different transaction
   })
 
-  describe('call', () => {
+  describe.skip('call', () => {
     it('calls static get method on jig', async () => {
       const run = new Run()
       class A extends Jig { static f (x) { return 123 + x } }
@@ -937,7 +948,7 @@ describe('Code', () => {
     })
   })
 
-  describe('get', () => {
+  describe.skip('get', () => {
     it('returns the same method twice', async () => {
       const run = new Run()
       class A { static f () { return 123 } }
