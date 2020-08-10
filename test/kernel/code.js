@@ -91,6 +91,17 @@ describe('Code', () => {
     })
   })
 
+  describe('getOwnPropertyDescriptor', () => {
+    it('returned undefined for code methods', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      CODE_METHODS.forEach(name => expect(Object.getOwnPropertyDescriptor(CA, name)).to.equal(undefined))
+    })
+
+    // TODO
+  })
+
   describe.skip('deploy', () => {
     it('creates local code only once', () => {
       const run = new Run()
