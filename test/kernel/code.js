@@ -97,6 +97,8 @@ describe('Code', () => {
     })
   })
 
+  // TODO: NativeCode methods
+
   describe('get', () => {
     it('code methods are same for same code', () => {
       const run = new Run()
