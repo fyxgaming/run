@@ -481,6 +481,14 @@ describe('Dynamic', () => {
       expect(d instanceof D).to.equal(true)
     })
 
+    it('passes args', () => {
+      const D = new Dynamic()
+      class A { constructor (x) { this.x = x } }
+      Dynamic._setInnerType(D, A)
+      const d = new D(1)
+      expect(d.x).to.equal(1)
+    })
+
     it('is not instance of inner type', () => {
       const D = new Dynamic()
       class A { }
@@ -599,11 +607,6 @@ describe('Dynamic', () => {
       expect(b instanceof DA).to.equal(true)
     })
 
-    // TODO
-    // - construct with args
-    // - construct child class not a dynamic type
-    // - other things with child class that is not a dynamic type
-
     it('toString is correct for child class', () => {
       const DA = new Dynamic()
       class A { }
@@ -617,6 +620,16 @@ describe('Dynamic', () => {
       expect(DA.toString().startsWith('class A')).to.equal(true)
       expect(DB.toString().startsWith('class B')).to.equal(true)
       expect(DC.toString().startsWith('class C')).to.equal(true)
+    })
+
+    it('can construct class that is not a dynamic', () => {
+      const DA = new Dynamic()
+      class A { }
+      Dynamic._setInnerType(DA, A)
+      class B extends DA { }
+      const b = new B()
+      expect(b.constructor).to.equal(B)
+      expect(Object.getPrototypeOf(b.constructor)).to.equal(DA)
     })
   })
 
