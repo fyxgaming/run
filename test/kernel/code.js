@@ -25,6 +25,7 @@ const { payFor } = require('../env/misc')
 // Code
 //  - defineProperty disabled
 //  - getters and setters either allowed, or not allowed
+//  - Code methods cannot be deleted, or redefined, either from inside or outside
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -68,9 +69,15 @@ describe('Code', () => {
         expect(CA1 === CA2).to.equal(true)
       })
 
-      // TODO: Check code methods are the same each time, dependable
-      // Frozen
-      // Cannot be deleted, or redefined, either from inside or outside
+      it('cannot depend on Code', () => {
+        const run = new Run()
+        class A extends Code { }
+        const error = 'The Code class cannot be used in jigs'
+        expect(() => run.deploy(A)).to.throw(error)
+        class B {}
+        B.Code = Code
+        expect(() => run.deploy(B)).to.throw(error)
+      })
     })
 
     describe('function', () => {
@@ -160,14 +167,15 @@ describe('Code', () => {
 
   describe('get', () => {
     describe('class', () => {
-      it('code methods are same for same code', () => {
+      it('adds invisible code methods', () => {
         const run = new Run()
         class A { }
         const CA = run.deploy(A)
-        CODE_METHODS.forEach(name => expect(CA[name]).to.equal(CA[name]))
+        CODE_METHODS.forEach(name => expect(typeof CA[name]).to.equal('function'))
+        CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(CA).includes(name)).to.equal(false))
       })
 
-      it('code methods are different for different code', () => {
+      it('code methods are always the same', () => {
         const run = new Run()
         class A { }
         class B { }
@@ -177,12 +185,11 @@ describe('Code', () => {
         expect(CA.sync).to.equal(CB.sync)
       })
 
-      it('adds invisible code methods', () => {
+      it('code methods are frozen', () => {
         const run = new Run()
         class A { }
         const CA = run.deploy(A)
-        CODE_METHODS.forEach(name => expect(typeof CA[name]).to.equal('function'))
-        CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(CA).includes(name)).to.equal(false))
+        CODE_METHODS.forEach(name => expect(Object.isFrozen(CA[name])))
       })
     })
 
@@ -316,15 +323,6 @@ describe('Code', () => {
         expect(unmangle(CA.owner)._value).to.equal(undefined)
         expect(unmangle(CA.satoshis)._value).to.equal(undefined)
       })
-    })
-
-    it('cannot reference Code directly', () => {
-      const run = new Run()
-      class A extends Code { }
-      expect(() => run.deploy(A)).to.throw()
-      class B {}
-      B.Code = Code
-      expect(() => run.deploy(B)).to.throw()
     })
 
     it('deploys parent and child', async () => {
