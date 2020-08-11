@@ -93,6 +93,7 @@ describe('Code', () => {
         expect(() => run.deploy(true)).to.throw(error)
         expect(() => run.deploy(null)).to.throw(error)
         expect(() => run.deploy('function')).to.throw(error)
+        expect(() => run.deploy('class A {}')).to.throw(error)
         expect(() => run.deploy({})).to.throw(error)
         expect(() => run.deploy([])).to.throw(error)
         expect(() => run.deploy(Symbol.hasInstance)).to.throw(error)
@@ -175,15 +176,6 @@ describe('Code', () => {
       const CA1 = run.deploy(A)
       const CA2 = run.deploy(A)
       expect(CA1 === CA2).to.equal(true)
-    })
-
-    it('throws if not a function', () => {
-      const run = new Run()
-      expect(() => run.deploy()).to.throw()
-      expect(() => run.deploy(0)).to.throw()
-      expect(() => run.deploy({})).to.throw()
-      expect(() => run.deploy('class A {}')).to.throw()
-      expect(() => run.deploy(null)).to.throw()
     })
 
     it('throw if anonymous', () => {
