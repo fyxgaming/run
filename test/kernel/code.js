@@ -27,6 +27,8 @@ const { payFor } = require('../env/misc')
 //  - getters and setters either allowed, or not allowed
 //  - Code methods cannot be deleted, or redefined, either from inside or outside
 
+// Bad parent
+
 // ------------------------------------------------------------------------------------------------
 // Globals
 // ------------------------------------------------------------------------------------------------
@@ -135,6 +137,44 @@ describe('Code', () => {
       expect(Object.getPrototypeOf(CC)).to.equal(CB)
       expect(Object.getPrototypeOf(CB)).to.equal(CA)
     })
+
+    // ------------------------------------------------------------------------
+    // Props
+    // ------------------------------------------------------------------------
+
+    // Helper to test valid props
+    function expectProp (a, b) {
+      const run = new Run()
+      class A { }
+      A.x = a
+      const CA = run.deploy(A)
+      expect(CA.x).to.equal(b || a)
+    }
+
+    it('creates number props', () => {
+      expectProp(0)
+      expectProp(1)
+      expectProp(-1)
+      expectProp(1.5)
+      expectProp(Number.MIN_SAFE_INTEGER)
+      expectProp(Number.MAX_SAFE_INTEGER)
+      expectProp(Number.MIN_VALUE)
+      expectProp(Number.MAX_VALUE)
+      expectProp(Number.POSITIVE_INFINITY)
+      expectProp(Number.NEGATIVE_INFINITY)
+      expectProp(NaN)
+    })
+
+    /*
+    it('creates code for props', () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      A.B = B
+      const CA = run.deploy(A)
+      expect(CA.B).to.equal(run.deploy(B))
+    })
+    */
 
     // ------------------------------------------------------------------------
     // Error cases
@@ -406,15 +446,6 @@ describe('Code', () => {
       class A { }
       A.Date = Date
       expect(() => run.deploy(A)).to.throw()
-    })
-
-    it('creates code for props', () => {
-      const run = new Run()
-      class A { }
-      class B { }
-      A.B = B
-      const CA = run.deploy(A)
-      expect(CA.B).to.equal(run.deploy(B))
     })
 
     it('installs circular prop code', () => {
