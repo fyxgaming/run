@@ -87,8 +87,19 @@ describe('Code', () => {
     describe('error', () => {
       it('cannot deploy non-functions', () => {
         const run = new Run()
-        run.deploy()
+        const error = 'Only functions and classes are supported'
+        expect(() => run.deploy()).to.throw(error)
+        expect(() => run.deploy(1)).to.throw(error)
+        expect(() => run.deploy(true)).to.throw(error)
+        expect(() => run.deploy(null)).to.throw(error)
+        expect(() => run.deploy('function')).to.throw(error)
+        expect(() => run.deploy({})).to.throw(error)
+        expect(() => run.deploy([])).to.throw(error)
+        expect(() => run.deploy(Symbol.hasInstance)).to.throw(error)
+        expect(() => run.deploy((class A { }).prototype)).to.throw(error)
       })
+
+      // Native
 
       it('cannot deploy native code', () => {
         const run = new Run()
