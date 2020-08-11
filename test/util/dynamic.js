@@ -266,7 +266,7 @@ describe('Dynamic', () => {
       expect(DA.toString()).not.to.equal(DB.toString())
     })
 
-    it('methods are the same with every get', () => {
+    it('methods are the same for every get', () => {
       const D = new Dynamic()
       Dynamic._setInnerType(D, class A { f () { }})
       expect(D.f).to.equal(D.f)
