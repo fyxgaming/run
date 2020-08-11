@@ -90,6 +90,36 @@ describe('Code', () => {
       expect(CA1).to.equal(CA2)
     })
 
+    it('creates code for parent', () => {
+      const run = new Run()
+      class A { }
+      class B extends A { }
+      const CB = run.deploy(B)
+      const CA = run.deploy(A)
+      expect(Object.getPrototypeOf(CB)).to.equal(CA)
+    })
+
+    it('reuses installed code for parent', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B extends A { }
+      const CB = run.deploy(B)
+      expect(Object.getPrototypeOf(CB)).to.equal(CA)
+    })
+
+    it('creates code for parent chain', () => {
+      const run = new Run()
+      class A { }
+      class B extends A { }
+      class C extends B { }
+      const CC = run.deploy(C)
+      const CB = run.deploy(B)
+      const CA = run.deploy(A)
+      expect(Object.getPrototypeOf(CC)).to.equal(CB)
+      expect(Object.getPrototypeOf(CB)).to.equal(CA)
+    })
+
     it('throws if non-function', () => {
       const run = new Run()
       const error = 'Only functions and classes are supported'
@@ -284,18 +314,6 @@ describe('Code', () => {
   })
 
   describe.skip('deploy', () => {
-    it('installs parents', () => {
-      const run = new Run()
-      class A { }
-      class B extends A { }
-      class C extends B { }
-      const CC = run.deploy(C)
-      const CB = run.deploy(B)
-      const CA = run.deploy(A)
-      expect(Object.getPrototypeOf(CC)).to.equal(CB)
-      expect(Object.getPrototypeOf(CB)).to.equal(CA)
-    })
-
     it('throws if error creating dependency', () => {
       const run = new Run()
       class A { }
