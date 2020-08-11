@@ -246,9 +246,10 @@ describe('Code', () => {
       class A { }
       const CA = run.deploy(A)
       class B extends CA { }
-      console.log('-----')
+      console.log('---')
       console.log(B.toString())
-      console.log('-----')
+      console.log('---')
+      expect(B.toString().startsWith('class B')).to.equal(true)
     })
   })
 
