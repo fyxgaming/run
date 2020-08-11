@@ -26,7 +26,7 @@ const { payFor } = require('../env/misc')
 //  - defineProperty disabled
 //  - getters and setters either allowed, or not allowed
 //  - Code methods cannot be deleted, or redefined, either from inside or outside
-//  - Same toString, same methods
+//  - same methods
 
 // ------------------------------------------------------------------------------------------------
 // Globals
