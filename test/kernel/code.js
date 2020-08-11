@@ -155,12 +155,11 @@ describe('Code', () => {
         expect(() => run.deploy(Berry)).to.throw(error)
       })
 
-      it.only('throws if contains reserved words', () => {
+      it('throws if contains reserved words', () => {
         const run = new Run()
         const error = 'Must not have any reserved words'
-        RESERVED_WORDS.forEach(word => {
-          console.log(word)
 
+        RESERVED_WORDS.forEach(word => {
           class A { }
           A[word] = 1
           expect(() => run.deploy(A)).to.throw(error)
@@ -169,10 +168,12 @@ describe('Code', () => {
           B[word] = class Z { }
           expect(() => run.deploy(B)).to.throw(error)
         })
-      // class C { static sync () { }}
-      // expect(() => run.deploy(C)).to.throw()
-      // class D { static get destroy () { } }
-      // expect(() => run.deploy(D)).to.throw()
+
+        class C { static sync () { }}
+        expect(() => run.deploy(C)).to.throw(error)
+
+        class D { static get destroy () { } }
+        expect(() => run.deploy(D)).to.throw(error)
       })
 
       it('throws if depend on Code', () => {
