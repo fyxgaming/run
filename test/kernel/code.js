@@ -260,7 +260,15 @@ describe('Code', () => {
       expect(CA.toString().startsWith('class A extends Jig')).to.equal(true)
     })
 
-    it('should return source code for child class', () => {
+    it('should return soure code for child code class', () => {
+      const run = new Run()
+      class A { }
+      class B extends A { }
+      const CB = run.deploy(B)
+      expect(CB.toString().startsWith('class B')).to.equal(true)
+    })
+
+    it('should return source code for child non-code class', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
