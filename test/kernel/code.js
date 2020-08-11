@@ -26,6 +26,7 @@ const { payFor } = require('../env/misc')
 //  - defineProperty disabled
 //  - getters and setters either allowed, or not allowed
 //  - Code methods cannot be deleted, or redefined, either from inside or outside
+//  - NativeCode methods
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -47,212 +48,228 @@ const RESERVED_WORDS = [...CODE_METHODS, 'toString', ...FUTURE_PROPS]
 
 describe('Code', () => {
   describe('deploy', () => {
-    describe('class', () => {
-      it('creates new code', async () => {
-        const run = new Run()
-        class A { }
-        const CA = run.deploy(A)
-        expect(CA.toString()).to.equal(A.toString())
-        expect(CA).not.to.equal(A)
-      })
-
-      it('returns instanceof Code', () => {
-        const run = new Run()
-        class A { }
-        const CA = run.deploy(A)
-        expect(A instanceof Code).to.equal(false)
-        expect(CA instanceof Code).to.equal(true)
-        expect(typeof CA).to.equal('function')
-      })
-
-      it('creates code only once', () => {
-        const run = new Run()
-        class A { }
-        const CA1 = run.deploy(A)
-        const CA2 = run.deploy(A)
-        expect(CA1 === CA2).to.equal(true)
-      })
-
-      it('returns code for code', () => {
-        const run = new Run()
-        class A { }
-        const CA1 = run.deploy(A)
-        const CA2 = run.deploy(CA1)
-        expect(CA1).to.equal(CA2)
-      })
+    it('creates new code for class', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      expect(typeof CA).to.equal('function')
+      expect(CA.toString()).to.equal(A.toString())
+      expect(CA).not.to.equal(A)
     })
 
-    describe('function', () => {
-      it('creates new code', () => {
-        const run = new Run()
-        function f () { }
-        const cf = run.deploy(f)
-        expect(cf.toString()).to.equal(f.toString())
-        expect(cf).not.to.equal(f)
-      })
-
-      it('returns instanceof Code', () => {
-        const run = new Run()
-        function f () { }
-        const cf = run.deploy(f)
-        expect(f instanceof Code).to.equal(false)
-        expect(cf instanceof Code).to.equal(true)
-        expect(typeof cf).to.equal('function')
-      })
-
-      it('creates code only once', () => {
-        const run = new Run()
-        function f () { }
-        const cf1 = run.deploy(f)
-        const cf2 = run.deploy(f)
-        expect(cf1 === cf2).to.equal(true)
-      })
+    it('creates new code for function', () => {
+      const run = new Run()
+      function f () { }
+      const cf = run.deploy(f)
+      expect(typeof cf).to.equal('function')
+      expect(cf.toString()).to.equal(f.toString())
+      expect(cf).not.to.equal(f)
     })
 
-    describe('error', () => {
-      it('throws if non-function', () => {
-        const run = new Run()
-        const error = 'Only functions and classes are supported'
-        expect(() => run.deploy()).to.throw(error)
-        expect(() => run.deploy(1)).to.throw(error)
-        expect(() => run.deploy(true)).to.throw(error)
-        expect(() => run.deploy(null)).to.throw(error)
-        expect(() => run.deploy('function')).to.throw(error)
-        expect(() => run.deploy('class A {}')).to.throw(error)
-        expect(() => run.deploy({})).to.throw(error)
-        expect(() => run.deploy([])).to.throw(error)
-        expect(() => run.deploy(Symbol.hasInstance)).to.throw(error)
-        expect(() => run.deploy((class A { }).prototype)).to.throw(error)
-      })
+    it('creates code for class only once', () => {
+      const run = new Run()
+      class A { }
+      const CA1 = run.deploy(A)
+      const CA2 = run.deploy(A)
+      expect(CA1 === CA2).to.equal(true)
+    })
 
-      it('throws if built-in', () => {
-        const run = new Run()
-        const error = 'Cannot install intrinsic'
-        expect(() => run.deploy(Object)).to.throw(error)
-        expect(() => run.deploy(Date)).to.throw(error)
-        expect(() => run.deploy(Uint8Array)).to.throw(error)
-        expect(() => run.deploy(Math.sin)).to.throw(error)
-        expect(() => run.deploy(parseInt)).to.throw(error)
-        expect(() => run.deploy(SI.Object)).to.throw(error)
-      })
+    it('creates code for function only once', () => {
+      const run = new Run()
+      function f () { }
+      const cf1 = run.deploy(f)
+      const cf2 = run.deploy(f)
+      expect(cf1 === cf2).to.equal(true)
+    })
 
-      it('throws if anonymous', () => {
-        const run = new Run()
-        const error = 'Anonymous types not supported'
-        expect(() => run.deploy(() => {})).to.throw(error)
-        expect(() => run.deploy(class {})).to.throw(error)
-        const g = function () { }
-        expect(() => run.deploy(g)).to.throw(error)
-        const A = class { }
+    it('returns code for code', () => {
+      const run = new Run()
+      class A { }
+      const CA1 = run.deploy(A)
+      const CA2 = run.deploy(CA1)
+      expect(CA1).to.equal(CA2)
+    })
+
+    it('throws if non-function', () => {
+      const run = new Run()
+      const error = 'Only functions and classes are supported'
+      expect(() => run.deploy()).to.throw(error)
+      expect(() => run.deploy(1)).to.throw(error)
+      expect(() => run.deploy(true)).to.throw(error)
+      expect(() => run.deploy(null)).to.throw(error)
+      expect(() => run.deploy('function')).to.throw(error)
+      expect(() => run.deploy('class A {}')).to.throw(error)
+      expect(() => run.deploy({})).to.throw(error)
+      expect(() => run.deploy([])).to.throw(error)
+      expect(() => run.deploy(Symbol.hasInstance)).to.throw(error)
+      expect(() => run.deploy((class A { }).prototype)).to.throw(error)
+    })
+
+    it('throws if built-in', () => {
+      const run = new Run()
+      const error = 'Cannot install intrinsic'
+      expect(() => run.deploy(Object)).to.throw(error)
+      expect(() => run.deploy(Date)).to.throw(error)
+      expect(() => run.deploy(Uint8Array)).to.throw(error)
+      expect(() => run.deploy(Math.sin)).to.throw(error)
+      expect(() => run.deploy(parseInt)).to.throw(error)
+      expect(() => run.deploy(SI.Object)).to.throw(error)
+    })
+
+    it('throws if anonymous', () => {
+      const run = new Run()
+      const error = 'Anonymous types not supported'
+      expect(() => run.deploy(() => {})).to.throw(error)
+      expect(() => run.deploy(class {})).to.throw(error)
+      const g = function () { }
+      expect(() => run.deploy(g)).to.throw(error)
+      const A = class { }
+      expect(() => run.deploy(A)).to.throw(error)
+    })
+
+    it('throws if prototype inheritance', () => {
+      const run = new Run()
+      function A () { }
+      function B () { }
+      B.prototype = Object.create(A.prototype)
+      const error = 'Prototypal inheritance not supported'
+      expect(() => run.deploy(B)).to.throw(error)
+    })
+
+    it('throws if native code', () => {
+      const run = new Run()
+      const error = 'Cannot deploy native code'
+      expect(() => run.deploy(Jig)).to.throw(error)
+      expect(() => run.deploy(Berry)).to.throw(error)
+    })
+
+    it('throws if contains reserved words', () => {
+      const run = new Run()
+      const error = 'Must not have any reserved words'
+
+      RESERVED_WORDS.forEach(word => {
+        class A { }
+        A[word] = 1
         expect(() => run.deploy(A)).to.throw(error)
-      })
 
-      it('throws if prototype inheritance', () => {
-        const run = new Run()
-        function A () { }
-        function B () { }
-        B.prototype = Object.create(A.prototype)
-        const error = 'Prototypal inheritance not supported'
+        class B { }
+        B[word] = class Z { }
         expect(() => run.deploy(B)).to.throw(error)
       })
 
-      it('throws if native code', () => {
-        const run = new Run()
-        const error = 'Cannot deploy native code'
-        expect(() => run.deploy(Jig)).to.throw(error)
-        expect(() => run.deploy(Berry)).to.throw(error)
-      })
+      class C { static sync () { }}
+      expect(() => run.deploy(C)).to.throw(error)
 
-      it('throws if contains reserved words', () => {
-        const run = new Run()
-        const error = 'Must not have any reserved words'
+      class D { static get destroy () { } }
+      expect(() => run.deploy(D)).to.throw(error)
+    })
 
-        RESERVED_WORDS.forEach(word => {
-          class A { }
-          A[word] = 1
-          expect(() => run.deploy(A)).to.throw(error)
+    it('throws if contains bindings', () => {
+      const run = new Run()
+      class A { }
+      A.location = randomLocation()
+      A.origin = randomLocation()
+      A.owner = randomOwner()
+      A.satoshis = 0
+      A.nonce = 1
+      const error = 'Must not have any bindings'
+      expect(() => run.deploy(A)).to.throw(error)
+    })
 
-          class B { }
-          B[word] = class Z { }
-          expect(() => run.deploy(B)).to.throw(error)
-        })
+    it('throws if depend on Code', () => {
+      const run = new Run()
+      class A extends Code { }
+      const error = 'The Code class cannot be used in jigs'
+      expect(() => run.deploy(A)).to.throw(error)
+      class B {}
+      B.Code = Code
+      expect(() => run.deploy(B)).to.throw(error)
+    })
+  })
 
-        class C { static sync () { }}
-        expect(() => run.deploy(C)).to.throw(error)
+  describe('get', () => {
+    it('adds invisible code methods to class', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      CODE_METHODS.forEach(name => expect(typeof CA[name]).to.equal('function'))
+      CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(CA).includes(name)).to.equal(false))
+    })
 
-        class D { static get destroy () { } }
-        expect(() => run.deploy(D)).to.throw(error)
-      })
+    it('adds invisible code methods to function', () => {
+      const run = new Run()
+      function f () { }
+      const cf = run.deploy(f)
+      CODE_METHODS.forEach(name => expect(typeof cf[name]).to.equal('function'))
+      CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(cf).includes(name)).to.equal(false))
+    })
 
-      it('throws if contains bindings', () => {
-        const run = new Run()
-        class A { }
-        A.location = randomLocation()
-        A.origin = randomLocation()
-        A.owner = randomOwner()
-        A.satoshis = 0
-        A.nonce = 1
-        const error = 'Must not have any bindings'
-        expect(() => run.deploy(A)).to.throw(error)
-      })
+    it('code methods for class are always the same', () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      expect(CA.upgrade).to.equal(CA.upgrade)
+      expect(CA.sync).to.equal(CB.sync)
+    })
 
-      it('throws if depend on Code', () => {
-        const run = new Run()
-        class A extends Code { }
-        const error = 'The Code class cannot be used in jigs'
-        expect(() => run.deploy(A)).to.throw(error)
-        class B {}
-        B.Code = Code
-        expect(() => run.deploy(B)).to.throw(error)
+    it('code methods for class are frozen', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      CODE_METHODS.forEach(name => expect(Object.isFrozen(CA[name])))
+    })
+
+    it('native code has native bindings', () => {
+      expect(Jig.location).to.equal('native://Jig')
+      expect(Jig.origin).to.equal('native://Jig')
+      expect(Jig.nonce).to.equal(0)
+      expect(Jig.owner).to.equal(null)
+      expect(Jig.satoshis).to.equal(null)
+
+      expect(Berry.location).to.equal('native://Berry')
+      expect(Berry.origin).to.equal('native://Berry')
+      expect(Berry.nonce).to.equal(0)
+      expect(Berry.owner).to.equal(null)
+      expect(Berry.satoshis).to.equal(null)
+    })
+
+    it('does not have code methods', () => {
+      CODE_METHODS.forEach(method => {
+        expect(method in Jig).to.equal(false)
+        expect(method in Berry).to.equal(false)
       })
     })
   })
 
-  // TODO: NativeCode methods
-
-  describe('get', () => {
-    describe('class', () => {
-      it('adds invisible code methods', () => {
-        const run = new Run()
-        class A { }
-        const CA = run.deploy(A)
-        CODE_METHODS.forEach(name => expect(typeof CA[name]).to.equal('function'))
-        CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(CA).includes(name)).to.equal(false))
-      })
-
-      it('code methods are always the same', () => {
-        const run = new Run()
-        class A { }
-        class B { }
-        const CA = run.deploy(A)
-        const CB = run.deploy(B)
-        expect(CA.upgrade).to.equal(CA.upgrade)
-        expect(CA.sync).to.equal(CB.sync)
-      })
-
-      it('code methods are frozen', () => {
-        const run = new Run()
-        class A { }
-        const CA = run.deploy(A)
-        CODE_METHODS.forEach(name => expect(Object.isFrozen(CA[name])))
-      })
+  describe('instanceof', () => {
+    it('deployed classes returns true', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      expect(CA instanceof Code).to.equal(true)
     })
 
-    describe('function', () => {
-      it('has invisible code methods', () => {
-        const run = new Run()
-        function f () { }
-        const cf = run.deploy(f)
-        CODE_METHODS.forEach(name => expect(typeof cf[name]).to.equal('function'))
-        CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(cf).includes(name)).to.equal(false))
-      })
+    it('deployed functions returns true', () => {
+      const run = new Run()
+      function f () { }
+      const cf = run.deploy(f)
+      expect(cf instanceof Code).to.equal(true)
     })
 
-    describe('native', () => {
-
+    it('non-code return false', () => {
+      expect(class A { } instanceof Code).to.equal(false)
+      expect(function f () { } instanceof Code).to.equal(false)
+      expect(undefined instanceof Code).to.equal(false)
+      expect(true instanceof Code).to.equal(false)
+      expect({} instanceof Code).to.equal(false)
     })
 
-    // TODO
+    it('native code return true', () => {
+      expect(Jig instanceof Code).to.equal(true)
+      expect(Berry instanceof Code).to.equal(true)
+    })
   })
 
   describe('getOwnPropertyDescriptor', () => {
