@@ -154,7 +154,7 @@ describe('Dynamic', () => {
       const D = new Dynamic()
       class A { }
       Dynamic._setInnerType(D, A)
-      Object.defineProperty(D, 'x', { value: 1 })
+      Object.defineProperty(D, 'x', { value: 1, configurable: true })
       expect(D.x).to.equal(1)
       expect(A.x).to.equal(1)
     })
@@ -172,6 +172,14 @@ describe('Dynamic', () => {
       class A { }
       Dynamic._setInnerType(D, A)
       expect(() => Object.defineProperty(D, 'toString', { value: 123 })).to.throw()
+    })
+
+    it('prevent non-configurable properties', () => {
+      const D = new Dynamic()
+      class A { }
+      Dynamic._setInnerType(D, A)
+      expect(() => Object.defineProperty(D, 'x', { value: 1 })).to.throw()
+      expect(() => Object.defineProperty(D, 'y', { value: 2, configurable: false })).to.throw()
     })
   })
 
