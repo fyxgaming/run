@@ -253,7 +253,7 @@ describe('Code', () => {
       expect(cf.toString().startsWith('function f')).to.equal(true)
     })
 
-    it.only('should return source code for jig class', () => {
+    it('should return source code for jig class', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
@@ -303,7 +303,7 @@ describe('Code', () => {
       CODE_METHODS.forEach(name => expect(Object.isFrozen(CA[name])))
     })
 
-    it.only('native code has native bindings', () => {
+    it('native code has native bindings', () => {
       expect(Jig.location).to.equal('native://Jig')
       expect(Jig.origin).to.equal('native://Jig')
       expect(Jig.nonce).to.equal(0)
