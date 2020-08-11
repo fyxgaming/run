@@ -39,6 +39,16 @@ describe('Dynamic', () => {
     it('throws if not a dynamic type', () => {
       expect(() => Dynamic._getInnerType({})).to.throw('Not a dynamic type')
     })
+
+    it('supports both inner and outer types', () => {
+      const D = new Dynamic()
+      class A { }
+      Dynamic._setInnerType(D, A)
+      const P = new Proxy(D, {})
+      Dynamic._setOuterType(D, P)
+      expect(Dynamic._getInnerType(D)).to.equal(A)
+      expect(Dynamic._getInnerType(P)).to.equal(A)
+    })
   })
 
   describe('_setInnerType', () => {
@@ -690,7 +700,7 @@ describe('Dynamic', () => {
     })
   })
 
-  describe('getOuterType', () => {
+  describe('_getOuterType', () => {
     it('initially returns dynamic', () => {
       const D = new Dynamic()
       expect(Dynamic._getOuterType(D)).to.equal(D)
@@ -704,7 +714,7 @@ describe('Dynamic', () => {
     })
   })
 
-  describe('setOuterType', () => {
+  describe('_setOuterType', () => {
     it('changes prototype constructor', () => {
       const D = new Dynamic()
       const P = new Proxy(D, {})
@@ -727,6 +737,18 @@ describe('Dynamic', () => {
       Dynamic._setInnerType(D, A)
       Dynamic._setOuterType(D, P)
       expect(P.toString()).to.equal(A.toString())
+    })
+
+    it('can set multiple times', () => {
+      const D = new Dynamic()
+      class A { }
+      Dynamic._setInnerType(D, A)
+      const P1 = new Proxy(D, { })
+      Dynamic._setOuterType(D, P1)
+      expect(Dynamic._getOuterType(D)).to.equal(P1)
+      const P2 = new Proxy(D, { })
+      Dynamic._setOuterType(D, P2)
+      expect(Dynamic._getOuterType(D)).to.equal(P2)
     })
   })
 })
