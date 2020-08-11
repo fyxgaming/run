@@ -267,6 +267,16 @@ describe('Code', () => {
       class B extends CA { }
       expect(B.toString().startsWith('class B')).to.equal(true)
     })
+
+    it('should return same method for different code', () => {
+      const run = new Run()
+      class A { }
+      function f () { }
+      const CA = run.deploy(A)
+      const cf = run.deploy(f)
+      expect(CA.toString).to.equal(cf.toString)
+      expect(CA.toString()).not.to.equal(cf.toString())
+    })
   })
 
   describe('get', () => {
