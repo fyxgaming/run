@@ -37,6 +37,10 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 // Methods available on all code instances
 const CODE_METHODS = ['upgrade', 'sync', 'destroy', 'auth']
 
+// Reserved words not allowed on code
+const FUTURE_PROPS = ['encryption', 'blockhash', 'blockheight', 'blocktime']
+const RESERVED_WORDS = [...CODE_METHODS, 'toString', ...FUTURE_PROPS]
+
 // ------------------------------------------------------------------------------------------------
 // Code
 // ------------------------------------------------------------------------------------------------
@@ -67,16 +71,6 @@ describe('Code', () => {
         const CA1 = run.deploy(A)
         const CA2 = run.deploy(A)
         expect(CA1 === CA2).to.equal(true)
-      })
-
-      it('cannot depend on Code', () => {
-        const run = new Run()
-        class A extends Code { }
-        const error = 'The Code class cannot be used in jigs'
-        expect(() => run.deploy(A)).to.throw(error)
-        class B {}
-        B.Code = Code
-        expect(() => run.deploy(B)).to.throw(error)
       })
     })
 
@@ -160,6 +154,36 @@ describe('Code', () => {
         expect(() => run.deploy(Jig)).to.throw(error)
         expect(() => run.deploy(Berry)).to.throw(error)
       })
+
+      it.only('throws if contains reserved words', () => {
+        const run = new Run()
+        const error = 'Must not have any reserved words'
+        RESERVED_WORDS.forEach(word => {
+          console.log(word)
+
+          class A { }
+          A[word] = 1
+          expect(() => run.deploy(A)).to.throw(error)
+
+          class B { }
+          B[word] = class Z { }
+          expect(() => run.deploy(B)).to.throw(error)
+        })
+      // class C { static sync () { }}
+      // expect(() => run.deploy(C)).to.throw()
+      // class D { static get destroy () { } }
+      // expect(() => run.deploy(D)).to.throw()
+      })
+
+      it('throws if depend on Code', () => {
+        const run = new Run()
+        class A extends Code { }
+        const error = 'The Code class cannot be used in jigs'
+        expect(() => run.deploy(A)).to.throw(error)
+        class B {}
+        B.Code = Code
+        expect(() => run.deploy(B)).to.throw(error)
+      })
     })
   })
 
@@ -222,20 +246,6 @@ describe('Code', () => {
   })
 
   describe.skip('deploy', () => {
-    it('throws if contains reserved words', () => {
-      const run = new Run()
-      class A { }
-      A.toString = () => 'hello'
-      expect(() => run.deploy(A)).to.throw()
-      class B { }
-      B.upgrade = 1
-      expect(() => run.deploy(B)).to.throw()
-      class C { static sync () { }}
-      expect(() => run.deploy(C)).to.throw()
-      class D { static get destroy () { } }
-      expect(() => run.deploy(D)).to.throw()
-    })
-
     it('throws if contains bindings', () => {
       const run = new Run()
       class A { }
