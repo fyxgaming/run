@@ -176,6 +176,18 @@ describe('Code', () => {
         expect(() => run.deploy(D)).to.throw(error)
       })
 
+      it('throws if contains bindings', () => {
+        const run = new Run()
+        class A { }
+        A.location = randomLocation()
+        A.origin = randomLocation()
+        A.owner = randomOwner()
+        A.satoshis = 0
+        A.nonce = 1
+        const error = 'Must not have any bindings'
+        expect(() => run.deploy(A)).to.throw(error)
+      })
+
       it('throws if depend on Code', () => {
         const run = new Run()
         class A extends Code { }
@@ -247,17 +259,6 @@ describe('Code', () => {
   })
 
   describe.skip('deploy', () => {
-    it('throws if contains bindings', () => {
-      const run = new Run()
-      class A { }
-      A.location = randomLocation()
-      A.origin = randomLocation()
-      A.owner = randomOwner()
-      A.satoshis = 0
-      A.nonce = 1
-      expect(() => run.deploy(A)).to.throw()
-    })
-
     it('installs parents', () => {
       const run = new Run()
       class A { }
