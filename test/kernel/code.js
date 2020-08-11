@@ -142,27 +142,27 @@ describe('Code', () => {
     // Props
     // ------------------------------------------------------------------------
 
-    // Helper to test valid props
-    function expectProp (a, b) {
+    // Helper to create a code with a prop
+    function prop (a) {
       const run = new Run()
       class A { }
       A.x = a
       const CA = run.deploy(A)
-      expect(CA.x).to.equal(b || a)
+      return CA.x
     }
 
     it('creates number props', () => {
-      expectProp(0)
-      expectProp(1)
-      expectProp(-1)
-      expectProp(1.5)
-      expectProp(Number.MIN_SAFE_INTEGER)
-      expectProp(Number.MAX_SAFE_INTEGER)
-      expectProp(Number.MIN_VALUE)
-      expectProp(Number.MAX_VALUE)
-      expectProp(Number.POSITIVE_INFINITY)
-      expectProp(Number.NEGATIVE_INFINITY)
-      expectProp(NaN)
+      expect(prop(0)).to.equal(0)
+      expect(prop(1)).to.equal(1)
+      expect(prop(-1)).to.equal(-1)
+      expect(prop(1.5)).to.equal(1.5)
+      expect(prop(Number.MIN_SAFE_INTEGER)).to.equal(Number.MIN_SAFE_INTEGER)
+      expect(prop(Number.MAX_SAFE_INTEGER)).to.equal(Number.MAX_SAFE_INTEGER)
+      expect(prop(Number.MIN_VALUE)).to.equal(Number.MIN_VALUE)
+      expect(prop(Number.MAX_VALUE)).to.equal(Number.MAX_VALUE)
+      expect(prop(Number.POSITIVE_INFINITY)).to.equal(Number.POSITIVE_INFINITY)
+      expect(prop(Number.NEGATIVE_INFINITY)).to.equal(Number.NEGATIVE_INFINITY)
+      expect(isNaN(prop(NaN))).to.equal(true)
     })
 
     /*
