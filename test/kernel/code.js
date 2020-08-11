@@ -241,14 +241,11 @@ describe('Code', () => {
   describe('toString', () => {
     // TODO
 
-    it.only('should return source code for child class', () => {
+    it('should return source code for child class', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
       class B extends CA { }
-      console.log('---')
-      console.log(B.toString())
-      console.log('---')
       expect(B.toString().startsWith('class B')).to.equal(true)
     })
   })
