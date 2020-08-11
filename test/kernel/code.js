@@ -111,6 +111,17 @@ describe('Code', () => {
         expect(() => run.deploy(SI.Object)).to.throw(error)
       })
 
+      it('throws if anonymous', () => {
+        const run = new Run()
+        const error = 'Anonymous types not supported'
+        expect(() => run.deploy(() => {})).to.throw(error)
+        expect(() => run.deploy(class {})).to.throw(error)
+        const g = function () { }
+        expect(() => run.deploy(g)).to.throw(error)
+        const A = class { }
+        expect(() => run.deploy(A)).to.throw(error)
+      })
+
       it('throws if native code', () => {
         const run = new Run()
         const error = 'Cannot deploy native code'
@@ -185,12 +196,6 @@ describe('Code', () => {
       const CA1 = run.deploy(A)
       const CA2 = run.deploy(A)
       expect(CA1 === CA2).to.equal(true)
-    })
-
-    it('throw if anonymous', () => {
-      const run = new Run()
-      expect(() => run.deploy(() => {})).to.throw()
-      expect(() => run.deploy(class {})).to.throw()
     })
 
     it('throws if prototype inheritance', () => {
