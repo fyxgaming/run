@@ -128,6 +128,15 @@ describe('Code', () => {
         expect(() => run.deploy(Jig)).to.throw(error)
         expect(() => run.deploy(Berry)).to.throw(error)
       })
+
+      it('throws if prototype inheritance', () => {
+        const run = new Run()
+        function A () { }
+        function B () { }
+        B.prototype = Object.create(A.prototype)
+        const error = 'Prototypal inheritance not supported'
+        expect(() => run.deploy(B)).to.throw(error)
+      })
     })
   })
 
@@ -196,14 +205,6 @@ describe('Code', () => {
       const CA1 = run.deploy(A)
       const CA2 = run.deploy(A)
       expect(CA1 === CA2).to.equal(true)
-    })
-
-    it('throws if prototype inheritance', () => {
-      const run = new Run()
-      function A () { }
-      function B () { }
-      B.prototype = Object.create(A.prototype)
-      expect(() => run.deploy(B)).to.throw()
     })
 
     it('throws if contains reserved words', () => {
