@@ -85,7 +85,7 @@ describe('Code', () => {
     })
 
     describe('error', () => {
-      it('cannot deploy non-functions', () => {
+      it('throws if non-function', () => {
         const run = new Run()
         const error = 'Only functions and classes are supported'
         expect(() => run.deploy()).to.throw(error)
@@ -100,9 +100,18 @@ describe('Code', () => {
         expect(() => run.deploy((class A { }).prototype)).to.throw(error)
       })
 
-      // Native
+      it('throws if built-in', () => {
+        const run = new Run()
+        const error = 'Cannot install intrinsic'
+        expect(() => run.deploy(Object)).to.throw(error)
+        expect(() => run.deploy(Date)).to.throw(error)
+        expect(() => run.deploy(Uint8Array)).to.throw(error)
+        expect(() => run.deploy(Math.sin)).to.throw(error)
+        expect(() => run.deploy(parseInt)).to.throw(error)
+        expect(() => run.deploy(SI.Object)).to.throw(error)
+      })
 
-      it('cannot deploy native code', () => {
+      it('throws if native code', () => {
         const run = new Run()
         const error = 'Cannot deploy native code'
         expect(() => run.deploy(Jig)).to.throw(error)
@@ -182,16 +191,6 @@ describe('Code', () => {
       const run = new Run()
       expect(() => run.deploy(() => {})).to.throw()
       expect(() => run.deploy(class {})).to.throw()
-    })
-
-    it('throws if built-in', () => {
-      const run = new Run()
-      expect(() => run.deploy(Object)).to.throw()
-      expect(() => run.deploy(Date)).to.throw()
-      expect(() => run.deploy(Uint8Array)).to.throw()
-      expect(() => run.deploy(Math.sin)).to.throw()
-      expect(() => run.deploy(parseInt)).to.throw()
-      expect(() => run.deploy(SI.Object)).to.throw()
     })
 
     it('throws if prototype inheritance', () => {
