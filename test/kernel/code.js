@@ -122,13 +122,6 @@ describe('Code', () => {
         expect(() => run.deploy(A)).to.throw(error)
       })
 
-      it('throws if native code', () => {
-        const run = new Run()
-        const error = 'Cannot deploy native code'
-        expect(() => run.deploy(Jig)).to.throw(error)
-        expect(() => run.deploy(Berry)).to.throw(error)
-      })
-
       it('throws if prototype inheritance', () => {
         const run = new Run()
         function A () { }
@@ -136,6 +129,13 @@ describe('Code', () => {
         B.prototype = Object.create(A.prototype)
         const error = 'Prototypal inheritance not supported'
         expect(() => run.deploy(B)).to.throw(error)
+      })
+
+      it('throws if native code', () => {
+        const run = new Run()
+        const error = 'Cannot deploy native code'
+        expect(() => run.deploy(Jig)).to.throw(error)
+        expect(() => run.deploy(Berry)).to.throw(error)
       })
     })
   })
