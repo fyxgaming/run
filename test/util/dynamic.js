@@ -256,6 +256,15 @@ describe('Dynamic', () => {
       expect(DA.n).to.equal(1)
       expect(DB.n).to.equal(2)
     })
+
+    it('toString is the same for all instances', () => {
+      const DA = new Dynamic()
+      const DB = new Dynamic()
+      Dynamic._setInnerType(DA, class A {})
+      Dynamic._setInnerType(DB, class B {})
+      expect(DA.toString).to.equal(DB.toString)
+      expect(DA.toString()).not.to.equal(DB.toString())
+    })
   })
 
   describe('getOwnPropertyDescriptor', () => {
