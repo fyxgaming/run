@@ -341,6 +341,24 @@ describe('Code', () => {
         expect(method in Berry).to.equal(false)
       })
     })
+
+    it('same method is returned every time', () => {
+      const run = new Run()
+      class A { static f () { } }
+      const CA = run.deploy(A)
+      expect(typeof CA.f).to.equal('function')
+      expect(CA.f).to.equal(CA.f)
+    })
+
+    it('same method is returned for child code', () => {
+      const run = new Run()
+      class A { static f () { } }
+      const CA = run.deploy(A)
+      class B extends CA {}
+      const CB = run.deploy(B)
+      expect(typeof CB.f).to.equal('function')
+      expect(CB.f).to.equal(CA.f)
+    })
   })
 
   describe('instanceof', () => {
