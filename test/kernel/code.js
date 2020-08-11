@@ -151,6 +151,17 @@ describe('Code', () => {
       return CA.x
     }
 
+    it('creates boolean props', () => {
+      expect(prop(false)).to.equal(false)
+      expect(prop(true)).to.equal(true)
+      expect(prop({ n: false }).n).to.equal(false)
+    })
+
+    it('creates undefined props', () => {
+      expect(prop(undefined)).to.equal(undefined)
+      expect(prop([undefined])[0]).to.equal(undefined)
+    })
+
     it('creates number props', () => {
       expect(prop(0)).to.equal(0)
       expect(prop(1)).to.equal(1)
@@ -163,6 +174,7 @@ describe('Code', () => {
       expect(prop(Number.POSITIVE_INFINITY)).to.equal(Number.POSITIVE_INFINITY)
       expect(prop(Number.NEGATIVE_INFINITY)).to.equal(Number.NEGATIVE_INFINITY)
       expect(isNaN(prop(NaN))).to.equal(true)
+      expect(prop([1])[0]).to.equal(1)
     })
 
     /*
