@@ -60,6 +60,14 @@ describe('Code', () => {
         expect(typeof CA).to.equal('function')
       })
 
+      it('creates code only once', () => {
+        const run = new Run()
+        class A { }
+        const CA1 = run.deploy(A)
+        const CA2 = run.deploy(A)
+        expect(CA1 === CA2).to.equal(true)
+      })
+
       // TODO: Check code methods are the same each time, dependable
       // Frozen
       // Cannot be deleted, or redefined, either from inside or outside
@@ -81,6 +89,14 @@ describe('Code', () => {
         expect(f instanceof Code).to.equal(false)
         expect(cf instanceof Code).to.equal(true)
         expect(typeof cf).to.equal('function')
+      })
+
+      it('creates code only once', () => {
+        const run = new Run()
+        function f () { }
+        const cf1 = run.deploy(f)
+        const cf2 = run.deploy(f)
+        expect(cf1 === cf2).to.equal(true)
       })
     })
 
@@ -199,14 +215,6 @@ describe('Code', () => {
   })
 
   describe.skip('deploy', () => {
-    it('creates local code only once', () => {
-      const run = new Run()
-      class A { }
-      const CA1 = run.deploy(A)
-      const CA2 = run.deploy(A)
-      expect(CA1 === CA2).to.equal(true)
-    })
-
     it('throws if contains reserved words', () => {
       const run = new Run()
       class A { }
