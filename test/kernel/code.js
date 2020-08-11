@@ -177,6 +177,16 @@ describe('Code', () => {
       expect(prop([1])[0]).to.equal(1)
     })
 
+    it('creates string props', () => {
+      expect(prop('')).to.equal('')
+      expect(prop('abc')).to.equal('abc')
+      expect(prop('0\n1\n2\n3\n')).to.equal('0\n1\n2\n3\n')
+      expect(prop('😄')).to.equal('😄')
+      const long = 'x'.repeat(10000)
+      expect(prop(long)).to.equal(long)
+      expect(prop({ a: ['a'] }).a[0]).to.equal('a')
+    })
+
     /*
     it('creates code for props', () => {
       const run = new Run()
