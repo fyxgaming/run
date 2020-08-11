@@ -268,7 +268,9 @@ describe('Dynamic', () => {
 
     it('methods are the same for every get', () => {
       const D = new Dynamic()
-      Dynamic._setInnerType(D, class A { f () { }})
+      class A { static f () { } }
+      Dynamic._setInnerType(D, A)
+      expect(typeof D.f).to.equal('function')
       expect(D.f).to.equal(D.f)
     })
   })
