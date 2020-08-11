@@ -72,6 +72,14 @@ describe('Code', () => {
         const CA2 = run.deploy(A)
         expect(CA1 === CA2).to.equal(true)
       })
+
+      it('returns code for code', () => {
+        const run = new Run()
+        class A { }
+        const CA1 = run.deploy(A)
+        const CA2 = run.deploy(CA1)
+        expect(CA1).to.equal(CA2)
+      })
     })
 
     describe('function', () => {
