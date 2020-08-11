@@ -26,7 +26,7 @@ const { payFor } = require('../env/misc')
 //  - defineProperty disabled
 //  - getters and setters either allowed, or not allowed
 //  - Code methods cannot be deleted, or redefined, either from inside or outside
-//  - NativeCode methods
+//  - Same toString, same methods
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -239,7 +239,26 @@ describe('Code', () => {
   })
 
   describe('toString', () => {
-    // TODO
+    it('should return source code for class', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      expect(CA.toString().startsWith('class A')).to.equal(true)
+    })
+
+    it('should return source code for function', () => {
+      const run = new Run()
+      function f () { }
+      const cf = run.deploy(f)
+      expect(cf.toString().startsWith('function f')).to.equal(true)
+    })
+
+    it.only('should return source code for jig class', () => {
+      const run = new Run()
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      expect(CA.toString().startsWith('class A extends Jig')).to.equal(true)
+    })
 
     it('should return source code for child class', () => {
       const run = new Run()
@@ -284,7 +303,7 @@ describe('Code', () => {
       CODE_METHODS.forEach(name => expect(Object.isFrozen(CA[name])))
     })
 
-    it('native code has native bindings', () => {
+    it.only('native code has native bindings', () => {
       expect(Jig.location).to.equal('native://Jig')
       expect(Jig.origin).to.equal('native://Jig')
       expect(Jig.nonce).to.equal(0)
