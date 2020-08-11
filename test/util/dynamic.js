@@ -615,7 +615,7 @@ describe('Dynamic', () => {
       expect(b instanceof DA).to.equal(true)
     })
 
-    it('toString is correct for child class', () => {
+    it('toString is correct for dynamic children', () => {
       const DA = new Dynamic()
       class A { }
       Dynamic._setInnerType(DA, A)
@@ -628,6 +628,16 @@ describe('Dynamic', () => {
       expect(DA.toString().startsWith('class A')).to.equal(true)
       expect(DB.toString().startsWith('class B')).to.equal(true)
       expect(DC.toString().startsWith('class C')).to.equal(true)
+    })
+
+    it('toString is correct for non-dynamic child of dynamic proxy', () => {
+      const DA = new Dynamic()
+      class A { }
+      Dynamic._setInnerType(DA, A)
+      const PA = new Proxy(DA, {})
+      Dynamic._setOuterType(DA, PA)
+      class B extends PA { }
+      expect(B.toString().startsWith('class B')).to.equal(true)
     })
 
     it('can construct class that is not a dynamic', () => {

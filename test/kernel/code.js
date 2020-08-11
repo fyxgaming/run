@@ -48,6 +48,10 @@ const RESERVED_WORDS = [...CODE_METHODS, 'toString', ...FUTURE_PROPS]
 
 describe('Code', () => {
   describe('deploy', () => {
+    // ------------------------------------------------------------------------
+    // Create basic code
+    // ------------------------------------------------------------------------
+
     it('creates new code for class', async () => {
       const run = new Run()
       class A { }
@@ -90,6 +94,10 @@ describe('Code', () => {
       expect(CA1).to.equal(CA2)
     })
 
+    // ------------------------------------------------------------------------
+    // Create parents
+    // ------------------------------------------------------------------------
+
     it('creates code for parent', () => {
       const run = new Run()
       class A { }
@@ -108,6 +116,15 @@ describe('Code', () => {
       expect(Object.getPrototypeOf(CB)).to.equal(CA)
     })
 
+    it('reueses parent that is code', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B extends CA { }
+      const CB = run.deploy(B)
+      expect(Object.getPrototypeOf(CB)).to.equal(CA)
+    })
+
     it('creates code for parent chain', () => {
       const run = new Run()
       class A { }
@@ -119,6 +136,10 @@ describe('Code', () => {
       expect(Object.getPrototypeOf(CC)).to.equal(CB)
       expect(Object.getPrototypeOf(CB)).to.equal(CA)
     })
+
+    // ------------------------------------------------------------------------
+    // Error cases
+    // ------------------------------------------------------------------------
 
     it('throws if non-function', () => {
       const run = new Run()
@@ -214,6 +235,20 @@ describe('Code', () => {
       class B {}
       B.Code = Code
       expect(() => run.deploy(B)).to.throw(error)
+    })
+  })
+
+  describe('toString', () => {
+    // TODO
+
+    it.only('should return source code for child class', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B extends CA { }
+      console.log('-----')
+      console.log(B.toString())
+      console.log('-----')
     })
   })
 
@@ -351,15 +386,6 @@ describe('Code', () => {
       const CB = run.deploy(B)
       expect(Object.getPrototypeOf(CA)).to.equal(CB)
       expect(CB.A).to.equal(CA)
-    })
-
-    it('installs parent that is code jig', () => {
-      const run = new Run()
-      class B { }
-      const CB = run.deploy(B)
-      class A extends CB { }
-      const CA = run.deploy(A)
-      expect(Object.getPrototypeOf(CA)).to.equal(CB)
     })
 
     it('sets initial bindings', () => {
