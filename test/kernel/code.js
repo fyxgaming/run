@@ -16,7 +16,7 @@ const SI = unmangle(sandbox)._intrinsics
 const Membrane = unmangle(unmangle(Run)._Membrane)
 const { payFor } = require('../env/misc')
 
-// Tests:
+// Written Tests:
 //
 // Jig
 //  - Code methods not present
@@ -26,9 +26,9 @@ const { payFor } = require('../env/misc')
 //  - defineProperty disabled
 //  - getters and setters either allowed, or not allowed
 //  - Code methods cannot be deleted, or redefined, either from inside or outside
-//  - Jig and Berry props
-
-// Bad parent
+//  - All prop tests also test with load
+//  - Bad parent
+//  - Prop tests should be in a set, in an array, on base
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -278,6 +278,14 @@ describe('Code', () => {
       expect(p.o).to.equal(p)
       expect(p.a[0]).to.equal(p)
       expect(p.a[1]).to.equal(p.a)
+    })
+
+    it('creates code for self-reference prop', () => {
+      const run = new Run()
+      class A { }
+      A.A = A
+      const CA = run.deploy(A)
+      expect(CA.A).to.equal(CA)
     })
 
     it('copies code props', () => {

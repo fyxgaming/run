@@ -11,7 +11,6 @@ const { stub } = require('sinon')
 const { Run, COVER } = require('../../test/env/config')
 const { unmangle } = require('../../test/env/unmangle')
 const { Jig } = Run
-const { _resourceType } = unmangle(unmangle(Run)._util)
 
 // ------------------------------------------------------------------------------------------------
 // Code tests
@@ -397,53 +396,6 @@ describe('Code', () => {
   })
 
   describe('static props', () => {
-    async function testStaticPropPass (x) {
-      // Test with a child class and various properties to ensure variation
-      class A { }
-      class B extends A { }
-      B.x = x
-      B.y = [x]
-      B.s = new Set()
-      B.s.x = x
-      const B2 = await run.load(await run.deploy(B))
-      const props = [B2.x, B2.y[0], B2.s.x]
-      props.forEach(y => {
-        if (_resourceType(y)) {
-          expect(y.origin).to.equal(x.origin)
-          expect(y.location).to.equal(x.location)
-        } else {
-          expect(y).to.deep.equal(x)
-        }
-      })
-    }
-
-    it('should support static prop that is zero', () => testStaticPropPass(0))
-    it('should support static prop that is negative number', () => testStaticPropPass(-1))
-    it('should support static prop that is max integer', () => testStaticPropPass(Number.MAX_SAFE_INTEGER))
-    it('should support static prop that is NaN', () => testStaticPropPass(NaN))
-    it('should support static prop that is negative infinity', () => testStaticPropPass(-Infinity))
-    it('should support static prop that is true', () => testStaticPropPass(true))
-    it('should support static prop that is false', () => testStaticPropPass(false))
-    it('should support static prop that is null', () => testStaticPropPass(null))
-    it('should support static prop that is empty string', () => testStaticPropPass(''))
-    it('should support static prop that is emoji string', () => testStaticPropPass('😊'))
-    it('should support static prop that is object', () => testStaticPropPass({ m: 1, n: 2, o: [] }))
-    it('should support static prop that is array', () => testStaticPropPass([1, 2, 3]))
-    it('should support static prop that is buffer', () => testStaticPropPass(new Uint8Array([0, 1, 2])))
-    it('should support static prop that is class', () => testStaticPropPass(class A { }))
-    it('should support static prop that is anonymous class', () => testStaticPropPass(class { }))
-    it('should support static prop that is anonymous function', () => testStaticPropPass(function () { }))
-    it('should support static prop that is a jig', () => testStaticPropPass(new (class A extends Jig {})()))
-    it('should support static prop that is a arbitrary object', () =>
-      testStaticPropPass(new (class A { constructor () { this.n = 1 }})()))
-
-    it('should support static prop that is self-reference', async () => {
-      class A { }
-      A.A = A
-      const A2 = await run.load(await run.deploy(A))
-      expect(A2.A).to.equal(A2)
-    })
-
     it('should dedup set and map keys in static props', async () => {
       class A extends Jig { }
       const a1 = new A()
