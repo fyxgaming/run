@@ -308,6 +308,29 @@ describe('Code', () => {
       expect(CA.f).to.equal(run.deploy(f))
     })
 
+    it('creates circular code props', () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      A.B = B
+      B.A = A
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      expect(CA.B).to.equal(CB)
+      expect(CB.A).to.equal(CA)
+    })
+
+    it('creates circular parent-child code', () => {
+      const run = new Run()
+      class B { }
+      class A extends B { }
+      B.A = A
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      expect(Object.getPrototypeOf(CA)).to.equal(CB)
+      expect(CB.A).to.equal(CA)
+    })
+
     it.skip('creates code for arbitrary objects', () => {
       // TODO
     })
@@ -626,8 +649,6 @@ describe('Code', () => {
       const CA = run.deploy(A)
       CODE_METHODS.forEach(name => expect(Object.getOwnPropertyDescriptor(CA, name)).to.equal(undefined))
     })
-
-    // TODO
   })
 
   describe.skip('deploy', () => {
@@ -636,29 +657,6 @@ describe('Code', () => {
       class A { }
       A.Date = Date
       expect(() => run.deploy(A)).to.throw()
-    })
-
-    it('installs circular prop code', () => {
-      const run = new Run()
-      class A { }
-      class B { }
-      A.B = B
-      B.A = A
-      const CA = run.deploy(A)
-      const CB = run.deploy(B)
-      expect(CA.B).to.equal(CB)
-      expect(CB.A).to.equal(CA)
-    })
-
-    it('installs circular parent-child code', () => {
-      const run = new Run()
-      class B { }
-      class A extends B { }
-      B.A = A
-      const CA = run.deploy(A)
-      const CB = run.deploy(B)
-      expect(Object.getPrototypeOf(CA)).to.equal(CB)
-      expect(CB.A).to.equal(CA)
     })
 
     it('sets initial bindings', () => {
