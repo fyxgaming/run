@@ -498,16 +498,11 @@ describe('Code', () => {
     })
   })
 
-  describe.only('deploy', () => {
+  describe('deploy', () => {
     it('sets initial bindings', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
-      expect(() => CA.location).to.throw('Cannot read location: undetermined')
-      expect(() => CA.origin).to.throw('Cannot read origin: undetermined')
-      expect(() => CA.nonce).to.throw('Cannot read nonce: undetermined')
-      expect(() => CA.owner).to.throw('Cannot read owner: unbound')
-      expect(() => CA.satoshis).to.throw('Cannot read satoshis: unbound')
       Membrane._sudo(() => {
         expect(CA.location.startsWith('commit://')).to.equal(true)
         expect(CA.origin.startsWith('commit://')).to.equal(true)
@@ -638,6 +633,17 @@ describe('Code', () => {
       const CB = run.deploy(B)
       expect(typeof CB.f).to.equal('function')
       expect(CB.f).to.equal(CA.f)
+    })
+
+    it('initial bindings are unreadable', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      expect(() => CA.location).to.throw('Cannot read location: undetermined')
+      expect(() => CA.origin).to.throw('Cannot read origin: undetermined')
+      expect(() => CA.nonce).to.throw('Cannot read nonce: undetermined')
+      expect(() => CA.owner).to.throw('Cannot read owner: unbound')
+      expect(() => CA.satoshis).to.throw('Cannot read satoshis: unbound')
     })
   })
 
