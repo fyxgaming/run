@@ -271,7 +271,6 @@ describe('Code', () => {
 
     // TODO: Throws if extend Array, Set, Map, Object, etc.
     // Unsupported types
-    // Circular props
 
     /*
     it('creates code for props', () => {
