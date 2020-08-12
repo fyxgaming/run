@@ -49,7 +49,7 @@ const RESERVED_WORDS = [...CODE_METHODS, 'toString', ...FUTURE_PROPS]
 // ------------------------------------------------------------------------------------------------
 
 describe('Code', () => {
-  describe('deploy', () => {
+  describe('install', () => {
     // ------------------------------------------------------------------------
     // Create basic code
     // ------------------------------------------------------------------------
@@ -488,6 +488,34 @@ describe('Code', () => {
       B.Code = Code
       expect(() => run.deploy(B)).to.throw(error)
     })
+
+    it('throws if error creating parent dependency', () => {
+      const run = new Run()
+      class A { }
+      class B extends A { }
+      B.Date = Date
+      expect(() => run.deploy(B)).to.throw('Cannot install intrinsic')
+    })
+  })
+
+  describe.only('deploy', () => {
+    it('sets initial bindings', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      expect(() => CA.location).to.throw('Cannot read location: undetermined')
+      expect(() => CA.origin).to.throw('Cannot read origin: undetermined')
+      expect(() => CA.nonce).to.throw('Cannot read nonce: undetermined')
+      expect(() => CA.owner).to.throw('Cannot read owner: unbound')
+      expect(() => CA.satoshis).to.throw('Cannot read satoshis: unbound')
+      Membrane._sudo(() => {
+        expect(CA.location.startsWith('commit://')).to.equal(true)
+        expect(CA.origin.startsWith('commit://')).to.equal(true)
+        expect(CA.nonce).to.equal(0)
+        expect(unmangle(CA.owner)._value).to.equal(undefined)
+        expect(unmangle(CA.satoshis)._value).to.equal(undefined)
+      })
+    })
   })
 
   describe('toString', () => {
@@ -652,31 +680,6 @@ describe('Code', () => {
   })
 
   describe.skip('deploy', () => {
-    it('throws if error creating dependency', () => {
-      const run = new Run()
-      class A { }
-      A.Date = Date
-      expect(() => run.deploy(A)).to.throw()
-    })
-
-    it('sets initial bindings', () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      expect(() => CA.location).to.throw('Cannot read location: undetermined')
-      expect(() => CA.origin).to.throw('Cannot read origin: undetermined')
-      expect(() => CA.nonce).to.throw('Cannot read nonce: undetermined')
-      expect(() => CA.owner).to.throw('Cannot read owner: unbound')
-      expect(() => CA.satoshis).to.throw('Cannot read satoshis: unbound')
-      Membrane._sudo(() => {
-        expect(CA.location.startsWith('commit://')).to.equal(true)
-        expect(CA.origin.startsWith('commit://')).to.equal(true)
-        expect(CA.nonce).to.equal(0)
-        expect(unmangle(CA.owner)._value).to.equal(undefined)
-        expect(unmangle(CA.satoshis)._value).to.equal(undefined)
-      })
-    })
-
     it('deploys parent and child', async () => {
       const run = new Run()
       class A {}
