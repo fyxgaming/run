@@ -252,11 +252,15 @@ describe('Code', () => {
     })
 
     it('creates sandboxed Uint8Array props', () => {
-      // TODO
+      expect(prop(new Uint8Array()) instanceof Uint8Array).to.equal(false)
+      expect(prop(new Uint8Array()) instanceof SI.Uint8Array).to.equal(true)
+      expect(prop(new Uint8Array())).to.deep.equal(new Uint8Array())
+      expect(prop(new Uint8Array([0, 1, 255]))).to.deep.equal(new Uint8Array([0, 1, 255]))
     })
 
     // TODO: Throws if extend Array, Set, Map, Object, etc.
     // Unsupported types
+    // Circular props
 
     /*
     it('creates code for props', () => {
