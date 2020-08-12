@@ -300,6 +300,22 @@ describe('Code', () => {
       expect(CA.f).to.equal(run.deploy(f))
     })
 
+    it.skip('creates code for arbitrary objects', () => {
+      // TODO
+    })
+
+    it.skip('copies jig props', () => {
+      // TODO
+    })
+
+    it.skip('copies berry props', () => {
+      // TODO
+    })
+
+    it.skip('copies native props', () => {
+      // TODO
+    })
+
     // Helper to test unsupported props
     function expectPropFail (x, error) {
       const run = new Run()
@@ -310,7 +326,7 @@ describe('Code', () => {
       expect(() => run.deploy(A)).to.throw(error)
     }
 
-    it.only('throws for intrinsic props', () => {
+    it.skip('throws for intrinsic props', () => {
       const error = 'Cannot install intrinsic'
       expectPropFail(Math, error)
       expectPropFail(Date, error)
@@ -318,8 +334,7 @@ describe('Code', () => {
       expectPropFail(Error, error)
     })
 
-    it.only('throw for unsupported objects', () => {
-      // TODO : Fix
+    it.skip('throws for unsupported objects', () => {
       expectPropFail(new Date())
       expectPropFail(new Uint16Array())
       expectPropFail(Promise.resolve())
@@ -330,10 +345,18 @@ describe('Code', () => {
       expectPropFail(new Error())
     })
 
-    // TODO: Throws if extend Array, Set, Map, Object, etc.
-    // Unsupported types
-    // Base props
-    // Built-in anonymous, etc.
+    it.skip('throws if extend intrinsics', () => {
+      expectPropFail(new (class MyArray extends Array {})())
+      expectPropFail(new (class MySet extends Set {})())
+      expectPropFail(new (class MyMap extends Map {})())
+      expectPropFail(new (class MyUint8Array extends Uint8Array {})())
+    })
+
+    it.skip('throws for anonymous functions', () => {
+      expectPropFail(function () { })
+      expectPropFail(() => { })
+      expectPropFail(class { })
+    })
 
     // ------------------------------------------------------------------------
     // Error cases
