@@ -679,6 +679,15 @@ describe('Code', () => {
     })
   })
 
+  describe('isExtensible', () => {
+    it('returns true', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      expect(Object.isExtensible(CA)).to.equal(true)
+    })
+  })
+
   describe.skip('deploy', () => {
     it('deploys parent and child', async () => {
       const run = new Run()
