@@ -207,6 +207,36 @@ describe('Code', () => {
       expect(prop(arrayWithProps)).to.deep.equal(arrayWithProps)
     })
 
+    it('creates sandboxed object props', () => {
+      expect(prop({}) instanceof Object).to.equal(false)
+      expect(prop({}) instanceof SI.Object).to.equal(true)
+      expect(prop({})).to.deep.equal({})
+      expect(prop({ n: 1, m: 2 })).to.deep.equal({ n: 1, m: 2 })
+      expect(prop({ n: {} })).to.deep.equal({ n: {} })
+      expect(prop([{}])).to.deep.equal([{}])
+      expect(prop(null)).to.equal(null)
+    })
+
+    it('creates sandboxed Set props', () => {
+      expect(prop(new Set()) instanceof Set).to.equal(false)
+      expect(prop(new Set()) instanceof SI.Set).to.equal(true)
+      expect(prop(new Set())).to.deep.equal(new Set())
+      expect(prop(new Set([1, 2, 3]))).to.deep.equal(new Set([1, 2, 3]))
+      expect(prop(new Set([{}, [], null, new Set()]))).to.deep.equal(new Set([{}, [], null, new Set()]))
+      // TODO set props
+    })
+
+    it('creates sandboxed Map props', () => {
+      // TODO
+    })
+
+    it('creates sandboxed Uint8Array props', () => {
+      // TODO
+    })
+
+    // TODO: Throws if extend Array, Set, Map, Object, etc.
+    // Unsupported types
+
     /*
     it('creates code for props', () => {
       const run = new Run()
