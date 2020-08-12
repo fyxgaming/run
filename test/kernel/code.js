@@ -305,6 +305,7 @@ describe('Code', () => {
       const run = new Run()
       class A { }
       A.x = x
+      // TODO: Remove
       console.log(x.toString())
       expect(() => run.deploy(A)).to.throw(error)
     }
