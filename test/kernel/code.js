@@ -234,7 +234,21 @@ describe('Code', () => {
     })
 
     it('creates sandboxed Map props', () => {
-      // TODO
+      expect(prop(new Map()) instanceof Map).to.equal(false)
+      expect(prop(new Map()) instanceof SI.Map).to.equal(true)
+      expect(prop(new Map())).to.deep.equal(new Map())
+      expect(prop(new Map([[1, 2], [3, 4]]))).to.deep.equal(new Map([[1, 2], [3, 4]]))
+      expect(prop(new Map([['a', new Map()]]))).to.deep.equal(new Map([['a', new Map()]]))
+      expect(prop(new Map([[{}, null]]))).to.deep.equal(new Map([[{}, null]]))
+      const map = new Map([[1, 2]])
+      map.b = false
+      map.u = undefined
+      const mapProp = prop(map)
+      expect(mapProp).to.deep.equal(map)
+      expect(mapProp.b).to.equal(false)
+      expect('u' in mapProp).to.equal(true)
+      expect(mapProp.u).to.equal(undefined)
+      expect(mapProp.get(1)).to.equal(2)
     })
 
     it('creates sandboxed Uint8Array props', () => {
