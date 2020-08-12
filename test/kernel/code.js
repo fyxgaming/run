@@ -187,6 +187,26 @@ describe('Code', () => {
       expect(prop({ a: ['a'] }).a[0]).to.equal('a')
     })
 
+    it('creates sandboxed array props', () => {
+      expect(prop([]) instanceof Array).to.equal(false)
+      expect(prop([]) instanceof SI.Array).to.equal(true)
+      expect(prop([])).to.deep.equal([])
+      expect(prop([1, 2, 3])).to.deep.equal([1, 2, 3])
+      expect(prop([[[]]])).to.deep.equal([[[]]])
+      expect(prop({ a: [] }).a).to.deep.equal([])
+      const sparseArray = []
+      sparseArray[0] = 1
+      sparseArray[99] = 2
+      const sparseArrayProp = prop(sparseArray)
+      expect(sparseArrayProp.length).to.equal(sparseArray.length)
+      expect(sparseArrayProp[0]).to.equal(1)
+      expect(sparseArrayProp[99]).to.equal(2)
+      expect(sparseArrayProp[1]).to.equal(undefined)
+      const arrayWithProps = []
+      arrayWithProps.a = 'b'
+      expect(prop(arrayWithProps)).to.deep.equal(arrayWithProps)
+    })
+
     /*
     it('creates code for props', () => {
       const run = new Run()
