@@ -9,6 +9,7 @@ require('./extra/group-lock.js')
 require('./kernel/api.js')
 require('./kernel/blockchain')
 require('./kernel/code.js')
+require('./kernel/native.js')
 
 require('./module/mockchain')
 require('./module/viewer')

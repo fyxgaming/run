@@ -1,7 +1,7 @@
 /**
  * code.js
  *
- * Tests for lib/kernel/code.js and lib/kernel/file.js
+ * Tests for lib/kernel/code.js
  */
 
 const { describe, it } = require('mocha')
@@ -21,6 +21,8 @@ const { payFor } = require('../env/misc')
 // Jig
 //  - Code methods not present
 //  - Can assign properties to code methods (only upgrade)
+//  - Getter that sets
+//  - Ownership: Create object, pass into another method, set on other jig, then set on current jig => fail
 //
 // Code
 //  - defineProperty disabled
@@ -439,13 +441,6 @@ describe('Code', () => {
       expect(() => run.deploy(B)).to.throw(error)
     })
 
-    it('throws if native code', () => {
-      const run = new Run()
-      const error = 'Cannot deploy native code'
-      expect(() => run.deploy(Jig)).to.throw(error)
-      expect(() => run.deploy(Berry)).to.throw(error)
-    })
-
     it('throws if contains reserved words', () => {
       const run = new Run()
       const error = 'Must not have any reserved words'
@@ -594,20 +589,6 @@ describe('Code', () => {
       class A { }
       const CA = run.deploy(A)
       CODE_METHODS.forEach(name => expect(Object.isFrozen(CA[name])))
-    })
-
-    it('native code has native bindings', () => {
-      expect(Jig.location).to.equal('native://Jig')
-      expect(Jig.origin).to.equal('native://Jig')
-      expect(Jig.nonce).to.equal(0)
-      expect(Jig.owner).to.equal(null)
-      expect(Jig.satoshis).to.equal(null)
-
-      expect(Berry.location).to.equal('native://Berry')
-      expect(Berry.origin).to.equal('native://Berry')
-      expect(Berry.nonce).to.equal(0)
-      expect(Berry.owner).to.equal(null)
-      expect(Berry.satoshis).to.equal(null)
     })
 
     it('does not have code methods', () => {
