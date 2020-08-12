@@ -26,6 +26,7 @@ const { payFor } = require('../env/misc')
 //  - defineProperty disabled
 //  - getters and setters either allowed, or not allowed
 //  - Code methods cannot be deleted, or redefined, either from inside or outside
+//  - Jig and Berry props
 
 // Bad parent
 
@@ -188,6 +189,8 @@ describe('Code', () => {
     })
 
     it('creates sandboxed array props', () => {
+      const a = []
+      expect(prop(a)).not.to.equal(a)
       expect(prop([]) instanceof Array).to.equal(false)
       expect(prop([]) instanceof SI.Array).to.equal(true)
       expect(prop([])).to.deep.equal([])
@@ -208,6 +211,8 @@ describe('Code', () => {
     })
 
     it('creates sandboxed object props', () => {
+      const o = {}
+      expect(prop(o)).not.to.equal(o)
       expect(prop({}) instanceof Object).to.equal(false)
       expect(prop({}) instanceof SI.Object).to.equal(true)
       expect(prop({})).to.deep.equal({})
@@ -218,6 +223,8 @@ describe('Code', () => {
     })
 
     it('creates sandboxed Set props', () => {
+      const s = new Set()
+      expect(prop(s)).not.to.equal(s)
       expect(prop(new Set()) instanceof Set).to.equal(false)
       expect(prop(new Set()) instanceof SI.Set).to.equal(true)
       expect(prop(new Set())).to.deep.equal(new Set())
@@ -234,6 +241,8 @@ describe('Code', () => {
     })
 
     it('creates sandboxed Map props', () => {
+      const m = new Map()
+      expect(prop(m)).not.to.equal(m)
       expect(prop(new Map()) instanceof Map).to.equal(false)
       expect(prop(new Map()) instanceof SI.Map).to.equal(true)
       expect(prop(new Map())).to.deep.equal(new Map())
@@ -252,6 +261,8 @@ describe('Code', () => {
     })
 
     it('creates sandboxed Uint8Array props', () => {
+      const u = new Uint8Array()
+      expect(prop(u)).not.to.equal(u)
       expect(prop(new Uint8Array()) instanceof Uint8Array).to.equal(false)
       expect(prop(new Uint8Array()) instanceof SI.Uint8Array).to.equal(true)
       expect(prop(new Uint8Array())).to.deep.equal(new Uint8Array())
@@ -269,19 +280,30 @@ describe('Code', () => {
       expect(p.a[1]).to.equal(p.a)
     })
 
-    // TODO: Throws if extend Array, Set, Map, Object, etc.
-    // Unsupported types
-
-    /*
-    it('creates code for props', () => {
+    it('copies code props', () => {
       const run = new Run()
       class A { }
-      class B { }
-      A.B = B
       const CA = run.deploy(A)
-      expect(CA.B).to.equal(run.deploy(B))
+      class B { }
+      B.CA = CA
+      const CB = run.deploy(B)
+      expect(CB.CA).to.equal(CA)
     })
-    */
+
+    it('creates code for function props', () => {
+      const run = new Run()
+      class A { }
+      function f () { }
+      A.f = f
+      const CA = run.deploy(A)
+      expect(CA.f).not.to.equal(f)
+      expect(CA.f).to.equal(run.deploy(f))
+    })
+
+    // TODO: Throws if extend Array, Set, Map, Object, etc.
+    // Unsupported types
+    // Base props
+    // Built-in anonymous, etc.
 
     // ------------------------------------------------------------------------
     // Error cases
