@@ -223,7 +223,14 @@ describe('Code', () => {
       expect(prop(new Set())).to.deep.equal(new Set())
       expect(prop(new Set([1, 2, 3]))).to.deep.equal(new Set([1, 2, 3]))
       expect(prop(new Set([{}, [], null, new Set()]))).to.deep.equal(new Set([{}, [], null, new Set()]))
-      // TODO set props
+      const set = new Set([1, 2])
+      set.a = []
+      set.s = new Set()
+      const setProp = prop(set)
+      expect(setProp).to.deep.equal(set)
+      expect(setProp.a).to.deep.equal([])
+      expect(setProp.s).to.deep.equal(new Set())
+      expect(setProp.has(1)).to.equal(true)
     })
 
     it('creates sandboxed Map props', () => {
