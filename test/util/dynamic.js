@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const Dynamic = unmangle(Run)._Dynamic
+const Dynamic = unmangle(unmangle(Run)._Dynamic)
 
 // ------------------------------------------------------------------------------------------------
 // Dynamic
