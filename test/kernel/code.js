@@ -300,6 +300,35 @@ describe('Code', () => {
       expect(CA.f).to.equal(run.deploy(f))
     })
 
+    // Helper to test unsupported props
+    function expectPropFail (x, error) {
+      const run = new Run()
+      class A { }
+      A.x = x
+      console.log(x.toString())
+      expect(() => run.deploy(A)).to.throw(error)
+    }
+
+    it.only('throws for intrinsic props', () => {
+      const error = 'Cannot install intrinsic'
+      expectPropFail(Math, error)
+      expectPropFail(Date, error)
+      expectPropFail(isNaN, error)
+      expectPropFail(Error, error)
+    })
+
+    it.only('throw for unsupported objects', () => {
+      // TODO : Fix
+      expectPropFail(new Date())
+      expectPropFail(new Uint16Array())
+      expectPropFail(Promise.resolve())
+      expectPropFail(new WeakSet())
+      expectPropFail(new WeakMap())
+      expectPropFail(new RegExp())
+      expectPropFail(/abc/)
+      expectPropFail(new Error())
+    })
+
     // TODO: Throws if extend Array, Set, Map, Object, etc.
     // Unsupported types
     // Base props
