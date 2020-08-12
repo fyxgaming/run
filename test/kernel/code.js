@@ -258,6 +258,17 @@ describe('Code', () => {
       expect(prop(new Uint8Array([0, 1, 255]))).to.deep.equal(new Uint8Array([0, 1, 255]))
     })
 
+    it('creates cirular props', () => {
+      const o = { }
+      o.o = o
+      o.a = [o]
+      o.a.push(o.a)
+      const p = prop(o)
+      expect(p.o).to.equal(p)
+      expect(p.a[0]).to.equal(p)
+      expect(p.a[1]).to.equal(p.a)
+    })
+
     // TODO: Throws if extend Array, Set, Map, Object, etc.
     // Unsupported types
     // Circular props
