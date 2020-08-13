@@ -50,8 +50,32 @@ const RESERVED_WORDS = [...CODE_METHODS, 'toString', ...FUTURE_PROPS]
 // expectTx
 // ------------------------------------------------------------------------------------------------
 
+/**
+ * Checks the payload data in next Run transaction broadcast
+ *
+ * @param {object} opts
+ * @param {?number} nin Number of inputs
+ * @param {?number} nin Number of references
+ * @param {?Array} out Output hashes
+ * @param {?Array} del Deleted hashes
+ * @param {?Array} ncre Number of creates
+ * @param {?Array} exec Program instructions
+ */
 function expectTx (opts) {
-  // TODO
+  const run = Run.instance
+
+  function verify (rawtx) {
+    const tx = new Transaction(rawtx)
+    console.log(tx.toString())
+  }
+
+  // Hook run.blockchain to verify the next transaction then disable the hook
+  const oldBroadcast = run.blockchain.broadcast
+  run.blockchain.broadcast = rawtx => {
+    run.blockchain.broadcast = oldBroadcast
+    verify(rawtx)
+    return oldBroadcast.call(run.blockchain, rawtx)
+  }
 }
 
 // ------------------------------------------------------------------------------------------------
