@@ -10,7 +10,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { Transaction, PrivateKey } = require('bsv')
 const Run = require('../env/run')
-const { Code, Jig, Berry, sandbox } = Run
+const { Code, Jig, Berry, LocalCache, sandbox } = Run
 const unmangle = require('../env/unmangle')
 const SI = unmangle(sandbox)._intrinsics
 const Membrane = unmangle(unmangle(Run)._Membrane)
@@ -47,21 +47,57 @@ const FUTURE_PROPS = ['encryption', 'blockhash', 'blockheight', 'blocktime']
 const RESERVED_WORDS = [...CODE_METHODS, 'toString', ...FUTURE_PROPS]
 
 // ------------------------------------------------------------------------------------------------
+// E2ETest
+// ------------------------------------------------------------------------------------------------
+
+/*
+class E2ETest {
+  constructor () { this.run = new Run(); this.jigs = {}; this.checks = [] }
+  jig (name, f) { this.jigs[name] = f(this.run); return this }
+  check (f) { this.checks.push(f); return this }
+  async run () {
+    this.checks.forEach(f => f(this.jigs))
+    await run.sync()
+    this.jigs2 = {}
+    for (const name of Object.keys(this.jigs)) {
+      this.jigs2 = await run.load(this.jigs[name])
+    }
+    this.checks.forEach(f => f(this.jigs2))
+    this.jigs3 = {}
+    for (const name of Object.keys(this.jigs)) {
+      this.jigs3 = await run.load(this.jigs[name])
+    }
+    this.checks.forEach(f => f(this.jigs3))
+  }
+}
+*/
+
+// Note on tests below
+
+// ------------------------------------------------------------------------------------------------
 // Code
 // ------------------------------------------------------------------------------------------------
 
 describe('Code', () => {
   describe('deploy', () => {
     it.only('basic class', async () => {
-      const run = new Run()
       class A { }
+
+      const test = CA => {
+        expect(typeof CA).to.equal('function')
+        expect(CA.toString()).to.equal(A.toString())
+        expect(CA).not.to.equal(A)
+      }
+
+      const run = new Run()
       const CA = run.deploy(A)
-
-      expect(typeof CA).to.equal('function')
-      expect(CA.toString()).to.equal(A.toString())
-      expect(CA).not.to.equal(A)
-
+      test(CA)
       await CA.sync()
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     it('creates new code for function', () => {
