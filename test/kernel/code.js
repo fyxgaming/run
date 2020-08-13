@@ -482,6 +482,32 @@ describe('Code', () => {
     })
 
     // ------------------------------------------------------------------------
+    // Presets
+    // ------------------------------------------------------------------------
+
+    it('uses blockchain presets', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      const CA = run.deploy(A)
+      expect(CA.location).to.equal(A.presets[network].location)
+      expect(CA.origin).to.equal(A.presets[network].origin)
+      expect(CA.nonce).to.equal(A.presets[network].nonce)
+      expect(CA.owner).to.equal(A.presets[network].owner)
+      expect(CA.satoshis).to.equal(A.presets[network].satoshis)
+      expect(typeof CA.presets).to.equal('undefined')
+    })
+
+    // ------------------------------------------------------------------------
     // Error cases
     // ------------------------------------------------------------------------
 
@@ -863,28 +889,6 @@ describe('Code', () => {
   })
 
   describe.skip('presets', () => {
-    it('uses blockchain presets', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      A.presets = {
-        [network]: {
-          location: randomLocation(),
-          origin: randomLocation(),
-          nonce: 2,
-          owner: randomOwner(),
-          satoshis: 0
-        }
-      }
-      const CA = run.deploy(A)
-      expect(CA.location).to.equal(A.presets[network].location)
-      expect(CA.origin).to.equal(A.presets[network].origin)
-      expect(CA.nonce).to.equal(A.presets[network].nonce)
-      expect(CA.owner).to.equal(A.presets[network].owner)
-      expect(CA.satoshis).to.equal(A.presets[network].satoshis)
-      expect(typeof CA.presets).to.equal('undefined')
-    })
-
     it('clones javascript objects for sandbox', () => {
       const run = new Run()
       const network = run.blockchain.network
