@@ -507,6 +507,18 @@ describe('Code', () => {
       expect(typeof CA.presets).to.equal('undefined')
     })
 
+    it('clones javascript objects for sandbox', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { a: [], s: new Set() } }
+      const CA = run.deploy(A)
+      expect(CA.a).not.to.equal(A.presets[network].a)
+      expect(CA.s).not.to.equal(A.presets[network].s)
+      expect(CA.a instanceof SI.Array).to.equal(true)
+      expect(CA.s instanceof SI.Set).to.equal(true)
+    })
+
     // ------------------------------------------------------------------------
     // Error cases
     // ------------------------------------------------------------------------
@@ -889,18 +901,6 @@ describe('Code', () => {
   })
 
   describe.skip('presets', () => {
-    it('clones javascript objects for sandbox', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      A.presets = { [network]: { a: [], s: new Set() } }
-      const CA = run.deploy(A)
-      expect(CA.a).not.to.equal(A.presets[network].a)
-      expect(CA.s).not.to.equal(A.presets[network].s)
-      expect(CA.a instanceof SI.Array).to.equal(true)
-      expect(CA.s instanceof SI.Set).to.equal(true)
-    })
-
     it.skip('copies jigs', async () => {
       const run = new Run()
       const network = run.blockchain.network
@@ -1096,15 +1096,6 @@ describe('Code', () => {
       expect(() => run.deploy(A)).to.throw('Invalid sealed option: null')
       A.sealed = 1
       expect(() => run.deploy(A)).to.throw('Invalid sealed option: 1')
-    })
-  })
-
-  describe.skip('prototype', () => {
-    it('sets prototype constructor to Code', () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      expect(CA.prototype.constructor).to.equal(CA)
     })
   })
 
