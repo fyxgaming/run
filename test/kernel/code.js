@@ -97,6 +97,9 @@ describe('Code', () => {
       test(CA2)
       run.cache = new LocalCache()
       const CA3 = await run.load(CA.location)
+      console.log('-------------------------')
+      console.log(CA3)
+      console.log('-------------------------')
       test(CA3)
     })
 
