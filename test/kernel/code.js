@@ -731,6 +731,17 @@ describe('Code', () => {
     })
   })
 
+  describe('setPrototypeOf', () => {
+    it('throws for code', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      expect(() => Object.setPrototypeOf(CA, {})).to.throw()
+    })
+
+    // TODO: Test child code
+  })
+
   describe.skip('deploy', () => {
     it.skip('deploys with custom lock', async () => {
       const run = new Run()
