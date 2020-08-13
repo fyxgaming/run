@@ -519,6 +519,178 @@ describe('Code', () => {
       expect(CA.s instanceof SI.Set).to.equal(true)
     })
 
+    it.skip('supports non-binding presets', () => {
+      // TODO
+    })
+
+    it.skip('deploys code presets', () => {
+      // TODO
+    })
+
+    it.skip('copies jig and berry presets', async () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class J extends Jig { }
+      const j = new J()
+      class B extends Berry { static pluck () { return new B() } }
+      const b = await run.load('', B)
+      class C {}
+      class A { }
+      A.presets = { [network]: { b, j, C } }
+      const CA = run.deploy(A)
+      expect(CA.b).to.equal(b)
+      expect(CA.j).to.equal(j)
+      expect(CA.C).not.to.equal(C)
+      expect(CA.C.toString()).to.equal(C.toString())
+      expect(CA.C).to.equal(run.deploy(C))
+    })
+
+    it('does not add presets object to code jig', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      const CA = run.deploy(A)
+      expect(CA.presets).to.equal(undefined)
+    })
+
+    it('returns different code for a copy with same presets', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      class B { }
+      Object.assign(B, A)
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      expect(CA).not.to.equal(CB)
+    })
+
+    it('installs separate presets for parent and child', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class B { }
+      B.presets = { [network]: { n: 1, m: 0 } }
+      class A extends B { }
+      A.presets = { [network]: { n: 2 } }
+      const CB = run.deploy(B)
+      const CA = run.deploy(A)
+      expect(CB.n).to.equal(1)
+      expect(CB.m).to.equal(0)
+      expect(CA.n).to.equal(2)
+      expect(CA.m).to.equal(0)
+      expect(Object.getOwnPropertyNames(CA).includes('n')).to.equal(true)
+      expect(Object.getOwnPropertyNames(CA).includes('m')).to.equal(false)
+    })
+
+    it('throws if parent dependency mismatch', () => {
+      const run = new Run()
+      class A { }
+      class C { }
+      class B extends A { }
+      B.deps = { A: C }
+      expect(() => run.deploy(B)).to.throw('Parent dependency mismatch')
+    })
+
+    it('throws if binding presets are invalid', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = null
+      expect(() => run.deploy(A)).to.throw()
+      A.presets = { [network]: null }
+      expect(() => run.deploy(A)).to.throw()
+      A.presets = {
+        [network]: {
+          location: '_o1',
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      expect(() => run.deploy(A)).to.throw()
+      A.presets = {
+        [network]: {
+          location: '_o1',
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      expect(() => run.deploy(A)).to.throw()
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        },
+        test: null
+      }
+      expect(() => run.deploy(A)).to.throw()
+      delete A.presets.test
+      A.presets[network].nonce = -1
+      expect(() => run.deploy(A)).to.throw()
+      A.presets[network].nonce = null
+      expect(() => run.deploy(A)).to.throw()
+      A.presets = []
+      expect(() => run.deploy(A)).to.throw()
+      A.presets = { [network]: new class Presets {}() }
+      expect(() => run.deploy(A)).to.throw()
+    })
+
+    it('throws if binding presets are incomplete', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      const npresets = {
+        location: '_o1',
+        origin: randomLocation(),
+        owner: randomOwner(),
+        satoshis: 0
+      }
+      for (const key of Object.keys(npresets)) {
+        A.presets = { [network]: Object.assign({}, npresets) }
+        delete A.presets[network][key]
+        expect(() => run.deploy(A)).to.throw()
+      }
+    })
+
+    it('throws if presets contains reserved properties', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { deps: {} } }
+      expect(() => run.deploy(A)).to.throw()
+      A.presets = { [network]: { presets: {} } }
+      expect(() => run.deploy(A)).to.throw()
+      A.presets = { [network]: { upgrade: () => {} } }
+      expect(() => run.deploy(A)).to.throw()
+    })
+
+    it.skip('throws if presets contain unsupported values', () => {
+      // On current network and different network
+    })
+
     // ------------------------------------------------------------------------
     // Error cases
     // ------------------------------------------------------------------------
@@ -897,168 +1069,6 @@ describe('Code', () => {
       CA.send(new L())
       await CA.sync()
       expect(A.location.startsWith('commit://'))
-    })
-  })
-
-  describe.skip('presets', () => {
-    it.skip('copies jigs', async () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class J extends Jig { }
-      const j = new J()
-      class B extends Berry { static pluck () { return new B() } }
-      const b = await run.load('', B)
-      class C {}
-      class A { }
-      A.presets = { [network]: { b, j, C } }
-      const CA = run.deploy(A)
-      expect(CA.b).to.equal(b)
-      expect(CA.j).to.equal(j)
-      expect(CA.C).not.to.equal(C)
-      expect(CA.C.toString()).to.equal(C.toString())
-      expect(CA.C).to.equal(run.deploy(C))
-    })
-
-    it('does not add presets to code jig', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      A.presets = {
-        [network]: {
-          location: randomLocation(),
-          origin: randomLocation(),
-          nonce: 2,
-          owner: randomOwner(),
-          satoshis: 0
-        }
-      }
-      const CA = run.deploy(A)
-      expect(CA.presets).to.equal(undefined)
-    })
-
-    it('returns different code for a copy with same presets', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      A.presets = {
-        [network]: {
-          location: randomLocation(),
-          origin: randomLocation(),
-          nonce: 2,
-          owner: randomOwner(),
-          satoshis: 0
-        }
-      }
-      class B { }
-      Object.assign(B, A)
-      const CA = run.deploy(A)
-      const CB = run.deploy(B)
-      expect(CA).not.to.equal(CB)
-    })
-
-    it('installs separate presets for parent and child', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class B { }
-      B.presets = { [network]: { n: 1, m: 0 } }
-      class A extends B { }
-      A.presets = { [network]: { n: 2 } }
-      const CB = run.deploy(B)
-      const CA = run.deploy(A)
-      expect(CB.n).to.equal(1)
-      expect(CB.m).to.equal(0)
-      expect(CA.n).to.equal(2)
-      expect(CA.m).to.equal(0)
-      expect(Object.getOwnPropertyNames(CA).includes('n')).to.equal(true)
-      expect(Object.getOwnPropertyNames(CA).includes('m')).to.equal(false)
-    })
-
-    it('throws if parent dependency mismatch', () => {
-      const run = new Run()
-      class A { }
-      class C { }
-      class B extends A { }
-      B.deps = { A: C }
-      expect(() => run.deploy(B)).to.throw('Parent dependency mismatch')
-    })
-
-    it('throws if presets are invalid', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      A.presets = null
-      expect(() => run.deploy(A)).to.throw()
-      A.presets = { [network]: null }
-      expect(() => run.deploy(A)).to.throw()
-      A.presets = {
-        [network]: {
-          location: '_o1',
-          origin: randomLocation(),
-          nonce: 2,
-          owner: randomOwner(),
-          satoshis: 0
-        }
-      }
-      expect(() => run.deploy(A)).to.throw()
-      A.presets = {
-        [network]: {
-          location: '_o1',
-          origin: randomLocation(),
-          nonce: 2,
-          owner: randomOwner(),
-          satoshis: 0
-        }
-      }
-      expect(() => run.deploy(A)).to.throw()
-      A.presets = {
-        [network]: {
-          location: randomLocation(),
-          origin: randomLocation(),
-          nonce: 2,
-          owner: randomOwner(),
-          satoshis: 0
-        },
-        test: null
-      }
-      expect(() => run.deploy(A)).to.throw()
-      delete A.presets.test
-      A.presets[network].nonce = -1
-      expect(() => run.deploy(A)).to.throw()
-      A.presets[network].nonce = null
-      expect(() => run.deploy(A)).to.throw()
-      A.presets = []
-      expect(() => run.deploy(A)).to.throw()
-      A.presets = { [network]: new class Presets {}() }
-      expect(() => run.deploy(A)).to.throw()
-    })
-
-    it('throws if presets are incomplete', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      const npresets = {
-        location: '_o1',
-        origin: randomLocation(),
-        owner: randomOwner(),
-        satoshis: 0
-      }
-      for (const key of Object.keys(npresets)) {
-        A.presets = { [network]: Object.assign({}, npresets) }
-        delete A.presets[network][key]
-        expect(() => run.deploy(A)).to.throw()
-      }
-    })
-
-    it('throws if presets contains reserved properties', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      A.presets = { [network]: { deps: {} } }
-      expect(() => run.deploy(A)).to.throw()
-      A.presets = { [network]: { presets: {} } }
-      expect(() => run.deploy(A)).to.throw()
-      A.presets = { [network]: { upgrade: () => {} } }
-      expect(() => run.deploy(A)).to.throw()
     })
   })
 
