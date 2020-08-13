@@ -83,7 +83,7 @@ describe('Code', () => {
   afterEach(() => Run.instance && Run.instance.sync())
 
   describe.only('deploy', () => {
-    it('basic class', async () => {
+    it.only('basic class', async () => {
       class A { }
 
       const test = CA => {
@@ -91,6 +91,17 @@ describe('Code', () => {
         expect(CA.toString()).to.equal(A.toString())
         expect(CA).not.to.equal(A)
       }
+
+      /*
+      checkTx({
+        nin: 2,
+        nref: 2,
+        out: [],
+        del: [],
+        ncre: 2,
+        exec: []
+      })
+      */
 
       const run = new Run()
       const CA = run.deploy(A)
