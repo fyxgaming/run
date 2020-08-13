@@ -82,7 +82,7 @@ describe('Code', () => {
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
 
-  describe.only('deploy', () => {
+  describe.only('e2e', () => {
     it('basic class', async () => {
       class A { }
 
@@ -123,6 +123,34 @@ describe('Code', () => {
       test(cf3)
     })
 
+    it('deploys parent', async () => {
+      class A { }
+      class B extends A { }
+
+      const test = (CA, CB) => {
+        expect(CA.location.endsWith('_o1')).to.equal(true)
+        expect(CB.location.endsWith('_o2')).to.equal(true)
+      }
+
+      const run = new Run()
+      const CB = run.deploy(B)
+      const CA = run.deploy(A)
+      expect(Object.getPrototypeOf(CB)).to.equal(CA)
+      console.log('1')
+      await run.sync()
+      console.log('2')
+      test(CA, CB)
+      const CA2 = await run.load(CA.location)
+      const CB2 = await run.load(CB.location)
+      test(CA2, CB2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      const CB3 = await run.load(CB.location)
+      test(CA3, CB3)
+    })
+  })
+
+  describe.only('deploy', () => {
     it('creates code for class only once', async () => {
       const run = new Run()
       class A { }
@@ -148,19 +176,13 @@ describe('Code', () => {
     })
   })
 
+  describe('parents', () => {
+  })
+
   describe.skip('deploy old', () => {
     // ------------------------------------------------------------------------
     // Create parents
     // ------------------------------------------------------------------------
-
-    it('creates code for parent', () => {
-      const run = new Run()
-      class A { }
-      class B extends A { }
-      const CB = run.deploy(B)
-      const CA = run.deploy(A)
-      expect(Object.getPrototypeOf(CB)).to.equal(CA)
-    })
 
     it('reuses installed code for parent', () => {
       const run = new Run()
