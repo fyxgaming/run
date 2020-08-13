@@ -51,18 +51,17 @@ const RESERVED_WORDS = [...CODE_METHODS, 'toString', ...FUTURE_PROPS]
 // ------------------------------------------------------------------------------------------------
 
 describe('Code', () => {
-  describe('install', () => {
-    // ------------------------------------------------------------------------
-    // Create basic code
-    // ------------------------------------------------------------------------
-
-    it('creates new code for class', async () => {
+  describe('deploy', () => {
+    it.only('basic class', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
+
       expect(typeof CA).to.equal('function')
       expect(CA.toString()).to.equal(A.toString())
       expect(CA).not.to.equal(A)
+
+      await CA.sync()
     })
 
     it('creates new code for function', () => {
@@ -869,7 +868,7 @@ describe('Code', () => {
       expect(cf.toString().startsWith('function f')).to.equal(true)
     })
 
-    it.only('should return source code for jig class', () => {
+    it('should return source code for jig class', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
