@@ -404,6 +404,73 @@ describe('Code', () => {
       expect(sf()).to.equal(run.deploy(A))
     })
 
+    it('supports normal javascript values as deps', () => {
+      const run = new Run()
+      class A {
+        static n () { return n } // eslint-disable-line
+        static o () { return o } // eslint-disable-line
+      }
+      A.deps = { n: 1, o: { a: [] } }
+      const CA = run.deploy(A)
+      expect(CA.n()).to.equal(1)
+      expect(CA.o()).not.to.equal(A.deps.o)
+      expect(CA.o()).to.deep.equal(A.deps.o)
+      expect(CA.o() instanceof SI.Object).to.equal(true)
+      expect(CA.o().a instanceof SI.Array).to.equal(true)
+    })
+
+    it('sets deps on returned code jig', () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      A.deps = { B }
+      const CA = run.deploy(A)
+      expect(CA.deps.B).to.equal(run.deploy(B))
+    })
+
+    it('automatically adds parent dep', () => {
+      const run = new Run()
+      class A { }
+      class B extends A { }
+      const CB = run.deploy(B)
+      expect(CB.deps).to.deep.equal({ A: Object.getPrototypeOf(CB) })
+    })
+
+    it('throws if deps invalid', () => {
+      const run = new Run()
+      class A { }
+      A.deps = null
+      expect(() => run.deploy(A)).to.throw()
+      A.deps = '123'
+      expect(() => run.deploy(A)).to.throw()
+      A.deps = []
+      expect(() => run.deploy(A)).to.throw()
+      A.deps = new class Deps {}()
+      expect(() => run.deploy(A)).to.throw()
+    })
+
+    it('does not install parent deps on child', () => {
+      const run = new Run()
+      class B { f () { return n } } // eslint-disable-line
+      class A extends B { g () { return n } } // eslint-disable-line
+      B.deps = { n: 1 }
+      const CB = run.deploy(B)
+      const b = new CB()
+      expect(b.f()).to.equal(1)
+      const CA = run.deploy(A)
+      const a = new CA()
+      expect(() => a.g()).to.throw()
+    })
+
+    it.skip('throws if dep is unsupported', () => {
+      const run = new Run()
+      class A { }
+      A.deps = { Date }
+      expect(() => run.deploy(A)).to.throw('Cannot install intrinsic')
+      A.deps = { r: new RegExp() }
+      expect(() => run.deploy(A)).to.throw('TODO')
+    })
+
     // ------------------------------------------------------------------------
     // Error cases
     // ------------------------------------------------------------------------
@@ -786,55 +853,6 @@ describe('Code', () => {
   })
 
   describe.skip('deps', () => {
-    it('supports normal javascript values as deps', () => {
-      const run = new Run()
-      class A {
-        static n () { return n } // eslint-disable-line
-        static o () { return o } // eslint-disable-line
-      }
-      A.deps = { n: 1, o: { a: [] } }
-      const CA = run.deploy(A)
-      expect(CA.n()).to.equal(1)
-      expect(CA.o()).not.to.equal(A.deps.o)
-      expect(CA.o()).to.deep.equal(A.deps.o)
-      expect(CA.o() instanceof SI.Object).to.equal(true)
-      expect(CA.o().a instanceof SI.Array).to.equal(true)
-    })
-
-    it('sets deps on returned code jig', () => {
-      const run = new Run()
-      class A { }
-      class B { }
-      A.deps = { B }
-      const CA = run.deploy(A)
-      expect(CA.deps.B).to.equal(run.deploy(B))
-    })
-
-    it('throws if deps invalid', () => {
-      const run = new Run()
-      class A { }
-      A.deps = null
-      expect(() => run.deploy(A)).to.throw()
-      A.deps = '123'
-      expect(() => run.deploy(A)).to.throw()
-      A.deps = []
-      expect(() => run.deploy(A)).to.throw()
-      A.deps = new class Deps {}()
-      expect(() => run.deploy(A)).to.throw()
-    })
-
-    it('doesnt install parent deps on child', () => {
-      const run = new Run()
-      class B { f () { return n } } // eslint-disable-line
-      class A extends B { g () { return n } } // eslint-disable-line
-      B.deps = { n: 1 }
-      const CB = run.deploy(B)
-      const b = new CB()
-      expect(b.f()).to.equal(1)
-      const CA = run.deploy(A)
-      const a = new CA()
-      expect(() => a.g()).to.throw()
-    })
   })
 
   describe.skip('presets', () => {
