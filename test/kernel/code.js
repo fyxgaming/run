@@ -4,7 +4,7 @@
  * Tests for lib/kernel/code.js
  */
 
-const { describe, it } = require('mocha')
+const { describe, it, afterEach } = require('mocha')
 const { stub } = require('sinon')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
@@ -79,6 +79,9 @@ class E2ETest {
 // ------------------------------------------------------------------------------------------------
 
 describe('Code', () => {
+  // Wait for every test to finish. This makes debugging easier.
+  afterEach(() => Run.instance && Run.instance.sync())
+
   describe.only('deploy', () => {
     it('basic class', async () => {
       class A { }
@@ -119,10 +122,8 @@ describe('Code', () => {
       const cf3 = await run.load(cf.location)
       test(cf3)
     })
-  })
 
-  describe.skip('deploy old', () => {
-    it('creates code for class only once', () => {
+    it('creates code for class only once', async () => {
       const run = new Run()
       class A { }
       const CA1 = run.deploy(A)
@@ -145,7 +146,9 @@ describe('Code', () => {
       const CA2 = run.deploy(CA1)
       expect(CA1).to.equal(CA2)
     })
+  })
 
+  describe.skip('deploy old', () => {
     // ------------------------------------------------------------------------
     // Create parents
     // ------------------------------------------------------------------------
