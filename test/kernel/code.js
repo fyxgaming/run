@@ -47,32 +47,12 @@ const FUTURE_PROPS = ['encryption', 'blockhash', 'blockheight', 'blocktime']
 const RESERVED_WORDS = [...CODE_METHODS, 'toString', ...FUTURE_PROPS]
 
 // ------------------------------------------------------------------------------------------------
-// E2ETest
+// expectTx
 // ------------------------------------------------------------------------------------------------
 
-/*
-class E2ETest {
-  constructor () { this.run = new Run(); this.jigs = {}; this.checks = [] }
-  jig (name, f) { this.jigs[name] = f(this.run); return this }
-  check (f) { this.checks.push(f); return this }
-  async run () {
-    this.checks.forEach(f => f(this.jigs))
-    await run.sync()
-    this.jigs2 = {}
-    for (const name of Object.keys(this.jigs)) {
-      this.jigs2 = await run.load(this.jigs[name])
-    }
-    this.checks.forEach(f => f(this.jigs2))
-    this.jigs3 = {}
-    for (const name of Object.keys(this.jigs)) {
-      this.jigs3 = await run.load(this.jigs[name])
-    }
-    this.checks.forEach(f => f(this.jigs3))
-  }
+function expectTx (opts) {
+  // TODO
 }
-*/
-
-// Note on tests below
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -81,9 +61,13 @@ class E2ETest {
 describe('Code', () => {
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
+  // Deactivate the current run instance. This stops leaks across tests.
+  afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe.only('deploy', () => {
     it.only('basic class', async () => {
+      const run = new Run()
+
       class A { }
 
       const test = CA => {
@@ -92,8 +76,7 @@ describe('Code', () => {
         expect(CA).not.to.equal(A)
       }
 
-      /*
-      checkTx({
+      expectTx({
         nin: 2,
         nref: 2,
         out: [],
@@ -101,20 +84,22 @@ describe('Code', () => {
         ncre: 2,
         exec: []
       })
-      */
 
-      const run = new Run()
       const CA = run.deploy(A)
       test(CA)
+
       await CA.sync()
       const CA2 = await run.load(CA.location)
       test(CA2)
+
       run.cache = new LocalCache()
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
 
     it('basic function', async () => {
+      const run = new Run()
+
       function f () { }
 
       const test = cf => {
@@ -123,12 +108,13 @@ describe('Code', () => {
         expect(cf).not.to.equal(f)
       }
 
-      const run = new Run()
       const cf = run.deploy(f)
       test(cf)
+
       await cf.sync()
       const cf2 = await run.load(cf.location)
       test(cf2)
+
       run.cache = new LocalCache()
       const cf3 = await run.load(cf.location)
       test(cf3)
