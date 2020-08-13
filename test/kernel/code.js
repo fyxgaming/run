@@ -672,6 +672,16 @@ describe('Code', () => {
       expect(() => CA.owner).to.throw('Cannot read owner: unbound')
       expect(() => CA.satoshis).to.throw('Cannot read satoshis: unbound')
     })
+
+    it('name is class or function name', () => {
+      const run = new Run()
+      class A { }
+      expect(run.deploy(A).name).to.equal('A')
+      function f () { }
+      expect(run.deploy(f).name).to.equal('f')
+      class B extends A { }
+      expect(run.deploy(B).name).to.equal('B')
+    })
   })
 
   describe('instanceof', () => {
@@ -1044,16 +1054,6 @@ describe('Code', () => {
     })
   })
 
-  describe.skip('name', () => {
-    it('returns class or function name', () => {
-      const run = new Run()
-      class A { }
-      expect(run.deploy(A).name).to.equal('A')
-      function f () { }
-      expect(run.deploy(f).name).to.equal('f')
-    })
-  })
-
   describe.skip('toString', () => {
     it('returns same string as original code', () => {
       const run = new Run()
@@ -1276,14 +1276,6 @@ describe('Code', () => {
 
       run.activate()
       expect(A.location).to.equal(location)
-    })
-  })
-
-  describe.skip('native', () => {
-    it('should not return source code', () => {
-      expect(Jig.toString().indexOf('[native code]')).not.to.equal(-1)
-      expect(Code.toString().indexOf('[native code]')).not.to.equal(-1)
-      expect(Berry.toString().indexOf('[native code]')).not.to.equal(-1)
     })
   })
 

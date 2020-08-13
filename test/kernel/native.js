@@ -62,6 +62,10 @@ describe('Native', () => {
       expect(N.satoshis).to.equal(null)
     })
   })
+
+  it('toString should not return actual source code', () => {
+    NATIVE.forEach(N => expect(N.toString().indexOf('[native code]')).not.to.equal(-1))
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
