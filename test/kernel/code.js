@@ -506,6 +506,16 @@ describe('Code', () => {
         expect(unmangle(CA.satoshis)._value).to.equal(undefined)
       })
     })
+
+    it('deploys parent and child', async () => {
+      const run = new Run()
+      class A {}
+      class B extends A {}
+      run.deploy(B)
+      await run.sync()
+      expect(A.location.endsWith('_o1'))
+      expect(B.location.endsWith('_o2'))
+    })
   })
 
   describe('toString', () => {
@@ -676,16 +686,6 @@ describe('Code', () => {
   })
 
   describe.skip('deploy', () => {
-    it('deploys parent and child', async () => {
-      const run = new Run()
-      class A {}
-      class B extends A {}
-      run.deploy(B)
-      await run.sync()
-      expect(A.location.endsWith('_o1'))
-      expect(B.location.endsWith('_o2'))
-    })
-
     it.skip('deploys with custom lock', async () => {
       const run = new Run()
       class L {
