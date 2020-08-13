@@ -392,6 +392,19 @@ describe('Code', () => {
     })
 
     // ------------------------------------------------------------------------
+    // Deps
+    // ------------------------------------------------------------------------
+
+    it('makes deps globals', () => {
+      const run = new Run()
+      class A { }
+      function f () { return A }
+      f.deps = { A }
+      const sf = run.deploy(f)
+      expect(sf()).to.equal(run.deploy(A))
+    })
+
+    // ------------------------------------------------------------------------
     // Error cases
     // ------------------------------------------------------------------------
 
@@ -773,15 +786,6 @@ describe('Code', () => {
   })
 
   describe.skip('deps', () => {
-    it('makes deps globals', () => {
-      const run = new Run()
-      class A { }
-      function f () { return A }
-      f.deps = { A }
-      const sf = run.deploy(f)
-      expect(sf()).to.equal(run.deploy(A))
-    })
-
     it('supports normal javascript values as deps', () => {
       const run = new Run()
       class A {
