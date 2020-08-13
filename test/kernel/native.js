@@ -35,10 +35,6 @@ describe('Native', () => {
     NATIVE.forEach(N => expect(() => { delete N.x }).to.throw(ERROR))
   })
 
-  it('is not extensible', () => {
-    NATIVE.forEach(N => expect(Object.isExtensible(N)).to.equal(false))
-  })
-
   it('cannot prevent extensions', () => {
     NATIVE.forEach(N => expect(() => Object.preventExtensions(N)).to.throw(ERROR))
   })
