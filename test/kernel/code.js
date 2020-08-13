@@ -513,8 +513,19 @@ describe('Code', () => {
       class B extends A {}
       run.deploy(B)
       await run.sync()
-      expect(A.location.endsWith('_o1'))
-      expect(B.location.endsWith('_o2'))
+      expect(A.location.endsWith('_o1')).to.equal(true)
+      expect(B.location.endsWith('_o2')).to.equal(true)
+    })
+
+    it('deploys jig props', async () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      A.B = B
+      run.deploy(A)
+      await run.sync()
+      expect(A.location.endsWith('_o1')).to.equal(true)
+      expect(B.location.endsWith('_o2')).to.equal(true)
     })
   })
 
