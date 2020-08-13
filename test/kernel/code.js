@@ -732,14 +732,24 @@ describe('Code', () => {
   })
 
   describe('setPrototypeOf', () => {
-    it('throws for code', () => {
+    it('throws if change externally', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
       expect(() => Object.setPrototypeOf(CA, {})).to.throw()
     })
 
-    // TODO: Test child code
+    it.skip('throws if change internally', () => {
+      // TODO
+    })
+
+    it('allowed to change on non-code child', () => {
+      const run = new Run()
+      class A {}
+      const CA = run.deploy(A)
+      class B extends CA { }
+      Object.setPrototypeOf(B, {})
+    })
   })
 
   describe.skip('deploy', () => {
