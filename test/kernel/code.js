@@ -79,8 +79,8 @@ class E2ETest {
 // ------------------------------------------------------------------------------------------------
 
 describe('Code', () => {
-  describe('deploy', () => {
-    it.only('basic class', async () => {
+  describe.only('deploy', () => {
+    it('basic class', async () => {
       class A { }
 
       const test = CA => {
@@ -100,15 +100,28 @@ describe('Code', () => {
       test(CA3)
     })
 
-    it('creates new code for function', () => {
-      const run = new Run()
+    it('basic function', async () => {
       function f () { }
-      const cf = run.deploy(f)
-      expect(typeof cf).to.equal('function')
-      expect(cf.toString()).to.equal(f.toString())
-      expect(cf).not.to.equal(f)
-    })
 
+      const test = cf => {
+        expect(typeof cf).to.equal('function')
+        expect(cf.toString()).to.equal(f.toString())
+        expect(cf).not.to.equal(f)
+      }
+
+      const run = new Run()
+      const cf = run.deploy(f)
+      test(cf)
+      await cf.sync()
+      const cf2 = await run.load(cf.location)
+      test(cf2)
+      run.cache = new LocalCache()
+      const cf3 = await run.load(cf.location)
+      test(cf3)
+    })
+  })
+
+  describe.skip('deploy old', () => {
     it('creates code for class only once', () => {
       const run = new Run()
       class A { }
