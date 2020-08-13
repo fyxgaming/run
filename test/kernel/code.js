@@ -467,8 +467,18 @@ describe('Code', () => {
       class A { }
       A.deps = { Date }
       expect(() => run.deploy(A)).to.throw('Cannot install intrinsic')
+      A.deps = { A: () => { } }
+      expect(() => run.deploy(A)).to.throw('TODO')
       A.deps = { r: new RegExp() }
       expect(() => run.deploy(A)).to.throw('TODO')
+    })
+
+    it.skip('supports berry deps', () => {
+      // TODO
+    })
+
+    it.skip('supports jig deps', () => {
+      // TODO
     })
 
     // ------------------------------------------------------------------------
@@ -852,9 +862,6 @@ describe('Code', () => {
     })
   })
 
-  describe.skip('deps', () => {
-  })
-
   describe.skip('presets', () => {
     it('uses blockchain presets', () => {
       const run = new Run()
@@ -1114,9 +1121,6 @@ describe('Code', () => {
       const CA = run.deploy(A)
       expect(CA.toString().replace(/\s/g, '')).to.equal('classAextendsB{}')
     })
-  })
-
-  describe.skip('get', () => {
   })
 
   describe.skip('methods', () => {
