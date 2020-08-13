@@ -869,7 +869,7 @@ describe('Code', () => {
       expect(cf.toString().startsWith('function f')).to.equal(true)
     })
 
-    it('should return source code for jig class', () => {
+    it.only('should return source code for jig class', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
@@ -1106,25 +1106,6 @@ describe('Code', () => {
       expect(() => run.deploy(A)).to.throw('Invalid sealed option: null')
       A.sealed = 1
       expect(() => run.deploy(A)).to.throw('Invalid sealed option: 1')
-    })
-  })
-
-  describe.skip('toString', () => {
-    it('returns same string as original code', () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      expect(CA.toString()).to.equal(A.toString())
-      expect(A.toString().replace(/\s/g, '')).to.equal('classA{}')
-    })
-
-    it('returns same code as original code when there is a parent', () => {
-      const run = new Run()
-      class B { }
-      const CB = run.deploy(B)
-      class A extends CB { }
-      const CA = run.deploy(A)
-      expect(CA.toString().replace(/\s/g, '')).to.equal('classAextendsB{}')
     })
   })
 
