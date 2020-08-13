@@ -498,13 +498,13 @@ describe('Dynamic', () => {
   })
 
   describe('setPrototypeOf', () => {
-    it('cannot change prototype', () => {
+    it('change prototype', () => {
       const D = new Dynamic()
       class A { }
+      class B { }
       Dynamic._setInnerType(D, A)
-      const proto = Object.getPrototypeOf(A)
-      expect(() => Object.setPrototypeOf(D, class B { })).to.throw()
-      expect(Object.getPrototypeOf(D)).to.equal(proto)
+      Object.setPrototypeOf(D, B)
+      expect(Object.getPrototypeOf(D)).to.equal(B)
     })
   })
 
