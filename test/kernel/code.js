@@ -507,6 +507,31 @@ describe('Code', () => {
       })
     })
 
+    it('assigns bindings after sync', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      await run.sync()
+      expect(CA.location.endsWith('_o1')).to.equal(true)
+      expect(CA.origin.endsWith('_o1')).to.equal(true)
+      expect(CA.nonce).to.equal(0)
+      const owner = await run.owner.owner()
+      expect(CA.owner).to.equal(owner)
+      expect(CA.satoshis).to.equal(0)
+    })
+
+    it('assigns bindings to both local and jig', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      await run.sync()
+      expect(CA.location).to.equal(A.location)
+      expect(CA.origin).to.equal(A.origin)
+      expect(CA.nonce).to.equal(A.nonce)
+      expect(CA.owner).to.equal(A.owner)
+      expect(CA.satoshis).to.equal(A.satoshis)
+    })
+
     it('deploys parent and child', async () => {
       const run = new Run()
       class A {}
