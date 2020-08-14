@@ -823,6 +823,12 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
+    it.skip('creates and deploys arbitrary objects', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it('circular code props', async () => {
       const run = new Run()
 
@@ -872,25 +878,36 @@ describe('Code', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('jigs', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('berries', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('native', async () => {
+      const run = new Run()
+
+      class A { }
+      A.Jig = Jig
+      A.Berry = Berry
+
+      const CA = run.deploy(A)
+      await CA.sync()
+    })
+
+    // ------------------------------------------------------------------------
   })
 
   describe.skip('deploy old', () => {
-    it.skip('creates code for arbitrary objects', () => {
-      // TODO
-    })
-
-    it.skip('copies jig props', () => {
-      // TODO
-    })
-
-    it.skip('copies berry props', () => {
-      // TODO
-    })
-
-    it.skip('copies native props', () => {
-      // TODO
-    })
-
     // Helper to test unsupported props
     function expectPropFail (x, error) {
       const run = new Run()
