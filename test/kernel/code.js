@@ -10,8 +10,8 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { Transaction, PrivateKey } = require('bsv')
 const Run = require('../env/run')
-const { Code, Jig, Berry, LocalCache, sandbox } = Run
 const unmangle = require('../env/unmangle')
+const { Code, Jig, Berry, LocalCache, sandbox, _payload } = unmangle(Run)
 const SI = unmangle(sandbox)._intrinsics
 const Membrane = unmangle(unmangle(Run)._Membrane)
 const { payFor } = require('../env/misc')
@@ -55,7 +55,7 @@ const RESERVED_WORDS = [...CODE_METHODS, 'toString', ...FUTURE_PROPS]
  *
  * @param {object} opts
  * @param {?number} nin Number of inputs
- * @param {?number} nin Number of references
+ * @param {?number} nref Number of references
  * @param {?Array} out Output hashes
  * @param {?Array} del Deleted hashes
  * @param {?Array} ncre Number of creates
@@ -66,7 +66,13 @@ function expectTx (opts) {
 
   function verify (rawtx) {
     const tx = new Transaction(rawtx)
-    console.log(tx.toString())
+    const payload = _payload(tx)
+    if ('nin' in opts) expect(payload.in).to.equal(opts.nin)
+    if ('nref' in opts) expect(payload.ref.length).to.equal(opts.nref)
+    if ('nout' in opts) expect(payload.out.length).to.equal(opts.nout)
+    if ('ndel' in opts) expect(payload.del.length).to.equal(opts.ndel)
+    if ('ncre' in opts) expect(payload.cre.length).to.equal(opts.ncre)
+    if ('exec' in opts) expect(payload.exec).to.deep.equal(opts.exec)
   }
 
   // Hook run.blockchain to verify the next transaction then disable the hook
@@ -88,8 +94,12 @@ describe('Code', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe.only('deploy', () => {
-    it.only('basic class', async () => {
+  // --------------------------------------------------------------------------
+  // Deploy
+  // --------------------------------------------------------------------------
+
+  describe('deploy', () => {
+    it('basic class', async () => {
       const run = new Run()
 
       class A { }
@@ -101,12 +111,20 @@ describe('Code', () => {
       }
 
       expectTx({
-        nin: 2,
-        nref: 2,
-        out: [],
-        del: [],
-        ncre: 2,
-        exec: []
+        nin: 0,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class A { }',
+              {}
+            ]
+          }
+        ]
       })
 
       const CA = run.deploy(A)
@@ -121,6 +139,8 @@ describe('Code', () => {
       test(CA3)
     })
 
+    // ------------------------------------------------------------------------
+
     it('basic function', async () => {
       const run = new Run()
 
@@ -131,6 +151,23 @@ describe('Code', () => {
         expect(cf.toString()).to.equal(f.toString())
         expect(cf).not.to.equal(f)
       }
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'function f () { }',
+              {}
+            ]
+          }
+        ]
+      })
 
       const cf = run.deploy(f)
       test(cf)
@@ -144,6 +181,8 @@ describe('Code', () => {
       test(cf3)
     })
 
+    // ------------------------------------------------------------------------
+
     it('creates code for class only once', async () => {
       const run = new Run()
       class A { }
@@ -152,6 +191,8 @@ describe('Code', () => {
       expect(CA1 === CA2).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('creates code for function only once', () => {
       const run = new Run()
       function f () { }
@@ -159,6 +200,8 @@ describe('Code', () => {
       const cf2 = run.deploy(f)
       expect(cf1 === cf2).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
 
     it('returns code for code', () => {
       const run = new Run()
@@ -169,8 +212,14 @@ describe('Code', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // Parents
+  // --------------------------------------------------------------------------
+
   describe('parents', () => {
     it('deploys parent', async () => {
+      const run = new Run()
+
       class A { }
       class B extends A { }
 
@@ -179,15 +228,40 @@ describe('Code', () => {
         expect(CB.location.endsWith('_o2')).to.equal(true)
       }
 
-      const run = new Run()
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        ncre: 2,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class A { }',
+              {},
+              'class B extends A { }',
+              {
+                deps: {
+                  A: { $jig: 0 }
+                }
+              }
+            ]
+          }
+        ]
+      })
+
       const CB = run.deploy(B)
       const CA = run.deploy(A)
       expect(Object.getPrototypeOf(CB)).to.equal(CA)
+
       await run.sync()
       test(CA, CB)
+
       const CA2 = await run.load(CA.location)
       const CB2 = await run.load(CB.location)
       test(CA2, CB2)
+
       run.cache = new LocalCache()
       const CA3 = await run.load(CA.location)
       const CB3 = await run.load(CB.location)
