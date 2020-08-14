@@ -618,6 +618,9 @@ describe('Code', () => {
       expect(typeof C.u).to.equal('undefined')
     })
 
+    // Upgrade in same transacation as create (batch)
+    // Upgrade destroyed jig
+
     // TODO: Upgrade with parent
     // TODO: Upgrade with props (deployed and not)
     // TODO: Upgrade and remove parent
