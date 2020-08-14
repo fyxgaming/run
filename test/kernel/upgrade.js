@@ -307,6 +307,7 @@ describe('Upgrade', () => {
       expect(typeof C.u).to.equal('undefined')
     })
 
+    // TODO: Rolls back if error
     // TODO: Upgrade in same transacation as create (batch)
     // TODO: Upgrade destroyed jig
     // TODO: Upgrade with parent
