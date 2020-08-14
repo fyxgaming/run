@@ -33,6 +33,24 @@ const { payFor } = require('../env/misc')
 //  - Prop tests should be in a set, in an array, on base
 //  - Test sandbox
 
+// Unfiled
+// Constructing Code objects inside... they would normally construct sandbox. How to do base?
+//      Need for arb objects
+// Clean up loader
+// Spend all stack when set
+// Spend all stack when delete
+// Spend all stack when create too
+// Handle auth and destroy
+// Borrowing
+// Cache protocol
+// Inheritance and upgrading parents
+// TODO: Delete a parent class property from a child?
+// Classes should always operate on themselves
+// Test set properties on child when there is a similar property on parent class
+// Same for delete. There's a comment in membrane about this.
+// Call auth in a jig
+// Owner is parent ... for new jigs
+
 // ------------------------------------------------------------------------------------------------
 // Globals
 // ------------------------------------------------------------------------------------------------
@@ -893,7 +911,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('native', async () => {
+    it('native', async () => {
       const run = new Run()
 
       class A { }
@@ -1929,30 +1947,6 @@ describe('Code', () => {
     })
   })
 
-  describe.skip('load', () => {
-    it('loads circular jig props', async () => {
-      const run = new Run()
-
-      class A { }
-      class B { }
-      A.B = B
-      B.A = A
-
-      run.deploy(A)
-      await run.sync()
-
-      // Load from cache
-      const CA = await run.load(A.location)
-      expect(CA.B.A).to.equal(CA)
-
-      // Load via replay
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      const CA2 = await run2.load(A.location)
-      expect(CA2.B.A).to.equal(CA2)
-    })
-  })
-
   describe.skip('auth', () => {
     it('auths code', async () => {
       const run = new Run()
@@ -2076,26 +2070,6 @@ describe('Code', () => {
       */
     })
   })
-
-  // Constructing Code objects inside... they would normally construct sandbox. How to do base?
-  //      Need for arb objects
-  // Clean up loader
-  // Spend all stack when set
-  // Spend all stack when delete
-  // Spend all stack when create too
-  // Handle auth and destroy
-  // Borrowing
-  // Cache protocol
-  // Inheritance and upgrading parents
-
-  // TODO: Delete a parent class property from a child?
-  // Classes should always operate on themselves
-
-  // Test set properties on child when there is a similar property on parent class
-  // Same for delete. There's a comment in membrane about this.
-  // Call auth in a jig
-
-  // Owner is parent ... for new jigs
 })
 
 // ------------------------------------------------------------------------------------------------
