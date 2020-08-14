@@ -354,16 +354,30 @@ describe('Code', () => {
   })
 
   describe('auth', () => {
-    it.only('spends code', async () => {
+    it('spends code', async () => {
       const run = new Run()
 
       class A { }
       const CA = run.deploy(A)
       await CA.sync()
 
-      function test(CA) {
+      function test (CA) {
         expect(CA.origin).not.to.equal(CA.location)
       }
+
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'AUTH',
+            data: { $jig: 0 }
+          }
+        ]
+      })
 
       expect(CA.auth()).to.equal(CA)
       await CA.sync()
