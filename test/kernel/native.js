@@ -77,6 +77,10 @@ describe('Native', () => {
     NATIVE.forEach(N => expect(() => Code.prototype.auth.apply(N)).to.throw(error))
   })
 
+  it('sync does nothing', () => {
+    NATIVE.forEach(N => Code.prototype.sync.apply(N))
+  })
+
   it.skip('cannot upgrade', () => {
     // TODO
   })
