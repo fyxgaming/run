@@ -340,6 +340,13 @@ describe('Code', () => {
       expect(CA.location).to.equal(lastLocation)
     })
 
+    it('cannot destroy non-code', () => {
+      const error = 'Destroy unavailable'
+      expect(() => Code.prototype.destroy.call({})).to.throw(error)
+      expect(() => Code.prototype.destroy.call(class A { })).to.throw(error)
+      expect(() => Code.prototype.destroy.call(null)).to.throw(error)
+    })
+
     it.skip('destroy in a static method', () => {
 
     })
@@ -427,6 +434,13 @@ describe('Code', () => {
       await CA.sync()
     })
 
+    it('cannot auth non-code', () => {
+      const error = 'Auth unavailable'
+      expect(() => Code.prototype.auth.call({})).to.throw(error)
+      expect(() => Code.prototype.auth.call(class A { })).to.throw(error)
+      expect(() => Code.prototype.auth.call(null)).to.throw(error)
+    })
+
     it.skip('throws if auth jig destroyed in same transaction', () => {
 
     })
@@ -498,6 +512,15 @@ describe('Code', () => {
       run.cache = new LocalCache()
       const CA3 = await run.load(CA.location)
       test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot upgrade non-code', () => {
+      const error = 'Upgrade unavailable'
+      expect(() => Code.prototype.upgrade.call({}, class A { })).to.throw(error)
+      expect(() => Code.prototype.upgrade.call(class A { }, class A { })).to.throw(error)
+      expect(() => Code.prototype.upgrade.call(null, class A { })).to.throw(error)
     })
   })
 
