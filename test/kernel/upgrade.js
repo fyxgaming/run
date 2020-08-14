@@ -14,7 +14,7 @@ const unmangle = require('../env/unmangle')
 const { Code, LocalCache } = unmangle(Run)
 
 // ------------------------------------------------------------------------------------------------
-// Code
+// Upgrade
 // ------------------------------------------------------------------------------------------------
 
 describe('Upgrade', () => {
@@ -269,6 +269,10 @@ describe('Upgrade', () => {
     })
 
     it.skip('throws if unsupported', () => {
+      // TODO - intrinsics, anonymous
+    })
+
+    it.skip('throws if reserved', () => {
       // TODO
     })
   })
@@ -378,6 +382,30 @@ describe('Upgrade', () => {
     // ------------------------------------------------------------------------
 
     it.skip('cannot upgrade undeployed berry class', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if prototypal inheritance', () => {
+      // TODO
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Sealed
+  // --------------------------------------------------------------------------
+
+  describe('sealed', () => {
+    it.skip('does not spend unsealed parent', () => {
+      // TODO
+    })
+
+    it.skip('spends owner sealed parent', () => {
+      // TODO
+    })
+
+    it.skip('throws if parent sealed', () => {
       // TODO
     })
   })
