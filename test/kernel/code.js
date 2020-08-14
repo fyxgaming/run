@@ -457,7 +457,7 @@ describe('Code', () => {
   })
 
   describe('upgrade', () => {
-    it.only('upgrades class', async () => {
+    it('upgrades class', async () => {
       const run = new Run()
 
       class A { }
@@ -618,9 +618,8 @@ describe('Code', () => {
       expect(typeof C.u).to.equal('undefined')
     })
 
-    // Upgrade in same transacation as create (batch)
-    // Upgrade destroyed jig
-
+    // TODO: Upgrade in same transacation as create (batch)
+    // TODO: Upgrade destroyed jig
     // TODO: Upgrade with parent
     // TODO: Upgrade with props (deployed and not)
     // TODO: Upgrade and remove parent
@@ -631,6 +630,11 @@ describe('Code', () => {
     // TODO: Does not deploy if already deployed
     // TODO: Rollback with multiple transactions in a batch
     // TODO: Rollback upgrade itself, not publish error
+    // TODO: Upgrade with complex props
+  })
+
+  describe.skip('caller', () => {
+    // TODO
   })
 
   describe.skip('sync', () => {
