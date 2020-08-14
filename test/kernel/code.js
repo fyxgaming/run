@@ -30,6 +30,7 @@ const { payFor } = require('../env/misc')
 //  - Code that was previously deployed, so a ref
 //  - Cannot set to "presets" or "deps" in a static method, or "sealed"? Or maybe you can set sealed.
 
+// Code functions are not available inside functions
 // Unfiled
 // Constructing Code objects inside... they would normally construct sandbox. How to do base?
 //      Need for arb objects
@@ -69,6 +70,10 @@ describe('Code', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
+  // --------------------------------------------------------------------------
+  // toString
+  // --------------------------------------------------------------------------
+
   describe('toString', () => {
     it('should return source code for class', () => {
       const run = new Run()
@@ -77,6 +82,8 @@ describe('Code', () => {
       expect(CA.toString().startsWith('class A')).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('should return source code for function', () => {
       const run = new Run()
       function f () { }
@@ -84,12 +91,16 @@ describe('Code', () => {
       expect(cf.toString().startsWith('function f')).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('should return source code for jig class', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
       expect(CA.toString().startsWith('class A extends Jig')).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
 
     it('should return soure code for child code class', () => {
       const run = new Run()
@@ -99,6 +110,8 @@ describe('Code', () => {
       expect(CB.toString().startsWith('class B')).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('should return source code for child non-code class', () => {
       const run = new Run()
       class A { }
@@ -106,6 +119,8 @@ describe('Code', () => {
       class B extends CA { }
       expect(B.toString().startsWith('class B')).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
 
     it('should return same method for different code', () => {
       const run = new Run()
@@ -118,6 +133,10 @@ describe('Code', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // get
+  // --------------------------------------------------------------------------
+
   describe('get', () => {
     it('adds invisible code methods to class', () => {
       const run = new Run()
@@ -127,6 +146,8 @@ describe('Code', () => {
       CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(CA).includes(name)).to.equal(false))
     })
 
+    // ------------------------------------------------------------------------
+
     it('adds invisible code methods to function', () => {
       const run = new Run()
       function f () { }
@@ -134,6 +155,8 @@ describe('Code', () => {
       CODE_METHODS.forEach(name => expect(typeof cf[name]).to.equal('function'))
       CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(cf).includes(name)).to.equal(false))
     })
+
+    // ------------------------------------------------------------------------
 
     it('code methods for class are always the same', () => {
       const run = new Run()
@@ -145,12 +168,16 @@ describe('Code', () => {
       expect(CA.sync).to.equal(CB.sync)
     })
 
+    // ------------------------------------------------------------------------
+
     it('code methods for class are frozen', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
       CODE_METHODS.forEach(name => expect(Object.isFrozen(CA[name])))
     })
+
+    // ------------------------------------------------------------------------
 
     it('does not have code methods', () => {
       CODE_METHODS.forEach(method => {
@@ -159,6 +186,8 @@ describe('Code', () => {
       })
     })
 
+    // ------------------------------------------------------------------------
+
     it('same method is returned every time', () => {
       const run = new Run()
       class A { static f () { } }
@@ -166,6 +195,8 @@ describe('Code', () => {
       expect(typeof CA.f).to.equal('function')
       expect(CA.f).to.equal(CA.f)
     })
+
+    // ------------------------------------------------------------------------
 
     it('same method is returned for child code', () => {
       const run = new Run()
@@ -176,6 +207,8 @@ describe('Code', () => {
       expect(typeof CB.f).to.equal('function')
       expect(CB.f).to.equal(CA.f)
     })
+
+    // ------------------------------------------------------------------------
 
     it('initial bindings are unreadable', () => {
       const run = new Run()
@@ -188,6 +221,8 @@ describe('Code', () => {
       expect(() => CA.satoshis).to.throw('Cannot read satoshis: unbound')
     })
 
+    // ------------------------------------------------------------------------
+
     it('name is class or function name', () => {
       const run = new Run()
       class A { }
@@ -199,6 +234,10 @@ describe('Code', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // instanceof
+  // --------------------------------------------------------------------------
+
   describe('instanceof', () => {
     it('deployed classes returns true', () => {
       const run = new Run()
@@ -207,12 +246,16 @@ describe('Code', () => {
       expect(CA instanceof Code).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('deployed functions returns true', () => {
       const run = new Run()
       function f () { }
       const cf = run.deploy(f)
       expect(cf instanceof Code).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
 
     it('non-code return false', () => {
       expect(class A { } instanceof Code).to.equal(false)
@@ -222,11 +265,17 @@ describe('Code', () => {
       expect({} instanceof Code).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
     it('native code return true', () => {
       expect(Jig instanceof Code).to.equal(true)
       expect(Berry instanceof Code).to.equal(true)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // getOwnPropertyDescriptor
+  // --------------------------------------------------------------------------
 
   describe('getOwnPropertyDescriptor', () => {
     it('returned undefined for code methods', () => {
@@ -237,6 +286,10 @@ describe('Code', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // isExtensible
+  // --------------------------------------------------------------------------
+
   describe('isExtensible', () => {
     it('returns true', () => {
       const run = new Run()
@@ -246,6 +299,10 @@ describe('Code', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // setPrototypeOf
+  // --------------------------------------------------------------------------
+
   describe('setPrototypeOf', () => {
     it('throws if change externally', () => {
       const run = new Run()
@@ -254,9 +311,13 @@ describe('Code', () => {
       expect(() => Object.setPrototypeOf(CA, {})).to.throw()
     })
 
+    // ------------------------------------------------------------------------
+
     it.skip('throws if change internally', () => {
       // TODO
     })
+
+    // ------------------------------------------------------------------------
 
     it('allowed to change on non-code child', () => {
       const run = new Run()
@@ -267,9 +328,9 @@ describe('Code', () => {
     })
   })
 
-  describe.skip('methods', () => {
-    // Code functions are not available inside functions
-  })
+  // --------------------------------------------------------------------------
+  // Destroy
+  // --------------------------------------------------------------------------
 
   describe('destroy', () => {
     it('destroys code', async () => {
@@ -314,6 +375,8 @@ describe('Code', () => {
       test(CA3)
     })
 
+    // ------------------------------------------------------------------------
+
     it('cannot destroy non-jig children', async () => {
       const run = new Run()
 
@@ -324,6 +387,8 @@ describe('Code', () => {
       class B extends CA { }
       expect(() => B.destroy()).to.throw('Destroy unavailable')
     })
+
+    // ------------------------------------------------------------------------
 
     it('destroy twice', async () => {
       const run = new Run()
@@ -340,6 +405,8 @@ describe('Code', () => {
       expect(CA.location).to.equal(lastLocation)
     })
 
+    // ------------------------------------------------------------------------
+
     it('cannot destroy non-code', () => {
       const error = 'Destroy unavailable'
       expect(() => Code.prototype.destroy.call({})).to.throw(error)
@@ -347,22 +414,34 @@ describe('Code', () => {
       expect(() => Code.prototype.destroy.call(null)).to.throw(error)
     })
 
+    // ------------------------------------------------------------------------
+
     it.skip('destroy in a static method', () => {
 
     })
+
+    // ------------------------------------------------------------------------
 
     it.skip('destroy code in a jig method', () => {
 
     })
 
+    // ------------------------------------------------------------------------
+
     it.skip('destroy multiple in a batch', () => {
 
     })
+
+    // ------------------------------------------------------------------------
 
     it.skip('create and destroy in same transaction', () => {
 
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Auth
+  // --------------------------------------------------------------------------
 
   describe('auth', () => {
     it('spends code', async () => {
@@ -402,6 +481,8 @@ describe('Code', () => {
       test(CA3)
     })
 
+    // ------------------------------------------------------------------------
+
     it('cannot auth non-jig children', async () => {
       const run = new Run()
 
@@ -412,6 +493,8 @@ describe('Code', () => {
       class B extends CA { }
       expect(() => B.auth()).to.throw('Auth unavailable')
     })
+
+    // ------------------------------------------------------------------------
 
     it('throws if auth jig destroyed in another transaction', async () => {
       const run = new Run()
@@ -426,6 +509,8 @@ describe('Code', () => {
       expect(() => CA.auth()).to.throw('Cannot auth destroyed jig')
     })
 
+    // ------------------------------------------------------------------------
+
     it('auth jig not synced', async () => {
       const run = new Run()
       class A { }
@@ -434,6 +519,8 @@ describe('Code', () => {
       await CA.sync()
     })
 
+    // ------------------------------------------------------------------------
+
     it('cannot auth non-code', () => {
       const error = 'Auth unavailable'
       expect(() => Code.prototype.auth.call({})).to.throw(error)
@@ -441,34 +528,52 @@ describe('Code', () => {
       expect(() => Code.prototype.auth.call(null)).to.throw(error)
     })
 
+    // ------------------------------------------------------------------------
+
     it.skip('throws if auth jig destroyed in same transaction', () => {
 
     })
+
+    // ------------------------------------------------------------------------
 
     it.skip('auth in a static method', () => {
 
     })
 
+    // ------------------------------------------------------------------------
+
     it.skip('auth code in a jig method', () => {
 
     })
+
+    // ------------------------------------------------------------------------
 
     it.skip('auth multiple in a batch', () => {
 
     })
 
+    // ------------------------------------------------------------------------
+
     it.skip('create and auth in same transaction', () => {
 
     })
+
+    // ------------------------------------------------------------------------
 
     it.skip('throws if auth new jig', () => {
 
     })
 
+    // ------------------------------------------------------------------------
+
     it.skip('throws if auth transferred jig', () => {
 
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Upgrade
+  // --------------------------------------------------------------------------
 
   describe('upgrade', () => {
     it('upgrades class', async () => {
