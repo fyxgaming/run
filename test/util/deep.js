@@ -327,6 +327,20 @@ describe('_deepClone', () => {
     expect(() => _deepClone(Symbol.hasInstance)).to.throw('Cannot clone')
   })
 
+  it.skip('should throw for intrinsics', () => {
+    // TODO
+    // TODO: Move below
+  })
+
+  it.skip('should throw for extensions of supported types', () => {
+    // TODO: Extend Set, Map, etc.
+    // TODO: Move below
+  })
+
+  it.skip('should throw for non-code arbitrary objects', () => {
+    // TODO: Move below
+  })
+
   it('should clone basic objects', () => {
     const o = { p: { m: 1 } }
     expect(_deepClone(o)).to.deep.equal({ p: { m: 1 } })

@@ -958,49 +958,25 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    async function expectPropFail (x, error) {
-      console.log(x)
+    function expectPropFail (x) {
       const run = new Run()
       class A { }
       A.x = x
-      run.deploy(A)
-      await run.sync()
-      // expect(() => run.deploy(A)).to.throw(error)
+      expect(() => run.deploy(A)).to.throw()
     }
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws for intrinsic props', async () => {
-      const error = 'Cannot install intrinsic'
-      await expectPropFail(Math, error)
-      // expectPropFail(Date, error)
-      // expectPropFail(isNaN, error)
-      // expectPropFail(Error, error)
+    it('throws for intrinsic props', async () => {
+      expectPropFail(Math)
+      expectPropFail(Date)
+      expectPropFail(isNaN)
+      expectPropFail(Error)
     })
 
     // ------------------------------------------------------------------------
-  })
 
-  describe.skip('deploy old', () => {
-    // Helper to test unsupported props
-    function expectPropFail (x, error) {
-      const run = new Run()
-      class A { }
-      A.x = x
-      // TODO: Remove
-      console.log(x.toString())
-      expect(() => run.deploy(A)).to.throw(error)
-    }
-
-    it.skip('throws for intrinsic props', () => {
-      const error = 'Cannot install intrinsic'
-      expectPropFail(Math, error)
-      expectPropFail(Date, error)
-      expectPropFail(isNaN, error)
-      expectPropFail(Error, error)
-    })
-
-    it.skip('throws for unsupported objects', () => {
+    it('throws for unsupported objects', () => {
       expectPropFail(new Date())
       expectPropFail(new Uint16Array())
       expectPropFail(Promise.resolve())
@@ -1011,19 +987,25 @@ describe('Code', () => {
       expectPropFail(new Error())
     })
 
-    it.skip('throws if extend intrinsics', () => {
+    // ------------------------------------------------------------------------
+
+    it('throws if extend intrinsics', () => {
       expectPropFail(new (class MyArray extends Array {})())
       expectPropFail(new (class MySet extends Set {})())
       expectPropFail(new (class MyMap extends Map {})())
       expectPropFail(new (class MyUint8Array extends Uint8Array {})())
     })
 
-    it.skip('throws for anonymous functions', () => {
+    // ------------------------------------------------------------------------
+
+    it('throws for anonymous functions', () => {
       expectPropFail(function () { })
       expectPropFail(() => { })
       expectPropFail(class { })
     })
+  })
 
+  describe.skip('deploy old', () => {
     // ------------------------------------------------------------------------
     // Deps
     // ------------------------------------------------------------------------
