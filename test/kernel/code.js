@@ -372,9 +372,9 @@ describe('Code', () => {
       const CA2 = await run.load(CA.location)
       test(CA2)
 
-      // run.cache = new LocalCache()
-      // const CA3 = await run.load(CA.location)
-      // test(CA3)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     // Auth fails on new jigs, or when owner transfers in a batch
