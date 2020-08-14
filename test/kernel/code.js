@@ -68,7 +68,6 @@ function expectTx (opts) {
   function verify (rawtx) {
     const tx = new Transaction(rawtx)
     const payload = _payload(tx)
-    console.log(JSON.stringify(payload, 0, 2))
     if ('nin' in opts) expect(payload.in).to.equal(opts.nin)
     if ('nref' in opts) expect(payload.ref.length).to.equal(opts.nref)
     if ('nout' in opts) expect(payload.out.length).to.equal(opts.nout)
@@ -647,7 +646,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('circular', async () => {
+    it('circular', async () => {
       const obj = {}
       obj.obj = obj
 
