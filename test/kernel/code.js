@@ -81,21 +81,6 @@ describe('Code', () => {
     // Error cases
     // ------------------------------------------------------------------------
 
-    it('throws if non-function', () => {
-      const run = new Run()
-      const error = 'Only functions and classes are supported'
-      expect(() => run.deploy()).to.throw(error)
-      expect(() => run.deploy(1)).to.throw(error)
-      expect(() => run.deploy(true)).to.throw(error)
-      expect(() => run.deploy(null)).to.throw(error)
-      expect(() => run.deploy('function')).to.throw(error)
-      expect(() => run.deploy('class A {}')).to.throw(error)
-      expect(() => run.deploy({})).to.throw(error)
-      expect(() => run.deploy([])).to.throw(error)
-      expect(() => run.deploy(Symbol.hasInstance)).to.throw(error)
-      expect(() => run.deploy((class A { }).prototype)).to.throw(error)
-    })
-
     it('throws if built-in', () => {
       const run = new Run()
       const error = 'Cannot install intrinsic'
