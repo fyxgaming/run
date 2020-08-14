@@ -967,7 +967,14 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws for intrinsic props', async () => {
+    it('throws for symbols', () => {
+      expectPropFail(Symbol.hasInstance)
+      expectPropFail(Symbol.iterator)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws for intrinsic props', () => {
       expectPropFail(Math)
       expectPropFail(Date)
       expectPropFail(isNaN)
