@@ -31,7 +31,7 @@ const { payFor } = require('../env/misc')
 //  - All prop tests also test with load
 //  - Bad parent
 //  - Prop tests should be in a set, in an array, on base
-//  - Test sandbox
+// - Code that was previously deployed, so a ref
 
 // Unfiled
 // Constructing Code objects inside... they would normally construct sandbox. How to do base?
@@ -956,7 +956,27 @@ describe('Code', () => {
       test(CA3)
     })
 
-    // TODO: Code that was previously deployed, so a ref
+    // ------------------------------------------------------------------------
+
+    async function expectPropFail (x, error) {
+      console.log(x)
+      const run = new Run()
+      class A { }
+      A.x = x
+      run.deploy(A)
+      await run.sync()
+      // expect(() => run.deploy(A)).to.throw(error)
+    }
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws for intrinsic props', async () => {
+      const error = 'Cannot install intrinsic'
+      await expectPropFail(Math, error)
+      // expectPropFail(Date, error)
+      // expectPropFail(isNaN, error)
+      // expectPropFail(Error, error)
+    })
 
     // ------------------------------------------------------------------------
   })
