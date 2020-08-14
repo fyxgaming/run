@@ -13,16 +13,6 @@ const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
 const { Code, LocalCache } = unmangle(Run)
 
-// TODO: Upgrade with parent
-// TODO: Upgrade with props (deployed and not)
-// TODO: Upgrade and remove parent
-// TODO: Upgrade with different parent
-// TODO: Same for props
-// TODO: Does not deploy if already deployed
-// TODO: Rollback with multiple transactions in a batch
-// TODO: Rollback upgrade itself, not publish error
-// TODO: Upgrade with complex props
-
 // ------------------------------------------------------------------------------------------------
 // Code
 // ------------------------------------------------------------------------------------------------
@@ -248,21 +238,57 @@ describe('Upgrade', () => {
   })
 
   // --------------------------------------------------------------------------
+  // Parents
+  // --------------------------------------------------------------------------
+
+  describe('parents', () => {
+    it.skip('deploys new parent chain', () => {
+      // TODO
+    })
+
+    it.skip('remove parent', () => {
+      // TODO - getprototypeof check
+    })
+
+    it.skip('throws if invalid parent', () => {
+      // TODO
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // Props
   // --------------------------------------------------------------------------
 
   describe('props', () => {
-    // Illegal
-    // Deploys
+    it.skip('complex props', () => {
+      // TODO - circular, jig, berries
+    })
+
+    it.skip('deploys new code', () => {
+      // TODO
+    })
+
+    it.skip('throws if unsupported', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
   // Deps
   // --------------------------------------------------------------------------
 
-  describe('props', () => {
-    // Illegal
-    // Deploys
+  describe('deps', () => {
+    it.skip('complex deps', () => {
+      // TODO - circular, jig, berries
+    })
+
+    it.skip('deploys new code', () => {
+      // TODO
+    })
+
+    it.skip('throws if unsupported', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -270,7 +296,7 @@ describe('Upgrade', () => {
   // --------------------------------------------------------------------------
 
   describe('errors', () => {
-    it('rollsback', async () => {
+    it('rolls back', async () => {
       const run = new Run()
       class A { static f () { }}
       A.x = 1
@@ -295,6 +321,12 @@ describe('Upgrade', () => {
       expect(typeof CA.y).to.equal('undefined')
       expect(typeof CA.f).to.equal('function')
       expect(typeof CA.g).to.equal('undefined')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('rolls back in batch', () => {
+      // TODO
     })
 
     // ------------------------------------------------------------------------
