@@ -1697,7 +1697,7 @@ describe('Deploy', () => {
   // --------------------------------------------------------------------------
 
   describe('sealed', () => {
-    it('sealed by default', async () => {
+    it('owner sealed by default', async () => {
       const run = new Run()
 
       class A { }
@@ -1733,18 +1733,48 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('allows unsealing', async () => {
+    it('sealed', async () => {
       const run = new Run()
       class A { }
-      A.sealed = false
-      class B extends A { }
+      A.sealed = true
       const CA = run.deploy(A)
-      await run.sync()
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      await run2.deploy(B)
       await CA.sync()
-      expect(CA.origin).to.equal(CA.location)
+      class B extends A {}
+      expect(() => run.deploy(B)).to.throw('Parent class sealed')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('unsealed', async () => {
+      const run = new Run()
+
+      class A { }
+      A.sealed = false
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      expectTx({
+        nin: 0,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class B extends A { }',
+              {
+                deps: { A: { $jig: 0 } }
+              }
+            ]
+          }
+        ]
+      })
+
+      class B extends A { }
+      const CB = run.deploy(B)
+      await CB.sync()
     })
 
     // ------------------------------------------------------------------------
