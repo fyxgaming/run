@@ -513,7 +513,17 @@ describe('Code', () => {
       test(CA3)
     })
 
-    // Non-jig code classes
+    it('cannot destroy non-jig children', async () => {
+      const run = new Run()
+
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      class B extends CA { }
+      expect(() => B.destroy()).to.throw('Destroy unavailable')
+    })
+
     // Destroy as part of a method
     // Destroy in a batch
     // Zero satoshis, undefined owner?
