@@ -388,7 +388,9 @@ describe('Code', () => {
         const Tprops = Object.assign({}, T)
         const bindings = ['location', 'origin', 'nonce', 'owner', 'satoshis']
         bindings.forEach(x => { delete Tprops[x] })
+
         expect(Tprops).to.deep.equal(props)
+
         if (testProps) testProps(T)
       }
 
@@ -499,6 +501,40 @@ describe('Code', () => {
 
       await runPropTest(props, encodedProps)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('arrays', async () => {
+      const sparse = []
+      sparse[0] = 0
+      sparse[99] = 99
+
+      const complex = [1]
+      complex.a = 'b'
+
+      const props = {
+        empty: [],
+        basic: [1, 2, 3],
+        nested: [[[]]],
+        sparse,
+        complex
+      }
+
+      const encodedProps = {
+        empty: [],
+        basic: [1, 2, 3],
+        nested: [[[]]],
+        sparse: { $arr: { 0: 0, 99: 99 } },
+        complex: { $arr: { 0: 1, a: 'b' } }
+      }
+
+      function testProps (T) {
+        expect(T.empty instanceof Array).to.equal(false)
+        expect(T.empty instanceof SI.Array).to.equal(true)
+      }
+
+      await runPropTest(props, encodedProps, testProps)
+    })
   })
 
   describe.skip('deploy old', () => {
@@ -510,28 +546,6 @@ describe('Code', () => {
       const CA = run.deploy(A)
       return CA.x
     }
-
-    it('creates sandboxed array props', () => {
-      const a = []
-      expect(prop(a)).not.to.equal(a)
-      expect(prop([]) instanceof Array).to.equal(false)
-      expect(prop([]) instanceof SI.Array).to.equal(true)
-      expect(prop([])).to.deep.equal([])
-      expect(prop([1, 2, 3])).to.deep.equal([1, 2, 3])
-      expect(prop([[[]]])).to.deep.equal([[[]]])
-      expect(prop({ a: [] }).a).to.deep.equal([])
-      const sparseArray = []
-      sparseArray[0] = 1
-      sparseArray[99] = 2
-      const sparseArrayProp = prop(sparseArray)
-      expect(sparseArrayProp.length).to.equal(sparseArray.length)
-      expect(sparseArrayProp[0]).to.equal(1)
-      expect(sparseArrayProp[99]).to.equal(2)
-      expect(sparseArrayProp[1]).to.equal(undefined)
-      const arrayWithProps = []
-      arrayWithProps.a = 'b'
-      expect(prop(arrayWithProps)).to.deep.equal(arrayWithProps)
-    })
 
     it('creates sandboxed object props', () => {
       const o = {}
