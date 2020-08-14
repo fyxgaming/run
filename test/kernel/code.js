@@ -535,6 +535,21 @@ describe('Code', () => {
 
       await runPropTest(props, encodedProps, testProps)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('objects', async () => {
+      const props = {
+      }
+
+      const encodedProps = {
+      }
+
+      function testProps (T) {
+      }
+
+      await runPropTest(props, encodedProps, testProps)
+    })
   })
 
   describe.skip('deploy old', () => {
