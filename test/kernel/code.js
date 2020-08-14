@@ -475,6 +475,30 @@ describe('Code', () => {
 
       await runPropTest(props, encodedProps)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('strings', async () => {
+      const props = {
+        empty: '',
+        short: 'abc',
+        long: 'x'.repeat(10000),
+        multiline: '0\n1\n2\n',
+        emoji: '😄',
+        obj: { arr: ['a'] }
+      }
+
+      const encodedProps = {
+        empty: '',
+        short: 'abc',
+        long: 'x'.repeat(10000),
+        multiline: '0\n1\n2\n',
+        emoji: '😄',
+        obj: { arr: ['a'] }
+      }
+
+      await runPropTest(props, encodedProps)
+    })
   })
 
   describe.skip('deploy old', () => {
@@ -486,16 +510,6 @@ describe('Code', () => {
       const CA = run.deploy(A)
       return CA.x
     }
-
-    it('creates string props', () => {
-      expect(prop('')).to.equal('')
-      expect(prop('abc')).to.equal('abc')
-      expect(prop('0\n1\n2\n3\n')).to.equal('0\n1\n2\n3\n')
-      expect(prop('😄')).to.equal('😄')
-      const long = 'x'.repeat(10000)
-      expect(prop(long)).to.equal(long)
-      expect(prop({ a: ['a'] }).a[0]).to.equal('a')
-    })
 
     it('creates sandboxed array props', () => {
       const a = []
