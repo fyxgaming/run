@@ -32,9 +32,8 @@ function unmangle (x) {
     },
 
     set: (target, prop, value) => {
-      if (typeof prop !== 'string') target[prop] = value
-      if (prop in target) target[prop] = value
-      if (('$' + prop) in mangledProps) target[mangledProps['$' + prop]] = value
+      if (('$' + prop) in mangledProps) prop = mangledProps['$' + prop]
+      target[prop] = value
       return true
     }
   })

@@ -133,17 +133,17 @@ describe('Codec', () => {
       encodePass(o, { a: [{ n: 1 }], o: { a: [] }, u: { $und: 1 }, b: { $ui8a: '' } })
     })
 
-    it.only('should support duplicate objects', () => {
+    it('should support duplicate objects', () => {
       new Run() // eslint-disable-line
       const o = {}
       const p = [1]
       const d0 = { $dup: 0 }
       const d1 = { $dup: 1 }
-      // encodePass([o, o], { $top: [d0, d0], dups: [{}] })
-      // encodePass({ a: o, b: o }, { $top: { a: d0, b: d0 }, dups: [{}] })
-      // encodePass([o, { o }], { $top: [d0, { o: d0 }], dups: [{}] })
+      encodePass([o, o], { $top: [d0, d0], dups: [{}] })
+      encodePass({ a: o, b: o }, { $top: { a: d0, b: d0 }, dups: [{}] })
+      encodePass([o, { o }], { $top: [d0, { o: d0 }], dups: [{}] })
       encodePass([o, p, o, p], { $top: [d0, d1, d0, d1], dups: [{}, [1]] })
-      // encodePass([o, o, p, [o, p], { z: p }], { $top: [d0, d0, d1, [d0, d1], { z: d1 }], dups: [{}, [1]] })
+      encodePass([o, o, p, [o, p], { z: p }], { $top: [d0, d0, d1, [d0, d1], { z: d1 }], dups: [{}, [1]] })
     })
 
     it('should support duplicate $ objects', () => {
@@ -253,9 +253,9 @@ describe('Codec', () => {
       o[3] = 3
       o[2] = 2
       o.n = 3
-      const encoded = new Codec()._encode(o)
+      const encoded = unmangle(new Codec())._encode(o)
       const json = JSON.parse(JSON.stringify(encoded))
-      const o2 = new Codec()._decode(json)
+      const o2 = unmangle(new Codec())._decode(json)
       expect(Object.keys(o)).to.deep.equal(Object.keys(o2))
     })
 
@@ -381,8 +381,8 @@ describe('Codec', () => {
 
     it('should default to host intrinsics', () => {
       new Run() // eslint-disable-line
-      expect(new Codec()._decode({}).constructor).to.equal(Object)
-      expect(new Codec()._decode([]).constructor).to.equal(Array)
+      expect(unmangle(new Codec())._decode({}).constructor).to.equal(Object)
+      expect(unmangle(new Codec())._decode([]).constructor).to.equal(Array)
     })
   })
 
