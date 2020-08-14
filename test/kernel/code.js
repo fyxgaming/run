@@ -708,10 +708,10 @@ describe('Code', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
-  })
 
-  describe.skip('deploy old', () => {
-    it('copies code props', () => {
+    // ------------------------------------------------------------------------
+
+    it('installs code props intact', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -721,16 +721,45 @@ describe('Code', () => {
       expect(CB.CA).to.equal(CA)
     })
 
-    it('creates code for function props', () => {
+    // ------------------------------------------------------------------------
+
+    it('creates code for function props', async () => {
       const run = new Run()
+
       class A { }
       function f () { }
       A.f = f
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        ncre: 2,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class A { }',
+              {
+                f: { $jig: 1 }
+              },
+              'function f () { }',
+              { }
+            ]
+          }
+        ]
+      })
+
       const CA = run.deploy(A)
       expect(CA.f).not.to.equal(f)
       expect(CA.f).to.equal(run.deploy(f))
-    })
 
+      await CA.sync()
+    })
+  })
+
+  describe.skip('deploy old', () => {
     it('creates circular code props', () => {
       const run = new Run()
       class A { }
