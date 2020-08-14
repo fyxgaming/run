@@ -8,11 +8,10 @@ const { describe, it, afterEach } = require('mocha')
 const { stub } = require('sinon')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
-const { Transaction, PrivateKey } = require('bsv')
+const { Transaction } = require('bsv')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { Code, Jig, Berry, sandbox } = unmangle(Run)
-const SI = unmangle(sandbox)._intrinsics
+const { Code, Jig, Berry } = unmangle(Run)
 const Membrane = unmangle(unmangle(Run)._Membrane)
 const { payFor } = require('../env/misc')
 
@@ -56,15 +55,8 @@ const { payFor } = require('../env/misc')
 // Globals
 // ------------------------------------------------------------------------------------------------
 
-const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
-const randomOwner = () => new PrivateKey().toAddress().toString()
-
 // Methods available on all code instances
 const CODE_METHODS = ['upgrade', 'sync', 'destroy', 'auth']
-
-// Reserved words not allowed on code
-const FUTURE_PROPS = ['encryption', 'blockhash', 'blockheight', 'blocktime']
-const RESERVED_WORDS = [...CODE_METHODS, 'toString', ...FUTURE_PROPS]
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -80,70 +72,6 @@ describe('Code', () => {
     // ------------------------------------------------------------------------
     // Error cases
     // ------------------------------------------------------------------------
-
-    it('throws if built-in', () => {
-      const run = new Run()
-      const error = 'Cannot install intrinsic'
-      expect(() => run.deploy(Object)).to.throw(error)
-      expect(() => run.deploy(Date)).to.throw(error)
-      expect(() => run.deploy(Uint8Array)).to.throw(error)
-      expect(() => run.deploy(Math.sin)).to.throw(error)
-      expect(() => run.deploy(parseInt)).to.throw(error)
-      expect(() => run.deploy(SI.Object)).to.throw(error)
-    })
-
-    it('throws if anonymous', () => {
-      const run = new Run()
-      const error = 'Anonymous types not supported'
-      expect(() => run.deploy(() => {})).to.throw(error)
-      expect(() => run.deploy(class {})).to.throw(error)
-      const g = function () { }
-      expect(() => run.deploy(g)).to.throw(error)
-      const A = class { }
-      expect(() => run.deploy(A)).to.throw(error)
-    })
-
-    it('throws if prototype inheritance', () => {
-      const run = new Run()
-      function A () { }
-      function B () { }
-      B.prototype = Object.create(A.prototype)
-      const error = 'Prototypal inheritance not supported'
-      expect(() => run.deploy(B)).to.throw(error)
-    })
-
-    it('throws if contains reserved words', () => {
-      const run = new Run()
-      const error = 'Must not have any reserved words'
-
-      RESERVED_WORDS.forEach(word => {
-        class A { }
-        A[word] = 1
-        expect(() => run.deploy(A)).to.throw(error)
-
-        class B { }
-        B[word] = class Z { }
-        expect(() => run.deploy(B)).to.throw(error)
-      })
-
-      class C { static sync () { }}
-      expect(() => run.deploy(C)).to.throw(error)
-
-      class D { static get destroy () { } }
-      expect(() => run.deploy(D)).to.throw(error)
-    })
-
-    it('throws if contains bindings', () => {
-      const run = new Run()
-      class A { }
-      A.location = randomLocation()
-      A.origin = randomLocation()
-      A.owner = randomOwner()
-      A.satoshis = 0
-      A.nonce = 1
-      const error = 'Must not have any bindings'
-      expect(() => run.deploy(A)).to.throw(error)
-    })
 
     it('throws if depend on Code', () => {
       const run = new Run()
