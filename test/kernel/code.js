@@ -456,58 +456,48 @@ describe('Code', () => {
     })
   })
 
-  describe.skip('sync', () => {
-    // Only waits for current record
-    // TODO: Check records
-    // TODO: Sync a destroyed jig
-
-    it('deploys a class and syncs it', async () => {
-      const run = new Run()
-      class A {}
-      run.deploy(A)
-      await run.sync()
-      const A2 = await run.load(A.location)
-      expect(A2.toString()).to.equal(A.toString())
-      expect(A2.origin).to.equal(A.origin)
-      expect(A2.location).to.equal(A.location)
-    })
-
-    it('publishes after dependent transaction', async () => {
+  describe('upgrade', () => {
+    it.only('upgrades class', async () => {
       const run = new Run()
 
       class A { }
-      class B extends A { }
-      A.B = B
+      const CA = run.deploy(A)
+      await CA.sync()
 
-      run.deploy(A)
-      await run.sync()
+      function test (CA) {
+        expect(CA.toString()).to.equal('class B { }')
+        expect(CA.location).not.to.equal(CA.origin)
+      }
 
-      await run.load(A.location)
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              'class B { }',
+              {}
+            ]
+          }
+        ]
+      })
 
-      const B2 = await run.load(B.location)
+      class B { }
+      expect(CA.upgrade(B)).to.equal(CA)
+      await CA.sync()
+      test(CA)
 
-      class C extends B2 { }
-      run.deploy(C)
-      await run.sync()
-    })
+      const CA2 = await run.load(CA.location)
+      test(CA2)
 
-    it('should sync with warning when UTXO is incorrectly spent', async () => {
-      const run = new Run()
-
-      class A { }
-      const C = run.deploy(A)
-
-      await C.sync()
-      const location = C.location
-
-      const utxos = await run.blockchain.utxos(run.owner.address)
-      const tx = new Transaction().from(utxos)
-      const paid = await payFor(tx, run)
-      const signed = paid.sign(run.owner.privkey)
-      await run.blockchain.broadcast(signed.toString('hex'))
-
-      await C.sync()
-      expect(C.location).to.equal(location)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
   })
 
@@ -640,6 +630,60 @@ describe('Code', () => {
     // TODO: Rollback upgrade itself, not publish error
   })
 
+  describe.skip('sync', () => {
+    // Only waits for current record
+    // TODO: Check records
+    // TODO: Sync a destroyed jig
+
+    it('deploys a class and syncs it', async () => {
+      const run = new Run()
+      class A {}
+      run.deploy(A)
+      await run.sync()
+      const A2 = await run.load(A.location)
+      expect(A2.toString()).to.equal(A.toString())
+      expect(A2.origin).to.equal(A.origin)
+      expect(A2.location).to.equal(A.location)
+    })
+
+    it('publishes after dependent transaction', async () => {
+      const run = new Run()
+
+      class A { }
+      class B extends A { }
+      A.B = B
+
+      run.deploy(A)
+      await run.sync()
+
+      await run.load(A.location)
+
+      const B2 = await run.load(B.location)
+
+      class C extends B2 { }
+      run.deploy(C)
+      await run.sync()
+    })
+
+    it('should sync with warning when UTXO is incorrectly spent', async () => {
+      const run = new Run()
+
+      class A { }
+      const C = run.deploy(A)
+
+      await C.sync()
+      const location = C.location
+
+      const utxos = await run.blockchain.utxos(run.owner.address)
+      const tx = new Transaction().from(utxos)
+      const paid = await payFor(tx, run)
+      const signed = paid.sign(run.owner.privkey)
+      await run.blockchain.broadcast(signed.toString('hex'))
+
+      await C.sync()
+      expect(C.location).to.equal(location)
+    })
+  })
   describe.skip('activate', () => {
     it('simple activate test', async () => {
       const run = new Run()
