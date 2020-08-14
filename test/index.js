@@ -11,6 +11,7 @@ require('./kernel/blockchain')
 require('./kernel/code.js')
 require('./kernel/deploy.js')
 require('./kernel/native.js')
+require('./kernel/upgrade.js')
 
 require('./module/mockchain')
 require('./module/viewer')
