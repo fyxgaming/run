@@ -31,7 +31,8 @@ const { payFor } = require('../env/misc')
 //  - All prop tests also test with load
 //  - Bad parent
 //  - Prop tests should be in a set, in an array, on base
-// - Code that was previously deployed, so a ref
+//  - Code that was previously deployed, so a ref
+//  - Cannot set to "presets" or "deps" in a static method
 
 // Unfiled
 // Constructing Code objects inside... they would normally construct sandbox. How to do base?
@@ -1315,19 +1316,24 @@ describe('Code', () => {
       A.deps = new class Deps {}()
       expect(() => run.deploy(A)).to.throw()
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if parent dependency mismatch', () => {
+      const run = new Run()
+      class A { }
+      class C { }
+      class B extends A { }
+      B.deps = { A: C }
+      expect(() => run.deploy(B)).to.throw('Parent dependency mismatch')
+    })
   })
 
   // --------------------------------------------------------------------------
   // Presets
   // --------------------------------------------------------------------------
 
-  // TODO
-
-  describe.skip('deploy old', () => {
-    // ------------------------------------------------------------------------
-    // Presets
-    // ------------------------------------------------------------------------
-
+  describe('presets', () => {
     it('uses blockchain presets', () => {
       const run = new Run()
       const network = run.blockchain.network
@@ -1350,6 +1356,8 @@ describe('Code', () => {
       expect(typeof CA.presets).to.equal('undefined')
     })
 
+    // ------------------------------------------------------------------------
+
     it('clones javascript objects for sandbox', () => {
       const run = new Run()
       const network = run.blockchain.network
@@ -1362,13 +1370,20 @@ describe('Code', () => {
       expect(CA.s instanceof SI.Set).to.equal(true)
     })
 
-    it.skip('supports non-binding presets', () => {
-      // TODO
+    // ------------------------------------------------------------------------
+
+    it('deploys code presets', async () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      function f () { }
+      A.presets = { [network]: { f } }
+      const CA = run.deploy(A)
+      await CA.sync()
+      expect(CA.f instanceof Code).to.equal(true)
     })
 
-    it.skip('deploys code presets', () => {
-      // TODO
-    })
+    // ------------------------------------------------------------------------
 
     it.skip('copies jig and berry presets', async () => {
       const run = new Run()
@@ -1388,6 +1403,8 @@ describe('Code', () => {
       expect(CA.C).to.equal(run.deploy(C))
     })
 
+    // ------------------------------------------------------------------------
+
     it('does not add presets object to code jig', () => {
       const run = new Run()
       const network = run.blockchain.network
@@ -1404,6 +1421,8 @@ describe('Code', () => {
       const CA = run.deploy(A)
       expect(CA.presets).to.equal(undefined)
     })
+
+    // ------------------------------------------------------------------------
 
     it('returns different code for a copy with same presets', () => {
       const run = new Run()
@@ -1425,6 +1444,8 @@ describe('Code', () => {
       expect(CA).not.to.equal(CB)
     })
 
+    // ------------------------------------------------------------------------
+
     it('installs separate presets for parent and child', () => {
       const run = new Run()
       const network = run.blockchain.network
@@ -1442,14 +1463,7 @@ describe('Code', () => {
       expect(Object.getOwnPropertyNames(CA).includes('m')).to.equal(false)
     })
 
-    it('throws if parent dependency mismatch', () => {
-      const run = new Run()
-      class A { }
-      class C { }
-      class B extends A { }
-      B.deps = { A: C }
-      expect(() => run.deploy(B)).to.throw('Parent dependency mismatch')
-    })
+    // ------------------------------------------------------------------------
 
     it('throws if binding presets are invalid', () => {
       const run = new Run()
@@ -1501,6 +1515,8 @@ describe('Code', () => {
       expect(() => run.deploy(A)).to.throw()
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if binding presets are incomplete', () => {
       const run = new Run()
       const network = run.blockchain.network
@@ -1518,6 +1534,8 @@ describe('Code', () => {
       }
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if presets contains reserved properties', () => {
       const run = new Run()
       const network = run.blockchain.network
@@ -1530,10 +1548,24 @@ describe('Code', () => {
       expect(() => run.deploy(A)).to.throw()
     })
 
-    it.skip('throws if presets contain unsupported values', () => {
-      // On current network and different network
-    })
+    // ------------------------------------------------------------------------
 
+    it('throws if presets contain unsupported values', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { a: new Date() } }
+      expect(() => run.deploy(A)).to.throw()
+      A.presets = { [network]: { b: Error } }
+      expect(() => run.deploy(A)).to.throw()
+      A.presets = { [network]: { c: new (class MySet extends Set { })() } }
+      expect(() => run.deploy(A)).to.throw()
+      A.presets = { anotherNetwork: { d: Math.random } }
+      expect(() => run.deploy(A)).to.throw()
+    })
+  })
+
+  describe.skip('deploy old', () => {
     // ------------------------------------------------------------------------
     // Error cases
     // ------------------------------------------------------------------------
