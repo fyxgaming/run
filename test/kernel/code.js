@@ -1012,34 +1012,111 @@ describe('Code', () => {
     })
   })
 
-  describe.skip('deploy old', () => {
-    // ------------------------------------------------------------------------
-    // Deps
-    // ------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
+  // Deps
+  // --------------------------------------------------------------------------
 
-    it('makes deps globals', () => {
+  describe.only('deps', () => {
+    it('basic dep', async () => {
       const run = new Run()
+
       class A { }
       function f () { return A }
       f.deps = { A }
-      const sf = run.deploy(f)
-      expect(sf()).to.equal(run.deploy(A))
+
+      function test (cf) {
+        expect(cf() instanceof Code).to.equal(true)
+        expect(cf.deps.A instanceof Code).to.equal(true)
+      }
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        ncre: 2,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'function f () { return A }',
+              {
+                deps: { A: { $jig: 1 } }
+              },
+              'class A { }',
+              {}
+            ]
+          }
+        ]
+      })
+
+      const cf = run.deploy(f)
+      await cf.sync()
+      test(cf)
+
+      const cf2 = await run.load(cf.location)
+      test(cf2)
+
+      run.cache = new LocalCache()
+      const cf3 = await run.load(cf.location)
+      test(cf3)
     })
 
-    it('supports normal javascript values as deps', () => {
+    // ------------------------------------------------------------------------
+
+    it('non-jig deps', async () => {
       const run = new Run()
+
       class A {
         static n () { return n } // eslint-disable-line
         static o () { return o } // eslint-disable-line
       }
       A.deps = { n: 1, o: { a: [] } }
+
+      function test (CA) {
+        expect(CA.n()).to.equal(1)
+        expect(CA.o()).not.to.equal(A.deps.o)
+        expect(CA.o()).to.deep.equal(A.deps.o)
+        expect(CA.o() instanceof SI.Object).to.equal(true)
+        expect(CA.o().a instanceof SI.Array).to.equal(true)
+      }
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              A.toString(),
+              {
+                deps: { n: 1, o: { a: [] } }
+              }
+            ]
+          }
+        ]
+      })
+
       const CA = run.deploy(A)
-      expect(CA.n()).to.equal(1)
-      expect(CA.o()).not.to.equal(A.deps.o)
-      expect(CA.o()).to.deep.equal(A.deps.o)
-      expect(CA.o() instanceof SI.Object).to.equal(true)
-      expect(CA.o().a instanceof SI.Array).to.equal(true)
+      await CA.sync()
+      test(CA)
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
+  })
+
+  describe.skip('deploy old', () => {
+    // ------------------------------------------------------------------------
+    // Deps
+    // ------------------------------------------------------------------------
 
     it('sets deps on returned code jig', () => {
       const run = new Run()
