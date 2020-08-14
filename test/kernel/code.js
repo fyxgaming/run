@@ -900,9 +900,45 @@ describe('Code', () => {
       A.Jig = Jig
       A.Berry = Berry
 
+      function test (CA) {
+        expect(CA.Jig).to.equal(Jig)
+        expect(CA.Berry).to.equal(Berry)
+      }
+
+      expectTx({
+        nin: 0,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class A { }',
+              {
+                Jig: { $jig: 0 },
+                Berry: { $jig: 1 }
+              }
+            ]
+          }
+        ]
+      })
+
       const CA = run.deploy(A)
       await CA.sync()
+      test(CA)
+
+      await run.sync()
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
+
+    // TODO: Code that was previously deployed, so a ref
 
     // ------------------------------------------------------------------------
   })
