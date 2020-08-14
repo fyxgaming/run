@@ -271,9 +271,92 @@ describe('Code', () => {
     // Code functions are not available inside functions
   })
 
+  describe('destroy', () => {
+    it('destroys code', async () => {
+      const run = new Run()
+
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      function test (CA) {
+        expect(CA.location.endsWith('_d0')).to.equal(true)
+        expect(CA.owner).to.equal(null)
+        expect(CA.satoshis).to.equal(0)
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 0,
+        ndel: 1,
+        ncre: 0,
+        exec: [
+          {
+            op: 'DESTROY',
+            data: { $jig: 0 }
+          }
+        ]
+      })
+
+      expect(CA.destroy()).to.equal(CA)
+      expect(CA.owner).to.equal(null)
+      expect(CA.satoshis).to.equal(0)
+
+      await CA.sync()
+      test(CA)
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+
+    it('cannot destroy non-jig children', async () => {
+      const run = new Run()
+
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      class B extends CA { }
+      expect(() => B.destroy()).to.throw('Destroy unavailable')
+    })
+
+    it.only('destroy twice', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      CA.destroy()
+      await CA.sync()
+      const lastLocation = CA.location
+
+      expect(CA.destroy()).to.equal(CA)
+      await CA.sync()
+      expect(CA.location).to.equal(lastLocation)
+    })
+
+    it.skip('destroy in a static method', () => {
+
+    })
+
+    it.skip('destroy in a batch', () => {
+
+    })
+
+    it.skip('create and destroy in same transaction', () => {
+
+    })
+  })
+
   describe.skip('sync', () => {
     // Only waits for current record
     // TODO: Check records
+    // TODO: Sync a destroyed jig
 
     it('deploys a class and syncs it', async () => {
       const run = new Run()
@@ -468,66 +551,6 @@ describe('Code', () => {
       run.activate()
       expect(A.location).to.equal(location)
     })
-  })
-
-  describe('destroy', () => {
-    it('destroys code', async () => {
-      const run = new Run()
-
-      class A { }
-      const CA = run.deploy(A)
-      await CA.sync()
-
-      function test (CA) {
-        expect(CA.location.endsWith('_d0')).to.equal(true)
-        expect(CA.owner).to.equal(null)
-        expect(CA.satoshis).to.equal(0)
-      }
-
-      expectTx({
-        nin: 1,
-        nref: 0,
-        nout: 0,
-        ndel: 1,
-        ncre: 0,
-        exec: [
-          {
-            op: 'DESTROY',
-            data: { $jig: 0 }
-          }
-        ]
-      })
-
-      expect(CA.destroy()).to.equal(CA)
-      expect(CA.owner).to.equal(null)
-      expect(CA.satoshis).to.equal(0)
-
-      await CA.sync()
-      test(CA)
-
-      const CA2 = await run.load(CA.location)
-      test(CA2)
-
-      run.cache = new LocalCache()
-      const CA3 = await run.load(CA.location)
-      test(CA3)
-    })
-
-    it('cannot destroy non-jig children', async () => {
-      const run = new Run()
-
-      class A { }
-      const CA = run.deploy(A)
-      await CA.sync()
-
-      class B extends CA { }
-      expect(() => B.destroy()).to.throw('Destroy unavailable')
-    })
-
-    // Destroy as part of a method
-    // Destroy in a batch
-    // Zero satoshis, undefined owner?
-    // Destroy in same transaction
   })
 
   describe.skip('auth', () => {
