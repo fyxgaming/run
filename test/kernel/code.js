@@ -325,7 +325,7 @@ describe('Code', () => {
       expect(() => B.destroy()).to.throw('Destroy unavailable')
     })
 
-    it.only('destroy twice', async () => {
+    it('destroy twice', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
