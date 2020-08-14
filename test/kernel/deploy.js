@@ -7,10 +7,11 @@
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
-const { Transaction, PrivateKey } = require('bsv')
+const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { Code, Jig, Berry, LocalCache, sandbox, _payload } = unmangle(Run)
+const { expectTx } = require('../env/misc')
+const { Code, Jig, Berry, LocalCache, sandbox } = Run
 const SI = unmangle(sandbox)._intrinsics
 const Membrane = unmangle(unmangle(Run)._Membrane)
 
@@ -27,44 +28,6 @@ const CODE_METHODS = ['upgrade', 'sync', 'destroy', 'auth']
 // Reserved words not allowed on code
 const FUTURE_PROPS = ['encryption', 'blockhash', 'blockheight', 'blocktime']
 const RESERVED_WORDS = [...CODE_METHODS, 'toString', ...FUTURE_PROPS]
-
-// ------------------------------------------------------------------------------------------------
-// expectTx
-// ------------------------------------------------------------------------------------------------
-
-/**
- * Checks the payload data in next Run transaction broadcast
- *
- * @param {object} opts
- * @param {?number} nin Number of inputs
- * @param {?number} nref Number of references
- * @param {?Array} out Output hashes
- * @param {?Array} del Deleted hashes
- * @param {?Array} ncre Number of creates
- * @param {?Array} exec Program instructions
- */
-function expectTx (opts) {
-  const run = Run.instance
-
-  function verify (rawtx) {
-    const tx = new Transaction(rawtx)
-    const payload = _payload(tx)
-    if ('nin' in opts) expect(payload.in).to.equal(opts.nin)
-    if ('nref' in opts) expect(payload.ref.length).to.equal(opts.nref)
-    if ('nout' in opts) expect(payload.out.length).to.equal(opts.nout)
-    if ('ndel' in opts) expect(payload.del.length).to.equal(opts.ndel)
-    if ('ncre' in opts) expect(payload.cre.length).to.equal(opts.ncre)
-    if ('exec' in opts) expect(payload.exec).to.deep.equal(opts.exec)
-  }
-
-  // Hook run.blockchain to verify the next transaction then disable the hook
-  const oldBroadcast = run.blockchain.broadcast
-  run.blockchain.broadcast = rawtx => {
-    run.blockchain.broadcast = oldBroadcast
-    verify(rawtx)
-    return oldBroadcast.call(run.blockchain, rawtx)
-  }
-}
 
 // ------------------------------------------------------------------------------------------------
 // Code

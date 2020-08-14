@@ -10,8 +10,9 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { Transaction } = require('bsv')
 const Run = require('../env/run')
+const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
-const { Code, Jig, Berry } = unmangle(Run)
+const { Code, Jig, Berry, LocalCache } = unmangle(Run)
 const { payFor } = require('../env/misc')
 
 // Written Tests:
@@ -479,7 +480,23 @@ describe('Code', () => {
 
       function test (CA) {
         expect(CA.location.endsWith('_d0')).to.equal(true)
+        // expect(CA.owner).to.equal(undefined)
+        // expect(CA.satoshis).to.equal(0)
       }
+
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 0,
+        ndel: 1,
+        ncre: 0,
+        exec: [
+          {
+            op: 'DESTROY',
+            data: { $jig: 0 }
+          }
+        ]
+      })
 
       expect(CA.destroy()).to.equal(CA)
       await CA.sync()
@@ -488,9 +505,9 @@ describe('Code', () => {
       const CA2 = await run.load(CA.location)
       test(CA2)
 
-      // Load via replay
-      // run.cache = new LocalCache()
-      // await run.load(C.location)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     // Native

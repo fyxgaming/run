@@ -5,6 +5,10 @@
  */
 
 const { Transaction } = require('bsv')
+const Run = require('./run')
+const unmangle = require('./unmangle')
+const { _payload } = unmangle(Run)
+const { expect } = require('chai')
 
 // ------------------------------------------------------------------------------------------------
 // populatePreviousOutputs
@@ -53,5 +57,43 @@ async function payFor (tx, run) {
 }
 
 // ------------------------------------------------------------------------------------------------
+// expectTx
+// ------------------------------------------------------------------------------------------------
 
-module.exports = { populatePreviousOutputs, payFor }
+/**
+ * Checks the payload data in next Run transaction broadcast
+ *
+ * @param {object} opts
+ * @param {?number} nin Number of inputs
+ * @param {?number} nref Number of references
+ * @param {?Array} out Output hashes
+ * @param {?Array} del Deleted hashes
+ * @param {?Array} ncre Number of creates
+ * @param {?Array} exec Program instructions
+ */
+function expectTx (opts) {
+  const run = Run.instance
+
+  function verify (rawtx) {
+    const tx = new Transaction(rawtx)
+    const payload = _payload(tx)
+    if ('nin' in opts) expect(payload.in).to.equal(opts.nin)
+    if ('nref' in opts) expect(payload.ref.length).to.equal(opts.nref)
+    if ('nout' in opts) expect(payload.out.length).to.equal(opts.nout)
+    if ('ndel' in opts) expect(payload.del.length).to.equal(opts.ndel)
+    if ('ncre' in opts) expect(payload.cre.length).to.equal(opts.ncre)
+    if ('exec' in opts) expect(payload.exec).to.deep.equal(opts.exec)
+  }
+
+  // Hook run.blockchain to verify the next transaction then disable the hook
+  const oldBroadcast = run.blockchain.broadcast
+  run.blockchain.broadcast = rawtx => {
+    run.blockchain.broadcast = oldBroadcast
+    verify(rawtx)
+    return oldBroadcast.call(run.blockchain, rawtx)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { populatePreviousOutputs, payFor, expectTx }
