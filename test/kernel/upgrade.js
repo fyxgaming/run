@@ -298,6 +298,26 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
+    it('cannot upgrade class to function', () => {
+      const run = new Run()
+      class A { }
+      function f () { }
+      const CA = run.deploy(A)
+      expect(() => CA.upgrade(f)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot upgrade function to class', () => {
+      const run = new Run()
+      function f () { }
+      class A { }
+      const cf = run.deploy(f)
+      expect(() => cf.upgrade(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
     it('cannot upgrade a destroyed jig', () => {
       const run = new Run()
       class A { }
@@ -320,7 +340,6 @@ describe('Upgrade', () => {
     // TODO: Upgrade and remove parent
     // TODO: Upgrade with different parent
     // TODO: Same for props
-    // TODO: Upgrade and change name
     // TODO: Cannot upgrade undeployed code
     // TODO: Does not deploy if already deployed
     // TODO: Rollback with multiple transactions in a batch
