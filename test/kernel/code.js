@@ -1111,30 +1111,52 @@ describe('Code', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
+
+    it('automatically adds parent', async () => {
+      const run = new Run()
+
+      class A { }
+      class B extends A { }
+
+      function test (CB) {
+        expect(CB.deps.A instanceof Code).to.equal(true)
+      }
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        ncre: 2,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class A { }',
+              {},
+              'class B extends A { }',
+              {
+                deps: { A: { $jig: 0 } }
+              }
+            ]
+          }
+        ]
+      })
+
+      const CB = run.deploy(B)
+      test(CB)
+      await CB.sync()
+
+      const CB2 = await run.load(CB.location)
+      test(CB2)
+
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      test(CB3)
+    })
   })
 
   describe.skip('deploy old', () => {
-    // ------------------------------------------------------------------------
-    // Deps
-    // ------------------------------------------------------------------------
-
-    it('sets deps on returned code jig', () => {
-      const run = new Run()
-      class A { }
-      class B { }
-      A.deps = { B }
-      const CA = run.deploy(A)
-      expect(CA.deps.B).to.equal(run.deploy(B))
-    })
-
-    it('automatically adds parent dep', () => {
-      const run = new Run()
-      class A { }
-      class B extends A { }
-      const CB = run.deploy(B)
-      expect(CB.deps).to.deep.equal({ A: Object.getPrototypeOf(CB) })
-    })
-
     it('throws if deps invalid', () => {
       const run = new Run()
       class A { }
