@@ -474,16 +474,19 @@ describe('Code', () => {
       const run = new Run()
 
       class A { }
-      const C = run.deploy(A)
-      await C.sync()
+      const CA = run.deploy(A)
+      await CA.sync()
 
-      expect(C.destroy()).to.equal(C)
-      await C.sync()
-      expect(C.location.endsWith('_d0')).to.equal(true)
+      function test (CA) {
+        expect(CA.location.endsWith('_d0')).to.equal(true)
+      }
 
-      // Load from state cache
-      // await run.load(C.origin)
-      // await run.load(C.location)
+      expect(CA.destroy()).to.equal(CA)
+      await CA.sync()
+      test(CA)
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
 
       // Load via replay
       // run.cache = new LocalCache()
