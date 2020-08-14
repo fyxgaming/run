@@ -583,8 +583,11 @@ describe('Code', () => {
       const CA = run.deploy(A)
       await CA.sync()
 
+      class B { }
+
       function test (CA) {
-        expect(CA.toString()).to.equal('class B { }')
+        expect(CA.toString()).to.equal(B.toString())
+        expect(CA.name).to.equal('B')
         expect(CA.location).not.to.equal(CA.origin)
       }
 
@@ -606,7 +609,6 @@ describe('Code', () => {
         ]
       })
 
-      class B { }
       expect(CA.upgrade(B)).to.equal(CA)
       await CA.sync()
       test(CA)
@@ -621,6 +623,70 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
+    it('changes methods', async () => {
+      const run = new Run()
+
+      class A {
+        a1 () { }
+        static a2 () { }
+      }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      class B {
+        b1 () { }
+        static b2 () { }
+      }
+
+      function test (CA) {
+        expect(typeof CA.prototype.a1).to.equal('undefined')
+        expect(typeof CA.prototype.b1).to.equal('function')
+        expect(typeof CA.a2).to.equal('undefined')
+        expect(typeof CA.b2).to.equal('function')
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              B.toString(),
+              {}
+            ]
+          }
+        ]
+      })
+
+      expect(CA.upgrade(B)).to.equal(CA)
+      await CA.sync()
+      test(CA)
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('changes deps', () => {
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('changes props', () => {
+    })
+
+    // ------------------------------------------------------------------------
+
     it('cannot upgrade non-code', () => {
       const error = 'Upgrade unavailable'
       expect(() => Code.prototype.upgrade.call({}, class A { })).to.throw(error)
@@ -630,55 +696,6 @@ describe('Code', () => {
   })
 
   describe.skip('upgrade', () => {
-    it('should replace code', async () => {
-      const run = new Run()
-
-      class A { f () { } }
-      const CA = run.deploy(A)
-
-      expect(typeof CA.prototype.f).to.equal('function')
-      expect(CA.toString()).to.equal(A.toString())
-      expect(CA.name).to.equal(A.name)
-
-      const x = new CA()
-
-      expect(x instanceof CA).to.equal(true)
-      expect(typeof x.f).to.equal('function')
-
-      run.deploy(A)
-      await CA.sync()
-
-      class B { g () { } }
-      CA.upgrade(B)
-
-      expect(typeof CA.prototype.f).to.equal('undefined')
-      expect(typeof CA.prototype.g).to.equal('function')
-      expect(CA.toString()).to.equal(B.toString())
-      expect(CA.name).to.equal(B.name)
-      expect(CA.prototype.constructor).to.equal(CA)
-
-      const y = new CA()
-
-      expect(y instanceof CA).to.equal(true)
-      expect(typeof y.f).to.equal('undefined')
-      expect(typeof y.g).to.equal('function')
-
-      expect(x instanceof CA).to.equal(true)
-      expect(typeof x.f).to.equal('undefined')
-      expect(typeof x.g).to.equal('function')
-
-      // Load with cache
-      await run.sync()
-      await run.load(CA.origin)
-      await run.load(CA.location)
-
-      // Load without cache
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      await run2.load(CA.origin)
-      await run2.load(CA.location)
-    })
-
     it('should upgrade functions', () => {
       const run = new Run()
       function f () { return 1 }
