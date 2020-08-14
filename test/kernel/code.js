@@ -361,11 +361,11 @@ describe('Code', () => {
   // --------------------------------------------------------------------------
 
   describe('props', () => {
-    async function runPropTest (addProps, testProps, instructionProps) {
+    async function runPropTest (props, encodedProps, testProps) {
       const run = new Run()
 
       class A { }
-      addProps(A)
+      Object.assign(A, props)
 
       expectTx({
         nin: 0,
@@ -378,106 +378,87 @@ describe('Code', () => {
             op: 'DEPLOY',
             data: [
               'class A { }',
-              instructionProps
+              encodedProps
             ]
           }
         ]
       })
 
+      function test (T) {
+        const Tprops = Object.assign({}, T)
+        const bindings = ['location', 'origin', 'nonce', 'owner', 'satoshis']
+        bindings.forEach(x => { delete Tprops[x] })
+        expect(Tprops).to.deep.equal(props)
+        if (testProps) testProps(T)
+      }
+
       const CA = run.deploy(A)
-      testProps(CA)
       await CA.sync()
+      test(CA)
 
       const CA2 = await run.load(CA.location)
-      testProps(CA2)
+      test(CA2)
 
       run.cache = new LocalCache()
       const CA3 = await run.load(CA.location)
-      testProps(CA3)
+      test(CA3)
     }
 
     // ------------------------------------------------------------------------
 
     it('booleans', async () => {
-      function addProps (T) {
-        T.falseValue = false
-        T.trueValue = true
-        T.container = { value: false }
-        T.array = [true, false]
-      }
-
-      function testProps (C) {
-        expect(C.falseValue).to.equal(false)
-        expect(C.trueValue).to.equal(true)
-        expect(C.container.value).to.equal(false)
-        expect(C.array).to.deep.equal([true, false])
-      }
-
-      const instructionProps = {
+      const props = {
         falseValue: false,
         trueValue: true,
         container: { value: false },
         array: [true, false]
       }
 
-      await runPropTest(addProps, testProps, instructionProps)
+      const encodedProps = {
+        falseValue: false,
+        trueValue: true,
+        container: { value: false },
+        array: [true, false]
+      }
+
+      await runPropTest(props, encodedProps)
     })
 
     // ------------------------------------------------------------------------
 
     it('undefined', async () => {
-      function addProps (T) {
-        T.undefinedValue = undefined
-        T.array = [undefined]
+      const props = {
+        undefinedValue: undefined,
+        array: [undefined]
       }
 
-      function testProps (C) {
-        expect(C.undefinedValue).to.equal(undefined)
-        expect(C.array).to.deep.equal([undefined])
-      }
-
-      const instructionProps = {
+      const encodedProps = {
         undefinedValue: { $und: 1 },
         array: [{ $und: 1 }]
       }
 
-      await runPropTest(addProps, testProps, instructionProps)
+      await runPropTest(props, encodedProps)
     })
 
     // ------------------------------------------------------------------------
 
     it('numbers', async () => {
-      function addProps (T) {
-        T.zero = 0
-        T.pos = 1
-        T.neg = -1
-        T.float = 1.5
-        T.minInt = Number.MIN_SAFE_INTEGER
-        T.maxInt = Number.MAX_SAFE_INTEGER
-        T.minVal = Number.MIN_VALUE
-        T.maxVal = Number.MAX_VALUE
-        T.posInf = Number.POSITIVE_INFINITY
-        T.negInf = Number.NEGATIVE_INFINITY
-        T.nan = NaN
-        T.array = [1, -1, NaN, Infinity]
+      const props = {
+        zero: 0,
+        pos: 1,
+        neg: -1,
+        float: 1.5,
+        minInt: Number.MIN_SAFE_INTEGER,
+        maxInt: Number.MAX_SAFE_INTEGER,
+        minVal: Number.MIN_VALUE,
+        maxVal: Number.MAX_VALUE,
+        posInf: Number.POSITIVE_INFINITY,
+        negInf: Number.NEGATIVE_INFINITY,
+        nan: NaN,
+        array: [1, -1, NaN, Infinity]
       }
 
-      function testProps (C) {
-        expect(C.zero).to.equal(0)
-        expect(C.pos).to.equal(1)
-        expect(C.neg).to.equal(-1)
-        expect(C.float).to.equal(1.5)
-        expect(C.minInt).to.equal(Number.MIN_SAFE_INTEGER)
-        expect(C.maxInt).to.equal(Number.MAX_SAFE_INTEGER)
-        expect(C.minVal).to.equal(Number.MIN_VALUE)
-        expect(C.maxVal).to.equal(Number.MAX_VALUE)
-        expect(C.posInf).to.equal(Number.POSITIVE_INFINITY)
-        expect(C.negInf).to.equal(Number.NEGATIVE_INFINITY)
-        expect(isNaN(C.nan)).to.equal(true)
-        expect(C.array).to.deep.equal([1, -1, NaN, Infinity])
-      }
-
-      const instructionProps = {
+      const encodedProps = {
         zero: 0,
         pos: 1,
         neg: -1,
@@ -492,7 +473,7 @@ describe('Code', () => {
         array: [1, -1, { $nan: 1 }, { $inf: 1 }]
       }
 
-      await runPropTest(addProps, testProps, instructionProps)
+      await runPropTest(props, encodedProps)
     })
   })
 
