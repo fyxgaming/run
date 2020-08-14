@@ -267,11 +267,71 @@ describe('Code', () => {
       const CB3 = await run.load(CB.location)
       test(CA3, CB3)
     })
-  })
 
-  describe.skip('deploy old', () => {
     // ------------------------------------------------------------------------
-    // Create parents
+
+    it('parent chain', async () => {
+      const run = new Run()
+
+      class A { }
+      class B extends A { }
+      class C extends B { }
+
+      function test (CC, CB, CA) {
+        expect(Object.getPrototypeOf(CC).origin).to.equal(CB.origin)
+        expect(Object.getPrototypeOf(CB).origin).to.equal(CA.origin)
+      }
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 3,
+        ndel: 0,
+        ncre: 3,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class A { }',
+              {},
+              'class B extends A { }',
+              {
+                deps: {
+                  A: { $jig: 0 }
+                }
+              },
+              'class C extends B { }',
+              {
+                deps: {
+                  B: { $jig: 1 }
+                }
+              }
+            ]
+          }
+        ]
+      })
+
+      const CC = run.deploy(C)
+      const CB = run.deploy(B)
+      const CA = run.deploy(A)
+      expect(Object.getPrototypeOf(CC)).to.equal(CB)
+      expect(Object.getPrototypeOf(CB)).to.equal(CA)
+
+      await run.sync()
+      test(CC, CB, CA)
+
+      const CC2 = await run.load(CC.location)
+      const CB2 = await run.load(CB.location)
+      const CA2 = await run.load(CA.location)
+      test(CC2, CB2, CA2)
+
+      run.cache = new LocalCache()
+      const CC3 = await run.load(CC.location)
+      const CB3 = await run.load(CB.location)
+      const CA3 = await run.load(CA.location)
+      test(CC3, CB3, CA3)
+    })
+
     // ------------------------------------------------------------------------
 
     it('reuses installed code for parent', () => {
@@ -283,6 +343,8 @@ describe('Code', () => {
       expect(Object.getPrototypeOf(CB)).to.equal(CA)
     })
 
+    // ------------------------------------------------------------------------
+
     it('reueses parent that is code', () => {
       const run = new Run()
       class A { }
@@ -291,23 +353,19 @@ describe('Code', () => {
       const CB = run.deploy(B)
       expect(Object.getPrototypeOf(CB)).to.equal(CA)
     })
+  })
 
-    it('creates code for parent chain', () => {
-      const run = new Run()
-      class A { }
-      class B extends A { }
-      class C extends B { }
-      const CC = run.deploy(C)
-      const CB = run.deploy(B)
-      const CA = run.deploy(A)
-      expect(Object.getPrototypeOf(CC)).to.equal(CB)
-      expect(Object.getPrototypeOf(CB)).to.equal(CA)
+  // --------------------------------------------------------------------------
+  // Props
+  // --------------------------------------------------------------------------
+
+  describe('props', () => {
+    it('todo', () => {
+      // TODO
     })
+  })
 
-    // ------------------------------------------------------------------------
-    // Props
-    // ------------------------------------------------------------------------
-
+  describe.skip('deploy old', () => {
     // Helper to create a code with a prop
     function prop (a) {
       const run = new Run()
