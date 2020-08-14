@@ -597,12 +597,22 @@ describe('Code', () => {
     // ------------------------------------------------------------------------
 
     it('maps', async () => {
+      const mapWithProps = new Map()
+      mapWithProps.a = []
+      mapWithProps.m = new Map()
+
       const props = {
-        empty: new Map()
+        empty: new Map(),
+        basic: new Map([[1, 2], [3, 4]]),
+        complex: new Map([[new Set(), null], [[], {}]]),
+        mapWithProps
       }
 
       const encodedProps = {
-        empty: { $map: [] }
+        empty: { $map: [] },
+        basic: { $map: [[1, 2], [3, 4]] },
+        complex: { $map: [[{ $set: [] }, null], [[], {}]] },
+        mapWithProps: { $map: [], props: { a: [], m: { $map: [] } } }
       }
 
       function testProps (C) {
@@ -623,26 +633,6 @@ describe('Code', () => {
       const CA = run.deploy(A)
       return CA.x
     }
-
-    it('creates sandboxed Map props', () => {
-      const m = new Map()
-      expect(prop(m)).not.to.equal(m)
-      expect(prop(new Map()) instanceof Map).to.equal(false)
-      expect(prop(new Map()) instanceof SI.Map).to.equal(true)
-      expect(prop(new Map())).to.deep.equal(new Map())
-      expect(prop(new Map([[1, 2], [3, 4]]))).to.deep.equal(new Map([[1, 2], [3, 4]]))
-      expect(prop(new Map([['a', new Map()]]))).to.deep.equal(new Map([['a', new Map()]]))
-      expect(prop(new Map([[{}, null]]))).to.deep.equal(new Map([[{}, null]]))
-      const map = new Map([[1, 2]])
-      map.b = false
-      map.u = undefined
-      const mapProp = prop(map)
-      expect(mapProp).to.deep.equal(map)
-      expect(mapProp.b).to.equal(false)
-      expect('u' in mapProp).to.equal(true)
-      expect(mapProp.u).to.equal(undefined)
-      expect(mapProp.get(1)).to.equal(2)
-    })
 
     it('creates sandboxed Uint8Array props', () => {
       const u = new Uint8Array()
