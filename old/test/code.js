@@ -22,17 +22,6 @@ describe('Code', () => {
   beforeEach(() => run.blockchain.block())
 
   describe('deploy', () => {
-    it('should deploy a basic class', async () => {
-      class A { }
-      await run.deploy(A)
-      expect(A.location).not.to.equal(undefined)
-      expect(A.location).to.equal(A.origin)
-      expect(A.originMocknet).to.equal(A.origin)
-      expect(A.locationMocknet).to.equal(A.origin)
-      expect(A.owner).to.equal(run.owner.address)
-      expect(A.ownerMocknet).to.equal(run.owner.address)
-    })
-
     it('should support custom owners', async () => {
       class CustomOwner {
         script () { return new Uint8Array() }
@@ -42,62 +31,6 @@ describe('Code', () => {
       class A { }
       await run.deploy(A)
       expect(A.owner instanceof CustomOwner).to.equal(true)
-    })
-
-    it('should not deploy previous install', async () => {
-      class A { }
-      const loc = await run.deploy(A)
-      expect(loc).to.equal(await run.deploy(A))
-    })
-
-    it('should deploy functions', async () => {
-      function f (a, b) { return a + b }
-      const loc = await run.deploy(f)
-      expect(f.origin).to.equal(loc)
-      expect(f.location).to.equal(loc)
-    })
-
-    it('should throw for non-deployables', async () => {
-      await expect(run.deploy(2)).to.be.rejected
-      await expect(run.deploy('abc')).to.be.rejected
-      await expect(run.deploy({ n: 1 })).to.be.rejected
-      await expect(run.deploy(Math.random)).to.be.rejected
-    })
-
-    it('should throw if parent dep mismatch', async () => {
-      class C { }
-      class B { }
-      class A extends B { }
-      A.deps = { B: C }
-      await expect(run.deploy(A)).to.be.rejectedWith('unexpected parent dependency B')
-    })
-
-    it('should support parent dep set to its sandbox', async () => {
-      class B { }
-      const B2 = await run.load(await run.deploy(B))
-      class A extends B { }
-      A.deps = { B: B2 }
-      await run.deploy(A)
-    })
-
-    it('should deploy parents', async () => {
-      class Grandparent { }
-      class Parent extends Grandparent { f () { this.n = 1 } }
-      class Child extends Parent { f () { super.f(); this.n += 1 } }
-      const Child2 = await run.load(await run.deploy(Child))
-      const child = new Child2()
-      child.f()
-      expect(child.n).to.equal(2)
-      expect(unmangle(run.code)._installs.has(Parent)).to.equal(true)
-      expect(unmangle(run.code)._installs.has(Grandparent)).to.equal(true)
-    })
-
-    it('should deploy dependencies', async () => {
-      class A { createB () { return new B() } }
-      class B { constructor () { this.n = 1 } }
-      A.deps = { B }
-      const A2 = await run.load(await run.deploy(A))
-      expect(new A2().createB().n).to.equal(1)
     })
 
     it('should always deploy parents', async () => {
@@ -125,14 +58,6 @@ describe('Code', () => {
       expect(new A2().bPrototype()).to.equal(B2.prototype)
     })
 
-    it('should support renaming dependencies', async () => {
-      class A { createB() { return new B() } } // eslint-disable-line
-      class C { constructor () { this.n = 1 } }
-      A.deps = { B: C }
-      const A2 = await run.load(await run.deploy(A))
-      expect(new A2().createB().n).to.equal(1)
-    })
-
     it('should throw for undefined dependencies', async () => {
       class B { }
       class A { createB () { return new B() } }
@@ -149,31 +74,6 @@ describe('Code', () => {
       const B2 = await run.load(await run.deploy(B))
       expect(new A2().createB()).to.be.instanceOf(B2)
       expect(new B2().createA()).to.be.instanceOf(A2)
-    })
-
-    it('should set temporary origins and locations before sync', async () => {
-      class B { }
-      class A { }
-      A.deps = { B }
-      const locationPromise = run.deploy(A)
-      expect(B.origin).to.equal('_d1')
-      expect(A.origin).to.equal('_d0')
-      expect(B.location).to.equal('_d1')
-      expect(A.location).to.equal('_d0')
-      expect(B.originMocknet).to.equal('_d1')
-      expect(A.originMocknet).to.equal('_d0')
-      expect(B.locationMocknet).to.equal('_d1')
-      expect(A.locationMocknet).to.equal('_d0')
-      const location = await locationPromise
-      expect(location.startsWith('_')).to.equal(false)
-      expect(B.origin.startsWith('_')).to.equal(false)
-      expect(A.origin.startsWith('_')).to.equal(false)
-      expect(B.location.startsWith('_')).to.equal(false)
-      expect(A.location.startsWith('_')).to.equal(false)
-      expect(B.originMocknet.startsWith('_')).to.equal(false)
-      expect(A.originMocknet.startsWith('_')).to.equal(false)
-      expect(B.locationMocknet.startsWith('_')).to.equal(false)
-      expect(A.locationMocknet.startsWith('_')).to.equal(false)
     })
 
     it('should support batch deploys', async () => {
@@ -260,104 +160,9 @@ describe('Code', () => {
       expect(B.location).to.equal(undefined)
       expect(B.locationMocknet).to.equal(undefined)
     })
-
-    it('should support presets', async () => {
-      const run = new Run()
-      class A { }
-      await run.deploy(A)
-      delete A.location
-      delete A.origin
-      run.deactivate()
-      const run2 = new Run()
-      const oldBroadcast = run2.blockchain.broadcast
-      run2.blockchain.broadcast = () => { throw new Error('unexpected broadcast') }
-      try {
-        const location = await run2.deploy(A)
-        const networkSuffix = unmangle(unmangle(Run)._util)._networkSuffix(run2.blockchain.network)
-        expect(A.origin).to.equal(A[`origin${networkSuffix}`])
-        expect(A.location).to.equal(A[`location${networkSuffix}`])
-        expect(location).to.equal(A[`location${networkSuffix}`])
-      } finally {
-        run2.blockchain.broadcast = oldBroadcast
-      }
-    })
-
-    it('should support origin-only presets', async () => {
-      const run = new Run()
-      class A { }
-      await run.deploy(A)
-      delete A.location
-      delete A.origin
-      run.deactivate()
-      const run2 = new Run()
-      const oldBroadcast = run2.blockchain.broadcast
-      run2.blockchain.broadcast = () => { throw new Error('unexpected broadcast') }
-      try {
-        const location = await run2.deploy(A)
-        const networkSuffix = unmangle(unmangle(Run)._util)._networkSuffix(run2.blockchain.network)
-        expect(A.origin).to.equal(A[`origin${networkSuffix}`])
-        expect(A.location).to.equal(A[`location${networkSuffix}`])
-        expect(location).to.equal(A[`location${networkSuffix}`])
-      } finally {
-        run2.blockchain.broadcast = oldBroadcast
-      }
-    })
-
-    it('should support location-only presets', async () => {
-      const run = new Run()
-      class A { }
-      await run.deploy(A)
-      run.deactivate()
-      const run2 = new Run()
-      const oldBroadcast = run2.blockchain.broadcast
-      run2.blockchain.broadcast = () => { throw new Error('unexpected broadcast') }
-      try {
-        delete A.location
-        delete A.origin
-        const networkSuffix = unmangle(unmangle(Run)._util)._networkSuffix(run2.blockchain.network)
-        delete A[`origin${networkSuffix}`]
-        const location = await run2.deploy(A)
-        expect(A.origin).to.equal(undefined)
-        expect(A.location).to.equal(A[`location${networkSuffix}`])
-        expect(location).to.equal(A[`location${networkSuffix}`])
-      } finally {
-        run2.blockchain.broadcast = oldBroadcast
-      }
-    })
   })
 
   describe('load', () => {
-    it('should load from cache', async () => {
-      class A { f () { return 1 } }
-      const A2 = await run.load(await run.deploy(A))
-      expect(await run.load(A.origin)).to.equal(A2)
-    })
-
-    it('should load from mockchain when cached', async () => {
-      class A { f () { return 1 } }
-      const A2 = await run.load(await run.deploy(A))
-      const run2 = new Run()
-      const A3 = await run2.load(A.origin)
-      expect(A2).to.equal(A3)
-    })
-
-    it('should load from mockchain when uncached', async () => {
-      class A { f () { return 1 } }
-      const A2 = await run.load(await run.deploy(A))
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      const A3 = await run2.load(A.origin)
-      expect(A2.owner).to.equal(run.owner.address)
-      expect(A2.owner).to.equal(A2.ownerMocknet)
-      expect(A3.owner).to.equal(A2.owner)
-    })
-
-    it('should throw if load temporary location', async () => {
-      class A { f () { return 1 } }
-      run.deploy(A).catch(e => {})
-      await expect(run.load(A.locationMocknet)).to.be.rejected
-    })
-
     it('should load functions', async () => {
       function f (a, b) { return a + b }
       const f2 = await run.load(await run.deploy(f))

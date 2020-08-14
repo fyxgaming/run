@@ -46,6 +46,10 @@ const { payFor } = require('../env/misc')
 // Call auth in a jig
 // Owner is parent ... for new jigs
 
+// TODO Deploy
+//  -Presets are assigned on locals, but not until synced
+//  -Failures, reverts
+
 // ------------------------------------------------------------------------------------------------
 // Globals
 // ------------------------------------------------------------------------------------------------
