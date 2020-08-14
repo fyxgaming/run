@@ -68,30 +68,6 @@ describe('Code', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe.skip('deploy old', () => {
-    // ------------------------------------------------------------------------
-    // Error cases
-    // ------------------------------------------------------------------------
-
-    it('throws if depend on Code', () => {
-      const run = new Run()
-      class A extends Code { }
-      const error = 'The Code class cannot be used in jigs'
-      expect(() => run.deploy(A)).to.throw(error)
-      class B {}
-      B.Code = Code
-      expect(() => run.deploy(B)).to.throw(error)
-    })
-
-    it('throws if error creating parent dependency', () => {
-      const run = new Run()
-      class A { }
-      class B extends A { }
-      B.Date = Date
-      expect(() => run.deploy(B)).to.throw('Cannot install intrinsic')
-    })
-  })
-
   describe('deploy', () => {
     it('sets initial bindings', () => {
       const run = new Run()

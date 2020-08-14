@@ -1530,7 +1530,7 @@ describe('Deploy', () => {
   // Errors
   // --------------------------------------------------------------------------
 
-  describe.only('errors', () => {
+  describe('errors', () => {
     it('throws if non-function', () => {
       const run = new Run()
       const error = 'Only functions and classes are supported'
@@ -1618,6 +1618,28 @@ describe('Deploy', () => {
       A.nonce = 1
       const error = 'Must not have any bindings'
       expect(() => run.deploy(A)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if depend on Code', () => {
+      const run = new Run()
+      class A extends Code { }
+      const error = 'The Code class cannot be used in jigs'
+      expect(() => run.deploy(A)).to.throw(error)
+      class B {}
+      B.Code = Code
+      expect(() => run.deploy(B)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if error creating parent dependency', () => {
+      const run = new Run()
+      class A { }
+      class B extends A { }
+      B.Date = Date
+      expect(() => run.deploy(B)).to.throw('Cannot install intrinsic')
     })
   })
 })
