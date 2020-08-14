@@ -68,6 +68,7 @@ function expectTx (opts) {
   function verify (rawtx) {
     const tx = new Transaction(rawtx)
     const payload = _payload(tx)
+    console.log(JSON.stringify(payload, 0, 2))
     if ('nin' in opts) expect(payload.in).to.equal(opts.nin)
     if ('nref' in opts) expect(payload.ref.length).to.equal(opts.nref)
     if ('nout' in opts) expect(payload.out.length).to.equal(opts.nout)
@@ -622,38 +623,52 @@ describe('Code', () => {
 
       await runPropTest(props, encodedProps, testProps)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('uint8array', async () => {
+      const props = {
+        empty: new Uint8Array(),
+        basic: new Uint8Array([0, 1, 255])
+      }
+
+      const encodedProps = {
+        empty: { $ui8a: '' },
+        basic: { $ui8a: 'AAH/' }
+      }
+
+      function testProps (C) {
+        expect(C.empty instanceof Uint8Array).to.equal(false)
+        expect(C.empty instanceof SI.Uint8Array).to.equal(true)
+      }
+
+      await runPropTest(props, encodedProps, testProps)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('circular', async () => {
+      const obj = {}
+      obj.obj = obj
+
+      const arr = []
+      arr.push(arr)
+
+      const props = { obj, arr }
+
+      const encodedProps = {
+        $top: {
+          obj: { $dup: 0 },
+          arr: { $dup: 1 }
+        },
+        dups: [{ obj: { $dup: 0 } }, [{ $dup: 1 }]]
+      }
+
+      await runPropTest(props, encodedProps)
+    })
   })
 
   describe.skip('deploy old', () => {
-    // Helper to create a code with a prop
-    function prop (a) {
-      const run = new Run()
-      class A { }
-      A.x = a
-      const CA = run.deploy(A)
-      return CA.x
-    }
-
-    it('creates sandboxed Uint8Array props', () => {
-      const u = new Uint8Array()
-      expect(prop(u)).not.to.equal(u)
-      expect(prop(new Uint8Array()) instanceof Uint8Array).to.equal(false)
-      expect(prop(new Uint8Array()) instanceof SI.Uint8Array).to.equal(true)
-      expect(prop(new Uint8Array())).to.deep.equal(new Uint8Array())
-      expect(prop(new Uint8Array([0, 1, 255]))).to.deep.equal(new Uint8Array([0, 1, 255]))
-    })
-
-    it('creates cirular props', () => {
-      const o = { }
-      o.o = o
-      o.a = [o]
-      o.a.push(o.a)
-      const p = prop(o)
-      expect(p.o).to.equal(p)
-      expect(p.a[0]).to.equal(p)
-      expect(p.a[1]).to.equal(p.a)
-    })
-
     it('creates code for self-reference prop', () => {
       const run = new Run()
       class A { }

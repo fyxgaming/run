@@ -15,6 +15,7 @@ require('./module/mockchain')
 require('./module/viewer')
 
 require('./util/bindings.js')
+require('./util/codec.js')
 require('./util/dynamic.js')
 require('./util/log.js')
 require('./util/misc.js')

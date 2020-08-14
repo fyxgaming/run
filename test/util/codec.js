@@ -7,12 +7,12 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
-const { Run } = require('../../test/env/config')
-const { unmangle } = require('../../test/env/unmangle')
-const Codec = unmangle(unmangle(Run)._util)._Codec
+const Run = require('../env/run')
+const { Jig, Berry } = Run
+const unmangle = require('../env/unmangle')
+const Codec = unmangle(Run)._Codec
 const SI = unmangle(Run.sandbox)._intrinsics
 const HI = unmangle(Run.sandbox)._hostIntrinsics
-const { Jig, Berry } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Helpers
@@ -440,7 +440,7 @@ describe('Codec', () => {
     })
   })
 
-  describe('jigs', () => {
+  describe.skip('jigs', () => {
     it('should save jigs with location', () => {
       new Run() // eslint-disable-line
       class Dragon extends Jig { }
@@ -523,7 +523,7 @@ describe('Codec', () => {
     })
   })
 
-  describe('arbitrary objects', () => {
+  describe.skip('arbitrary objects', () => {
     it('should support basic arbitrary objects', () => {
       const run = new Run()
       const jigs = []
