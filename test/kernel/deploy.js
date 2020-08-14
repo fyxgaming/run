@@ -165,21 +165,6 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it('sets initial bindings', () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      Membrane._sudo(() => {
-        expect(CA.location.startsWith('commit://')).to.equal(true)
-        expect(CA.origin.startsWith('commit://')).to.equal(true)
-        expect(CA.nonce).to.equal(0)
-        expect(unmangle(CA.owner)._value).to.equal(undefined)
-        expect(unmangle(CA.satoshis)._value).to.equal(undefined)
-      })
-    })
-
-    // ------------------------------------------------------------------------
-
     it('creates code for class only once', async () => {
       const run = new Run()
       class A { }
@@ -206,6 +191,54 @@ describe('Deploy', () => {
       const CA1 = run.deploy(A)
       const CA2 = run.deploy(CA1)
       expect(CA1).to.equal(CA2)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Bindings
+  // --------------------------------------------------------------------------
+
+  describe('bindings', () => {
+    it('sets initial bindings before sync', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      Membrane._sudo(() => {
+        expect(CA.location.startsWith('commit://')).to.equal(true)
+        expect(CA.origin.startsWith('commit://')).to.equal(true)
+        expect(CA.nonce).to.equal(0)
+        expect(unmangle(CA.owner)._value).to.equal(undefined)
+        expect(unmangle(CA.satoshis)._value).to.equal(undefined)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('assigns bindings after sync', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      await run.sync()
+      expect(CA.location.endsWith('_o1')).to.equal(true)
+      expect(CA.origin.endsWith('_o1')).to.equal(true)
+      expect(CA.nonce).to.equal(0)
+      const owner = await run.owner.owner()
+      expect(CA.owner).to.equal(owner)
+      expect(CA.satoshis).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('assigns bindings to both local and jig', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      await run.sync()
+      expect(CA.location).to.equal(A.location)
+      expect(CA.origin).to.equal(A.origin)
+      expect(CA.nonce).to.equal(A.nonce)
+      expect(CA.owner).to.equal(A.owner)
+      expect(CA.satoshis).to.equal(A.satoshis)
     })
   })
 
@@ -1656,6 +1689,109 @@ describe('Deploy', () => {
       class B extends A { }
       B.Date = Date
       expect(() => run.deploy(B)).to.throw('Cannot install intrinsic')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Sealed
+  // --------------------------------------------------------------------------
+
+  describe('sealed', () => {
+    it('sealed by default', async () => {
+      const run = new Run()
+
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class B extends A { }',
+              {
+                deps: { A: { $jig: 0 } }
+              }
+            ]
+          }
+        ]
+      })
+
+      class B extends A { }
+      const CB = run.deploy(B)
+      await CB.sync()
+
+      run.cache = new LocalCache()
+      await run.load(CB.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('allows unsealing', async () => {
+      const run = new Run()
+      class A { }
+      A.sealed = false
+      class B extends A { }
+      const CA = run.deploy(A)
+      await run.sync()
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      await run2.deploy(B)
+      await CA.sync()
+      expect(CA.origin).to.equal(CA.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      const run = new Run()
+      class A { }
+      A.sealed = null
+      expect(() => run.deploy(A)).to.throw('Invalid sealed option: null')
+      A.sealed = 1
+      expect(() => run.deploy(A)).to.throw('Invalid sealed option: 1')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Locks
+  // --------------------------------------------------------------------------
+
+  describe('locks', () => {
+    it.skip('deploys with custom lock', async () => {
+      // TODO: Use custom owner
+
+      const run = new Run()
+
+      class L {
+        script () { return new Uint8Array() }
+        domain () { return 0 }
+      }
+      run.deploy()
+
+      class A {
+        static send (to) { this.owner = to }
+      }
+
+      A.send = () => { throw new Error('Must call methods on jigs') }
+      const CA = run.deploy(A)
+      run.deploy(CA)
+      await run.sync()
+      CA.send(new L())
+      await CA.sync()
+      expect(A.location.startsWith('commit://'))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('fails to deploy if lock class undeployed', () => {
+      // TODO
     })
   })
 })

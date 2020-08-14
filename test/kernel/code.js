@@ -67,54 +67,6 @@ describe('Code', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('deploy', () => {
-    it('assigns bindings after sync', async () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      await run.sync()
-      expect(CA.location.endsWith('_o1')).to.equal(true)
-      expect(CA.origin.endsWith('_o1')).to.equal(true)
-      expect(CA.nonce).to.equal(0)
-      const owner = await run.owner.owner()
-      expect(CA.owner).to.equal(owner)
-      expect(CA.satoshis).to.equal(0)
-    })
-
-    it('assigns bindings to both local and jig', async () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      await run.sync()
-      expect(CA.location).to.equal(A.location)
-      expect(CA.origin).to.equal(A.origin)
-      expect(CA.nonce).to.equal(A.nonce)
-      expect(CA.owner).to.equal(A.owner)
-      expect(CA.satoshis).to.equal(A.satoshis)
-    })
-
-    it('deploys parent and child', async () => {
-      const run = new Run()
-      class A {}
-      class B extends A {}
-      run.deploy(B)
-      await run.sync()
-      expect(A.location.endsWith('_o1')).to.equal(true)
-      expect(B.location.endsWith('_o2')).to.equal(true)
-    })
-
-    it('deploys jig props', async () => {
-      const run = new Run()
-      class A { }
-      class B { }
-      A.B = B
-      run.deploy(A)
-      await run.sync()
-      expect(A.location.endsWith('_o1')).to.equal(true)
-      expect(B.location.endsWith('_o2')).to.equal(true)
-    })
-  })
-
   describe('toString', () => {
     it('should return source code for class', () => {
       const run = new Run()
@@ -310,63 +262,6 @@ describe('Code', () => {
       const CA = run.deploy(A)
       class B extends CA { }
       Object.setPrototypeOf(B, {})
-    })
-  })
-
-  describe.skip('deploy', () => {
-    it.skip('deploys with custom lock', async () => {
-      const run = new Run()
-      class L {
-        script () { return new Uint8Array() }
-        domain () { return 0 }
-      }
-      class A {
-        static send (to) { this.owner = to }
-      }
-      A.send = () => { throw new Error('Must call methods on jigs') }
-      const CA = run.deploy(A)
-      run.deploy(CA)
-      await run.sync()
-      CA.send(new L())
-      await CA.sync()
-      expect(A.location.startsWith('commit://'))
-    })
-  })
-
-  describe.skip('sealed', () => {
-    it.skip('sealed by default', () => {
-      const run = new Run()
-      class A { }
-      A.options = { utility: true }
-      const CA = run.deploy(A)
-      CA.deploy()
-      class C extends A { }
-      const CC = run.deploy(C)
-      CC.deploy()
-      // TODO: Parent approval
-    })
-
-    it('allows unsealing', async () => {
-      const run = new Run()
-      class A { }
-      A.sealed = false
-      class B extends A { }
-      const CA = run.deploy(A)
-      await run.sync()
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      await run2.deploy(B)
-      await CA.sync()
-      expect(CA.origin).to.equal(CA.location)
-    })
-
-    it('throws if invalid', () => {
-      const run = new Run()
-      class A { }
-      A.sealed = null
-      expect(() => run.deploy(A)).to.throw('Invalid sealed option: null')
-      A.sealed = 1
-      expect(() => run.deploy(A)).to.throw('Invalid sealed option: 1')
     })
   })
 
