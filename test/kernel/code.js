@@ -1016,7 +1016,7 @@ describe('Code', () => {
   // Deps
   // --------------------------------------------------------------------------
 
-  describe.only('deps', () => {
+  describe('deps', () => {
     it('basic dep', async () => {
       const run = new Run()
 
@@ -1112,6 +1112,8 @@ describe('Code', () => {
       test(CA3)
     })
 
+    // ------------------------------------------------------------------------
+
     it('automatically adds parent', async () => {
       const run = new Run()
 
@@ -1154,9 +1156,153 @@ describe('Code', () => {
       const CB3 = await run.load(CB.location)
       test(CB3)
     })
-  })
 
-  describe.skip('deploy old', () => {
+    // ------------------------------------------------------------------------
+
+    it('parent deps is not available on child', async () => {
+      const run = new Run()
+
+      class B { static f () { return n } } // eslint-disable-line
+      class A extends B { static g () { return n } } // eslint-disable-line
+      B.deps = { n: 1 }
+
+      function test (CA) {
+        expect(Object.getPrototypeOf(CA).f()).to.equal(1)
+        expect(() => CA.g()).to.throw()
+      }
+
+      const CA = run.deploy(A)
+      test(CA)
+      await CA.sync()
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('berry deps', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('jig deps', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('native deps', async () => {
+      const run = new Run()
+
+      function f () { return [Jig, Berry] }
+      f.deps = { Jig, Berry }
+
+      function test (cf) {
+        expect(cf()).to.deep.equal([Jig, Berry])
+      }
+
+      expectTx({
+        nin: 0,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'function f () { return [Jig, Berry] }',
+              {
+                deps: {
+                  Jig: { $jig: 0 },
+                  Berry: { $jig: 1 }
+                }
+              }
+            ]
+          }
+        ]
+      })
+
+      const cf = run.deploy(f)
+      test(cf)
+      await cf.sync()
+
+      const cf2 = await run.load(cf.location)
+      test(cf2)
+
+      run.cache = new LocalCache()
+      const cf3 = await run.load(cf.location)
+      test(cf3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('renamed deps', async () => {
+      const run = new Run()
+
+      const h = 'dummy'
+      function f () { return 1 }
+      function g () { return h() }
+      g.deps = { h: f }
+
+      function test (cg) {
+        expect(cg()).to.equal(1)
+      }
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        ncre: 2,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'function g () { return h() }',
+              {
+                deps: { h: { $jig: 1 } }
+              },
+              'function f () { return 1 }',
+              {}
+            ]
+          }
+        ]
+      })
+
+      const cg = run.deploy(g)
+      test(cg)
+      await cg.sync()
+
+      const cg2 = await run.load(cg.location)
+      test(cg2)
+
+      run.cache = new LocalCache()
+      const cg3 = await run.load(cg.location)
+      test(cg3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if dep is unsupported', () => {
+      const run = new Run()
+      class A { }
+      A.deps = { Date }
+      expect(() => run.deploy(A)).to.throw()
+      A.deps = { A: () => { } }
+      expect(() => run.deploy(A)).to.throw()
+      A.deps = { r: new RegExp() }
+      expect(() => run.deploy(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if deps invalid', () => {
       const run = new Run()
       class A { }
@@ -1169,39 +1315,9 @@ describe('Code', () => {
       A.deps = new class Deps {}()
       expect(() => run.deploy(A)).to.throw()
     })
+  })
 
-    it('does not install parent deps on child', () => {
-      const run = new Run()
-      class B { f () { return n } } // eslint-disable-line
-      class A extends B { g () { return n } } // eslint-disable-line
-      B.deps = { n: 1 }
-      const CB = run.deploy(B)
-      const b = new CB()
-      expect(b.f()).to.equal(1)
-      const CA = run.deploy(A)
-      const a = new CA()
-      expect(() => a.g()).to.throw()
-    })
-
-    it.skip('throws if dep is unsupported', () => {
-      const run = new Run()
-      class A { }
-      A.deps = { Date }
-      expect(() => run.deploy(A)).to.throw('Cannot install intrinsic')
-      A.deps = { A: () => { } }
-      expect(() => run.deploy(A)).to.throw('TODO')
-      A.deps = { r: new RegExp() }
-      expect(() => run.deploy(A)).to.throw('TODO')
-    })
-
-    it.skip('supports berry deps', () => {
-      // TODO
-    })
-
-    it.skip('supports jig deps', () => {
-      // TODO
-    })
-
+  describe.skip('deploy old', () => {
     // ------------------------------------------------------------------------
     // Presets
     // ------------------------------------------------------------------------
