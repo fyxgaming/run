@@ -30,7 +30,7 @@ const { payFor } = require('../env/misc')
 //  - Bad parent
 //  - Prop tests should be in a set, in an array, on base
 //  - Code that was previously deployed, so a ref
-//  - Cannot set to "presets" or "deps" in a static method
+//  - Cannot set to "presets" or "deps" in a static method, or "sealed"? Or maybe you can set sealed.
 
 // Unfiled
 // Constructing Code objects inside... they would normally construct sandbox. How to do base?
