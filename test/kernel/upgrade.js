@@ -180,17 +180,18 @@ describe('Upgrade', () => {
     it('changes deps', async () => {
       const run = new Run()
 
-      function f () { return [typeof a, typeof b] }
+      function f () { return [typeof a, typeof b, 'f'] }
       f.deps = { a: 1 }
       const cf = run.deploy(f)
       await cf.sync()
 
-      function g () { return [typeof a, typeof b] }
+      function g () { return [typeof a, typeof b, 'g'] }
       g.deps = { b: 2 }
 
       function test (cf) {
         expect(cf()[0]).to.equal('undefined')
         expect(cf()[1]).to.equal('number')
+        expect(cf()[2]).to.equal('g')
       }
 
       expectTx({
@@ -225,6 +226,69 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
+    it.skip('upgrades multiple in a batch', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('upgrades in same transaction as create', () => {
+      // TODO
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Props
+  // --------------------------------------------------------------------------
+
+  describe('props', () => {
+    // Illegal
+    // Deploys
+  })
+
+  // --------------------------------------------------------------------------
+  // Deps
+  // --------------------------------------------------------------------------
+
+  describe('props', () => {
+    // Illegal
+    // Deploys
+  })
+
+  // --------------------------------------------------------------------------
+  // Errors
+  // --------------------------------------------------------------------------
+
+  describe('errors', () => {
+    it('should roll back', async () => {
+      const run = new Run()
+      class A { static f () { }}
+      A.x = 1
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      class B { static g () { }}
+      B.y = 2
+      stub(run.purse, 'pay').callsFake(x => x)
+      CA.upgrade(B)
+
+      expect(CA.toString()).to.equal(B.toString())
+      expect(typeof CA.x).to.equal('undefined')
+      expect(CA.y).to.equal(2)
+      expect(typeof CA.f).to.equal('undefined')
+      expect(typeof CA.g).to.equal('function')
+
+      await expect(CA.sync()).to.be.rejected
+
+      expect(CA.toString()).to.equal(A.toString())
+      expect(CA.x).to.equal(1)
+      expect(typeof CA.y).to.equal('undefined')
+      expect(typeof CA.f).to.equal('function')
+      expect(typeof CA.g).to.equal('undefined')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('cannot upgrade non-code', () => {
       const error = 'Upgrade unavailable'
       expect(() => Code.prototype.upgrade.call({}, class A { })).to.throw(error)
@@ -234,82 +298,23 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    // Throws if illegal
-    // Upgrade multiple in a batch
-    // Cannot upgrade inside a method
+    it('cannot upgrade a destroyed jig', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      CA.destroy()
+      class B { }
+      expect(() => CA.upgrade(B)).to.throw('Cannot upgrade destroyed jig')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('cannot upgrade in a method', () => {
+      // TODO
+    })
   })
 
   describe.skip('upgrade', () => {
-    it('should upgrade functions', () => {
-      const run = new Run()
-      function f () { return 1 }
-      const c = run.deploy(f)
-      expect(c()).to.equal(1)
-      function g () { return 2 }
-      c.upgrade(g)
-      expect(c()).to.equal(2)
-    })
-
-    it('should upgrade with dependencies', async () => {
-      const run = new Run()
-      class A { }
-      class D { }
-      class B extends D { }
-      class C { }
-      B.C = C
-      const CA = run.deploy(A)
-      CA.upgrade(B)
-      await run.sync()
-      await run.load(CA.location)
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      await run2.load(CA.location)
-    })
-
-    it('should throw if inconsistent world after upgrade', async () => {
-      const run = new Run()
-      class A { }
-      class B { }
-      const CA = run.deploy(A)
-      CA.upgrade(B)
-      await run.sync()
-      const A1 = await run.load(CA.origin)
-      class C { }
-      C.A1 = A1
-      C.A2 = CA
-      expect(() => run.deploy(C)).to.throw('Inconsistent worldview')
-    })
-
-    it('should rollback upgrade', async () => {
-      const run = new Run()
-      class A { f () { } static t () { }}
-      A.x = 1
-      const C = run.deploy(A)
-      await C.sync()
-      expect(typeof C.t).to.equal('function')
-      expect(typeof C.u).to.equal('undefined')
-
-      class B { g () { } static u () { }}
-      B.y = 2
-      stub(run.purse, 'pay').callsFake(x => x)
-      C.upgrade(B)
-      expect(typeof C.t).to.equal('undefined')
-      expect(typeof C.u).to.equal('function')
-
-      await expect(C.sync()).to.be.rejected
-
-      expect(C.toString()).to.equal(A.toString())
-      expect(C.x).to.equal(1)
-      expect(C.y).to.equal(undefined)
-      expect(typeof C.prototype.f).to.equal('function')
-      expect(typeof C.prototype.g).to.equal('undefined')
-      expect(typeof C.t).to.equal('function')
-      expect(typeof C.u).to.equal('undefined')
-    })
-
-    // TODO: Rolls back if error
-    // TODO: Upgrade in same transacation as create (batch)
-    // TODO: Upgrade destroyed jig
     // TODO: Upgrade with parent
     // TODO: Upgrade with props (deployed and not)
     // TODO: Upgrade and remove parent
@@ -322,6 +327,8 @@ describe('Upgrade', () => {
     // TODO: Rollback upgrade itself, not publish error
     // TODO: Upgrade with complex props
     // TODO: Cannot upgrade in another action
+    // TODO: Sync a jig to gets its newer code. Test
+    // TODO: Sync a code to gets a newer code prop. Test
   })
 })
 
