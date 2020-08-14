@@ -1536,6 +1536,12 @@ describe('Deploy', () => {
       A.presets = { anotherNetwork: { d: Math.random } }
       expect(() => run.deploy(A)).to.throw()
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('presets supported for deleted jigs', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------

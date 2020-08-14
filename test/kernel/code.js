@@ -470,7 +470,7 @@ describe('Code', () => {
     })
   })
 
-  describe.only('destroy', () => {
+  describe('destroy', () => {
     it('destroys code', async () => {
       const run = new Run()
 
@@ -480,8 +480,8 @@ describe('Code', () => {
 
       function test (CA) {
         expect(CA.location.endsWith('_d0')).to.equal(true)
-        // expect(CA.owner).to.equal(undefined)
-        // expect(CA.satoshis).to.equal(0)
+        expect(CA.owner).to.equal(null)
+        expect(CA.satoshis).to.equal(0)
       }
 
       expectTx({
@@ -499,6 +499,9 @@ describe('Code', () => {
       })
 
       expect(CA.destroy()).to.equal(CA)
+      expect(CA.owner).to.equal(null)
+      expect(CA.satoshis).to.equal(0)
+
       await CA.sync()
       test(CA)
 
