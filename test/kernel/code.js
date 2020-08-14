@@ -344,7 +344,11 @@ describe('Code', () => {
 
     })
 
-    it.skip('destroy in a batch', () => {
+    it.skip('destroy code in a jig method', () => {
+
+    })
+
+    it.skip('destroy multiple in a batch', () => {
 
     })
 
@@ -391,8 +395,65 @@ describe('Code', () => {
       test(CA3)
     })
 
-    // Auth fails on new jigs, or when owner transfers in a batch
-    // Auth is allowed when unbound and undefined, but a different transaction
+    it('cannot auth non-jig children', async () => {
+      const run = new Run()
+
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      class B extends CA { }
+      expect(() => B.auth()).to.throw('Auth unavailable')
+    })
+
+    it('throws if auth jig destroyed in another transaction', async () => {
+      const run = new Run()
+
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      CA.destroy()
+      await CA.sync()
+
+      expect(() => CA.auth()).to.throw('Cannot auth destroyed jig')
+    })
+
+    it('auth jig not synced', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      CA.auth()
+      await CA.sync()
+    })
+
+    it.skip('throws if auth jig destroyed in same transaction', () => {
+
+    })
+
+    it.skip('auth in a static method', () => {
+
+    })
+
+    it.skip('auth code in a jig method', () => {
+
+    })
+
+    it.skip('auth multiple in a batch', () => {
+
+    })
+
+    it.skip('create and auth in same transaction', () => {
+
+    })
+
+    it.skip('throws if auth new jig', () => {
+
+    })
+
+    it.skip('throws if auth transferred jig', () => {
+
+    })
   })
 
   describe.skip('sync', () => {

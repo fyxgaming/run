@@ -72,8 +72,9 @@ describe('Native', () => {
     NATIVE.forEach(N => expect(() => Code.prototype.destroy.apply(N)).to.throw(error))
   })
 
-  it.skip('cannot auth', () => {
-    // TODO
+  it('cannot auth', () => {
+    const error = 'Auth unavailable'
+    NATIVE.forEach(N => expect(() => Code.prototype.auth.apply(N)).to.throw(error))
   })
 
   it.skip('cannot upgrade', () => {
