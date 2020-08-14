@@ -631,6 +631,7 @@ describe('Code', () => {
     // TODO: Rollback with multiple transactions in a batch
     // TODO: Rollback upgrade itself, not publish error
     // TODO: Upgrade with complex props
+    // TODO: Cannot upgrade in another action
   })
 
   describe.skip('caller', () => {
