@@ -26,16 +26,12 @@ const { payFor } = require('../env/misc')
 //  - defineProperty disabled
 //  - getters and setters either allowed, or not allowed
 //  - Code methods cannot be deleted, or redefined, either from inside or outside
-//  - All prop tests also test with load
-//  - Bad parent
-//  - Prop tests should be in a set, in an array, on base
 //  - Code that was previously deployed, so a ref
 //  - Cannot set to "presets" or "deps" in a static method, or "sealed"? Or maybe you can set sealed.
 
 // Unfiled
 // Constructing Code objects inside... they would normally construct sandbox. How to do base?
 //      Need for arb objects
-// Clean up loader
 // Spend all stack when set
 // Spend all stack when delete
 // Spend all stack when create too
