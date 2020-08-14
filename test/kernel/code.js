@@ -353,6 +353,34 @@ describe('Code', () => {
     })
   })
 
+  describe('auth', () => {
+    it.only('spends code', async () => {
+      const run = new Run()
+
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      function test(CA) {
+        expect(CA.origin).not.to.equal(CA.location)
+      }
+
+      expect(CA.auth()).to.equal(CA)
+      await CA.sync()
+      test(CA)
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      // run.cache = new LocalCache()
+      // const CA3 = await run.load(CA.location)
+      // test(CA3)
+    })
+
+    // Auth fails on new jigs, or when owner transfers in a batch
+    // Auth is allowed when unbound and undefined, but a different transaction
+  })
+
   describe.skip('sync', () => {
     // Only waits for current record
     // TODO: Check records
@@ -551,31 +579,6 @@ describe('Code', () => {
       run.activate()
       expect(A.location).to.equal(location)
     })
-  })
-
-  describe.skip('auth', () => {
-    it('auths code', async () => {
-      const run = new Run()
-      class A { }
-      const C = run.deploy(A)
-      await C.sync()
-
-      C.auth()
-      await C.sync()
-      expect(C.origin).not.to.equal(C.location)
-
-      // Load from state cache
-      await run.load(C.origin)
-      await run.load(C.location)
-
-      // Load via replay
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      await run2.load(C.location)
-    })
-
-    // Auth fails on new jigs, or when owner transfers in a batch
-    // Auth is allowed when unbound and undefined, but a different transaction
   })
 
   describe.skip('call', () => {
