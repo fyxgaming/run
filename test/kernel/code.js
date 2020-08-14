@@ -12,7 +12,6 @@ const { Transaction } = require('bsv')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const { Code, Jig, Berry } = unmangle(Run)
-const Membrane = unmangle(unmangle(Run)._Membrane)
 const { payFor } = require('../env/misc')
 
 // Written Tests:
@@ -69,19 +68,6 @@ describe('Code', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('deploy', () => {
-    it('sets initial bindings', () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      Membrane._sudo(() => {
-        expect(CA.location.startsWith('commit://')).to.equal(true)
-        expect(CA.origin.startsWith('commit://')).to.equal(true)
-        expect(CA.nonce).to.equal(0)
-        expect(unmangle(CA.owner)._value).to.equal(undefined)
-        expect(unmangle(CA.satoshis)._value).to.equal(undefined)
-      })
-    })
-
     it('assigns bindings after sync', async () => {
       const run = new Run()
       class A { }
