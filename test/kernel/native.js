@@ -66,6 +66,19 @@ describe('Native', () => {
   it('toString should not return actual source code', () => {
     NATIVE.forEach(N => expect(N.toString().indexOf('[native code]')).not.to.equal(-1))
   })
+
+  it('cannot destroy', () => {
+    const error = 'Destroy unavailable'
+    NATIVE.forEach(N => expect(() => Code.prototype.destroy.apply(N)).to.throw(error))
+  })
+
+  it.skip('cannot auth', () => {
+    // TODO
+  })
+
+  it.skip('cannot upgrade', () => {
+    // TODO
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

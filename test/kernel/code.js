@@ -513,7 +513,6 @@ describe('Code', () => {
       test(CA3)
     })
 
-    // Native
     // Non-jig code classes
     // Destroy as part of a method
     // Destroy in a batch
