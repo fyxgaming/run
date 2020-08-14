@@ -528,9 +528,9 @@ describe('Code', () => {
         complex: { $arr: { 0: 1, a: 'b' } }
       }
 
-      function testProps (T) {
-        expect(T.empty instanceof Array).to.equal(false)
-        expect(T.empty instanceof SI.Array).to.equal(true)
+      function testProps (C) {
+        expect(C.empty instanceof Array).to.equal(false)
+        expect(C.empty instanceof SI.Array).to.equal(true)
       }
 
       await runPropTest(props, encodedProps, testProps)
@@ -540,12 +540,26 @@ describe('Code', () => {
 
     it('objects', async () => {
       const props = {
+        empty: {},
+        basic: { a: 1, b: 2 },
+        nested: { o: { } },
+        array: [{}],
+        nullValue: null,
+        dollar: { $und: 1 }
       }
 
       const encodedProps = {
+        empty: {},
+        basic: { a: 1, b: 2 },
+        nested: { o: { } },
+        array: [{}],
+        nullValue: null,
+        dollar: { $obj: { $und: 1 } }
       }
 
-      function testProps (T) {
+      function testProps (C) {
+        expect(C.empty instanceof Object).to.equal(false)
+        expect(C.empty instanceof SI.Object).to.equal(true)
       }
 
       await runPropTest(props, encodedProps, testProps)
@@ -561,18 +575,6 @@ describe('Code', () => {
       const CA = run.deploy(A)
       return CA.x
     }
-
-    it('creates sandboxed object props', () => {
-      const o = {}
-      expect(prop(o)).not.to.equal(o)
-      expect(prop({}) instanceof Object).to.equal(false)
-      expect(prop({}) instanceof SI.Object).to.equal(true)
-      expect(prop({})).to.deep.equal({})
-      expect(prop({ n: 1, m: 2 })).to.deep.equal({ n: 1, m: 2 })
-      expect(prop({ n: {} })).to.deep.equal({ n: {} })
-      expect(prop([{}])).to.deep.equal([{}])
-      expect(prop(null)).to.equal(null)
-    })
 
     it('creates sandboxed Set props', () => {
       const s = new Set()
