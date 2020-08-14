@@ -354,6 +354,60 @@ describe('Code', () => {
       const CB = run.deploy(B)
       expect(Object.getPrototypeOf(CB)).to.equal(CA)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('circular parent-child code', async () => {
+      const run = new Run()
+
+      class B { }
+      class A extends B { }
+      B.A = A
+
+      function test (CA) {
+        expect(Object.getPrototypeOf(CA).A).to.equal(CA)
+      }
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        ncre: 2,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class B { }',
+              {
+                A: { $jig: 1 }
+              },
+              'class A extends B { }',
+              {
+                deps: {
+                  B: { $jig: 0 }
+                }
+              }
+            ]
+          }
+        ]
+      })
+
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      expect(Object.getPrototypeOf(CA)).to.equal(CB)
+      expect(CB.A).to.equal(CA)
+      test(CA)
+
+      await run.sync()
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -821,17 +875,6 @@ describe('Code', () => {
   })
 
   describe.skip('deploy old', () => {
-    it('creates circular parent-child code', () => {
-      const run = new Run()
-      class B { }
-      class A extends B { }
-      B.A = A
-      const CA = run.deploy(A)
-      const CB = run.deploy(B)
-      expect(Object.getPrototypeOf(CA)).to.equal(CB)
-      expect(CB.A).to.equal(CA)
-    })
-
     it.skip('creates code for arbitrary objects', () => {
       // TODO
     })
