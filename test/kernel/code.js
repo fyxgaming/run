@@ -564,6 +564,54 @@ describe('Code', () => {
 
       await runPropTest(props, encodedProps, testProps)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('sets', async () => {
+      const setWithProps = new Set()
+      setWithProps.a = []
+      setWithProps.s = new Set()
+
+      const props = {
+        empty: new Set(),
+        basic: new Set([1, 2, 3]),
+        nested: new Set([new Set()]),
+        setWithProps
+      }
+
+      const encodedProps = {
+        empty: { $set: [] },
+        basic: { $set: [1, 2, 3] },
+        nested: { $set: [{ $set: [] }] },
+        setWithProps: { $set: [], props: { a: [], s: { $set: [] } } }
+      }
+
+      function testProps (C) {
+        expect(C.empty instanceof Set).to.equal(false)
+        expect(C.empty instanceof SI.Set).to.equal(true)
+      }
+
+      await runPropTest(props, encodedProps, testProps)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('maps', async () => {
+      const props = {
+        empty: new Map()
+      }
+
+      const encodedProps = {
+        empty: { $map: [] }
+      }
+
+      function testProps (C) {
+        expect(C.empty instanceof Map).to.equal(false)
+        expect(C.empty instanceof SI.Map).to.equal(true)
+      }
+
+      await runPropTest(props, encodedProps, testProps)
+    })
   })
 
   describe.skip('deploy old', () => {
@@ -575,24 +623,6 @@ describe('Code', () => {
       const CA = run.deploy(A)
       return CA.x
     }
-
-    it('creates sandboxed Set props', () => {
-      const s = new Set()
-      expect(prop(s)).not.to.equal(s)
-      expect(prop(new Set()) instanceof Set).to.equal(false)
-      expect(prop(new Set()) instanceof SI.Set).to.equal(true)
-      expect(prop(new Set())).to.deep.equal(new Set())
-      expect(prop(new Set([1, 2, 3]))).to.deep.equal(new Set([1, 2, 3]))
-      expect(prop(new Set([{}, [], null, new Set()]))).to.deep.equal(new Set([{}, [], null, new Set()]))
-      const set = new Set([1, 2])
-      set.a = []
-      set.s = new Set()
-      const setProp = prop(set)
-      expect(setProp).to.deep.equal(set)
-      expect(setProp.a).to.deep.equal([])
-      expect(setProp.s).to.deep.equal(new Set())
-      expect(setProp.has(1)).to.equal(true)
-    })
 
     it('creates sandboxed Map props', () => {
       const m = new Map()
