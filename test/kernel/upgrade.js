@@ -13,6 +13,16 @@ const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
 const { Code, LocalCache } = unmangle(Run)
 
+// TODO: Upgrade with parent
+// TODO: Upgrade with props (deployed and not)
+// TODO: Upgrade and remove parent
+// TODO: Upgrade with different parent
+// TODO: Same for props
+// TODO: Does not deploy if already deployed
+// TODO: Rollback with multiple transactions in a batch
+// TODO: Rollback upgrade itself, not publish error
+// TODO: Upgrade with complex props
+
 // ------------------------------------------------------------------------------------------------
 // Code
 // ------------------------------------------------------------------------------------------------
@@ -260,7 +270,7 @@ describe('Upgrade', () => {
   // --------------------------------------------------------------------------
 
   describe('errors', () => {
-    it('should roll back', async () => {
+    it('rollsback', async () => {
       const run = new Run()
       class A { static f () { }}
       A.x = 1
@@ -332,22 +342,12 @@ describe('Upgrade', () => {
     it.skip('cannot upgrade in a method', () => {
       // TODO
     })
-  })
 
-  describe.skip('upgrade', () => {
-    // TODO: Upgrade with parent
-    // TODO: Upgrade with props (deployed and not)
-    // TODO: Upgrade and remove parent
-    // TODO: Upgrade with different parent
-    // TODO: Same for props
-    // TODO: Cannot upgrade undeployed code
-    // TODO: Does not deploy if already deployed
-    // TODO: Rollback with multiple transactions in a batch
-    // TODO: Rollback upgrade itself, not publish error
-    // TODO: Upgrade with complex props
-    // TODO: Cannot upgrade in another action
-    // TODO: Sync a jig to gets its newer code. Test
-    // TODO: Sync a code to gets a newer code prop. Test
+    // ------------------------------------------------------------------------
+
+    it.skip('cannot upgrade undeployed berry class', () => {
+      // TODO
+    })
   })
 })
 

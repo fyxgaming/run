@@ -47,6 +47,9 @@ const { payFor } = require('../env/misc')
 // Call auth in a jig
 // Owner is parent ... for new jigs
 // Async updates
+// Sync
+// - Sync a jig to gets its newer code. Test
+// - Sync a code to gets a newer code prop. Test
 
 // TODO Deploy
 //  -Presets are assigned on locals, but not until synced
@@ -442,6 +445,12 @@ describe('Code', () => {
     it.skip('rollback if error', () => {
 
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('cannot auth undeployed berry class', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -579,6 +588,12 @@ describe('Code', () => {
 
     it.skip('rollback if error', () => {
 
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('cannot auth undeployed berry class', () => {
+      // TODO
     })
   })
 
