@@ -45,6 +45,7 @@ const { payFor } = require('../env/misc')
 // Same for delete. There's a comment in membrane about this.
 // Call auth in a jig
 // Owner is parent ... for new jigs
+// Async updates
 
 // TODO Deploy
 //  -Presets are assigned on locals, but not until synced
@@ -468,26 +469,33 @@ describe('Code', () => {
     })
   })
 
-  describe.skip('destroy', () => {
+  describe.only('destroy', () => {
     it('destroys code', async () => {
       const run = new Run()
+
       class A { }
       const C = run.deploy(A)
       await C.sync()
 
-      C.destroy()
+      expect(C.destroy()).to.equal(C)
       await C.sync()
       expect(C.location.endsWith('_d0')).to.equal(true)
 
       // Load from state cache
-      await run.load(C.origin)
-      await run.load(C.location)
+      // await run.load(C.origin)
+      // await run.load(C.location)
 
       // Load via replay
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      await run2.load(C.location)
+      // run.cache = new LocalCache()
+      // await run.load(C.location)
     })
+
+    // Native
+    // Non-jig code classes
+    // Destroy as part of a method
+    // Destroy in a batch
+    // Zero satoshis, undefined owner?
+    // Destroy in same transaction
   })
 
   describe.skip('auth', () => {
