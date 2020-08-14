@@ -723,12 +723,63 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('creates code for function props', async () => {
+    it('creates and deploys code props', async () => {
       const run = new Run()
 
       class A { }
       function f () { }
+      class B { }
       A.f = f
+      A.B = B
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 3,
+        ndel: 0,
+        ncre: 3,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class A { }',
+              {
+                f: { $jig: 1 },
+                B: { $jig: 2 }
+              },
+              'function f () { }',
+              { },
+              'class B { }',
+              { }
+            ]
+          }
+        ]
+      })
+
+      const CA = run.deploy(A)
+
+      await CA.sync()
+
+      expect(CA.f).not.to.equal(f)
+      expect(CA.f).to.equal(run.deploy(f))
+
+      expect(CA.B).not.to.equal(B)
+      expect(CA.B).to.equal(run.deploy(B))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('circular code props', async () => {
+      const run = new Run()
+
+      class A { }
+      class B { }
+      A.B = B
+      B.A = A
+
+      function test (CA) {
+        expect(CA.B.A).to.equal(CA)
+      }
 
       expectTx({
         nin: 0,
@@ -742,36 +793,34 @@ describe('Code', () => {
             data: [
               'class A { }',
               {
-                f: { $jig: 1 }
+                B: { $jig: 1 }
               },
-              'function f () { }',
-              { }
+              'class B { }',
+              {
+                A: { $jig: 0 }
+              }
             ]
           }
         ]
       })
 
       const CA = run.deploy(A)
-      expect(CA.f).not.to.equal(f)
-      expect(CA.f).to.equal(run.deploy(f))
+      const CB = run.deploy(B)
+      expect(CA.B).to.equal(CB)
+      expect(CB.A).to.equal(CA)
+      test(CA)
 
-      await CA.sync()
+      await run.sync()
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
   })
 
   describe.skip('deploy old', () => {
-    it('creates circular code props', () => {
-      const run = new Run()
-      class A { }
-      class B { }
-      A.B = B
-      B.A = A
-      const CA = run.deploy(A)
-      const CB = run.deploy(B)
-      expect(CA.B).to.equal(CB)
-      expect(CB.A).to.equal(CA)
-    })
-
     it('creates circular parent-child code', () => {
       const run = new Run()
       class B { }
