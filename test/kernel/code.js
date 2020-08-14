@@ -665,17 +665,52 @@ describe('Code', () => {
 
       await runPropTest(props, encodedProps)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('self-reference', async () => {
+      const run = new Run()
+
+      class A { }
+      A.A = A
+
+      const test = CA => {
+        expect(CA.A).to.equal(CA)
+      }
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class A { }',
+              {
+                A: { $jig: 0 }
+              }
+            ]
+          }
+        ]
+      })
+
+      const CA = run.deploy(A)
+      test(CA)
+
+      await CA.sync()
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
   })
 
   describe.skip('deploy old', () => {
-    it('creates code for self-reference prop', () => {
-      const run = new Run()
-      class A { }
-      A.A = A
-      const CA = run.deploy(A)
-      expect(CA.A).to.equal(CA)
-    })
-
     it('copies code props', () => {
       const run = new Run()
       class A { }
