@@ -7,11 +7,14 @@
 require('./extra/group-lock.js')
 
 require('./kernel/api.js')
+require('./kernel/auth.js')
 require('./kernel/blockchain')
 require('./kernel/code.js')
 require('./kernel/deploy.js')
+require('./kernel/destroy.js')
 require('./kernel/native.js')
 require('./kernel/upgrade.js')
+require('./kernel/sync.js')
 
 require('./module/mockchain')
 require('./module/viewer')
