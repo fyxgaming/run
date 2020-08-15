@@ -479,6 +479,20 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
+    it('cannot upgrade to a code jig', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B { }
+      const CB = run.deploy(B)
+      const error = 'Cannot upgrade to a code jig'
+      expect(() => CB.upgrade(CA)).to.throw(error)
+      await CA.sync()
+      expect(() => CB.upgrade(CA)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if prototypal inheritance', async () => {
       const run = new Run()
       function O () { }
