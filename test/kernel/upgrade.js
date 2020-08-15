@@ -242,8 +242,17 @@ describe('Upgrade', () => {
   // --------------------------------------------------------------------------
 
   describe('parents', () => {
-    it.skip('deploys new parent chain', () => {
-      // TODO
+    it.only('deploys new parent chain', async () => {
+      const run = new Run()
+
+      class O { }
+      const CO = run.deploy(O)
+      await CO.sync()
+
+      class A { }
+      class B extends A { }
+      CO.upgrade(B)
+      await CO.sync()
     })
 
     it.skip('remove parent', () => {
