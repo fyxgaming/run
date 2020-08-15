@@ -1,7 +1,7 @@
 /**
  * sealed.js
  *
- * Tests for sealed functionality
+ * Tests for sealed functionality on code
  */
 
 const { describe, it, afterEach } = require('mocha')
