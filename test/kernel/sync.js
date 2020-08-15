@@ -36,6 +36,8 @@ describe.skip('Sync', () => {
     expect(A2.location).to.equal(A.location)
   })
 
+  // --------------------------------------------------------------------------
+
   it('publishes after dependent transaction', async () => {
     const run = new Run()
 
@@ -54,6 +56,8 @@ describe.skip('Sync', () => {
     run.deploy(C)
     await run.sync()
   })
+
+  // --------------------------------------------------------------------------
 
   it('should sync with warning when UTXO is incorrectly spent', async () => {
     const run = new Run()

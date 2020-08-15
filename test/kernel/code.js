@@ -327,9 +327,17 @@ describe('Code', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // Caller
+  // --------------------------------------------------------------------------
+
   describe.skip('caller', () => {
     // TODO
   })
+
+  // --------------------------------------------------------------------------
+  // Activate
+  // --------------------------------------------------------------------------
 
   describe.skip('activate', () => {
     it('simple activate test', async () => {
@@ -347,6 +355,10 @@ describe('Code', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // Call
+  // --------------------------------------------------------------------------
+
   describe.skip('call', () => {
     it('calls static get method on jig', async () => {
       const run = new Run()
@@ -356,6 +368,8 @@ describe('Code', () => {
       expect(C.f(1)).to.equal(124)
       expect(C.origin).to.equal(C.location)
     })
+
+    // ------------------------------------------------------------------------
 
     it('calls static set method on jig', async () => {
       const run = new Run()
@@ -375,6 +389,8 @@ describe('Code', () => {
       expect(C.x).to.equal(C2.x)
     })
 
+    // ------------------------------------------------------------------------
+
     // TODO: Move to deploy
     it('allowed to set native class as dependency', async () => {
       const run = new Run()
@@ -383,6 +399,8 @@ describe('Code', () => {
       const C = run.deploy(A)
       await C.sync()
     })
+
+    // ------------------------------------------------------------------------
 
     it('calls static method with passthrough and without this on non-jig', async () => {
       const run = new Run()
@@ -397,6 +415,8 @@ describe('Code', () => {
       await C.sync()
       expect(C.f(Symbol.hasInstance)).to.equal(Symbol.iterator)
     })
+
+    // ------------------------------------------------------------------------
 
     it('can only call static methods on class they are from', async () => {
       const run = new Run()
@@ -421,6 +441,10 @@ describe('Code', () => {
       // console.log(CB)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Get (again?)
+  // --------------------------------------------------------------------------
 
   describe.skip('get', () => {
     it('returns the same method twice', async () => {
