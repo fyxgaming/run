@@ -13,7 +13,7 @@ const unmangle = require('../env/unmangle')
 const { expectTx } = require('../env/misc')
 const { Code, Jig, Berry, LocalCache, sandbox } = Run
 const SI = unmangle(sandbox)._intrinsics
-const Membrane = unmangle(unmangle(Run)._Membrane)
+const _sudo = unmangle(Run)._sudo
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -166,7 +166,7 @@ describe('Deploy', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
-      Membrane._sudo(() => {
+      _sudo(() => {
         expect(CA.location.startsWith('commit://')).to.equal(true)
         expect(CA.origin.startsWith('commit://')).to.equal(true)
         expect(CA.nonce).to.equal(0)

@@ -116,7 +116,7 @@ describe('Sealed', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('grandparent spend required', async () => {
+    it('grandparent spend required', async () => {
       const run = new Run()
 
       class A { }
