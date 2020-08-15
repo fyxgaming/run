@@ -57,6 +57,8 @@ describe('Sealed', () => {
       const CB = run.deploy(B)
       await CB.sync()
 
+      await run.load(CB.location)
+
       run.cache = new LocalCache()
       await run.load(CB.location)
     })
@@ -105,6 +107,50 @@ describe('Sealed', () => {
       class B extends A { }
       const CB = run.deploy(B)
       await CB.sync()
+
+      await run.load(CB.location)
+
+      run.cache = new LocalCache()
+      await run.load(CB.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('grandparent spend required', async () => {
+      const run = new Run()
+
+      class A { }
+      class B extends A { }
+      const CB = run.deploy(B)
+      await CB.sync()
+
+      expectTx({
+        nin: 2,
+        nref: 0,
+        nout: 3,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class C extends B { }',
+              {
+                deps: { B: { $jig: 1 } }
+              }
+            ]
+          }
+        ]
+      })
+
+      class C extends B { }
+      const CC = run.deploy(C)
+      await CC.sync()
+
+      await run.load(CC.location)
+
+      run.cache = new LocalCache()
+      await run.load(CC.location)
     })
 
     // ------------------------------------------------------------------------
@@ -133,6 +179,45 @@ describe('Sealed', () => {
 
     it.skip('unseal and extend then reseal in a method', () => {
       // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('mixture of sealed and unsealed', async () => {
+      const run = new Run()
+
+      class A { }
+      A.sealed = false
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      expectTx({
+        nin: 0,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class B extends A { }',
+              {
+                deps: { A: { $jig: 0 } }
+              }
+            ]
+          }
+        ]
+      })
+
+      class B extends A { }
+      const CB = run.deploy(B)
+      await CB.sync()
+
+      await run.load(CB.location)
+
+      run.cache = new LocalCache()
+      await run.load(CB.location)
     })
   })
 
@@ -176,6 +261,8 @@ describe('Sealed', () => {
       const CB = CO.upgrade(B)
       await CB.sync()
 
+      await run.load(CB.location)
+
       run.cache = new LocalCache()
       await run.load(CB.location)
     })
@@ -218,8 +305,54 @@ describe('Sealed', () => {
       const CB = CO.upgrade(B)
       await CB.sync()
 
+      await run.load(CB.location)
+
       run.cache = new LocalCache()
       await run.load(CB.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('grandparent spend required', async () => {
+      const run = new Run()
+
+      class A { }
+      class B extends A { }
+      const CB = run.deploy(B)
+      await CB.sync()
+
+      class O { }
+      const CO = run.deploy(O)
+      await CO.sync()
+
+      expectTx({
+        nin: 3,
+        nref: 0,
+        nout: 3,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              'class C extends B { }',
+              {
+                deps: { B: { $jig: 2 } }
+              }
+            ]
+          }
+        ]
+      })
+
+      class C extends B { }
+      const CC = CO.upgrade(C)
+      await CC.sync()
+
+      await run.load(CC.location)
+
+      run.cache = new LocalCache()
+      await run.load(CC.location)
     })
 
     // ------------------------------------------------------------------------
