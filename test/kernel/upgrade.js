@@ -242,17 +242,47 @@ describe('Upgrade', () => {
   // --------------------------------------------------------------------------
 
   describe('parents', () => {
-    it.only('deploys new parent chain', async () => {
+    it('deploys new parent chain', async () => {
       const run = new Run()
 
       class O { }
       const CO = run.deploy(O)
       await CO.sync()
 
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class A { }',
+              {}
+            ]
+          },
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              'class B extends A { }',
+              { deps: { A: { $jig: 1 } } }
+            ]
+          }
+        ]
+      })
+
       class A { }
       class B extends A { }
       CO.upgrade(B)
       await CO.sync()
+
+      await run.load(CO.location)
+
+      run.cache = new LocalCache()
+      await run.load(CO.location)
     })
 
     it.skip('remove parent', () => {
