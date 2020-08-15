@@ -249,6 +249,11 @@ describe('Upgrade', () => {
       const CO = run.deploy(O)
       await CO.sync()
 
+      function test (CO) {
+        expect(CO.name).to.equal('B')
+        expect(Object.getPrototypeOf(CO).name).to.equal('A')
+      }
+
       expectTx({
         nin: 1,
         nref: 0,
@@ -278,11 +283,14 @@ describe('Upgrade', () => {
       class B extends A { }
       CO.upgrade(B)
       await CO.sync()
+      test(CO)
 
-      await run.load(CO.location)
+      const CO2 = await run.load(CO.location)
+      test(CO2)
 
       run.cache = new LocalCache()
-      await run.load(CO.location)
+      const CO3 = await run.load(CO.location)
+      test(CO3)
     })
 
     it.skip('remove parent', () => {
