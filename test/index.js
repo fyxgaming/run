@@ -14,6 +14,7 @@ require('./kernel/deploy.js')
 require('./kernel/destroy.js')
 require('./kernel/native.js')
 require('./kernel/upgrade.js')
+require('./kernel/sealed.js')
 require('./kernel/sync.js')
 
 require('./module/mockchain')
