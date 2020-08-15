@@ -341,8 +341,15 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid parent', () => {
-      // TODO
+    it('throws if invalid parent', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+      class B { }
+      B.badProp = new Date()
+      class C extends B { }
+      expect(() => CA.upgrade(C)).to.throw()
     })
   })
 
