@@ -128,6 +128,12 @@ describe('Sealed', () => {
       A.sealed = 1
       expect(() => run.deploy(A)).to.throw('Invalid sealed option: 1')
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('unseal and extend then reseal in a method', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -258,5 +264,13 @@ describe('Sealed', () => {
       A.sealed = 1
       expect(() => CO.upgrade(A)).to.throw('Invalid sealed option: 1')
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('unseal and extend then reseal in a method', () => {
+      // TODO
+    })
   })
 })
+
+// ------------------------------------------------------------------------------------------------
