@@ -1700,7 +1700,7 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if prototype inheritance', () => {
+    it('throws if prototypal inheritance', () => {
       const run = new Run()
       function A () { }
       function B () { }

@@ -268,6 +268,10 @@ describe('Upgrade', () => {
       // TODO
     })
 
+    it.skip('code reference', () => {
+      // TODO
+    })
+
     it.skip('throws if unsupported', () => {
       // TODO - intrinsics, anonymous
     })
@@ -287,6 +291,10 @@ describe('Upgrade', () => {
     })
 
     it.skip('deploys new code', () => {
+      // TODO
+    })
+
+    it.skip('code reference', () => {
       // TODO
     })
 
@@ -375,6 +383,19 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
+    it.only('throws if prototypal inheritance', () => {
+      // TODO
+
+      const run = new Run()
+      function A () { }
+      function B () { }
+      B.prototype = Object.create(A.prototype)
+      const error = 'Prototypal inheritance not supported'
+      expect(() => run.deploy(B)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('cannot upgrade in a method', () => {
       // TODO
     })
@@ -382,12 +403,6 @@ describe('Upgrade', () => {
     // ------------------------------------------------------------------------
 
     it.skip('cannot upgrade undeployed berry class', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if prototypal inheritance', () => {
       // TODO
     })
   })
