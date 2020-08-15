@@ -358,13 +358,62 @@ describe('Upgrade', () => {
 
   describe('props', () => {
     it.skip('complex props', () => {
-      // TODO - circular, jig, berries
+      // TODO - circular
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('deploys new code', () => {
-      // TODO
+    it('deploys new code', async () => {
+      const run = new Run()
+
+      class O { }
+      const CO = run.deploy(O)
+      await CO.sync()
+
+      function test (CO) {
+        expect(CO.B instanceof Code).to.equal(true)
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class B { }',
+              {}
+            ]
+          },
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              'class A { }',
+              {
+                B: { $jig: 1 }
+              }
+            ]
+          }
+        ]
+      })
+
+      class A { }
+      class B { }
+      A.B = B
+      CO.upgrade(A)
+      test(CO)
+      await CO.sync()
+
+      const CO2 = await run.load(CO.location)
+      test(CO2)
+
+      run.cache = new LocalCache()
+      const CO3 = await run.load(CO.location)
+      test(CO3)
     })
 
     // ------------------------------------------------------------------------
