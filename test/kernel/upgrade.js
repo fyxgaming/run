@@ -606,8 +606,85 @@ describe('Upgrade', () => {
   // --------------------------------------------------------------------------
 
   describe('deps', () => {
-    it.skip('complex deps', () => {
-      // TODO - circular
+    it('complex deps', async () => {
+      const run = new Run()
+
+      class O { }
+      const CO = run.deploy(O)
+      await CO.sync()
+
+      function test (CO) {
+        expect(typeof CO.deps.o).to.equal('object')
+        expect(CO.deps.n).to.equal(1)
+        expect(CO.deps.b).to.equal(false)
+        expect(CO.deps.s).to.equal('abc')
+        expect(CO.deps.o.o).to.equal(CO.deps.o)
+        expect(CO.deps.set instanceof SI.Set).to.equal(true)
+        expect(CO.deps.set.size).to.equal(1)
+        expect(CO.deps.set.values().next().value).to.equal(CO)
+        expect(CO.deps.set.A).to.equal(CO)
+        expect(CO.deps.arr instanceof SI.Array).to.equal(true)
+        expect(CO.deps.arr.length).to.equal(1)
+        expect(CO.deps.arr[0]).to.equal(CO.deps.arr)
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              'class A { }',
+              {
+                $top: {
+                  deps: {
+                    n: 1,
+                    b: false,
+                    s: 'abc',
+                    o: { $dup: 0 },
+                    set: { $set: [{ $dup: 1 }], props: { A: { $dup: 1 } } },
+                    arr: { $dup: 2 }
+                  }
+                },
+                dups: [
+                  { o: { $dup: 0 } },
+                  { $jig: 0 },
+                  [{ $dup: 2 }]
+                ]
+              }
+            ]
+          }
+        ]
+      })
+
+      class A { }
+      A.deps = {}
+      A.deps.n = 1
+      A.deps.b = false
+      A.deps.s = 'abc'
+      A.deps.o = {}
+      A.deps.o.o = A.deps.o
+      A.deps.set = new Set()
+      A.deps.set.add(A)
+      A.deps.set.A = A
+      A.deps.arr = []
+      A.deps.arr.push(A.deps.arr)
+
+      CO.upgrade(A)
+      await CO.sync()
+      test(CO)
+
+      const CO2 = await run.load(CO.location)
+      test(CO2)
+
+      run.cache = new LocalCache()
+      const CO3 = await run.load(CO.location)
+      test(CO3)
     })
 
     // ------------------------------------------------------------------------
