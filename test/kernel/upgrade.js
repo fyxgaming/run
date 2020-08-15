@@ -357,8 +357,73 @@ describe('Upgrade', () => {
   // --------------------------------------------------------------------------
 
   describe('props', () => {
-    it.skip('complex props', () => {
-      // TODO - circular
+    it('complex props', async () => {
+      const run = new Run()
+
+      class O { }
+      const CO = run.deploy(O)
+      await CO.sync()
+
+      function test (CO) {
+        expect(typeof CO.o).to.equal('object')
+        expect(CO.o.o).to.equal(CO.o)
+        expect(CO.set instanceof SI.Set).to.equal(true)
+        expect(CO.set.size).to.equal(1)
+        expect(CO.set.values().next().value).to.equal(CO)
+        expect(CO.set.A).to.equal(CO)
+        expect(CO.arr instanceof SI.Array).to.equal(true)
+        expect(CO.arr.length).to.equal(1)
+        expect(CO.arr[0]).to.equal(CO.arr)
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              'class A { }',
+              {
+                $top: {
+                  o: { $dup: 0 },
+                  set: { $set: [{ $dup: 1 }], props: { A: { $dup: 1 } } },
+                  arr: { $dup: 2 }
+                },
+                dups: [
+                  { o: { $dup: 0 } },
+                  { $jig: 0 },
+                  [{ $dup: 2 }]
+                ]
+              }
+            ]
+          }
+        ]
+      })
+
+      class A { }
+      A.o = {}
+      A.o.o = A.o
+      A.set = new Set()
+      A.set.add(A)
+      A.set.A = A
+      A.arr = []
+      A.arr.push(A.arr)
+
+      CO.upgrade(A)
+      await CO.sync()
+      test(CO)
+
+      const CO2 = await run.load(CO.location)
+      test(CO2)
+
+      run.cache = new LocalCache()
+      const CO3 = await run.load(CO.location)
+      test(CO3)
     })
 
     // ------------------------------------------------------------------------
