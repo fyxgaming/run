@@ -341,11 +341,10 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if invalid parent', async () => {
+    it('throws if invalid parent', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
-      await CA.sync()
       class B { }
       B.badProp = new Date()
       class C extends B { }
@@ -382,8 +381,14 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if reserved', () => {
-      // TODO
+    it('throws if reserved', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B { }
+      B.toString = () => 'hello'
+      const error = 'Must not have any reserved words'
+      expect(() => CA.upgrade(B)).to.throw(error)
     })
   })
 
