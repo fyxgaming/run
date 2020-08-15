@@ -366,6 +366,9 @@ describe('Upgrade', () => {
 
       function test (CO) {
         expect(typeof CO.o).to.equal('object')
+        expect(CO.n).to.equal(1)
+        expect(CO.b).to.equal(false)
+        expect(CO.s).to.equal('abc')
         expect(CO.o.o).to.equal(CO.o)
         expect(CO.set instanceof SI.Set).to.equal(true)
         expect(CO.set.size).to.equal(1)
@@ -390,6 +393,9 @@ describe('Upgrade', () => {
               'class A { }',
               {
                 $top: {
+                  n: 1,
+                  b: false,
+                  s: 'abc',
                   o: { $dup: 0 },
                   set: { $set: [{ $dup: 1 }], props: { A: { $dup: 1 } } },
                   arr: { $dup: 2 }
@@ -406,6 +412,9 @@ describe('Upgrade', () => {
       })
 
       class A { }
+      A.n = 1
+      A.b = false
+      A.s = 'abc'
       A.o = {}
       A.o.o = A.o
       A.set = new Set()
@@ -546,6 +555,17 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if symbol', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B { }
+      B.symbol = Symbol.hasInstance
+      expect(() => CA.upgrade(B)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if intrinsic', () => {
       const run = new Run()
       class A { }
@@ -558,7 +578,7 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if anonymous function', () => {
+    it('throws if anonymous', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -587,7 +607,7 @@ describe('Upgrade', () => {
 
   describe('deps', () => {
     it.skip('complex deps', () => {
-      // TODO - circular, jig, berries
+      // TODO - circular
     })
 
     // ------------------------------------------------------------------------
@@ -605,19 +625,48 @@ describe('Upgrade', () => {
     // ------------------------------------------------------------------------
 
     it.skip('jig', () => {
-
+      // TODO
     })
 
     // ------------------------------------------------------------------------
 
     it.skip('berry', () => {
-
+      // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if unsupported', () => {
-      // TODO
+    it('throws if symbol', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B { }
+      B.deps = { symbol: Symbol.iterator }
+      expect(() => CA.upgrade(B)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if intrinsic', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B { }
+      B.deps = { Math }
+      const error = 'Cannot clone intrinsic'
+      expect(() => CA.upgrade(B)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if anonymous', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B { }
+      B.deps = { f: () => { } }
+      const error = 'Anonymous types not supported'
+      expect(() => CA.upgrade(B)).to.throw(error)
     })
   })
 
