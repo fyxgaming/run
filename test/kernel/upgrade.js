@@ -618,8 +618,54 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('code reference', () => {
-      // TODO
+    it('code reference', async () => {
+      const run = new Run()
+
+      function f () { }
+      const cf = run.deploy(f)
+      await cf.sync()
+
+      function o () { }
+      const co = run.deploy(o)
+      await co.sync()
+
+      function test (co) {
+        expect(co.deps.f.origin).to.equal(f.origin)
+        expect(co()).to.equal(co.deps.f)
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              'function g () { return f }',
+              {
+                deps: { f: { $jig: 1 } }
+              }
+            ]
+          }
+        ]
+      })
+
+      function g () { return f }
+      g.deps = { f }
+      co.upgrade(g)
+      test(co)
+      await co.sync()
+
+      const co2 = await run.load(co.location)
+      test(co2)
+
+      run.cache = new LocalCache()
+      const co3 = await run.load(co.location)
+      test(co3)
     })
 
     // ------------------------------------------------------------------------
