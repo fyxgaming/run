@@ -90,12 +90,12 @@ describe('Bindings', () => {
 
   describe('_nonce', () => {
     it('supports valid nonce', () => {
+      _nonce(0)
       _nonce(1)
       _nonce(Number.MAX_SAFE_INTEGER)
     })
 
     it('throws if invalid nonce', () => {
-      expect(() => _nonce(0)).to.throw()
       expect(() => _nonce(-1)).to.throw()
       expect(() => _nonce(1.5)).to.throw()
       expect(() => _nonce(Infinity)).to.throw()
@@ -125,11 +125,16 @@ describe('Bindings', () => {
 
     it('should throw if bad owner', () => {
       expect(() => _owner()).to.throw('Invalid owner: undefined')
+      expect(() => _owner(null)).to.throw('Invalid owner: null')
       expect(() => _owner(123)).to.throw('Invalid owner: 123')
       expect(() => _owner('hello')).to.throw('Invalid owner: "hello"')
       expect(() => _owner(new PrivateKey())).to.throw('Invalid owner')
       expect(() => _owner(new PrivateKey().publicKey)).to.throw('Invalid owner')
       expect(() => _owner([new PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
+    })
+
+    it('allow null', () => {
+      expect(_owner(null, true)).to.equal(null)
     })
   })
 
