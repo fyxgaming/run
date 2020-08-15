@@ -293,8 +293,57 @@ describe('Upgrade', () => {
       test(CO3)
     })
 
-    it.skip('remove parent', () => {
-      // TODO - getprototypeof check
+    it.only('remove parent', async () => {
+      const run = new Run()
+
+      class A { }
+      class B extends A { }
+      const CB = run.deploy(B)
+      await CB.sync()
+
+      // TODO: Test upgrade to code throw
+
+      /*
+      function test (CO) {
+        console.log(Object.getPrototypeOf(CO))
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class A { }',
+              {}
+            ]
+          },
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              'class B extends A { }',
+              { deps: { A: { $jig: 1 } } }
+            ]
+          }
+        ]
+      })
+      */
+
+      CB.upgrade(A)
+      await CB.sync()
+      // test(CO)
+
+      // const CO2 = await run.load(CO.location)
+      // test(CO2)
+
+      // run.cache = new LocalCache()
+      // const CO3 = await run.load(CO.location)
+      // test(CO3)
     })
 
     it.skip('throws if invalid parent', () => {
