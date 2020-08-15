@@ -369,8 +369,53 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('code reference', () => {
-      // TODO
+    it('code reference', async () => {
+      const run = new Run()
+
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      class O { }
+      const CO = run.deploy(O)
+      await CO.sync()
+
+      function test (CO) {
+        expect(CO.A.origin).to.equal(CA.origin)
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              'class B { }',
+              {
+                A: { $jig: 1 }
+              }
+            ]
+          }
+        ]
+      })
+
+      class B { }
+      B.A = A
+      CO.upgrade(B)
+      test(CO)
+      await CO.sync()
+
+      const CO2 = await run.load(CO.location)
+      test(CO2)
+
+      run.cache = new LocalCache()
+      const CO3 = await run.load(CO.location)
+      test(CO3)
     })
 
     // ------------------------------------------------------------------------
