@@ -109,6 +109,17 @@ describe('Sealed', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if sealed and undeployed', () => {
+      const run = new Run()
+      class A { }
+      A.sealed = true
+      class B extends A { }
+      const error = 'Parent class sealed'
+      expect(() => run.deploy(B)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if invalid', () => {
       const run = new Run()
       class A { }
@@ -218,6 +229,19 @@ describe('Sealed', () => {
       const CA = run.deploy(A)
 
       class B extends CA { }
+      const error = 'Parent class sealed'
+      expect(() => CO.upgrade(B)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if sealed and undeployed', () => {
+      const run = new Run()
+      class O { }
+      const CO = run.deploy(O)
+      class A { }
+      A.sealed = true
+      class B extends A { }
       const error = 'Parent class sealed'
       expect(() => CO.upgrade(B)).to.throw(error)
     })
