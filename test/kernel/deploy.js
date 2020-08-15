@@ -1657,6 +1657,10 @@ describe('Deploy', () => {
   // --------------------------------------------------------------------------
 
   describe('errors', () => {
+    it.skip('rolls back if fail to publish', () => {
+      // TODO
+    })
+
     it('throws if non-function', () => {
       const run = new Run()
       const error = 'Only functions and classes are supported'
