@@ -12,6 +12,7 @@ const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
 const { Code, LocalCache } = unmangle(Run)
+const SI = unmangle(Run.sandbox)._intrinsics
 
 // ------------------------------------------------------------------------------------------------
 // Upgrade
@@ -293,7 +294,9 @@ describe('Upgrade', () => {
       test(CO3)
     })
 
-    it.only('remove parent', async () => {
+    // ------------------------------------------------------------------------
+
+    it('remove parent', async () => {
       const run = new Run()
 
       class A { }
@@ -301,50 +304,42 @@ describe('Upgrade', () => {
       const CB = run.deploy(B)
       await CB.sync()
 
-      // TODO: Test upgrade to code throw
-
-      /*
       function test (CO) {
-        console.log(Object.getPrototypeOf(CO))
+        expect(Object.getPrototypeOf(CO)).to.equal(SI.Function.prototype)
       }
 
       expectTx({
         nin: 1,
         nref: 0,
-        nout: 2,
+        nout: 1,
         ndel: 0,
-        ncre: 1,
+        ncre: 0,
         exec: [
-          {
-            op: 'DEPLOY',
-            data: [
-              'class A { }',
-              {}
-            ]
-          },
           {
             op: 'UPGRADE',
             data: [
               { $jig: 0 },
-              'class B extends A { }',
-              { deps: { A: { $jig: 1 } } }
+              'class C { }',
+              {}
             ]
           }
         ]
       })
-      */
 
-      CB.upgrade(A)
+      class C { }
+      CB.upgrade(C)
       await CB.sync()
-      // test(CO)
+      test(CB)
 
-      // const CO2 = await run.load(CO.location)
-      // test(CO2)
+      const CB2 = await run.load(CB.location)
+      test(CB2)
 
-      // run.cache = new LocalCache()
-      // const CO3 = await run.load(CO.location)
-      // test(CO3)
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      test(CB3)
     })
+
+    // ------------------------------------------------------------------------
 
     it.skip('throws if invalid parent', () => {
       // TODO
@@ -360,17 +355,25 @@ describe('Upgrade', () => {
       // TODO - circular, jig, berries
     })
 
+    // ------------------------------------------------------------------------
+
     it.skip('deploys new code', () => {
       // TODO
     })
+
+    // ------------------------------------------------------------------------
 
     it.skip('code reference', () => {
       // TODO
     })
 
+    // ------------------------------------------------------------------------
+
     it.skip('throws if unsupported', () => {
       // TODO - intrinsics, anonymous
     })
+
+    // ------------------------------------------------------------------------
 
     it.skip('throws if reserved', () => {
       // TODO
@@ -386,13 +389,19 @@ describe('Upgrade', () => {
       // TODO - circular, jig, berries
     })
 
+    // ------------------------------------------------------------------------
+
     it.skip('deploys new code', () => {
       // TODO
     })
 
+    // ------------------------------------------------------------------------
+
     it.skip('code reference', () => {
       // TODO
     })
+
+    // ------------------------------------------------------------------------
 
     it.skip('throws if unsupported', () => {
       // TODO
