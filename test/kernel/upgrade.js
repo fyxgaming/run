@@ -375,8 +375,26 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if unsupported', () => {
-      // TODO - intrinsics, anonymous
+    it('throws if intrinsic', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B { }
+      B.intrinsic = Map
+      const error = 'Cannot install intrinsic'
+      expect(() => CA.upgrade(B)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if anonymous function', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B { }
+      B.anon = () => {}
+      const error = 'Anonymous types not supported'
+      expect(() => CA.upgrade(B)).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
@@ -386,7 +404,7 @@ describe('Upgrade', () => {
       class A { }
       const CA = run.deploy(A)
       class B { }
-      B.toString = () => 'hello'
+      B.toString = 'hello'
       const error = 'Must not have any reserved words'
       expect(() => CA.upgrade(B)).to.throw(error)
     })
