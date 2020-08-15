@@ -383,15 +383,15 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('throws if prototypal inheritance', () => {
-      // TODO
-
+    it('throws if prototypal inheritance', async () => {
       const run = new Run()
+      function O () { }
+      const CO = run.deploy(O)
       function A () { }
       function B () { }
       B.prototype = Object.create(A.prototype)
       const error = 'Prototypal inheritance not supported'
-      expect(() => run.deploy(B)).to.throw(error)
+      expect(() => CO.upgrade(B)).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
