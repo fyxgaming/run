@@ -815,6 +815,50 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
+    it('code reference', async () => {
+      const run = new Run()
+
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      function test (CB) {
+        expect(CB.A.origin).to.equal(A.origin)
+      }
+
+      expectTx({
+        nin: 0,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class B { }',
+              { A: { $jig: 0 } }
+            ]
+          }
+        ]
+      })
+
+      class B { }
+      B.A = CA
+      const CB = run.deploy(B)
+      await CB.sync()
+      test(CB)
+
+      const CB2 = await run.load(CB.location)
+      test(CB2)
+
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      test(CB3)
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('creates and deploys arbitrary objects', async () => {
       // TODO
     })
@@ -1229,6 +1273,54 @@ describe('Deploy', () => {
       run.cache = new LocalCache()
       const cf3 = await run.load(cf.location)
       test(cf3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('code reference', async () => {
+      const run = new Run()
+
+      function f () { }
+      const cf = run.deploy(f)
+      await cf.sync()
+
+      function test (cg) {
+        expect(cg().origin).to.equal(cf.origin)
+      }
+
+      expectTx({
+        nin: 0,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'function g () { return f }',
+              {
+                deps: {
+                  f: { $jig: 0 }
+                }
+              }
+            ]
+          }
+        ]
+      })
+
+      function g () { return f }
+      g.deps = { f }
+      const cg = await run.deploy(g)
+      await cg.sync()
+      test(cg)
+
+      const cg2 = await run.load(cg.location)
+      test(cg2)
+
+      run.cache = new LocalCache()
+      const cg3 = await run.load(cg.location)
+      test(cg3)
     })
 
     // ------------------------------------------------------------------------
