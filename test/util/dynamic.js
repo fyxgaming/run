@@ -207,7 +207,7 @@ describe('Dynamic', () => {
       const D = new Dynamic()
       class A { }
       Dynamic._setInnerType(D, A)
-      delete D.prototype
+      expect(() => delete D.prototype).to.throw()
       expect(D.prototype).not.to.equal(undefined)
     })
 
@@ -215,7 +215,7 @@ describe('Dynamic', () => {
       const D = new Dynamic()
       class A { }
       Dynamic._setInnerType(D, A)
-      delete D.toString
+      expect(() => delete D.toString).to.throw()
       expect(D.toString).not.to.equal(undefined)
     })
   })
@@ -399,7 +399,7 @@ describe('Dynamic', () => {
     it('prototype properties cannot be set', () => {
       const D = new Dynamic()
       Dynamic._setInnerType(D, class A { })
-      D.prototype.x = 1
+      expect(() => { D.prototype.x = 1 }).to.throw()
       expect(D.prototype.x).to.equal(undefined)
     })
 
@@ -424,7 +424,7 @@ describe('Dynamic', () => {
       const D = new Dynamic()
       Dynamic._setInnerType(D, class A { })
       const protoproto = Object.getPrototypeOf(D.prototype)
-      protoproto.x = 1
+      expect(() => { protoproto.x = 1 }).to.throw()
       expect(protoproto.x).to.equal(undefined)
     })
 
@@ -440,7 +440,7 @@ describe('Dynamic', () => {
       const D = new Dynamic()
       Dynamic._setInnerType(D, class A { f () { } })
       const protoproto = Object.getPrototypeOf(D.prototype)
-      delete protoproto.f
+      expect(() => delete protoproto.f).to.throw()
       expect(typeof protoproto.f).to.equal('function')
     })
 
@@ -483,7 +483,7 @@ describe('Dynamic', () => {
       const D = new Dynamic()
       class A { }
       Dynamic._setInnerType(D, A)
-      D.prototype = 123
+      expect(() => { D.prototype = 123 }).to.throw()
       expect(D.prototype).not.to.equal(123)
       expect(A.prototype).not.to.equal(123)
     })
@@ -492,7 +492,7 @@ describe('Dynamic', () => {
       const D = new Dynamic()
       class A { }
       Dynamic._setInnerType(D, A)
-      D.toString = 123
+      expect(() => { D.toString = 123 }).to.throw()
       expect(D.toString).not.to.equal(123)
     })
   })
@@ -624,9 +624,9 @@ describe('Dynamic', () => {
       const DB = new Dynamic()
       class B extends DA { }
       Dynamic._setInnerType(DB, B)
-      Object.getPrototypeOf(DA.prototype).x = 1
+      expect(() => { Object.getPrototypeOf(DA.prototype).x = 1 }).to.throw()
       expect(Object.getPrototypeOf(DA.prototype).x).to.equal(undefined)
-      Object.getPrototypeOf(DB.prototype).y = 2
+      expect(() => { Object.getPrototypeOf(DB.prototype).y = 2 }).to.throw()
       expect(Object.getPrototypeOf(DB.prototype).y).to.equal(undefined)
     })
 
