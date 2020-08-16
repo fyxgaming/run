@@ -608,7 +608,7 @@ describe('Dynamic', () => {
       class A { f () { this.n = 1 } }
       Dynamic._setInnerType(DA, A)
       const DB = new Dynamic()
-      class B extends DA { g () { this.m = 2 }}
+      class B extends DA { g () { this.m = 2 } }
       Dynamic._setInnerType(DB, B)
       const b = new DB()
       b.f()
