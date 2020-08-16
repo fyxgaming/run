@@ -22,10 +22,11 @@
       this.done = false
       const markDone = () => { this.done = true }
 
+
       mocha.reporter(class {
         constructor (runner, options) {
-          new Mocha.reporters.Spec(runner, options)
-          new Mocha.reporters.HTML(runner, options)
+          new mocha.Mocha.reporters.Spec(runner, options)
+          new mocha.Mocha.reporters.HTML(runner, options)
           runner.on('end', markDone)
         }
       })
@@ -34,8 +35,8 @@
       mocha.checkLeaks()
 
       const urlParams = new URLSearchParams(window.location.search)
-      Mocha.reporters.Base.useColors = JSON.parse(urlParams.get('colors')) || chrome
-      Mocha.reporters.Base.consoleLog = (...args) => console.log(...args)
+      mocha.Mocha.reporters.Base.useColors = JSON.parse(urlParams.get('colors')) || chrome
+      mocha.Mocha.reporters.Base.consoleLog = (...args) => console.log(...args)
 
       const original = Object.assign({}, console)
       const methods = ['log', 'info', 'warn', 'error', 'debug']

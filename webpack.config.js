@@ -198,7 +198,7 @@ const browserTests = {
   entry: entries,
   output: { filename: `${name}.browser.tests.js`, path: dist },
   node: { fs: 'empty' },
-  externals: { mocha: 'Mocha', chai: 'chai', bsv: 'bsv', target: library },
+  externals: { mocha: 'mocha.Mocha', chai: 'chai', bsv: 'bsv', target: library },
   optimization: { minimize: false },
   plugins: [new webpack.EnvironmentPlugin(process.env)],
   stats: 'errors-only'
