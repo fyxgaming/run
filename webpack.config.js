@@ -70,14 +70,29 @@ let lastNameCacheJson = fs.existsSync(nameCachePath) ? fs.readFileSync(nameCache
 const nameCache = JSON.parse(lastNameCacheJson)
 
 // Plugin to save the name cache if it differs from the last known name cache
-class SaveNameCache {
+class SaveNameCachePlugin {
   apply (compiler) {
-    compiler.hooks.done.tap(SaveNameCache.name, () => {
+    compiler.hooks.done.tap(SaveNameCachePlugin.name, () => {
       const newNameCacheJson = JSON.stringify(nameCache)
       if (newNameCacheJson !== lastNameCacheJson) {
         lastNameCacheJson = newNameCacheJson
         fs.writeFileSync(nameCachePath, newNameCacheJson)
       }
+    })
+  }
+}
+
+// Plugin to wait for the name cache file to be saved
+class WaitForNameCachePlugin {
+  apply (compiler) {
+    compiler.hooks.run.tapAsync(WaitForNameCachePlugin.name, async (compiler, callback) => {
+      const start = new Date()
+      const timeout = 30000
+      while (!fs.existsSync(nameCachePath)) {
+        if (new Date() - start > timeout) throw new Error('Name cache never built!')
+        await new Promise((resolve, reject) => setTimeout(resolve, 100))
+      }
+      callback()
     })
   }
 }
@@ -130,7 +145,7 @@ const browserMin = {
       new TerserPlugin(terserPluginConfig)
     ]
   },
-  plugins: [version, browserVariant, new SaveNameCache()],
+  plugins: [version, browserVariant, new SaveNameCachePlugin()],
   stats: 'errors-only'
 }
 
@@ -150,7 +165,7 @@ const nodeMin = {
     mainFields: ['main', 'module'],
     extensions: ['.js', '.mjs', '.wasm', '.json']
   },
-  plugins: [version, nodeVariant, new SaveNameCache()]
+  plugins: [version, nodeVariant, new SaveNameCachePlugin()]
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -200,7 +215,7 @@ const browserTests = {
   node: { fs: 'empty' },
   externals: { mocha: 'mocha.Mocha', chai: 'chai', bsv: 'bsv', target: library },
   optimization: { minimize: false },
-  plugins: [new webpack.EnvironmentPlugin(process.env)],
+  plugins: [new WaitForNameCachePlugin(), new webpack.EnvironmentPlugin(process.env)],
   stats: 'errors-only'
 }
 
