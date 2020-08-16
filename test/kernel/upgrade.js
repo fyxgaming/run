@@ -503,6 +503,8 @@ describe('Upgrade', () => {
       const CO = run.deploy(O)
       await CO.sync()
 
+      class B { }
+
       function test (CO) {
         expect(CO.A.origin).to.equal(CA.origin)
       }
@@ -518,7 +520,7 @@ describe('Upgrade', () => {
             op: 'UPGRADE',
             data: [
               { $jig: 0 },
-              'class B { }',
+              B.toString(),
               {
                 A: { $jig: 1 }
               }
@@ -527,7 +529,6 @@ describe('Upgrade', () => {
         ]
       })
 
-      class B { }
       B.A = A
       CO.upgrade(B)
       test(CO)

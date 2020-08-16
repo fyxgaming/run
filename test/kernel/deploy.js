@@ -108,7 +108,7 @@ describe('Deploy', () => {
           {
             op: 'DEPLOY',
             data: [
-              'function f () { }',
+              f.toString(),
               {}
             ]
           }
@@ -794,9 +794,9 @@ describe('Deploy', () => {
                 f: { $jig: 1 },
                 B: { $jig: 2 }
               },
-              'function f () { }',
+              f.toString(),
               { },
-              'class B { }',
+              B.toString(),
               { }
             ]
           }
@@ -827,6 +827,8 @@ describe('Deploy', () => {
         expect(CB.A.origin).to.equal(A.origin)
       }
 
+      class B { }
+
       expectTx({
         nin: 0,
         nref: 1,
@@ -837,14 +839,13 @@ describe('Deploy', () => {
           {
             op: 'DEPLOY',
             data: [
-              'class B { }',
+              B.toString(),
               { A: { $jig: 0 } }
             ]
           }
         ]
       })
 
-      class B { }
       B.A = CA
       const CB = run.deploy(B)
       await CB.sync()
@@ -1074,11 +1075,11 @@ describe('Deploy', () => {
           {
             op: 'DEPLOY',
             data: [
-              'function f () { return A }',
+              f.toString(),
               {
                 deps: { A: { $jig: 1 } }
               },
-              'class A { }',
+              A.toString(),
               {}
             ]
           }
@@ -1252,7 +1253,7 @@ describe('Deploy', () => {
           {
             op: 'DEPLOY',
             data: [
-              'function f () { return [Jig, Berry] }',
+              f.toString(),
               {
                 deps: {
                   Jig: { $jig: 0 },
@@ -1289,6 +1290,8 @@ describe('Deploy', () => {
         expect(cg().origin).to.equal(cf.origin)
       }
 
+      function g () { return f }
+
       expectTx({
         nin: 0,
         nref: 1,
@@ -1299,7 +1302,7 @@ describe('Deploy', () => {
           {
             op: 'DEPLOY',
             data: [
-              'function g () { return f }',
+              g.toString(),
               {
                 deps: {
                   f: { $jig: 0 }
@@ -1310,7 +1313,6 @@ describe('Deploy', () => {
         ]
       })
 
-      function g () { return f }
       g.deps = { f }
       const cg = await run.deploy(g)
       await cg.sync()
@@ -1348,11 +1350,11 @@ describe('Deploy', () => {
           {
             op: 'DEPLOY',
             data: [
-              'function g () { return h() }',
+              g.toString(),
               {
                 deps: { h: { $jig: 1 } }
               },
-              'function f () { return 1 }',
+              f.toString(),
               {}
             ]
           }
