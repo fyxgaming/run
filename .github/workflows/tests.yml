@@ -90,7 +90,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 5
     # disabled until https://github.com/nodejs/node-gyp/pull/2112 is fixed
-    if: ${{ false }}
+    # if: ${{ false }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
