@@ -761,6 +761,8 @@ describe('Upgrade', () => {
         expect(co()).to.equal(co.deps.f)
       }
 
+      function g () { return f }
+
       expectTx({
         nin: 1,
         nref: 1,
@@ -772,7 +774,7 @@ describe('Upgrade', () => {
             op: 'UPGRADE',
             data: [
               { $jig: 0 },
-              'function g () { return f }',
+              g.toString(),
               {
                 deps: { f: { $jig: 1 } }
               }
@@ -781,7 +783,6 @@ describe('Upgrade', () => {
         ]
       })
 
-      function g () { return f }
       g.deps = { f }
       co.upgrade(g)
       test(co)
