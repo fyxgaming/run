@@ -169,7 +169,7 @@ describe('Deploy', () => {
       _sudo(() => {
         expect(CA.location.startsWith('commit://')).to.equal(true)
         expect(CA.origin.startsWith('commit://')).to.equal(true)
-        expect(CA.nonce).to.equal(0)
+        expect(CA.nonce).to.equal(1)
         expect(unmangle(CA.owner)._value).to.equal(undefined)
         expect(unmangle(CA.satoshis)._value).to.equal(undefined)
       })
@@ -184,7 +184,7 @@ describe('Deploy', () => {
       await run.sync()
       expect(CA.location.endsWith('_o1')).to.equal(true)
       expect(CA.origin.endsWith('_o1')).to.equal(true)
-      expect(CA.nonce).to.equal(0)
+      expect(CA.nonce).to.equal(1)
       const owner = await run.owner.owner()
       expect(CA.owner).to.equal(owner)
       expect(CA.satoshis).to.equal(0)
@@ -1586,7 +1586,7 @@ describe('Deploy', () => {
       }
       expect(() => run.deploy(A)).to.throw()
       delete A.presets.test
-      A.presets[network].nonce = -1
+      A.presets[network].nonce = 0
       expect(() => run.deploy(A)).to.throw()
       A.presets[network].nonce = null
       expect(() => run.deploy(A)).to.throw()

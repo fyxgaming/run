@@ -90,12 +90,12 @@ describe('Bindings', () => {
 
   describe('_nonce', () => {
     it('supports valid nonce', () => {
-      _nonce(0)
       _nonce(1)
       _nonce(Number.MAX_SAFE_INTEGER)
     })
 
     it('throws if invalid nonce', () => {
+      expect(() => _nonce(0)).to.throw()
       expect(() => _nonce(-1)).to.throw()
       expect(() => _nonce(1.5)).to.throw()
       expect(() => _nonce(Infinity)).to.throw()
@@ -172,7 +172,7 @@ describe('Bindings', () => {
       _init(o)
       expect(o.origin).to.equal('error://Undeployed')
       expect(o.location).to.equal('error://Undeployed')
-      expect(o.nonce).to.equal(-1)
+      expect(o.nonce).to.equal(0)
       expect(o.owner).to.deep.equal(unmangle.mangle({ _value: undefined }))
       expect(o.satoshis).to.deep.equal(unmangle.mangle({ _value: undefined }))
     })
