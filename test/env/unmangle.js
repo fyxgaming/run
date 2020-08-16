@@ -5,7 +5,11 @@
  */
 
 let mangledProps = {}
-try { mangledProps = require('../../dist/name-cache.json').props.props } catch (e) { }
+try {
+  mangledProps = require('../../dist/name-cache.json').props.props
+} catch (e) {
+  console.log(e)
+}
 
 // ------------------------------------------------------------------------------------------------
 // enable
