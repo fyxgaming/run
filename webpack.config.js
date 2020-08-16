@@ -8,7 +8,7 @@ require('dotenv').config()
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
 const path = require('path')
-const fs = require('fs')
+const fs = require('fs-extra')
 const { execSync } = require('child_process')
 const glob = require('glob')
 const pkg = require('./package')
@@ -19,6 +19,7 @@ const pkg = require('./package')
 
 const entry = path.join(__dirname, 'lib')
 const dist = path.join(__dirname, 'dist/')
+const node_modules = path.join(__dirname, 'node_modules/')
 const name = pkg.name.split('/').pop()
 const library = require(entry).name
 const version = new webpack.DefinePlugin({ VERSION: JSON.stringify(pkg.version) })
@@ -68,6 +69,11 @@ const reservedProperties = [
 const nameCachePath = path.join(dist, 'name-cache.json')
 let lastNameCacheJson = fs.existsSync(nameCachePath) ? fs.readFileSync(nameCachePath).toString('utf8') : '{}'
 const nameCache = JSON.parse(lastNameCacheJson)
+
+// If the name cache doesn't exist, clear the existing terser cache. Otherwise, it never gets built.
+if (!fs.existsSync(nameCachePath)) {
+  fs.removeSync(path.join(node_modules, '.cache'))
+}
 
 // Plugin to save the name cache if it differs from the last known name cache
 class SaveNameCachePlugin {
