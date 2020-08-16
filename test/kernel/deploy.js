@@ -1546,6 +1546,25 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
+    it('presets supported for deleted jigs', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = {
+        [network]: {
+          location: randomLocation().slice(0, -3) + '_d0',
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      const CA = run.deploy(A)
+      expect(CA.location).to.equal(A.presets[network].location)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if binding presets are invalid', () => {
       const run = new Run()
       const network = run.blockchain.network
@@ -1643,12 +1662,6 @@ describe('Deploy', () => {
       expect(() => run.deploy(A)).to.throw()
       A.presets = { anotherNetwork: { d: Math.random } }
       expect(() => run.deploy(A)).to.throw()
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('presets supported for deleted jigs', () => {
-      // TODO
     })
   })
 
