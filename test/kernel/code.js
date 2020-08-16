@@ -11,6 +11,10 @@ const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const { Code, Jig, Berry } = unmangle(Run)
 
+// When in an error state, all actions fail
+
+
+
 // Written Tests:
 //
 // Jig
