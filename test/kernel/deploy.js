@@ -6,6 +6,7 @@
 
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
+const { stub } = require('sinon')
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
@@ -1670,8 +1671,18 @@ describe('Deploy', () => {
   // --------------------------------------------------------------------------
 
   describe('errors', () => {
-    it.skip('rolls back if fail to publish', () => {
-      // TODO
+    it('rolls back if fail to publish', async () => {
+      const run = new Run()
+      class A { }
+      stub(run.purse, 'pay').callsFake(x => x)
+      const CA = run.deploy(A)
+      await expect(CA.sync()).to.be.rejected
+      const error = prop => `Cannot read ${prop}`
+      expect(() => CA.location).to.throw(error('location'))
+      expect(() => CA.origin).to.throw(error('origin'))
+      expect(() => CA.nonce).to.throw(error('nonce'))
+      expect(() => CA.owner).to.throw(error('owner'))
+      expect(() => CA.satoshis).to.throw(error('satoshis'))
     })
 
     it('throws if non-function', () => {

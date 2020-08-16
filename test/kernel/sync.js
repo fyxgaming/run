@@ -24,6 +24,7 @@ describe.skip('Sync', () => {
   // Only waits for current record
   // TODO: Check records
   // TODO: Sync a destroyed jig
+  // TODO: Sync a jig that failed to deploy to deploy it again
 
   it('deploys a class and syncs it', async () => {
     const run = new Run()
