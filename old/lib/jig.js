@@ -90,7 +90,7 @@ class Jig {
     }
 
     handler.setPrototypeOf = function (target, prototype) {
-      if (JigControl._enforce) throw new Error('setPrototypeOf disallowed')
+      if (JigControl._enforce) throw new Error('setPrototypeOf disabled')
       Object.setPrototypeOf(target, prototype)
       return true
     }
@@ -100,7 +100,7 @@ class Jig {
     }
 
     handler.preventExtensions = function (target) {
-      throw new Error('preventExtensions disallowed')
+      throw new Error('preventExtensions disabled')
     }
 
     handler.getOwnPropertyDescriptor = function (target, prop) {
@@ -116,7 +116,7 @@ class Jig {
     }
 
     handler.defineProperty = function (target, prop, descriptor) {
-      throw new Error('defineProperty disallowed')
+      throw new Error('defineProperty disabled')
     }
 
     handler.has = function (target, prop) {
