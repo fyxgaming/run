@@ -1785,42 +1785,6 @@ describe('Deploy', () => {
       expect(() => run.deploy(B)).to.throw('Cannot install intrinsic')
     })
   })
-
-  // --------------------------------------------------------------------------
-  // Locks
-  // --------------------------------------------------------------------------
-
-  describe('locks', () => {
-    it.skip('deploys with custom lock', async () => {
-      // TODO: Use custom owner
-
-      const run = new Run()
-
-      class L {
-        script () { return new Uint8Array() }
-        domain () { return 0 }
-      }
-      run.deploy()
-
-      class A {
-        static send (to) { this.owner = to }
-      }
-
-      A.send = () => { throw new Error('Must call methods on jigs') }
-      const CA = run.deploy(A)
-      run.deploy(CA)
-      await run.sync()
-      CA.send(new L())
-      await CA.sync()
-      expect(A.location.startsWith('commit://'))
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('fails to deploy if lock class undeployed', () => {
-      // TODO
-    })
-  })
 })
 
 // ------------------------------------------------------------------------------------------------
