@@ -913,13 +913,13 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('throws if upgrade a jig to a sidekick', () => {
+    it.skip('throws if upgrade a jig to a sidekick', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.only('throws if upgrade a sidekick to a jig', () => {
+    it.skip('throws if upgrade a sidekick to a jig', () => {
       // TODO
     })
 

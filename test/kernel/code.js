@@ -139,7 +139,7 @@ describe('Code', () => {
   // --------------------------------------------------------------------------
 
   describe('get', () => {
-    it.only('adds invisible code methods to class', () => {
+    it('adds invisible code methods to class', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
