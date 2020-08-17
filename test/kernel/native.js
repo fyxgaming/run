@@ -67,20 +67,25 @@ describe('Native', () => {
 
   it('cannot destroy', () => {
     const error = 'Destroy unavailable'
+    NATIVE.forEach(N => expect('destroy' in N).to.equal(false))
     NATIVE.forEach(N => expect(() => Code.prototype.destroy.apply(N)).to.throw(error))
   })
 
   it('cannot auth', () => {
     const error = 'Auth unavailable'
+    NATIVE.forEach(N => expect('auth' in N).to.equal(false))
     NATIVE.forEach(N => expect(() => Code.prototype.auth.apply(N)).to.throw(error))
   })
 
   it('cannot upgrade', () => {
     const error = 'Upgrade unavailable'
+    NATIVE.forEach(N => expect('upgrade' in N).to.equal(false))
     NATIVE.forEach(N => expect(() => Code.prototype.upgrade.apply(N, class A { })).to.throw(error))
   })
 
   it('sync does nothing', () => {
+    NATIVE.forEach(N => expect('sync' in N).to.equal(true))
+    NATIVE.forEach(N => N.sync())
     NATIVE.forEach(N => Code.prototype.sync.apply(N))
   })
 })

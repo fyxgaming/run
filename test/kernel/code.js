@@ -144,6 +144,7 @@ describe('Code', () => {
       class A { }
       const CA = run.deploy(A)
       CODE_METHODS.forEach(name => expect(typeof CA[name]).to.equal('function'))
+      CODE_METHODS.forEach(name => expect(name in CA).to.equal(true))
       CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(CA).includes(name)).to.equal(false))
     })
 
@@ -154,6 +155,7 @@ describe('Code', () => {
       function f () { }
       const cf = run.deploy(f)
       CODE_METHODS.forEach(name => expect(typeof cf[name]).to.equal('function'))
+      CODE_METHODS.forEach(name => expect(name in cf).to.equal(true))
       CODE_METHODS.forEach(name => expect(Object.getOwnPropertyNames(cf).includes(name)).to.equal(false))
     })
 
@@ -176,15 +178,6 @@ describe('Code', () => {
       class A { }
       const CA = run.deploy(A)
       CODE_METHODS.forEach(name => expect(Object.isFrozen(CA[name])))
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('does not have code methods', () => {
-      CODE_METHODS.forEach(method => {
-        expect(method in Jig).to.equal(false)
-        expect(method in Berry).to.equal(false)
-      })
     })
 
     // ------------------------------------------------------------------------

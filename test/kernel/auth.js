@@ -75,7 +75,8 @@ describe('Auth', () => {
       await CA.sync()
 
       class B extends CA { }
-      expect(() => B.auth()).to.throw('Auth unavailable')
+      expect(typeof B.auth).to.equal('undefined')
+      expect(() => Code.prototype.auth.apply(B)).to.throw('Auth unavailable')
     })
 
     // --------------------------------------------------------------------------
