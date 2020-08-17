@@ -139,7 +139,7 @@ describe('Code', () => {
   // --------------------------------------------------------------------------
 
   describe('get', () => {
-    it('adds invisible code methods to class', () => {
+    it.only('adds invisible code methods to class', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -404,7 +404,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('calls static method with passthrough and without this on non-jig', async () => {
+    it('calls static method with passthrough and without this on arbitrary code', async () => {
       const run = new Run()
       class A {
         static f (x) {

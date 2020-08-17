@@ -1100,7 +1100,7 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it('non-jig deps', async () => {
+    it('non-code deps', async () => {
       const run = new Run()
 
       class A {

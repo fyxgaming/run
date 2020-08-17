@@ -913,6 +913,18 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
+    it.only('throws if upgrade a jig to a sidekick', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('throws if upgrade a sidekick to a jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it('cannot upgrade a destroyed jig', () => {
       const run = new Run()
       class A { }

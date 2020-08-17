@@ -67,7 +67,7 @@ describe('Auth', () => {
 
     // --------------------------------------------------------------------------
 
-    it('cannot auth non-jig children', async () => {
+    it('cannot auth non-code children', async () => {
       const run = new Run()
 
       class A { }

@@ -337,7 +337,7 @@ describe('_deepClone', () => {
     // TODO: Move below
   })
 
-  it.skip('should throw for non-code arbitrary objects', () => {
+  it.skip('should throw for arbitrary objects of undeployed sidekicks', () => {
     // TODO: Move below
   })
 
@@ -401,11 +401,11 @@ describe('_deepClone', () => {
     expect(f3).to.equal(f2)
   })
 
-  it('should throw for non-jig code', () => {
+  it('should throw for non-code functions', () => {
     function f () { }
-    expect(() => _deepClone(f)).to.throw('Cannot clone non-jig function')
+    expect(() => _deepClone(f)).to.throw('Cannot clone non-code function')
     class A { }
-    expect(() => _deepClone(A)).to.throw('Cannot clone non-jig function')
+    expect(() => _deepClone(A)).to.throw('Cannot clone non-code function')
   })
 
   it.skip('should pass berries through', async () => {
