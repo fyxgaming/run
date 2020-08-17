@@ -4,14 +4,9 @@
  * Proxy handler common to all code and object jigs
  */
 
-const Bindings = require('../../lib/util/bindings')
 const Sandbox = require('../../lib/util/sandbox')
 const { _checkState } = require('../../lib/util/misc')
 const SI = Sandbox._intrinsics
-const {
-  _isBasicObject, _isBasicArray, _isBasicMap, _isBasicSet, _isBasicUint8Array,
-  _isArbitraryObject
-} = require('../../lib/util/misc')
 
 const { _deepClone } = require('../../lib/util/deep')
 
@@ -42,7 +37,7 @@ const { _deepClone } = require('../../lib/util/deep')
 const STACK = [] // Array<Jig|Code>
 let ERROR = null // The error that happened while calling a method
 let RECORD = null // Active record when STACK is non-empty
-const ADMIN = false // Whether the normal jig safety checks for users are bypassed
+// const ADMIN = false // Whether the normal jig safety checks for users are bypassed
 
 /**
  * Possessed principles for inner non-jig objects:
@@ -65,7 +60,7 @@ const ADMIN = false // Whether the normal jig safety checks for users are bypass
 // const POSSESSION_OBJECTS = new WeakMap() // Object | Proxy -> Object
 
 const PROXY_METHODS = new WeakMap() // Function | Proxy -> Proxy
-const PROXY_OWNERS = new WeakMap() // Proxy -> Jig | Code
+// const PROXY_OWNERS = new WeakMap() // Proxy -> Jig | Code
 
 // ------------------------------------------------------------------------------------------------
 // MethodHandler
@@ -219,46 +214,6 @@ class Membrane {
   }
 
   // --------------------------------------------------------------------------
-  // apply
-  // --------------------------------------------------------------------------
-
-  apply (target, thisArg, args) {
-    this._checkNotErrored()
-
-    if (STACK.length) RECORD._read(this._proxy)
-
-    // Function jigs can run directly. No need to wrap args. No need to record.
-    // They are essentially transparent helpers that can be upgraded.
-    return Reflect.apply(this._target, undefined, args)
-  }
-
-  // --------------------------------------------------------------------------
-  // construct
-  // --------------------------------------------------------------------------
-
-  construct (target, args, newTarget) {
-    this._checkNotErrored()
-
-    if (STACK.length) RECORD._read(this._proxy)
-
-    return Reflect.construct(target, args, newTarget)
-  }
-
-  // --------------------------------------------------------------------------
-  // defineProperty
-  // --------------------------------------------------------------------------
-
-  defineProperty (target, prop, desc) {
-    this._checkNotErrored()
-
-    if (!ADMIN) throw new Error('defineProperty disabled')
-
-    Reflect.defineProperty(this._target, prop, desc)
-
-    return true
-  }
-
-  // --------------------------------------------------------------------------
   // deleteProperty
   // --------------------------------------------------------------------------
 
@@ -325,40 +280,6 @@ class Membrane {
     }
 
     throw new Error('Unknown value: ' + val)
-  }
-
-  // --------------------------------------------------------------------------
-
-  _checkGettable (prop, val) {
-    if (ADMIN) return
-
-    try {
-      if (prop === 'location' || prop === 'origin' || prop === 'nonce') {
-        // Treat nonce the same as location for readability
-        if (prop === 'nonce') val = this._target.location
-
-        const loc = Bindings._location(val)
-        _checkState(!loc.undeployed, 'Undeployed. Please sync.')
-        _checkState(!loc.error, `An previous error occurred\n\n${loc.error}`)
-
-        const hint = `Hint: Sync the jig first to assign ${prop} in a transaction`
-        _checkState(loc.txid && ('vout' in loc || 'vdel' in loc), `undetermined\n\n${hint}`)
-      }
-
-      if (prop === 'owner' || prop === 'satoshis') {
-        const Unbound = require('../../lib/util/unbound')
-
-        if (val instanceof Unbound) {
-          const hint = `Hint: Sync the jig first to bind ${prop} in a transaction`
-          throw new Error(`unbound\n\n${hint}`)
-        }
-
-        if (prop === 'owner') Bindings._owner(val)
-        if (prop === 'satoshis') Bindings._satoshis(val)
-      }
-    } catch (e) {
-      throw new Error(`Cannot read ${prop}: ${e.message}`)
-    }
   }
 
   // --------------------------------------------------------------------------
@@ -432,63 +353,6 @@ class Membrane {
     }
 
     return this._setInternal(target, prop, value, receiver)
-  }
-
-  // --------------------------------------------------------------------------
-
-  _setInternal (target, prop, value, receiver) {
-    // Check that the property is settable
-    this._checkSettable(prop, value)
-
-    // All sets become spends, even if the value doesn't change
-    // The user likely intended this value to change, and it saves us a deep traverse later.
-    if (STACK.length) RECORD._spend(this._proxy)
-
-    this._target[prop] = value
-
-    return true
-  }
-
-  // --------------------------------------------------------------------------
-
-  _checkSettable (prop, value) {
-    if (ADMIN) return true
-
-    const Code = require('../../lib/kernel/code')
-    const Jig = require('../../lib/kernel/jig')
-
-    _checkState(this._inside(), 'Only the jig may set properties')
-    _checkState(prop !== 'origin', 'Must not set origin')
-    _checkState(prop !== 'location', 'Must not set location')
-    _checkState(prop !== 'nonce', 'Must not set nonce')
-    _checkState(typeof prop === 'string', 'Must only set string keys')
-
-    if (this._proxy instanceof Code) {
-      const reserved = Object.getOwnPropertyNames(Code.prototype)
-      _checkState(!reserved.includes(prop), `Must not set a reserved property: ${prop}`)
-    }
-
-    if (this._proxy instanceof Jig) {
-      const reserved = Object.getOwnPropertyNames(Jig.prototype)
-      _checkState(!reserved.includes(prop), `Must not set a reserved property: ${prop}`)
-    }
-
-    // Check property value is serializable
-    _checkState(typeof value !== 'symbol', 'Must not set symbols as values')
-    _checkState(typeof value !== 'function' || value instanceof Code,
-      'Must not set non-jig functions as values')
-    _checkState(typeof value !== 'object' ||
-        value === null ||
-        _isBasicObject(value) ||
-        _isBasicArray(value) ||
-        _isBasicSet(value) ||
-        _isBasicMap(value) ||
-        _isBasicUint8Array(value) ||
-        _isArbitraryObject(value), 'Must only set serializable objects')
-
-    // Check the value being set does not belong to another jig
-    _checkState(!PROXY_OWNERS.has(value) || PROXY_OWNERS.get(value) === this._proxy,
-      'Cannot set properties belonging to another jig')
   }
 }
 
