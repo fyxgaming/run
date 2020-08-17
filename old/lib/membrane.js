@@ -4,16 +4,16 @@
  * Proxy handler common to all code and object jigs
  */
 
-const Bindings = require('../../util/bindings')
-const Sandbox = require('../../util/sandbox')
-const { _checkState } = require('../../util/misc')
+const Bindings = require('../../lib/util/bindings')
+const Sandbox = require('../../lib/util/sandbox')
+const { _checkState } = require('../../lib/util/misc')
 const SI = Sandbox._intrinsics
 const {
   _isBasicObject, _isBasicArray, _isBasicMap, _isBasicSet, _isBasicUint8Array,
   _isArbitraryObject
-} = require('../../util/misc')
+} = require('../../lib/util/misc')
 
-const { _deepClone } = require('../../util/deep')
+const { _deepClone } = require('../../lib/util/deep')
 
 // TODO:
 // - native code
@@ -79,10 +79,10 @@ class MethodHandler {
   }
 
   apply (target, thisArg, args) {
-    const Jig = require('../../kernel/jig')
-    const Code = require('../../kernel/code')
-    const Action = require('../../kernel/action')
-    const { _recordMultiple, _record } = require('../../kernel/commit')
+    const Jig = require('../../lib/kernel/jig')
+    const Code = require('../../lib/kernel/code')
+    const Action = require('../../lib/kernel/action')
+    const { _recordMultiple, _record } = require('../../lib/kernel/commit')
 
     // Function.toString is special. It should be allowed to run on extended classes before they are code.
     if (typeof thisArg === 'function' && this._name === 'toString') {
@@ -262,23 +262,6 @@ class Membrane {
   // deleteProperty
   // --------------------------------------------------------------------------
 
-  deleteProperty (target, prop, receiver) {
-    this._checkNotErrored()
-
-    if (!ADMIN) {
-      _checkState(this._inside(), 'Only the jig may delete properties')
-      _checkState(!Bindings._BINDINGS.includes(prop), 'Must not delete bindings')
-      _checkState(Object.getOwnPropertyNames(this._target).includes(prop), 'Must only delete own properties')
-      _checkState(typeof prop !== 'symbol', 'Must not delete symbols')
-    }
-
-    if (STACK.length) RECORD._spend(this._proxy)
-
-    delete this._target[prop]
-
-    return true
-  }
-
   get (target, prop, receiver) {
     this._checkNotErrored()
 
@@ -304,9 +287,9 @@ class Membrane {
     if (primitives.includes(typeof val)) return val
 
     // Return jigs directly because they are already proxied and safe.
-    const Jig = require('../../kernel/jig')
-    const Code = require('../../kernel/code')
-    const Berry = require('../../kernel/berry')
+    const Jig = require('../../lib/kernel/jig')
+    const Code = require('../../lib/kernel/code')
+    const Berry = require('../../lib/kernel/berry')
     if (val instanceof Code || val instanceof Jig || val instanceof Berry) {
       return val
     }
@@ -363,7 +346,7 @@ class Membrane {
       }
 
       if (prop === 'owner' || prop === 'satoshis') {
-        const Unbound = require('../../util/unbound')
+        const Unbound = require('../../lib/util/unbound')
 
         if (val instanceof Unbound) {
           const hint = `Hint: Sync the jig first to bind ${prop} in a transaction`
@@ -399,22 +382,12 @@ class Membrane {
 
     if (!hasOwnProp && STACK.length) {
       const prototype = Object.getPrototypeOf(this._target)
-      const Code = require('../../kernel/code')
+      const Code = require('../../lib/kernel/code')
       if (prototype instanceof Code) RECORD._read(prototype)
     }
 
     // TODO: Wrap the value
     return desc
-  }
-
-  // --------------------------------------------------------------------------
-  // getPrototypeOf
-  // --------------------------------------------------------------------------
-
-  getPrototypeOf (target) {
-    this._checkNotErrored()
-
-    return Object.getPrototypeOf(this._target)
   }
 
   // --------------------------------------------------------------------------
@@ -433,29 +406,11 @@ class Membrane {
     const hasOwnProp = Object.getOwnPropertyNames(this._target).includes(prop)
     if (!hasOwnProp && STACK.length) {
       const prototype = Object.getPrototypeOf(this._target)
-      const Code = require('../../kernel/code')
+      const Code = require('../../lib/kernel/code')
       if (prototype instanceof Code) RECORD._read(prototype)
     }
 
     return prop in this._target
-  }
-
-  // --------------------------------------------------------------------------
-  // ownKeys
-  // --------------------------------------------------------------------------
-
-  ownKeys (target) {
-    this._checkNotErrored()
-
-    if (STACK.length) RECORD._read(this._proxy)
-
-    const allKeys = Reflect.ownKeys(this._target)
-
-    if (this._privateAccess()) {
-      return allKeys
-    } else {
-      return allKeys.filter(key => key[0] !== '_')
-    }
   }
 
   // --------------------------------------------------------------------------
@@ -499,8 +454,8 @@ class Membrane {
   _checkSettable (prop, value) {
     if (ADMIN) return true
 
-    const Code = require('../../kernel/code')
-    const Jig = require('../../kernel/jig')
+    const Code = require('../../lib/kernel/code')
+    const Jig = require('../../lib/kernel/jig')
 
     _checkState(this._inside(), 'Only the jig may set properties')
     _checkState(prop !== 'origin', 'Must not set origin')
@@ -534,66 +489,6 @@ class Membrane {
     // Check the value being set does not belong to another jig
     _checkState(!PROXY_OWNERS.has(value) || PROXY_OWNERS.get(value) === this._proxy,
       'Cannot set properties belonging to another jig')
-  }
-
-  // --------------------------------------------------------------------------
-  // setPrototypeOf
-  // --------------------------------------------------------------------------
-
-  setPrototypeOf (target, prototype) {
-    this._checkNotErrored()
-
-    _checkState(ADMIN, 'setPrototypeOf disabled')
-
-    Object.setPrototypeOf(this._target, prototype)
-
-    return true
-  }
-
-  // --------------------------------------------------------------------------
-  // _privateAccess
-  // --------------------------------------------------------------------------
-
-  _privateAccess () {
-    if (ADMIN) return true
-
-    if (typeof this._target === 'function') {
-      const Jig = require('../../kernel/jig')
-
-      // Private access is granted to all non-jig code
-      let extendsJig = false
-      let prototype = Object.getPrototypeOf(this._target)
-      while (prototype) {
-        if (prototype === Jig) { extendsJig = true; break }
-        prototype = Object.getPrototypeOf(prototype)
-      }
-      if (!extendsJig) return true
-
-      // Jig code can only access its own private properties
-      return STACK.length && STACK[STACK.length - 1] !== this._proxy
-    }
-
-    // Jigs can only access properties from the same class
-    return STACK.length && STACK[STACK.length - 1].constructor !== this._proxy.constructor
-  }
-
-  // --------------------------------------------------------------------------
-  // _checkNotErrored
-  // --------------------------------------------------------------------------
-
-  _checkNotErrored () {
-    if (ADMIN) return
-    if (!Object.getOwnPropertyNames(this._target).includes('location')) return
-    const { error, undeployed } = Bindings._location(this._target.location)
-    if (error && !undeployed) throw new Error(error)
-  }
-
-  // --------------------------------------------------------------------------
-  // _inside
-  // --------------------------------------------------------------------------
-
-  _inside () {
-    return STACK.length && STACK[STACK.length - 1] === this._proxy
   }
 }
 
