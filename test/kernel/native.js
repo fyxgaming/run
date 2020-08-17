@@ -16,8 +16,6 @@ const { Code, Jig, Berry } = Run
 
 const NATIVE = [Jig, Berry]
 
-const ERROR = 'Native code is immutable'
-
 // ------------------------------------------------------------------------------------------------
 // Native
 // ------------------------------------------------------------------------------------------------
@@ -28,23 +26,23 @@ describe('Native', () => {
   })
 
   it('throws if define property', () => {
-    NATIVE.forEach(N => expect(() => Object.defineProperty(N, 'x', { value: 1 })).to.throw(ERROR))
+    NATIVE.forEach(N => expect(() => Object.defineProperty(N, 'x', { value: 1 })).to.throw())
   })
 
   it('throws if delete property', () => {
-    NATIVE.forEach(N => expect(() => { delete N.x }).to.throw(ERROR))
+    NATIVE.forEach(N => expect(() => { delete N.x }).to.throw())
   })
 
   it('cannot prevent extensions', () => {
-    NATIVE.forEach(N => expect(() => Object.preventExtensions(N)).to.throw(ERROR))
+    NATIVE.forEach(N => expect(() => Object.preventExtensions(N)).to.throw())
   })
 
   it('throws if set property', () => {
-    NATIVE.forEach(N => expect(() => { N.x = 1 }).to.throw(ERROR))
+    NATIVE.forEach(N => expect(() => { N.x = 1 }).to.throw())
   })
 
   it('throws if set prototype', () => {
-    NATIVE.forEach(N => expect(() => Object.setPrototypeOf(N, {})).to.throw(ERROR))
+    NATIVE.forEach(N => expect(() => Object.setPrototypeOf(N, {})).to.throw())
   })
 
   it('throws if deploy', () => {
