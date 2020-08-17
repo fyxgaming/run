@@ -144,7 +144,8 @@ describe('Destroy', () => {
       await CA.sync()
 
       class B extends CA { }
-      expect(() => B.destroy()).to.throw('Destroy unavailable')
+      expect(typeof B.destroy).to.equal('undefined')
+      expect(() => Code.prototype.destroy.call(B)).to.throw('Destroy unavailable')
     })
 
     // ------------------------------------------------------------------------
