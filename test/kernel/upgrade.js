@@ -885,7 +885,7 @@ describe('Upgrade', () => {
     // ------------------------------------------------------------------------
 
     it('cannot upgrade non-code', () => {
-      const error = 'Upgrade unavailable'
+      const error = 'upgrade unavailable'
       expect(() => Code.prototype.upgrade.call({}, class A { })).to.throw(error)
       expect(() => Code.prototype.upgrade.call(class A { }, class A { })).to.throw(error)
       expect(() => Code.prototype.upgrade.call(null, class A { })).to.throw(error)

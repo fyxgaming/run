@@ -128,7 +128,7 @@ describe('Destroy', () => {
 
   describe('errors', () => {
     it('cannot destroy non-code', () => {
-      const error = 'Destroy unavailable'
+      const error = 'destroy unavailable'
       expect(() => Code.prototype.destroy.call({})).to.throw(error)
       expect(() => Code.prototype.destroy.call(class A { })).to.throw(error)
       expect(() => Code.prototype.destroy.call(null)).to.throw(error)
@@ -144,8 +144,7 @@ describe('Destroy', () => {
       await CA.sync()
 
       class B extends CA { }
-      expect(typeof B.destroy).to.equal('undefined')
-      expect(() => Code.prototype.destroy.call(B)).to.throw('Destroy unavailable')
+      expect(() => Code.prototype.destroy.call(B)).to.throw('destroy unavailable')
     })
 
     // ------------------------------------------------------------------------

@@ -1781,7 +1781,7 @@ describe('Deploy', () => {
     it('throws if depend on Code', () => {
       const run = new Run()
       class A extends Code { }
-      const error = 'The Code class cannot be used in jigs'
+      const error = 'The Code class itself cannot be used in code'
       expect(() => run.deploy(A)).to.throw(error)
       class B {}
       B.Code = Code
