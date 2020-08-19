@@ -19,6 +19,7 @@ require('./kernel/sync.js')
 require('./kernel/upgrade.js')
 
 require('./membrane/immutable.js')
+require('./membrane/intrinsics.js')
 require('./membrane/membrane.js')
 
 require('./module/mockchain')
