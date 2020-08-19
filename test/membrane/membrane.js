@@ -73,7 +73,7 @@ describe('Membrane', () => {
     it('preventExtensions', () => {
       const o = new Proxy({ n: 1 }, new Membrane())
       Object.preventExtensions(o)
-      expect(Object.isExtensible(o)).to.equal(true)
+      expect(Object.isExtensible(o)).to.equal(false)
     })
 
     it('set', () => {
@@ -89,6 +89,103 @@ describe('Membrane', () => {
       class A { }
       Object.setPrototypeOf(o, A.prototype)
       expect(Object.getPrototypeOf(o)).to.equal(A.prototype)
+    })
+  })
+
+  describe('custom inner', () => {
+    it('apply', () => {
+      const inner = { apply: () => { throw new Error('abc') } }
+      const f = new Proxy(function f () { }, new Membrane(inner))
+      expect(() => f()).to.throw('abc')
+    })
+
+    it('construct', () => {
+      const inner = { construct: () => { throw new Error('abc') } }
+      const A = new Proxy(class A { }, new Membrane(inner))
+      expect(() => new A()).to.throw('abc')
+    })
+
+    it('defineProperty', () => {
+      const inner = { defineProperty: () => { throw new Error('abc') } }
+      const o = new Proxy({}, new Membrane(inner))
+      expect(() => Object.defineProperty(o, 'n', { value: 1, configurable: true })).to.throw('abc')
+    })
+
+    it('deleteProperty', () => {
+      const inner = { deleteProperty: () => { throw new Error('abc') } }
+      const o = new Proxy({ }, new Membrane(inner))
+      expect(() => delete o.n).to.throw('abc')
+    })
+
+    it('get', () => {
+      const inner = { get: () => { throw new Error('abc') } }
+      const o = new Proxy({ }, new Membrane(inner))
+      expect(() => o.n).to.throw('abc')
+    })
+
+    it('getOwnPropertyDescriptor', () => {
+      const inner = { getOwnPropertyDescriptor: () => { throw new Error('abc') } }
+      const o = new Proxy({ }, new Membrane(inner))
+      expect(() => Object.getOwnPropertyDescriptor(o, 'n')).to.throw('abc')
+    })
+
+    it('getPrototypeOf', () => {
+      const inner = { getPrototypeOf: () => { throw new Error('abc') } }
+      const a = new Proxy({}, new Membrane(inner))
+      expect(() => Object.getPrototypeOf(a)).to.throw('abc')
+    })
+
+    it('has', () => {
+      const inner = { has: () => { throw new Error('abc') } }
+      const o = new Proxy({ }, new Membrane(inner))
+      expect(() => 'n' in o).to.throw('abc')
+    })
+
+    it('isExtensible', () => {
+      const inner = { isExtensible: () => { throw new Error('abc') } }
+      const o = new Proxy({ }, new Membrane(inner))
+      expect(() => Object.isExtensible(o)).to.throw('abc')
+    })
+
+    it('ownKeys', () => {
+      const inner = { ownKeys: () => { throw new Error('abc') } }
+      const o = new Proxy({ }, new Membrane(inner))
+      expect(() => Object.getOwnPropertyNames(o)).to.throw('abc')
+    })
+
+    it('preventExtensions', () => {
+      const inner = { preventExtensions: () => { throw new Error('abc') } }
+      const o = new Proxy({ }, new Membrane(inner))
+      expect(() => Object.preventExtensions(o)).to.throw('abc')
+    })
+
+    it('set', () => {
+      const inner = { set: () => { throw new Error('abc') } }
+      const o = new Proxy({ }, new Membrane(inner))
+      expect(() => { o.n = 2 }).to.throw('abc')
+    })
+
+    it('setPrototypeOf', () => {
+      const inner = { setPrototypeOf: () => { throw new Error('abc') } }
+      const o = new Proxy({ }, new Membrane(inner))
+      expect(() => Object.setPrototypeOf(o, {})).to.throw('abc')
+    })
+  })
+
+  describe('misc', () => {
+    it('change inner', () => {
+      const membrane = new Membrane()
+      const o = new Proxy({ }, membrane)
+      expect(o.n).to.equal(undefined)
+      membrane._inner.get = () => 1
+      expect(o.n).to.equal(1)
+    })
+
+    it('partial inner', () => {
+      const inner = { ownKeys: () => [] }
+      const o = new Proxy({ }, new Membrane(inner))
+      o.n = 1
+      expect(o.n).to.equal(1)
     })
   })
 })
