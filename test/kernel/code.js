@@ -298,7 +298,7 @@ describe('Code', () => {
   // --------------------------------------------------------------------------
 
   describe('setPrototypeOf', () => {
-    it('throws if change externally', () => {
+    it.only('throws if change externally', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)

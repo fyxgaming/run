@@ -18,6 +18,9 @@ require('./kernel/sealed.js')
 require('./kernel/sync.js')
 require('./kernel/upgrade.js')
 
+require('./membrane/immutable.js')
+require('./membrane/membrane.js')
+
 require('./module/mockchain')
 require('./module/viewer')
 
