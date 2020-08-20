@@ -15,9 +15,15 @@ describe('Intrinsics', () => {
   describe('Set', () => {
     it('hello', () => {
       const p = new Proxy(new Set(), new Intrinsics())
+      const p2 = new Proxy(p, new Intrinsics())
+
       console.log(p, p.has(1), p.size)
       p.add(1)
       console.log(p, p.has(1), p.size)
+
+      console.log(p2, p2.has(2), p2.size)
+      p2.add(2)
+      console.log(p2, p2.has(2), p2.size)
     })
   })
 
