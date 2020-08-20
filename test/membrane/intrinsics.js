@@ -8,43 +8,62 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
+const { _ownGetters, _ownMethods } = unmangle(unmangle(Run)._misc)
 const Intrinsics = unmangle(unmangle(Run)._membrane)._Intrinsics
 const Proxy = unmangle(Run)._Proxy
+
+// ------------------------------------------------------------------------------------------------
+// Globals
+// ------------------------------------------------------------------------------------------------
+
+const SET_GETTERS = _ownGetters(Set.prototype)
+const MAP_GETTERS = _ownGetters(Map.prototype)
+const UINT8ARRAY_GETTERS = _ownGetters(Uint8Array.prototype)
+  .concat(_ownGetters(Object.getPrototypeOf(Uint8Array.prototype)))
+
+const SET_METHODS = _ownMethods(Set.prototype)
+const MAP_METHODS = _ownMethods(Map.prototype)
+const UINT8ARRAY_METHODS = _ownMethods(Uint8Array.prototype)
+  .concat(_ownMethods(Object.getPrototypeOf(Uint8Array.prototype)))
+
+// ------------------------------------------------------------------------------------------------
+// Intrinsics
+// ------------------------------------------------------------------------------------------------
 
 describe('Intrinsics', () => {
   describe('Set', () => {
     it('getters', () => {
       const p = new Proxy(new Set(), new Intrinsics())
-      unmangle(Intrinsics)._SET_GETTERS.forEach(name => p[name])
+      SET_GETTERS.forEach(name => p[name])
     })
 
     it('methods', () => {
       const p = new Proxy(new Set(), new Intrinsics())
-      unmangle(Intrinsics)._SET_METHODS.forEach(name => p[name](() => {}))
+      SET_METHODS.forEach(name => p[name](() => {}))
     })
   })
 
   describe('Map', () => {
     it('getters', () => {
       const p = new Proxy(new Map(), new Intrinsics())
-      unmangle(Intrinsics)._MAP_GETTERS.forEach(name => p[name])
+      MAP_GETTERS.forEach(name => p[name])
     })
 
     it('methods', () => {
       const p = new Proxy(new Map(), new Intrinsics())
-      unmangle(Intrinsics)._MAP_METHODS.forEach(name => p[name](() => {}))
+      MAP_METHODS.forEach(name => p[name](() => {}))
     })
   })
 
   describe('Uint8Array', () => {
     it('getters', () => {
       const p = new Proxy(new Uint8Array(), new Intrinsics())
-      unmangle(Intrinsics)._UINT8ARRAY_GETTERS.forEach(name => p[name])
+      UINT8ARRAY_GETTERS.forEach(name => p[name])
     })
 
     it('methods', () => {
       const p = new Proxy(new Uint8Array(), new Intrinsics())
-      unmangle(Intrinsics)._UINT8ARRAY_METHODS.forEach(name => p[name](() => {}, 0))
+      UINT8ARRAY_METHODS.forEach(name => p[name](() => {}, 0))
     })
   })
 
@@ -80,3 +99,5 @@ describe('Intrinsics', () => {
     })
   })
 })
+
+// ------------------------------------------------------------------------------------------------
