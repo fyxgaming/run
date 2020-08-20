@@ -177,7 +177,7 @@ describe('Membrane', () => {
       const membrane = new Membrane()
       const o = new Proxy({ }, membrane)
       expect(o.n).to.equal(undefined)
-      membrane._inner.get = () => 1
+      unmangle(membrane)._inner.get = () => 1
       expect(o.n).to.equal(1)
     })
 
