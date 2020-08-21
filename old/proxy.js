@@ -5,8 +5,8 @@
  * Membranes expect this functionality. The proxy returned is a sandboxed proxy too.
  */
 
-const { _assert } = require('./misc')
-const Sandbox = require('./sandbox')
+const { _assert } = require('../lib/util/misc')
+const Sandbox = require('../lib/util/sandbox')
 const SI = Sandbox._intrinsics
 
 // ------------------------------------------------------------------------------------------------
@@ -29,6 +29,8 @@ class UniqueProxy {
 
     PROXIES.set(target, proxy)
     TARGETS.set(proxy, target)
+
+    // handler._init(target, proxy)
 
     return proxy
   }

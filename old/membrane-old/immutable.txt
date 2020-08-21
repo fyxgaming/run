@@ -8,14 +8,36 @@
  */
 
 const Membrane = require('./membrane')
-const { _checkState } = require('../util/misc')
-const Proxy = require('../util/proxy')
+const { _checkState } = require('../../lib/util/misc')
+const Proxy = require('../proxy')
 
 // ------------------------------------------------------------------------------------------------
 // Globals
 // ------------------------------------------------------------------------------------------------
 
 const IMMUTABLES = new WeakMap() // Target -> Immutable Proxy
+
+const MUTABLE_SET_METHODS = ['add', 'clear', 'delete']
+const MUTABLE_MAP_METHODS = ['clear', 'delete', 'set']
+const MUTABLE_UINT8ARRAY_METHODS = ['copyWithin', 'fill', 'reverse', 'set', 'sort']
+
+// Wrap all methods. Iterators returned are made immutable.
+// Function arguments passed in ... when called .. are passed immutable
+// Other methods that return anything ... must be immutable
+// What about forEach methods? Callbacks?
+/*
+class Sidekick {}
+Sidekick.set = new Set()
+set.add({})
+const C = run.deploy(Sidekick)
+C.set.forEach(x => { x.n = 1 })
+*/
+// Handle these specific methods
+// If any of the arguments passed in are functions, wrap so that when called
+// their arguments are made immutable.
+// How to know if an argument was already immutable?
+// OR ... when the Set is retrieved, convert it to an immutable Set.
+// Immutable iterator
 
 // ------------------------------------------------------------------------------------------------
 // Immutable
@@ -37,9 +59,9 @@ class Immutable extends Membrane {
     if (typeof value !== 'object' && typeof value !== 'function') return value
 
     // Other Jigs, Code, and Berries are excluded from this object's immutability
-    const Jig = require('../kernel/jig')
-    const Code = require('../kernel/code')
-    const Berry = require('../kernel/berry')
+    const Jig = require('../../lib/kernel/jig')
+    const Code = require('../../lib/kernel/code')
+    const Berry = require('../../lib/kernel/berry')
     if (value instanceof Jig || value instanceof Code || value instanceof Berry) return value
 
     // Check if we've already created a wrapped value
@@ -49,6 +71,8 @@ class Immutable extends Membrane {
     const immutable = new Proxy(value, new Immutable())
     IMMUTABLES.set(value, immutable)
     return immutable
+
+    Proxy._getProxy(value)
   }
 
   getOwnPropertyDescriptor (target, prop) {
@@ -64,9 +88,9 @@ class Immutable extends Membrane {
     if (typeof value !== 'object' && typeof value !== 'function') return desc
 
     // Other Jigs, Code, and Berries are excluded from this object's immutability
-    const Jig = require('../kernel/jig')
-    const Code = require('../kernel/code')
-    const Berry = require('../kernel/berry')
+    const Jig = require('../../lib/kernel/jig')
+    const Code = require('../../lib/kernel/code')
+    const Berry = require('../../lib/kernel/berry')
     if (value instanceof Jig || value instanceof Code || value instanceof Berry) return desc
 
     // Check if we've already created a wrapped value
@@ -93,6 +117,15 @@ class Immutable extends Membrane {
   setPrototypeOf (target, prototype) {
     throw new Error('setPrototypeOf disabled')
   }
+}
+
+// ------------------------------------------------------------------------------------------------
+// ImmutableMethod
+// ------------------------------------------------------------------------------------------------
+
+// We apply these to intrinsics
+class ImmutableMethod {
+
 }
 
 // ------------------------------------------------------------------------------------------------

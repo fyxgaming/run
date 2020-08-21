@@ -1,15 +1,14 @@
 /**
- * intrinsics
+ * basic.js
  *
- * Membrane that allows intrinsics supported by Run to be used in proxy. Because unless we handle
- * them specially, Set, Map, and TypedArray methods will throw errors that the target is not the
- * of the intrinsic type. We want to allow intrinsics to be used normally, but tracked.
+ * Membrane that allows intrinsics supported by Run to be used in a membrane. Because unless we
+ * handle them specially, Set, Map, and TypedArray methods will throw errors that the target is
+ * not the of the intrinsic type. We want to allow intrinsics to be used normally but intercepted.
  */
 
-const Membrane = require('./membrane')
-const Proxy = require('../util/proxy')
-const Sandbox = require('../util/sandbox')
-const { _ownGetters, _ownMethods } = require('../util/misc')
+const Membrane = require('./membrane.txt')
+const Sandbox = require('../../util/sandbox')
+const { _ownGetters, _ownMethods } = require('../../util/misc')
 const SI = Sandbox._intrinsics
 const HI = Sandbox._hostIntrinsics
 
@@ -30,10 +29,10 @@ const UINT8ARRAY_METHODS = _ownMethods(Uint8Array.prototype)
   .concat(_ownMethods(Object.getPrototypeOf(Uint8Array.prototype)))
 
 // ------------------------------------------------------------------------------------------------
-// Intrinsics
+// Basic
 // ------------------------------------------------------------------------------------------------
 
-class Intrinsics extends Membrane {
+class Basic extends Membrane {
   get (target, prop, receiver) {
     // Run getters on the target
     if (isIntrinsicGetter(target, prop)) return super.get(target, prop, target)
@@ -64,10 +63,10 @@ class Intrinsics extends Membrane {
 class IntrinsicMethod extends Membrane {
   apply (target, thisArg, args) {
     // Use the underlying target if it exists
-    const thisArgTarget = Proxy._getTarget(thisArg) || thisArg
+    const ogTarget = Membrane._getOGTarget(thisArg) || thisArg
 
     // Apply the method
-    return super.apply(target, thisArgTarget, args)
+    return super.apply(target, ogTarget, args)
   }
 }
 
@@ -109,4 +108,4 @@ function isIntrinsicMethod (target, prop) {
 
 // ------------------------------------------------------------------------------------------------
 
-module.exports = Intrinsics
+module.exports = Basic
