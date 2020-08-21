@@ -11,11 +11,11 @@ const Proxy2 = unmangle(Run)._Proxy2
 describe('Membrane', () => {
   it('test', () => {
     const h = {}
-    h._nativeGetMethod = () => { console.log('  native get method') }
-    h._nativeIn = x => { console.log('  native in', x); return x }
-    h._nativeOut = x => { console.log('  native out', x); return x }
-    h._nativeRead = () => { console.log('  native read') }
-    h._nativeUpdate = () => { console.log('  native update') }
+    h._intrinsicGetMethod = () => { console.log('  intrinsic get method') }
+    h._intrinsicIn = x => { console.log('  intrinsic in', x); return x }
+    h._intrinsicOut = x => { console.log('  intrinsic out', x); return x }
+    h._intrinsicRead = () => { console.log('  intrinsic read') }
+    h._intrinsicUpdate = () => { console.log('  intrinsic update') }
 
     const p = new Proxy2(new Set(), h)
 

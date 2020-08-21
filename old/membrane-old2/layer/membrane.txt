@@ -89,8 +89,8 @@ class Layer {
   _nativeGetMethod () { } // Get any method
   _nativeGet (value) { return value } // get(), forEach()
   _nativeSet (value) { return value } // add(), set(), etc.
-  _nativeInnerRead () { } // has(), includes()
-  _nativeInnerUpdate () {} // clear(), delete(), etc.
+  _intrinsicInnerRead () { } // has(), includes()
+  _intrinsicInnerUpdate () {} // clear(), delete(), etc.
 }
 
 // ------------------------------------------------------------------------------------------------

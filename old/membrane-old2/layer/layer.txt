@@ -33,8 +33,8 @@ class Core {
   _nativeGetMethod () { } // Get any method
   _nativeGet (value) { return value } // get(), forEach()
   _nativeSet (value) { return value } // add(), set(), etc.
-  _nativeInnerRead () { } // has(), includes()
-  _nativeInnerUpdate () { } // clear(), delete(), etc.
+  _intrinsicInnerRead () { } // has(), includes()
+  _intrinsicInnerUpdate () { } // clear(), delete(), etc.
 }
 
 class Layer {
@@ -59,6 +59,6 @@ class Layer {
   _nativeGetMethod () { this._inner._nativeGetMethod() } // Get any method
   _nativeGet (value) { return this._inner._nativeGet(value) } // get(), forEach()
   _nativeSet (value) { return this._inner._nativeSet(value) } // add(), set(), etc.
-  _nativeInnerRead () { this._inner._nativeInnerRead() } // has(), includes()
-  _nativeInnerUpdate () { this._inner._nativeInnerUpdate() } // clear(), delete(), etc.
+  _intrinsicInnerRead () { this._inner._intrinsicInnerRead() } // has(), includes()
+  _intrinsicInnerUpdate () { this._inner._intrinsicInnerUpdate() } // clear(), delete(), etc.
 }
