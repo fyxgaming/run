@@ -18,10 +18,6 @@ require('./kernel/sealed.js')
 require('./kernel/sync.js')
 require('./kernel/upgrade.js')
 
-require('./membrane/immutable.js')
-require('./membrane/intrinsics.js')
-require('./membrane/membrane.js')
-
 require('./module/mockchain')
 require('./module/viewer')
 
@@ -31,5 +27,6 @@ require('./util/codec.js')
 require('./util/dynamic.js')
 require('./util/log.js')
 require('./util/misc.js')
+require('./util/proxy2.js')
 require('./util/queue.js')
 require('./util/standard-lock.js')

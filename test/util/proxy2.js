@@ -8,7 +8,7 @@ const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const Proxy2 = unmangle(Run)._Proxy2
 
-describe('Membrane', () => {
+describe('Proxy2', () => {
   it('test', () => {
     const h = {}
     h._intrinsicGetMethod = () => { console.log('  intrinsic get method') }
