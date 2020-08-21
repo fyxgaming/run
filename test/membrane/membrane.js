@@ -43,12 +43,10 @@ describe('Membrane', () => {
     expect(addMethod).not.to.equal(Set.prototype.add)
     addMethod.call(new Set(), 1)
 
-    console.log('getter')
-    console.log(' ', p.size)
+    console.log('clear')
+    p.clear()
 
-    // const p = new Membrane(new Set())
-    // p.add(1)
-    // p.forEach(x => console.log(x))
-    // console.log(p)
+    console.log('size getter')
+    console.log(' ', p.size)
   })
 })
