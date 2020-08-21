@@ -19,11 +19,15 @@ describe('Membrane', () => {
 
     const p = new Proxy2(new Set(), h)
 
-    console.log('add 1')
+    console.log('add 1, 2')
     expect(p.add(1)).to.equal(p)
+    expect(p.add(2)).to.equal(p)
 
     console.log('for each')
     p.forEach(x => console.log(' ', x))
+
+    console.log('iterator')
+    for (const x of p) { console.log(' ', x) }
 
     console.log('print set')
     console.log(' ', p)
@@ -33,6 +37,7 @@ describe('Membrane', () => {
 
     console.log('another object')
     const addMethod = p.add
+    expect(addMethod).not.to.equal(Set.prototype.add)
     addMethod.call(new Set(), 1)
 
     // const p = new Membrane(new Set())
