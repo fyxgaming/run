@@ -29,6 +29,9 @@ describe('Membrane', () => {
     console.log('iterator')
     for (const x of p) { console.log(' ', x) }
 
+    console.log('entries')
+    for (const x of p.entries()) { console.log(' ', x) }
+
     console.log('print set')
     console.log(' ', p)
 
