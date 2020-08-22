@@ -427,6 +427,30 @@ describe('Proxy2', () => {
       new Proxy2(o, h) // eslint-disable-line
       expect(() => new Proxy2(o, h)).to.throw()
     })
+
+    it('without old handlers', () => {
+      const f = new Proxy2(function f () { }, {})
+      const A = new Proxy2(class A { }, {})
+      f()
+      new A() // eslint-disable-line
+      Object.defineProperty(f, 'x', { value: 1 })
+      delete f.n
+      'n' in f; // eslint-disable-line
+      Object.getPrototypeOf(A)
+      Object.isExtensible(f)
+      Object.getOwnPropertyDescriptor(f)
+      Object.preventExtensions(f)
+      A.n = 1
+      Object.setPrototypeOf(A, { })
+    })
+
+    it('without new handlers', () => {
+      const p = new Proxy2(new Set(), {})
+      p.add(1)
+      p.entries()
+      p.clear()
+      p.size // eslint-disable-line
+    })
   })
 
   describe('getTarget', () => {
