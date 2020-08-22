@@ -332,9 +332,14 @@ describe('Proxy2', () => {
     })
   })
 
-  // Normal set/map/uint8array
-  // Normal proxy
-  // GetTarget,Handler,etc.
+  describe('Uint8Array', () => {
+    // TODO
+  })
+
+  describe('misc', () => {
+    // Normal proxy
+    // GetTarget,Handler,etc.
+  })
 
   it('test', () => {
     const h = {}
