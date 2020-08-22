@@ -503,6 +503,20 @@ describe('Proxy2', () => {
       expect(h._deleteProperty.called).to.equal(true)
     })
 
+    it('get', () => {
+      const h = handler({ _get: (...args) => Reflect.get(...args) })
+      const p = new Proxy2({ n: 1 }, h)
+      p.n // eslint-disable-line
+      expect(h._get.called).to.equal(true)
+    })
+
+    it('get intrinsic method not called', () => {
+      const h = handler({ _get: (...args) => Reflect.get(...args) })
+      const p = new Proxy2(new Set(), h)
+      p.add // eslint-disable-line
+      expect(h._get.called).to.equal(false)
+    })
+
     it('getPrototypeOf', () => {
       const h = handler({ _getPrototypeOf: (...args) => Reflect.getPrototypeOf(...args) })
       const p = new Proxy2({}, h)
@@ -552,10 +566,6 @@ describe('Proxy2', () => {
       expect(h._setPrototypeOf.called).to.equal(true)
     })
   })
-
-  /* #101-111
-  get ... not called for intrinsincs, but otherwise yes
-  */
 })
 
 // ------------------------------------------------------------------------------------------------
