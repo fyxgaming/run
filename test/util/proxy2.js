@@ -12,6 +12,10 @@ const unmangle = require('../env/unmangle')
 const { mangle } = unmangle
 const Proxy2 = unmangle(Run)._Proxy2
 
+// ------------------------------------------------------------------------------------------------
+// Handler
+// ------------------------------------------------------------------------------------------------
+
 function handler (methods = {}) {
   const handler = {
     _intrinsicGetMethod: () => {},
@@ -32,7 +36,15 @@ function resetHistory (h) {
   unmangle(h)._intrinsicUpdate.resetHistory()
 }
 
+// ------------------------------------------------------------------------------------------------
+// Proxy2
+// ------------------------------------------------------------------------------------------------
+
 describe('Proxy2', () => {
+  // --------------------------------------------------------------------------
+  // Set
+  // --------------------------------------------------------------------------
+
   describe('Set', () => {
     it('add', () => {
       const h = handler()
@@ -98,7 +110,6 @@ describe('Proxy2', () => {
       const p = new Proxy2(new Set(), h)
       const v = [1, 2]
       v.forEach(x => p.add(x))
-      resetHistory(h)
       for (const x of p.entries()) {
         const n = v.shift()
         expect(x).to.deep.equal([n, n])
@@ -179,6 +190,148 @@ describe('Proxy2', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // Map
+  // --------------------------------------------------------------------------
+
+  describe('Map', () => {
+    it('clear', () => {
+      const h = handler()
+      const p = new Proxy2(new Map(), h)
+      p.set(1, 2)
+      resetHistory(h)
+      p.clear()
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(false)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(false)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(false)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(true)
+    })
+
+    it('delete', () => {
+      const h = handler()
+      const p = new Proxy2(new Map(), h)
+      p.set(1, 2)
+      resetHistory(h)
+      p.delete(1)
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(true)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(false)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(false)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(true)
+    })
+
+    it('entries', () => {
+      const h = handler({
+        _intrinsicIn: x => x * 2,
+        _intrinsicOut: x => x / 2
+      })
+      const p = new Proxy2(new Map(), h)
+      const val = [[1, 2], [3, 4]]
+      val.forEach(([k, v]) => p.set(k, v))
+      resetHistory(h)
+      for (const x of p.entries()) {
+        const n = val.shift()
+        expect(n).to.deep.equal(x)
+      }
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(false)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(true)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(true)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(false)
+    })
+
+    it('forEach', () => {
+      const h = handler({
+        _intrinsicIn: x => [x],
+        _intrinsicOut: x => x[0]
+      })
+      const p = new Proxy2(new Map(), h)
+      const v = [[1, 2], [3, 4]]
+      v.forEach((k, v) => p.set(k, v))
+      resetHistory(h)
+      p.forEach(x => expect(x).to.deep.equal(v.shift()))
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(false)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(true)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(true)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(false)
+    })
+
+    it('get', () => {
+      const h = handler()
+      const p = new Proxy2(new Map(), h)
+      p.set(1, 2)
+      resetHistory(h)
+      expect(p.get(1)).to.equal(2)
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(true)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(true)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(true)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(false)
+    })
+
+    it('iterator', () => {
+      const h = handler()
+      const p = new Proxy2(new Map(), h)
+      const val = [[1, 2], [3, 4]]
+      val.forEach(([k, v]) => p.set(k, v))
+      resetHistory(h)
+      for (const x of p) {
+        const n = val.shift()
+        expect(n).to.deep.equal(x)
+      }
+    })
+
+    it('keys', () => {
+      const h = handler({
+        _intrinsicIn: x => { return { x } },
+        _intrinsicOut: o => o.x
+      })
+      const p = new Proxy2(new Map(), h)
+      const val = [[1, 2], [3, 4]]
+      val.forEach(([k, v]) => p.set(k, v))
+      resetHistory(h)
+      for (const x of p.keys()) {
+        const n = val.shift()
+        expect(n[0]).to.deep.equal(x)
+      }
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(false)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(true)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(true)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(false)
+    })
+
+    it('set', () => {
+      const h = handler()
+      const p = new Proxy2(new Map(), h)
+      expect(p.set(1, 2)).to.equal(p)
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(true)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(false)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(false)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(true)
+    })
+
+    it('values', () => {
+      const h = handler()
+      const p = new Proxy2(new Map(), h)
+      const val = [[1, 2], [3, 4]]
+      val.forEach(([k, v]) => p.set(k, v))
+      resetHistory(h)
+      for (const x of p.values()) {
+        const n = val.shift()
+        expect(n[1]).to.deep.equal(x)
+      }
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(false)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(true)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(true)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(false)
+    })
+  })
+
   // Normal set/map/uint8array
   // Normal proxy
   // GetTarget,Handler,etc.
@@ -224,3 +377,5 @@ describe('Proxy2', () => {
     console.log(' ', p.size)
   })
 })
+
+// ------------------------------------------------------------------------------------------------
