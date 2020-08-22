@@ -332,8 +332,59 @@ describe('Proxy2', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // Uint8Array
+  // --------------------------------------------------------------------------
+
   describe('Uint8Array', () => {
-    // TODO
+    it('read methods', () => {
+      const h = handler()
+      const p = new Proxy2(new Uint8Array([1, 2, 3]), h)
+      p.entries()
+      p.every(() => {})
+      p.filter(() => {})
+      p.find(() => {})
+      p.findIndex(() => {})
+      p.forEach(() => {})
+      p.includes()
+      p.indexOf()
+      p.lastIndexOf()
+      p.join()
+      p.keys()
+      p.map(() => {})
+      p.reduce(() => {})
+      p.reduceRight(() => {})
+      p.some(() => {})
+      p.subarray()
+      p.toLocaleString()
+      p.toString()
+      p.values()
+      p[Symbol.iterator]()
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(false)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(false)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(true)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(false)
+    })
+
+    it('update methods', () => {
+      const h = handler()
+      const p = new Proxy2(new Uint8Array([1, 2, 3]), h)
+      function test (f) {
+        resetHistory(h)
+        f()
+        expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+        expect(unmangle(h)._intrinsicIn.called).to.equal(false)
+        expect(unmangle(h)._intrinsicOut.called).to.equal(false)
+        expect(unmangle(h)._intrinsicRead.called).to.equal(false)
+        expect(unmangle(h)._intrinsicUpdate.called).to.equal(true)
+      }
+      test(() => p.copyWithin(0))
+      test(() => p.fill(0))
+      test(() => p.reverse())
+      test(() => p.set([0]))
+      test(() => p.sort())
+    })
   })
 
   describe('misc', () => {
