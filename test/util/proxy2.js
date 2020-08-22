@@ -472,11 +472,32 @@ describe('Proxy2', () => {
     })
   })
 
+  describe('handlers', () => {
+    it('apply', () => {
+      const h = handler({ _apply: (...args) => Reflect.apply(...args) })
+      function f () { }
+      const p = new Proxy2(f, h)
+      p()
+      expect(h._apply.called).to.equal(true)
+    })
+
+    it('construct', () => {
+      const h = handler({ _construct: (...args) => Reflect.construct(...args) })
+      class A { }
+      const P = new Proxy2(A, h)
+      new P() // eslint-disable-line
+      expect(h._construct.called).to.equal(true)
+    })
+
+    it('defineProperty', () => {
+      const h = handler({ _defineProperty: (...args) => Reflect.defineProperty(...args) })
+      const p = new Proxy2({}, h)
+      Object.defineProperty(p, 'n', { value: 1 })
+      expect(h._defineProperty.called).to.equal(true)
+    })
+  })
+
   /* #101-111
-   // Standard proxy handlers
-  apply (...args) { return this._handler._apply ? this._handler._apply(...args) : Reflect.apply(...args) }
-  construct (...args) { return this._handler._construct ? this._handler._construct(...args) : Reflect.construct(...args) }
-  defineProperty (...args) { return this._handler._defineProperty ? this._handler._defineProperty(...args) : Reflect.defineProperty(...args) }
   deleteProperty (...args) { return this._handler._deleteProperty ? this._handler._deleteProperty(...args) : Reflect.deleteProperty(...args) }
   getPrototypeOf (...args) { return this._handler._getPrototypeOf ? this._handler._getPrototypeOf(...args) : Reflect.getPrototypeOf(...args) }
   has (...args) { return this._handler._has ? this._handler.has(...args) : Reflect._has(...args) }
