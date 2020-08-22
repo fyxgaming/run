@@ -421,7 +421,55 @@ describe('Proxy2', () => {
       addMethod.call(new Set(), 1)
     })
 
-    // TODO: GetTarget,Handler,etc.
+    it('cannot create for same target twice', () => {
+      const h = handler()
+      const o = {}
+      new Proxy2(o, h) // eslint-disable-line
+      expect(() => new Proxy2(o, h)).to.throw()
+    })
+  })
+
+  describe('getTarget', () => {
+    it('returns target if exist', () => {
+      const o = {}
+      const p = new Proxy2(o, handler())
+      expect(Proxy2._getTarget(p)).to.equal(o)
+    })
+
+    it('returns undefined if not exist', () => {
+      expect(Proxy2._getTarget({})).to.equal(undefined)
+    })
+  })
+
+  describe('getProxy', () => {
+    it('returns proxy if exist', () => {
+      const o = {}
+      const p = new Proxy2(o, handler())
+      expect(Proxy2._getProxy(o)).to.equal(p)
+    })
+
+    it('returns undefined if not exist', () => {
+      expect(Proxy2._getProxy({})).to.equal(undefined)
+    })
+  })
+
+  describe('getHandler', () => {
+    it('returns handler if exist for target', () => {
+      const h = handler()
+      const p = new Proxy2({}, h)
+      expect(Proxy2._getHandler(p)).to.equal(h)
+    })
+
+    it('returns handler if exist for proxy', () => {
+      const h = handler()
+      const o = {}
+      new Proxy2(o, h) // eslint-disable-line
+      expect(Proxy2._getHandler(o)).to.equal(h)
+    })
+
+    it('returns undefined if not exist', () => {
+      expect(Proxy2._getHandler({})).to.equal(undefined)
+    })
   })
 
   /* #101-111
