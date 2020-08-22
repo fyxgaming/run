@@ -438,7 +438,7 @@ describe('Proxy2', () => {
       'n' in f; // eslint-disable-line
       Object.getPrototypeOf(A)
       Object.isExtensible(f)
-      Object.getOwnPropertyDescriptor(f)
+      Object.getOwnPropertyNames(f)
       Object.preventExtensions(f)
       A.n = 1
       Object.setPrototypeOf(A, { })
