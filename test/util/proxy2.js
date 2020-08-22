@@ -173,6 +173,12 @@ describe('Proxy2', () => {
       expect(unmangle(h)._intrinsicUpdate.called).to.equal(false)
     })
 
+    it('size', () => {
+      const h = handler()
+      const p = new Proxy2(new Set([1, 2, 3]), h)
+      expect(p.size).to.equal(3)
+    })
+
     it('values', () => {
       const h = handler()
       const p = new Proxy2(new Set(), h)
@@ -314,6 +320,12 @@ describe('Proxy2', () => {
       expect(unmangle(h)._intrinsicUpdate.called).to.equal(true)
     })
 
+    it('size', () => {
+      const h = handler()
+      const p = new Proxy2(new Map([[1, 2], [3, 4]]), h)
+      expect(p.size).to.equal(2)
+    })
+
     it('values', () => {
       const h = handler()
       const p = new Proxy2(new Map(), h)
@@ -385,53 +397,49 @@ describe('Proxy2', () => {
       test(() => p.set([0]))
       test(() => p.sort())
     })
+
+    it('length', () => {
+      const h = handler()
+      const p = new Proxy2(new Uint8Array([1, 2, 3]), h)
+      expect(p.length).to.equal(3)
+    })
   })
 
   describe('misc', () => {
-    // Normal proxy
-    // GetTarget,Handler,etc.
+    it('same methods when wrapped', () => {
+      const h = handler()
+      const p = new Proxy2(new Set(), h)
+      expect(p.add).to.equal(p.add)
+      expect(p[Symbol.iterator]).to.equal(p[Symbol.iterator])
+    })
+
+    it('can call method on a non-proxy intrinsic', () => {
+      const h = handler()
+      const p = new Proxy2(new Set(), h)
+      const addMethod = p.add
+      expect(addMethod).not.to.equal(Set.prototype.add)
+      addMethod.call(new Set(), 1)
+    })
+
+    // TODO: GetTarget,Handler,etc.
   })
 
-  it('test', () => {
-    const h = {}
-    h._intrinsicGetMethod = () => { console.log('  intrinsic get method') }
-    h._intrinsicIn = x => { console.log('  intrinsic in', x); return x }
-    h._intrinsicOut = x => { console.log('  intrinsic out', x); return x }
-    h._intrinsicRead = () => { console.log('  intrinsic read') }
-    h._intrinsicUpdate = () => { console.log('  intrinsic update') }
+  /* #101-111
+   // Standard proxy handlers
+  apply (...args) { return this._handler._apply ? this._handler._apply(...args) : Reflect.apply(...args) }
+  construct (...args) { return this._handler._construct ? this._handler._construct(...args) : Reflect.construct(...args) }
+  defineProperty (...args) { return this._handler._defineProperty ? this._handler._defineProperty(...args) : Reflect.defineProperty(...args) }
+  deleteProperty (...args) { return this._handler._deleteProperty ? this._handler._deleteProperty(...args) : Reflect.deleteProperty(...args) }
+  getPrototypeOf (...args) { return this._handler._getPrototypeOf ? this._handler._getPrototypeOf(...args) : Reflect.getPrototypeOf(...args) }
+  has (...args) { return this._handler._has ? this._handler.has(...args) : Reflect._has(...args) }
+  isExtensible (...args) { return this._handler._isExtensible ? this._handler._isExtensible(...args) : Reflect.isExtensible(...args) }
+  ownKeys (...args) { return this._handler._ownKeys ? this._handler._ownKeys(...args) : Reflect.ownKeys(...args) }
+  preventExtensions (...args) { return this._handler._preventExtensions ? this._handler._preventExtensions(...args) : Reflect.preventExtensions(...args) }
+  set (...args) { return this._handler.set ? this._handler._set(...args) : Reflect.set(...args) }
+  setPrototypeOf (...args) { return this._handler._setPrototypeOf ? this._handler._setPrototypeOf(...args) : Reflect.setPrototypeOf(...args) }
 
-    const p = new Proxy2(new Set(), h)
-
-    console.log('add 1, 2')
-    expect(p.add(1)).to.equal(p)
-    expect(p.add(2)).to.equal(p)
-
-    console.log('for each')
-    p.forEach(x => console.log(' ', x))
-
-    console.log('iterator')
-    for (const x of p) { console.log(' ', x) }
-
-    console.log('entries')
-    for (const x of p.entries()) { console.log(' ', x) }
-
-    console.log('print set')
-    console.log(' ', p)
-
-    console.log('checking same method')
-    expect(p.set).to.equal(p.set)
-
-    console.log('another object')
-    const addMethod = p.add
-    expect(addMethod).not.to.equal(Set.prototype.add)
-    addMethod.call(new Set(), 1)
-
-    console.log('clear')
-    p.clear()
-
-    console.log('size getter')
-    console.log(' ', p.size)
-  })
+  get ... not called for intrinsincs, but otherwise yes
+  */
 })
 
 // ------------------------------------------------------------------------------------------------
