@@ -1,5 +1,5 @@
 /**
- * proxy.js
+ * proxy2.js
  *
  * Tests for lib/util/proxy2.js
  */
@@ -105,6 +105,23 @@ describe('Proxy2', () => {
       }
     })
 
+    it('forEach', () => {
+      const h = handler({
+        _intrinsicIn: x => x + 1,
+        _intrinsicOut: x => x - 1
+      })
+      const p = new Proxy2(new Set(), h)
+      const v = [1, 2]
+      v.forEach(x => p.add(x))
+      resetHistory(h)
+      p.forEach(x => expect(x).to.deep.equal(v.shift()))
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(false)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(true)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(true)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(false)
+    })
+
     it('has', () => {
       const h = handler()
       const p = new Proxy2(new Set(), h)
@@ -125,7 +142,46 @@ describe('Proxy2', () => {
       resetHistory(h)
       expect(p.has(1)).to.equal(true)
     })
+
+    it('iterator', () => {
+      const h = handler({
+        _intrinsicIn: x => x + 1,
+        _intrinsicOut: x => x - 1
+      })
+      const p = new Proxy2(new Set(), h)
+      const v = [1, 2]
+      v.forEach(x => p.add(x))
+      resetHistory(h)
+      for (const x of p) {
+        expect(x).to.deep.equal(v.shift())
+      }
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(false)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(true)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(true)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(false)
+    })
+
+    it('values', () => {
+      const h = handler()
+      const p = new Proxy2(new Set(), h)
+      const v = [1, 2]
+      v.forEach(x => p.add(x))
+      resetHistory(h)
+      for (const x of p.values()) {
+        expect(x).to.deep.equal(v.shift())
+      }
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(false)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(true)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(true)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(false)
+    })
   })
+
+  // Normal set/map/uint8array
+  // Normal proxy
+  // GetTarget,Handler,etc.
 
   it('test', () => {
     const h = {}
