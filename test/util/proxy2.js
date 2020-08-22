@@ -1,14 +1,132 @@
 /**
- * membrane.js
+ * proxy.js
+ *
+ * Tests for lib/util/proxy2.js
  */
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+const { spy } = require('sinon')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
+const { mangle } = unmangle
 const Proxy2 = unmangle(Run)._Proxy2
 
+function handler (methods = {}) {
+  const handler = {
+    _intrinsicGetMethod: () => {},
+    _intrinsicIn: x => x,
+    _intrinsicOut: x => x,
+    _intrinsicRead: () => {},
+    _intrinsicUpdate: () => {}
+  }
+  Object.keys(methods).forEach(key => { handler[key] = methods[key] })
+  return mangle(spy(handler))
+}
+
+function resetHistory (h) {
+  unmangle(h)._intrinsicGetMethod.resetHistory()
+  unmangle(h)._intrinsicIn.resetHistory()
+  unmangle(h)._intrinsicOut.resetHistory()
+  unmangle(h)._intrinsicRead.resetHistory()
+  unmangle(h)._intrinsicUpdate.resetHistory()
+}
+
 describe('Proxy2', () => {
+  describe('Set', () => {
+    it('add', () => {
+      const h = handler()
+      const p = new Proxy2(new Set(), h)
+      p.add(1)
+      p.add(p)
+      p.add([])
+      expect(unmangle(h)._intrinsicGetMethod.calledThrice).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.calledThrice).to.equal(true)
+      expect(unmangle(h)._intrinsicUpdate.calledThrice).to.equal(true)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(false)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(false)
+    })
+
+    it('clear', () => {
+      const h = handler()
+      const p = new Proxy2(new Set(), h)
+      p.add(1)
+      resetHistory(h)
+      p.clear()
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(false)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(false)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(false)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(true)
+    })
+
+    it('delete', () => {
+      const h = handler()
+      const p = new Proxy2(new Set(), h)
+      p.add(1)
+      resetHistory(h)
+      expect(p.delete(1)).to.equal(true)
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(true)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(false)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(false)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(true)
+    })
+
+    it('entries', () => {
+      const h = handler()
+      const p = new Proxy2(new Set(), h)
+      const v = [1, 2]
+      v.forEach(x => p.add(x))
+      resetHistory(h)
+      for (const x of p.entries()) {
+        const n = v.shift()
+        expect(x).to.deep.equal([n, n])
+      }
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(false)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(true)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(true)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(false)
+    })
+
+    it('entries with conversion', () => {
+      const h = handler({
+        _intrinsicIn: x => x + 1,
+        _intrinsicOut: x => x - 1
+      })
+      const p = new Proxy2(new Set(), h)
+      const v = [1, 2]
+      v.forEach(x => p.add(x))
+      resetHistory(h)
+      for (const x of p.entries()) {
+        const n = v.shift()
+        expect(x).to.deep.equal([n, n])
+      }
+    })
+
+    it('has', () => {
+      const h = handler()
+      const p = new Proxy2(new Set(), h)
+      p.add(p)
+      resetHistory(h)
+      expect(p.has(p)).to.equal(true)
+      expect(unmangle(h)._intrinsicGetMethod.called).to.equal(true)
+      expect(unmangle(h)._intrinsicIn.called).to.equal(true)
+      expect(unmangle(h)._intrinsicOut.called).to.equal(false)
+      expect(unmangle(h)._intrinsicRead.called).to.equal(true)
+      expect(unmangle(h)._intrinsicUpdate.called).to.equal(false)
+    })
+
+    it('has with conversion', () => {
+      const h = handler({ _intrinsicIn: x => x + 1 })
+      const p = new Proxy2(new Set(), h)
+      p.add(1)
+      resetHistory(h)
+      expect(p.has(1)).to.equal(true)
+    })
+  })
+
   it('test', () => {
     const h = {}
     h._intrinsicGetMethod = () => { console.log('  intrinsic get method') }
