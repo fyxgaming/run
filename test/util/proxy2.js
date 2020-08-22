@@ -505,15 +505,27 @@ describe('Proxy2', () => {
 
     it('getPrototypeOf', () => {
       const h = handler({ _getPrototypeOf: (...args) => Reflect.getPrototypeOf(...args) })
-      const p = new Proxy2({ n: 1 }, h)
+      const p = new Proxy2({}, h)
       Object.getPrototypeOf(p)
       expect(h._getPrototypeOf.called).to.equal(true)
+    })
+
+    it('has', () => {
+      const h = handler({ _has: (...args) => Reflect.has(...args) })
+      const p = new Proxy2({ }, h)
+      'n' in p // eslint-disable-line
+      expect(h._has.called).to.equal(true)
+    })
+
+    it('isExtensible', () => {
+      const h = handler({ _isExtensible: (...args) => Reflect.isExtensible(...args) })
+      const p = new Proxy2({ }, h)
+      Object.isExtensible(p)
+      expect(h._isExtensible.called).to.equal(true)
     })
   })
 
   /* #101-111
-  has (...args) { return this._handler._has ? this._handler.has(...args) : Reflect._has(...args) }
-  isExtensible (...args) { return this._handler._isExtensible ? this._handler._isExtensible(...args) : Reflect.isExtensible(...args) }
   ownKeys (...args) { return this._handler._ownKeys ? this._handler._ownKeys(...args) : Reflect.ownKeys(...args) }
   preventExtensions (...args) { return this._handler._preventExtensions ? this._handler._preventExtensions(...args) : Reflect.preventExtensions(...args) }
   set (...args) { return this._handler.set ? this._handler._set(...args) : Reflect.set(...args) }
