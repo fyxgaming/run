@@ -537,10 +537,16 @@ describe('Proxy2', () => {
       Object.preventExtensions(p)
       expect(h._preventExtensions.called).to.equal(true)
     })
+
+    it('set', () => {
+      const h = handler({ _set: (...args) => Reflect.set(...args) })
+      const p = new Proxy2({ }, h)
+      p.n = 1
+      expect(h._set.called).to.equal(true)
+    })
   })
 
   /* #101-111
-  set (...args) { return this._handler.set ? this._handler._set(...args) : Reflect.set(...args) }
   setPrototypeOf (...args) { return this._handler._setPrototypeOf ? this._handler._setPrototypeOf(...args) : Reflect.setPrototypeOf(...args) }
 
   get ... not called for intrinsincs, but otherwise yes
