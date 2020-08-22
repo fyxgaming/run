@@ -495,10 +495,16 @@ describe('Proxy2', () => {
       Object.defineProperty(p, 'n', { value: 1 })
       expect(h._defineProperty.called).to.equal(true)
     })
+
+    it('deleteProperty', () => {
+      const h = handler({ _deleteProperty: (...args) => Reflect.deleteProperty(...args) })
+      const p = new Proxy2({ n: 1 }, h)
+      delete p.n
+      expect(h._deleteProperty.called).to.equal(true)
+    })
   })
 
   /* #101-111
-  deleteProperty (...args) { return this._handler._deleteProperty ? this._handler._deleteProperty(...args) : Reflect.deleteProperty(...args) }
   getPrototypeOf (...args) { return this._handler._getPrototypeOf ? this._handler._getPrototypeOf(...args) : Reflect.getPrototypeOf(...args) }
   has (...args) { return this._handler._has ? this._handler.has(...args) : Reflect._has(...args) }
   isExtensible (...args) { return this._handler._isExtensible ? this._handler._isExtensible(...args) : Reflect.isExtensible(...args) }
