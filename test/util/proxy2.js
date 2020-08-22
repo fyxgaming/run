@@ -523,10 +523,16 @@ describe('Proxy2', () => {
       Object.isExtensible(p)
       expect(h._isExtensible.called).to.equal(true)
     })
+
+    it('ownKeys', () => {
+      const h = handler({ _ownKeys: (...args) => Reflect.ownKeys(...args) })
+      const p = new Proxy2({ }, h)
+      Object.getOwnPropertyNames(p)
+      expect(h._ownKeys.called).to.equal(true)
+    })
   })
 
   /* #101-111
-  ownKeys (...args) { return this._handler._ownKeys ? this._handler._ownKeys(...args) : Reflect.ownKeys(...args) }
   preventExtensions (...args) { return this._handler._preventExtensions ? this._handler._preventExtensions(...args) : Reflect.preventExtensions(...args) }
   set (...args) { return this._handler.set ? this._handler._set(...args) : Reflect.set(...args) }
   setPrototypeOf (...args) { return this._handler._setPrototypeOf ? this._handler._setPrototypeOf(...args) : Reflect.setPrototypeOf(...args) }
