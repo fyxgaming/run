@@ -502,10 +502,16 @@ describe('Proxy2', () => {
       delete p.n
       expect(h._deleteProperty.called).to.equal(true)
     })
+
+    it('getPrototypeOf', () => {
+      const h = handler({ _getPrototypeOf: (...args) => Reflect.getPrototypeOf(...args) })
+      const p = new Proxy2({ n: 1 }, h)
+      Object.getPrototypeOf(p)
+      expect(h._getPrototypeOf.called).to.equal(true)
+    })
   })
 
   /* #101-111
-  getPrototypeOf (...args) { return this._handler._getPrototypeOf ? this._handler._getPrototypeOf(...args) : Reflect.getPrototypeOf(...args) }
   has (...args) { return this._handler._has ? this._handler.has(...args) : Reflect._has(...args) }
   isExtensible (...args) { return this._handler._isExtensible ? this._handler._isExtensible(...args) : Reflect.isExtensible(...args) }
   ownKeys (...args) { return this._handler._ownKeys ? this._handler._ownKeys(...args) : Reflect.ownKeys(...args) }
