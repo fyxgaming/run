@@ -544,11 +544,16 @@ describe('Proxy2', () => {
       p.n = 1
       expect(h._set.called).to.equal(true)
     })
+
+    it('setPrototypeOf', () => {
+      const h = handler({ _setPrototypeOf: (...args) => Reflect.setPrototypeOf(...args) })
+      const p = new Proxy2({ }, h)
+      Object.setPrototypeOf(p, {})
+      expect(h._setPrototypeOf.called).to.equal(true)
+    })
   })
 
   /* #101-111
-  setPrototypeOf (...args) { return this._handler._setPrototypeOf ? this._handler._setPrototypeOf(...args) : Reflect.setPrototypeOf(...args) }
-
   get ... not called for intrinsincs, but otherwise yes
   */
 })
