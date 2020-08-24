@@ -542,6 +542,13 @@ describe('Proxy2', () => {
       expect(h._get.called).to.equal(false)
     })
 
+    it('getOwnPropertyDescriptor', () => {
+      const h = handler({ _getOwnPropertyDescriptor: (...args) => Reflect.getOwnPropertyDescriptor(...args) })
+      const p = new Proxy2({}, h)
+      Object.getOwnPropertyDescriptor(p, 'n')
+      expect(h._getOwnPropertyDescriptor.called).to.equal(true)
+    })
+
     it('getPrototypeOf', () => {
       const h = handler({ _getPrototypeOf: (...args) => Reflect.getPrototypeOf(...args) })
       const p = new Proxy2({}, h)
