@@ -105,18 +105,6 @@ class Immutable extends Membrane {
     desc.value = immutable
     return desc
   }
-
-  preventExtensions (target) {
-    throw new Error('preventExtensions disabled')
-  }
-
-  set (target, prop, value, receiver) {
-    throw new Error('set disabled')
-  }
-
-  setPrototypeOf (target, prototype) {
-    throw new Error('setPrototypeOf disabled')
-  }
 }
 
 // ------------------------------------------------------------------------------------------------
