@@ -15,8 +15,26 @@ const Membrane = unmangle(Run)._Membrane
 
 describe('Membrane', () => {
   describe('errors', () => {
-    it('test', () => {
+    it('throws if jig errors on jig', () => {
       console.log(Membrane)
+    })
+
+    it('throws if jig errors on inner object', () => {
+      // TODO
+    })
+
+    it('does not throw if no errors', () => {
+      // TODO
+    })
+  })
+
+  describe('admin', () => {
+    it('admin mode runs directly on target', () => {
+      // TODO
+    })
+
+    it('admin mode overrides errors', () => {
+      // TODO
     })
   })
 })
