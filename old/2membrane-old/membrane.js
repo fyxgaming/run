@@ -6,8 +6,8 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const Run = require('../env/run')
-const unmangle = require('../env/unmangle')
+const Run = require('../../test/env/run')
+const unmangle = require('../../test/env/unmangle')
 const Membrane = unmangle(unmangle(Run)._membrane)._Membrane
 
 // ------------------------------------------------------------------------------------------------
