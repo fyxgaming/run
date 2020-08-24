@@ -88,7 +88,7 @@ describe('Proxy2', () => {
     it('entries', () => {
       const h = handler()
       const p = new Proxy2(new Set(), h)
-      const v = [1, 2]
+      const v = [0, 1, 2]
       v.forEach(x => p.add(x))
       resetHistory(h)
       for (const x of p.entries()) {
@@ -445,9 +445,10 @@ describe('Proxy2', () => {
     })
 
     it('without new handlers', () => {
-      const p = new Proxy2(new Set(), {})
-      p.add(1)
-      p.entries()
+      const p = new Proxy2(new Map(), {})
+      p.set(1, 2)
+      p.entries().next()
+      p.get(1)
       p.clear()
       p.size // eslint-disable-line
     })
