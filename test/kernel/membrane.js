@@ -26,9 +26,12 @@ describe('Membrane', () => {
     it('throws if use jig with errors', () => {
       const A = new Membrane(class A {})
       const f = new Membrane(function f () {})
+      const m = new Membrane(new Map(), A)
+
       const error = 'hello'
       sudo(() => { A.location = `error://${error}` })
       sudo(() => { f.location = `error://${error}` })
+
       expect(() => new A()).to.throw()
       expect(() => f()).to.throw(error)
       expect(() => Object.defineProperty(A, 'n', { value: 1 })).to.throw(error)
@@ -41,6 +44,8 @@ describe('Membrane', () => {
       expect(() => Object.preventExtensions(f)).to.throw(error)
       expect(() => { A.n = 1 }).to.throw(error)
       expect(() => Object.setPrototypeOf(f, {})).to.throw(error)
+
+      expect(() => m.set).to.throw(error)
     })
 
     it('throws if inner object with jig errors', () => {
