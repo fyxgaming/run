@@ -130,7 +130,7 @@ class MethodHandler {
     return _recordMultiple(() => {
       let clonedArgs = null
 
-      // Deploy jig classes and sidekick code as params
+      // Deploy jig classes and static code as params
       clonedArgs = _deepClone(args, SI, x => {
         if (typeof x === 'function' && !(x instanceof Code)) {
           const C = new Code(x)

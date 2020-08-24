@@ -14,9 +14,17 @@ const Membrane = unmangle(Run)._Membrane
 // ------------------------------------------------------------------------------------------------
 
 describe('Membrane', () => {
+  describe('constructor', () => {
+    it('creates proxy', () => {
+      // TODO
+    })
+  })
+
   describe('errors', () => {
     it('throws if jig errors on jig', () => {
-      console.log(Membrane)
+      const p = new Membrane({}, 'jig')
+      p.location = 'error://oops'
+      console.log(p.x)
     })
 
     it('throws if jig errors on inner object', () => {

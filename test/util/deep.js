@@ -337,7 +337,7 @@ describe('_deepClone', () => {
     // TODO: Move below
   })
 
-  it.skip('should throw for arbitrary objects of undeployed sidekicks', () => {
+  it.skip('should throw for arbitrary objects of undeployed static code', () => {
     // TODO: Move below
   })
 

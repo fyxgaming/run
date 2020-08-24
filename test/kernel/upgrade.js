@@ -913,13 +913,13 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if upgrade a jig to a sidekick', () => {
+    it.skip('throws if upgrade normal jig class to static code', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if upgrade a sidekick to a jig', () => {
+    it.skip('throws if upgrade static code to normal jig class', () => {
       // TODO
     })
 
