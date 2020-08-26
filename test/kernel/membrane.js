@@ -229,7 +229,13 @@ describe('Membrane', () => {
       const m = new Map()
       const o = {}
       const m2 = new Membrane(m, f)
-      _sudo(() => m2.set(o))
+      const mset = m2.set
+      const mhas = m2.has
+      const mget = m2.get
+      expect(_sudo(() => m2.set(o, 2))).to.equal(m2)
+      expect(_sudo(() => mset.call(m2, o, 3))).to.equal(m2)
+      expect(_sudo(() => mhas.call(m2, o))).to.equal(true)
+      expect(_sudo(() => mget.call(m2, o))).to.equal(3)
       expect(_sudo(() => m.has(o))).to.equal(true)
     })
 
