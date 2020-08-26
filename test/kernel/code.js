@@ -217,7 +217,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('name is class or function name', () => {
+    it('name is correct', () => {
       const run = new Run()
       class A { }
       expect(run.deploy(A).name).to.equal('A')
@@ -225,6 +225,18 @@ describe('Code', () => {
       expect(run.deploy(f).name).to.equal('f')
       class B extends A { }
       expect(run.deploy(B).name).to.equal('B')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns code by name', () => {
+      const run = new Run()
+      class A { static getThis () { return A } }
+      const A2 = run.deploy(A)
+      expect(A2.getThis()).to.equal(A2)
+      function f () { return f }
+      const f2 = run.deploy(f)
+      expect(f2()).to.equal(f2)
     })
   })
 

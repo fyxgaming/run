@@ -99,20 +99,6 @@ describe('Dynamic', () => {
       expect(() => { Dynamic._setInnerType(D, class A { }) }).to.throw()
     })
 
-    it('cannot set anonymous types', () => {
-      const D = new Dynamic()
-      const error = 'Types must not be anonymous'
-      const A = class { }
-      expect(() => { Dynamic._setInnerType(D, A) }).to.throw(error)
-      class B2 { }
-      const B = class extends B2 { }
-      expect(() => { Dynamic._setInnerType(D, B) }).to.throw(error)
-      const f = function () { }
-      expect(() => { Dynamic._setInnerType(D, f) }).to.throw(error)
-      const g = () => { }
-      expect(() => { Dynamic._setInnerType(D, g) }).to.throw(error)
-    })
-
     it('cannot have toString static function', () => {
       const D = new Dynamic()
       const error = 'toString is a reserved property'
