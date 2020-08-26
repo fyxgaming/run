@@ -102,6 +102,16 @@ describe('Membrane', () => {
       expect(_sudo(() => f.location)).to.equal('error://hello')
     })
   })
+
+  describe('code methods', () => {
+    it('has', () => {
+      const f = new Membrane(function f () { })
+      expect('sync' in f).to.equal(true)
+      expect('upgrade' in f).to.equal(true)
+      expect('destroy' in f).to.equal(true)
+      expect('auth' in f).to.equal(true)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
