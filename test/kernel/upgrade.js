@@ -862,12 +862,12 @@ describe('Upgrade', () => {
   describe('errors', () => {
     it('rolls back', async () => {
       const run = new Run()
-      class A { static f () { }}
+      class A { static f () { } }
       A.x = 1
       const CA = run.deploy(A)
       await CA.sync()
 
-      class B { static g () { }}
+      class B { static g () { } }
       B.y = 2
       stub(run.purse, 'pay').callsFake(x => x)
       CA.upgrade(B)
