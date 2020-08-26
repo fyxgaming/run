@@ -76,6 +76,12 @@ describe('Membrane', () => {
       expect(Object.getPrototypeOf(A2)).to.equal(B)
     })
 
+    it('has', () => {
+      class A { }
+      A.n = 1
+      expect('n' in A).to.equal(true)
+    })
+
     it('setPrototypeOf disabled', () => {
       class A { static f () { Object.setPrototypeOf(this, {}) } }
       const A2 = new Membrane(A)
