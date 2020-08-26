@@ -217,7 +217,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('name is correct', () => {
+    it('name is correct', () => {
       const run = new Run()
       class A { }
       expect(run.deploy(A).name).to.equal('A')
@@ -229,7 +229,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('returns code by name', () => {
+    it('returns code by name', () => {
       const run = new Run()
       class A { static getThis () { return A } }
       const A2 = run.deploy(A)

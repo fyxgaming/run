@@ -1053,7 +1053,7 @@ describe('Deploy', () => {
   // --------------------------------------------------------------------------
 
   describe('deps', () => {
-    it('basic dep', async () => {
+    it.only('basic dep', async () => {
       const run = new Run()
 
       class A { }
@@ -1414,11 +1414,11 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('throws if dep is class name', () => {
+    it('throws if dep is class name', () => {
       const run = new Run()
       class A { }
       A.deps = { A }
-      expect(() => run.deploy(A)).to.throw('hoo hah')
+      expect(() => run.deploy(A)).to.throw('Illegal dependency')
     })
   })
 

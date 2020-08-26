@@ -845,13 +845,13 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('throws if dep is function name', () => {
+    it('throws if dep is function name', () => {
       const run = new Run()
       function f () { }
       const cf = run.deploy(f)
       function g () { }
       g.deps = { g }
-      expect(() => cf.upgrade(g)).to.throw('hoo hah')
+      expect(() => cf.upgrade(g)).to.throw('Illegal dependency')
     })
   })
 
