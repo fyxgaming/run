@@ -79,7 +79,14 @@ describe('Membrane', () => {
     it('has', () => {
       class A { }
       A.n = 1
-      expect('n' in A).to.equal(true)
+      const A2 = new Membrane(A)
+      expect('n' in A2).to.equal(true)
+    })
+
+    it('isExtensible', () => {
+      class A { }
+      const A2 = new Membrane(A)
+      expect(Object.isExtensible(A2)).to.equal(true)
     })
 
     it('setPrototypeOf disabled', () => {
