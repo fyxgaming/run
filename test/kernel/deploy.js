@@ -1053,7 +1053,7 @@ describe('Deploy', () => {
   // --------------------------------------------------------------------------
 
   describe('deps', () => {
-    it.only('basic dep', async () => {
+    it('basic dep', async () => {
       const run = new Run()
 
       class A { }
@@ -1061,8 +1061,11 @@ describe('Deploy', () => {
       f.deps = { A }
 
       function test (cf) {
+        console.log('1')
         expect(cf() instanceof Code).to.equal(true)
+        console.log('2')
         expect(cf.deps.A instanceof Code).to.equal(true)
+        console.log('3')
       }
 
       expectTx({
