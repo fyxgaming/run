@@ -46,6 +46,14 @@ describe('Membrane', () => {
       expect(() => A2.f()).to.throw('defineProperty disabled')
     })
 
+    it('delete', () => {
+      class A { static f () { delete this.n } }
+      A.n = 1
+      const A2 = new Membrane(A)
+      A2.f()
+      expect('n' in A2).to.equal(false)
+    })
+
     it('setPrototypeOf disabled', () => {
       class A { static f () { Object.setPrototypeOf(this, {}) } }
       const A2 = new Membrane(A)
