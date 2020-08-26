@@ -120,6 +120,14 @@ describe('Membrane', () => {
       expect(typeof f.auth).to.equal('function')
     })
 
+    it('getOwnPropertyDescriptor undefined', () => {
+      const f = new Membrane(function f () { })
+      expect(Object.getOwnPropertyDescriptor(f, 'sync')).to.equal(undefined)
+      expect(Object.getOwnPropertyDescriptor(f, 'upgrade')).to.equal(undefined)
+      expect(Object.getOwnPropertyDescriptor(f, 'destroy')).to.equal(undefined)
+      expect(Object.getOwnPropertyDescriptor(f, 'auth')).to.equal(undefined)
+    })
+
     it('cannot set', () => {
       const f = new Membrane(function f () { })
       expect(() => { f.sync = 1 }).to.throw('Cannot set sync')
