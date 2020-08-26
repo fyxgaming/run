@@ -111,6 +111,22 @@ describe('Membrane', () => {
       expect('destroy' in f).to.equal(true)
       expect('auth' in f).to.equal(true)
     })
+
+    it('get', () => {
+      const f = new Membrane(function f () { })
+      expect(typeof f.sync).to.equal('function')
+      expect(typeof f.upgrade).to.equal('function')
+      expect(typeof f.destroy).to.equal('function')
+      expect(typeof f.auth).to.equal('function')
+    })
+
+    it('cannot delete', () => {
+      const f = new Membrane(function f () { })
+      expect(() => { delete f.sync }).to.throw('Cannot delete sync')
+      expect(() => { delete f.upgrade }).to.throw('Cannot delete upgrade')
+      expect(() => { delete f.destroy }).to.throw('Cannot delete destroy')
+      expect(() => { delete f.auth }).to.throw('Cannot delete auth')
+    })
   })
 })
 
