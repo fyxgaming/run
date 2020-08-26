@@ -290,10 +290,21 @@ describe('Membrane', () => {
 
   describe('bindings', () => {
     it('can read jig bindings when bound', () => {
-      // const A = new Membrane(class A { })
-      // console.log(A.location)
-      // TODO
+      const A = new Membrane(class A { })
+      _sudo(() => { A.location = 'abc_o1' })
+      _sudo(() => { A.origin = 'def_o2' })
+      _sudo(() => { A.nonce = 1 })
+      _sudo(() => { A.owner = '1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N' })
+      _sudo(() => { A.satoshis = 0 })
+
+      expect(A.location).to.equal('abc_o1')
+      expect(A.origin).to.equal('def_o2')
+      expect(A.nonce).to.equal(1)
+      expect(A.owner).to.equal('1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N')
+      expect(A.satoshis).to.equal(0)
     })
+
+    // Jig Class, Inner object, etc.
 
     it('can read berry bindings when bound', () => {
       // const A = new Membrane(class A { })
