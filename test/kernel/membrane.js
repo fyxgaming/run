@@ -120,6 +120,14 @@ describe('Membrane', () => {
       expect(typeof f.auth).to.equal('function')
     })
 
+    it('cannot set', () => {
+      const f = new Membrane(function f () { })
+      expect(() => { f.sync = 1 }).to.throw('Cannot set sync')
+      expect(() => { f.upgrade = 1 }).to.throw('Cannot set upgrade')
+      expect(() => { f.destroy = 1 }).to.throw('Cannot set destroy')
+      expect(() => { f.auth = 1 }).to.throw('Cannot set auth')
+    })
+
     it('cannot delete', () => {
       const f = new Membrane(function f () { })
       expect(() => { delete f.sync }).to.throw('Cannot delete sync')
