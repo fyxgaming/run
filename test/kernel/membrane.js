@@ -89,6 +89,14 @@ describe('Membrane', () => {
       expect(Object.isExtensible(A2)).to.equal(true)
     })
 
+    it('ownKeys', () => {
+      class A { }
+      A.n = 1
+      const A2 = new Membrane(A)
+      const keys = ['length', 'prototype', 'name', 'n']
+      expect(Reflect.ownKeys(A2)).to.deep.equal(keys)
+    })
+
     it('setPrototypeOf disabled', () => {
       class A { static f () { Object.setPrototypeOf(this, {}) } }
       const A2 = new Membrane(A)
