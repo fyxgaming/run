@@ -103,7 +103,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should return soure code for child code class', () => {
+    it('should return source code for child code class', () => {
       const run = new Run()
       class A { }
       class B extends A { }
