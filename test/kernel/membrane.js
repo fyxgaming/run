@@ -7,6 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const { _sudo } = require('../../lib/util/admin')
 const Membrane = unmangle(Run)._Membrane
@@ -24,6 +25,41 @@ describe('Membrane', () => {
       const A2 = new Membrane(A)
       expect(Proxy2._getTarget(A2)).to.equal(A)
       expect(Proxy2._getProxy(A)).to.equal(A2)
+    })
+
+    it('jig code', () => {
+      new Membrane(class A extends Jig { }) // eslint-disable-line
+    })
+
+    it('static jig code', () => {
+      new Membrane(class A { }) // eslint-disable-line
+    })
+
+    it('jig instance', () => {
+      const o = {}
+      Object.setPrototypeOf(o, (class A extends Jig { }).prototype)
+      new Membrane(o) // eslint-disable-line
+    })
+
+    it('berry', () => {
+      const o = {}
+      Object.setPrototypeOf(o, (class A extends Berry { }).prototype)
+      new Membrane(o) // eslint-disable-line
+    })
+
+    it('inner object', () => {
+      new Membrane({}, {}) // eslint-disable-line
+    })
+
+    it('inner method', () => {
+      new Membrane(function f() { }, {}) // eslint-disable-line
+    })
+
+    it('throws if unsupported', () => {
+      expect(() => new Membrane()).to.throw()
+      expect(() => new Membrane(1)).to.throw()
+      expect(() => new Membrane(null)).to.throw()
+      expect(() => new Membrane({})).to.throw()
     })
   })
 
