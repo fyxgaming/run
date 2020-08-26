@@ -115,6 +115,12 @@ describe('Membrane', () => {
       const A2 = new Membrane(A)
       expect(() => A2.f()).to.throw('setPrototypeOf disabled')
     })
+
+    it('intrinsic handlers', () => {
+      const m = new Membrane(new Map(), {})
+      m.set(1, 2)
+      expect(m.get(1)).to.equal(2)
+    })
   })
 
   describe('errors', () => {
