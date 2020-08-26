@@ -1061,11 +1061,8 @@ describe('Deploy', () => {
       f.deps = { A }
 
       function test (cf) {
-        console.log('1')
         expect(cf() instanceof Code).to.equal(true)
-        console.log('2')
         expect(cf.deps.A instanceof Code).to.equal(true)
-        console.log('3')
       }
 
       expectTx({

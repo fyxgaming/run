@@ -54,6 +54,21 @@ describe('Membrane', () => {
       expect('n' in A2).to.equal(false)
     })
 
+    it('get', () => {
+      class A { }
+      A.n = 1
+      const A2 = new Membrane(A)
+      expect(A2.n).to.equal(1)
+    })
+
+    it('getOwnPropertyDescriptor', () => {
+      class A { }
+      A.n = 1
+      const A2 = new Membrane(A)
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      expect(Object.getOwnPropertyDescriptor(A2, 'n')).to.deep.equal(desc)
+    })
+
     it('setPrototypeOf disabled', () => {
       class A { static f () { Object.setPrototypeOf(this, {}) } }
       const A2 = new Membrane(A)
