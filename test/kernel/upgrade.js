@@ -842,6 +842,17 @@ describe('Upgrade', () => {
       const error = 'Anonymous types not supported'
       expect(() => CA.upgrade(B)).to.throw(error)
     })
+
+    // ------------------------------------------------------------------------
+
+    it.only('throws if dep is function name', () => {
+      const run = new Run()
+      function f () { }
+      const cf = run.deploy(f)
+      function g () { }
+      g.deps = { g }
+      expect(() => cf.upgrade(g)).to.throw('hoo hah')
+    })
   })
 
   // --------------------------------------------------------------------------

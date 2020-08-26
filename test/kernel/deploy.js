@@ -1411,6 +1411,15 @@ describe('Deploy', () => {
       B.deps = { A: C }
       expect(() => run.deploy(B)).to.throw('Parent dependency mismatch')
     })
+
+    // ------------------------------------------------------------------------
+
+    it.only('throws if dep is class name', () => {
+      const run = new Run()
+      class A { }
+      A.deps = { A }
+      expect(() => run.deploy(A)).to.throw('hoo hah')
+    })
   })
 
   // --------------------------------------------------------------------------
