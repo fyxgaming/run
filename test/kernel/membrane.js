@@ -27,6 +27,20 @@ describe('Membrane', () => {
     })
   })
 
+  describe('handlers', () => {
+    it('construct', () => {
+      class A { }
+      const A2 = new Membrane(A)
+      expect(new A2() instanceof A2).to.equal(true)
+    })
+
+    it('setPrototypeOf disabled', () => {
+      class A { static f () { Object.setPrototypeOf(A, {}) } }
+      const A2 = new Membrane(A)
+      expect(() => A2.f()).to.throw('setPrototypeOf disabled')
+    })
+  })
+
   describe('errors', () => {
     it('throws if use jig that has errors', () => {
       const A = new Membrane(class A {})
