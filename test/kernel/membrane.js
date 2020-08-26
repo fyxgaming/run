@@ -28,14 +28,26 @@ describe('Membrane', () => {
   })
 
   describe('handlers', () => {
+    it('apply', () => {
+      function f (x) { return x }
+      const f2 = new Membrane(f)
+      expect(f2(1)).to.equal(1)
+    })
+
     it('construct', () => {
       class A { }
       const A2 = new Membrane(A)
       expect(new A2() instanceof A2).to.equal(true)
     })
 
+    it('defineProperty disabled', () => {
+      class A { static f () { Object.defineProperty(this, 'n', { value: 1 }) } }
+      const A2 = new Membrane(A)
+      expect(() => A2.f()).to.throw('defineProperty disabled')
+    })
+
     it('setPrototypeOf disabled', () => {
-      class A { static f () { Object.setPrototypeOf(A, {}) } }
+      class A { static f () { Object.setPrototypeOf(this, {}) } }
       const A2 = new Membrane(A)
       expect(() => A2.f()).to.throw('setPrototypeOf disabled')
     })
