@@ -69,6 +69,13 @@ describe('Membrane', () => {
       expect(Object.getOwnPropertyDescriptor(A2, 'n')).to.deep.equal(desc)
     })
 
+    it('getPrototypeOf', () => {
+      class B { }
+      class A extends B { }
+      const A2 = new Membrane(A)
+      expect(Object.getPrototypeOf(A2)).to.equal(B)
+    })
+
     it('setPrototypeOf disabled', () => {
       class A { static f () { Object.setPrototypeOf(this, {}) } }
       const A2 = new Membrane(A)
