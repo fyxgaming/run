@@ -289,7 +289,15 @@ describe('Membrane', () => {
   })
 
   describe('immutable', () => {
+    // TODO
+  })
 
+  describe('private', () => {
+    // TODO
+  })
+
+  describe('record', () => {
+    // TODO
   })
 })
 
