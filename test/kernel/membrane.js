@@ -213,8 +213,9 @@ describe('Membrane', () => {
       _sudo(() => { delete A2.n })
       expect('n' in A).to.equal(false)
       A.n = 2
-      expect(_sudo(() => Object.getOwnPropertyDescriptor(A, 'n')).value).to.equal(2)
+      expect(_sudo(() => Object.getOwnPropertyDescriptor(A2, 'n')).value).to.equal(2)
       expect(_sudo(() => Object.getPrototypeOf(A2))).to.equal(Object.getPrototypeOf(A))
+      expect(_sudo(() => 'n' in A2)).to.equal(true)
       expect(_sudo(() => Object.isExtensible(A2))).to.equal(Object.isExtensible(A))
       A._private = 1
       expect(_sudo(() => Object.getOwnPropertyNames(A2))).to.deep.equal(Object.getOwnPropertyNames(A))
