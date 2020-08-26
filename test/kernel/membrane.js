@@ -97,6 +97,12 @@ describe('Membrane', () => {
       expect(Reflect.ownKeys(A2)).to.deep.equal(keys)
     })
 
+    it('preventExtensions disabled', () => {
+      class A { static f () { Object.preventExtensions(this) } }
+      const A2 = new Membrane(A)
+      expect(() => A2.f()).to.throw('preventExtensions disabled')
+    })
+
     it('setPrototypeOf disabled', () => {
       class A { static f () { Object.setPrototypeOf(this, {}) } }
       const A2 = new Membrane(A)
