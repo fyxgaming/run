@@ -288,8 +288,82 @@ describe('Membrane', () => {
     })
   })
 
+  describe('bindings', () => {
+    it('can read jig bindings when bound', () => {
+      // const A = new Membrane(class A { })
+      // console.log(A.location)
+      // TODO
+    })
+
+    it('can read berry bindings when bound', () => {
+      // const A = new Membrane(class A { })
+      // console.log(A.location)
+      // TODO
+    })
+
+    it('can read inner object binding props anytime', () => {
+      // const A = new Membrane(class A { })
+      // console.log(A.location)
+      // TODO
+    })
+
+    it('can set owner when undefined', () => {
+      // TODO
+    })
+
+    it('can set satoshis when undefined', () => {
+      // TODO
+    })
+
+    it('can set inner object binding properties', () => {
+      // TODO
+    })
+
+    it('cannot set location, origin, or nonce', () => {
+      // TODO
+    })
+
+    it('cannot delete bindings', () => {
+      // TODO
+    })
+
+    it('cannot change owner once unbound', () => {
+      // TODO
+    })
+
+    it('cannot change satoshis once unbound', () => {
+      // TODO
+    })
+  })
+
+  describe('jig method', () => {
+    it('returns membrane', () => { })
+    it('returns same method twice', () => { })
+    it('immutable', () => { })
+    it('method can only be applied to jig instance', () => {})
+    it('static method can only be applied to jig class', () => {})
+  })
+
+  describe('inner object', () => {
+    it('returns membrane', () => { })
+    it('returns same object twice', () => { })
+    it('returns membrane for inner inner object', () => { })
+    it('store and retrieve from intrinsic', () => { })
+  })
+
+  describe('inner method', () => {
+    it('intrinsic method immutable', () => { })
+    it('arbitrary object method immutable', () => { })
+    it('can call inside of jig', () => { })
+    it('can call outside of jig if no updates', () => { })
+  })
+
   describe('immutable', () => {
-    // TODO
+    it('delete disabled', () => { })
+    it('set disabled', () => { })
+    it('intrinsic update disabled', () => { })
+    it('sudo overrides', () => { })
+    it('returns immutable inner object', () => { })
   })
 
   describe('private', () => {
@@ -297,6 +371,10 @@ describe('Membrane', () => {
   })
 
   describe('record', () => {
+    // TODO
+  })
+
+  describe('borrow', () => {
     // TODO
   })
 })

@@ -208,11 +208,11 @@ describe('Code', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
-      expect(() => CA.location).to.throw('Cannot read location: undetermined')
-      expect(() => CA.origin).to.throw('Cannot read origin: undetermined')
-      expect(() => CA.nonce).to.throw('Cannot read nonce: undetermined')
-      expect(() => CA.owner).to.throw('Cannot read owner: unbound')
-      expect(() => CA.satoshis).to.throw('Cannot read satoshis: unbound')
+      expect(() => CA.location).to.throw('Cannot read location\n\nValue is undetermined')
+      expect(() => CA.origin).to.throw('Cannot read origin\n\nValue is undetermined')
+      expect(() => CA.nonce).to.throw('Cannot read nonce\n\nValue is undetermined')
+      expect(() => CA.owner).to.throw('Cannot read owner\n\nValue is unbound')
+      expect(() => CA.satoshis).to.throw('Cannot read satoshis\n\nValue is unbound')
     })
 
     // ------------------------------------------------------------------------
