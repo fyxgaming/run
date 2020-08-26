@@ -10,6 +10,7 @@ const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const { _sudo } = require('../../lib/util/admin')
 const Membrane = unmangle(Run)._Membrane
+const Proxy2 = unmangle(Run)._Proxy2
 const sudo = unmangle(Run)._sudo
 
 // ------------------------------------------------------------------------------------------------
@@ -19,7 +20,10 @@ const sudo = unmangle(Run)._sudo
 describe('Membrane', () => {
   describe('constructor', () => {
     it('creates proxy', () => {
-      // TODO
+      class A { }
+      const A2 = new Membrane(A)
+      expect(Proxy2._getTarget(A2)).to.equal(A)
+      expect(Proxy2._getProxy(A)).to.equal(A2)
     })
   })
 
@@ -143,6 +147,10 @@ describe('Membrane', () => {
       expect(() => { delete f.destroy }).to.throw('Cannot delete destroy')
       expect(() => { delete f.auth }).to.throw('Cannot delete auth')
     })
+  })
+
+  describe('immutable', () => {
+
   })
 })
 
