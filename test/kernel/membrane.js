@@ -103,6 +103,13 @@ describe('Membrane', () => {
       expect(() => A2.f()).to.throw('preventExtensions disabled')
     })
 
+    it('set', () => {
+      class A { static f () { this.n = 1 } }
+      const A2 = new Membrane(A)
+      A2.f()
+      expect(A2.n).to.equal(1)
+    })
+
     it('setPrototypeOf disabled', () => {
       class A { static f () { Object.setPrototypeOf(this, {}) } }
       const A2 = new Membrane(A)
