@@ -460,23 +460,18 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('can set inner object binding properties', () => {
-      // TODO
+      const o = new Membrane({}, {})
+      o.location = 'abc_o1'
+      o.owner = DUMMY_OWNER
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if set invalid bindings', () => {
-      /*
-      const A = new Membrane(class A { })
-      sudo(() => { A.origin = null })
-      sudo(() => { A.nonce = new Set() })
-      sudo(() => { A.owner = false })
-      sudo(() => { A.satoshis = -1000 })
-      expect(() => A.origin).to.throw('Cannot read origin')
-      expect(() => A.nonce).to.throw('Cannot read nonce')
-      expect(() => A.owner).to.throw('Cannot read owner')
-      expect(() => A.satoshis).to.throw('Cannot read satoshis')
-      */
+      class A { static setProperty (name, value) { this[name] = value } }
+      const A2 = new Membrane(A)
+      expect(() => A2.setProperty('owner', [])).to.throw('Invalid owner')
+      expect(() => A2.setProperty('satoshis', null)).to.throw('satoshis must be a number')
     })
 
     // ------------------------------------------------------------------------
