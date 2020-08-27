@@ -480,7 +480,12 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot delete bindings', () => {
-      // TODO
+      const A = new Membrane(class A { })
+      expect(() => { delete A.location }).to.throw('Cannot delete binding location')
+      expect(() => { delete A.origin }).to.throw('Cannot delete binding origin')
+      expect(() => { delete A.nonce }).to.throw('Cannot delete binding nonce')
+      expect(() => { delete A.owner }).to.throw('Cannot delete binding owner')
+      expect(() => { delete A.satoshis }).to.throw('Cannot delete binding satoshis')
     })
 
     // ------------------------------------------------------------------------
