@@ -524,6 +524,63 @@ describe('Membrane', () => {
       delete o.owner
       delete o.satoshis
     })
+
+    // ------------------------------------------------------------------------
+
+    it('read bindings on jigs', () => {
+      const A = new Membrane(class A { })
+      sudo(() => { A.location = 'abc_o1' })
+      sudo(() => { A.origin = 'def_o2' })
+      sudo(() => { A.nonce = 1 })
+      sudo(() => { A.owner = DUMMY_OWNER })
+      sudo(() => { A.satoshis = 0 })
+      expect(Object.getOwnPropertyDescriptor(A, 'location').value).to.equal('abc_o1')
+      expect(Object.getOwnPropertyDescriptor(A, 'origin').value).to.equal('def_o2')
+      expect(Object.getOwnPropertyDescriptor(A, 'nonce').value).to.equal(1)
+      expect(Object.getOwnPropertyDescriptor(A, 'owner').value).to.equal(DUMMY_OWNER)
+      expect(Object.getOwnPropertyDescriptor(A, 'satoshis').value).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('read bindings on inner objects', () => {
+      const o = new Membrane({}, {})
+      sudo(() => { o.location = [] })
+      sudo(() => { o.origin = null })
+      sudo(() => { o.nonce = new Set() })
+      sudo(() => { o.owner = false })
+      sudo(() => { o.satoshis = -1000 })
+      expect(Object.getOwnPropertyDescriptor(o, 'location').value).to.deep.equal([])
+      expect(Object.getOwnPropertyDescriptor(o, 'origin').value).to.equal(null)
+      expect(Object.getOwnPropertyDescriptor(o, 'nonce').value).to.deep.equal(new Set())
+      expect(Object.getOwnPropertyDescriptor(o, 'owner').value).to.equal(false)
+      expect(Object.getOwnPropertyDescriptor(o, 'satoshis').value).to.equal(-1000)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if get descriptor of undetermined bindings', () => {
+      const A = new Membrane(class A { })
+      sudo(() => { A.location = '_o1' })
+      sudo(() => { A.origin = 'commit://def_d2' })
+      sudo(() => { A.owner = new Unbound() })
+      sudo(() => { A.satoshis = new Unbound() })
+      expect(() => Object.getOwnPropertyDescriptor(A, 'location').value).to.throw('location is undetermined')
+      expect(() => Object.getOwnPropertyDescriptor(A, 'origin').value).to.throw('origin is undetermined')
+      expect(() => Object.getOwnPropertyDescriptor(A, 'nonce').value).to.throw('nonce is undetermined')
+      expect(() => Object.getOwnPropertyDescriptor(A, 'owner').value).to.throw('owner is undetermined')
+      expect(() => Object.getOwnPropertyDescriptor(A, 'satoshis').value).to.throw('satoshis is undetermined')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can get descriptor of unbound bindings', () => {
+      const A = new Membrane(class A { })
+      sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
+      sudo(() => { A.satoshis = new Unbound(1) })
+      expect(Object.getOwnPropertyDescriptor(A, 'owner').value).to.equal(DUMMY_OWNER)
+      expect(Object.getOwnPropertyDescriptor(A, 'satoshis').value).to.equal(1)
+    })
   })
 
   // --------------------------------------------------------------------------
