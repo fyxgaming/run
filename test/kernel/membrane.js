@@ -291,6 +291,7 @@ describe('Membrane', () => {
   describe('bindings', () => {
     it('can read jig bindings when bound', () => {
       const A = new Membrane(class A { })
+
       _sudo(() => { A.location = 'abc_o1' })
       _sudo(() => { A.origin = 'def_o2' })
       _sudo(() => { A.nonce = 1 })
@@ -304,18 +305,39 @@ describe('Membrane', () => {
       expect(A.satoshis).to.equal(0)
     })
 
-    // Jig Class, Inner object, etc.
+    it('can read inner object bindings if invalid', () => {
+      const o = new Membrane({}, {})
 
-    it('can read berry bindings when bound', () => {
-      // const A = new Membrane(class A { })
-      // console.log(A.location)
-      // TODO
+      _sudo(() => { o.location = [] })
+      _sudo(() => { o.origin = null })
+      _sudo(() => { o.nonce = new Set() })
+      _sudo(() => { o.owner = false })
+      _sudo(() => { o.satoshis = -1000 })
+
+      expect(o.location).to.deep.equal([])
+      expect(o.origin).to.equal(null)
+      expect(o.nonce).to.deep.equal(new Set())
+      expect(o.owner).to.equal(false)
+      expect(o.satoshis).to.equal(-1000)
     })
 
-    it('can read inner object binding props anytime', () => {
-      // const A = new Membrane(class A { })
-      // console.log(A.location)
-      // TODO
+    it('throws if read undetermined bindings', () => {
+      const A = new Membrane(class A { })
+
+      _sudo(() => { A.location = 'commit://abc_o1' })
+      _sudo(() => { A.origin = 'commit://def_o2' })
+
+      expect(() => A.location).to.throw('Cannot read location\n\nValue is undetermined')
+      expect(() => A.origin).to.throw('Cannot read origin\n\nValue is undetermined')
+      expect(() => A.nonce).to.throw('Cannot read nonce\n\nValue is undetermined')
+    })
+
+    it('throws if read unbound bindings', () => {
+
+    })
+
+    it('throws if read invalid bindings', () => {
+
     })
 
     it('can set owner when undefined', () => {
