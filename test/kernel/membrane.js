@@ -613,7 +613,14 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('accessible on berries', () => {
-      // TODO
+      const o = {}
+      Object.setPrototypeOf(o, (class A extends Berry { }).prototype)
+      const o2 = new Membrane(o)
+      sudo(() => { o2._n = 1 })
+      expect(o2._n).to.equal(1)
+      expect(Object.getOwnPropertyDescriptor(o2, '_n').value).to.equal(1)
+      expect('_n' in o2).to.equal(true)
+      expect(Object.getOwnPropertyNames(o2).includes('_n')).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
