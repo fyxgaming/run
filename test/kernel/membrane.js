@@ -68,13 +68,15 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('inner object', () => {
-      new Membrane({}, {}) // eslint-disable-line
+      const jig = new Membrane(class A { })
+      new Membrane({}, jig) // eslint-disable-line
     })
 
     // ------------------------------------------------------------------------
 
     it('inner method', () => {
-      new Membrane(function f() { }, {}) // eslint-disable-line
+      const jig = new Membrane(class A { })
+      new Membrane(function f() { }, jig) // eslint-disable-line
     })
 
     // ------------------------------------------------------------------------
@@ -207,7 +209,8 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('intrinsic handlers', () => {
-      const m = new Membrane(new Map(), {})
+      const jig = new Membrane(class A { })
+      const m = new Membrane(new Map(), jig)
       m.set(1, 2)
       expect(m.get(1)).to.equal(2)
     })
@@ -254,7 +257,8 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if inner objects jig has errors', () => {
-      const jig = { location: 'error://hello' }
+      const jig = new Membrane(class A { })
+      sudo(() => { jig.location = 'error://hello' })
       const o = new Membrane({}, jig)
       expect(() => o.n).to.throw('hello')
     })
@@ -388,7 +392,8 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('read bindings on inner objects', () => {
-      const o = new Membrane({}, {})
+      const jig = new Membrane(class A { })
+      const o = new Membrane({}, jig)
       sudo(() => { o.location = [] })
       sudo(() => { o.origin = null })
       sudo(() => { o.nonce = new Set() })
@@ -459,7 +464,8 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('can set inner object binding properties', () => {
-      const o = new Membrane({}, {})
+      const jig = new Membrane(class A { })
+      const o = new Membrane({}, jig)
       o.location = 'abc_o1'
       o.owner = DUMMY_OWNER
     })
@@ -516,7 +522,8 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('can delete inner object bindings', () => {
-      const o = new Membrane({}, {})
+      const jig = new Membrane(class A { })
+      const o = new Membrane({}, jig)
       delete o.location
       delete o.origin
       delete o.nonce
@@ -543,7 +550,8 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('read bindings on inner objects', () => {
-      const o = new Membrane({}, {})
+      const jig = new Membrane(class A { })
+      const o = new Membrane({}, jig)
       sudo(() => { o.location = [] })
       sudo(() => { o.origin = null })
       sudo(() => { o.nonce = new Set() })
