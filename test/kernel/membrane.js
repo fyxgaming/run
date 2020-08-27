@@ -367,13 +367,11 @@ describe('Membrane', () => {
   describe('Bindings', () => {
     it('read bindings on jigs', () => {
       const A = new Membrane(class A { })
-
       sudo(() => { A.location = 'abc_o1' })
       sudo(() => { A.origin = 'def_o2' })
       sudo(() => { A.nonce = 1 })
       sudo(() => { A.owner = '1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N' })
       sudo(() => { A.satoshis = 0 })
-
       expect(A.location).to.equal('abc_o1')
       expect(A.origin).to.equal('def_o2')
       expect(A.nonce).to.equal(1)
@@ -421,7 +419,15 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if read invalid bindings', () => {
-
+      const A = new Membrane(class A { })
+      sudo(() => { A.origin = null })
+      sudo(() => { A.nonce = new Set() })
+      sudo(() => { A.owner = false })
+      sudo(() => { A.satoshis = -1000 })
+      expect(() => A.origin).to.throw('Cannot read origin')
+      expect(() => A.nonce).to.throw('Cannot read nonce')
+      expect(() => A.owner).to.throw('Cannot read owner')
+      expect(() => A.satoshis).to.throw('Cannot read satoshis')
     })
 
     // ------------------------------------------------------------------------
