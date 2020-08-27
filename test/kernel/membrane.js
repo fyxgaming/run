@@ -9,6 +9,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
+const { _sudo } = require('../../lib/run')
 const Membrane = unmangle(Run)._Membrane
 const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const Unbound = unmangle(Run)._Unbound
@@ -805,12 +806,38 @@ describe('Membrane', () => {
   // Immutable
   // --------------------------------------------------------------------------
 
-  describe('immutable', () => {
-    it('delete disabled', () => { })
-    it('set disabled', () => { })
-    it('intrinsic update disabled', () => { })
-    it('sudo overrides', () => { })
-    it('returns immutable inner object', () => { })
+  describe.only('immutable', () => {
+    it('delete disabled', () => {
+      class A { static f () { delete this.n } }
+      const A2 = new Membrane(A)
+      expect(() => A2.f()).to.throw('delete disabled')
+    })
+
+    it('set disabled', () => {
+      class A extends Berry { f () { this.n = 1 } }
+      const o = { }
+      Object.setPrototypeOf(o, A.prototype)
+      const o2 = new Membrane(o)
+      expect(() => o2.f()).to.throw('set disabled')
+    })
+
+    it('sudo overrides', () => {
+      class A { static f () { delete this.n } }
+      const A2 = new Membrane(A)
+      expect(() => _sudo(() => A2.f())).not.to.throw()
+    })
+
+    // Immutability applies to inner objects
+    // Immutability applies to inner methods
+
+    // Does not add membrane for primitive types
+
+    // Add membrane for set (function)
+    // Add membrane for intrinsic in (object)
+
+    // Remove membrane for set
+    // Remove membrane for getOwnPropertyDescriptor
+    // Remove membrane for intrinsic out
   })
 
   // --------------------------------------------------------------------------
