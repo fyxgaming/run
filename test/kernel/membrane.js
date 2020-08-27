@@ -626,13 +626,21 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('accessible on inner objects of static code', () => {
-      // TODO
+      const jig = new Membrane(class A { })
+      const o = new Membrane({}, jig)
+      sudo(() => { o._n = 1 })
+      expect(o._n).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
     it('accessible on inner objects of berries', () => {
-      // TODO
+      const o = {}
+      Object.setPrototypeOf(o, (class A extends Berry { }).prototype)
+      const berry = new Membrane(o)
+      const o2 = new Membrane({}, berry)
+      sudo(() => { o2._n = 1 })
+      expect(o2._n).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
