@@ -827,17 +827,60 @@ describe('Membrane', () => {
       expect(() => _sudo(() => A2.f())).not.to.throw()
     })
 
-    // Immutability applies to inner objects
-    // Immutability applies to inner methods
+    it('inner objects inherit immutability', () => {
+      const jig = new Membrane(class A { })
+      class B { f () { this.n = 1 } }
+      const b = new Membrane(new B(), jig)
+      expect(() => b.f()).to.throw('set disabled')
+    })
 
-    // Does not add membrane for primitive types
+    it('inner methods inherit immutability', () => {
+      const jig = new Membrane(class A { })
+      function f (x) { delete x.n }
+      const f2 = new Membrane(f, jig)
+      expect(() => f2(f2)).to.throw('delete disabled')
+    })
 
-    // Add membrane for set (function)
-    // Add membrane for intrinsic in (object)
+    it('adds immutable membrane for get objects', () => {
+      class A { }
+      A.o = { n: 1 }
+      const A2 = new Membrane(A)
+      expect(A2.o).not.to.equal(A.o)
+      expect(A2.o).to.deep.equal(A.o)
+      expect(() => { A2.o.n = 1 }).to.throw('set disabled')
+    })
 
-    // Remove membrane for set
-    // Remove membrane for getOwnPropertyDescriptor
-    // Remove membrane for intrinsic out
+    it('adds immutable membrane for get descriptor of objects', () => {
+      class A { }
+      A.o = { n: 1 }
+      const A2 = new Membrane(A)
+      const getO = X => Object.getOwnPropertyDescriptor(X, 'o').value
+      expect(getO(A2)).not.to.equal(getO(A))
+      expect(getO(A2)).to.deep.equal(getO(A))
+    })
+
+    it('adds immutable membrane for intrinsic out', () => {
+      const m = new Map()
+      m.set(1, { n: 1 })
+      const jig = new Membrane(class A { })
+      const m2 = new Membrane(m, jig)
+      expect(m2.get(1)).not.to.equal(m.get(1))
+      expect(m2.get(1)).to.deep.equal(m.get(1))
+    })
+
+    /*
+    it('removes membrane for set objects', () => {
+      class A { static f (o) { this.n = o } }
+      const A2 = new Membrane(A)
+      const o = {}
+      A2.f(o)
+      console.log(A2.n === o)
+    })
+    */
+
+    // Removes membrane for set (function)
+    // Removes membrane for intrinsic in (object)
+    // Does not removes membrane for primitive types
   })
 
   // --------------------------------------------------------------------------
