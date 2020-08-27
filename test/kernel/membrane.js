@@ -802,6 +802,18 @@ describe('Membrane', () => {
   })
 
   // --------------------------------------------------------------------------
+  // Immutable
+  // --------------------------------------------------------------------------
+
+  describe('immutable', () => {
+    it('delete disabled', () => { })
+    it('set disabled', () => { })
+    it('intrinsic update disabled', () => { })
+    it('sudo overrides', () => { })
+    it('returns immutable inner object', () => { })
+  })
+
+  // --------------------------------------------------------------------------
   // Jig Method
   // --------------------------------------------------------------------------
 
@@ -825,14 +837,6 @@ describe('Membrane', () => {
     it('arbitrary object method immutable', () => { })
     it('can call inside of jig', () => { })
     it('can call outside of jig if no updates', () => { })
-  })
-
-  describe('immutable', () => {
-    it('delete disabled', () => { })
-    it('set disabled', () => { })
-    it('intrinsic update disabled', () => { })
-    it('sudo overrides', () => { })
-    it('returns immutable inner object', () => { })
   })
 
   describe('record', () => {
