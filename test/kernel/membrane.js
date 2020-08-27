@@ -673,15 +673,27 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('accessible in jig object from child instance of same class', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it('accessible in jig code from same class', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    // TODO
-    // hierarchy of classes - child cannot access parent?
-    // different instances in same chain - throws
+    it('throws when access parent class private property', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('accessible if only access child class private property', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
