@@ -603,6 +603,11 @@ describe('Membrane', () => {
     // has
     // ownKeys
     // set
+
+    // hierarchy of classes - child cannot access parent?
+    // class accessing instance
+    // instance accessing another instance
+    // different instances in same chain - throws
   })
 
   // --------------------------------------------------------------------------
