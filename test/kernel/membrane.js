@@ -588,6 +588,13 @@ describe('Membrane', () => {
 
   describe('Private', () => {
     // TODO
+
+    // delete
+    // get
+    // getOwnPropertyDescriptor
+    // has
+    // ownKeys
+    // set
   })
 
   // --------------------------------------------------------------------------
