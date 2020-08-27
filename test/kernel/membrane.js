@@ -439,14 +439,22 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('can set owner when undefined', () => {
-      // TODO
+    it('can set owner when undetermined', () => {
+      class A { static f () { this.owner = DUMMY_OWNER } }
+      const A2 = new Membrane(A)
+      _sudo(() => { A2.owner = new Unbound(undefined) })
+      A2.f()
+      expect(A2.owner).to.equal(DUMMY_OWNER)
     })
 
     // ------------------------------------------------------------------------
 
-    it('can set satoshis when undefined', () => {
-      // TODO
+    it('can set satoshis when undetermined', () => {
+      class A { static f () { this.satoshis = 1 } }
+      const A2 = new Membrane(A)
+      _sudo(() => { A2.satoshis = new Unbound(undefined) })
+      A2.f()
+      expect(A2.satoshis).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
