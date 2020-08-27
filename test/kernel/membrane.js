@@ -9,9 +9,8 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
-const { _sudo } = require('../../lib/run')
 const Membrane = unmangle(Run)._Membrane
-const Proxy2 = unmangle(Run)._Proxy2
+const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const Unbound = unmangle(Run)._Unbound
 const sudo = unmangle(Run)._sudo
 
@@ -176,8 +175,8 @@ describe('Membrane', () => {
       class A { }
       A.n = 1
       const A2 = new Membrane(A)
-      const keys = ['length', 'prototype', 'name', 'n']
-      expect(Reflect.ownKeys(A2)).to.deep.equal(keys)
+      const keys = ['length', 'prototype', 'name', 'n'].sort()
+      expect(Reflect.ownKeys(A2).sort()).to.deep.equal(keys)
     })
 
     // ------------------------------------------------------------------------
@@ -433,8 +432,8 @@ describe('Membrane', () => {
       class A { static f () { this.owner = DUMMY_OWNER; this.satoshis = 1 } }
       const A2 = new Membrane(A)
       A2.f()
-      expect(_sudo(() => A.owner) instanceof Unbound).to.equal(true)
-      expect(_sudo(() => A.satoshis) instanceof Unbound).to.equal(true)
+      expect(sudo(() => A.owner) instanceof Unbound).to.equal(true)
+      expect(sudo(() => A.satoshis) instanceof Unbound).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -442,7 +441,7 @@ describe('Membrane', () => {
     it('can set owner when undetermined', () => {
       class A { static f () { this.owner = DUMMY_OWNER } }
       const A2 = new Membrane(A)
-      _sudo(() => { A2.owner = new Unbound(undefined) })
+      sudo(() => { A2.owner = new Unbound(undefined) })
       A2.f()
       expect(A2.owner).to.equal(DUMMY_OWNER)
     })
@@ -452,7 +451,7 @@ describe('Membrane', () => {
     it('can set satoshis when undetermined', () => {
       class A { static f () { this.satoshis = 1 } }
       const A2 = new Membrane(A)
-      _sudo(() => { A2.satoshis = new Unbound(undefined) })
+      sudo(() => { A2.satoshis = new Unbound(undefined) })
       A2.f()
       expect(A2.satoshis).to.equal(1)
     })

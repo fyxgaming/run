@@ -10,7 +10,7 @@ const { spy } = require('sinon')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const { mangle } = unmangle
-const Proxy2 = unmangle(Run)._Proxy2
+const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 
 // ------------------------------------------------------------------------------------------------
 // Handler
@@ -503,7 +503,7 @@ describe('Proxy2', () => {
       function f () { }
       const p = new Proxy2(f, h)
       p()
-      expect(h._apply.called).to.equal(true)
+      expect(unmangle(h)._apply.called).to.equal(true)
     })
 
     it('construct', () => {
@@ -511,91 +511,91 @@ describe('Proxy2', () => {
       class A { }
       const P = new Proxy2(A, h)
       new P() // eslint-disable-line
-      expect(h._construct.called).to.equal(true)
+      expect(unmangle(h)._construct.called).to.equal(true)
     })
 
     it('defineProperty', () => {
       const h = handler({ _defineProperty: (...args) => Reflect.defineProperty(...args) })
       const p = new Proxy2({}, h)
       Object.defineProperty(p, 'n', { value: 1 })
-      expect(h._defineProperty.called).to.equal(true)
+      expect(unmangle(h)._defineProperty.called).to.equal(true)
     })
 
     it('deleteProperty', () => {
       const h = handler({ _deleteProperty: (...args) => Reflect.deleteProperty(...args) })
       const p = new Proxy2({ n: 1 }, h)
       delete p.n
-      expect(h._deleteProperty.called).to.equal(true)
+      expect(unmangle(h)._deleteProperty.called).to.equal(true)
     })
 
     it('get', () => {
       const h = handler({ _get: (...args) => Reflect.get(...args) })
       const p = new Proxy2({ n: 1 }, h)
       p.n // eslint-disable-line
-      expect(h._get.called).to.equal(true)
+      expect(unmangle(h)._get.called).to.equal(true)
     })
 
     it('get intrinsic method not called', () => {
       const h = handler({ _get: (...args) => Reflect.get(...args) })
       const p = new Proxy2(new Set(), h)
       p.add // eslint-disable-line
-      expect(h._get.called).to.equal(false)
+      expect(unmangle(h)._get.called).to.equal(false)
     })
 
     it('getOwnPropertyDescriptor', () => {
       const h = handler({ _getOwnPropertyDescriptor: (...args) => Reflect.getOwnPropertyDescriptor(...args) })
       const p = new Proxy2({}, h)
       Object.getOwnPropertyDescriptor(p, 'n')
-      expect(h._getOwnPropertyDescriptor.called).to.equal(true)
+      expect(unmangle(h)._getOwnPropertyDescriptor.called).to.equal(true)
     })
 
     it('getPrototypeOf', () => {
       const h = handler({ _getPrototypeOf: (...args) => Reflect.getPrototypeOf(...args) })
       const p = new Proxy2({}, h)
       Object.getPrototypeOf(p)
-      expect(h._getPrototypeOf.called).to.equal(true)
+      expect(unmangle(h)._getPrototypeOf.called).to.equal(true)
     })
 
     it('has', () => {
       const h = handler({ _has: (...args) => Reflect.has(...args) })
       const p = new Proxy2({ }, h)
       'n' in p // eslint-disable-line
-      expect(h._has.called).to.equal(true)
+      expect(unmangle(h)._has.called).to.equal(true)
     })
 
     it('isExtensible', () => {
       const h = handler({ _isExtensible: (...args) => Reflect.isExtensible(...args) })
       const p = new Proxy2({ }, h)
       Object.isExtensible(p)
-      expect(h._isExtensible.called).to.equal(true)
+      expect(unmangle(h)._isExtensible.called).to.equal(true)
     })
 
     it('ownKeys', () => {
       const h = handler({ _ownKeys: (...args) => Reflect.ownKeys(...args) })
       const p = new Proxy2({ }, h)
       Object.getOwnPropertyNames(p)
-      expect(h._ownKeys.called).to.equal(true)
+      expect(unmangle(h)._ownKeys.called).to.equal(true)
     })
 
     it('preventExtensions', () => {
       const h = handler({ _preventExtensions: (...args) => Reflect.preventExtensions(...args) })
       const p = new Proxy2({ }, h)
       Object.preventExtensions(p)
-      expect(h._preventExtensions.called).to.equal(true)
+      expect(unmangle(h)._preventExtensions.called).to.equal(true)
     })
 
     it('set', () => {
       const h = handler({ _set: (...args) => Reflect.set(...args) })
       const p = new Proxy2({ }, h)
       p.n = 1
-      expect(h._set.called).to.equal(true)
+      expect(unmangle(h)._set.called).to.equal(true)
     })
 
     it('setPrototypeOf', () => {
       const h = handler({ _setPrototypeOf: (...args) => Reflect.setPrototypeOf(...args) })
       const p = new Proxy2({ }, h)
       Object.setPrototypeOf(p, {})
-      expect(h._setPrototypeOf.called).to.equal(true)
+      expect(unmangle(h)._setPrototypeOf.called).to.equal(true)
     })
   })
 })
