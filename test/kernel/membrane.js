@@ -596,7 +596,18 @@ describe('Membrane', () => {
 
   describe('Private', () => {
     it('accessible on static code', () => {
-      // TODO
+      class A {
+        static f () { delete this._n }
+        static g () { this._n = 1 }
+      }
+      const A2 = new Membrane(A)
+      sudo(() => { A2._n = 1 })
+      expect(A2._n).to.equal(1)
+      expect(Object.getOwnPropertyDescriptor(A2, '_n').value).to.equal(1)
+      expect('_n' in A2).to.equal(true)
+      expect(Object.getOwnPropertyNames(A2).includes('_n')).to.equal(true)
+      expect(() => A2.f()).not.to.throw()
+      expect(() => A2.g()).not.to.throw()
     })
 
     // ------------------------------------------------------------------------
