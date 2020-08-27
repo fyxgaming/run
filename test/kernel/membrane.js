@@ -477,7 +477,11 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot set location, origin, or nonce', () => {
-      // TODO
+      class A { static setProperty (name, value) { this[name] = value } }
+      const A2 = new Membrane(A)
+      expect(() => A2.setProperty('location', 'abc_o1')).to.throw('Must not set location')
+      expect(() => A2.setProperty('origin', 'def_d2')).to.throw('Must not set origin')
+      expect(() => A2.setProperty('nonce', 1)).to.throw('Must not set nonce')
     })
 
     // ------------------------------------------------------------------------
