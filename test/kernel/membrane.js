@@ -9,9 +9,9 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
-const { _sudo } = require('../../lib/util/admin')
 const Membrane = unmangle(Run)._Membrane
 const Proxy2 = unmangle(Run)._Proxy2
+const Unbound = unmangle(Run)._Unbound
 const sudo = unmangle(Run)._sudo
 
 // ------------------------------------------------------------------------------------------------
@@ -19,6 +19,10 @@ const sudo = unmangle(Run)._sudo
 // ------------------------------------------------------------------------------------------------
 
 describe('Membrane', () => {
+  // --------------------------------------------------------------------------
+  // constructor
+  // --------------------------------------------------------------------------
+
   describe('constructor', () => {
     it('creates proxy', () => {
       class A { }
@@ -27,13 +31,19 @@ describe('Membrane', () => {
       expect(Proxy2._getProxy(A)).to.equal(A2)
     })
 
+    // ------------------------------------------------------------------------
+
     it('jig code', () => {
       new Membrane(class A extends Jig { }) // eslint-disable-line
     })
 
+    // ------------------------------------------------------------------------
+
     it('static jig code', () => {
       new Membrane(class A { }) // eslint-disable-line
     })
+
+    // ------------------------------------------------------------------------
 
     it('jig instance', () => {
       const o = {}
@@ -41,19 +51,27 @@ describe('Membrane', () => {
       new Membrane(o) // eslint-disable-line
     })
 
+    // ------------------------------------------------------------------------
+
     it('berry', () => {
       const o = {}
       Object.setPrototypeOf(o, (class A extends Berry { }).prototype)
       new Membrane(o) // eslint-disable-line
     })
 
+    // ------------------------------------------------------------------------
+
     it('inner object', () => {
       new Membrane({}, {}) // eslint-disable-line
     })
 
+    // ------------------------------------------------------------------------
+
     it('inner method', () => {
       new Membrane(function f() { }, {}) // eslint-disable-line
     })
+
+    // ------------------------------------------------------------------------
 
     it('throws if unsupported', () => {
       expect(() => new Membrane()).to.throw()
@@ -63,12 +81,18 @@ describe('Membrane', () => {
     })
   })
 
-  describe('handlers', () => {
+  // --------------------------------------------------------------------------
+  // Handlers
+  // --------------------------------------------------------------------------
+
+  describe('Handlers', () => {
     it('apply', () => {
       function f (x) { return x }
       const f2 = new Membrane(f)
       expect(f2(1)).to.equal(1)
     })
+
+    // ------------------------------------------------------------------------
 
     it('construct', () => {
       class A { }
@@ -76,11 +100,15 @@ describe('Membrane', () => {
       expect(new A2() instanceof A2).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('defineProperty disabled', () => {
       class A { static f () { Object.defineProperty(this, 'n', { value: 1 }) } }
       const A2 = new Membrane(A)
       expect(() => A2.f()).to.throw('defineProperty disabled')
     })
+
+    // ------------------------------------------------------------------------
 
     it('delete', () => {
       class A { static f () { delete this.n } }
@@ -90,12 +118,16 @@ describe('Membrane', () => {
       expect('n' in A2).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
     it('get', () => {
       class A { }
       A.n = 1
       const A2 = new Membrane(A)
       expect(A2.n).to.equal(1)
     })
+
+    // ------------------------------------------------------------------------
 
     it('getOwnPropertyDescriptor', () => {
       class A { }
@@ -105,12 +137,16 @@ describe('Membrane', () => {
       expect(Object.getOwnPropertyDescriptor(A2, 'n')).to.deep.equal(desc)
     })
 
+    // ------------------------------------------------------------------------
+
     it('getPrototypeOf', () => {
       class B { }
       class A extends B { }
       const A2 = new Membrane(A)
       expect(Object.getPrototypeOf(A2)).to.equal(B)
     })
+
+    // ------------------------------------------------------------------------
 
     it('has', () => {
       class A { }
@@ -119,11 +155,15 @@ describe('Membrane', () => {
       expect('n' in A2).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('isExtensible', () => {
       class A { }
       const A2 = new Membrane(A)
       expect(Object.isExtensible(A2)).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
 
     it('ownKeys', () => {
       class A { }
@@ -133,11 +173,15 @@ describe('Membrane', () => {
       expect(Reflect.ownKeys(A2)).to.deep.equal(keys)
     })
 
+    // ------------------------------------------------------------------------
+
     it('preventExtensions disabled', () => {
       class A { static f () { Object.preventExtensions(this) } }
       const A2 = new Membrane(A)
       expect(() => A2.f()).to.throw('preventExtensions disabled')
     })
+
+    // ------------------------------------------------------------------------
 
     it('set', () => {
       class A { static f () { this.n = 1 } }
@@ -146,11 +190,15 @@ describe('Membrane', () => {
       expect(A2.n).to.equal(1)
     })
 
+    // ------------------------------------------------------------------------
+
     it('setPrototypeOf disabled', () => {
       class A { static f () { Object.setPrototypeOf(this, {}) } }
       const A2 = new Membrane(A)
       expect(() => A2.f()).to.throw('setPrototypeOf disabled')
     })
+
+    // ------------------------------------------------------------------------
 
     it('intrinsic handlers', () => {
       const m = new Membrane(new Map(), {})
@@ -159,7 +207,11 @@ describe('Membrane', () => {
     })
   })
 
-  describe('errors', () => {
+  // --------------------------------------------------------------------------
+  // Errors
+  // --------------------------------------------------------------------------
+
+  describe('Errors', () => {
     it('throws if use jig that has errors', () => {
       const A = new Membrane(class A {})
       const f = new Membrane(function f () {})
@@ -193,6 +245,8 @@ describe('Membrane', () => {
       expect(() => mhas.call(m, 1)).to.throw(error)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if inner objects jig has errors', () => {
       const jig = { location: 'error://hello' }
       const o = new Membrane({}, jig)
@@ -200,31 +254,35 @@ describe('Membrane', () => {
     })
   })
 
-  describe('admin', () => {
+  // --------------------------------------------------------------------------
+  // Admin
+  // --------------------------------------------------------------------------
+
+  describe('Admin', () => {
     it('admin mode runs directly on target', () => {
       class A { }
       const A2 = new Membrane(A)
       function f () { return f }
       const f2 = new Membrane(f)
-      expect(_sudo(() => new A2()) instanceof A).to.equal(true)
-      expect(_sudo(() => f2())).to.equal(f)
-      _sudo(() => Object.defineProperty(A2, 'n', { value: 1, configurable: true }))
+      expect(sudo(() => new A2()) instanceof A).to.equal(true)
+      expect(sudo(() => f2())).to.equal(f)
+      sudo(() => Object.defineProperty(A2, 'n', { value: 1, configurable: true }))
       expect(A.n).to.equal(1)
-      _sudo(() => { delete A2.n })
+      sudo(() => { delete A2.n })
       expect('n' in A).to.equal(false)
       A.n = 2
-      expect(_sudo(() => Object.getOwnPropertyDescriptor(A2, 'n')).value).to.equal(2)
-      expect(_sudo(() => Object.getPrototypeOf(A2))).to.equal(Object.getPrototypeOf(A))
-      expect(_sudo(() => 'n' in A2)).to.equal(true)
-      expect(_sudo(() => Object.isExtensible(A2))).to.equal(Object.isExtensible(A))
+      expect(sudo(() => Object.getOwnPropertyDescriptor(A2, 'n')).value).to.equal(2)
+      expect(sudo(() => Object.getPrototypeOf(A2))).to.equal(Object.getPrototypeOf(A))
+      expect(sudo(() => 'n' in A2)).to.equal(true)
+      expect(sudo(() => Object.isExtensible(A2))).to.equal(Object.isExtensible(A))
       A._private = 1
-      expect(_sudo(() => Object.getOwnPropertyNames(A2))).to.deep.equal(Object.getOwnPropertyNames(A))
-      _sudo(() => Object.preventExtensions(A2))
+      expect(sudo(() => Object.getOwnPropertyNames(A2))).to.deep.equal(Object.getOwnPropertyNames(A))
+      sudo(() => Object.preventExtensions(A2))
       expect(Object.isExtensible(A)).to.equal(false)
-      _sudo(() => { f2.n = 1 })
+      sudo(() => { f2.n = 1 })
       expect(f.n).to.equal(1)
       function g () { }
-      _sudo(() => Object.setPrototypeOf(f2, g))
+      sudo(() => Object.setPrototypeOf(f2, g))
       expect(Object.getPrototypeOf(f)).to.equal(g)
       const m = new Map()
       const o = {}
@@ -232,21 +290,27 @@ describe('Membrane', () => {
       const mset = m2.set
       const mhas = m2.has
       const mget = m2.get
-      expect(_sudo(() => m2.set(o, 2))).to.equal(m2)
-      expect(_sudo(() => mset.call(m2, o, 3))).to.equal(m2)
-      expect(_sudo(() => mhas.call(m2, o))).to.equal(true)
-      expect(_sudo(() => mget.call(m2, o))).to.equal(3)
-      expect(_sudo(() => m.has(o))).to.equal(true)
+      expect(sudo(() => m2.set(o, 2))).to.equal(m2)
+      expect(sudo(() => mset.call(m2, o, 3))).to.equal(m2)
+      expect(sudo(() => mhas.call(m2, o))).to.equal(true)
+      expect(sudo(() => mget.call(m2, o))).to.equal(3)
+      expect(sudo(() => m.has(o))).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
 
     it('admin mode overrides errors', () => {
       const f = new Membrane(function f () { })
-      _sudo(() => { f.location = 'error://hello' })
-      expect(_sudo(() => f.location)).to.equal('error://hello')
+      sudo(() => { f.location = 'error://hello' })
+      expect(sudo(() => f.location)).to.equal('error://hello')
     })
   })
 
-  describe('code methods', () => {
+  // --------------------------------------------------------------------------
+  // Code methods
+  // --------------------------------------------------------------------------
+
+  describe('Code Methods', () => {
     it('has', () => {
       const f = new Membrane(function f () { })
       expect('sync' in f).to.equal(true)
@@ -254,6 +318,8 @@ describe('Membrane', () => {
       expect('destroy' in f).to.equal(true)
       expect('auth' in f).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
 
     it('get', () => {
       const f = new Membrane(function f () { })
@@ -263,6 +329,8 @@ describe('Membrane', () => {
       expect(typeof f.auth).to.equal('function')
     })
 
+    // ------------------------------------------------------------------------
+
     it('getOwnPropertyDescriptor undefined', () => {
       const f = new Membrane(function f () { })
       expect(Object.getOwnPropertyDescriptor(f, 'sync')).to.equal(undefined)
@@ -271,6 +339,8 @@ describe('Membrane', () => {
       expect(Object.getOwnPropertyDescriptor(f, 'auth')).to.equal(undefined)
     })
 
+    // ------------------------------------------------------------------------
+
     it('cannot set', () => {
       const f = new Membrane(function f () { })
       expect(() => { f.sync = 1 }).to.throw('Cannot set sync')
@@ -278,6 +348,8 @@ describe('Membrane', () => {
       expect(() => { f.destroy = 1 }).to.throw('Cannot set destroy')
       expect(() => { f.auth = 1 }).to.throw('Cannot set auth')
     })
+
+    // ------------------------------------------------------------------------
 
     it('cannot delete', () => {
       const f = new Membrane(function f () { })
@@ -288,15 +360,19 @@ describe('Membrane', () => {
     })
   })
 
-  describe('bindings', () => {
-    it('can read jig bindings when bound', () => {
+  // --------------------------------------------------------------------------
+  // Bindings
+  // --------------------------------------------------------------------------
+
+  describe('Bindings', () => {
+    it('read bindings on jigs', () => {
       const A = new Membrane(class A { })
 
-      _sudo(() => { A.location = 'abc_o1' })
-      _sudo(() => { A.origin = 'def_o2' })
-      _sudo(() => { A.nonce = 1 })
-      _sudo(() => { A.owner = '1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N' })
-      _sudo(() => { A.satoshis = 0 })
+      sudo(() => { A.location = 'abc_o1' })
+      sudo(() => { A.origin = 'def_o2' })
+      sudo(() => { A.nonce = 1 })
+      sudo(() => { A.owner = '1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N' })
+      sudo(() => { A.satoshis = 0 })
 
       expect(A.location).to.equal('abc_o1')
       expect(A.origin).to.equal('def_o2')
@@ -305,15 +381,15 @@ describe('Membrane', () => {
       expect(A.satoshis).to.equal(0)
     })
 
-    it('can read inner object bindings if invalid', () => {
+    // ------------------------------------------------------------------------
+
+    it('read bindings on inner objects', () => {
       const o = new Membrane({}, {})
-
-      _sudo(() => { o.location = [] })
-      _sudo(() => { o.origin = null })
-      _sudo(() => { o.nonce = new Set() })
-      _sudo(() => { o.owner = false })
-      _sudo(() => { o.satoshis = -1000 })
-
+      sudo(() => { o.location = [] })
+      sudo(() => { o.origin = null })
+      sudo(() => { o.nonce = new Set() })
+      sudo(() => { o.owner = false })
+      sudo(() => { o.satoshis = -1000 })
       expect(o.location).to.deep.equal([])
       expect(o.origin).to.equal(null)
       expect(o.nonce).to.deep.equal(new Set())
@@ -321,53 +397,79 @@ describe('Membrane', () => {
       expect(o.satoshis).to.equal(-1000)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if read undetermined bindings', () => {
       const A = new Membrane(class A { })
-
-      _sudo(() => { A.location = 'commit://abc_o1' })
-      _sudo(() => { A.origin = 'commit://def_o2' })
-
+      sudo(() => { A.location = '_o1' })
+      sudo(() => { A.origin = 'commit://def_d2' })
       expect(() => A.location).to.throw('Cannot read location\n\nValue is undetermined')
       expect(() => A.origin).to.throw('Cannot read origin\n\nValue is undetermined')
       expect(() => A.nonce).to.throw('Cannot read nonce\n\nValue is undetermined')
     })
 
-    it('throws if read unbound bindings', () => {
+    // ------------------------------------------------------------------------
 
+    it('throws if read unbound bindings', () => {
+      const A = new Membrane(class A { })
+      sudo(() => { A.owner = new Unbound() })
+      sudo(() => { A.satoshis = new Unbound() })
+      expect(() => A.owner).to.throw('Cannot read owner\n\nValue is unbound')
+      expect(() => A.satoshis).to.throw('Cannot read satoshis\n\nValue is unbound')
     })
+
+    // ------------------------------------------------------------------------
 
     it('throws if read invalid bindings', () => {
 
     })
 
+    // ------------------------------------------------------------------------
+
     it('can set owner when undefined', () => {
       // TODO
     })
+
+    // ------------------------------------------------------------------------
 
     it('can set satoshis when undefined', () => {
       // TODO
     })
 
+    // ------------------------------------------------------------------------
+
     it('can set inner object binding properties', () => {
       // TODO
     })
+
+    // ------------------------------------------------------------------------
 
     it('cannot set location, origin, or nonce', () => {
       // TODO
     })
 
+    // ------------------------------------------------------------------------
+
     it('cannot delete bindings', () => {
       // TODO
     })
+
+    // ------------------------------------------------------------------------
 
     it('cannot change owner once unbound', () => {
       // TODO
     })
 
+    // ------------------------------------------------------------------------
+
     it('cannot change satoshis once unbound', () => {
       // TODO
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Jig Method
+  // --------------------------------------------------------------------------
 
   describe('jig method', () => {
     it('returns membrane', () => { })
