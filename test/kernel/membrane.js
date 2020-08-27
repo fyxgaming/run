@@ -479,17 +479,6 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('cannot delete bindings', () => {
-      const A = new Membrane(class A { })
-      expect(() => { delete A.location }).to.throw('Cannot delete binding location')
-      expect(() => { delete A.origin }).to.throw('Cannot delete binding origin')
-      expect(() => { delete A.nonce }).to.throw('Cannot delete binding nonce')
-      expect(() => { delete A.owner }).to.throw('Cannot delete binding owner')
-      expect(() => { delete A.satoshis }).to.throw('Cannot delete binding satoshis')
-    })
-
-    // ------------------------------------------------------------------------
-
     it('cannot change owner once unbound', () => {
       // TODO
     })
@@ -498,6 +487,18 @@ describe('Membrane', () => {
 
     it('cannot change satoshis once unbound', () => {
       // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot delete bindings', () => {
+      class A { static deleteProperty (x) { delete this[x] } }
+      const A2 = new Membrane(A)
+      expect(() => A2.deleteProperty('location')).to.throw('Cannot delete binding location')
+      expect(() => A2.deleteProperty('origin')).to.throw('Cannot delete binding origin')
+      expect(() => A2.deleteProperty('nonce')).to.throw('Cannot delete binding nonce')
+      expect(() => A2.deleteProperty('owner')).to.throw('Cannot delete binding owner')
+      expect(() => A2.deleteProperty('satoshis')).to.throw('Cannot delete binding satoshis')
     })
   })
 
