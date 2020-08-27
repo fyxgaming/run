@@ -487,13 +487,19 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot change owner once unbound', () => {
-      // TODO
+      class A { static setProperty (name, value) { this[name] = value } }
+      const A2 = new Membrane(A)
+      sudo(() => { A2.owner = new Unbound(DUMMY_OWNER) })
+      expect(() => A2.setProperty('owner', DUMMY_OWNER)).to.throw('Cannot set binding owner again')
     })
 
     // ------------------------------------------------------------------------
 
     it('cannot change satoshis once unbound', () => {
-      // TODO
+      class A { static setProperty (name, value) { this[name] = value } }
+      const A2 = new Membrane(A)
+      sudo(() => { A2.satoshis = new Unbound(1) })
+      expect(() => A2.setProperty('satoshis', 1)).to.throw('Cannot set binding satoshis again')
     })
 
     // ------------------------------------------------------------------------
