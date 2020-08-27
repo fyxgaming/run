@@ -491,7 +491,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('cannot delete bindings', () => {
+    it('cannot delete jig bindings', () => {
       class A { static deleteProperty (x) { delete this[x] } }
       const A2 = new Membrane(A)
       expect(() => A2.deleteProperty('location')).to.throw('Cannot delete binding location')
@@ -499,6 +499,17 @@ describe('Membrane', () => {
       expect(() => A2.deleteProperty('nonce')).to.throw('Cannot delete binding nonce')
       expect(() => A2.deleteProperty('owner')).to.throw('Cannot delete binding owner')
       expect(() => A2.deleteProperty('satoshis')).to.throw('Cannot delete binding satoshis')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can delete inner object bindings', () => {
+      const o = new Membrane({}, {})
+      delete o.location
+      delete o.origin
+      delete o.nonce
+      delete o.owner
+      delete o.satoshis
     })
   })
 
