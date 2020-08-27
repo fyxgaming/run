@@ -9,10 +9,17 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
+const { _sudo } = require('../../lib/run')
 const Membrane = unmangle(Run)._Membrane
 const Proxy2 = unmangle(Run)._Proxy2
 const Unbound = unmangle(Run)._Unbound
 const sudo = unmangle(Run)._sudo
+
+// ------------------------------------------------------------------------------------------------
+// Globals
+// ------------------------------------------------------------------------------------------------
+
+const DUMMY_OWNER = '1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N'
 
 // ------------------------------------------------------------------------------------------------
 // Membrane
@@ -370,12 +377,12 @@ describe('Membrane', () => {
       sudo(() => { A.location = 'abc_o1' })
       sudo(() => { A.origin = 'def_o2' })
       sudo(() => { A.nonce = 1 })
-      sudo(() => { A.owner = '1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N' })
+      sudo(() => { A.owner = DUMMY_OWNER })
       sudo(() => { A.satoshis = 0 })
       expect(A.location).to.equal('abc_o1')
       expect(A.origin).to.equal('def_o2')
       expect(A.nonce).to.equal(1)
-      expect(A.owner).to.equal('1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N')
+      expect(A.owner).to.equal(DUMMY_OWNER)
       expect(A.satoshis).to.equal(0)
     })
 
@@ -401,33 +408,33 @@ describe('Membrane', () => {
       const A = new Membrane(class A { })
       sudo(() => { A.location = '_o1' })
       sudo(() => { A.origin = 'commit://def_d2' })
-      expect(() => A.location).to.throw('Cannot read location\n\nValue is undetermined')
-      expect(() => A.origin).to.throw('Cannot read origin\n\nValue is undetermined')
-      expect(() => A.nonce).to.throw('Cannot read nonce\n\nValue is undetermined')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if read unbound bindings', () => {
-      const A = new Membrane(class A { })
       sudo(() => { A.owner = new Unbound() })
       sudo(() => { A.satoshis = new Unbound() })
-      expect(() => A.owner).to.throw('Cannot read owner\n\nValue is unbound')
-      expect(() => A.satoshis).to.throw('Cannot read satoshis\n\nValue is unbound')
+      expect(() => A.location).to.throw('location is undetermined')
+      expect(() => A.origin).to.throw('origin is undetermined')
+      expect(() => A.nonce).to.throw('nonce is undetermined')
+      expect(() => A.owner).to.throw('owner is undetermined')
+      expect(() => A.satoshis).to.throw('satoshis is undetermined')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if read invalid bindings', () => {
+    it('can read unbound bindings', () => {
       const A = new Membrane(class A { })
-      sudo(() => { A.origin = null })
-      sudo(() => { A.nonce = new Set() })
-      sudo(() => { A.owner = false })
-      sudo(() => { A.satoshis = -1000 })
-      expect(() => A.origin).to.throw('Cannot read origin')
-      expect(() => A.nonce).to.throw('Cannot read nonce')
-      expect(() => A.owner).to.throw('Cannot read owner')
-      expect(() => A.satoshis).to.throw('Cannot read satoshis')
+      sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
+      sudo(() => { A.satoshis = new Unbound(1) })
+      expect(A.owner).to.equal(DUMMY_OWNER)
+      expect(A.satoshis).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set bindings marks them unbound', () => {
+      class A { static f () { this.owner = DUMMY_OWNER; this.satoshis = 1 } }
+      const A2 = new Membrane(A)
+      A2.f()
+      expect(_sudo(() => A.owner) instanceof Unbound).to.equal(true)
+      expect(_sudo(() => A.satoshis) instanceof Unbound).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -446,6 +453,22 @@ describe('Membrane', () => {
 
     it('can set inner object binding properties', () => {
       // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if set invalid bindings', () => {
+      /*
+      const A = new Membrane(class A { })
+      sudo(() => { A.origin = null })
+      sudo(() => { A.nonce = new Set() })
+      sudo(() => { A.owner = false })
+      sudo(() => { A.satoshis = -1000 })
+      expect(() => A.origin).to.throw('Cannot read origin')
+      expect(() => A.nonce).to.throw('Cannot read nonce')
+      expect(() => A.owner).to.throw('Cannot read owner')
+      expect(() => A.satoshis).to.throw('Cannot read satoshis')
+      */
     })
 
     // ------------------------------------------------------------------------
