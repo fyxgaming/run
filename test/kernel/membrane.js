@@ -806,7 +806,7 @@ describe('Membrane', () => {
   // Immutable
   // --------------------------------------------------------------------------
 
-  describe.only('immutable', () => {
+  describe('immutable', () => {
     it('delete disabled', () => {
       class A { static f () { delete this.n } }
       const A2 = new Membrane(A)
@@ -841,7 +841,7 @@ describe('Membrane', () => {
       expect(() => f2(f2)).to.throw('delete disabled')
     })
 
-    it('adds immutable membrane for get objects', () => {
+    it('adds immutable membrane when get objects', () => {
       class A { }
       A.o = { n: 1 }
       const A2 = new Membrane(A)
@@ -850,7 +850,7 @@ describe('Membrane', () => {
       expect(() => { A2.o.n = 1 }).to.throw('set disabled')
     })
 
-    it('adds immutable membrane for get descriptor of objects', () => {
+    it('adds immutable membrane when get object descriptor', () => {
       class A { }
       A.o = { n: 1 }
       const A2 = new Membrane(A)
@@ -868,17 +868,16 @@ describe('Membrane', () => {
       expect(m2.get(1)).to.deep.equal(m.get(1))
     })
 
-    /*
-    it('removes membrane for set objects', () => {
-      class A { static f (o) { this.n = o } }
+    it('removes membrane for objects set', () => {
+      class A extends Jig { static f (o) { this.n = o } }
+      A.o = { n: 1 }
       const A2 = new Membrane(A)
-      const o = {}
-      A2.f(o)
-      console.log(A2.n === o)
+      expect(A2.o).not.to.equal(A.o)
+      A2.f(A2.o)
+      expect(A2.n).to.equal(A2.o)
+      expect(sudo(() => A2.n)).to.equal(A.o)
     })
-    */
 
-    // Removes membrane for set (function)
     // Removes membrane for intrinsic in (object)
     // Does not removes membrane for primitive types
   })
