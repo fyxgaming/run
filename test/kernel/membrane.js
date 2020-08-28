@@ -9,6 +9,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
+const { mangle } = unmangle
 const { _sudo } = require('../../lib/run')
 const Membrane = unmangle(Run)._Membrane
 const Proxy2 = unmangle(unmangle(Run)._Proxy2)
@@ -21,25 +22,11 @@ const sudo = unmangle(Run)._sudo
 
 const DUMMY_OWNER = '1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N'
 
-// Helper to create a membrane with select features
-function membrane (target = class { }, options = {}) {
-  const proxy = new Membrane(target, options.jig)
-  const membrane = Proxy2._getHandler(proxy)
-  membrane._admins = options.admins
-  membrane._errors = options.errors
-  membrane._immutable = options.immutable
-  membrane._private = options.private
-  membrane._codeMethods = options.code
-  membrane._bindings = options.bindings
-  membrane._recording = options.record
-  return proxy
-}
-
 // ------------------------------------------------------------------------------------------------
 // Membrane
 // ------------------------------------------------------------------------------------------------
 
-describe('Membrane', () => {
+describe.only('Membrane', () => {
   // --------------------------------------------------------------------------
   // constructor
   // --------------------------------------------------------------------------
@@ -109,10 +96,10 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   // Tests for the base handler when there are no other configurations
-  describe('Base Handlers', () => {
+  describe.only('Base Handlers', () => {
     it('apply', () => {
       function f (x) { return x }
-      const f2 = membrane(f)
+      const f2 = new Membrane(f)
       expect(f2(1)).to.equal(1)
     })
 
@@ -120,14 +107,14 @@ describe('Membrane', () => {
 
     it('construct', () => {
       class A { }
-      const A2 = membrane(A)
+      const A2 = new Membrane(A)
       expect(new A2() instanceof A2).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('defineProperty', () => {
-      const m = membrane()
+      const m = new Membrane(class A { })
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       Object.defineProperty(m, 'n', desc)
       expect('n' in m).to.equal(true)
@@ -138,7 +125,7 @@ describe('Membrane', () => {
     it('delete', () => {
       class A { }
       A.n = 1
-      const A2 = membrane(A)
+      const A2 = new Membrane(A)
       delete A2.n
       expect('n' in A2).to.equal(false)
     })
@@ -148,7 +135,7 @@ describe('Membrane', () => {
     it('get', () => {
       class A { }
       A.n = 1
-      const A2 = membrane(A)
+      const A2 = new Membrane(A)
       expect(A2.n).to.equal(1)
     })
 
@@ -157,7 +144,7 @@ describe('Membrane', () => {
     it('getOwnPropertyDescriptor', () => {
       class A { }
       A.n = 1
-      const A2 = membrane(A)
+      const A2 = new Membrane(A)
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(Object.getOwnPropertyDescriptor(A2, 'n')).to.deep.equal(desc)
     })
@@ -167,7 +154,7 @@ describe('Membrane', () => {
     it('getPrototypeOf', () => {
       class B { }
       class A extends B { }
-      const A2 = membrane(A)
+      const A2 = new Membrane(A)
       expect(Object.getPrototypeOf(A2)).to.equal(B)
     })
 
@@ -176,14 +163,14 @@ describe('Membrane', () => {
     it('has', () => {
       class A { }
       A.n = 1
-      const A2 = membrane(A)
+      const A2 = new Membrane(A)
       expect('n' in A2).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('isExtensible', () => {
-      const m = membrane()
+      const m = new Membrane(class A { })
       expect(Object.isExtensible(m)).to.equal(true)
     })
 
@@ -192,7 +179,7 @@ describe('Membrane', () => {
     it('ownKeys', () => {
       class A { }
       A.n = 1
-      const A2 = membrane(A)
+      const A2 = new Membrane(A)
       const keys = ['length', 'prototype', 'name', 'n'].sort()
       expect(Reflect.ownKeys(A2).sort()).to.deep.equal(keys)
     })
@@ -200,14 +187,14 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('preventExtensions disabled', () => {
-      const m = membrane()
+      const m = new Membrane(class A { })
       expect(() => Object.preventExtensions(m)).to.throw('preventExtensions disabled')
     })
 
     // ------------------------------------------------------------------------
 
     it('set', () => {
-      const m = membrane()
+      const m = new Membrane(class A { })
       m.n = 1
       expect(m.n).to.equal(1)
     })
@@ -216,15 +203,15 @@ describe('Membrane', () => {
 
     it('setPrototypeOf disabled', () => {
       class A { }
-      const A2 = membrane(A)
+      const A2 = new Membrane(A)
       expect(() => Object.setPrototypeOf(A2, class B { })).to.throw('setPrototypeOf disabled')
     })
 
     // ------------------------------------------------------------------------
 
     it('intrinsic handlers', () => {
-      const jig = membrane()
-      const m = membrane(new Map(), { jig })
+      const jig = new Membrane(class A { })
+      const m = new Membrane(new Map(), mangle({ _jig: jig }))
       m.set(1, 2)
       expect(m.get(1)).to.equal(2)
     })
@@ -288,9 +275,9 @@ describe('Membrane', () => {
 
   describe('Errors', () => {
     it('throws if use jig that has errors', () => {
-      const A = membrane(class A { }, { errors: true })
-      const f = membrane(function f () {}, { errors: true })
-      const m = membrane(new Map(), { jig: A, errors: true })
+      const A = new Membrane(class A { }, mangle({ _errors: true }))
+      const f = new Membrane(function f () {}, mangle({ _errors: true }))
+      const m = new Membrane(new Map(), mangle({ _jig: A, _errors: true }))
 
       const mset = m.set
       const mclear = m.clear
@@ -324,9 +311,9 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if inner objects jig has errors', () => {
-      const jig = membrane(class A { })
+      const jig = new Membrane(class A { })
       jig.location = 'error://hello'
-      const o = membrane({}, { jig, errors: true })
+      const o = new Membrane({}, mangle({ _jig: jig, _errors: true }))
       expect(() => o.n).to.throw('hello')
     })
   })
@@ -337,7 +324,7 @@ describe('Membrane', () => {
 
   describe('Code Methods', () => {
     it('has', () => {
-      const f = membrane(function f () { }, { code: true })
+      const f = new Membrane(function f () { }, mangle({ _code: true }))
       expect('sync' in f).to.equal(true)
       expect('upgrade' in f).to.equal(true)
       expect('destroy' in f).to.equal(true)
@@ -347,7 +334,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get', () => {
-      const f = membrane(function f () { }, { code: true })
+      const f = new Membrane(function f () { }, mangle({ _code: true }))
       expect(typeof f.sync).to.equal('function')
       expect(typeof f.upgrade).to.equal('function')
       expect(typeof f.destroy).to.equal('function')
@@ -357,7 +344,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('getOwnPropertyDescriptor undefined', () => {
-      const f = membrane(function f () { }, { code: true })
+      const f = new Membrane(function f () { }, mangle({ _code: true }))
       expect(Object.getOwnPropertyDescriptor(f, 'sync')).to.equal(undefined)
       expect(Object.getOwnPropertyDescriptor(f, 'upgrade')).to.equal(undefined)
       expect(Object.getOwnPropertyDescriptor(f, 'destroy')).to.equal(undefined)
@@ -367,7 +354,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot set', () => {
-      const f = membrane(function f () { }, { code: true })
+      const f = new Membrane(function f () { }, mangle({ _code: true }))
       expect(() => { f.sync = 1 }).to.throw('Cannot set sync')
       expect(() => { f.upgrade = 1 }).to.throw('Cannot set upgrade')
       expect(() => { f.destroy = 1 }).to.throw('Cannot set destroy')
@@ -377,7 +364,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot delete', () => {
-      const f = membrane(function f () { }, { code: true })
+      const f = new Membrane(function f () { }, mangle({ _code: true }))
       expect(() => { delete f.sync }).to.throw('Cannot delete sync')
       expect(() => { delete f.upgrade }).to.throw('Cannot delete upgrade')
       expect(() => { delete f.destroy }).to.throw('Cannot delete destroy')
@@ -389,9 +376,9 @@ describe('Membrane', () => {
   // Bindings
   // --------------------------------------------------------------------------
 
-  describe.only('Bindings', () => {
+  describe('Bindings', () => {
     it('read bindings when enabled', () => {
-      const A = membrane(class A { }, { admins: true, bindings: true })
+      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       sudo(() => { A.location = 'abc_o1' })
       sudo(() => { A.origin = 'def_o2' })
       sudo(() => { A.nonce = 1 })
@@ -407,7 +394,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('read bindings when disabled', () => {
-      const A = membrane(class A { }, { admins: true, bindings: false })
+      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       sudo(() => { A.location = [] })
       sudo(() => { A.origin = null })
       sudo(() => { A.nonce = new Set() })
@@ -423,7 +410,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if read undetermined bindings', () => {
-      const A = membrane(class A { }, { admins: true, bindings: false })
+      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       sudo(() => { A.location = '_o1' })
       sudo(() => { A.origin = 'commit://def_d2' })
       sudo(() => { A.owner = new Unbound() })
@@ -438,7 +425,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('can read unbound bindings', () => {
-      const A = membrane(class A { }, { admins: true, bindings: false })
+      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
       sudo(() => { A.satoshis = new Unbound(1) })
       expect(A.owner).to.equal(DUMMY_OWNER)
