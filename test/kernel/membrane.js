@@ -15,6 +15,7 @@ const Membrane = unmangle(Run)._Membrane
 const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const Unbound = unmangle(Run)._Unbound
 const sudo = unmangle(Run)._sudo
+const Rules = unmangle(Membrane)._Rules
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -26,7 +27,7 @@ const DUMMY_OWNER = '1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N'
 // Membrane
 // ------------------------------------------------------------------------------------------------
 
-describe.only('Membrane', () => {
+describe('Membrane', () => {
   // --------------------------------------------------------------------------
   // constructor
   // --------------------------------------------------------------------------
@@ -38,56 +39,23 @@ describe.only('Membrane', () => {
       expect(Proxy2._getTarget(A2)).to.equal(A)
       expect(Proxy2._getProxy(A)).to.equal(A2)
     })
+  })
 
-    // ------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
+  // Rules
+  // --------------------------------------------------------------------------
 
-    it('jig code', () => {
-      new Membrane(class A extends Jig { }) // eslint-disable-line
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('static jig code', () => {
-      new Membrane(class A { }) // eslint-disable-line
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('jig instance', () => {
-      const o = {}
-      Object.setPrototypeOf(o, (class A extends Jig { }).prototype)
-      new Membrane(o) // eslint-disable-line
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('berry', () => {
-      const o = {}
-      Object.setPrototypeOf(o, (class A extends Berry { }).prototype)
-      new Membrane(o) // eslint-disable-line
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('inner object', () => {
-      const jig = new Membrane(class A { })
-      new Membrane({}, jig) // eslint-disable-line
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('inner method', () => {
-      const jig = new Membrane(class A { })
-      new Membrane(function f() { }, jig) // eslint-disable-line
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if unsupported', () => {
-      expect(() => new Membrane()).to.throw()
-      expect(() => new Membrane(1)).to.throw()
-      expect(() => new Membrane(null)).to.throw()
-      expect(() => new Membrane({})).to.throw()
+  describe.only('Rules', () => {
+    it('native code', () => {
+      const rules = Rules._nativeCode()
+      expect(rules._parentJig).to.equal(null)
+      expect(rules._admin).to.equal(true)
+      expect(rules._errors).to.equal(true)
+      expect(rules._bindings).to.equal(true)
+      expect(rules._codeMethods).to.equal(true)
+      expect(rules._private).to.equal(false)
+      expect(rules._immutable).to.equal(true)
+      expect(rules._record).to.equal(true)
     })
   })
 
@@ -96,7 +64,7 @@ describe.only('Membrane', () => {
   // --------------------------------------------------------------------------
 
   // Tests for the base handler when there are no other configurations
-  describe.only('Base Handlers', () => {
+  describe('Base Handlers', () => {
     it('apply', () => {
       function f (x) { return x }
       const f2 = new Membrane(f)
@@ -224,9 +192,9 @@ describe.only('Membrane', () => {
   describe('Admin', () => {
     it('admin mode runs directly on target', () => {
       class A { }
-      const A2 = new Membrane(A)
+      const A2 = new Membrane(A, mangle({ _admin: true }))
       function f () { return f }
-      const f2 = new Membrane(f)
+      const f2 = new Membrane(f, mangle({ _admin: true }))
       expect(sudo(() => new A2()) instanceof A).to.equal(true)
       expect(sudo(() => f2())).to.equal(f)
       sudo(() => Object.defineProperty(A2, 'n', { value: 1, configurable: true }))
@@ -249,7 +217,7 @@ describe.only('Membrane', () => {
       expect(Object.getPrototypeOf(f)).to.equal(g)
       const m = new Map()
       const o = {}
-      const m2 = new Membrane(m, f)
+      const m2 = new Membrane(m, mangle({ _admin: true, _parentJig: f }))
       const mset = m2.set
       const mhas = m2.has
       const mget = m2.get
@@ -263,7 +231,7 @@ describe.only('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('admin mode overrides errors', () => {
-      const f = new Membrane(function f () { })
+      const f = new Membrane(function f () { }, mangle({ _admin: true }))
       sudo(() => { f.location = 'error://hello' })
       expect(sudo(() => f.location)).to.equal('error://hello')
     })
