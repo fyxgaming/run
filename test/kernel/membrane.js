@@ -337,7 +337,7 @@ describe('Membrane', () => {
 
   describe('Code Methods', () => {
     it('has', () => {
-      const f = new Membrane(function f () { })
+      const f = membrane(function f () { }, { code: true })
       expect('sync' in f).to.equal(true)
       expect('upgrade' in f).to.equal(true)
       expect('destroy' in f).to.equal(true)
@@ -347,7 +347,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get', () => {
-      const f = new Membrane(function f () { })
+      const f = membrane(function f () { }, { code: true })
       expect(typeof f.sync).to.equal('function')
       expect(typeof f.upgrade).to.equal('function')
       expect(typeof f.destroy).to.equal('function')
@@ -357,7 +357,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('getOwnPropertyDescriptor undefined', () => {
-      const f = new Membrane(function f () { })
+      const f = membrane(function f () { }, { code: true })
       expect(Object.getOwnPropertyDescriptor(f, 'sync')).to.equal(undefined)
       expect(Object.getOwnPropertyDescriptor(f, 'upgrade')).to.equal(undefined)
       expect(Object.getOwnPropertyDescriptor(f, 'destroy')).to.equal(undefined)
@@ -367,7 +367,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot set', () => {
-      const f = new Membrane(function f () { })
+      const f = membrane(function f () { }, { code: true })
       expect(() => { f.sync = 1 }).to.throw('Cannot set sync')
       expect(() => { f.upgrade = 1 }).to.throw('Cannot set upgrade')
       expect(() => { f.destroy = 1 }).to.throw('Cannot set destroy')
@@ -377,7 +377,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot delete', () => {
-      const f = new Membrane(function f () { })
+      const f = membrane(function f () { }, { code: true })
       expect(() => { delete f.sync }).to.throw('Cannot delete sync')
       expect(() => { delete f.upgrade }).to.throw('Cannot delete upgrade')
       expect(() => { delete f.destroy }).to.throw('Cannot delete destroy')
@@ -389,9 +389,9 @@ describe('Membrane', () => {
   // Bindings
   // --------------------------------------------------------------------------
 
-  describe('Bindings', () => {
-    it('read bindings on jigs', () => {
-      const A = new Membrane(class A { })
+  describe.only('Bindings', () => {
+    it('read bindings when enabled', () => {
+      const A = membrane(class A { }, { admins: true, bindings: true })
       sudo(() => { A.location = 'abc_o1' })
       sudo(() => { A.origin = 'def_o2' })
       sudo(() => { A.nonce = 1 })
@@ -406,25 +406,24 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('read bindings on inner objects', () => {
-      const jig = new Membrane(class A { })
-      const o = new Membrane({}, jig)
-      sudo(() => { o.location = [] })
-      sudo(() => { o.origin = null })
-      sudo(() => { o.nonce = new Set() })
-      sudo(() => { o.owner = false })
-      sudo(() => { o.satoshis = -1000 })
-      expect(o.location).to.deep.equal([])
-      expect(o.origin).to.equal(null)
-      expect(o.nonce).to.deep.equal(new Set())
-      expect(o.owner).to.equal(false)
-      expect(o.satoshis).to.equal(-1000)
+    it('read bindings when disabled', () => {
+      const A = membrane(class A { }, { admins: true, bindings: false })
+      sudo(() => { A.location = [] })
+      sudo(() => { A.origin = null })
+      sudo(() => { A.nonce = new Set() })
+      sudo(() => { A.owner = false })
+      sudo(() => { A.satoshis = -1000 })
+      expect(A.location).to.deep.equal([])
+      expect(A.origin).to.equal(null)
+      expect(A.nonce).to.deep.equal(new Set())
+      expect(A.owner).to.equal(false)
+      expect(A.satoshis).to.equal(-1000)
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if read undetermined bindings', () => {
-      const A = new Membrane(class A { })
+      const A = membrane(class A { }, { admins: true, bindings: false })
       sudo(() => { A.location = '_o1' })
       sudo(() => { A.origin = 'commit://def_d2' })
       sudo(() => { A.owner = new Unbound() })
@@ -439,7 +438,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('can read unbound bindings', () => {
-      const A = new Membrane(class A { })
+      const A = membrane(class A { }, { admins: true, bindings: false })
       sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
       sudo(() => { A.satoshis = new Unbound(1) })
       expect(A.owner).to.equal(DUMMY_OWNER)
