@@ -288,17 +288,18 @@ describe('Membrane', () => {
 
   describe('Errors', () => {
     it('throws if use jig that has errors', () => {
-      const A = new Membrane(class A {})
-      const f = new Membrane(function f () {})
-      const m = new Membrane(new Map(), A)
+      const A = membrane(class A { }, { errors: true })
+      const f = membrane(function f () {}, { errors: true })
+      const m = membrane(new Map(), { jig: A, errors: true })
+
       const mset = m.set
       const mclear = m.clear
       const mget = m.get
       const mhas = m.has
 
       const error = 'hello'
-      sudo(() => { A.location = `error://${error}` })
-      sudo(() => { f.location = `error://${error}` })
+      A.location = `error://${error}`
+      f.location = `error://${error}`
 
       expect(() => new A()).to.throw()
       expect(() => f()).to.throw(error)
@@ -323,9 +324,9 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if inner objects jig has errors', () => {
-      const jig = new Membrane(class A { })
-      sudo(() => { jig.location = 'error://hello' })
-      const o = new Membrane({}, jig)
+      const jig = membrane(class A { })
+      jig.location = 'error://hello'
+      const o = membrane({}, { jig, errors: true })
       expect(() => o.n).to.throw('hello')
     })
   })
