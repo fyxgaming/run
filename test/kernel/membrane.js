@@ -25,6 +25,8 @@ const DUMMY_OWNER = '1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N'
 function membrane (target = class { }, options = {}) {
   const proxy = new Membrane(target, options.jig)
   const membrane = Proxy2._getHandler(proxy)
+  membrane._admins = options.admins
+  membrane._errors = options.errors
   membrane._immutable = options.immutable
   membrane._private = options.private
   membrane._codeMethods = options.code
@@ -232,7 +234,7 @@ describe('Membrane', () => {
   // Admin
   // --------------------------------------------------------------------------
 
-  describe.only('Admin', () => {
+  describe('Admin', () => {
     it('admin mode runs directly on target', () => {
       class A { }
       const A2 = new Membrane(A)
