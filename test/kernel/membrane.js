@@ -956,6 +956,10 @@ describe('Membrane', () => {
       expect(rules._immutable).to.equal(parentRules._immutable)
       expect(rules._record).to.equal(parentRules._record)
     })
+
+    it('equals', () => {
+
+    })
   })
 })
 
