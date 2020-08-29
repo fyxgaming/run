@@ -21,6 +21,17 @@ const _sudo = unmangle(Run)._sudo
 
 const DUMMY_OWNER = '1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N'
 
+// Helper to test recording calls and then roll back any changes
+function testRecord (f) {
+  const CURRENT_RECORD = unmangle(unmangle(unmangle(Run)._Record)._CURRENT_RECORD)
+  try {
+    CURRENT_RECORD._begin()
+    f(CURRENT_RECORD)
+  } finally {
+    CURRENT_RECORD._rollback()
+  }
+}
+
 // ------------------------------------------------------------------------------------------------
 // Membrane
 // ------------------------------------------------------------------------------------------------
@@ -585,6 +596,32 @@ describe('Membrane', () => {
   })
 
   // --------------------------------------------------------------------------
+  // Record
+  // --------------------------------------------------------------------------
+
+  describe.only('record', () => {
+    it('construct', () => {
+      testRecord(record => {
+        const A = new Membrane(class A { }, unmangle({ _record: true }))
+        new A() // eslint-disable-line
+        console.log(record)
+      })
+    })
+
+    it('get', () => {
+      testRecord(record => {
+        const A = new Membrane({}, unmangle({ _record: true }))
+        A.n // eslint-disable-line
+        console.log(record)
+      })
+    })
+
+    // snapshot
+    // immutable inner functions
+    // check functions can only be called by object with them
+  })
+
+  // --------------------------------------------------------------------------
   // Private
   // --------------------------------------------------------------------------
 
@@ -785,10 +822,6 @@ describe('Membrane', () => {
     it('arbitrary object method immutable', () => { })
     it('can call inside of jig', () => { })
     it('can call outside of jig if no updates', () => { })
-  })
-
-  describe('record', () => {
-    // TODO
   })
 
   describe('borrow', () => {
