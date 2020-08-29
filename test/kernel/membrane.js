@@ -32,7 +32,7 @@ describe('Membrane', () => {
   // constructor
   // --------------------------------------------------------------------------
 
-  describe('constructor', () => {
+  describe.only('constructor', () => {
     it('creates proxy', () => {
       class A { }
       const A2 = new Membrane(A)
@@ -43,7 +43,7 @@ describe('Membrane', () => {
     it('assigns rules', () => {
       const rules = new Rules()
       const A = new Membrane(class A { }, rules)
-      expect(Proxy2._getHandler(A)._rules).to.equal(rules)
+      expect(unmangle(Proxy2._getHandler(A))._rules).to.equal(rules)
     })
   })
 
@@ -52,7 +52,7 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   // Tests for the base handler when there are no other configurations
-  describe('Base Handlers', () => {
+  describe.only('Base Handlers', () => {
     it('apply', () => {
       function f (x) { return x }
       const f2 = new Membrane(f)
@@ -177,7 +177,7 @@ describe('Membrane', () => {
   // Admin
   // --------------------------------------------------------------------------
 
-  describe('Admin', () => {
+  describe.only('Admin', () => {
     it('admin mode runs directly on target', () => {
       class A { }
       const A2 = new Membrane(A, mangle({ _admin: true }))
@@ -229,7 +229,7 @@ describe('Membrane', () => {
   // Errors
   // --------------------------------------------------------------------------
 
-  describe('Errors', () => {
+  describe.only('Errors', () => {
     it('throws if use jig that has errors', () => {
       const A = new Membrane(class A { }, mangle({ _errors: true }))
       const f = new Membrane(function f () {}, mangle({ _errors: true }))
@@ -278,7 +278,7 @@ describe('Membrane', () => {
   // Code methods
   // --------------------------------------------------------------------------
 
-  describe('Code Methods', () => {
+  describe.only('Code Methods', () => {
     it('has', () => {
       const f = new Membrane(function f () { }, mangle({ _code: true }))
       expect('sync' in f).to.equal(true)
@@ -332,7 +332,7 @@ describe('Membrane', () => {
   // Bindings
   // --------------------------------------------------------------------------
 
-  describe('Bindings', () => {
+  describe.only('Bindings', () => {
     it('read bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       sudo(() => { A.location = 'abc_o1' })
@@ -528,13 +528,13 @@ describe('Membrane', () => {
   // Private
   // --------------------------------------------------------------------------
 
-  describe('Private', () => {
+  describe.only('Private', () => {
     it('accessible on static code', () => {
       class A {
         static f () { delete this._n }
         static g () { this._n = 1 }
       }
-      const A2 = new Membrane(A) // TODO
+      const A2 = new Membrane(A)
       sudo(() => { A2._n = 1 })
       expect(A2._n).to.equal(1)
       expect(Object.getOwnPropertyDescriptor(A2, '_n').value).to.equal(1)
