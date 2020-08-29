@@ -14,6 +14,7 @@ const Rules = unmangle(Run)._Rules
 const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const Unbound = unmangle(Run)._Unbound
 const _sudo = unmangle(Run)._sudo
+const JIGS = unmangle(unmangle(Run)._Universal)._JIGS
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -30,6 +31,20 @@ function testRecord (f) {
   } finally {
     CURRENT_RECORD._rollback()
   }
+}
+
+// Helpers to make a mock jig with a membrane
+function makeJig (x, options) {
+  const jig = new Membrane(x, Object.assign(unmangle({ _admin: true }), options))
+  _sudo(() => {
+    jig.location = 'error://Undeployed'
+    jig.origin = 'error://Undeployed'
+    jig.nonce = 0
+    jig.owner = null
+    jig.satoshis = null
+  })
+  JIGS.add(jig)
+  return jig
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -555,7 +570,7 @@ describe('Membrane', () => {
   // Immutable
   // --------------------------------------------------------------------------
 
-  describe('immutable', () => {
+  describe('Immutable', () => {
     it('defineProperty throws', () => {
       const o = new Membrane({ }, mangle({ _immutable: true }))
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
@@ -599,24 +614,48 @@ describe('Membrane', () => {
   // Record
   // --------------------------------------------------------------------------
 
-  describe.only('record', () => {
+  describe('Record', () => {
     it('construct', () => {
       testRecord(record => {
-        const A = new Membrane(class A { }, unmangle({ _record: true }))
+        const A = makeJig(class A { }, { _record: true })
         new A() // eslint-disable-line
-        console.log(record)
+        expect(record._reads.includes(A)).to.equal(true)
+        expect(record._snapshots.has(A)).to.equal(true)
       })
     })
 
-    it('get', () => {
+    /*
+    it('get property', () => {
       testRecord(record => {
-        const A = new Membrane({}, unmangle({ _record: true }))
-        A.n // eslint-disable-line
-        console.log(record)
+        const o = new Membrane({}, unmangle({ _record: true }))
+        JIGS.add(o)
+        o.n // eslint-disable-line
+        expect(record._reads.includes(o)).to.equal(true)
+        expect(record._snapshots.has(o)).to.equal(true)
       })
     })
 
-    // snapshot
+    it('get method', () => {
+      testRecord(record => {
+        const o = new Membrane({}, unmangle({ _record: true }))
+        JIGS.add(o)
+        o.n // eslint-disable-line
+        expect(record._reads.includes(o)).to.equal(true)
+        expect(record._snapshots.has(o)).to.equal(true)
+      })
+    })
+
+    it('get parent method', () => {
+      testRecord(record => {
+        const o = new Membrane({}, unmangle({ _record: true }))
+        JIGS.add(o)
+        o.n // eslint-disable-line
+        expect(record._reads.includes(o)).to.equal(true)
+        expect(record._snapshots.has(o)).to.equal(true)
+      })
+    })
+    */
+
     // immutable inner functions
     // check functions can only be called by object with them
   })
