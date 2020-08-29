@@ -11,6 +11,7 @@ const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const { mangle } = unmangle
 const { _sudo } = require('../../lib/run')
+const Rules = require('../../lib/kernel/rules')
 const Membrane = unmangle(Run)._Membrane
 const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const Unbound = unmangle(Run)._Unbound
@@ -37,6 +38,12 @@ describe('Membrane', () => {
       const A2 = new Membrane(A)
       expect(Proxy2._getTarget(A2)).to.equal(A)
       expect(Proxy2._getProxy(A)).to.equal(A2)
+    })
+
+    it('assigns rules', () => {
+      const rules = new Rules()
+      const A = new Membrane(class A { }, rules)
+      expect(Proxy2._getHandler(A)._rules).to.equal(rules)
     })
   })
 
@@ -160,7 +167,7 @@ describe('Membrane', () => {
 
     it('intrinsic handlers', () => {
       const jig = new Membrane(class A { })
-      const m = new Membrane(new Map(), mangle({ _jig: jig }))
+      const m = new Membrane(new Map(), mangle({ _parentJig: jig }))
       m.set(1, 2)
       expect(m.get(1)).to.equal(2)
     })
@@ -226,7 +233,7 @@ describe('Membrane', () => {
     it('throws if use jig that has errors', () => {
       const A = new Membrane(class A { }, mangle({ _errors: true }))
       const f = new Membrane(function f () {}, mangle({ _errors: true }))
-      const m = new Membrane(new Map(), mangle({ _jig: A, _errors: true }))
+      const m = new Membrane(new Map(), mangle({ _parentJig: A, _errors: true }))
 
       const mset = m.set
       const mclear = m.clear
@@ -262,7 +269,7 @@ describe('Membrane', () => {
     it('throws if inner objects jig has errors', () => {
       const jig = new Membrane(class A { })
       jig.location = 'error://hello'
-      const o = new Membrane({}, mangle({ _jig: jig, _errors: true }))
+      const o = new Membrane({}, mangle({ _parentJig: jig, _errors: true }))
       expect(() => o.n).to.throw('hello')
     })
   })
@@ -325,8 +332,8 @@ describe('Membrane', () => {
   // Bindings
   // --------------------------------------------------------------------------
 
-  describe('Bindings', () => {
-    it('read bindings when enabled', () => {
+  describe.only('Bindings', () => {
+    it('read bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       sudo(() => { A.location = 'abc_o1' })
       sudo(() => { A.origin = 'def_o2' })
@@ -342,23 +349,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('read bindings when disabled', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
-      sudo(() => { A.location = [] })
-      sudo(() => { A.origin = null })
-      sudo(() => { A.nonce = new Set() })
-      sudo(() => { A.owner = false })
-      sudo(() => { A.satoshis = -1000 })
-      expect(A.location).to.deep.equal([])
-      expect(A.origin).to.equal(null)
-      expect(A.nonce).to.deep.equal(new Set())
-      expect(A.owner).to.equal(false)
-      expect(A.satoshis).to.equal(-1000)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if read undetermined bindings', () => {
+    it('read undetermined bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       sudo(() => { A.location = '_o1' })
       sudo(() => { A.origin = 'commit://def_d2' })
@@ -373,7 +364,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('can read unbound bindings', () => {
+    it('read unbound bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
       sudo(() => { A.satoshis = new Unbound(1) })
@@ -384,30 +375,28 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('set bindings marks them unbound', () => {
-      class A extends Jig { static f () { this.owner = DUMMY_OWNER; this.satoshis = 1 } }
-      const A2 = new Membrane(A)
-      A2.f()
-      expect(sudo(() => A.owner) instanceof Unbound).to.equal(true)
-      expect(sudo(() => A.satoshis) instanceof Unbound).to.equal(true)
+      const A2 = new Membrane(class A { }, { _admin: true, _bindings: true })
+      A2.owner = DUMMY_OWNER
+      A2.satoshis = 1
+      expect(sudo(() => A2.owner) instanceof Unbound).to.equal(true)
+      expect(sudo(() => A2.satoshis) instanceof Unbound).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it('can set owner when undetermined', () => {
-      class A extends Jig { static f () { this.owner = DUMMY_OWNER } }
-      const A2 = new Membrane(A)
+    it('set owner when undetermined', () => {
+      const A2 = new Membrane(class A { }, { _admin: true, _bindings: true })
       sudo(() => { A2.owner = new Unbound(undefined) })
-      A2.f()
+      A2.owner = DUMMY_OWNER
       expect(A2.owner).to.equal(DUMMY_OWNER)
     })
 
     // ------------------------------------------------------------------------
 
-    it('can set satoshis when undetermined', () => {
-      class A extends Jig { static f () { this.satoshis = 1 } }
-      const A2 = new Membrane(A)
+    it('set satoshis when undetermined', () => {
+      const A2 = new Membrane(class A { }, { _admin: true, _bindings: true })
       sudo(() => { A2.satoshis = new Unbound(undefined) })
-      A2.f()
+      A2.satoshis = 1
       expect(A2.satoshis).to.equal(1)
     })
 
