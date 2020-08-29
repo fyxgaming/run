@@ -627,11 +627,8 @@ describe('Membrane', () => {
     it('construct chain', () => {
       testRecord(record => {
         const A = makeJig(class A { }, { _record: true })
-        console.log('1')
         const B = makeJig(class B extends A { }, { _record: true })
-        console.log('2')
         new B() // eslint-disable-line
-        console.log('3')
         expect(record._reads.includes(A)).to.equal(true)
         expect(record._reads.includes(B)).to.equal(true)
         expect(record._snapshots.has(A)).to.equal(true)
