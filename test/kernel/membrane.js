@@ -155,6 +155,16 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('set on non-membrane child class', () => {
+      const A = new Membrane(class A { })
+      class B extends A { }
+      B.n = 1
+      expect(B.n).to.equal(1)
+      expect(A.n).to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('setPrototypeOf disabled', () => {
       class A { }
       const A2 = new Membrane(A)
