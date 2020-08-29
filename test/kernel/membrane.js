@@ -550,31 +550,20 @@ describe('Membrane', () => {
       expect(() => { A.o.n = 1 }).to.throw('set disabled')
     })
 
+    it('getOwnPropertyDescriptor adds immutable membrane', () => {
+      const A = new Membrane({ }, mangle({ _admin: true, _immutable: true }))
+      _sudo(() => { A.o = {} })
+      expect(Object.getOwnPropertyDescriptor(A, 'o').value)
+        .not.to.equal(_sudo(() => Object.getOwnPropertyDescriptor(A, 'o').value))
+      expect(() => { Object.getOwnPropertyDescriptor(A, 'o').value.n = 1 }).to.throw('set disabled')
+    })
+
     it('intrinsic out adds immutable membrane', () => {
       const A = new Membrane(new Map(), mangle({ _admin: true, _immutable: true }))
       _sudo(() => A.set(1, {}))
       expect(A.get(1)).not.to.equal(_sudo(() => A.get(1)))
       expect(() => { A.get(1).n = 1 }).to.throw('set disabled')
     })
-
-    /*
-    it('removes membrane for objects set', () => {
-      class A extends Jig { static f (o) { this.n = o } }
-      A.o = { n: 1 }
-      const A2 = new Membrane(A)
-      expect(A2.o).not.to.equal(A.o)
-      A2.f(A2.o)
-      expect(A2.n).to.equal(A2.o)
-      expect(_sudo(() => A2.n)).to.equal(A.o)
-    })
-    */
-
-    // Removes membrane for intrinsic in (object)
-    // Does not removes membrane for primitive types
-    // Get prototype ...
-    // GetOwnPropertyDescriptor prototype ...
-    // defineProperty!
-    // And immutable
   })
 
   // --------------------------------------------------------------------------
