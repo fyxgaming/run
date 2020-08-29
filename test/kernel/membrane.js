@@ -13,7 +13,7 @@ const Membrane = unmangle(Run)._Membrane
 const Rules = unmangle(Run)._Rules
 const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const Unbound = unmangle(Run)._Unbound
-const sudo = unmangle(Run)._sudo
+const _sudo = unmangle(Run)._sudo
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -181,25 +181,25 @@ describe('Membrane', () => {
       const A2 = new Membrane(A, mangle({ _admin: true }))
       function f () { return f }
       const f2 = new Membrane(f, mangle({ _admin: true }))
-      expect(sudo(() => new A2()) instanceof A).to.equal(true)
-      expect(sudo(() => f2())).to.equal(f)
-      sudo(() => Object.defineProperty(A2, 'n', { value: 1, configurable: true }))
+      expect(_sudo(() => new A2()) instanceof A).to.equal(true)
+      expect(_sudo(() => f2())).to.equal(f)
+      _sudo(() => Object.defineProperty(A2, 'n', { value: 1, configurable: true }))
       expect(A.n).to.equal(1)
-      sudo(() => { delete A2.n })
+      _sudo(() => { delete A2.n })
       expect('n' in A).to.equal(false)
       A.n = 2
-      expect(sudo(() => Object.getOwnPropertyDescriptor(A2, 'n')).value).to.equal(2)
-      expect(sudo(() => Object.getPrototypeOf(A2))).to.equal(Object.getPrototypeOf(A))
-      expect(sudo(() => 'n' in A2)).to.equal(true)
-      expect(sudo(() => Object.isExtensible(A2))).to.equal(Object.isExtensible(A))
+      expect(_sudo(() => Object.getOwnPropertyDescriptor(A2, 'n')).value).to.equal(2)
+      expect(_sudo(() => Object.getPrototypeOf(A2))).to.equal(Object.getPrototypeOf(A))
+      expect(_sudo(() => 'n' in A2)).to.equal(true)
+      expect(_sudo(() => Object.isExtensible(A2))).to.equal(Object.isExtensible(A))
       A._private = 1
-      expect(sudo(() => Object.getOwnPropertyNames(A2))).to.deep.equal(Object.getOwnPropertyNames(A))
-      sudo(() => Object.preventExtensions(A2))
+      expect(_sudo(() => Object.getOwnPropertyNames(A2))).to.deep.equal(Object.getOwnPropertyNames(A))
+      _sudo(() => Object.preventExtensions(A2))
       expect(Object.isExtensible(A)).to.equal(false)
-      sudo(() => { f2.n = 1 })
+      _sudo(() => { f2.n = 1 })
       expect(f.n).to.equal(1)
       function g () { }
-      sudo(() => Object.setPrototypeOf(f2, g))
+      _sudo(() => Object.setPrototypeOf(f2, g))
       expect(Object.getPrototypeOf(f)).to.equal(g)
       const m = new Map()
       const o = {}
@@ -207,19 +207,19 @@ describe('Membrane', () => {
       const mset = m2.set
       const mhas = m2.has
       const mget = m2.get
-      expect(sudo(() => m2.set(o, 2))).to.equal(m2)
-      expect(sudo(() => mset.call(m2, o, 3))).to.equal(m2)
-      expect(sudo(() => mhas.call(m2, o))).to.equal(true)
-      expect(sudo(() => mget.call(m2, o))).to.equal(3)
-      expect(sudo(() => m.has(o))).to.equal(true)
+      expect(_sudo(() => m2.set(o, 2))).to.equal(m2)
+      expect(_sudo(() => mset.call(m2, o, 3))).to.equal(m2)
+      expect(_sudo(() => mhas.call(m2, o))).to.equal(true)
+      expect(_sudo(() => mget.call(m2, o))).to.equal(3)
+      expect(_sudo(() => m.has(o))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('admin mode overrides errors', () => {
       const f = new Membrane(function f () { }, mangle({ _admin: true }))
-      sudo(() => { f.location = 'error://hello' })
-      expect(sudo(() => f.location)).to.equal('error://hello')
+      _sudo(() => { f.location = 'error://hello' })
+      expect(_sudo(() => f.location)).to.equal('error://hello')
     })
   })
 
@@ -333,11 +333,11 @@ describe('Membrane', () => {
   describe('Bindings', () => {
     it('read bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
-      sudo(() => { A.location = 'abc_o1' })
-      sudo(() => { A.origin = 'def_o2' })
-      sudo(() => { A.nonce = 1 })
-      sudo(() => { A.owner = DUMMY_OWNER })
-      sudo(() => { A.satoshis = 0 })
+      _sudo(() => { A.location = 'abc_o1' })
+      _sudo(() => { A.origin = 'def_o2' })
+      _sudo(() => { A.nonce = 1 })
+      _sudo(() => { A.owner = DUMMY_OWNER })
+      _sudo(() => { A.satoshis = 0 })
       expect(A.location).to.equal('abc_o1')
       expect(A.origin).to.equal('def_o2')
       expect(A.nonce).to.equal(1)
@@ -349,10 +349,10 @@ describe('Membrane', () => {
 
     it('read undetermined bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
-      sudo(() => { A.location = '_o1' })
-      sudo(() => { A.origin = 'commit://def_d2' })
-      sudo(() => { A.owner = new Unbound() })
-      sudo(() => { A.satoshis = new Unbound() })
+      _sudo(() => { A.location = '_o1' })
+      _sudo(() => { A.origin = 'commit://def_d2' })
+      _sudo(() => { A.owner = new Unbound() })
+      _sudo(() => { A.satoshis = new Unbound() })
       expect(() => A.location).to.throw('location is undetermined')
       expect(() => A.origin).to.throw('origin is undetermined')
       expect(() => A.nonce).to.throw('nonce is undetermined')
@@ -364,8 +364,8 @@ describe('Membrane', () => {
 
     it('read unbound bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
-      sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
-      sudo(() => { A.satoshis = new Unbound(1) })
+      _sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
+      _sudo(() => { A.satoshis = new Unbound(1) })
       expect(A.owner).to.equal(DUMMY_OWNER)
       expect(A.satoshis).to.equal(1)
     })
@@ -376,15 +376,15 @@ describe('Membrane', () => {
       const A2 = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       A2.owner = DUMMY_OWNER
       A2.satoshis = 1
-      expect(sudo(() => A2.owner) instanceof Unbound).to.equal(true)
-      expect(sudo(() => A2.satoshis) instanceof Unbound).to.equal(true)
+      expect(_sudo(() => A2.owner) instanceof Unbound).to.equal(true)
+      expect(_sudo(() => A2.satoshis) instanceof Unbound).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('set owner when undetermined', () => {
       const A2 = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
-      sudo(() => { A2.owner = new Unbound(undefined) })
+      _sudo(() => { A2.owner = new Unbound(undefined) })
       A2.owner = DUMMY_OWNER
       expect(A2.owner).to.equal(DUMMY_OWNER)
     })
@@ -393,7 +393,7 @@ describe('Membrane', () => {
 
     it('set satoshis when undetermined', () => {
       const A2 = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
-      sudo(() => { A2.satoshis = new Unbound(undefined) })
+      _sudo(() => { A2.satoshis = new Unbound(undefined) })
       A2.satoshis = 1
       expect(A2.satoshis).to.equal(1)
     })
@@ -428,7 +428,7 @@ describe('Membrane', () => {
 
     it('cannot change owner once unbound', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
-      sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
+      _sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
       expect(() => { A.owner = DUMMY_OWNER }).to.throw('Cannot set binding owner again')
     })
 
@@ -436,7 +436,7 @@ describe('Membrane', () => {
 
     it('cannot change satoshis once unbound', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
-      sudo(() => { A.satoshis = new Unbound(1) })
+      _sudo(() => { A.satoshis = new Unbound(1) })
       expect(() => { A.satoshis = 1 }).to.throw('Cannot set binding satoshis again')
     })
 
@@ -467,11 +467,11 @@ describe('Membrane', () => {
 
     it('read bindings on jigs', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
-      sudo(() => { A.location = 'abc_o1' })
-      sudo(() => { A.origin = 'def_o2' })
-      sudo(() => { A.nonce = 1 })
-      sudo(() => { A.owner = DUMMY_OWNER })
-      sudo(() => { A.satoshis = 0 })
+      _sudo(() => { A.location = 'abc_o1' })
+      _sudo(() => { A.origin = 'def_o2' })
+      _sudo(() => { A.nonce = 1 })
+      _sudo(() => { A.owner = DUMMY_OWNER })
+      _sudo(() => { A.satoshis = 0 })
       expect(Object.getOwnPropertyDescriptor(A, 'location').value).to.equal('abc_o1')
       expect(Object.getOwnPropertyDescriptor(A, 'origin').value).to.equal('def_o2')
       expect(Object.getOwnPropertyDescriptor(A, 'nonce').value).to.equal(1)
@@ -484,11 +484,11 @@ describe('Membrane', () => {
     it('read bindings on inner objects', () => {
       const jig = new Membrane(class A { }, mangle({ _bindings: true }))
       const o = new Membrane({}, mangle({ _admin: true, _parentJig: jig }))
-      sudo(() => { o.location = [] })
-      sudo(() => { o.origin = null })
-      sudo(() => { o.nonce = new Set() })
-      sudo(() => { o.owner = false })
-      sudo(() => { o.satoshis = -1000 })
+      _sudo(() => { o.location = [] })
+      _sudo(() => { o.origin = null })
+      _sudo(() => { o.nonce = new Set() })
+      _sudo(() => { o.owner = false })
+      _sudo(() => { o.satoshis = -1000 })
       expect(Object.getOwnPropertyDescriptor(o, 'location').value).to.deep.equal([])
       expect(Object.getOwnPropertyDescriptor(o, 'origin').value).to.equal(null)
       expect(Object.getOwnPropertyDescriptor(o, 'nonce').value).to.deep.equal(new Set())
@@ -500,10 +500,10 @@ describe('Membrane', () => {
 
     it('throws if get descriptor of undetermined bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
-      sudo(() => { A.location = '_o1' })
-      sudo(() => { A.origin = 'commit://def_d2' })
-      sudo(() => { A.owner = new Unbound() })
-      sudo(() => { A.satoshis = new Unbound() })
+      _sudo(() => { A.location = '_o1' })
+      _sudo(() => { A.origin = 'commit://def_d2' })
+      _sudo(() => { A.owner = new Unbound() })
+      _sudo(() => { A.satoshis = new Unbound() })
       expect(() => Object.getOwnPropertyDescriptor(A, 'location').value).to.throw('location is undetermined')
       expect(() => Object.getOwnPropertyDescriptor(A, 'origin').value).to.throw('origin is undetermined')
       expect(() => Object.getOwnPropertyDescriptor(A, 'nonce').value).to.throw('nonce is undetermined')
@@ -515,8 +515,8 @@ describe('Membrane', () => {
 
     it('can get descriptor of unbound bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
-      sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
-      sudo(() => { A.satoshis = new Unbound(1) })
+      _sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
+      _sudo(() => { A.satoshis = new Unbound(1) })
       expect(Object.getOwnPropertyDescriptor(A, 'owner').value).to.equal(DUMMY_OWNER)
       expect(Object.getOwnPropertyDescriptor(A, 'satoshis').value).to.equal(1)
     })
@@ -527,6 +527,12 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('immutable', () => {
+    it('defineProperty throws', () => {
+      const o = new Membrane({ }, mangle({ _immutable: true }))
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      expect(() => Object.defineProperty(o, 'n', desc)).to.throw('defineProperty disabled')
+    })
+
     it('delete disabled', () => {
       const A = new Membrane(class A { }, mangle({ _immutable: true }))
       expect(() => { delete A.n }).to.throw('delete disabled')
@@ -537,46 +543,21 @@ describe('Membrane', () => {
       expect(() => { o.n = 1 }).to.throw('set disabled')
     })
 
-    it('define property disabled', () => {
-      const o = new Membrane({ }, mangle({ _immutable: true }))
-      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
-      expect(() => Object.defineProperty(o, 'n', desc)).to.throw('defineProperty disabled')
+    it('get adds immutable membrane', () => {
+      const A = new Membrane({ }, mangle({ _admin: true, _immutable: true }))
+      _sudo(() => { A.o = {} })
+      expect(A.o).not.to.equal(_sudo(() => A.o))
+      expect(() => { A.o.n = 1 }).to.throw('set disabled')
     })
 
-    it('admin overrides', () => {
-      const A = new Membrane({ }, mangle({ _admin: true, _immutable: true }))
-      sudo(() => { A.n = 1 })
+    it('intrinsic out adds immutable membrane', () => {
+      const A = new Membrane(new Map(), mangle({ _admin: true, _immutable: true }))
+      _sudo(() => A.set(1, {}))
+      expect(A.get(1)).not.to.equal(_sudo(() => A.get(1)))
+      expect(() => { A.get(1).n = 1 }).to.throw('set disabled')
     })
 
     /*
-
-    it('adds immutable membrane when get objects', () => {
-      class A { }
-      A.o = { n: 1 }
-      const A2 = new Membrane(A)
-      expect(A2.o).not.to.equal(A.o)
-      expect(A2.o).to.deep.equal(A.o)
-      expect(() => { A2.o.n = 1 }).to.throw('set disabled')
-    })
-
-    it('adds immutable membrane when get object descriptor', () => {
-      class A { }
-      A.o = { n: 1 }
-      const A2 = new Membrane(A)
-      const getO = X => Object.getOwnPropertyDescriptor(X, 'o').value
-      expect(getO(A2)).not.to.equal(getO(A))
-      expect(getO(A2)).to.deep.equal(getO(A))
-    })
-
-    it('adds immutable membrane for intrinsic out', () => {
-      const m = new Map()
-      m.set(1, { n: 1 })
-      const jig = new Membrane(class A { })
-      const m2 = new Membrane(m, { _parentJig: jig })
-      expect(m2.get(1)).not.to.equal(m.get(1))
-      expect(m2.get(1)).to.deep.equal(m.get(1))
-    })
-
     it('removes membrane for objects set', () => {
       class A extends Jig { static f (o) { this.n = o } }
       A.o = { n: 1 }
@@ -584,7 +565,7 @@ describe('Membrane', () => {
       expect(A2.o).not.to.equal(A.o)
       A2.f(A2.o)
       expect(A2.n).to.equal(A2.o)
-      expect(sudo(() => A2.n)).to.equal(A.o)
+      expect(_sudo(() => A2.n)).to.equal(A.o)
     })
     */
 
@@ -604,13 +585,13 @@ describe('Membrane', () => {
     describe('get', () => {
       it('throws if outside', () => {
         const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
-        sudo(() => { A._n = 1 })
+        _sudo(() => { A._n = 1 })
         expect(() => A._n).to.throw('Cannot access private property _n')
       })
 
       it('allowed if inside jig action', () => {
         const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
-        sudo(() => { A._n = 1 })
+        _sudo(() => { A._n = 1 })
         expect(() => A._n).to.throw('Cannot access private property _n')
       })
     })
@@ -619,7 +600,7 @@ describe('Membrane', () => {
     it('g on jig code from outside', () => {
       class A extends Jig { }
       const A2 = new Membrane(A)
-      sudo(() => { A2._n = 1 })
+      _sudo(() => { A2._n = 1 })
       expect(() => A2._n).to.throw('Cannot access private property _n')
       expect(() => Object.getOwnPropertyDescriptor(A2, '_n')).to.throw('Cannot access private property _n')
       expect(() => '_n' in A2).to.throw('Cannot access private property _n')
@@ -631,7 +612,7 @@ describe('Membrane', () => {
     it('inaccessible on jig code from a different jig', () => {
       const A = new Membrane(class A { static testGet (b) { return b._n } })
       const B = new Membrane(class B extends Jig { })
-      sudo(() => { B._n = 1 })
+      _sudo(() => { B._n = 1 })
       expect(() => A.testGet(B)).to.throw('Cannot access private property _n')
     })
 
@@ -642,7 +623,7 @@ describe('Membrane', () => {
       class A extends Jig { }
       Object.setPrototypeOf(jig, A.prototype)
       const jig2 = new Membrane(jig)
-      sudo(() => { jig2._n = 1 })
+      _sudo(() => { jig2._n = 1 })
       expect(() => jig2._n).to.throw('Cannot access private property _n')
     })
 
@@ -687,7 +668,7 @@ describe('Membrane', () => {
     it('filters ownKeys', () => {
       const A = new Membrane(class A { static testKeys (b) { return Object.getOwnPropertyNames(b) } })
       const B = new Membrane(class B extends Jig { })
-      sudo(() => { B._n = 1 })
+      _sudo(() => { B._n = 1 })
       expect(A.testKeys(B).includes('_n')).to.equal(false)
     })
 
@@ -696,7 +677,7 @@ describe('Membrane', () => {
     it('throws on set', () => {
       const A = new Membrane(class A { static testSet (b) { b._n = 1 } })
       const B = new Membrane(class B extends Jig { })
-      sudo(() => { B._n = 1 })
+      _sudo(() => { B._n = 1 })
       expect(() => A.testSet(B)).to.throw('Cannot set private property _n')
     })
 
@@ -710,7 +691,7 @@ describe('Membrane', () => {
       Object.setPrototypeOf(b, A.prototype)
       const a2 = new Membrane(a)
       const b2 = new Membrane(b)
-      sudo(() => { b2._n = 1 })
+      _sudo(() => { b2._n = 1 })
       expect(a2.testGet(b2)).to.equal(1)
     })
 
@@ -725,7 +706,7 @@ describe('Membrane', () => {
       Object.setPrototypeOf(b, B.prototype)
       const a2 = new Membrane(a)
       const b2 = new Membrane(b)
-      sudo(() => { b2._n = 1 })
+      _sudo(() => { b2._n = 1 })
       expect(a2.testGet(b2)).to.equal(1)
     })
 
@@ -734,7 +715,7 @@ describe('Membrane', () => {
     it('accessible in jig code from same class', () => {
       class A extends Jig { static testGet () { return this._n } }
       const A2 = new Membrane(A)
-      sudo(() => { A2._n = 1 })
+      _sudo(() => { A2._n = 1 })
       expect(A2.testGet()).to.equal(1)
     })
 
@@ -744,7 +725,7 @@ describe('Membrane', () => {
       class A extends Jig { static testGet (x) { return x._n } }
       const A2 = new Membrane(A)
       const B = new Membrane({}, A2)
-      sudo(() => { A2._n = 1 })
+      _sudo(() => { A2._n = 1 })
       expect(A2.testGet(B)).to.equal(1)
     })
 
@@ -755,7 +736,7 @@ describe('Membrane', () => {
       const A2 = new Membrane(A)
       class B extends A2 { }
       const B2 = new Membrane(B)
-      sudo(() => { A2._n = 1 })
+      _sudo(() => { A2._n = 1 })
       expect(() => B2.testGet()).to.throw('Cannot access private property _n')
     })
 
@@ -766,8 +747,8 @@ describe('Membrane', () => {
       const A2 = new Membrane(A)
       class B extends A2 { }
       const B2 = new Membrane(B)
-      sudo(() => { A2._n = 1 })
-      sudo(() => { B2._n = 2 })
+      _sudo(() => { A2._n = 1 })
+      _sudo(() => { B2._n = 2 })
       expect(B2.testGet()).to.equal(2)
     })
     */
