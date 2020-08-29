@@ -35,7 +35,8 @@ function testRecord (f) {
 
 // Helpers to make a mock jig with a membrane
 function makeJig (x, options) {
-  const jig = new Membrane(x, Object.assign(unmangle({ _admin: true }), options))
+  options = mangle(Object.assign(options, { _admin: true }))
+  const jig = new Membrane(x, options)
   _sudo(() => {
     jig.location = 'error://Undeployed'
     jig.origin = 'error://Undeployed'
@@ -614,7 +615,7 @@ describe('Membrane', () => {
   // Record
   // --------------------------------------------------------------------------
 
-  describe.only('Record', () => {
+  describe('Record', () => {
     it('construct', () => {
       testRecord(record => {
         const A = makeJig(class A { }, { _record: true })
