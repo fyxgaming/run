@@ -25,6 +25,12 @@ function unmangle (x) {
   if (!mangled) return x
 
   return new Proxy(x, {
+    deleteProperty: (target, prop) => {
+      if (('$' + prop) in mangledProps) prop = mangledProps['$' + prop]
+      delete target[prop]
+      return true
+    },
+
     get: (target, prop) => {
       if (typeof prop !== 'string') return target[prop]
       if (prop in target) return target[prop]

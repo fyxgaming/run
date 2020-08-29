@@ -15,7 +15,6 @@ const Membrane = unmangle(Run)._Membrane
 const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const Unbound = unmangle(Run)._Unbound
 const sudo = unmangle(Run)._sudo
-const Rules = unmangle(unmangle(Membrane)._Rules)
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -868,98 +867,6 @@ describe('Membrane', () => {
 
   describe('borrow', () => {
     // TODO
-  })
-
-  // --------------------------------------------------------------------------
-  // Rules
-  // --------------------------------------------------------------------------
-
-  describe('Rules', () => {
-    it('code', () => {
-      const rules = Rules._code()
-      expect(rules._parentJig).to.equal(null)
-      expect(rules._admin).to.equal(true)
-      expect(rules._errors).to.equal(true)
-      expect(rules._bindings).to.equal(true)
-      expect(rules._codeMethods).to.equal(true)
-      expect(rules._private).to.equal(true)
-      expect(rules._immutable).to.equal(false)
-      expect(rules._record).to.equal(true)
-    })
-
-    it('static code', () => {
-      const rules = Rules._staticCode()
-      expect(rules._parentJig).to.equal(null)
-      expect(rules._admin).to.equal(true)
-      expect(rules._errors).to.equal(true)
-      expect(rules._bindings).to.equal(true)
-      expect(rules._codeMethods).to.equal(true)
-      expect(rules._private).to.equal(false)
-      expect(rules._immutable).to.equal(true)
-      expect(rules._record).to.equal(true)
-    })
-
-    it('native code', () => {
-      const rules = Rules._nativeCode()
-      expect(rules._parentJig).to.equal(null)
-      expect(rules._admin).to.equal(true)
-      expect(rules._errors).to.equal(true)
-      expect(rules._bindings).to.equal(true)
-      expect(rules._codeMethods).to.equal(true)
-      expect(rules._private).to.equal(false)
-      expect(rules._immutable).to.equal(true)
-      expect(rules._record).to.equal(true)
-    })
-
-    it('jig instance', () => {
-      const rules = Rules._jigInstance()
-      expect(rules._parentJig).to.equal(null)
-      expect(rules._admin).to.equal(true)
-      expect(rules._errors).to.equal(true)
-      expect(rules._bindings).to.equal(true)
-      expect(rules._codeMethods).to.equal(false)
-      expect(rules._private).to.equal(true)
-      expect(rules._immutable).to.equal(false)
-      expect(rules._record).to.equal(true)
-    })
-
-    it('berry instance', () => {
-      const rules = Rules._berryInstance()
-      expect(rules._parentJig).to.equal(null)
-      expect(rules._admin).to.equal(true)
-      expect(rules._errors).to.equal(true)
-      expect(rules._bindings).to.equal(true)
-      expect(rules._codeMethods).to.equal(false)
-      expect(rules._private).to.equal(true)
-      expect(rules._immutable).to.equal(true)
-      expect(rules._record).to.equal(true)
-    })
-
-    it('child property', () => {
-      const parentRules = {
-        _admin: Math.random() < 0.5,
-        _errors: Math.random() < 0.5,
-        _bindings: Math.random() < 0.5,
-        _codeMethods: Math.random() < 0.5,
-        _private: Math.random() < 0.5,
-        _immutable: Math.random() < 0.5,
-        _record: Math.random() < 0.5
-      }
-      const parentJig = new Membrane({}, mangle(parentRules))
-      const rules = unmangle(Rules._childProperty(parentJig))
-      expect(rules._parentJig).to.equal(parentJig)
-      expect(rules._admin).to.equal(parentRules._admin)
-      expect(rules._errors).to.equal(parentRules._errors)
-      expect(rules._bindings).to.equal(false)
-      expect(rules._codeMethods).to.equal(false)
-      expect(rules._private).to.equal(parentRules._private)
-      expect(rules._immutable).to.equal(parentRules._immutable)
-      expect(rules._record).to.equal(parentRules._record)
-    })
-
-    it('equals', () => {
-
-    })
   })
 })
 
