@@ -578,15 +578,21 @@ describe('Membrane', () => {
       expect(() => Object.defineProperty(o, 'n', desc)).to.throw('defineProperty disabled')
     })
 
+    // ------------------------------------------------------------------------
+
     it('delete disabled', () => {
       const A = new Membrane(class A { }, mangle({ _immutable: true }))
       expect(() => { delete A.n }).to.throw('delete disabled')
     })
 
+    // ------------------------------------------------------------------------
+
     it('set disabled', () => {
       const o = new Membrane({ }, mangle({ _immutable: true }))
       expect(() => { o.n = 1 }).to.throw('set disabled')
     })
+
+    // ------------------------------------------------------------------------
 
     it('get adds immutable membrane', () => {
       const A = new Membrane({ }, mangle({ _admin: true, _immutable: true }))
@@ -595,6 +601,8 @@ describe('Membrane', () => {
       expect(() => { A.o.n = 1 }).to.throw('set disabled')
     })
 
+    // ------------------------------------------------------------------------
+
     it('getOwnPropertyDescriptor adds immutable membrane', () => {
       const A = new Membrane({ }, mangle({ _admin: true, _immutable: true }))
       _sudo(() => { A.o = {} })
@@ -602,6 +610,8 @@ describe('Membrane', () => {
         .not.to.equal(_sudo(() => Object.getOwnPropertyDescriptor(A, 'o').value))
       expect(() => { Object.getOwnPropertyDescriptor(A, 'o').value.n = 1 }).to.throw('set disabled')
     })
+
+    // ------------------------------------------------------------------------
 
     it('intrinsic out adds immutable membrane', () => {
       const A = new Membrane(new Map(), mangle({ _admin: true, _immutable: true }))
@@ -625,6 +635,8 @@ describe('Membrane', () => {
       })
     })
 
+    // ------------------------------------------------------------------------
+
     it('construct chain', () => {
       testRecord(record => {
         const A = makeJig(class A { }, { _record: true })
@@ -635,6 +647,12 @@ describe('Membrane', () => {
         expect(record._snapshots.has(A)).to.equal(true)
         expect(record._snapshots.has(B)).to.equal(true)
       })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('apply', () => {
+
     })
 
     /*
