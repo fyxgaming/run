@@ -537,25 +537,18 @@ describe('Membrane', () => {
       expect(() => { o.n = 1 }).to.throw('set disabled')
     })
 
+    it('define property disabled', () => {
+      const o = new Membrane({ }, mangle({ _immutable: true }))
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      expect(() => Object.defineProperty(o, 'n', desc)).to.throw('defineProperty disabled')
+    })
+
     it('admin overrides', () => {
       const A = new Membrane({ }, mangle({ _admin: true, _immutable: true }))
       sudo(() => { A.n = 1 })
     })
 
     /*
-    it('inner objects inherit immutability', () => {
-      const jig = new Membrane(class A { })
-      class B { f () { this.n = 1 } }
-      const b = new Membrane(new B(), { _parentJig: jig })
-      expect(() => b.f()).to.throw('set disabled')
-    })
-
-    it('inner methods inherit immutability', () => {
-      const jig = new Membrane(class A { })
-      function f (x) { delete x.n }
-      const f2 = new Membrane(f, { _parentJig: jig })
-      expect(() => f2(f2)).to.throw('delete disabled')
-    })
 
     it('adds immutable membrane when get objects', () => {
       class A { }
