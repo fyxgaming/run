@@ -95,6 +95,14 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('get on different receiver', () => {
+      const A = new Membrane(class A { }, { _admin: true })
+      A.n = 1
+      expect(Reflect.get(A, 'n', { n: 2 })).to.equal(2)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('getOwnPropertyDescriptor', () => {
       class A { }
       A.n = 1
