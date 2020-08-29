@@ -7,12 +7,10 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const { mangle } = unmangle
-const { _sudo } = require('../../lib/run')
-const Rules = require('../../lib/kernel/rules')
 const Membrane = unmangle(Run)._Membrane
+const Rules = unmangle(Run)._Rules
 const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const Unbound = unmangle(Run)._Unbound
 const sudo = unmangle(Run)._sudo
@@ -32,7 +30,7 @@ describe('Membrane', () => {
   // constructor
   // --------------------------------------------------------------------------
 
-  describe.only('constructor', () => {
+  describe('constructor', () => {
     it('creates proxy', () => {
       class A { }
       const A2 = new Membrane(A)
@@ -52,7 +50,7 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   // Tests for the base handler when there are no other configurations
-  describe.only('Base Handlers', () => {
+  describe('Base Handlers', () => {
     it('apply', () => {
       function f (x) { return x }
       const f2 = new Membrane(f)
@@ -177,7 +175,7 @@ describe('Membrane', () => {
   // Admin
   // --------------------------------------------------------------------------
 
-  describe.only('Admin', () => {
+  describe('Admin', () => {
     it('admin mode runs directly on target', () => {
       class A { }
       const A2 = new Membrane(A, mangle({ _admin: true }))
@@ -229,7 +227,7 @@ describe('Membrane', () => {
   // Errors
   // --------------------------------------------------------------------------
 
-  describe.only('Errors', () => {
+  describe('Errors', () => {
     it('throws if use jig that has errors', () => {
       const A = new Membrane(class A { }, mangle({ _errors: true }))
       const f = new Membrane(function f () {}, mangle({ _errors: true }))
@@ -278,7 +276,7 @@ describe('Membrane', () => {
   // Code methods
   // --------------------------------------------------------------------------
 
-  describe.only('Code Methods', () => {
+  describe('Code Methods', () => {
     it('has', () => {
       const f = new Membrane(function f () { }, mangle({ _code: true }))
       expect('sync' in f).to.equal(true)
@@ -332,7 +330,7 @@ describe('Membrane', () => {
   // Bindings
   // --------------------------------------------------------------------------
 
-  describe.only('Bindings', () => {
+  describe('Bindings', () => {
     it('read bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       sudo(() => { A.location = 'abc_o1' })
@@ -525,61 +523,107 @@ describe('Membrane', () => {
   })
 
   // --------------------------------------------------------------------------
+  // Immutable
+  // --------------------------------------------------------------------------
+
+  describe('immutable', () => {
+    it('delete disabled', () => {
+      const A = new Membrane(class A { }, mangle({ _immutable: true }))
+      expect(() => { delete A.n }).to.throw('delete disabled')
+    })
+
+    it('set disabled', () => {
+      const o = new Membrane({ }, mangle({ _immutable: true }))
+      expect(() => { o.n = 1 }).to.throw('set disabled')
+    })
+
+    it('admin overrides', () => {
+      const A = new Membrane({ }, mangle({ _admin: true, _immutable: true }))
+      sudo(() => { A.n = 1 })
+    })
+
+    /*
+    it('inner objects inherit immutability', () => {
+      const jig = new Membrane(class A { })
+      class B { f () { this.n = 1 } }
+      const b = new Membrane(new B(), { _parentJig: jig })
+      expect(() => b.f()).to.throw('set disabled')
+    })
+
+    it('inner methods inherit immutability', () => {
+      const jig = new Membrane(class A { })
+      function f (x) { delete x.n }
+      const f2 = new Membrane(f, { _parentJig: jig })
+      expect(() => f2(f2)).to.throw('delete disabled')
+    })
+
+    it('adds immutable membrane when get objects', () => {
+      class A { }
+      A.o = { n: 1 }
+      const A2 = new Membrane(A)
+      expect(A2.o).not.to.equal(A.o)
+      expect(A2.o).to.deep.equal(A.o)
+      expect(() => { A2.o.n = 1 }).to.throw('set disabled')
+    })
+
+    it('adds immutable membrane when get object descriptor', () => {
+      class A { }
+      A.o = { n: 1 }
+      const A2 = new Membrane(A)
+      const getO = X => Object.getOwnPropertyDescriptor(X, 'o').value
+      expect(getO(A2)).not.to.equal(getO(A))
+      expect(getO(A2)).to.deep.equal(getO(A))
+    })
+
+    it('adds immutable membrane for intrinsic out', () => {
+      const m = new Map()
+      m.set(1, { n: 1 })
+      const jig = new Membrane(class A { })
+      const m2 = new Membrane(m, { _parentJig: jig })
+      expect(m2.get(1)).not.to.equal(m.get(1))
+      expect(m2.get(1)).to.deep.equal(m.get(1))
+    })
+
+    it('removes membrane for objects set', () => {
+      class A extends Jig { static f (o) { this.n = o } }
+      A.o = { n: 1 }
+      const A2 = new Membrane(A)
+      expect(A2.o).not.to.equal(A.o)
+      A2.f(A2.o)
+      expect(A2.n).to.equal(A2.o)
+      expect(sudo(() => A2.n)).to.equal(A.o)
+    })
+    */
+
+    // Removes membrane for intrinsic in (object)
+    // Does not removes membrane for primitive types
+    // Get prototype ...
+    // GetOwnPropertyDescriptor prototype ...
+    // defineProperty!
+    // And immutable
+  })
+
+  // --------------------------------------------------------------------------
   // Private
   // --------------------------------------------------------------------------
 
-  describe.only('Private', () => {
-    it('accessible on static code', () => {
-      class A {
-        static f () { delete this._n }
-        static g () { this._n = 1 }
-      }
-      const A2 = new Membrane(A)
-      sudo(() => { A2._n = 1 })
-      expect(A2._n).to.equal(1)
-      expect(Object.getOwnPropertyDescriptor(A2, '_n').value).to.equal(1)
-      expect('_n' in A2).to.equal(true)
-      expect(Object.getOwnPropertyNames(A2).includes('_n')).to.equal(true)
-      expect(() => A2.f()).not.to.throw()
-      expect(() => A2.g()).not.to.throw()
+  describe.skip('Private', () => {
+    describe('get', () => {
+      it('throws if outside', () => {
+        const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
+        sudo(() => { A._n = 1 })
+        expect(() => A._n).to.throw('Cannot access private property _n')
+      })
+
+      it('allowed if inside jig action', () => {
+        const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
+        sudo(() => { A._n = 1 })
+        expect(() => A._n).to.throw('Cannot access private property _n')
+      })
     })
 
-    // ------------------------------------------------------------------------
-
-    it('accessible on berries', () => {
-      const o = {}
-      Object.setPrototypeOf(o, (class A extends Berry { }).prototype)
-      const o2 = new Membrane(o)
-      sudo(() => { o2._n = 1 })
-      expect(o2._n).to.equal(1)
-      expect(Object.getOwnPropertyDescriptor(o2, '_n').value).to.equal(1)
-      expect('_n' in o2).to.equal(true)
-      expect(Object.getOwnPropertyNames(o2).includes('_n')).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('accessible on inner objects of static code', () => {
-      const jig = new Membrane(class A { })
-      const o = new Membrane({}, { _parentJig: jig })
-      sudo(() => { o._n = 1 })
-      expect(o._n).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('accessible on inner objects of berries', () => {
-      const o = {}
-      Object.setPrototypeOf(o, (class A extends Berry { }).prototype)
-      const berry = new Membrane(o)
-      const o2 = new Membrane({}, berry)
-      sudo(() => { o2._n = 1 })
-      expect(o2._n).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('inaccessible on jig code from outside', () => {
+    /*
+    it('g on jig code from outside', () => {
       class A extends Jig { }
       const A2 = new Membrane(A)
       sudo(() => { A2._n = 1 })
@@ -733,90 +777,7 @@ describe('Membrane', () => {
       sudo(() => { B2._n = 2 })
       expect(B2.testGet()).to.equal(2)
     })
-  })
-
-  // --------------------------------------------------------------------------
-  // Immutable
-  // --------------------------------------------------------------------------
-
-  describe('immutable', () => {
-    it('delete disabled', () => {
-      class A { static f () { delete this.n } }
-      const A2 = new Membrane(A)
-      expect(() => A2.f()).to.throw('delete disabled')
-    })
-
-    it('set disabled', () => {
-      class A extends Berry { f () { this.n = 1 } }
-      const o = { }
-      Object.setPrototypeOf(o, A.prototype)
-      const o2 = new Membrane(o)
-      expect(() => o2.f()).to.throw('set disabled')
-    })
-
-    it('sudo overrides', () => {
-      class A { static f () { delete this.n } }
-      const A2 = new Membrane(A)
-      expect(() => _sudo(() => A2.f())).not.to.throw()
-    })
-
-    it('inner objects inherit immutability', () => {
-      const jig = new Membrane(class A { })
-      class B { f () { this.n = 1 } }
-      const b = new Membrane(new B(), { _parentJig: jig })
-      expect(() => b.f()).to.throw('set disabled')
-    })
-
-    it('inner methods inherit immutability', () => {
-      const jig = new Membrane(class A { })
-      function f (x) { delete x.n }
-      const f2 = new Membrane(f, { _parentJig: jig })
-      expect(() => f2(f2)).to.throw('delete disabled')
-    })
-
-    it('adds immutable membrane when get objects', () => {
-      class A { }
-      A.o = { n: 1 }
-      const A2 = new Membrane(A)
-      expect(A2.o).not.to.equal(A.o)
-      expect(A2.o).to.deep.equal(A.o)
-      expect(() => { A2.o.n = 1 }).to.throw('set disabled')
-    })
-
-    it('adds immutable membrane when get object descriptor', () => {
-      class A { }
-      A.o = { n: 1 }
-      const A2 = new Membrane(A)
-      const getO = X => Object.getOwnPropertyDescriptor(X, 'o').value
-      expect(getO(A2)).not.to.equal(getO(A))
-      expect(getO(A2)).to.deep.equal(getO(A))
-    })
-
-    it('adds immutable membrane for intrinsic out', () => {
-      const m = new Map()
-      m.set(1, { n: 1 })
-      const jig = new Membrane(class A { })
-      const m2 = new Membrane(m, { _parentJig: jig })
-      expect(m2.get(1)).not.to.equal(m.get(1))
-      expect(m2.get(1)).to.deep.equal(m.get(1))
-    })
-
-    it('removes membrane for objects set', () => {
-      class A extends Jig { static f (o) { this.n = o } }
-      A.o = { n: 1 }
-      const A2 = new Membrane(A)
-      expect(A2.o).not.to.equal(A.o)
-      A2.f(A2.o)
-      expect(A2.n).to.equal(A2.o)
-      expect(sudo(() => A2.n)).to.equal(A.o)
-    })
-
-    // Removes membrane for intrinsic in (object)
-    // Does not removes membrane for primitive types
-    // Get prototype ...
-    // GetOwnPropertyDescriptor prototype ...
-    // defineProperty!
-    // And immutable
+    */
   })
 
   // --------------------------------------------------------------------------
