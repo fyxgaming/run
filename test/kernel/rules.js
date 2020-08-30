@@ -27,7 +27,8 @@ describe('Rules', () => {
       expect(rules._code).to.equal(true)
       expect(rules._private).to.equal(true)
       expect(rules._immutable).to.equal(false)
-      expect(rules._record).to.equal(true)
+      expect(rules._recordReads).to.equal(true)
+      expect(rules._recordUpdates).to.equal(true)
       expect(rules._recordCalls).to.equal(true)
     })
   })
@@ -44,7 +45,8 @@ describe('Rules', () => {
       expect(rules._code).to.equal(true)
       expect(rules._private).to.equal(false)
       expect(rules._immutable).to.equal(true)
-      expect(rules._record).to.equal(true)
+      expect(rules._recordReads).to.equal(true)
+      expect(rules._recordUpdates).to.equal(false)
       expect(rules._recordCalls).to.equal(false)
     })
   })
@@ -61,7 +63,8 @@ describe('Rules', () => {
       expect(rules._code).to.equal(true)
       expect(rules._private).to.equal(false)
       expect(rules._immutable).to.equal(true)
-      expect(rules._record).to.equal(true)
+      expect(rules._recordReads).to.equal(true)
+      expect(rules._recordUpdates).to.equal(false)
       expect(rules._recordCalls).to.equal(false)
     })
   })
@@ -78,7 +81,8 @@ describe('Rules', () => {
       expect(rules._code).to.equal(false)
       expect(rules._private).to.equal(true)
       expect(rules._immutable).to.equal(false)
-      expect(rules._record).to.equal(true)
+      expect(rules._recordReads).to.equal(true)
+      expect(rules._recordUpdates).to.equal(true)
       expect(rules._recordCalls).to.equal(false)
     })
   })
@@ -95,7 +99,8 @@ describe('Rules', () => {
       expect(rules._code).to.equal(false)
       expect(rules._private).to.equal(true)
       expect(rules._immutable).to.equal(true)
-      expect(rules._record).to.equal(true)
+      expect(rules._recordReads).to.equal(true)
+      expect(rules._recordUpdates).to.equal(false)
       expect(rules._recordCalls).to.equal(false)
     })
   })
@@ -111,7 +116,9 @@ describe('Rules', () => {
         _code: Math.random() < 0.5,
         _private: Math.random() < 0.5,
         _immutable: Math.random() < 0.5,
-        _record: Math.random() < 0.5
+        _recordReads: Math.random() < 0.5,
+        _recordUpdates: Math.random() < 0.5,
+        _recordCalls: Math.random() < 0.5
       }
       const parentJig = new Membrane({}, mangle(parentRules))
       const rules = unmangle(Rules._childProperty(parentJig))
@@ -122,7 +129,8 @@ describe('Rules', () => {
       expect(rules._code).to.equal(false)
       expect(rules._private).to.equal(parentRules._private)
       expect(rules._immutable).to.equal(parentRules._immutable)
-      expect(rules._record).to.equal(parentRules._record)
+      expect(rules._recordReads).to.equal(parentRules._recordReads)
+      expect(rules._recordUpdates).to.equal(parentRules._recordUpdates)
       expect(rules._recordCalls).to.equal(parentRules._recordCalls)
     })
   })

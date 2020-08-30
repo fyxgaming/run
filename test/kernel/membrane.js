@@ -628,7 +628,7 @@ describe('Membrane', () => {
   describe('Record', () => {
     it('construct', () => {
       testRecord(record => {
-        const A = makeJig(class A { }, { _record: true })
+        const A = makeJig(class A { }, { _recordReads: true })
         new A() // eslint-disable-line
         expect(record._reads.includes(A)).to.equal(true)
         expect(record._snapshots.has(A)).to.equal(true)
@@ -639,8 +639,8 @@ describe('Membrane', () => {
 
     it('construct chain', () => {
       testRecord(record => {
-        const A = makeJig(class A { }, { _record: true })
-        const B = makeJig(class B extends A { }, { _record: true })
+        const A = makeJig(class A { }, { _recordReads: true })
+        const B = makeJig(class B extends A { }, { _recordReads: true })
         new B() // eslint-disable-line
         expect(record._reads.includes(A)).to.equal(true)
         expect(record._reads.includes(B)).to.equal(true)
@@ -658,7 +658,7 @@ describe('Membrane', () => {
     /*
     it('get property', () => {
       testRecord(record => {
-        const o = new Membrane({}, unmangle({ _record: true }))
+        const o = new Membrane({}, unmangle({ _recordReads: true }))
         JIGS.add(o)
         o.n // eslint-disable-line
         expect(record._reads.includes(o)).to.equal(true)
