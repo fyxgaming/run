@@ -800,8 +800,8 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('has', () => {
+      const o = makeJig({}, { _recordReads: true })
       testRecord(record => {
-        const o = makeJig({}, { _recordReads: true })
         'n' in o // eslint-disable-line
         expect(record._reads.length).to.equal(1)
         expect(record._reads.includes(o)).to.equal(true)
@@ -813,8 +813,8 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('ownKeys', () => {
+      const o = makeJig({}, { _recordReads: true })
       testRecord(record => {
-        const o = makeJig({}, { _recordReads: true })
         Object.keys(o)
         expect(record._reads.length).to.equal(1)
         expect(record._reads.includes(o)).to.equal(true)
@@ -826,13 +826,52 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('set', () => {
+      const o = makeJig({}, { _recordReads: true, _recordUpdates: true })
       testRecord(record => {
-        const o = makeJig({}, { _recordReads: true, _recordUpdates: true })
         o.n = 1
         expect(record._snapshots.size).to.equal(1)
         expect(record._snapshots.has(o)).to.equal(true)
         expect(record._updates.length).to.equal(1)
         expect(record._updates.includes(o)).to.equal(true)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicGetMethod', () => {
+      const s = makeJig(new Set(), { _recordReads: true })
+      testRecord(record => {
+        s.add // eslint-disable-line
+        expect(record._reads.length).to.equal(1)
+        expect(record._reads.includes(s)).to.equal(true)
+        expect(record._snapshots.size).to.equal(1)
+        expect(record._snapshots.has(s)).to.equal(true)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicRead', () => {
+      const m = makeJig(new Map(), { _recordReads: true })
+      testRecord(record => {
+        m.has(1)
+        expect(record._reads.length).to.equal(1)
+        expect(record._reads.includes(m)).to.equal(true)
+        expect(record._snapshots.size).to.equal(1)
+        expect(record._snapshots.has(m)).to.equal(true)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicUpdate', () => {
+      const m = makeJig(new Map(), { _recordReads: true, _recordUpdates: true })
+      testRecord(record => {
+        m.set(1, 2)
+        expect(record._snapshots.size).to.equal(1)
+        expect(record._snapshots.has(m)).to.equal(true)
+        expect(record._updates.length).to.equal(1)
+        expect(record._updates.includes(m)).to.equal(true)
       })
     })
   })
