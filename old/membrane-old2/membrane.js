@@ -36,7 +36,6 @@ const { _deepClone } = require('../../lib/util/deep')
 
 const STACK = [] // Array<Jig|Code>
 let ERROR = null // The error that happened while calling a method
-let RECORD = null // Active record when STACK is non-empty
 // const ADMIN = false // Whether the normal jig safety checks for users are bypassed
 
 /**
@@ -59,7 +58,6 @@ let RECORD = null // Active record when STACK is non-empty
 // const POSSESSION_PROXIES = new WeakMap() // Object | Proxy -> Proxy
 // const POSSESSION_OBJECTS = new WeakMap() // Object | Proxy -> Object
 
-const PROXY_METHODS = new WeakMap() // Function | Proxy -> Proxy
 // const PROXY_OWNERS = new WeakMap() // Proxy -> Jig | Code
 
 // ------------------------------------------------------------------------------------------------
@@ -143,7 +141,7 @@ class MethodHandler {
 
       // Call the method
       return _record(record => {
-        RECORD = record
+        // RECORD = record
         try {
           const ret = this._call(target, thisArg, clonedArgs)
 
@@ -151,7 +149,7 @@ class MethodHandler {
 
           return ret
         } finally {
-          RECORD = null
+          // RECORD = null
         }
       })
     })
@@ -194,168 +192,5 @@ class MethodHandler {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Membrane
-// ------------------------------------------------------------------------------------------------
 
-/**
- * Proxy handler for all jigs
- *
- * Guarantees
- *    - Properties cannot be changed except through methods
- *    - Methods are atomic. Errors will be rolled back
- *    - Arguments passed to methods will be cloned for safety
- *    - toString on code will return the actual source code
- *    - Prototypes cannot be changed
- */
-class Membrane {
-  _init (target, proxy) {
-    this._target = target
-    this._proxy = proxy
-  }
-
-  // --------------------------------------------------------------------------
-  // deleteProperty
-  // --------------------------------------------------------------------------
-
-  get (target, prop, receiver) {
-    this._checkNotErrored()
-
-    if (!this._privateAccess() && typeof prop === 'string' && prop.startsWith('_')) {
-      throw new Error(`Cannot get ${prop} because it is private`)
-    }
-
-    // Mark this jig as read just be accessing get.
-    if (STACK.length) RECORD._read(this._proxy)
-
-    // Return function prototypes directly. Never return a proxy. Run already guarantees they
-    // are immutable to users. We have to return the prototype before any instanceof checks.
-    if (typeof this._target === 'function' && prop === 'prototype') return target[prop]
-
-    // Get the value. The class or parent class might be read in the process.
-    const val = this._target[prop]
-
-    // Detect errors when reading bindings in non-admin mode
-    this._checkGettable(prop, val)
-
-    // Return primitive types directly. These will look the same in every realm.
-    const primitives = ['undefined', 'boolean', 'number', 'string', 'symbol']
-    if (primitives.includes(typeof val)) return val
-
-    // Return jigs directly because they are already proxied and safe.
-    const Jig = require('../../lib/kernel/jig')
-    const Code = require('../../lib/kernel/code')
-    const Berry = require('../../lib/kernel/berry')
-    if (val instanceof Code || val instanceof Jig || val instanceof Berry) {
-      return val
-    }
-
-    // Wrap instance and static class methods with a proxy
-    if (typeof val === 'function') {
-      if (PROXY_METHODS.has(val)) return PROXY_METHODS.get(val)
-
-      const methodHandler = new MethodHandler()
-      const proxy = new SI.Proxy(val, methodHandler)
-      methodHandler._init(prop, val, proxy)
-
-      PROXY_METHODS.set(val, proxy)
-      PROXY_METHODS.set(proxy, proxy)
-
-      return proxy
-    }
-
-    // Always return the source code on the current target, not any of its parents.
-    // if (typeof this._target === 'function' && prop === 'toString' && receiver === this._proxy) {
-    // return this._target.toString.bind(this._target)
-    // }
-
-    if (typeof val === 'object') {
-    // If we are getting an object from within the membrane, return it directly
-      if (this._inside()) return val
-
-      // Same for null
-      if (val === null) return val
-
-      // TODO: Borrow
-      return val
-    }
-
-    throw new Error('Unknown value: ' + val)
-  }
-
-  // --------------------------------------------------------------------------
-  // getOwnPropertyDescriptor
-  // --------------------------------------------------------------------------
-
-  getOwnPropertyDescriptor (target, prop) {
-    this._checkNotErrored()
-
-    // Prototypes must always be retrieved on the original target
-    if (typeof this._target === 'function' && prop === 'prototype') {
-      return Reflect.getOwnPropertyDescriptor(target, prop)
-    }
-
-    if (!this._privateAccess() && typeof prop === 'string' && prop.startsWith('_')) {
-      throw new Error(`Cannot check ${prop} because it is private`)
-    }
-
-    const hasOwnProp = Object.getOwnPropertyNames(this._target).includes(prop)
-    const desc = SI.Reflect.getOwnPropertyDescriptor(this._target, prop)
-
-    if (!hasOwnProp && STACK.length) {
-      const prototype = Object.getPrototypeOf(this._target)
-      const Code = require('../../lib/kernel/code')
-      if (prototype instanceof Code) RECORD._read(prototype)
-    }
-
-    // TODO: Wrap the value
-    return desc
-  }
-
-  // --------------------------------------------------------------------------
-  // has
-  // --------------------------------------------------------------------------
-
-  has (target, prop) {
-    this._checkNotErrored()
-
-    if (!this._privateAccess() && typeof prop === 'string' && prop.startsWith('_')) {
-      throw new Error(`Cannot check ${prop} because it is private`)
-    }
-
-    if (STACK.length) RECORD._read(this._proxy)
-
-    const hasOwnProp = Object.getOwnPropertyNames(this._target).includes(prop)
-    if (!hasOwnProp && STACK.length) {
-      const prototype = Object.getPrototypeOf(this._target)
-      const Code = require('../../lib/kernel/code')
-      if (prototype instanceof Code) RECORD._read(prototype)
-    }
-
-    return prop in this._target
-  }
-
-  // --------------------------------------------------------------------------
-  // set
-  // --------------------------------------------------------------------------
-
-  set (target, prop, value, receiver) {
-    this._checkNotErrored()
-
-    // Stop proxy parent classes from intercepting sets on children. It doesn't make sense!
-    if (typeof this._target === 'function') {
-      const proto = Object.getPrototypeOf(this._target)
-      try {
-        Object.setPrototypeOf(this._target, Object.getPrototypeOf(Object))
-        return this._setInternal(target, prop, value, receiver)
-      } finally {
-        Object.setPrototypeOf(this._target, proto)
-      }
-    }
-
-    return this._setInternal(target, prop, value, receiver)
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-
-module.exports = Membrane
+module.exports = MethodHandler

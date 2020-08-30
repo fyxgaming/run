@@ -113,29 +113,4 @@ function crossing (proxy) {
   const stack = Record._CURRENT_RECORD._stack
   return stack.length && stack[stack.length - 1]._jig === proxy
 }
-
-class Inner {
-  get (target, prop, receiver) {
-    // Mark as a read
-
-    // If value is Code, or Jig, or Berry, return directly
-
-    // If value is a primitive type, return directly
-
-    // If value is a function, wrap with method membrane
-
-    // If value is an object
-    // If value is a set, wrap with the set membrane
-    // If value is a map, wrap with the map membrane
-    // If value is a basic array or basic object, wrap with the inner object membrane
-
-    // If pending and in self, return self
-  }
-}
-
-class Owned {
-  constructor (owner) {
-    this._owner = owner
-  }
-}
 */
