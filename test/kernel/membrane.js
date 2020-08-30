@@ -811,7 +811,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('construct chain', () => {
+    it.only('construct chain', () => {
       const A = makeJig(class A { }, { _recordReads: true })
       const B = makeJig(class B extends A { }, { _recordReads: true })
       testRecord(record => {
@@ -825,7 +825,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('apply static method to code', () => {
+    it.only('apply static method to code', () => {
       class A { static f () { this._n = 1 }}
       const A2 = makeJig(A, { _recordReads: true, _recordUpdates: true, _recordCalls: true })
       testRecord(record => {
@@ -833,8 +833,8 @@ describe('Membrane', () => {
         expect(record._reads.length).to.equal(1)
         expect(record._reads.includes(A2)).to.equal(true)
         expect(record._actions.length).to.equal(1)
-        expect(record._actions[0]._method).to.equal('f')
-        expect(record._actions[0]._jig).to.equal(A2)
+        expect(unmangle(record._actions[0])._method).to.equal('f')
+        expect(unmangle(record._actions[0])._jig).to.equal(A2)
         expect(record._snapshots.size).to.equal(1)
         expect(record._snapshots.has(A2)).to.equal(true)
         expect(record._updates.length).to.equal(1)
@@ -854,8 +854,8 @@ describe('Membrane', () => {
         a2.f()
         expect(record._reads.includes(A2)).to.equal(true)
         expect(record._actions.length).to.equal(1)
-        expect(record._actions[0]._method).to.equal('f')
-        expect(record._actions[0]._jig).to.equal(a2)
+        expect(unmangle(record._actions[0])._method).to.equal('f')
+        expect(unmangle(record._actions[0])._jig).to.equal(a2)
         expect(record._snapshots.size).to.equal(2)
         expect(record._snapshots.has(a2)).to.equal(true)
         expect(record._snapshots.has(A2)).to.equal(true)
