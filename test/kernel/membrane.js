@@ -134,6 +134,21 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it.only('get static method on child class', () => {
+      class A { static f () { } }
+      const A2 = new Membrane(A)
+      class B extends A2 { }
+      const B2 = new Membrane(B)
+      console.log('1')
+      expect(typeof A2.f).to.equal('function')
+      console.log('2')
+      expect(typeof B2.f).to.equal('function')
+      console.log('3')
+      expect(A2.f).to.equal(B2.f)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('getOwnPropertyDescriptor', () => {
       class A { }
       A.n = 1
@@ -1240,20 +1255,28 @@ describe('Membrane', () => {
       expect(testRecord(() => a.f(b))).to.equal(1)
     })
 
-    /*
-
     // ------------------------------------------------------------------------
 
-    it('throws when access parent class private property', () => {
-      class A extends Jig { static testGet () { return this._n } }
-      const A2 = new Membrane(A)
+    it.skip('throws when access parent class private property', () => {
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      class A { static testGet () { return this._n } }
+      const A2 = makeJig(A, options)
       class B extends A2 { }
-      const B2 = new Membrane(B)
-      _sudo(() => { A2._n = 1 })
+      const B2 = makeJig(B, options)
+      A._n = 1
+      const t = A2.testGet
+      console.log('==')
+      const u = B2.testGet
+      console.log('---', t === u)
+      console.log('1')
+      console.log(B2.testGet())
+      console.log('2')
       expect(() => B2.testGet()).to.throw('Cannot access private property _n')
     })
 
     // ------------------------------------------------------------------------
+
+    /*
 
     it('accessible if only access child class private property', () => {
       class A extends Jig { static testGet () { return this._n } }
