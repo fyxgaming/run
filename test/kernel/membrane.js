@@ -38,8 +38,8 @@ function makeJig (x, options) {
   options = mangle(Object.assign(options, { _admin: true }))
   const jig = new Membrane(x, options)
   _sudo(() => {
-    jig.location = 'error://Undeployed'
-    jig.origin = 'error://Undeployed'
+    jig.location = 'abc_o1'
+    jig.origin = 'def_o2'
     jig.nonce = 0
     jig.owner = null
     jig.satoshis = null
@@ -638,7 +638,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('construct chain', () => {
+    it.only('construct chain', () => {
       testRecord(record => {
         const A = makeJig(class A { }, { _recordReads: true })
         const B = makeJig(class B extends A { }, { _recordReads: true })
