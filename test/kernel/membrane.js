@@ -192,6 +192,14 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('getOwnPropertyDescriptor returns prototype directly', () => {
+      class A { }
+      const A2 = new Membrane(A)
+      expect(Object.getOwnPropertyDescriptor(A2, 'prototype').value).to.equal(A.prototype)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('getPrototypeOf', () => {
       class B { }
       class A extends B { }
