@@ -172,6 +172,13 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('get an intrinsic property', () => {
+      const A = new Membrane(class A { })
+      expect(A.toString).to.equal(Function.prototype.toString)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('getOwnPropertyDescriptor', () => {
       class A { }
       A.n = 1
