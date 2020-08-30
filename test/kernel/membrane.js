@@ -323,6 +323,19 @@ describe('Membrane', () => {
       const o = new Membrane({}, mangle({ _parentJig: jig, _errors: true }))
       expect(() => o.n).to.throw('hello')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot swallow inner errors', () => {
+      const options = { _recordReads: true, _recordUpdates: true, _recordCalls: true, _bindings: true }
+      class A {
+        static f () {
+          try { this.location = '123' } catch (e) { }
+        }
+      }
+      const A2 = makeJig(A, options)
+      expect(() => testRecord(() => A2.f())).to.throw('Must not set location')
+    })
   })
 
   // --------------------------------------------------------------------------
