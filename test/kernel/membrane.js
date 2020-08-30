@@ -1216,52 +1216,31 @@ describe('Membrane', () => {
       expect(testRecord(() => b.g())).to.equal(1)
     })
 
-    /*
-    it('accessible in jig object from instance of same class', () => {
-      class A extends Jig { testGet (b) { return b._n } }
-      const a = {}
-      const b = {}
-      Object.setPrototypeOf(a, A.prototype)
-      Object.setPrototypeOf(b, A.prototype)
-      const a2 = new Membrane(a)
-      const b2 = new Membrane(b)
-      _sudo(() => { b2._n = 1 })
-      expect(a2.testGet(b2)).to.equal(1)
-    })
-
     // ------------------------------------------------------------------------
 
-    it('accessible in jig object from child instance of same class', () => {
-      class A extends Jig { }
-      class B extends A { testGet (b) { return b._n } }
-      const a = {}
-      const b = {}
-      Object.setPrototypeOf(a, B.prototype)
-      Object.setPrototypeOf(b, B.prototype)
-      const a2 = new Membrane(a)
-      const b2 = new Membrane(b)
-      _sudo(() => { b2._n = 1 })
-      expect(a2.testGet(b2)).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('accessible in jig code from same class', () => {
-      class A extends Jig { static testGet () { return this._n } }
-      const A2 = new Membrane(A)
-      _sudo(() => { A2._n = 1 })
-      expect(A2.testGet()).to.equal(1)
+    it('get private property allowed from instance of same class', () => {
+      class A {
+        constructor () { this._n = 1 }
+        f (b) { return b._n }
+      }
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const A2 = makeJig(A, options)
+      const a = makeJig(new A2(), options)
+      const b = makeJig(new A2(1), options)
+      expect(testRecord(() => a.f(b))).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
     it('accessible from inner object of same jig', () => {
-      class A extends Jig { static testGet (x) { return x._n } }
-      const A2 = new Membrane(A)
-      const B = new Membrane({}, A2)
-      _sudo(() => { A2._n = 1 })
-      expect(A2.testGet(B)).to.equal(1)
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      class A { static f (b) { return b._n } }
+      const a = makeJig(A, options)
+      const b = makeJig({ _n: 1 }, Object.assign({ _parentJig: a }, options))
+      expect(testRecord(() => a.f(b))).to.equal(1)
     })
+
+    /*
 
     // ------------------------------------------------------------------------
 
