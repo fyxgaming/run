@@ -491,6 +491,17 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('cannot define', () => {
+      const f = new Membrane(function f () { }, mangle({ _code: true }))
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      expect(() => Object.defineProperty(f, 'sync', desc)).to.throw('Cannot define sync')
+      expect(() => Object.defineProperty(f, 'upgrade', desc)).to.throw('Cannot define upgrade')
+      expect(() => Object.defineProperty(f, 'destroy', desc)).to.throw('Cannot define destroy')
+      expect(() => Object.defineProperty(f, 'auth', desc)).to.throw('Cannot define auth')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('cannot delete', () => {
       const f = new Membrane(function f () { }, mangle({ _code: true }))
       expect(() => { delete f.sync }).to.throw('Cannot delete sync')
