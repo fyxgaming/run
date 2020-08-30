@@ -126,24 +126,13 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get on different receiver', () => {
-      const A = new Membrane(class A { }, { _admin: true })
-      A.n = 1
-      expect(Reflect.get(A, 'n', { n: 2 })).to.equal(2)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.only('get static method on child class', () => {
+    it('get static method on child class', () => {
       class A { static f () { } }
       const A2 = new Membrane(A)
       class B extends A2 { }
       const B2 = new Membrane(B)
-      console.log('1')
       expect(typeof A2.f).to.equal('function')
-      console.log('2')
       expect(typeof B2.f).to.equal('function')
-      console.log('3')
       expect(A2.f).to.equal(B2.f)
     })
 
@@ -1257,7 +1246,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws when access parent class private property', () => {
+    it('throws when access parent class private property', () => {
       const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
       class A { static testGet () { return this._n } }
       const A2 = makeJig(A, options)
