@@ -651,9 +651,22 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('apply', () => {
-
+    it('apply static method', () => {
+      testRecord(record => {
+        class A { static f () { this._n = 1 }}
+        const A2 = makeJig(A, { _recordReads: true, _recordUpdates: true, _recordCalls: true })
+        A2.f()
+        console.log(record)
+        expect(record._reads.includes(A2)).to.equal(true)
+        expect(record._actions.length).to.equal(1)
+        expect(record._actions[0]._method).to.equal('f')
+        expect(record._actions[0]._jig).to.equal(A2)
+        expect(record._snapshots.has(A2)).to.equal(true)
+        expect(A2._n).to.equal(1)
+      })
     })
+
+    // ------------------------------------------------------------------------
 
     /*
     it('get property', () => {
