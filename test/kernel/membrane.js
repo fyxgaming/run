@@ -38,14 +38,17 @@ function makeJig (x, options) {
   options = mangle(Object.assign(options, { _admin: true }))
   const jig = new Membrane(x, options)
   _sudo(() => {
-    jig.location = 'abc_o1'
-    jig.origin = 'def_o2'
+    jig.location = `abc_o${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)}`
+    jig.origin = `def_o${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)}`
     jig.nonce = 0
     jig.owner = null
     jig.satoshis = null
   })
   JIGS.add(jig)
-  if (typeof x === 'function') x.prototype.constructor = jig
+  if (typeof x === 'function') {
+    const desc = { value: jig, configurable: true, enumerable: true, writable: true }
+    Object.defineProperty(x.prototype, 'constructor', desc)
+  }
   return jig
 }
 
