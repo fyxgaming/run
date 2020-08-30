@@ -138,12 +138,32 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('get returns universals directly', () => {
+      const jig = makeJig({})
+      class A { }
+      A.jig = jig
+      const A2 = new Membrane(A)
+      expect(A2.jig).to.equal(jig)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('getOwnPropertyDescriptor', () => {
       class A { }
       A.n = 1
       const A2 = new Membrane(A)
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(Object.getOwnPropertyDescriptor(A2, 'n')).to.deep.equal(desc)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('getOwnPropertyDescriptor returns universals directly', () => {
+      const jig = makeJig({})
+      class A { }
+      A.jig = jig
+      const A2 = new Membrane(A)
+      expect(Object.getOwnPropertyDescriptor(A2, 'jig').value).to.equal(jig)
     })
 
     // ------------------------------------------------------------------------
