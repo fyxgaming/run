@@ -883,7 +883,7 @@ describe('Membrane', () => {
   describe('Contract', () => {
     it('delete throws if outside method', () => {
       const a = makeJig({}, { _contract: true })
-      const error = 'Updates must be performed in methods'
+      const error = 'Updates must be performed in this jig\'s methods'
       expect(() => { delete a.n }).to.throw(error)
     })
 
@@ -897,9 +897,19 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('delete throws from another jigs method', () => {
+      class A { static f (b) { delete b.n } }
+      const a = makeJig(A, { _recordCalls: true, _contract: true })
+      const b = makeJig({}, { _recordCalls: true, _contract: true })
+      const error = 'Updates must be performed in this jig\'s methods'
+      testRecord(record => expect(() => a.f(b)).to.throw(error))
+    })
+
+    // ------------------------------------------------------------------------
+
     it('defineProperty throws if outside method', () => {
       const a = makeJig({}, { _contract: true })
-      const error = 'Updates must be performed in methods'
+      const error = 'Updates must be performed in this jig\'s methods'
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(a, 'n', desc)).to.throw(error)
     })
@@ -921,7 +931,7 @@ describe('Membrane', () => {
 
     it('set throws if outside method', () => {
       const a = makeJig({}, { _contract: true })
-      const error = 'Updates must be performed in methods'
+      const error = 'Updates must be performed in this jig\'s methods'
       expect(() => { a.n = 1 }).to.throw(error)
     })
 
@@ -937,7 +947,7 @@ describe('Membrane', () => {
 
     it('intrinsicUpdate throws if outside method', () => {
       const s = makeJig(new Set(), { _contract: true })
-      const error = 'Updates must be performed in methods'
+      const error = 'Updates must be performed in this jig\'s methods'
       expect(() => s.add(1)).to.throw(error)
     })
 
