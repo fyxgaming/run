@@ -148,6 +148,30 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('get returns prototype directly', () => {
+      class A { }
+      const A2 = new Membrane(A)
+      expect(A2.prototype).to.equal(A.prototype)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get returns symbol props directly', () => {
+      class A { }
+      const A2 = new Membrane(A)
+      expect(A2[Symbol.hasInstance]).to.equal(A[Symbol.hasInstance])
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get returns constructor directly', () => {
+      const o = {}
+      const o2 = new Membrane(o)
+      expect(o2.constructor).to.equal(o.constructor)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('getOwnPropertyDescriptor', () => {
       class A { }
       A.n = 1
