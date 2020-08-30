@@ -1000,19 +1000,32 @@ describe('Membrane', () => {
   // Private
   // --------------------------------------------------------------------------
 
-  describe.skip('Private', () => {
-    describe('get', () => {
-      it('throws if outside', () => {
-        const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
-        _sudo(() => { A._n = 1 })
-        expect(() => A._n).to.throw('Cannot access private property _n')
-      })
+  describe('Private', () => {
+    it('get throws if outside', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
+      _sudo(() => { A._n = 1 })
+      expect(() => A._n).to.throw('Cannot access private property _n')
+    })
 
-      it('allowed if inside jig action', () => {
-        const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
-        _sudo(() => { A._n = 1 })
-        expect(() => A._n).to.throw('Cannot access private property _n')
-      })
+    // ------------------------------------------------------------------------
+
+    it('get allowed in jig methods', () => {
+      class A { static f () { return this._n } }
+      A._n = 1
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const A2 = makeJig(A, options)
+      testRecord(() => A2.f())
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get throws from another jigs method', () => {
+      class A { static f (b) { return b._n } }
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const a = makeJig(A, options)
+      const b = makeJig({}, options)
+      const error = 'Cannot access private property _n'
+      expect(() => testRecord(() => a.f(b))).to.throw(error)
     })
 
     /*
