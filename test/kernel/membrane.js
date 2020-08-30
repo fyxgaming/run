@@ -45,6 +45,7 @@ function makeJig (x, options) {
     jig.satoshis = null
   })
   JIGS.add(jig)
+  if (typeof x === 'function') x.prototype.constructor = jig
   return jig
 }
 
@@ -651,18 +652,43 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('apply static method', () => {
+    it('apply static method to code', () => {
       testRecord(record => {
         class A { static f () { this._n = 1 }}
         const A2 = makeJig(A, { _recordReads: true, _recordUpdates: true, _recordCalls: true })
         A2.f()
-        console.log(record) // ... todo: why native jig, and unbound?
+        expect(record._reads.length).to.equal(1)
         expect(record._reads.includes(A2)).to.equal(true)
         expect(record._actions.length).to.equal(1)
         expect(record._actions[0]._method).to.equal('f')
         expect(record._actions[0]._jig).to.equal(A2)
+        expect(record._snapshots.size).to.equal(1)
         expect(record._snapshots.has(A2)).to.equal(true)
+        expect(record._updates.length).to.equal(1)
+        expect(record._updates.includes(A2)).to.equal(true)
         expect(A2._n).to.equal(1)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('apply method to instance', () => {
+      testRecord(record => {
+        class A { f () { this._n = 1 }}
+        const A2 = makeJig(A, { _recordReads: true, _recordUpdates: true, _recordCalls: true })
+        const a = new A2()
+        const a2 = makeJig(a, { _recordReads: true, _recordUpdates: true, _recordCalls: true })
+        a2.f()
+        expect(record._reads.includes(A2)).to.equal(true)
+        expect(record._actions.length).to.equal(1)
+        expect(record._actions[0]._method).to.equal('f')
+        expect(record._actions[0]._jig).to.equal(a2)
+        expect(record._snapshots.size).to.equal(2)
+        expect(record._snapshots.has(a2)).to.equal(true)
+        expect(record._snapshots.has(A2)).to.equal(true)
+        expect(record._updates.length).to.equal(1)
+        expect(record._updates.includes(a2)).to.equal(true)
+        expect(a2._n).to.equal(1)
       })
     })
 
