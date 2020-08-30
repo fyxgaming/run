@@ -660,6 +660,13 @@ describe('Membrane', () => {
       expect(A.get(1)).not.to.equal(_sudo(() => A.get(1)))
       expect(() => { A.get(1).n = 1 }).to.throw('set disabled')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsic update disabled', () => {
+      const s = new Membrane(new Set(), mangle({ _immutable: true }))
+      expect(() => s.add(1)).to.throw('set disabled')
+    })
   })
 
   // --------------------------------------------------------------------------
