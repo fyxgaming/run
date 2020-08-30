@@ -227,6 +227,27 @@ describe('Membrane', () => {
       const m = new Membrane(new Map())
       m.set(1, 2)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicIn removes membrane for objects', () => {
+      const o = {}
+      const o2 = new Membrane(o)
+      const s = new Set()
+      const s2 = new Membrane(s)
+      s2.add(o2)
+      expect(s.has(o)).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicIn keeps membrane for universals', () => {
+      const jig = makeJig({})
+      const s = new Set()
+      const s2 = new Membrane(s)
+      s2.add(jig)
+      expect(s.has(jig)).to.equal(true)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -671,27 +692,6 @@ describe('Membrane', () => {
     it('intrinsic update disabled', () => {
       const s = new Membrane(new Set(), mangle({ _immutable: true }))
       expect(() => s.add(1)).to.throw('Immutable')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('intrinsicIn removes membrane for objects', () => {
-      const o = {}
-      const o2 = new Membrane(o)
-      const s = new Set()
-      const s2 = new Membrane(s)
-      s2.add(o2)
-      expect(s.has(o)).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('intrinsicIn keeps membrane for universals', () => {
-      const jig = makeJig({})
-      const s = new Set()
-      const s2 = new Membrane(s)
-      s2.add(jig)
-      expect(s.has(jig)).to.equal(true)
     })
   })
 
