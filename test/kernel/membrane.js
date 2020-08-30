@@ -769,22 +769,6 @@ describe('Membrane', () => {
         expect(record._snapshots.has(b)).to.equal(true)
       })
     })
-
-    /*
-
-    it('get parent method', () => {
-      testRecord(record => {
-        const o = new Membrane({}, unmangle({ _record: true }))
-        JIGS.add(o)
-        o.n // eslint-disable-line
-        expect(record._reads.includes(o)).to.equal(true)
-        expect(record._snapshots.has(o)).to.equal(true)
-      })
-    })
-    */
-
-    // immutable inner functions
-    // check functions can only be called by object with them
   })
 
   // --------------------------------------------------------------------------
