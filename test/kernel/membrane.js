@@ -722,6 +722,19 @@ describe('Membrane', () => {
       })
     })
 
+    // ------------------------------------------------------------------------
+
+    it('get', () => {
+      testRecord(record => {
+        const o = makeJig({}, unmangle({ _recordReads: true, _recordUpdates: true }))
+        o.n // eslint-disable-line
+        expect(record._reads.length).to.equal(1)
+        expect(record._reads.includes(o)).to.equal(true)
+        expect(record._snapshots.size).to.equal(1)
+        expect(record._snapshots.has(o)).to.equal(true)
+      })
+    })
+
     /*
     it('get property', () => {
       testRecord(record => {
