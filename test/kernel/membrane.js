@@ -425,10 +425,20 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set bindings marks them unbound', () => {
+    it('set bindings makes them unbound', () => {
       const A2 = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       A2.owner = DUMMY_OWNER
       A2.satoshis = 1
+      expect(_sudo(() => A2.owner) instanceof Unbound).to.equal(true)
+      expect(_sudo(() => A2.satoshis) instanceof Unbound).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('define bindings makes them unbound', () => {
+      const A2 = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
+      Object.defineProperty(A2, 'owner', { value: DUMMY_OWNER, configurable: true, enumerable: true, writable: true })
+      Object.defineProperty(A2, 'satoshis', { value: 1, configurable: true, enumerable: true, writable: true })
       expect(_sudo(() => A2.owner) instanceof Unbound).to.equal(true)
       expect(_sudo(() => A2.satoshis) instanceof Unbound).to.equal(true)
     })
