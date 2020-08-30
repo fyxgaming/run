@@ -413,6 +413,16 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('read native bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
+      _sudo(() => { A.location = 'native://A' })
+      _sudo(() => { A.origin = 'native://A' })
+      expect(A.location).to.equal('native://A')
+      expect(A.origin).to.equal('native://A')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('read undetermined bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       _sudo(() => { A.location = '_o1' })
