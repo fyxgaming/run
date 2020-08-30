@@ -24,7 +24,8 @@ const DUMMY_OWNER = '1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N'
 
 // Helper to test recording calls and then roll back any changes
 function testRecord (f) {
-  const CURRENT_RECORD = unmangle(unmangle(unmangle(Run)._Record)._CURRENT_RECORD)
+  const Record = unmangle(unmangle(Run)._Record)
+  const CURRENT_RECORD = unmangle(Record._CURRENT_RECORD)
   try {
     CURRENT_RECORD._begin()
     return f(CURRENT_RECORD)
@@ -811,7 +812,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('construct chain', () => {
+    it('construct chain', () => {
       const A = makeJig(class A { }, { _recordReads: true })
       const B = makeJig(class B extends A { }, { _recordReads: true })
       testRecord(record => {
@@ -825,7 +826,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('apply static method to code', () => {
+    it('apply static method to code', () => {
       class A { static f () { this._n = 1 }}
       const A2 = makeJig(A, { _recordReads: true, _recordUpdates: true, _recordCalls: true })
       testRecord(record => {
