@@ -248,6 +248,36 @@ describe('Membrane', () => {
       s2.add(jig)
       expect(s.has(jig)).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicOut adds membrane for objects', () => {
+      const o = {}
+      const m2 = new Membrane(new Map())
+      m2.set(1, o)
+      expect(m2.get(1)).not.to.equal(o)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicOut keeps membrane for universals', () => {
+      const jig = makeJig({})
+      const m2 = new Membrane(new Map())
+      m2.set(1, jig)
+      expect(m2.get(1)).to.equal(jig)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicOut does not add membrane for basic types', () => {
+      const m2 = new Membrane(new Map())
+      m2.set(1, null)
+      m2.set(2, 'abc')
+      m2.set(3, false)
+      expect(m2.get(1)).to.equal(null)
+      expect(m2.get(2)).to.equal('abc')
+      expect(m2.get(3)).to.equal(false)
+    })
   })
 
   // --------------------------------------------------------------------------
