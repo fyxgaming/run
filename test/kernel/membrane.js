@@ -1001,6 +1001,33 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Private', () => {
+    it('delete throws if outside', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
+      expect(() => { delete A._n }).to.throw('Cannot delete private property _n')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('delete allowed in jig methods', () => {
+      class A { static f () { delete this._n } }
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const a = makeJig(A, options)
+      testRecord(() => a.f())
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('delete throws from another jigs method', () => {
+      class A { static f (b) { delete b._n } }
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const a = makeJig(A, options)
+      const b = makeJig({}, options)
+      const error = 'Cannot delete private property _n'
+      expect(() => testRecord(() => a.f(b))).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('get throws if outside', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
       _sudo(() => { A._n = 1 })
@@ -1013,8 +1040,8 @@ describe('Membrane', () => {
       class A { static f () { return this._n } }
       A._n = 1
       const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
-      const A2 = makeJig(A, options)
-      testRecord(() => A2.f())
+      const a = makeJig(A, options)
+      testRecord(() => a.f())
     })
 
     // ------------------------------------------------------------------------
