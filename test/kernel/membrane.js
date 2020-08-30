@@ -27,7 +27,7 @@ function testRecord (f) {
   const CURRENT_RECORD = unmangle(unmangle(unmangle(Run)._Record)._CURRENT_RECORD)
   try {
     CURRENT_RECORD._begin()
-    f(CURRENT_RECORD)
+    return f(CURRENT_RECORD)
   } finally {
     CURRENT_RECORD._rollback()
   }
@@ -1145,6 +1145,35 @@ describe('Membrane', () => {
       const b = makeJig({}, options)
       const error = 'Cannot access private property _n'
       expect(() => testRecord(() => a.f(b))).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('ownKeys filters private properties if outside', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
+      _sudo(() => { A._n = 1 })
+      expect(Object.getOwnPropertyNames(A).includes('_n')).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('ownKeys returns private properties in jig methods', () => {
+      class A { static f () { return Object.getOwnPropertyNames(this).includes('_n') } }
+      A._n = 1
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const a = makeJig(A, options)
+      expect(testRecord(() => a.f())).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('ownKeys filters private properties from another jigs method', () => {
+      class A { static f (b) { return Object.getOwnPropertyNames(b).includes('_n') } }
+      A._n = 1
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const a = makeJig(A, options)
+      const b = makeJig({}, options)
+      expect(testRecord(() => a.f(b))).to.equal(false)
     })
 
     /*
