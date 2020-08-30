@@ -1093,6 +1093,33 @@ describe('Membrane', () => {
       expect(() => testRecord(() => a.f(b))).to.throw(error)
     })
 
+    // ------------------------------------------------------------------------
+
+    it('getOwnPropertyDescriptor throws if outside', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
+      expect(() => Object.getOwnPropertyDescriptor(A, '_n')).to.throw('Cannot access private property _n')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('getOwnPropertyDescriptor allowed in jig methods', () => {
+      class A { static f () { return Object.getOwnPropertyDescriptor(this, '_n') } }
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const a = makeJig(A, options)
+      testRecord(() => a.f())
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('getOwnPropertyDescriptor throws from another jigs method', () => {
+      class A { static f (b) { return Object.getOwnPropertyDescriptor(b, '_n') } }
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const a = makeJig(A, options)
+      const b = makeJig({}, options)
+      const error = 'Cannot access private property _n'
+      expect(() => testRecord(() => a.f(b))).to.throw(error)
+    })
+
     /*
     it('g on jig code from outside', () => {
       class A extends Jig { }
