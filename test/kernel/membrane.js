@@ -34,7 +34,7 @@ function testRecord (f) {
 }
 
 // Helpers to make a mock jig with a membrane
-function makeJig (x, options) {
+function makeJig (x, options = {}) {
   options = mangle(Object.assign(options, { _admin: true }))
   const jig = new Membrane(x, options)
   _sudo(() => {
@@ -671,6 +671,27 @@ describe('Membrane', () => {
     it('intrinsic update disabled', () => {
       const s = new Membrane(new Set(), mangle({ _immutable: true }))
       expect(() => s.add(1)).to.throw('Immutable')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicIn removes membrane for objects', () => {
+      const o = {}
+      const o2 = new Membrane(o)
+      const s = new Set()
+      const s2 = new Membrane(s)
+      s2.add(o2)
+      expect(s.has(o)).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicIn keeps membrane for universals', () => {
+      const jig = makeJig({})
+      const s = new Set()
+      const s2 = new Membrane(s)
+      s2.add(jig)
+      expect(s.has(jig)).to.equal(true)
     })
   })
 
