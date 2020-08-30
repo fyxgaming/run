@@ -1209,7 +1209,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get private method allowed from instance', () => {
+    it('get method allowed from instance', () => {
       class A {
         g () { return this._f() }
         _f (b) { return 1 }
@@ -1222,7 +1222,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get private property allowed from instance of same class', () => {
+    it('get allowed from instance of same class', () => {
       class A {
         constructor () { this._n = 1 }
         f (b) { return b._n }
@@ -1246,7 +1246,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws when access parent class private property', () => {
+    it('throws when access parent class property', () => {
       const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
       class A { static testGet () { return this._n } }
       const A2 = makeJig(A, options)
@@ -1258,16 +1258,18 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('accessible if access child class private property', () => {
+    it('accessible if access child class property with parent method', () => {
       const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
       class A { static testGet () { return this._n } }
       const A2 = makeJig(A, options)
       class B extends A2 { }
       const B2 = makeJig(B, options)
-      Object.defineProperty(A, 'n', { value: 1, configurable: true, enumerable: true, writable: true })
-      Object.defineProperty(B, 'n', { value: 2, configurable: true, enumerable: true, writable: true })
+      Object.defineProperty(A, '_n', { value: 1, configurable: true, enumerable: true, writable: true })
+      Object.defineProperty(B, '_n', { value: 2, configurable: true, enumerable: true, writable: true })
       expect(testRecord(() => B2.testGet())).to.equal(2)
     })
+
+    // TODO: Get from below class on instance
   })
 
   // --------------------------------------------------------------------------
