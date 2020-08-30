@@ -887,6 +887,16 @@ describe('Membrane', () => {
       expect(() => { delete a.n }).to.throw(error)
     })
 
+    // ------------------------------------------------------------------------
+
+    it('delete allowed in methods', () => {
+      class A { static f () { delete this.n } }
+      const a = makeJig(A, { _recordCalls: true, _contract: true })
+      testRecord(record => a.f())
+    })
+
+    // ------------------------------------------------------------------------
+
     it('defineProperty throws if outside method', () => {
       const a = makeJig({}, { _contract: true })
       const error = 'Updates must be performed in methods'
@@ -894,11 +904,15 @@ describe('Membrane', () => {
       expect(() => Object.defineProperty(a, 'n', desc)).to.throw(error)
     })
 
+    // ------------------------------------------------------------------------
+
     it('set throws if outside method', () => {
       const a = makeJig({}, { _contract: true })
       const error = 'Updates must be performed in methods'
       expect(() => { a.n = 1 }).to.throw(error)
     })
+
+    // ------------------------------------------------------------------------
 
     it('intrinsicUpdate throws if outside method', () => {
       const s = makeJig(new Set(), { _contract: true })
