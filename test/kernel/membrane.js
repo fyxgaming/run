@@ -1176,93 +1176,40 @@ describe('Membrane', () => {
       expect(testRecord(() => a.f(b))).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
+    it('set throws if outside', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
+      expect(() => { A._n = 1 }).to.throw('Cannot set private property _n')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set allowed in jig methods', () => {
+      class A { static f () { this._n = 1 } }
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const a = makeJig(A, options)
+      testRecord(() => a.f())
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set throws from another jigs method', () => {
+      class A { static f (b) { b._n = 1 } }
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const a = makeJig(A, options)
+      const b = makeJig({}, options)
+      const error = 'Cannot set private property _n'
+      expect(() => testRecord(() => a.f(b))).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get private method allowed from instance', () => {
+      // TODO
+    })
+
     /*
-    it('g on jig code from outside', () => {
-      class A extends Jig { }
-      const A2 = new Membrane(A)
-      _sudo(() => { A2._n = 1 })
-      expect(() => A2._n).to.throw('Cannot access private property _n')
-      expect(() => Object.getOwnPropertyDescriptor(A2, '_n')).to.throw('Cannot access private property _n')
-      expect(() => '_n' in A2).to.throw('Cannot access private property _n')
-      expect(Object.getOwnPropertyNames(A2).includes('_n')).to.equal(false)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('inaccessible on jig code from a different jig', () => {
-      const A = new Membrane(class A { static testGet (b) { return b._n } })
-      const B = new Membrane(class B extends Jig { })
-      _sudo(() => { B._n = 1 })
-      expect(() => A.testGet(B)).to.throw('Cannot access private property _n')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('inaccessible on jig objects from outside', () => {
-      const jig = { }
-      class A extends Jig { }
-      Object.setPrototypeOf(jig, A.prototype)
-      const jig2 = new Membrane(jig)
-      _sudo(() => { jig2._n = 1 })
-      expect(() => jig2._n).to.throw('Cannot access private property _n')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws on delete', () => {
-      const A = new Membrane(class A { static testDelete (b) { delete b._n } })
-      const B = new Membrane(class B extends Jig { })
-      expect(() => A.testDelete(B)).to.throw('Cannot delete private property _n')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws on get', () => {
-      const A = new Membrane(class A { static testGet (b) { return b._n } })
-      const B = new Membrane(class B extends Jig { })
-      expect(() => A.testGet(B)).to.throw('Cannot access private property _n')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws on getOwnPropertyDescriptor', () => {
-      const A = new Membrane(class A {
-        static testGetDesc (b) {
-          return Object.getOwnPropertyDescriptor(b, '_n')
-        }
-      })
-      const B = new Membrane(class B extends Jig { })
-      expect(() => A.testGetDesc(B)).to.throw('Cannot access private property _n')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws on has', () => {
-      const A = new Membrane(class A { static testHas (b) { return '_n' in b } })
-      const B = new Membrane(class B extends Jig { })
-      expect(() => A.testHas(B)).to.throw('Cannot access private property _n')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('filters ownKeys', () => {
-      const A = new Membrane(class A { static testKeys (b) { return Object.getOwnPropertyNames(b) } })
-      const B = new Membrane(class B extends Jig { })
-      _sudo(() => { B._n = 1 })
-      expect(A.testKeys(B).includes('_n')).to.equal(false)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws on set', () => {
-      const A = new Membrane(class A { static testSet (b) { b._n = 1 } })
-      const B = new Membrane(class B extends Jig { })
-      _sudo(() => { B._n = 1 })
-      expect(() => A.testSet(B)).to.throw('Cannot set private property _n')
-    })
-
-    // ------------------------------------------------------------------------
-
     it('accessible in jig object from instance of same class', () => {
       class A extends Jig { testGet (b) { return b._n } }
       const a = {}
