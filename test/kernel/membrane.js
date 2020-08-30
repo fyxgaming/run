@@ -1258,18 +1258,16 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
-
-    it('accessible if only access child class private property', () => {
-      class A extends Jig { static testGet () { return this._n } }
-      const A2 = new Membrane(A)
+    it.only('accessible if access child class private property', () => {
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      class A { static testGet () { return this._n } }
+      const A2 = makeJig(A, options)
       class B extends A2 { }
-      const B2 = new Membrane(B)
-      _sudo(() => { A2._n = 1 })
-      _sudo(() => { B2._n = 2 })
-      expect(B2.testGet()).to.equal(2)
+      const B2 = makeJig(B, options)
+      Object.defineProperty(A, 'n', { value: 1, configurable: true, enumerable: true, writable: true })
+      Object.defineProperty(B, 'n', { value: 2, configurable: true, enumerable: true, writable: true })
+      expect(testRecord(() => B2.testGet())).to.equal(2)
     })
-    */
   })
 
   // --------------------------------------------------------------------------
