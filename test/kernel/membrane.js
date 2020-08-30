@@ -216,11 +216,16 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('intrinsic handlers', () => {
-      const jig = new Membrane(class A { })
-      const m = new Membrane(new Map(), mangle({ _parentJig: jig }))
-      m.set(1, 2)
+    it('intrinsicRead', () => {
+      const m = new Membrane(new Map([[1, 2]]))
       expect(m.get(1)).to.equal(2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicUpdate', () => {
+      const m = new Membrane(new Map())
+      m.set(1, 2)
     })
   })
 
@@ -665,7 +670,7 @@ describe('Membrane', () => {
 
     it('intrinsic update disabled', () => {
       const s = new Membrane(new Set(), mangle({ _immutable: true }))
-      expect(() => s.add(1)).to.throw('set disabled')
+      expect(() => s.add(1)).to.throw('Immutable')
     })
   })
 
