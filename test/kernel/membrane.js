@@ -1206,7 +1206,14 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get private method allowed from instance', () => {
-      // TODO
+      class A {
+        g () { return this._f() }
+        _f (b) { return 1 }
+      }
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const A2 = makeJig(A, options)
+      const b = makeJig(new A2(), options)
+      expect(testRecord(() => b.g())).to.equal(1)
     })
 
     /*
