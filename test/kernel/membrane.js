@@ -1269,7 +1269,20 @@ describe('Membrane', () => {
       expect(testRecord(() => B2.testGet())).to.equal(2)
     })
 
-    // TODO: Get from below class on instance
+    // ------------------------------------------------------------------------
+
+    it('cannot access on instance with different class chain', () => {
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      class A { f (z) { return z._n } }
+      const A2 = makeJig(A, options)
+      class B extends A2 { }
+      const B2 = makeJig(B, options)
+      const x = makeJig(new A2(), options)
+      const y = makeJig(new B2(), options)
+      const error = 'Cannot access private property _n'
+      expect(() => testRecord(() => x.f(y))).to.throw(error)
+      expect(() => testRecord(() => y.f(x))).to.throw(error)
+    })
   })
 
   // --------------------------------------------------------------------------
