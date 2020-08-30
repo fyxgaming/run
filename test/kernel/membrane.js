@@ -709,6 +709,19 @@ describe('Membrane', () => {
       })
     })
 
+    // ------------------------------------------------------------------------
+
+    it('delete', () => {
+      testRecord(record => {
+        const o = makeJig({}, unmangle({ _recordReads: true, _recordUpdates: true }))
+        delete o.n
+        expect(record._snapshots.size).to.equal(1)
+        expect(record._snapshots.has(o)).to.equal(true)
+        expect(record._updates.length).to.equal(1)
+        expect(record._updates.includes(o)).to.equal(true)
+      })
+    })
+
     /*
     it('get property', () => {
       testRecord(record => {
