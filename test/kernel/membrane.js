@@ -697,6 +697,18 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('define', () => {
+      testRecord(record => {
+        const o = makeJig({}, unmangle({ _recordReads: true, _recordUpdates: true }))
+        const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+        Object.defineProperty(o, 'n', desc)
+        expect(record._snapshots.size).to.equal(1)
+        expect(record._snapshots.has(o)).to.equal(true)
+        expect(record._updates.length).to.equal(1)
+        expect(record._updates.includes(o)).to.equal(true)
+      })
+    })
+
     /*
     it('get property', () => {
       testRecord(record => {
