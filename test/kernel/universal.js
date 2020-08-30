@@ -11,7 +11,7 @@ const { describe, it } = require('mocha')
 // Universal
 // ------------------------------------------------------------------------------------------------
 
-describe('Universal', () => {
+describe.skip('Universal', () => {
   describe('hasInstance', () => {
     it('jigs are universals', () => {
       // TODO
