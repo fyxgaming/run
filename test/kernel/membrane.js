@@ -631,8 +631,8 @@ describe('Membrane', () => {
 
   describe('Record', () => {
     it('construct', () => {
+      const A = makeJig(class A { }, { _recordReads: true })
       testRecord(record => {
-        const A = makeJig(class A { }, { _recordReads: true })
         new A() // eslint-disable-line
         expect(record._reads.includes(A)).to.equal(true)
         expect(record._snapshots.has(A)).to.equal(true)
@@ -642,9 +642,9 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('construct chain', () => {
+      const A = makeJig(class A { }, { _recordReads: true })
+      const B = makeJig(class B extends A { }, { _recordReads: true })
       testRecord(record => {
-        const A = makeJig(class A { }, { _recordReads: true })
-        const B = makeJig(class B extends A { }, { _recordReads: true })
         new B() // eslint-disable-line
         expect(record._reads.includes(A)).to.equal(true)
         expect(record._reads.includes(B)).to.equal(true)
@@ -656,9 +656,9 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('apply static method to code', () => {
+      class A { static f () { this._n = 1 }}
+      const A2 = makeJig(A, { _recordReads: true, _recordUpdates: true, _recordCalls: true })
       testRecord(record => {
-        class A { static f () { this._n = 1 }}
-        const A2 = makeJig(A, { _recordReads: true, _recordUpdates: true, _recordCalls: true })
         A2.f()
         expect(record._reads.length).to.equal(1)
         expect(record._reads.includes(A2)).to.equal(true)
@@ -676,11 +676,11 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('apply method to instance', () => {
+      class A { f () { this._n = 1 }}
+      const A2 = makeJig(A, { _recordReads: true, _recordUpdates: true, _recordCalls: true })
+      const a = new A2()
+      const a2 = makeJig(a, { _recordReads: true, _recordUpdates: true, _recordCalls: true })
       testRecord(record => {
-        class A { f () { this._n = 1 }}
-        const A2 = makeJig(A, { _recordReads: true, _recordUpdates: true, _recordCalls: true })
-        const a = new A2()
-        const a2 = makeJig(a, { _recordReads: true, _recordUpdates: true, _recordCalls: true })
         a2.f()
         expect(record._reads.includes(A2)).to.equal(true)
         expect(record._actions.length).to.equal(1)
@@ -698,9 +698,9 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('define', () => {
+      const o = makeJig({}, { _recordReads: true, _recordUpdates: true })
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       testRecord(record => {
-        const o = makeJig({}, { _recordReads: true, _recordUpdates: true })
-        const desc = { value: 1, configurable: true, enumerable: true, writable: true }
         Object.defineProperty(o, 'n', desc)
         expect(record._snapshots.size).to.equal(1)
         expect(record._snapshots.has(o)).to.equal(true)
@@ -712,8 +712,8 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('delete', () => {
+      const o = makeJig({}, { _recordReads: true, _recordUpdates: true })
       testRecord(record => {
-        const o = makeJig({}, { _recordReads: true, _recordUpdates: true })
         delete o.n
         expect(record._snapshots.size).to.equal(1)
         expect(record._snapshots.has(o)).to.equal(true)
@@ -725,8 +725,8 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get', () => {
+      const o = makeJig({}, { _recordReads: true })
       testRecord(record => {
-        const o = makeJig({}, { _recordReads: true })
         o.n // eslint-disable-line
         expect(record._reads.length).to.equal(1)
         expect(record._reads.includes(o)).to.equal(true)
@@ -738,9 +738,9 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get method', () => {
+      const A = makeJig(class A { f () { } }, { _recordReads: true })
+      const a = makeJig(new A(), { _recordReads: true })
       testRecord(record => {
-        const A = makeJig(class A { f () { } }, { _recordReads: true })
-        const a = makeJig(new A(), { _recordReads: true })
         a.f // eslint-disable-line
         expect(record._reads.length).to.equal(2)
         expect(record._reads.includes(A)).to.equal(true)
@@ -754,10 +754,10 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get parent method', () => {
+      const A = makeJig(class A { f () { } }, { _recordReads: true })
+      const B = makeJig(class B extends A { }, { _recordReads: true })
+      const b = makeJig(new B(), { _recordReads: true })
       testRecord(record => {
-        const A = makeJig(class A { f () { } }, { _recordReads: true })
-        const B = makeJig(class B extends A { }, { _recordReads: true })
-        const b = makeJig(new B(), { _recordReads: true })
         b.f // eslint-disable-line
         expect(record._reads.length).to.equal(3)
         expect(record._reads.includes(A)).to.equal(true)
@@ -767,6 +767,72 @@ describe('Membrane', () => {
         expect(record._snapshots.has(A)).to.equal(true)
         expect(record._snapshots.has(B)).to.equal(true)
         expect(record._snapshots.has(b)).to.equal(true)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('getOwnPropertyDescriptor', () => {
+      const o = makeJig({}, { _recordReads: true })
+      testRecord(record => {
+        Object.getOwnPropertyDescriptor(o, 'n')
+        expect(record._reads.length).to.equal(1)
+        expect(record._reads.includes(o)).to.equal(true)
+        expect(record._snapshots.size).to.equal(1)
+        expect(record._snapshots.has(o)).to.equal(true)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('getPrototypeOf', () => {
+      const A = makeJig(class A { f () { } }, { _recordReads: true })
+      const a = makeJig(new A(), { _recordReads: true })
+      testRecord(record => {
+        Object.getPrototypeOf(a)
+        expect(record._reads.length).to.equal(1)
+        expect(record._reads.includes(a)).to.equal(true)
+        expect(record._snapshots.size).to.equal(1)
+        expect(record._snapshots.has(a)).to.equal(true)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('has', () => {
+      testRecord(record => {
+        const o = makeJig({}, { _recordReads: true })
+        'n' in o // eslint-disable-line
+        expect(record._reads.length).to.equal(1)
+        expect(record._reads.includes(o)).to.equal(true)
+        expect(record._snapshots.size).to.equal(1)
+        expect(record._snapshots.has(o)).to.equal(true)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('ownKeys', () => {
+      testRecord(record => {
+        const o = makeJig({}, { _recordReads: true })
+        Object.keys(o)
+        expect(record._reads.length).to.equal(1)
+        expect(record._reads.includes(o)).to.equal(true)
+        expect(record._snapshots.size).to.equal(1)
+        expect(record._snapshots.has(o)).to.equal(true)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set', () => {
+      testRecord(record => {
+        const o = makeJig({}, { _recordReads: true, _recordUpdates: true })
+        o.n = 1
+        expect(record._snapshots.size).to.equal(1)
+        expect(record._snapshots.has(o)).to.equal(true)
+        expect(record._updates.length).to.equal(1)
+        expect(record._updates.includes(o)).to.equal(true)
       })
     })
   })
