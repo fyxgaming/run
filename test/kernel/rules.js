@@ -28,6 +28,7 @@ describe('Rules', () => {
       expect(rules._private).to.equal(true)
       expect(rules._immutable).to.equal(false)
       expect(rules._record).to.equal(true)
+      expect(rules._recordCalls).to.equal(true)
     })
   })
 
@@ -44,6 +45,7 @@ describe('Rules', () => {
       expect(rules._private).to.equal(false)
       expect(rules._immutable).to.equal(true)
       expect(rules._record).to.equal(true)
+      expect(rules._recordCalls).to.equal(false)
     })
   })
 
@@ -60,6 +62,7 @@ describe('Rules', () => {
       expect(rules._private).to.equal(false)
       expect(rules._immutable).to.equal(true)
       expect(rules._record).to.equal(true)
+      expect(rules._recordCalls).to.equal(false)
     })
   })
 
@@ -76,6 +79,7 @@ describe('Rules', () => {
       expect(rules._private).to.equal(true)
       expect(rules._immutable).to.equal(false)
       expect(rules._record).to.equal(true)
+      expect(rules._recordCalls).to.equal(false)
     })
   })
 
@@ -92,6 +96,7 @@ describe('Rules', () => {
       expect(rules._private).to.equal(true)
       expect(rules._immutable).to.equal(true)
       expect(rules._record).to.equal(true)
+      expect(rules._recordCalls).to.equal(false)
     })
   })
 
@@ -118,6 +123,7 @@ describe('Rules', () => {
       expect(rules._private).to.equal(parentRules._private)
       expect(rules._immutable).to.equal(parentRules._immutable)
       expect(rules._record).to.equal(parentRules._record)
+      expect(rules._recordCalls).to.equal(parentRules._recordCalls)
     })
   })
 
