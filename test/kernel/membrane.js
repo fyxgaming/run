@@ -889,7 +889,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('delete allowed in methods', () => {
+    it('delete allowed in jig methods', () => {
       class A { static f () { delete this.n } }
       const a = makeJig(A, { _recordCalls: true, _contract: true })
       testRecord(record => a.f())
@@ -906,6 +906,19 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('defineProperty allowed in jig methods', () => {
+      class A {
+        static f () {
+          const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+          Object.defineProperty(this, 'n', desc)
+        }
+      }
+      const a = makeJig(A, { _recordCalls: true, _contract: true })
+      testRecord(record => a.f())
+    })
+
+    // ------------------------------------------------------------------------
+
     it('set throws if outside method', () => {
       const a = makeJig({}, { _contract: true })
       const error = 'Updates must be performed in methods'
@@ -914,10 +927,27 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('set allowed in jig methods', () => {
+      class A { static f () { this.n = 1 } }
+      const a = makeJig(A, { _recordCalls: true, _contract: true })
+      testRecord(record => a.f())
+    })
+
+    // ------------------------------------------------------------------------
+
     it('intrinsicUpdate throws if outside method', () => {
       const s = makeJig(new Set(), { _contract: true })
       const error = 'Updates must be performed in methods'
       expect(() => s.add(1)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set allowed in jig methods', () => {
+      class A { static f () { this.set.add(1) } }
+      A.set = new Set()
+      const a = makeJig(A, { _recordCalls: true, _contract: true })
+      testRecord(record => a.f())
     })
   })
 
