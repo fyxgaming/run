@@ -1028,6 +1028,44 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('define throws if outside', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      expect(() => Object.defineProperty(A, '_n', desc)).to.throw('Cannot define private property _n')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('define allowed in jig methods', () => {
+      class A {
+        static f () {
+          const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+          Object.defineProperty(this, '_n', desc)
+        }
+      }
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const a = makeJig(A, options)
+      testRecord(() => a.f())
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('define throws from another jigs method', () => {
+      class A {
+        static f (b) {
+          const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+          Object.defineProperty(b, '_n', desc)
+        }
+      }
+      const options = { _private: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const a = makeJig(A, options)
+      const b = makeJig({}, options)
+      const error = 'Cannot define private property _n'
+      expect(() => testRecord(() => a.f(b))).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('get throws if outside', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _private: true }))
       _sudo(() => { A._n = 1 })
