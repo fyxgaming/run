@@ -929,6 +929,21 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('delete throws from another jigs method', () => {
+      class A {
+        static f (b) {
+          const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+          Object.defineProperty(b, 'n', desc)
+        }
+      }
+      const a = makeJig(A, { _recordCalls: true, _contract: true })
+      const b = makeJig({}, { _recordCalls: true, _contract: true })
+      const error = 'Updates must be performed in this jig\'s methods'
+      testRecord(record => expect(() => a.f(b)).to.throw(error))
+    })
+
+    // ------------------------------------------------------------------------
+
     it('set throws if outside method', () => {
       const a = makeJig({}, { _contract: true })
       const error = 'Updates must be performed in this jig\'s methods'
@@ -945,6 +960,16 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('set throws from another jigs method', () => {
+      class A { static f (b) { b.n = 1 } }
+      const a = makeJig(A, { _recordCalls: true, _contract: true })
+      const b = makeJig({}, { _recordCalls: true, _contract: true })
+      const error = 'Updates must be performed in this jig\'s methods'
+      testRecord(record => expect(() => a.f(b)).to.throw(error))
+    })
+
+    // ------------------------------------------------------------------------
+
     it('intrinsicUpdate throws if outside method', () => {
       const s = makeJig(new Set(), { _contract: true })
       const error = 'Updates must be performed in this jig\'s methods'
@@ -953,11 +978,21 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set allowed in jig methods', () => {
+    it('intrinsicUpdate allowed in jig methods', () => {
       class A { static f () { this.set.add(1) } }
       A.set = new Set()
       const a = makeJig(A, { _recordCalls: true, _contract: true })
       testRecord(record => a.f())
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicUpdate throws from another jigs method', () => {
+      class A { static f (b) { b.add(1) } }
+      const a = makeJig(A, { _recordCalls: true, _contract: true })
+      const b = makeJig(new Set(), { _recordCalls: true, _contract: true })
+      const error = 'Updates must be performed in this jig\'s methods'
+      testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
   })
 
