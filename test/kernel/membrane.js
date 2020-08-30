@@ -1253,14 +1253,7 @@ describe('Membrane', () => {
       class B extends A2 { }
       const B2 = makeJig(B, options)
       A._n = 1
-      const t = A2.testGet
-      console.log('==')
-      const u = B2.testGet
-      console.log('---', t === u)
-      console.log('1')
-      console.log(B2.testGet())
-      console.log('2')
-      expect(() => B2.testGet()).to.throw('Cannot access private property _n')
+      expect(() => testRecord(() => B2.testGet())).to.throw('Cannot access private property _n')
     })
 
     // ------------------------------------------------------------------------
