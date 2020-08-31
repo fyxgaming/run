@@ -133,7 +133,7 @@ describe('Rules', () => {
         _serializable: Math.random() < 0.5
       }
       const parentJig = new Membrane({}, mangle(parentRules))
-      const rules = unmangle(Rules._childProperty(parentJig))
+      const rules = unmangle(Rules._childProperty(parentJig, false))
       expect(rules._parentJig).to.equal(parentJig)
       expect(rules._admin).to.equal(parentRules._admin)
       expect(rules._errors).to.equal(parentRules._errors)
@@ -146,6 +146,12 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(parentRules._recordCalls)
       expect(rules._contract).to.equal(false)
       expect(rules._serializable).to.equal(parentRules._serializable)
+    })
+
+    it('method are immutable', () => {
+      const parentJig = new Membrane({})
+      const rules = unmangle(Rules._childProperty(parentJig, true))
+      expect(rules._immutable).to.equal(true)
     })
   })
 
