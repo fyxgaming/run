@@ -1531,6 +1531,15 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Copy on Write', () => {
+    it('defineProperty copies', () => {
+      const o = { }
+      const o2 = new Membrane(o, mangle({ _cow: true }))
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      Object.defineProperty(o2, 'n', desc)
+      expect(o.n).to.equal(undefined)
+      expect(o2.n).to.equal(1)
+    })
+
     it('delete copies', () => {
       const o = { n: 1 }
       const o2 = new Membrane(o, mangle({ _cow: true }))
@@ -1539,7 +1548,6 @@ describe('Membrane', () => {
       expect('n' in o2).to.equal(false)
     })
 
-    // Define
     // Set
     // Intrinsic update
 
