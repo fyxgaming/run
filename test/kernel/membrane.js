@@ -1692,7 +1692,9 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('set allowed if not a membrane', () => {
-      // TODO
+      const a = makeJig({}, { _ownership: true })
+      a.n = 1
+      a.m = {}
     })
 
     // ------------------------------------------------------------------------
@@ -1720,7 +1722,11 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('defineProperty allowed if not a membrane', () => {
-      // TODO
+      const a = makeJig({}, { _ownership: true })
+      const desc1 = { value: 1, configurable: true, enumerable: true, writable: true }
+      const desc2 = { value: {}, configurable: true, enumerable: true, writable: true }
+      Object.defineProperty(a, 'n', desc1)
+      Object.defineProperty(a, 'n', desc2)
     })
 
     // ------------------------------------------------------------------------
