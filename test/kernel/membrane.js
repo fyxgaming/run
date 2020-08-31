@@ -1691,6 +1691,12 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('set allowed if not a membrane', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it('set allowed if owned by the jig', () => {
       // TODO
     })
@@ -1704,6 +1710,16 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('defineProperty throws if not owned', () => {
+      const a = makeJig({})
+      const b = new Membrane({}, mangle({ _parentJig: a }))
+      const c = makeJig({}, { _ownership: true })
+      const desc = { value: b, configurable: true, enumerable: true, writable: true }
+      expect(() => Object.defineProperty(c, 'n', desc)).to.throw('Ownership violation')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('defineProperty allowed if not a membrane', () => {
       // TODO
     })
 
