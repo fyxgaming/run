@@ -1601,7 +1601,14 @@ describe('Membrane', () => {
       expect(Proxy2._getTarget(p)).to.equal(o2)
     })
 
-    // Throws if uncopyable
+    it('throws if not clonable', () => {
+      const o = { }
+      o.n = new WeakSet()
+      o.m = function f () { }
+      const p = new Membrane(o, mangle({ _cow: true }))
+      expect(() => { p.a = 1 }).to.throw('Cannot clone')
+    })
+
     // Nested objects
     // Mixed ownership
   })
