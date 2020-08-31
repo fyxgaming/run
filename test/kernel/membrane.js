@@ -1792,6 +1792,12 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it.only('get returns membrane object to other jig while still pending', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it('assign naked cow membrane assigns owner', () => {
       const b = { m: 1 }
       const a = makeJig({}, { _ownership: true })
@@ -1810,6 +1816,26 @@ describe('Membrane', () => {
       const m = makeJig(new Map(), Object.assign({ _parentJig: A2 }, options))
       testRecord(() => expect(A2.f(m)).to.equal(true))
     })
+
+    // ------------------------------------------------------------------------
+
+    it.only('apply args are copied when stored on another jig', () => {
+      class A { static f (o) { this.o = o } }
+      const options = { _ownership: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const o = new Membrane({}, mangle(options))
+      const A2 = makeJig(A, options)
+      testRecord(() => {
+        A2.f(o)
+        expect(A2.o).not.to.equal(o)
+        A2.o.n = 1
+        expect('n' in o).to.equal(false)
+      })
+    })
+
+    // Copied when changed
+    // Same
+    // Apply args are not copied when on the same jig
+    // Inner object
   })
 
   // --------------------------------------------------------------------------
