@@ -1792,16 +1792,13 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get returns membrane object in other methods', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
     it('assign naked cow membrane assigns owner', () => {
-      // TODO: Inner object
-      // COW
-      // Sets parentJig. Sets up rules.
+      const b = { m: 1 }
+      const a = makeJig({}, { _ownership: true })
+      const b2 = makeJig(b, { _ownership: true, _cow: true })
+      a.n = b2
+      expect(Proxy2._getTarget(a.n)).not.to.equal(b)
+      expect(Proxy2._getTarget(a.n)).to.deep.equal(b)
     })
   })
 
