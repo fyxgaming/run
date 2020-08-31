@@ -598,6 +598,34 @@ describe('Proxy2', () => {
       expect(unmangle(h)._setPrototypeOf.called).to.equal(true)
     })
   })
+
+  describe('setTarget', () => {
+    it('changes target for default handlers', () => {
+      const a = { n: 1 }
+      const b = { m: 2 }
+      const p = new Proxy2(a, {})
+      Proxy2._setTarget(p, b)
+    })
+
+    it('getProxy returns for updated target', () => {
+      const a = { n: 1 }
+      const b = { m: 2 }
+      const p = new Proxy2(a, {})
+      Proxy2._setTarget(p, b)
+      expect(Proxy2._getProxy(a)).to.equal(undefined)
+      expect(Proxy2._getProxy(b)).to.equal(p)
+    })
+
+    it('getHandler returns for updated target', () => {
+      const a = { n: 1 }
+      const b = { m: 2 }
+      const h = { }
+      const p = new Proxy2(a, h)
+      Proxy2._setTarget(p, b)
+      expect(Proxy2._getHandler(a)).to.equal(undefined)
+      expect(Proxy2._getHandler(b)).to.equal(h)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
