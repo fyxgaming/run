@@ -1518,6 +1518,8 @@ describe('Membrane', () => {
       expect(() => Object.defineProperty(a, Symbol.hasInstance, desc)).to.throw(error)
     })
 
+    // ------------------------------------------------------------------------
+
     it('cannot define unserializable value', () => {
       const a = new Membrane({}, mangle({ _serializable: true }))
       const testFail = x => {
@@ -1530,11 +1532,15 @@ describe('Membrane', () => {
       testFail(() => { })
     })
 
+    // ------------------------------------------------------------------------
+
     it('cannot set symbol prop name', () => {
       const a = new Membrane({}, mangle({ _serializable: true }))
       const error = 'Symbol names are not serializable'
       expect(() => { a[Symbol.hasInstance] = 1 }).to.throw(error)
     })
+
+    // ------------------------------------------------------------------------
 
     it('cannot define unserializable value', () => {
       const a = new Membrane({}, mangle({ _serializable: true }))
@@ -1560,6 +1566,8 @@ describe('Membrane', () => {
       expect(o2.n).to.equal(1)
     })
 
+    // ------------------------------------------------------------------------
+
     it('delete copies', () => {
       const o = { n: 1 }
       const o2 = new Membrane(o, mangle({ _cow: true }))
@@ -1567,6 +1575,8 @@ describe('Membrane', () => {
       expect('n' in o).to.equal(true)
       expect('n' in o2).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
 
     it('set copies', () => {
       const o = { }
@@ -1576,6 +1586,8 @@ describe('Membrane', () => {
       expect(o2.n).to.equal(1)
     })
 
+    // ------------------------------------------------------------------------
+
     it('intrinsic update copies', () => {
       const s = new Set()
       const s2 = new Membrane(s, mangle({ _cow: true }))
@@ -1584,6 +1596,8 @@ describe('Membrane', () => {
       expect(s2.has(1)).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('updates proxy target', () => {
       const o = { }
       const o2 = new Membrane(o, mangle({ _cow: true }))
@@ -1591,6 +1605,8 @@ describe('Membrane', () => {
       o2.n = 1
       expect(Proxy2._getTarget(o2)).not.to.equal(o)
     })
+
+    // ------------------------------------------------------------------------
 
     it('only copies once', () => {
       const o = { }
@@ -1601,6 +1617,8 @@ describe('Membrane', () => {
       expect(Proxy2._getTarget(p)).to.equal(o2)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if not clonable', () => {
       const o = { }
       o.n = new WeakSet()
@@ -1609,8 +1627,35 @@ describe('Membrane', () => {
       expect(() => { p.a = 1 }).to.throw('Cannot clone')
     })
 
-    // Nested objects
-    // Mixed ownership
+    // ------------------------------------------------------------------------
+
+    it('clones child objects', () => {
+      const o = { }
+      o.o = o
+      o.s = new Set([1])
+      o.a = ['abc']
+      o.n = 1
+      const p = new Membrane(o, mangle({ _cow: true }))
+      p.n = 1
+      const o2 = Proxy2._getTarget(p)
+      expect(o).not.to.equal(o2)
+      expect(o.s).not.to.equal(o2.s)
+      expect(o.a).not.to.equal(o2.a)
+      expect(o).to.deep.equal(o2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('clones other membrane objects', () => {
+      const a = makeJig({})
+      const o = { n: 1 }
+      const b = new Membrane(o, mangle({ _parentJig: a }))
+      const c = makeJig({ b: o }, { _cow: true })
+      expect(c.b).to.equal(b)
+      c.n = 1
+      expect(c.b).not.to.equal(b)
+      expect(c.b.n).to.equal(1)
+    })
   })
 
   // --------------------------------------------------------------------------
