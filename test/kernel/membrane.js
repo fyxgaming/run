@@ -1824,20 +1824,6 @@ describe('Membrane', () => {
     it('method can only be applied to jig instance', () => {})
     it('static method can only be applied to jig class', () => {})
   })
-
-  describe('inner object', () => {
-    it('returns membrane', () => { })
-    it('returns same object twice', () => { })
-    it('returns membrane for inner inner object', () => { })
-    it('store and retrieve from intrinsic', () => { })
-  })
-
-  describe('inner method', () => {
-    it('intrinsic method immutable', () => { })
-    it('arbitrary object method immutable', () => { })
-    it('can call inside of jig', () => { })
-    it('can call outside of jig if no updates', () => { })
-  })
 })
 
 // ------------------------------------------------------------------------------------------------
