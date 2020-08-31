@@ -1530,8 +1530,24 @@ describe('Membrane', () => {
   // Copy on Write (COW)
   // --------------------------------------------------------------------------
 
-  describe('COW', () => {
-    // TODO
+  describe('Copy on Write', () => {
+    it('delete copies', () => {
+      const o = { n: 1 }
+      const o2 = new Membrane(o, mangle({ _cow: true }))
+      delete o2.n
+      expect('n' in o).to.equal(true)
+      expect('n' in o2).to.equal(false)
+    })
+
+    // Define
+    // Set
+    // Intrinsic update
+
+    // Proxy is updated
+    // Only copies once
+
+    // Throws if uncopyable
+
     // Nested objects
     // Mixed ownership
   })
@@ -1540,7 +1556,12 @@ describe('Membrane', () => {
   // Ownership
   // --------------------------------------------------------------------------
 
+  // TODO: Serializable should check inner objects. Deep visit.
+
   describe('Ownership', () => {
+    // Assigning owner ... copies on write if necessary
+    // Sets parentJig. Sets up rules.
+
     // TODO
     // set/define/in allows owned by jig
     // set/define/in throws if owned by another jig
