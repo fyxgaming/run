@@ -1701,6 +1701,7 @@ describe('Membrane', () => {
 
     it('set allowed if owned by the jig', () => {
       // TODO
+      // Self
     })
 
     // ------------------------------------------------------------------------
@@ -1748,6 +1749,15 @@ describe('Membrane', () => {
       const b = new Membrane({}, mangle({ _parentJig: a }))
       const c = makeJig(new Set(), { _ownership: true })
       expect(() => c.add(b)).to.throw('Ownership violation')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicIn allowed if not a membrane', () => {
+      const a = makeJig(new Set(), { _ownership: true })
+      a.add(false)
+      a.add([])
+      a.add(new Uint8Array())
     })
 
     // ------------------------------------------------------------------------
