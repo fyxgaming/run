@@ -605,6 +605,28 @@ describe('Proxy2', () => {
       const b = { m: 2 }
       const p = new Proxy2(a, {})
       Proxy2._setTarget(p, b)
+      // set
+      p.a = 3
+      // get
+      expect(b.a).to.equal(3)
+      // delete
+      delete p.a
+      expect('a' in p).to.equal(false)
+      // define
+      const desc = { value: 1, enumerable: false, configurable: true, writable: true }
+      Object.defineProperty(p, 'x', desc)
+      // get desc
+      expect(Object.getOwnPropertyDescriptor(p, 'x')).to.deep.equal(desc)
+      // has
+      expect('m' in p).to.equal(true)
+      // apply
+      const f = new Proxy2(function () { return 1 }, {})
+      Proxy2._setTarget(f, function () { return 2 })
+      expect(f()).to.equal(2)
+      // construct
+      const A = new Proxy2(class A { }, { })
+      Proxy2._setTarget(A, class B { })
+      expect(A.name).to.equal('B')
     })
 
     it('getProxy returns for updated target', () => {
