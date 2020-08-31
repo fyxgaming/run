@@ -1833,7 +1833,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('apply args copied when stored on another', () => {
+    it('apply args copied when stored on another', () => {
       const options = { _ownership: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
       const o = new Membrane({}, mangle(options))
       class A { static f (o) { this.o = o } }
@@ -1846,7 +1846,6 @@ describe('Membrane', () => {
       })
     })
 
-    // Inner object
     // Copied when changed
     // Same
     // Apply args are not copied when on the same jig
