@@ -1457,7 +1457,37 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Serializable', () => {
-    // TODO
+    it('cannot define symbol prop name', () => {
+      const a = new Membrane({}, mangle({ _serializable: true }))
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      const error = 'Symbol names are not serializable'
+      expect(() => Object.defineProperty(a, Symbol.hasInstance, desc)).to.throw(error)
+    })
+
+    it('cannot define unserializable value', () => {
+      const a = new Membrane({}, mangle({ _serializable: true }))
+      const testFail = x => {
+        const desc = { value: x, configurable: true, enumerable: true, writable: true }
+        expect(() => Object.defineProperty(a, 'n', desc)).to.throw()
+      }
+      testFail(Symbol.hasInstance)
+      testFail(new (class MySet extends Set { })())
+      testFail(Math)
+    })
+
+    it('cannot set symbol prop name', () => {
+      const a = new Membrane({}, mangle({ _serializable: true }))
+      const error = 'Symbol names are not serializable'
+      expect(() => { a[Symbol.hasInstance] = 1 }).to.throw(error)
+    })
+
+    it('cannot define unserializable value', () => {
+      const a = new Membrane({}, mangle({ _serializable: true }))
+      const testFail = x => expect(() => { a.n = x }).to.throw()
+      testFail(Symbol.hasInstance)
+      testFail(new (class MySet extends Set { })())
+      testFail(Math)
+    })
   })
 
   // --------------------------------------------------------------------------
