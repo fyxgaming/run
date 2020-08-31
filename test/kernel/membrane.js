@@ -1828,10 +1828,6 @@ describe('Membrane', () => {
     it('can call inside of jig', () => { })
     it('can call outside of jig if no updates', () => { })
   })
-
-  describe('borrow', () => {
-    // TODO
-  })
 })
 
 // ------------------------------------------------------------------------------------------------
