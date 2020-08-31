@@ -1536,7 +1536,7 @@ describe('Membrane', () => {
       const o2 = new Membrane(o, mangle({ _cow: true }))
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       Object.defineProperty(o2, 'n', desc)
-      expect(o.n).to.equal(undefined)
+      expect('n' in o).to.equal(false)
       expect(o2.n).to.equal(1)
     })
 
@@ -1548,7 +1548,14 @@ describe('Membrane', () => {
       expect('n' in o2).to.equal(false)
     })
 
-    // Set
+    it('set copies', () => {
+      const o = { }
+      const o2 = new Membrane(o, mangle({ _cow: true }))
+      o2.n = 1
+      expect('n' in o).to.equal(false)
+      expect(o2.n).to.equal(1)
+    })
+
     // Intrinsic update
 
     // Proxy is updated
