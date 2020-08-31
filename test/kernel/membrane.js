@@ -1777,7 +1777,16 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get returns naked object if created in method', () => {
-      // TODO
+      class A {
+        f () {
+          const o = { }
+          this.x = o
+          return this.x === o
+        }
+      }
+      const A2 = makeJig(A, { _ownership: true })
+      const a = makeJig(new A2(), { _ownership: true })
+      expect(a.f()).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
