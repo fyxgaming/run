@@ -1776,7 +1776,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get returns naked object if created in method', () => {
+    it('get naked to self in method', () => {
       class A {
         f () {
           const o = { }
@@ -1792,8 +1792,22 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('get returns membrane object to other jig while still pending', () => {
-      // TODO
+    it('get membrane while naked to self', () => {
+      class A {
+        static f (b) {
+          this.o = { }
+          b.g(a)
+        }
+      }
+      class B {
+        static g (a) {
+          this.o = a.o
+        }
+      }
+      const options = { _ownership: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const a = makeJig(A, options)
+      const b = makeJig(B, options)
+      testRecord(() => expect(() => a.f(b)).to.throw('Ownership violation'))
     })
 
     // ------------------------------------------------------------------------
@@ -1819,7 +1833,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('apply args are copied when stored on another jig', () => {
+    it('apply args are copied when stored on another jig', () => {
       class A { static f (o) { this.o = o } }
       const options = { _ownership: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
       const o = new Membrane({}, mangle(options))
