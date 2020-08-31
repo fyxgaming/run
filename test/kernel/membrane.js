@@ -108,6 +108,15 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('defineProperty disabled on methods', () => {
+      const A = makeJig(class A { f () { } })
+      const a = makeJig(new A())
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      expect(() => Object.defineProperty(a.f, 'n', desc)).to.throw('defineProperty disabled')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('delete', () => {
       class A { }
       A.n = 1
@@ -281,6 +290,14 @@ describe('Membrane', () => {
       B.n = 1
       expect(B.n).to.equal(1)
       expect(A.n).to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set disabled on methods', () => {
+      const A = makeJig(class A { f () { } })
+      const a = makeJig(new A())
+      expect(() => { a.f.n = 1 }).to.throw('set disabled')
     })
 
     // ------------------------------------------------------------------------
