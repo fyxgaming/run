@@ -86,18 +86,18 @@ describe('_deepVisit', () => {
     expect(callback.args).to.deep.equal([[m], [s], [a], [m.o]])
   })
 
-  it('should not visit non-objects and non-functions', () => {
+  it('should visit primitive types', () => {
     const callback = fake()
     _deepVisit(1, callback)
-    expect(callback.called).to.equal(false)
+    expect(callback.called).to.equal(true)
     _deepVisit('abc', callback)
-    expect(callback.called).to.equal(false)
+    expect(callback.called).to.equal(true)
     _deepVisit(null, callback)
-    expect(callback.called).to.equal(false)
+    expect(callback.called).to.equal(true)
     _deepVisit(undefined, callback)
-    expect(callback.called).to.equal(false)
+    expect(callback.called).to.equal(true)
     _deepVisit(Symbol.hasInstance, callback)
-    expect(callback.called).to.equal(false)
+    expect(callback.called).to.equal(true)
   })
 
   it('should not visit circular objects', () => {

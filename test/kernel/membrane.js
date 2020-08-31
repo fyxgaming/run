@@ -1534,6 +1534,17 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('cannot define unserializable inner value', () => {
+      const a = new Membrane({}, mangle({ _serializable: true }))
+      const testFail = x => {
+        const desc = { value: x, configurable: true, enumerable: true, writable: true }
+        expect(() => Object.defineProperty(a, 'n', desc)).to.throw()
+      }
+      testFail({ inner: Symbol.hasInstance })
+    })
+
+    // ------------------------------------------------------------------------
+
     it('cannot set symbol prop name', () => {
       const a = new Membrane({}, mangle({ _serializable: true }))
       const error = 'Symbol names are not serializable'
@@ -1542,7 +1553,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('cannot define unserializable value', () => {
+    it('cannot set unserializable value', () => {
       const a = new Membrane({}, mangle({ _serializable: true }))
       const testFail = x => expect(() => { a.n = x }).to.throw()
       testFail(Symbol.hasInstance)
@@ -1551,7 +1562,13 @@ describe('Membrane', () => {
       testFail(function f () { })
     })
 
-    // TODO: Serializable should check inner objects. Deep visit.
+    // ------------------------------------------------------------------------
+
+    it('cannot set unserializable inner value', () => {
+      const a = new Membrane({}, mangle({ _serializable: true }))
+      const testFail = x => expect(() => { a.n = x }).to.throw()
+      testFail({ inner: Symbol.hasInstance })
+    })
   })
 
   // --------------------------------------------------------------------------
