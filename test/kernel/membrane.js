@@ -1815,7 +1815,7 @@ describe('Membrane', () => {
     it('assign naked cow membrane assigns owner', () => {
       const b = { m: 1 }
       const a = makeJig({}, { _ownership: true })
-      const b2 = makeJig(b, { _ownership: true, _cow: true })
+      const b2 = new Membrane(b, mangle({ _ownership: true, _cow: true }))
       a.n = b2
       expect(Proxy2._getTarget(a.n)).not.to.equal(b)
       expect(Proxy2._getTarget(a.n)).to.deep.equal(b)
@@ -1833,10 +1833,10 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('apply args are copied when stored on another jig', () => {
-      class A { static f (o) { this.o = o } }
+    it.only('apply args copied when stored on another', () => {
       const options = { _ownership: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
       const o = new Membrane({}, mangle(options))
+      class A { static f (o) { this.o = o } }
       const A2 = makeJig(A, options)
       testRecord(() => {
         A2.f(o)
@@ -1846,10 +1846,10 @@ describe('Membrane', () => {
       })
     })
 
+    // Inner object
     // Copied when changed
     // Same
     // Apply args are not copied when on the same jig
-    // Inner object
   })
 
   // --------------------------------------------------------------------------
