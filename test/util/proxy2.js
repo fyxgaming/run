@@ -686,6 +686,15 @@ describe('Proxy2', () => {
       expect(Proxy2._getHandler(a)).to.equal(undefined)
       expect(Proxy2._getHandler(b)).to.equal(h)
     })
+
+    it('getTarget returns for updated target', () => {
+      const a = { n: 1 }
+      const b = { m: 2 }
+      const h = { }
+      const p = new Proxy2(a, h)
+      Proxy2._setTarget(p, b)
+      expect(Proxy2._getTarget(p)).to.equal(b)
+    })
   })
 })
 
