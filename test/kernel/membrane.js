@@ -827,9 +827,10 @@ describe('Membrane', () => {
     it('getOwnPropertyDescriptor adds immutable membrane', () => {
       const A = new Membrane({ }, mangle({ _admin: true, _immutable: true }))
       _sudo(() => { A.o = {} })
-      expect(Object.getOwnPropertyDescriptor(A, 'o').value)
-        .not.to.equal(_sudo(() => Object.getOwnPropertyDescriptor(A, 'o').value))
-      expect(() => { Object.getOwnPropertyDescriptor(A, 'o').value.n = 1 }).to.throw('set disabled')
+      const value1 = Object.getOwnPropertyDescriptor(A, 'o').value
+      const value2 = _sudo(() => Object.getOwnPropertyDescriptor(A, 'o').value)
+      expect(value1).not.to.equal(value2)
+      expect(() => { value1.n = 1 }).to.throw('set disabled')
     })
 
     // ------------------------------------------------------------------------
