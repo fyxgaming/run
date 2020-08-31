@@ -1578,10 +1578,9 @@ describe('Membrane', () => {
       p.n = 1
       const o2 = Proxy2._getTarget(p)
       p.n = 2
-      expect(Proxy._getTarget(p)).to.equal(o2)
+      expect(Proxy2._getTarget(p)).to.equal(o2)
     })
 
-    // Can use proxy after copy
     // Throws if uncopyable
     // Nested objects
     // Mixed ownership
