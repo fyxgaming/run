@@ -1556,7 +1556,13 @@ describe('Membrane', () => {
       expect(o2.n).to.equal(1)
     })
 
-    // Intrinsic update
+    it('intrinsic update copies', () => {
+      const s = new Set()
+      const s2 = new Membrane(s, mangle({ _cow: true }))
+      s2.add(1)
+      expect(s.has(1)).to.equal(false)
+      expect(s2.has(1)).to.equal(true)
+    })
 
     // Proxy is updated
     // Only copies once
