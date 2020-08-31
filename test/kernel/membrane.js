@@ -117,6 +117,16 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('defineProperty on existing', () => {
+      const o = makeJig({})
+      o.n = 1
+      Object.defineProperty(o, 'n', { value: 2 })
+      const desc = { value: 2, configurable: true, enumerable: true, writable: true }
+      expect(Object.getOwnPropertyDescriptor(o, 'n')).to.deep.equal(desc)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('delete', () => {
       class A { }
       A.n = 1
@@ -280,6 +290,16 @@ describe('Membrane', () => {
       const m = new Membrane(class A { })
       m.n = 1
       expect(m.n).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set multiple times', () => {
+      const m = new Membrane(class A { })
+      m.n = 1
+      m.n = 2
+      m.n = 3
+      expect(m.n).to.equal(3)
     })
 
     // ------------------------------------------------------------------------
