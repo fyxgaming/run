@@ -1490,6 +1490,7 @@ describe('Membrane', () => {
       testFail(Symbol.hasInstance)
       testFail(new (class MySet extends Set { })())
       testFail(Math)
+      testFail(() => { })
     })
 
     it('cannot set symbol prop name', () => {
@@ -1504,6 +1505,7 @@ describe('Membrane', () => {
       testFail(Symbol.hasInstance)
       testFail(new (class MySet extends Set { })())
       testFail(Math)
+      testFail(function f () { })
     })
   })
 
