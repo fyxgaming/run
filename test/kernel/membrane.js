@@ -1800,6 +1800,16 @@ describe('Membrane', () => {
       expect(Proxy2._getTarget(a.n)).not.to.equal(b)
       expect(Proxy2._getTarget(a.n)).to.deep.equal(b)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('returns naked object in intrinsic inside method', () => {
+      const options = { _ownership: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      class A { static f (m) { const o = { n: 1 }; m.set(1, o); return m.get(1) === o } }
+      const A2 = makeJig(A, options)
+      const m = makeJig(new Map(), Object.assign({ _parentJig: A2 }, options))
+      testRecord(() => expect(A2.f(m)).to.equal(true))
+    })
   })
 
   // --------------------------------------------------------------------------
