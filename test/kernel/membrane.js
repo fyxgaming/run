@@ -1739,7 +1739,10 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('defineProperty allowed if owned', () => {
-      // TODO
+      const a = makeJig({}, { _ownership: true })
+      const b = new Membrane(function () { }, { _parentJig: a })
+      const desc = { value: b, configurable: true, enumerable: true, writable: true }
+      Object.defineProperty(a, 'n', desc)
     })
 
     // ------------------------------------------------------------------------
@@ -1769,7 +1772,10 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('intrinsicIn allowed if owned', () => {
-      // TODO
+      const a = makeJig(new Map(), { _ownership: true })
+      a.set(a)
+      a.set(1, [[]])
+      a.set(2, a.get(1)[0])
     })
 
     // ------------------------------------------------------------------------
