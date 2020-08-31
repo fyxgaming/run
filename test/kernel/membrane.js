@@ -1572,10 +1572,17 @@ describe('Membrane', () => {
       expect(Proxy2._getTarget(o2)).not.to.equal(o)
     })
 
-    // Only copies once
+    it('only copies once', () => {
+      const o = { }
+      const p = new Membrane(o, mangle({ _cow: true }))
+      p.n = 1
+      const o2 = Proxy2._getTarget(p)
+      p.n = 2
+      expect(Proxy._getTarget(p)).to.equal(o2)
+    })
 
+    // Can use proxy after copy
     // Throws if uncopyable
-
     // Nested objects
     // Mixed ownership
   })
