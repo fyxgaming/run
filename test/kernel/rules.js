@@ -32,6 +32,7 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(true)
       expect(rules._contract).to.equal(true)
       expect(rules._serializable).to.equal(true)
+      expect(rules._ownership).to.equal(true)
     })
   })
 
@@ -52,6 +53,7 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(false)
       expect(rules._contract).to.equal(false)
       expect(rules._serializable).to.equal(true)
+      expect(rules._ownership).to.equal(true)
     })
   })
 
@@ -72,6 +74,7 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(false)
       expect(rules._contract).to.equal(false)
       expect(rules._serializable).to.equal(false)
+      expect(rules._ownership).to.equal(true)
     })
   })
 
@@ -92,6 +95,7 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(false)
       expect(rules._contract).to.equal(true)
       expect(rules._serializable).to.equal(true)
+      expect(rules._ownership).to.equal(true)
     })
   })
 
@@ -112,6 +116,7 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(false)
       expect(rules._contract).to.equal(false)
       expect(rules._serializable).to.equal(true)
+      expect(rules._ownership).to.equal(true)
     })
   })
 
@@ -146,6 +151,7 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(parentRules._recordCalls)
       expect(rules._contract).to.equal(false)
       expect(rules._serializable).to.equal(parentRules._serializable)
+      expect(rules._ownership).to.equal(parentRules._ownership)
     })
 
     it('method are immutable', () => {
