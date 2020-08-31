@@ -31,39 +31,6 @@ class JigMethod extends Immutable {
     this._container = container
   }
 
-  apply (target, thisArg, args) {
-    const _CURRENT_RECORD = Record._CURRENT_RECORD
-
-    // Record multiple in case we have to deploy args
-    return _CURRENT_RECORD._multiple(() => {
-      const proxy = Proxy._getProxy(target)
-
-      // This method can only be applied to an object that has this method.
-      // This get should also be a read.... should happen after action starts.
-      _checkState(thisArg[name] === proxy, `Cannot call ${this._name} on ${_text(target)}`)
-
-      // Calling a method is reading the current class
-      // But we also need to read parents right, or in-betweens?
-      // Yes. So if object, get all in-between classes. Also the object itself.
-      _CURRENT_RECORD._read(this._container)
-
-      // Clone method args for this call
-      const methodArgs = this._methodArgs(args, target)
-
-      // Call the method
-      const ret = super.apply(target, thisArg, methodArgs)
-
-      if (crossing(proxy)) {
-        // Replace with owned objects.
-        // If it is not owned, then it doesn't exist
-      }
-
-      // When to pending checks?
-
-      return ret
-    })
-  }
-
   _methodArgs (args, proxy) {
     // At the top level, code that is passed in gets automatically deployed
     if (topLevel()) {

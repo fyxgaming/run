@@ -67,7 +67,6 @@ describe('Membrane', () => {
       class A { }
       const A2 = new Membrane(A)
       expect(Proxy2._getTarget(A2)).to.equal(A)
-      expect(Proxy2._getProxy(A)).to.equal(A2)
     })
 
     it('assigns rules', () => {
