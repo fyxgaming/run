@@ -32,7 +32,6 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(true)
       expect(rules._contract).to.equal(true)
       expect(rules._serializable).to.equal(true)
-      expect(rules._ownership).to.equal(true)
       expect(rules._cow).to.equal(false)
     })
   })
@@ -54,7 +53,6 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(false)
       expect(rules._contract).to.equal(false)
       expect(rules._serializable).to.equal(true)
-      expect(rules._ownership).to.equal(true)
       expect(rules._cow).to.equal(false)
     })
   })
@@ -76,7 +74,6 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(false)
       expect(rules._contract).to.equal(false)
       expect(rules._serializable).to.equal(false)
-      expect(rules._ownership).to.equal(true)
       expect(rules._cow).to.equal(false)
     })
   })
@@ -98,7 +95,6 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(false)
       expect(rules._contract).to.equal(true)
       expect(rules._serializable).to.equal(true)
-      expect(rules._ownership).to.equal(true)
       expect(rules._cow).to.equal(false)
     })
   })
@@ -120,7 +116,6 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(false)
       expect(rules._contract).to.equal(false)
       expect(rules._serializable).to.equal(true)
-      expect(rules._ownership).to.equal(true)
       expect(rules._cow).to.equal(false)
     })
   })
@@ -156,7 +151,6 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(parentRules._recordCalls)
       expect(rules._contract).to.equal(false)
       expect(rules._serializable).to.equal(parentRules._serializable)
-      expect(rules._ownership).to.equal(parentRules._ownership)
       expect(rules._cow).to.equal(parentRules._cow)
     })
 
@@ -164,29 +158,6 @@ describe('Rules', () => {
       const parentJig = new Membrane({})
       const rules = unmangle(Rules._childProperty(parentJig, true))
       expect(rules._immutable).to.equal(true)
-    })
-  })
-
-  // --------------------------------------------------------------------------
-
-  describe('naked', () => {
-    it('creates rules', () => {
-      const method = Math.random() < 0.5
-      const rules = Rules._naked(method)
-      expect(rules._parentJig).to.equal(null)
-      expect(rules._admin).to.equal(true)
-      expect(rules._errors).to.equal(false)
-      expect(rules._bindings).to.equal(false)
-      expect(rules._code).to.equal(false)
-      expect(rules._private).to.equal(false)
-      expect(rules._immutable).to.equal(method)
-      expect(rules._recordReads).to.equal(false)
-      expect(rules._recordUpdates).to.equal(false)
-      expect(rules._recordCalls).to.equal(false)
-      expect(rules._contract).to.equal(false)
-      expect(rules._serializable).to.equal(true)
-      expect(rules._ownership).to.equal(false)
-      expect(rules._cow).to.equal(true)
     })
   })
 

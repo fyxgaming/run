@@ -1681,6 +1681,7 @@ describe('Membrane', () => {
   // Ownership
   // --------------------------------------------------------------------------
 
+  /*
   describe('Ownership', () => {
     it('set throws if owned by another jig', () => {
       const a = makeJig({})
@@ -1850,6 +1851,7 @@ describe('Membrane', () => {
     // Same
     // Apply args are not copied when on the same jig
   })
+  */
 
   // --------------------------------------------------------------------------
   // Jig Method
