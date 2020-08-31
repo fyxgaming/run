@@ -1700,8 +1700,14 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('set allowed if owned by the jig', () => {
-      // TODO
-      // Self
+      const o = { }
+      const a = makeJig(o, { _ownership: true })
+      a.x = []
+      a.y = a
+      expect(a.x).not.to.equal(o.x)
+      expect(a.y).to.equal(a)
+      expect(o.y).to.equal(o)
+      a.z = a.x
     })
 
     // ------------------------------------------------------------------------
