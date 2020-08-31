@@ -31,6 +31,7 @@ describe('Rules', () => {
       expect(rules._recordUpdates).to.equal(true)
       expect(rules._recordCalls).to.equal(true)
       expect(rules._contract).to.equal(true)
+      expect(rules._serializable).to.equal(true)
     })
   })
 
@@ -50,6 +51,7 @@ describe('Rules', () => {
       expect(rules._recordUpdates).to.equal(false)
       expect(rules._recordCalls).to.equal(false)
       expect(rules._contract).to.equal(false)
+      expect(rules._serializable).to.equal(true)
     })
   })
 
@@ -69,6 +71,7 @@ describe('Rules', () => {
       expect(rules._recordUpdates).to.equal(false)
       expect(rules._recordCalls).to.equal(false)
       expect(rules._contract).to.equal(false)
+      expect(rules._serializable).to.equal(false)
     })
   })
 
@@ -88,6 +91,7 @@ describe('Rules', () => {
       expect(rules._recordUpdates).to.equal(true)
       expect(rules._recordCalls).to.equal(false)
       expect(rules._contract).to.equal(true)
+      expect(rules._serializable).to.equal(true)
     })
   })
 
@@ -107,6 +111,7 @@ describe('Rules', () => {
       expect(rules._recordUpdates).to.equal(false)
       expect(rules._recordCalls).to.equal(false)
       expect(rules._contract).to.equal(false)
+      expect(rules._serializable).to.equal(true)
     })
   })
 
@@ -124,7 +129,8 @@ describe('Rules', () => {
         _recordReads: Math.random() < 0.5,
         _recordUpdates: Math.random() < 0.5,
         _recordCalls: Math.random() < 0.5,
-        _contract: Math.random() < 0.5
+        _contract: Math.random() < 0.5,
+        _serializable: Math.random() < 0.5
       }
       const parentJig = new Membrane({}, mangle(parentRules))
       const rules = unmangle(Rules._childProperty(parentJig))
@@ -138,7 +144,8 @@ describe('Rules', () => {
       expect(rules._recordReads).to.equal(parentRules._recordReads)
       expect(rules._recordUpdates).to.equal(parentRules._recordUpdates)
       expect(rules._recordCalls).to.equal(parentRules._recordCalls)
-      expect(rules._contract).to.equal(parentRules._contract)
+      expect(rules._contract).to.equal(false)
+      expect(rules._serializable).to.equal(parentRules._serializable)
     })
   })
 
