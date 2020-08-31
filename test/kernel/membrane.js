@@ -1564,7 +1564,14 @@ describe('Membrane', () => {
       expect(s2.has(1)).to.equal(true)
     })
 
-    // Proxy is updated
+    it('updates proxy target', () => {
+      const o = { }
+      const o2 = new Membrane(o, mangle({ _cow: true }))
+      expect(Proxy2._getTarget(o2)).to.equal(o)
+      o2.n = 1
+      expect(Proxy2._getTarget(o2)).not.to.equal(o)
+    })
+
     // Only copies once
 
     // Throws if uncopyable
