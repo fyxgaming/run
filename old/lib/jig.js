@@ -50,7 +50,6 @@ class Jig {
     classChain.forEach(type => {
       Object.getOwnPropertyNames(type.prototype).forEach(prop => methods.push(prop))
     })
-    const permanents = [...methods, 'owner', 'satoshis', 'origin', 'location']
 
     function resetJigControl () {
       JigControl._stack = []
@@ -80,60 +79,6 @@ class Jig {
 
     // internal variable that tracks whether init is called. if we are injecting a state, then init was called.
     let calledInit = !!JigControl._blankSlate
-
-    handler.getPrototypeOf = function (target) {
-      checkValid()
-
-      if (JigControl._stack.length) JigControl._proxies.set(original, proxy)
-
-      return Object.getPrototypeOf(target)
-    }
-
-    handler.setPrototypeOf = function (target, prototype) {
-      if (JigControl._enforce) throw new Error('setPrototypeOf disabled')
-      Object.setPrototypeOf(target, prototype)
-      return true
-    }
-
-    handler.isExtensible = function (target) {
-      return true
-    }
-
-    handler.preventExtensions = function (target) {
-      throw new Error('preventExtensions disabled')
-    }
-
-    handler.getOwnPropertyDescriptor = function (target, prop) {
-      checkValid()
-
-      if (JigControl._stack.length) JigControl._proxies.set(original, proxy)
-
-      if (!this.has(target, prop)) return undefined
-
-      const descriptor = Object.getOwnPropertyDescriptor(target, prop)
-      if (!descriptor) return undefined
-      return Object.assign({}, descriptor, { value: this.get(target, prop) })
-    }
-
-    handler.defineProperty = function (target, prop, descriptor) {
-      throw new Error('defineProperty disabled')
-    }
-
-    handler.has = function (target, prop) {
-      checkValid()
-
-      if (JigControl._stack.length) JigControl._proxies.set(original, proxy)
-
-      if (JigControl._enforce && prop[0] === '_' && fromInstanceOfDifferentJigClass()) {
-        throw new Error(`cannot check ${prop} because it is private`)
-      }
-
-      const didRead = JigControl._stack.length && (!(target instanceof Jig) || !permanents.includes(prop))
-
-      if (didRead) JigControl._reads.add(original)
-
-      return prop in target
-    }
 
     handler.get = function (target, prop, receiver) {
       checkValid()
@@ -237,44 +182,6 @@ class Jig {
         if (target[prop].location) return target[prop]
         return new Proxy(target[prop], handler)
       }
-    }
-
-    handler.set = function (target, prop, value, receiver) {
-      checkValid()
-
-      if (JigControl._stack.length) JigControl._proxies.set(original, proxy)
-
-      if (JigControl._enforce) {
-        if (!fromWithin()) {
-          throw new Error(`must not set ${prop} outside of a method`)
-        }
-
-        if (target instanceof Jig) {
-          const notSettable = ['origin', 'location', ...methods]
-
-          if (notSettable.includes(prop)) {
-            throw new Error(`must not set ${prop}`)
-          }
-        } else {
-          // Must not overwrite methods on internal objects
-          if (typeof target[prop] === 'function') {
-            throw new Error(`must not overwrite internal method ${prop}`)
-          }
-
-          // Must not set properties on internal property functions
-          if (typeof target === 'function') {
-            throw new Error(`must not set ${prop} on method ${target.name}`)
-          }
-        }
-      }
-
-      // Check each set doesn't contain objects from other resources
-      Context._checkNoObjectsBelongingToOtherResources(value, proxy)
-
-      // Whether value is serializable is checked after the method is complete
-      target[prop] = value
-
-      return true
     }
 
     handler.apply = function (target, thisArg, args) {
