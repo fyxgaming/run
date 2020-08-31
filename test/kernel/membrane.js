@@ -1532,6 +1532,8 @@ describe('Membrane', () => {
 
   describe('COW', () => {
     // TODO
+    // Nested objects
+    // Mixed ownership
   })
 
   // --------------------------------------------------------------------------
@@ -1548,6 +1550,7 @@ describe('Membrane', () => {
   // Jig Method
   // --------------------------------------------------------------------------
 
+  // Passing invalid args internally ... only a problem on access
   describe('jig method', () => {
     it('returns membrane', () => { })
     it('returns same method twice', () => { })
