@@ -118,6 +118,15 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('delete does not delete prototype properties', () => {
+      class A { f () { } }
+      const a = new Membrane(new A())
+      delete a.f
+      expect('f' in a).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('get', () => {
       class A { }
       A.n = 1

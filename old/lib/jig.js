@@ -277,48 +277,6 @@ class Jig {
       return true
     }
 
-    handler.deleteProperty = function (target, prop) {
-      checkValid()
-
-      if (JigControl._stack.length) JigControl._proxies.set(original, proxy)
-
-      if (JigControl._enforce) {
-        if (!fromWithin()) {
-          throw new Error(`must not delete ${prop} outside of a method`)
-        }
-
-        if (target instanceof Jig) {
-          const notDeletable = ['origin', 'location', 'satoshis', 'owner', ...methods]
-
-          if (notDeletable.includes(prop)) {
-            throw new Error(`must not delete ${prop}`)
-          }
-        } else {
-          if (typeof target[prop] === 'function') {
-            throw new Error(`must not delete internal method ${prop}`)
-          }
-        }
-      }
-
-      delete target[prop]
-
-      return true
-    }
-
-    handler.ownKeys = function (target) {
-      checkValid()
-
-      if (JigControl._stack.length) JigControl._proxies.set(original, proxy)
-
-      if (JigControl._stack.length) JigControl._reads.add(original)
-
-      if (fromInstanceOfDifferentJigClass()) {
-        return Reflect.ownKeys(target).filter(key => key[0] !== '_')
-      } else {
-        return Reflect.ownKeys(target)
-      }
-    }
-
     handler.apply = function (target, thisArg, args) {
       const parentIsAJig = this._parent instanceof Jig
 
