@@ -1532,6 +1532,8 @@ describe('Membrane', () => {
 
   describe('Ownership', () => {
     // TODO
+    // set/define/in allows owned by jig
+    // set/define/in throws if owned by another jig
   })
 
   // --------------------------------------------------------------------------
