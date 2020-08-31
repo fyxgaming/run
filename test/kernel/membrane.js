@@ -1738,7 +1738,10 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('intrinsicIn throws if not owned', () => {
-      // TODO
+      const a = makeJig({})
+      const b = new Membrane({}, mangle({ _parentJig: a }))
+      const c = makeJig(new Set(), { _ownership: true })
+      expect(() => c.add(b)).to.throw('Ownership violation')
     })
 
     // ------------------------------------------------------------------------
