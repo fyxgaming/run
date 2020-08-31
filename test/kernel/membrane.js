@@ -180,6 +180,14 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('get returns the same method every time', () => {
+      const A = new Membrane(class A { f () { } })
+      const a = new Membrane(new A())
+      expect(a.f).to.equal(a.f)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('getOwnPropertyDescriptor', () => {
       class A { }
       A.n = 1
