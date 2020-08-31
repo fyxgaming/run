@@ -1550,6 +1550,8 @@ describe('Membrane', () => {
       testFail(Math)
       testFail(function f () { })
     })
+
+    // TODO: Serializable should check inner objects. Deep visit.
   })
 
   // --------------------------------------------------------------------------
@@ -1662,15 +1664,78 @@ describe('Membrane', () => {
   // Ownership
   // --------------------------------------------------------------------------
 
-  // TODO: Serializable should check inner objects. Deep visit.
-
   describe('Ownership', () => {
-    // Assigning owner ... copies on write if necessary
-    // Sets parentJig. Sets up rules.
+    it('set throws if owned by another jig', () => {
+      // TODO
+    })
 
-    // TODO
-    // set/define/in allows owned by jig
-    // set/define/in throws if owned by another jig
+    // ------------------------------------------------------------------------
+
+    it('set allowed if owned by the jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set allowed on inner object if not owned', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('defineProperty throws if not owned', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('defineProperty allowed if owned', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('defineProperty allowed on inner object if owned', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicIn throws if not owned', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicIn allowed if owned', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicIn allowed on inner object if owned', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get returns naked object if created in method', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get returns membrane object in other methods', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('assign naked cow membrane assigns owner', () => {
+      // TODO: Inner object
+      // COW
+      // Sets parentJig. Sets up rules.
+    })
   })
 
   // --------------------------------------------------------------------------
