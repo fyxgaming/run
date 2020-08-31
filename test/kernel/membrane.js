@@ -1784,9 +1784,10 @@ describe('Membrane', () => {
           return this.x === o
         }
       }
-      const A2 = makeJig(A, { _ownership: true })
-      const a = makeJig(new A2(), { _ownership: true })
-      expect(a.f()).to.equal(true)
+      const options = { _ownership: true, _recordReads: true, _recordUpdates: true, _recordCalls: true }
+      const A2 = makeJig(A, options)
+      const a = makeJig(new A2(), options)
+      testRecord(() => expect(a.f()).to.equal(true))
     })
 
     // ------------------------------------------------------------------------
