@@ -1682,8 +1682,12 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Ownership', () => {
-    it('set throws if owned by another jig', () => {
-      // TODO
+    it.only('set throws if owned by another jig', () => {
+      const a = makeJig({})
+      const b = new Membrane({}, mangle({ _parentJig: a }))
+      const c = makeJig({}, { _ownership: true })
+      c.n = b
+      console.log(c)
     })
 
     // ------------------------------------------------------------------------
