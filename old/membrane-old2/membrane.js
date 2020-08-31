@@ -182,13 +182,6 @@ class MethodHandler {
 
     return ret
   }
-
-  construct (target, args, newTarget) { throw new Error('construct disabled') }
-  defineProperty (target, prop, desc) { throw new Error('defineProperty disabled') }
-  deleteProperty (target, prop, receiver) { throw new Error('deleteProperty disabled') }
-  preventExtensions (target) { throw new Error('preventExtensions disabled') }
-  set (target, prop, value, receiver) { throw new Error('set disabled') }
-  setPrototypeOf (target, prototype) { throw new Error('setPrototypeOf disabled') }
 }
 
 // ------------------------------------------------------------------------------------------------
