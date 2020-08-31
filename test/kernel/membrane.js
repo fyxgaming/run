@@ -1712,8 +1712,10 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set allowed on inner object if not owned', () => {
-      // TODO
+    it('set allowed on inner object if owned', () => {
+      const a = makeJig({}, { _ownership: true })
+      a.x = { }
+      a.x.x = a.x
     })
 
     // ------------------------------------------------------------------------
@@ -1747,12 +1749,6 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('defineProperty allowed on inner object if owned', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
     it('intrinsicIn throws if not owned', () => {
       const a = makeJig({})
       const b = new Membrane({}, mangle({ _parentJig: a }))
@@ -1776,12 +1772,6 @@ describe('Membrane', () => {
       a.set(a)
       a.set(1, [[]])
       a.set(2, a.get(1)[0])
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('intrinsicIn allowed on inner object if owned', () => {
-      // TODO
     })
 
     // ------------------------------------------------------------------------
