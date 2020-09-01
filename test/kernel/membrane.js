@@ -1691,7 +1691,6 @@ describe('Membrane', () => {
   // TODO
   // - pending membranes
   // - copy on write when set, define, intrinsic in
-  // - throws if set another parent jig
   // - makes us the owner, so another jig cannot
 
   describe('Ownership', () => {
@@ -1702,7 +1701,9 @@ describe('Membrane', () => {
       expect(() => { c.n = b }).to.throw()
     })
 
-    it('define throws if owned by another jig', () => {
+    // ------------------------------------------------------------------------
+
+    it('defineProperty throws if owned by another jig', () => {
       const a = makeJig({})
       const b = new Membrane({}, mangle({ _parentJig: a }))
       const c = makeJig({})
@@ -1710,83 +1711,43 @@ describe('Membrane', () => {
       expect(() => Object.defineProperty(c, 'n', desc)).to.throw()
     })
 
+    // ------------------------------------------------------------------------
+
     it('intrinsicIn throws if owned by another jig', () => {
       const a = makeJig({})
       const b = new Membrane({}, mangle({ _parentJig: a }))
       const c = makeJig(new Set())
       expect(() => c.add(b)).to.throw()
     })
-  })
 
-  /*
     // ------------------------------------------------------------------------
 
-    it('set allowed if not a membrane', () => {
-      const a = makeJig({}, { _ownership: true })
-      a.n = 1
-      a.m = {}
+    it('set allowed if owned by us', () => {
+      const a = makeJig({})
+      const b = makeJig({}, { _parentJig: a })
+      a.n = b
+      a.o = { b }
     })
 
     // ------------------------------------------------------------------------
 
-    it('set allowed if owned by the jig', () => {
-      const o = { }
-      const a = makeJig(o, { _ownership: true })
-      a.x = []
-      a.y = a
-      expect(a.x).not.to.equal(o.x)
-      expect(a.y).to.equal(a)
-      expect(o.y).to.equal(o)
-      a.z = a.x
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('set allowed on inner object if owned', () => {
-      const a = makeJig({}, { _ownership: true })
-      a.x = { }
-      a.x.x = a.x
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('defineProperty allowed if not a membrane', () => {
-      const a = makeJig({}, { _ownership: true })
-      const desc1 = { value: 1, configurable: true, enumerable: true, writable: true }
-      const desc2 = { value: {}, configurable: true, enumerable: true, writable: true }
-      Object.defineProperty(a, 'n', desc1)
-      Object.defineProperty(a, 'n', desc2)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('defineProperty allowed if owned', () => {
-      const a = makeJig({}, { _ownership: true })
-      const b = new Membrane(function () { }, { _parentJig: a })
+    it('defineProperty allowed if owned by us', () => {
+      const a = makeJig({})
+      const b = makeJig({}, { _parentJig: a })
       const desc = { value: b, configurable: true, enumerable: true, writable: true }
       Object.defineProperty(a, 'n', desc)
     })
 
     // ------------------------------------------------------------------------
 
-    it('intrinsicIn allowed if not a membrane', () => {
-      const a = makeJig(new Set(), { _ownership: true })
-      a.add(false)
-      a.add([])
-      a.add(new Uint8Array())
+    it('intrinsicIn allowed if owned by us', () => {
+      const a = makeJig(new Set())
+      const b = makeJig({}, { _parentJig: a })
+      a.add(b)
     })
+  })
 
-    // ------------------------------------------------------------------------
-
-    it('intrinsicIn allowed if owned', () => {
-      const a = makeJig(new Map(), { _ownership: true })
-      a.set(a)
-      a.set(1, [[]])
-      a.set(2, a.get(1)[0])
-    })
-
-    // ------------------------------------------------------------------------
-
+  /*
     it('get naked to self in method', () => {
       class A {
         f () {
