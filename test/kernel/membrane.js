@@ -15,6 +15,7 @@ const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const Unbound = unmangle(Run)._Unbound
 const _sudo = unmangle(Run)._sudo
 const JIGS = unmangle(unmangle(Run)._Universal)._JIGS
+const _RESERVED_PROPS = unmangle(Run)._RESERVED_PROPS
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -1987,6 +1988,39 @@ describe('Membrane', () => {
       const c = new Membrane({})
       a.n = c
       expect(() => { b.n = c }).to.throw()
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Reserved
+  // --------------------------------------------------------------------------
+
+  describe('Reserved', () => {
+    it('cannot set reserved properties', () => {
+      const a = new Membrane({}, mangle({ _reserved: true }))
+      _RESERVED_PROPS.forEach(prop => {
+        const error = `${prop} is reserved`
+        expect(() => { a[prop] = 1 }).to.throw(error)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot define reserve properties', () => {
+      const a = new Membrane({}, mangle({ _reserved: true }))
+      _RESERVED_PROPS.forEach(prop => {
+        const error = `${prop} is reserved`
+        const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+        expect(() => Object.defineProperty(a, prop, desc)).to.throw(error)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can set inner property with reserved name', () => {
+      const a = new Membrane({}, mangle({ _reserved: true }))
+      a.o = {}
+      a.o[_RESERVED_PROPS[0]] = 1
     })
   })
 

@@ -24,6 +24,7 @@ describe('Rules', () => {
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
       expect(rules._bindings).to.equal(true)
+      expect(rules._reserved).to.equal(true)
       expect(rules._code).to.equal(true)
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(false)
@@ -43,6 +44,7 @@ describe('Rules', () => {
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
       expect(rules._bindings).to.equal(true)
+      expect(rules._reserved).to.equal(true)
       expect(rules._code).to.equal(true)
       expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(true)
@@ -62,6 +64,7 @@ describe('Rules', () => {
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
       expect(rules._bindings).to.equal(true)
+      expect(rules._reserved).to.equal(false)
       expect(rules._code).to.equal(true)
       expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(true)
@@ -81,6 +84,7 @@ describe('Rules', () => {
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
       expect(rules._bindings).to.equal(true)
+      expect(rules._reserved).to.equal(true)
       expect(rules._code).to.equal(false)
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(false)
@@ -100,6 +104,7 @@ describe('Rules', () => {
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
       expect(rules._bindings).to.equal(true)
+      expect(rules._reserved).to.equal(true)
       expect(rules._code).to.equal(false)
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(true)
@@ -118,6 +123,7 @@ describe('Rules', () => {
         _admin: Math.random() < 0.5,
         _errors: Math.random() < 0.5,
         _bindings: Math.random() < 0.5,
+        _reserved: Math.random() < 0.5,
         _code: Math.random() < 0.5,
         _privacy: Math.random() < 0.5,
         _immutable: Math.random() < 0.5,
@@ -131,6 +137,7 @@ describe('Rules', () => {
       expect(rules._admin).to.equal(parentRules._admin)
       expect(rules._errors).to.equal(parentRules._errors)
       expect(rules._bindings).to.equal(false)
+      expect(rules._reserved).to.equal(false)
       expect(rules._code).to.equal(false)
       expect(rules._privacy).to.equal(parentRules._privacy)
       expect(rules._immutable).to.equal(parentRules._immutable)
@@ -156,6 +163,7 @@ describe('Rules', () => {
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
       expect(rules._bindings).to.equal(false)
+      expect(rules._reserved).to.equal(false)
       expect(rules._code).to.equal(false)
       expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(false)
