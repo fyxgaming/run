@@ -1812,7 +1812,16 @@ describe('Membrane', () => {
       const a = makeJig({})
       const b = new Membrane({}, mangle({ _parentJig: a }))
       const c = makeJig({})
-      expect(() => { c.n = b }).to.throw()
+      expect(() => { c.n = b }).to.throw('Ownership violation')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set throws if inner prop owned by another jig', () => {
+      const a = makeJig({})
+      const b = new Membrane({}, mangle({ _parentJig: a }))
+      const c = makeJig({})
+      expect(() => { c.n = [b] }).to.throw('Ownership violation')
     })
 
     // ------------------------------------------------------------------------
@@ -1822,7 +1831,7 @@ describe('Membrane', () => {
       const b = new Membrane({}, mangle({ _parentJig: a }))
       const c = makeJig({})
       const desc = { value: b, configurable: true, enumerable: true, writable: true }
-      expect(() => Object.defineProperty(c, 'n', desc)).to.throw()
+      expect(() => Object.defineProperty(c, 'n', desc)).to.throw('Ownership violation')
     })
 
     // ------------------------------------------------------------------------
@@ -1831,7 +1840,7 @@ describe('Membrane', () => {
       const a = makeJig({})
       const b = new Membrane({}, mangle({ _parentJig: a }))
       const c = makeJig(new Set())
-      expect(() => c.add(b)).to.throw()
+      expect(() => c.add(b)).to.throw('Ownership violation')
     })
 
     // ------------------------------------------------------------------------
