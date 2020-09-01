@@ -1730,8 +1730,8 @@ describe('Membrane', () => {
   // Copy on Write Props (COW Props)
   // --------------------------------------------------------------------------
 
-  describe('Copy on Write Props', () => {
-    it.only('get returns copy', () => {
+  describe.only('Copy on Write Props', () => {
+    it('get returns copy', () => {
       const a = makeJig({ arr: [] }, { _cowProps: true })
       a.arr.push(1)
       expect(a.arr.length).to.equal(0)
@@ -1740,13 +1740,16 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get methods are not cows', () => {
-      // TODO
+      const A = makeJig(class A { static f () { } }, { _cowProps: true })
+      expect(() => { A.f.n = 2 }).to.throw('set disabled')
     })
 
     // ------------------------------------------------------------------------
 
     it('get universals are not cows', () => {
-      // TODO
+      const a = makeJig({})
+      const b = makeJig({ a }, { _cowProps: true })
+      expect(b.a).to.equal(a)
     })
 
     // ------------------------------------------------------------------------
