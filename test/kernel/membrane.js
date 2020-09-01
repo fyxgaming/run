@@ -2032,6 +2032,19 @@ describe('Membrane', () => {
       const B2 = makeJig(B, options)
       testRecord(() => expect(B2.f(A2)).to.equal(true))
     })
+
+    // ------------------------------------------------------------------------
+
+    it('unifies worldview with args', () => {
+      const options = { _recordable: true, _replayable: true }
+      const a1 = makeJig({}, options)
+      const a2 = makeJig({}, options)
+      _sudo(() => Object.assign(a2, a1))
+      class A { static f (a2) { return this.a1 === a2 } }
+      A.a1 = a1
+      const A2 = makeJig(A, options)
+      testRecord(() => expect(A2.f(a2)).to.equal(true))
+    })
   })
 })
 
