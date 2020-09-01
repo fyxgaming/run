@@ -1731,7 +1731,7 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Copy on Write Props', () => {
-    it('get returns copy', () => {
+    it.only('get returns copy', () => {
       const a = makeJig({ arr: [] }, { _cowProps: true })
       a.arr.push(1)
       expect(a.arr.length).to.equal(0)
@@ -1740,6 +1740,12 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get methods are not cows', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get universals are not cows', () => {
       // TODO
     })
 
@@ -1757,7 +1763,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get twice is a copy', () => {
+    it('get twice inside is a cow', () => {
       // TODO
     })
 
