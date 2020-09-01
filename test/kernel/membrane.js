@@ -1688,15 +1688,37 @@ describe('Membrane', () => {
   // Ownership
   // --------------------------------------------------------------------------
 
-  /*
+  // TODO
+  // - pending membranes
+  // - copy on write when set, define, intrinsic in
+  // - throws if set another parent jig
+  // - makes us the owner, so another jig cannot
+
   describe('Ownership', () => {
     it('set throws if owned by another jig', () => {
       const a = makeJig({})
       const b = new Membrane({}, mangle({ _parentJig: a }))
-      const c = makeJig({}, { _ownership: true })
-      expect(() => { c.n = b }).to.throw('Ownership violation')
+      const c = makeJig({})
+      expect(() => { c.n = b }).to.throw()
     })
 
+    it('define throws if owned by another jig', () => {
+      const a = makeJig({})
+      const b = new Membrane({}, mangle({ _parentJig: a }))
+      const c = makeJig({})
+      const desc = { value: b, configurable: true, enumerable: true, writable: true }
+      expect(() => Object.defineProperty(c, 'n', desc)).to.throw()
+    })
+
+    it('intrinsicIn throws if owned by another jig', () => {
+      const a = makeJig({})
+      const b = new Membrane({}, mangle({ _parentJig: a }))
+      const c = makeJig(new Set())
+      expect(() => c.add(b)).to.throw()
+    })
+  })
+
+  /*
     // ------------------------------------------------------------------------
 
     it('set allowed if not a membrane', () => {
@@ -1728,16 +1750,6 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('defineProperty throws if not owned', () => {
-      const a = makeJig({})
-      const b = new Membrane({}, mangle({ _parentJig: a }))
-      const c = makeJig({}, { _ownership: true })
-      const desc = { value: b, configurable: true, enumerable: true, writable: true }
-      expect(() => Object.defineProperty(c, 'n', desc)).to.throw('Ownership violation')
-    })
-
-    // ------------------------------------------------------------------------
-
     it('defineProperty allowed if not a membrane', () => {
       const a = makeJig({}, { _ownership: true })
       const desc1 = { value: 1, configurable: true, enumerable: true, writable: true }
@@ -1753,15 +1765,6 @@ describe('Membrane', () => {
       const b = new Membrane(function () { }, { _parentJig: a })
       const desc = { value: b, configurable: true, enumerable: true, writable: true }
       Object.defineProperty(a, 'n', desc)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('intrinsicIn throws if not owned', () => {
-      const a = makeJig({})
-      const b = new Membrane({}, mangle({ _parentJig: a }))
-      const c = makeJig(new Set(), { _ownership: true })
-      expect(() => c.add(b)).to.throw('Ownership violation')
     })
 
     // ------------------------------------------------------------------------
