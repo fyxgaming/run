@@ -170,7 +170,7 @@ describe('Membrane', () => {
       const jig = makeJig({})
       class A { }
       A.jig = jig
-      const A2 = new Membrane(A)
+      const A2 = makeJig(A)
       expect(A2.jig).to.equal(jig)
     })
 
@@ -2031,20 +2031,6 @@ describe('Membrane', () => {
       B.A2 = A2
       const B2 = makeJig(B, options)
       testRecord(() => expect(B2.f(A2)).to.equal(true))
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('universals are intact from another jig', () => {
-      /*
-      const options = { _recordable: true, _replayable: true }
-      class A { }
-      const A2 = makeJig(A, options)
-      class B { static f (A2) { return A2 === B.A2 } }
-      B.A2 = A2
-      const B2 = makeJig(B, options)
-      testRecord(() => expect(B2.f(A2)).to.equal(true))
-      */
     })
   })
 })
