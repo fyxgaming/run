@@ -851,10 +851,10 @@ describe('Membrane', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Record
+  // Recordable
   // --------------------------------------------------------------------------
 
-  describe('Record', () => {
+  describe('Recordable', () => {
     it('construct', () => {
       const A = makeJig(class A { }, { _recordable: true })
       testRecord(record => {
@@ -1102,10 +1102,10 @@ describe('Membrane', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Contract
+  // Replayable
   // --------------------------------------------------------------------------
 
-  describe('Contract', () => {
+  describe('Replayable', () => {
     it('delete throws if outside method', () => {
       const a = makeJig({}, { _replayable: true })
       const error = 'Updates must be performed in this jig\'s methods'
@@ -1222,10 +1222,10 @@ describe('Membrane', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Private
+  // Privacy
   // --------------------------------------------------------------------------
 
-  describe('Private', () => {
+  describe('Privacy', () => {
     it('delete throws if outside', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
       expect(() => { delete A._n }).to.throw('Cannot delete private property _n')
