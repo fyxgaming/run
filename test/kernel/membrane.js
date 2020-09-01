@@ -1772,7 +1772,11 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get twice inside is a cow', () => {
-      // TODO
+      const a = makeJig({ a: [[]] }, { _cowProps: true })
+      const cow = a.a[0]
+      cow[0] = 1
+      expect(cow[0]).to.equal(1)
+      expect(a.a[0][0]).to.equal(undefined)
     })
 
     // ------------------------------------------------------------------------
