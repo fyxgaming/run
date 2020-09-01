@@ -1676,11 +1676,11 @@ describe('Membrane', () => {
       const a = makeJig({})
       const o = { n: 1 }
       const b = new Membrane(o, mangle({ _parentJig: a }))
-      const c = makeJig({ b: o }, { _cow: true })
-      expect(c.b).to.equal(b)
-      c.n = 1
-      expect(c.b).not.to.equal(b)
-      expect(c.b.n).to.equal(1)
+      const args = makeJig([b], { _cow: true })
+      expect(args[0]).to.equal(b)
+      args.push(1)
+      expect(args[0]).not.to.equal(b)
+      expect(args[1]).to.equal(1)
     })
   })
 
