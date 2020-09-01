@@ -1810,33 +1810,17 @@ describe('Membrane', () => {
       const A2 = makeJig(A, options)
       testRecord(() => expect(A2.f()).to.equal(true))
     })
-  })
-
-  // TODO
-  // - makes us the owner, so another jig cannot
-
-  /*
 
     // ------------------------------------------------------------------------
 
-    it('apply args copied when stored on another', () => {
-      const options = { _ownership: true, _recordable: true, _replayable: true }
-      const o = new Membrane({}, mangle(options))
-      class A { static f (o) { this.o = o } }
-      const A2 = makeJig(A, options)
-      testRecord(() => {
-        A2.f(o)
-        expect(A2.o).not.to.equal(o)
-        A2.o.n = 1
-        expect('n' in o).to.equal(false)
-      })
+    it('set assigns ownership', () => {
+      const a = makeJig({})
+      const b = makeJig({})
+      const c = new Membrane({})
+      a.n = c
+      expect(() => { b.n = c }).to.throw()
     })
-
-    // Copied when changed
-    // Same
-    // Apply args are not copied when on the same jig
   })
-  */
 
   // --------------------------------------------------------------------------
   // Jig Method
