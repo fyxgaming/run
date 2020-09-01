@@ -2065,8 +2065,14 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if pass new code as args from outside', () => {
-
+    it('throws if pass new code as args from inside', () => {
+      const options = { _recordable: true, _replayable: true }
+      class A {
+        static f () { this.g(class B { }) }
+        static g () { this.n = 1 }
+      }
+      const A2 = makeJig(A, options)
+      expect(() => testRecord(() => A2.f())).to.throw('Not serializable')
     })
   })
 })
