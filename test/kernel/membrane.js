@@ -1257,6 +1257,10 @@ describe('Membrane', () => {
       expect(() => a.f()).not.to.throw()
       testRecord(() => expect(() => b.f()).to.throw())
     })
+
+    // Set replayable clones input
+    // Define replayable clones input
+    // In replayable clones input
   })
 
   // --------------------------------------------------------------------------
