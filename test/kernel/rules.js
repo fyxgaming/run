@@ -25,9 +25,9 @@ describe('Rules', () => {
       expect(rules._errors).to.equal(true)
       expect(rules._bindings).to.equal(true)
       expect(rules._code).to.equal(true)
-      expect(rules._private).to.equal(true)
+      expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(false)
-      expect(rules._records).to.equal(true)
+      expect(rules._recordable).to.equal(true)
       expect(rules._recordCalls).to.equal(true)
       expect(rules._contract).to.equal(true)
       expect(rules._serializable).to.equal(true)
@@ -45,10 +45,10 @@ describe('Rules', () => {
       expect(rules._errors).to.equal(true)
       expect(rules._bindings).to.equal(true)
       expect(rules._code).to.equal(true)
-      expect(rules._private).to.equal(false)
+      expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(true)
-      expect(rules._records).to.equal(true)
-      expect(rules._actions).to.equal(false)
+      expect(rules._recordable).to.equal(true)
+      expect(rules._replayable).to.equal(false)
       expect(rules._contract).to.equal(false)
       expect(rules._serializable).to.equal(true)
       expect(rules._cow).to.equal(false)
@@ -65,10 +65,10 @@ describe('Rules', () => {
       expect(rules._errors).to.equal(true)
       expect(rules._bindings).to.equal(true)
       expect(rules._code).to.equal(true)
-      expect(rules._private).to.equal(false)
+      expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(true)
-      expect(rules._records).to.equal(false)
-      expect(rules._actions).to.equal(false)
+      expect(rules._recordable).to.equal(false)
+      expect(rules._replayable).to.equal(false)
       expect(rules._contract).to.equal(false)
       expect(rules._serializable).to.equal(false)
       expect(rules._cow).to.equal(false)
@@ -85,10 +85,10 @@ describe('Rules', () => {
       expect(rules._errors).to.equal(true)
       expect(rules._bindings).to.equal(true)
       expect(rules._code).to.equal(false)
-      expect(rules._private).to.equal(true)
+      expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(false)
-      expect(rules._records).to.equal(true)
-      expect(rules._actions).to.equal(false)
+      expect(rules._recordable).to.equal(true)
+      expect(rules._replayable).to.equal(false)
       expect(rules._contract).to.equal(true)
       expect(rules._serializable).to.equal(true)
       expect(rules._cow).to.equal(false)
@@ -105,10 +105,10 @@ describe('Rules', () => {
       expect(rules._errors).to.equal(true)
       expect(rules._bindings).to.equal(true)
       expect(rules._code).to.equal(false)
-      expect(rules._private).to.equal(true)
+      expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(true)
-      expect(rules._records).to.equal(true)
-      expect(rules._actions).to.equal(false)
+      expect(rules._recordable).to.equal(true)
+      expect(rules._replayable).to.equal(false)
       expect(rules._contract).to.equal(false)
       expect(rules._serializable).to.equal(true)
       expect(rules._cow).to.equal(false)
@@ -124,10 +124,10 @@ describe('Rules', () => {
         _errors: Math.random() < 0.5,
         _bindings: Math.random() < 0.5,
         _code: Math.random() < 0.5,
-        _private: Math.random() < 0.5,
+        _privacy: Math.random() < 0.5,
         _immutable: Math.random() < 0.5,
-        _records: Math.random() < 0.5,
-        _actions: Math.random() < 0.5,
+        _recordable: Math.random() < 0.5,
+        _replayable: Math.random() < 0.5,
         _contract: Math.random() < 0.5,
         _serializable: Math.random() < 0.5
       }
@@ -138,10 +138,10 @@ describe('Rules', () => {
       expect(rules._errors).to.equal(parentRules._errors)
       expect(rules._bindings).to.equal(false)
       expect(rules._code).to.equal(false)
-      expect(rules._private).to.equal(parentRules._private)
+      expect(rules._privacy).to.equal(parentRules._privacy)
       expect(rules._immutable).to.equal(parentRules._immutable)
-      expect(rules._records).to.equal(parentRules._records)
-      expect(rules._actions).to.equal(parentRules._actions)
+      expect(rules._recordable).to.equal(parentRules._recordable)
+      expect(rules._replayable).to.equal(parentRules._replayable)
       expect(rules._contract).to.equal(false)
       expect(rules._serializable).to.equal(parentRules._serializable)
       expect(rules._cow).to.equal(parentRules._cow)
