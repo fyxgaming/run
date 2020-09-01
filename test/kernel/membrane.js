@@ -1993,19 +1993,6 @@ describe('Membrane', () => {
       expect(() => { b.n = c }).to.throw()
     })
   })
-
-  // --------------------------------------------------------------------------
-  // Jig Method
-  // --------------------------------------------------------------------------
-
-  // Passing invalid args internally ... only a problem on access
-  describe('jig method', () => {
-    it('returns membrane', () => { })
-    it('returns same method twice', () => { })
-    it('immutable', () => { })
-    it('method can only be applied to jig instance', () => {})
-    it('static method can only be applied to jig class', () => {})
-  })
 })
 
 // ------------------------------------------------------------------------------------------------
