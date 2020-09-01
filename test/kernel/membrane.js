@@ -155,6 +155,13 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('get intrinsic class not wrapped', () => {
+      const s = new Membrane(new Set())
+      expect(s.constructor).to.equal(Set)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('get static method on child class', () => {
       class A { static f () { } }
       const A2 = new Membrane(A)
