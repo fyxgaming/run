@@ -1569,6 +1569,13 @@ describe('Membrane', () => {
       const testFail = x => expect(() => { a.n = x }).to.throw()
       testFail({ inner: Symbol.hasInstance })
     })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot intrinsic in unserializable value', () => {
+      const s = new Membrane(new Set())
+      expect(() => s.add(Symbol.hasInstance)).to.throw('Not serializable')
+    })
   })
 
   // --------------------------------------------------------------------------
