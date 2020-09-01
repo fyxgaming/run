@@ -1999,12 +1999,50 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Methods', () => {
-    it('apply args are cow', () => {
+    it('apply args are copied from outside', () => {
       class A { static f (o) { o.n = 2 } }
       const A2 = makeJig(A, { _replayable: true, _recordable: true })
       const o = { n: 1 }
       testRecord(() => A2.f(o))
       expect(o.n).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('apply args are cow from another jig', () => {
+      /*
+      class A { static f (o) { o.n = 2 } }
+      const A2 = makeJig(A, { _replayable: true, _recordable: true })
+      const o = { n: 1 }
+      testRecord(() => A2.f(o))
+      expect(o.n).to.equal(1)
+      */
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('universals are intact from outside', () => {
+      const options = { _recordable: true, _replayable: true }
+      class A { }
+      const A2 = makeJig(A, options)
+      class B { static f (A2) { return A2 === B.A2 } }
+      B.A2 = A2
+      const B2 = makeJig(B, options)
+      testRecord(() => expect(B2.f(A2)).to.equal(true))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('universals are intact from another jig', () => {
+      /*
+      const options = { _recordable: true, _replayable: true }
+      class A { }
+      const A2 = makeJig(A, options)
+      class B { static f (A2) { return A2 === B.A2 } }
+      B.A2 = A2
+      const B2 = makeJig(B, options)
+      testRecord(() => expect(B2.f(A2)).to.equal(true))
+      */
     })
   })
 })
