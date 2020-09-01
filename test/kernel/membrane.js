@@ -1512,7 +1512,7 @@ describe('Membrane', () => {
 
   describe('Serializable', () => {
     it('cannot define symbol prop name', () => {
-      const a = new Membrane({}, mangle({ _serializable: true }))
+      const a = new Membrane({})
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       const error = 'Symbol names are not serializable'
       expect(() => Object.defineProperty(a, Symbol.hasInstance, desc)).to.throw(error)
@@ -1521,7 +1521,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot define unserializable value', () => {
-      const a = new Membrane({}, mangle({ _serializable: true }))
+      const a = new Membrane({})
       const testFail = x => {
         const desc = { value: x, configurable: true, enumerable: true, writable: true }
         expect(() => Object.defineProperty(a, 'n', desc)).to.throw()
@@ -1535,7 +1535,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot define unserializable inner value', () => {
-      const a = new Membrane({}, mangle({ _serializable: true }))
+      const a = new Membrane({})
       const testFail = x => {
         const desc = { value: x, configurable: true, enumerable: true, writable: true }
         expect(() => Object.defineProperty(a, 'n', desc)).to.throw()
@@ -1546,7 +1546,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot set symbol prop name', () => {
-      const a = new Membrane({}, mangle({ _serializable: true }))
+      const a = new Membrane({})
       const error = 'Symbol names are not serializable'
       expect(() => { a[Symbol.hasInstance] = 1 }).to.throw(error)
     })
@@ -1554,7 +1554,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot set unserializable value', () => {
-      const a = new Membrane({}, mangle({ _serializable: true }))
+      const a = new Membrane({})
       const testFail = x => expect(() => { a.n = x }).to.throw()
       testFail(Symbol.hasInstance)
       testFail(new (class MySet extends Set { })())
@@ -1565,7 +1565,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot set unserializable inner value', () => {
-      const a = new Membrane({}, mangle({ _serializable: true }))
+      const a = new Membrane({})
       const testFail = x => expect(() => { a.n = x }).to.throw()
       testFail({ inner: Symbol.hasInstance })
     })

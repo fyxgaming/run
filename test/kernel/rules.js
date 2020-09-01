@@ -28,9 +28,7 @@ describe('Rules', () => {
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(false)
       expect(rules._recordable).to.equal(true)
-      expect(rules._recordCalls).to.equal(true)
-      expect(rules._contract).to.equal(true)
-      expect(rules._serializable).to.equal(true)
+      expect(rules._replayable).to.equal(true)
       expect(rules._cow).to.equal(false)
     })
   })
@@ -49,8 +47,6 @@ describe('Rules', () => {
       expect(rules._immutable).to.equal(true)
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(false)
-      expect(rules._contract).to.equal(false)
-      expect(rules._serializable).to.equal(true)
       expect(rules._cow).to.equal(false)
     })
   })
@@ -69,8 +65,6 @@ describe('Rules', () => {
       expect(rules._immutable).to.equal(true)
       expect(rules._recordable).to.equal(false)
       expect(rules._replayable).to.equal(false)
-      expect(rules._contract).to.equal(false)
-      expect(rules._serializable).to.equal(false)
       expect(rules._cow).to.equal(false)
     })
   })
@@ -89,8 +83,6 @@ describe('Rules', () => {
       expect(rules._immutable).to.equal(false)
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(false)
-      expect(rules._contract).to.equal(true)
-      expect(rules._serializable).to.equal(true)
       expect(rules._cow).to.equal(false)
     })
   })
@@ -109,8 +101,6 @@ describe('Rules', () => {
       expect(rules._immutable).to.equal(true)
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(false)
-      expect(rules._contract).to.equal(false)
-      expect(rules._serializable).to.equal(true)
       expect(rules._cow).to.equal(false)
     })
   })
@@ -127,9 +117,7 @@ describe('Rules', () => {
         _privacy: Math.random() < 0.5,
         _immutable: Math.random() < 0.5,
         _recordable: Math.random() < 0.5,
-        _replayable: Math.random() < 0.5,
-        _contract: Math.random() < 0.5,
-        _serializable: Math.random() < 0.5
+        _replayable: Math.random() < 0.5
       }
       const parentJig = new Membrane({}, mangle(parentRules))
       const rules = unmangle(Rules._childProperty(parentJig, false))
@@ -141,9 +129,7 @@ describe('Rules', () => {
       expect(rules._privacy).to.equal(parentRules._privacy)
       expect(rules._immutable).to.equal(parentRules._immutable)
       expect(rules._recordable).to.equal(parentRules._recordable)
-      expect(rules._replayable).to.equal(parentRules._replayable)
-      expect(rules._contract).to.equal(false)
-      expect(rules._serializable).to.equal(parentRules._serializable)
+      expect(rules._replayable).to.equal(false)
       expect(rules._cow).to.equal(parentRules._cow)
     })
 
