@@ -1246,6 +1246,17 @@ describe('Membrane', () => {
         expect(record._actions.length).to.equal(0)
       })
     })
+
+    // ------------------------------------------------------------------------
+
+    it('replayable method depends on thisArg', () => {
+      // Returning a WeakMap will fail when replayable due to unserializability
+      const f = new Membrane(function f () { return new WeakMap() }, { _replayable: false })
+      const a = makeJig({ f }, { _replayable: false })
+      const b = makeJig({ f }, { _replayable: true })
+      expect(() => a.f()).not.to.throw()
+      testRecord(() => expect(() => b.f()).to.throw())
+    })
   })
 
   // --------------------------------------------------------------------------
