@@ -30,7 +30,7 @@ describe('Rules', () => {
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(true)
       expect(rules._cow).to.equal(false)
-      expect(rules._cowProps).to.equal(true)
+      expect(rules._cowProps).to.equal(false)
     })
   })
 
@@ -49,7 +49,7 @@ describe('Rules', () => {
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(false)
       expect(rules._cow).to.equal(false)
-      expect(rules._cowProps).to.equal(true)
+      expect(rules._cowProps).to.equal(false)
     })
   })
 
@@ -87,7 +87,7 @@ describe('Rules', () => {
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(true)
       expect(rules._cow).to.equal(false)
-      expect(rules._cowProps).to.equal(true)
+      expect(rules._cowProps).to.equal(false)
     })
   })
 
@@ -106,7 +106,7 @@ describe('Rules', () => {
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(false)
       expect(rules._cow).to.equal(false)
-      expect(rules._cowProps).to.equal(true)
+      expect(rules._cowProps).to.equal(false)
     })
   })
 
@@ -162,7 +162,7 @@ describe('Rules', () => {
       expect(rules._recordable).to.equal(false)
       expect(rules._replayable).to.equal(false)
       expect(rules._cow).to.equal(true)
-      expect(rules._cowProps).to.equal(true)
+      expect(rules._cowProps).to.equal(false)
     })
   })
 
