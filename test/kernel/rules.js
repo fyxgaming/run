@@ -30,6 +30,7 @@ describe('Rules', () => {
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(true)
       expect(rules._cow).to.equal(false)
+      expect(rules._cowProps).to.equal(true)
     })
   })
 
@@ -48,6 +49,7 @@ describe('Rules', () => {
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(false)
       expect(rules._cow).to.equal(false)
+      expect(rules._cowProps).to.equal(true)
     })
   })
 
@@ -66,6 +68,7 @@ describe('Rules', () => {
       expect(rules._recordable).to.equal(false)
       expect(rules._replayable).to.equal(false)
       expect(rules._cow).to.equal(false)
+      expect(rules._cowProps).to.equal(false)
     })
   })
 
@@ -84,6 +87,7 @@ describe('Rules', () => {
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(true)
       expect(rules._cow).to.equal(false)
+      expect(rules._cowProps).to.equal(true)
     })
   })
 
@@ -102,6 +106,7 @@ describe('Rules', () => {
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(false)
       expect(rules._cow).to.equal(false)
+      expect(rules._cowProps).to.equal(true)
     })
   })
 
@@ -117,7 +122,8 @@ describe('Rules', () => {
         _privacy: Math.random() < 0.5,
         _immutable: Math.random() < 0.5,
         _recordable: Math.random() < 0.5,
-        _replayable: Math.random() < 0.5
+        _replayable: Math.random() < 0.5,
+        _cowProps: Math.random() < 0.5
       }
       const parentJig = new Membrane({}, mangle(parentRules))
       const rules = unmangle(Rules._childProperty(parentJig, false))
@@ -131,12 +137,32 @@ describe('Rules', () => {
       expect(rules._recordable).to.equal(parentRules._recordable)
       expect(rules._replayable).to.equal(false)
       expect(rules._cow).to.equal(parentRules._cow)
+      expect(rules._cowProps).to.equal(parentRules._cowProps)
     })
 
     it('method are immutable', () => {
       const parentJig = new Membrane({})
       const rules = unmangle(Rules._childProperty(parentJig, true))
       expect(rules._immutable).to.equal(true)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+
+  describe('cow', () => {
+    it('creates rules', () => {
+      const rules = Rules._cow()
+      expect(rules._parentJig).to.equal(null)
+      expect(rules._admin).to.equal(true)
+      expect(rules._errors).to.equal(true)
+      expect(rules._bindings).to.equal(false)
+      expect(rules._code).to.equal(false)
+      expect(rules._privacy).to.equal(false)
+      expect(rules._immutable).to.equal(false)
+      expect(rules._recordable).to.equal(false)
+      expect(rules._replayable).to.equal(false)
+      expect(rules._cow).to.equal(true)
+      expect(rules._cowProps).to.equal(true)
     })
   })
 
