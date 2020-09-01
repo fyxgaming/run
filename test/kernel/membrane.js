@@ -1730,7 +1730,7 @@ describe('Membrane', () => {
   // Copy on Write Props (COW Props)
   // --------------------------------------------------------------------------
 
-  describe.only('Copy on Write Props', () => {
+  describe('Copy on Write Props', () => {
     it('get returns copy', () => {
       class A { constructor () { this.s = new Set() } }
       const a = makeJig(new A(), { _cowProps: true })
@@ -1800,18 +1800,6 @@ describe('Membrane', () => {
         A2.f()
         expect(A2.a[0]).to.equal(1)
       })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('getOwnPropertyDescriptor does not return copy internally', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('intrinsicOut does not return copy internally', () => {
-      // TODO
     })
   })
 
