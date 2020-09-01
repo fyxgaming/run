@@ -1764,7 +1764,9 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('intrinsicOut returns copy', () => {
-      // TODO
+      const a = makeJig(new Map([[1, {}]]), { _cowProps: true })
+      a.get(1).n = 1
+      expect(typeof a.get(1).n).to.equal('undefined')
     })
 
     // ------------------------------------------------------------------------
