@@ -1788,8 +1788,18 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get does not return copy internally', () => {
-      // TODO
+    it('get does not return cow internally', () => {
+      class A {
+        static f () {
+          this.a[0] = 1
+        }
+      }
+      A.a = []
+      const A2 = makeJig(A, { _recordable: true, _replayable: true, _cowProps: true })
+      testRecord(() => {
+        A2.f()
+        expect(A2.a[0]).to.equal(1)
+      })
     })
 
     // ------------------------------------------------------------------------
