@@ -1774,14 +1774,10 @@ describe('Membrane', () => {
       expect(a.get(1)).not.to.equal(b)
       expect(_sudo(() => a.get(1))).not.to.equal(o)
     })
-  })
 
-  // TODO
-  // - pending membranes
-  // - makes us the owner, so another jig cannot
+    // ------------------------------------------------------------------------
 
-  /*
-    it('get naked to self in method', () => {
+    it('get naked object in method', () => {
       class A {
         f () {
           const o = { }
@@ -1789,7 +1785,7 @@ describe('Membrane', () => {
           return this.x === o
         }
       }
-      const options = { _ownership: true, _recordable: true, _replayable: true }
+      const options = { _recordable: true, _replayable: true }
       const A2 = makeJig(A, options)
       const a = makeJig(new A2(), options)
       testRecord(() => expect(a.f()).to.equal(true))
@@ -1797,44 +1793,29 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get membrane while naked to self', () => {
+    it('get naked object in internal intrinsic method', () => {
       class A {
-        static f (b) {
-          this.o = { }
-          b.g(a)
+        static f () {
+          this.m = new Map()
+          return this.g()
+        }
+
+        static g () {
+          const o = { n: 1 }
+          this.m.set(1, o)
+          return this.m.get(1) === o
         }
       }
-      class B {
-        static g (a) {
-          this.o = a.o
-        }
-      }
-      const options = { _ownership: true, _recordable: true, _replayable: true }
-      const a = makeJig(A, options)
-      const b = makeJig(B, options)
-      testRecord(() => expect(() => a.f(b)).to.throw('Ownership violation'))
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('assign naked cow membrane assigns owner', () => {
-      const b = { m: 1 }
-      const a = makeJig({}, { _ownership: true })
-      const b2 = new Membrane(b, mangle({ _ownership: true, _cow: true }))
-      a.n = b2
-      expect(Proxy2._getTarget(a.n)).not.to.equal(b)
-      expect(Proxy2._getTarget(a.n)).to.deep.equal(b)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('returns naked object in intrinsic inside method', () => {
-      const options = { _ownership: true, _recordable: true, _replayable: true }
-      class A { static f (m) { const o = { n: 1 }; m.set(1, o); return m.get(1) === o } }
+      const options = { _recordable: true, _replayable: true }
       const A2 = makeJig(A, options)
-      const m = makeJig(new Map(), Object.assign({ _parentJig: A2 }, options))
-      testRecord(() => expect(A2.f(m)).to.equal(true))
+      testRecord(() => expect(A2.f()).to.equal(true))
     })
+  })
+
+  // TODO
+  // - makes us the owner, so another jig cannot
+
+  /*
 
     // ------------------------------------------------------------------------
 
