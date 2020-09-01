@@ -1921,6 +1921,26 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('get naked object in inner method', () => {
+      class A {
+        static f () {
+          const o = { }
+          this.o = o
+          return this.g(o)
+        }
+
+        static g (o) {
+          return o === this.o
+        }
+      }
+
+      const options = { _recordable: true, _replayable: true }
+      const A2 = makeJig(A, options)
+      testRecord(() => expect(A2.f()).to.equal(true))
+    })
+
+    // ------------------------------------------------------------------------
+
     it('get naked object in internal intrinsic method', () => {
       class A {
         static f () {
@@ -1937,6 +1957,30 @@ describe('Membrane', () => {
       const options = { _recordable: true, _replayable: true }
       const A2 = makeJig(A, options)
       testRecord(() => expect(A2.f()).to.equal(true))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns membraned object to external after naked create', () => {
+      class A {
+        static f () {
+          const o = {}
+          this.o = o
+          return o
+        }
+      }
+
+      class B {
+        static g (a) {
+          const o = a.f()
+          return o === a.o
+        }
+      }
+
+      const options = { _recordable: true, _replayable: true }
+      const A2 = makeJig(A, options)
+      const B2 = makeJig(B, options)
+      testRecord(() => expect(B2.g(A2)).to.equal(true))
     })
 
     // ------------------------------------------------------------------------
