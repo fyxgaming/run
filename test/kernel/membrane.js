@@ -2074,6 +2074,26 @@ describe('Membrane', () => {
       const A2 = makeJig(A, options)
       expect(() => testRecord(() => A2.f())).to.throw('Not serializable')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if call jig method on another jig', () => {
+      const options = { _recordable: true, _replayable: true }
+      const A = makeJig(class A { static f () { } }, options)
+      const B = makeJig(class B { }, options)
+      const error = 'Cannot call f'
+      expect(() => testRecord(() => Reflect.apply(A.f, B, []))).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if call overridden method', () => {
+      const options = { _recordable: true, _replayable: true }
+      const A = makeJig(class A { static f () { } }, options)
+      const B = makeJig(class B extends A { static f () { } }, options)
+      const error = 'Cannot call f'
+      expect(() => testRecord(() => Reflect.apply(A.f, B, []))).to.throw(error)
+    })
   })
 })
 
