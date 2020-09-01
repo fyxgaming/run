@@ -1755,13 +1755,24 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('defineProperty copies cow objects', () => {
-      // TODO
+      const o = {}
+      const b = new Membrane(o, mangle({ _cow: true }))
+      const a = makeJig({})
+      const desc = { value: b, configurable: true, enumerable: true, writable: true }
+      Object.defineProperty(a, 'n', desc)
+      expect(a.n).not.to.equal(b)
+      expect(_sudo(() => a.n)).not.to.equal(o)
     })
 
     // ------------------------------------------------------------------------
 
     it('intrinsicIn copies cow objects', () => {
-      // TODO
+      const o = {}
+      const b = new Membrane(o, mangle({ _cow: true }))
+      const a = makeJig(new Map())
+      a.set(1, b)
+      expect(a.get(1)).not.to.equal(b)
+      expect(_sudo(() => a.get(1))).not.to.equal(o)
     })
   })
 
