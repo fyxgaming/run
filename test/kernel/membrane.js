@@ -1732,9 +1732,10 @@ describe('Membrane', () => {
 
   describe.only('Copy on Write Props', () => {
     it('get returns copy', () => {
-      const a = makeJig({ arr: [] }, { _cowProps: true })
-      a.arr.push(1)
-      expect(a.arr.length).to.equal(0)
+      class A { constructor () { this.s = new Set() } }
+      const a = makeJig(new A(), { _cowProps: true })
+      a.s.add(1)
+      expect(a.s.size).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
@@ -1755,7 +1756,9 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('getOwnPropertyDescriptor returns copy', () => {
-      // TODO
+      const a = makeJig({ arr: [] }, { _cowProps: true })
+      Object.getOwnPropertyDescriptor(a, 'arr').value.push(1)
+      expect(a.arr.length).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
