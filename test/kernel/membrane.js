@@ -2010,13 +2010,15 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('apply args are cow from another jig', () => {
-      /*
+      const options = { _recordable: true, _replayable: true }
+      class B { static g (a) { this.o = { n: 1 }; a.f(this.o) } }
       class A { static f (o) { o.n = 2 } }
-      const A2 = makeJig(A, { _replayable: true, _recordable: true })
-      const o = { n: 1 }
-      testRecord(() => A2.f(o))
-      expect(o.n).to.equal(1)
-      */
+      const A2 = makeJig(A, options)
+      const B2 = makeJig(B, options)
+      testRecord(() => {
+        B2.g(A2)
+        expect(B2.o.n).to.equal(1)
+      })
     })
 
     // ------------------------------------------------------------------------
