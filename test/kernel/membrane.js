@@ -1246,6 +1246,17 @@ describe('Membrane', () => {
         expect(record._actions.length).to.equal(0)
       })
     })
+
+    // ------------------------------------------------------------------------
+
+    it('replayable method depends on thisArg', () => {
+      // Returning a WeakMap will fail when replayable due to unserializability
+      const f = new Membrane(function f () { return new WeakMap() }, { _replayable: false })
+      const a = makeJig({ f }, { _replayable: false })
+      const b = makeJig({ f }, { _replayable: true })
+      expect(() => a.f()).not.to.throw()
+      testRecord(() => expect(() => b.f()).to.throw())
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -1946,7 +1957,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('returns membraned object to external after naked create', () => {
+    it('returns membraned object to external jig after internal create', () => {
       class A {
         static f () {
           const o = {}
@@ -1984,7 +1995,7 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Methods', () => {
-    it('apply args are copied from outside', () => {
+    it('apply args are cow from outside', () => {
       class A { static f (o) { o.n = 2 } }
       const A2 = makeJig(A, { _replayable: true, _recordable: true })
       const o = { n: 1 }
@@ -2029,6 +2040,33 @@ describe('Membrane', () => {
       A.a1 = a1
       const A2 = makeJig(A, options)
       testRecord(() => expect(A2.f(a2)).to.equal(true))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('async methods not supported', () => {
+      const options = { _recordable: true, _replayable: true }
+      const A = makeJig(class A { static async f () { } }, options)
+      expect(() => testRecord(() => A.f())).to.throw('Async methods not supported')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('deploys new code as args from outside', () => {
+      const options = { _recordable: true, _replayable: true }
+      const A = makeJig(class A { static f () { this.n = 1 } }, options)
+      testRecord(record => {
+        A.f(function f () { })
+        expect(record._actions.length).to.equal(2)
+        expect(record._actions[0]._op === 'DEPLOY')
+        expect(record._actions[1]._op === 'CALL')
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if pass new code as args from outside', () => {
+
     })
   })
 })
