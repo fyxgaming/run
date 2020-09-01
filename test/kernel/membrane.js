@@ -1219,6 +1219,33 @@ describe('Membrane', () => {
       const error = 'Updates must be performed in this jig\'s methods'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
+
+    // ------------------------------------------------------------------------
+
+    it('args passed through if not replayable', () => {
+      class A { static f (x) { return typeof x === 'symbol' } }
+      const A2 = makeJig(A, { _replayable: false })
+      expect(A2.f(Symbol.hasInstance)).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('return values passed through if not replayable', () => {
+      class A { static f () { return Symbol.hasInstance } }
+      const A2 = makeJig(A, { _replayable: false })
+      expect(A2.f()).to.equal(Symbol.hasInstance)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('no action if not replayable', () => {
+      class A { static f () { } }
+      const A2 = makeJig(A, { _replayable: false })
+      testRecord(record => {
+        A2.f()
+        expect(record._actions.length).to.equal(0)
+      })
+    })
   })
 
   // --------------------------------------------------------------------------
