@@ -1781,8 +1781,9 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('different values each time', () => {
-      // TODO
+    it('different cows each time', () => {
+      const a = makeJig({ a: [] }, { _cowProps: true })
+      expect(a.a).not.to.equal(a.a)
     })
 
     // ------------------------------------------------------------------------
