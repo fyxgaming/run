@@ -614,7 +614,7 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('sets', async () => {
+    it('sets', async () => {
       const setWithProps = new Set()
       setWithProps.a = []
       setWithProps.s = new Set()
