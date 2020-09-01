@@ -1688,11 +1688,6 @@ describe('Membrane', () => {
   // Ownership
   // --------------------------------------------------------------------------
 
-  // TODO
-  // - pending membranes
-  // - copy on write when set, define, intrinsic in
-  // - makes us the owner, so another jig cannot
-
   describe('Ownership', () => {
     it('set throws if owned by another jig', () => {
       const a = makeJig({})
@@ -1745,7 +1740,29 @@ describe('Membrane', () => {
       const b = makeJig({}, { _parentJig: a })
       a.add(b)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('set copies cow objects', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('defineProperty copies cow objects', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicIn copies cow objects', () => {
+      // TODO
+    })
   })
+
+  // TODO
+  // - pending membranes
+  // - makes us the owner, so another jig cannot
 
   /*
     it('get naked to self in method', () => {
