@@ -1993,6 +1993,20 @@ describe('Membrane', () => {
       expect(() => { b.n = c }).to.throw()
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Methods
+  // --------------------------------------------------------------------------
+
+  describe('Methods', () => {
+    it('apply args are cow', () => {
+      class A { static f (o) { o.n = 2 } }
+      const A2 = makeJig(A, { _replayable: true, _recordable: true })
+      const o = { n: 1 }
+      testRecord(() => A2.f(o))
+      expect(o.n).to.equal(1)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
