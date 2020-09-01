@@ -1732,6 +1732,14 @@ describe('Membrane', () => {
 
   describe('Copy on Write Props', () => {
     it('get returns copy', () => {
+      const a = makeJig({ arr: [] }, { _cowProps: true })
+      a.arr.push(1)
+      expect(a.arr.length).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get methods are not cows', () => {
       // TODO
     })
 
