@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const Rules = unmangle(Run)._Rules
+const Rules = unmangle(unmangle(Run)._Rules)
 const Membrane = unmangle(Run)._Membrane
 const { mangle } = unmangle
 
@@ -19,7 +19,7 @@ const { mangle } = unmangle
 describe('Rules', () => {
   describe('code', () => {
     it('creates rules', () => {
-      const rules = Rules._code()
+      const rules = unmangle(Rules._code())
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
@@ -38,7 +38,7 @@ describe('Rules', () => {
 
   describe('static code', () => {
     it('creates rules', () => {
-      const rules = Rules._staticCode()
+      const rules = unmangle(Rules._staticCode())
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
@@ -57,7 +57,7 @@ describe('Rules', () => {
 
   describe('native code', () => {
     it('creates rules', () => {
-      const rules = Rules._nativeCode()
+      const rules = unmangle(Rules._nativeCode())
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
@@ -76,7 +76,7 @@ describe('Rules', () => {
 
   describe('jig instance', () => {
     it('creates rules', () => {
-      const rules = Rules._jigInstance()
+      const rules = unmangle(Rules._jigInstance())
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
@@ -95,7 +95,7 @@ describe('Rules', () => {
 
   describe('berry instance', () => {
     it('creates rules', () => {
-      const rules = Rules._berryInstance()
+      const rules = unmangle(Rules._berryInstance())
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
@@ -125,7 +125,7 @@ describe('Rules', () => {
         _replayable: Math.random() < 0.5,
         _cowProps: Math.random() < 0.5
       }
-      const parentJig = new Membrane({}, mangle(parentRules))
+      const parentJig = new Membrane({}, mangle(Object.assign({}, parentRules)))
       const rules = unmangle(Rules._childProperty(parentJig, false))
       expect(rules._parentJig).to.equal(parentJig)
       expect(rules._admin).to.equal(parentRules._admin)
@@ -151,7 +151,7 @@ describe('Rules', () => {
 
   describe('cow', () => {
     it('creates rules', () => {
-      const rules = Rules._cow()
+      const rules = unmangle(Rules._cow())
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
