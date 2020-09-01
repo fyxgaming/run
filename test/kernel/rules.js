@@ -82,7 +82,7 @@ describe('Rules', () => {
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(false)
       expect(rules._recordable).to.equal(true)
-      expect(rules._replayable).to.equal(false)
+      expect(rules._replayable).to.equal(true)
       expect(rules._cow).to.equal(false)
     })
   })
