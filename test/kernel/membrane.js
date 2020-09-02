@@ -7,6 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { Jig } = Run
 const unmangle = require('../env/unmangle')
 const { mangle } = unmangle
 const Membrane = unmangle(Run)._Membrane
@@ -592,6 +593,83 @@ describe('Membrane', () => {
       expect(() => { delete f.upgrade }).to.throw('Cannot delete upgrade')
       expect(() => { delete f.destroy }).to.throw('Cannot delete destroy')
       expect(() => { delete f.auth }).to.throw('Cannot delete auth')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Jig methods
+  // --------------------------------------------------------------------------
+
+  describe('Jig Methods', () => {
+    it('has', () => {
+      const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      expect('sync' in a).to.equal(true)
+      expect('destroy' in a).to.equal(true)
+      expect('auth' in a).to.equal(true)
+      expect('init' in a).to.equal(true)
+      expect('toString' in a).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get', () => {
+      const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      expect(typeof a.sync).to.equal('function')
+      expect(typeof a.destroy).to.equal('function')
+      expect(typeof a.auth).to.equal('function')
+      expect(typeof a.init).to.equal('function')
+      expect(typeof a.toString).to.equal('function')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('getOwnPropertyDescriptor undefined', () => {
+      const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      expect(Object.getOwnPropertyDescriptor(a, 'sync')).to.equal(undefined)
+      expect(Object.getOwnPropertyDescriptor(a, 'destroy')).to.equal(undefined)
+      expect(Object.getOwnPropertyDescriptor(a, 'auth')).to.equal(undefined)
+      expect(Object.getOwnPropertyDescriptor(a, 'init')).to.equal(undefined)
+      expect(Object.getOwnPropertyDescriptor(a, 'tostring')).to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot set', () => {
+      const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      expect(() => { a.sync = 1 }).to.throw('Cannot set sync')
+      expect(() => { a.destroy = 1 }).to.throw('Cannot set destroy')
+      expect(() => { a.auth = 1 }).to.throw('Cannot set auth')
+      expect(() => { a.init = 1 }).to.throw('Cannot set init')
+      expect(() => { a.toString = 1 }).to.throw('Cannot set toString')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot define', () => {
+      const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      expect(() => Object.defineProperty(a, 'sync', desc)).to.throw('Cannot define sync')
+      expect(() => Object.defineProperty(a, 'destroy', desc)).to.throw('Cannot define destroy')
+      expect(() => Object.defineProperty(a, 'auth', desc)).to.throw('Cannot define auth')
+      expect(() => Object.defineProperty(a, 'init', desc)).to.throw('Cannot define init')
+      expect(() => Object.defineProperty(a, 'toString', desc)).to.throw('Cannot define toString')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot delete', () => {
+      const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      expect(() => { delete a.sync }).to.throw('Cannot delete sync')
+      expect(() => { delete a.destroy }).to.throw('Cannot delete destroy')
+      expect(() => { delete a.auth }).to.throw('Cannot delete auth')
+      expect(() => { delete a.init }).to.throw('Cannot delete init')
+      expect(() => { delete a.toString }).to.throw('Cannot delete toString')
     })
   })
 
@@ -2173,6 +2251,14 @@ describe('Membrane', () => {
       const A = makeJig(class A { static f (x) { return x } }, options)
       const set = testRecord(() => A.f(new Set()))
       expect(set instanceof SI.Set)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('thisless', () => {
+      class A { static f () { return this } }
+      const A2 = new Membrane(A, mangle({ _thisless: true }))
+      expect(A2.f()).to.equal(undefined)
     })
   })
 })
