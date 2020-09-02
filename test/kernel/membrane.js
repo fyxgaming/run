@@ -16,6 +16,7 @@ const Unbound = unmangle(Run)._Unbound
 const _sudo = unmangle(Run)._sudo
 const JIGS = unmangle(unmangle(Run)._Universal)._JIGS
 const _RESERVED_PROPS = unmangle(Run)._RESERVED_PROPS
+const SI = unmangle(Run.sandbox)._intrinsics
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -2163,6 +2164,15 @@ describe('Membrane', () => {
       const B = makeJig(class B extends A { static f () { } }, options)
       const error = 'Cannot call f'
       expect(() => testRecord(() => Reflect.apply(A.f, B, []))).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('clones args with sandbox intrinsics', () => {
+      const options = { _recordable: true, _replayable: true }
+      const A = makeJig(class A { static f (x) { return x } }, options)
+      const set = testRecord(() => A.f(new Set()))
+      expect(set instanceof SI.Set)
     })
   })
 })
