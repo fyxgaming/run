@@ -239,7 +239,7 @@ describe('LocalPurse', () => {
   })
 
   describe('balance', () => {
-    it('should sum non-jig and non-code utxos', async () => {
+    it('should sum non-jig utxos', async () => {
       const address = new PrivateKey().toAddress()
       const send = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       await run.blockchain.broadcast(send)
@@ -255,7 +255,7 @@ describe('LocalPurse', () => {
   })
 
   describe('utxos', () => {
-    it('should return non-jig and non-code utxos', async () => {
+    it('should return non-jig utxos', async () => {
       const run2 = new Run({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain })
       class A extends Jig { init () { this.satoshis = 888 } }
       const a = new A()
