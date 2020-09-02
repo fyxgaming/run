@@ -987,6 +987,23 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if accessors', () => {
+      const run = new Run()
+      function O () { }
+      const CO = run.deploy(O)
+      class A { static get x () { } }
+      class B { static set x (value) { } }
+      class C { get x () { } }
+      class D { set x (value) { } }
+      const error = 'Getters and setters not supported'
+      expect(() => CO.upgrade(A)).to.throw(error)
+      expect(() => CO.upgrade(B)).to.throw(error)
+      expect(() => CO.upgrade(C)).to.throw(error)
+      expect(() => CO.upgrade(D)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('cannot upgrade in a method', () => {
       // TODO
     })
