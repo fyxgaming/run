@@ -15,10 +15,12 @@ const { Jig } = Run
 describe('Jig', () => {
   describe('constructor', () => {
     it('basic jig', async () => {
-      const run = new Run()
+      // const run = new Run()
+      new Run() // eslint-disable-line
       class A extends Jig { }
       const a = new A()
-      await run.sync()
+      // await run.sync()
+      await a.sync()
       console.log(a)
       // a.sync()
       /*

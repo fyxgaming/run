@@ -536,7 +536,7 @@ describe('Membrane', () => {
 
   describe('Code Methods', () => {
     it('has', () => {
-      const f = new Membrane(function f () { }, mangle({ _code: true }))
+      const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
       expect('sync' in f).to.equal(true)
       expect('upgrade' in f).to.equal(true)
       expect('destroy' in f).to.equal(true)
@@ -546,7 +546,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get', () => {
-      const f = new Membrane(function f () { }, mangle({ _code: true }))
+      const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
       expect(typeof f.sync).to.equal('function')
       expect(typeof f.upgrade).to.equal('function')
       expect(typeof f.destroy).to.equal('function')
@@ -556,7 +556,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('getOwnPropertyDescriptor undefined', () => {
-      const f = new Membrane(function f () { }, mangle({ _code: true }))
+      const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
       expect(Object.getOwnPropertyDescriptor(f, 'sync')).to.equal(undefined)
       expect(Object.getOwnPropertyDescriptor(f, 'upgrade')).to.equal(undefined)
       expect(Object.getOwnPropertyDescriptor(f, 'destroy')).to.equal(undefined)
@@ -566,7 +566,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot set', () => {
-      const f = new Membrane(function f () { }, mangle({ _code: true }))
+      const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
       expect(() => { f.sync = 1 }).to.throw('Cannot set sync')
       expect(() => { f.upgrade = 1 }).to.throw('Cannot set upgrade')
       expect(() => { f.destroy = 1 }).to.throw('Cannot set destroy')
@@ -576,7 +576,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot define', () => {
-      const f = new Membrane(function f () { }, mangle({ _code: true }))
+      const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(f, 'sync', desc)).to.throw('Cannot define sync')
       expect(() => Object.defineProperty(f, 'upgrade', desc)).to.throw('Cannot define upgrade')
@@ -587,7 +587,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot delete', () => {
-      const f = new Membrane(function f () { }, mangle({ _code: true }))
+      const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
       expect(() => { delete f.sync }).to.throw('Cannot delete sync')
       expect(() => { delete f.upgrade }).to.throw('Cannot delete upgrade')
       expect(() => { delete f.destroy }).to.throw('Cannot delete destroy')
@@ -632,11 +632,11 @@ describe('Membrane', () => {
       _sudo(() => { A.origin = 'commit://def_d2' })
       _sudo(() => { A.owner = new Unbound() })
       _sudo(() => { A.satoshis = new Unbound() })
-      expect(() => A.location).to.throw('location is undetermined')
-      expect(() => A.origin).to.throw('origin is undetermined')
-      expect(() => A.nonce).to.throw('nonce is undetermined')
-      expect(() => A.owner).to.throw('owner is undetermined')
-      expect(() => A.satoshis).to.throw('satoshis is undetermined')
+      expect(() => A.location).to.throw('Cannot read location')
+      expect(() => A.origin).to.throw('Cannot read origin')
+      expect(() => A.nonce).to.throw('Cannot read nonce')
+      expect(() => A.owner).to.throw('Cannot read owner')
+      expect(() => A.satoshis).to.throw('Cannot read satoshis')
     })
 
     // ------------------------------------------------------------------------
@@ -793,11 +793,11 @@ describe('Membrane', () => {
       _sudo(() => { A.origin = 'commit://def_d2' })
       _sudo(() => { A.owner = new Unbound() })
       _sudo(() => { A.satoshis = new Unbound() })
-      expect(() => Object.getOwnPropertyDescriptor(A, 'location').value).to.throw('location is undetermined')
-      expect(() => Object.getOwnPropertyDescriptor(A, 'origin').value).to.throw('origin is undetermined')
-      expect(() => Object.getOwnPropertyDescriptor(A, 'nonce').value).to.throw('nonce is undetermined')
-      expect(() => Object.getOwnPropertyDescriptor(A, 'owner').value).to.throw('owner is undetermined')
-      expect(() => Object.getOwnPropertyDescriptor(A, 'satoshis').value).to.throw('satoshis is undetermined')
+      expect(() => Object.getOwnPropertyDescriptor(A, 'location').value).to.throw('Cannot read location')
+      expect(() => Object.getOwnPropertyDescriptor(A, 'origin').value).to.throw('Cannot read origin')
+      expect(() => Object.getOwnPropertyDescriptor(A, 'nonce').value).to.throw('Cannot read nonce')
+      expect(() => Object.getOwnPropertyDescriptor(A, 'owner').value).to.throw('Cannot read owner')
+      expect(() => Object.getOwnPropertyDescriptor(A, 'satoshis').value).to.throw('Cannot read satoshis')
     })
 
     // ------------------------------------------------------------------------
