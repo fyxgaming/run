@@ -59,17 +59,6 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    // TODO: Move to deploy
-    it('allowed to set native class as dependency', async () => {
-      const run = new Run()
-      class A extends Jig { static f (x) { this.x = x } }
-      A.deps = { Jig }
-      const C = run.deploy(A)
-      await C.sync()
-    })
-
-    // ------------------------------------------------------------------------
-
     it('calls static method with passthrough and without this on arbitrary code', async () => {
       const run = new Run()
       class A {
