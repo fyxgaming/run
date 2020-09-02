@@ -30,6 +30,7 @@ describe('Rules', () => {
       expect(rules._immutable).to.equal(false)
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(true)
+      expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
       expect(rules._cowProps).to.equal(false)
     })
@@ -50,6 +51,7 @@ describe('Rules', () => {
       expect(rules._immutable).to.equal(true)
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(false)
+      expect(rules._thisless).to.equal(true)
       expect(rules._cow).to.equal(false)
       expect(rules._cowProps).to.equal(false)
     })
@@ -70,6 +72,7 @@ describe('Rules', () => {
       expect(rules._immutable).to.equal(true)
       expect(rules._recordable).to.equal(false)
       expect(rules._replayable).to.equal(false)
+      expect(rules._thisless).to.equal(true)
       expect(rules._cow).to.equal(false)
       expect(rules._cowProps).to.equal(false)
     })
@@ -90,6 +93,7 @@ describe('Rules', () => {
       expect(rules._immutable).to.equal(false)
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(true)
+      expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
       expect(rules._cowProps).to.equal(false)
     })
@@ -110,7 +114,29 @@ describe('Rules', () => {
       expect(rules._immutable).to.equal(true)
       expect(rules._recordable).to.equal(true)
       expect(rules._replayable).to.equal(false)
+      expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
+      expect(rules._cowProps).to.equal(false)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+
+  describe('cow', () => {
+    it('creates rules', () => {
+      const rules = unmangle(Rules._cow())
+      expect(rules._parentJig).to.equal(null)
+      expect(rules._admin).to.equal(true)
+      expect(rules._errors).to.equal(true)
+      expect(rules._bindings).to.equal(false)
+      expect(rules._reserved).to.equal(false)
+      expect(rules._code).to.equal(false)
+      expect(rules._privacy).to.equal(false)
+      expect(rules._immutable).to.equal(false)
+      expect(rules._recordable).to.equal(false)
+      expect(rules._replayable).to.equal(false)
+      expect(rules._thisless).to.equal(false)
+      expect(rules._cow).to.equal(true)
       expect(rules._cowProps).to.equal(false)
     })
   })
@@ -132,7 +158,8 @@ describe('Rules', () => {
         _cowProps: Math.random() < 0.5
       }
       const parentJig = new Membrane({}, mangle(Object.assign({}, parentRules)))
-      const rules = unmangle(Rules._childProperty(parentJig, false))
+      const owned = Math.random() < 0.5
+      const rules = unmangle(Rules._childProperty(parentJig, false, owned))
       expect(rules._parentJig).to.equal(parentJig)
       expect(rules._admin).to.equal(parentRules._admin)
       expect(rules._errors).to.equal(parentRules._errors)
@@ -143,34 +170,15 @@ describe('Rules', () => {
       expect(rules._immutable).to.equal(parentRules._immutable)
       expect(rules._recordable).to.equal(parentRules._recordable)
       expect(rules._replayable).to.equal(false)
+      expect(rules._thisless).to.equal(parentRules._thisless && owned)
       expect(rules._cow).to.equal(parentRules._cow)
       expect(rules._cowProps).to.equal(parentRules._cowProps)
     })
 
     it('method are immutable', () => {
       const parentJig = new Membrane({})
-      const rules = unmangle(Rules._childProperty(parentJig, true))
+      const rules = unmangle(Rules._childProperty(parentJig, true, false))
       expect(rules._immutable).to.equal(true)
-    })
-  })
-
-  // --------------------------------------------------------------------------
-
-  describe('cow', () => {
-    it('creates rules', () => {
-      const rules = unmangle(Rules._cow())
-      expect(rules._parentJig).to.equal(null)
-      expect(rules._admin).to.equal(true)
-      expect(rules._errors).to.equal(true)
-      expect(rules._bindings).to.equal(false)
-      expect(rules._reserved).to.equal(false)
-      expect(rules._code).to.equal(false)
-      expect(rules._privacy).to.equal(false)
-      expect(rules._immutable).to.equal(false)
-      expect(rules._recordable).to.equal(false)
-      expect(rules._replayable).to.equal(false)
-      expect(rules._cow).to.equal(true)
-      expect(rules._cowProps).to.equal(false)
     })
   })
 
