@@ -1806,6 +1806,17 @@ describe('Deploy', () => {
       B.Date = Date
       expect(() => run.deploy(B)).to.throw('Cannot install intrinsic')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if symbol methods', () => {
+      const run = new Run()
+      class A { static [Symbol.iterator] () { } }
+      class B { [Symbol.iterator] () { } }
+      const error = 'Symbol methods not supported'
+      expect(() => run.deploy(A)).to.throw(error)
+      expect(() => run.deploy(B)).to.throw(error)
+    })
   })
 })
 

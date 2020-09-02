@@ -974,6 +974,19 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if symbol methods', () => {
+      const run = new Run()
+      function O () { }
+      const CO = run.deploy(O)
+      class A { static [Symbol.iterator] () { } }
+      class B { [Symbol.iterator] () { } }
+      const error = 'Symbol methods not supported'
+      expect(() => CO.upgrade(A)).to.throw(error)
+      expect(() => CO.upgrade(B)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('cannot upgrade in a method', () => {
       // TODO
     })
