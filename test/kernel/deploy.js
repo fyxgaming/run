@@ -1817,6 +1817,22 @@ describe('Deploy', () => {
       expect(() => run.deploy(A)).to.throw(error)
       expect(() => run.deploy(B)).to.throw(error)
     })
+
+    // ------------------------------------------------------------------------
+
+    it.only('throws if accessors', () => {
+      const run = new Run()
+      class A { static get x () { } }
+      class B { static set x (value) { } }
+      class C { get x () { } }
+      class D { set x (value) { } }
+      const getterError = 'Getters not supported'
+      const setterError = 'Setters not supported'
+      expect(() => run.deploy(A)).to.throw(getterError)
+      expect(() => run.deploy(B)).to.throw(setterError)
+      expect(() => run.deploy(C)).to.throw(getterError)
+      expect(() => run.deploy(D)).to.throw(setterError)
+    })
   })
 })
 
