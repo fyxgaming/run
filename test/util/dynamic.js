@@ -207,7 +207,7 @@ describe('Dynamic', () => {
   })
 
   describe('get', () => {
-    it('should get basic property', () => {
+    it('basic property', () => {
       const D = new Dynamic()
       class A { }
       A.x = 1
@@ -215,7 +215,7 @@ describe('Dynamic', () => {
       expect(A.x).to.equal(1)
     })
 
-    it('should bind functions to dynamic', () => {
+    it('binds functions to dynamic', () => {
       const D = new Dynamic()
       class A { static f () { this.thisInF = this } }
       Dynamic._setInnerType(D, A)
@@ -230,7 +230,7 @@ describe('Dynamic', () => {
       expect(D.toString()).to.equal(A.toString())
     })
 
-    it('should get on child class', () => {
+    it('get on child class', () => {
       class A { }
       class B extends A { }
       B.n = 2
@@ -262,7 +262,7 @@ describe('Dynamic', () => {
   })
 
   describe('getOwnPropertyDescriptor', () => {
-    it('should get property descriptor of inner type', () => {
+    it('returns property descriptor of inner type', () => {
       const D = new Dynamic()
       class A { static f () { } }
       Dynamic._setInnerType(D, A)
@@ -272,7 +272,7 @@ describe('Dynamic', () => {
       expect(descA).to.deep.equal(descD)
     })
 
-    it('should get property descriptor of child class', () => {
+    it('returns property descriptor of child class', () => {
       class A { static f () { }}
       class B extends A { static f () { } }
       const DA = new Dynamic()
@@ -291,7 +291,7 @@ describe('Dynamic', () => {
       expect(descDA).not.to.deep.equal(descDB)
     })
 
-    it('should return prototype of base type', () => {
+    it('returns prototype of base type', () => {
       const D = new Dynamic()
       const desc = Object.getOwnPropertyDescriptor(D, 'prototype')
       Dynamic._setInnerType(D, class A { })
@@ -300,7 +300,7 @@ describe('Dynamic', () => {
   })
 
   describe('getPrototypeOf', () => {
-    it('should return inner type parent', () => {
+    it('returns inner type parent', () => {
       class A { }
       class B extends A { }
       const D = new Dynamic()
@@ -308,7 +308,7 @@ describe('Dynamic', () => {
       expect(Object.getPrototypeOf(D)).to.equal(A)
     })
 
-    it('should return Function.prototype for base functions', () => {
+    it('returns Function.prototype for base functions', () => {
       const D = new Dynamic()
       Dynamic._setInnerType(D, function f () { })
       expect(Object.getPrototypeOf(D)).to.equal(Function.prototype)
@@ -365,14 +365,14 @@ describe('Dynamic', () => {
   })
 
   describe('prototype', () => {
-    it('should always return base prototype', () => {
+    it('always returns base prototype', () => {
       const D = new Dynamic()
       const basePrototype = D.prototype
       Dynamic._setInnerType(D, class A { })
       expect(D.prototype).to.equal(basePrototype)
     })
 
-    it('should have prototypes of parents', () => {
+    it('has prototypes of parents', () => {
       const D = new Dynamic()
       class A {}
       class B extends A {}

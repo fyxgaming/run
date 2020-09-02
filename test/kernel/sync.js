@@ -60,7 +60,7 @@ describe.skip('Sync', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should sync with warning when UTXO is incorrectly spent', async () => {
+  it('sync with warning when UTXO is incorrectly spent', async () => {
     const run = new Run()
 
     class A { }

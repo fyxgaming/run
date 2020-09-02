@@ -17,21 +17,21 @@ const { _deepVisit, _deepReplace, _deepClone } = unmangle(unmangle(Run)._deep)
 // ------------------------------------------------------------------------------------------------
 
 describe('_deepVisit', () => {
-  it('should visit objects', () => {
+  it('objects', () => {
     const o = { p: {} }
     const callback = fake()
     _deepVisit(o, callback)
     expect(callback.args).to.deep.equal([[o], [o.p]])
   })
 
-  it('should visit arrays', () => {
+  it('arrays', () => {
     const a = [[], []]
     const callback = fake()
     _deepVisit(a, callback)
     expect(callback.args).to.deep.equal([[a], [a[0]], [a[1]]])
   })
 
-  it('should visit functions', () => {
+  it('functions', () => {
     function f () { }
     f.g = () => { }
     const callback = fake()
@@ -39,7 +39,7 @@ describe('_deepVisit', () => {
     expect(callback.args).to.deep.equal([[f], [f.g]])
   })
 
-  it('should visit classes', () => {
+  it('classes', () => {
     class A { }
     const a = new A()
     const callback = fake()
@@ -47,7 +47,7 @@ describe('_deepVisit', () => {
     expect(callback.args).to.deep.equal([[a], [A]])
   })
 
-  it('should visit parent classes', () => {
+  it('parent classes', () => {
     class A { }
     class B extends A { }
     const b = new B()
@@ -56,7 +56,7 @@ describe('_deepVisit', () => {
     expect(callback.args).to.deep.equal([[b], [B], [A]])
   })
 
-  it('should visit class properties', () => {
+  it('class properties', () => {
     class A { }
     A.x = {}
     const a = new A()
@@ -65,7 +65,7 @@ describe('_deepVisit', () => {
     expect(callback.args).to.deep.equal([[a], [A], [A.x]])
   })
 
-  it('should visit set', () => {
+  it('set', () => {
     const o = {}
     const s = new Set()
     s.add(o)
@@ -75,7 +75,7 @@ describe('_deepVisit', () => {
     expect(callback.args).to.deep.equal([[s], [o], [s.a]])
   })
 
-  it('should visit map', () => {
+  it('map', () => {
     const s = new Set()
     const a = []
     const m = new Map()
@@ -86,7 +86,7 @@ describe('_deepVisit', () => {
     expect(callback.args).to.deep.equal([[m], [s], [a], [m.o]])
   })
 
-  it('should visit primitive types', () => {
+  it('primitive types', () => {
     const callback = fake()
     _deepVisit(1, callback)
     expect(callback.called).to.equal(true)
@@ -100,7 +100,7 @@ describe('_deepVisit', () => {
     expect(callback.called).to.equal(true)
   })
 
-  it('should not visit circular objects', () => {
+  it('circular objects', () => {
     const o = {}
     o.o = o
     o.p = [o]
@@ -109,7 +109,7 @@ describe('_deepVisit', () => {
     expect(callback.args).to.deep.equal([[o], [o.p]])
   })
 
-  it('should not visit circular classes', () => {
+  it('circular classes', () => {
     class A { }
     A.A = A
     class B extends A { }
@@ -119,7 +119,7 @@ describe('_deepVisit', () => {
     expect(callback.args).to.deep.equal([[B], [B.x], [A]])
   })
 
-  it('should not traverse deeper if return false', () => {
+  it('stop traversing', () => {
     const a = [[{}]]
     const callback = stub()
     callback.withArgs(a[0]).returns(false)
@@ -127,7 +127,7 @@ describe('_deepVisit', () => {
     expect(callback.args).to.deep.equal([[a], [a[0]]])
   })
 
-  it('should recognize sandbox intrinsics', () => {
+  it('recognizes sandbox intrinsics', () => {
     const SI = unmangle(Run.sandbox)._intrinsics
     new Run() // eslint-disable-line
     const o = new SI.Object()
@@ -145,7 +145,7 @@ describe('_deepVisit', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('_deepReplace', () => {
-  it('should replace objects', () => {
+  it('objects', () => {
     const o = {}
     o.p = {}
     const callback = stub()
@@ -153,14 +153,14 @@ describe('_deepReplace', () => {
     expect(_deepReplace(o, callback)).to.deep.equal({ p: [] })
   })
 
-  it('should replace arrays', () => {
+  it('arrays', () => {
     const a = [1, 2, []]
     const callback = stub()
     callback.withArgs(a[2]).returns(3)
     expect(_deepReplace(a, callback)).to.deep.equal([1, 2, 3])
   })
 
-  it('should replace functions', () => {
+  it('functions', () => {
     function f () { }
     f.g = () => {}
     const h = x => x
@@ -169,7 +169,7 @@ describe('_deepReplace', () => {
     expect(_deepReplace(f, callback).g).to.equal(h)
   })
 
-  it('should replace classes', () => {
+  it('classes', () => {
     class A { }
     class B { get x () { return 1 } }
     const a = new A()
@@ -180,7 +180,7 @@ describe('_deepReplace', () => {
     expect(a2.x).to.equal(1)
   })
 
-  it('should replace parent classes', () => {
+  it('parent classes', () => {
     class A { cls () { return 'A' } }
     class B extends A { }
     class C { cls () { return 'C' } }
@@ -192,7 +192,7 @@ describe('_deepReplace', () => {
     expect(c.cls()).to.equal('C')
   })
 
-  it('should replace class properties', () => {
+  it('class properties', () => {
     class A {}
     A.o = class B { }
     const a = new A()
@@ -202,7 +202,7 @@ describe('_deepReplace', () => {
     expect(A.o).to.deep.equal([])
   })
 
-  it('should traverse replaced values', () => {
+  it('traverses replaced values', () => {
     const o = {}
     o.p = []
     const callback = stub()
@@ -213,7 +213,7 @@ describe('_deepReplace', () => {
     expect(o.p).to.deep.equal([{}, o, 1])
   })
 
-  it('should replace set entries', () => {
+  it('set entries', () => {
     const s = new Set()
     const o = {}
     const m = new Map()
@@ -226,7 +226,7 @@ describe('_deepReplace', () => {
     expect(Array.from(s)).to.deep.equal([1, m, 3])
   })
 
-  it('should replace map entries', () => {
+  it('map entries', () => {
     const m = new Map()
     function f () { }
     class B { }
@@ -245,7 +245,7 @@ describe('_deepReplace', () => {
     expect(Array.from(m.values())).to.deep.equal([1, 2, m, 4])
   })
 
-  it('should replace circular objects', () => {
+  it('circular objects', () => {
     const o = {}
     o.p = {}
     o.p.q = o
@@ -255,7 +255,7 @@ describe('_deepReplace', () => {
     expect(o.p).to.deep.equal([o])
   })
 
-  it('should replace circular classes', () => {
+  it('circular classes', () => {
     class A {}
     class B extends A { }
     A.B = B
@@ -269,7 +269,7 @@ describe('_deepReplace', () => {
     expect(b.constructor.B).to.equal(C)
   })
 
-  it('should allow callback to return non-objects and non-functions', () => {
+  it('callback can return non-objects and non-functions', () => {
     const a = [{}, [], () => {}]
     const callback = stub()
     callback.withArgs(a[0]).returns(Symbol.hasInstance)
@@ -279,7 +279,7 @@ describe('_deepReplace', () => {
     expect(a).to.deep.equal([Symbol.hasInstance, 1, 'hello'])
   })
 
-  it('should recognize sandbox intrinsics', () => {
+  it('recognizes sandbox intrinsics', () => {
     const SI = unmangle(Run.sandbox)._intrinsics
     new Run() // eslint-disable-line
     const o = new SI.Object()
@@ -292,7 +292,7 @@ describe('_deepReplace', () => {
     expect(o.s).to.deep.equal([1])
   })
 
-  it('should not replace non-objects and non-functions', () => {
+  it('does not replace non-objects and non-functions', () => {
     const callback = fake()
     expect(_deepReplace(1, callback)).to.equal(1)
     expect(callback.called).to.equal(false)
@@ -312,7 +312,7 @@ describe('_deepReplace', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('_deepClone', () => {
-  it('should clone primitives', () => {
+  it('primitives', () => {
     expect(_deepClone(0)).to.equal(0)
     expect(_deepClone(1)).to.equal(1)
     expect(_deepClone(Infinity)).to.equal(Infinity)
@@ -323,42 +323,42 @@ describe('_deepClone', () => {
     expect(_deepClone(null)).to.equal(null)
   })
 
-  it('should throw for symbols', () => {
+  it('throws for symbols', () => {
     expect(() => _deepClone(Symbol.hasInstance)).to.throw('Cannot clone')
   })
 
-  it.skip('should throw for intrinsics', () => {
+  it.skip('throws for intrinsics', () => {
     // TODO
     // TODO: Move below
   })
 
-  it.skip('should throw for extensions of supported types', () => {
+  it.skip('throws for extensions of supported types', () => {
     // TODO: Extend Set, Map, etc.
     // TODO: Move below
   })
 
-  it.skip('should throw for arbitrary objects of undeployed static code', () => {
+  it.skip('throws for arbitrary objects of undeployed static code', () => {
     // TODO: Move below
   })
 
-  it('should clone basic objects', () => {
+  it('basic objects', () => {
     const o = { p: { m: 1 } }
     expect(_deepClone(o)).to.deep.equal({ p: { m: 1 } })
   })
 
-  it('should clone basic array', () => {
+  it('basic array', () => {
     const a = [1, false, [], {}]
     expect(_deepClone(a)).to.deep.equal([1, false, [], {}])
   })
 
-  it('should clone uint8array', () => {
+  it('uint8array', () => {
     const b = new Uint8Array([0, 1, 255])
     const b2 = _deepClone(b)
     expect(b2 instanceof Uint8Array).to.equal(true)
     expect(Array.from(b2)).to.deep.equal([0, 1, 255])
   })
 
-  it('should clone set', () => {
+  it('set', () => {
     const s = new Set([false, null, {}, new Map()])
     s.x = 1
     const s2 = _deepClone(s)
@@ -367,7 +367,7 @@ describe('_deepClone', () => {
     expect(s2.x).to.equal(1)
   })
 
-  it('should clone map', () => {
+  it('map', () => {
     const m = new Map([[0, 1], ['a', 'b'], [[], {}], [new Set(), new Map()]])
     m.o = {}
     const m2 = _deepClone(m)
@@ -376,7 +376,7 @@ describe('_deepClone', () => {
     expect(m2.o).to.deep.equal({})
   })
 
-  it.skip('should clone arbitrary objects', () => {
+  it.skip('arbitrary objects', () => {
     const run = new Run()
     class A { }
     const A2 = run.install(A)
@@ -386,14 +386,14 @@ describe('_deepClone', () => {
     expect(A2).to.equal(a2.constructor)
   })
 
-  it.skip('should pass jigs through', () => {
+  it.skip('jigs', () => {
     new Run() // eslint-disable-line
     class A extends Jig { }
     const a = new A()
     expect(_deepClone(a)).to.equal(a)
   })
 
-  it.skip('should pass code jigs through', () => {
+  it.skip('code', () => {
     const run = new Run()
     function f () { }
     const f2 = run.install(f)
@@ -401,21 +401,21 @@ describe('_deepClone', () => {
     expect(f3).to.equal(f2)
   })
 
-  it('should throw for non-code functions', () => {
+  it('static code', () => {
     function f () { }
     expect(() => _deepClone(f)).to.throw('Cannot clone non-code function')
     class A { }
     expect(() => _deepClone(A)).to.throw('Cannot clone non-code function')
   })
 
-  it.skip('should pass berries through', async () => {
+  it.skip('berries', async () => {
     const run = new Run()
     class A extends Berry { static pluck () { return new A() } }
     const berry = await run.load('123', A)
     expect(_deepClone(berry)).to.equal(berry)
   })
 
-  it('should clone circular references', () => {
+  it('circular references', () => {
     const run = new Run()
     const o = {}
     o.o = o
@@ -440,7 +440,7 @@ describe('_deepClone', () => {
     expect(o2.m.m).to.equal(o2.m)
   })
 
-  it('should clone to sandbox intrinsics', () => {
+  it('to sandbox intrinsics', () => {
     const SI = unmangle(Run.sandbox)._intrinsics
     expect(_deepClone(new Set(), SI) instanceof SI.Set).to.equal(true)
     expect(_deepClone(new Map(), SI) instanceof SI.Map).to.equal(true)
@@ -449,7 +449,7 @@ describe('_deepClone', () => {
     expect(Object.getPrototypeOf(_deepClone({}, SI))).to.equal(SI.Object.prototype)
   })
 
-  it('should clone from sandbox intrinsics', () => {
+  it('from sandbox intrinsics', () => {
     const SI = unmangle(Run.sandbox)._intrinsics
     expect(_deepClone(new SI.Set()) instanceof Set).to.equal(true)
     expect(_deepClone(new SI.Map()) instanceof Map).to.equal(true)

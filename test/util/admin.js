@@ -16,11 +16,11 @@ const { _admin, _sudo } = unmangle(Run)
 
 describe('Admin', () => {
   describe('_admin', () => {
-    it('should return false by default', () => {
+    it('returns false by default', () => {
       expect(_admin()).to.equal(false)
     })
 
-    it('should return true only within sudo', () => {
+    it('returns true only within sudo', () => {
       expect(_admin()).to.equal(false)
       _sudo(() => {
         expect(_admin()).to.equal(true)

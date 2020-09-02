@@ -28,7 +28,7 @@ describe('Misc', () => {
       expect(_kernel()).to.equal(run._kernel)
     })
 
-    it('should throw if no run instance is active', () => {
+    it('throws if no run instance is active', () => {
       new Run().deactivate() // eslint-disable-line
       expect(() => _kernel()).to.throw('Run instance not active')
     })
@@ -38,13 +38,13 @@ describe('Misc', () => {
   // _assert
   // ----------------------------------------------------------------------------------------------
 
-  describe('_kernel', () => {
-    it('should not throw if assert passes', () => {
+  describe('_assert', () => {
+    it('pass', () => {
       _assert(true)
       _assert(1)
     })
 
-    it('should throw if assert fails', () => {
+    it('fail', () => {
       expect(() => _assert(false)).to.throw()
     })
   })
@@ -54,7 +54,7 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_bsvNetwork', () => {
-    it('should return appropriate network', () => {
+    it('returns appropriate network', () => {
       expect(_bsvNetwork('main')).to.equal('mainnet')
       expect(_bsvNetwork('mainnet')).to.equal('mainnet')
       expect(_bsvNetwork('mainSideChain')).to.equal('mainnet')
@@ -69,18 +69,18 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_parent', () => {
-    it('should get parent class', () => {
+    it('gets parent class', () => {
       class B { }
       class A extends B { }
       expect(_parent(A)).to.equal(B)
     })
 
-    it('should return undefined when no parent', () => {
+    it('returns undefined when no parent', () => {
       expect(_parent(function () { })).to.equal(undefined)
       expect(_parent(class {})).to.equal(undefined)
     })
 
-    it('should return undefined for non-functions', () => {
+    it('returns undefined for non-functions', () => {
       expect(_parent(null)).to.equal(undefined)
       expect(_parent(0)).to.equal(undefined)
       expect(_parent('hello')).to.equal(undefined)
@@ -93,22 +93,22 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_parentName', () => {
-    it('should return null if no parent', () => {
+    it('returns null if no parent', () => {
       const src = 'class A { }'
       expect(_parentName(src)).to.equal(null)
     })
 
-    it('should return null for functions', () => {
+    it('returns null for functions', () => {
       const src = 'function f() { }'
       expect(_parentName(src)).to.equal(null)
     })
 
-    it('should return parent name if there is a parent', () => {
+    it('returns parent name if there is a parent', () => {
       const src = 'class A extends B { }'
       expect(_parentName(src)).to.equal('B')
     })
 
-    it('should support multi-line class definitions', () => {
+    it('supports multi-line class definitions', () => {
       const src = 'class A\nextends B\n{ }'
       expect(_parentName(src)).to.equal('B')
     })
@@ -119,7 +119,7 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_extendsFrom', () => {
-    it('should return true when class is an ancestor', () => {
+    it('returns true when class is an ancestor', () => {
       class A { }
       class B extends A { }
       class C extends B { }
@@ -128,7 +128,7 @@ describe('Misc', () => {
       expect(_extendsFrom(C, B)).to.equal(true)
     })
 
-    it('should return false when class is not an ancestor', () => {
+    it('returns false when class is not an ancestor', () => {
       class A { }
       class B extends A { }
       class C { }
@@ -137,12 +137,12 @@ describe('Misc', () => {
       expect(_extendsFrom(A, B)).to.equal(false)
     })
 
-    it('should return false for self', () => {
+    it('returns false for self', () => {
       class A { }
       expect(_extendsFrom(A, A)).to.equal(false)
     })
 
-    it('should return false when args are not classes', () => {
+    it('returns false when args are not classes', () => {
       expect(_extendsFrom()).to.equal(false)
       expect(_extendsFrom(class A { })).to.equal(false)
       expect(_extendsFrom(null, class B { })).to.equal(false)
@@ -155,7 +155,7 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_isBasicObject', () => {
-    it('should return whether value is a basic object', () => {
+    it('returns whether basic object', () => {
       expect(_isBasicObject({})).to.equal(true)
       expect(_isBasicObject(null)).to.equal(false)
       expect(_isBasicObject(new class {}())).to.equal(false)
@@ -171,7 +171,7 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_isBasicArray', () => {
-    it('should return whether value is a basic array', () => {
+    it('returns whether basic array', () => {
       expect(_isBasicArray([])).to.equal(true)
       expect(_isBasicArray(new SI.Array())).to.equal(true)
       expect(_isBasicArray(new class C extends Array {}())).to.equal(false)
@@ -189,7 +189,7 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_isBasicSet', () => {
-    it('should return whether value is a basic set', () => {
+    it('returns whether basic set', () => {
       expect(_isBasicSet(new Set())).to.equal(true)
       expect(_isBasicSet(new Set([1, 2, 3]))).to.equal(true)
       expect(_isBasicSet(new SI.Set())).to.equal(true)
@@ -207,7 +207,7 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_isBasicMap', () => {
-    it('should return whether value is a basic map', () => {
+    it('returns whether basic map', () => {
       expect(_isBasicMap(new Map())).to.equal(true)
       expect(_isBasicMap(new Map([[1, 2]]))).to.equal(true)
       expect(_isBasicMap(new SI.Map())).to.equal(true)
@@ -225,7 +225,7 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_isBasicUint8Array', () => {
-    it('should return whether value is a basic uint8array', () => {
+    it('returns whether basic uint8array', () => {
       expect(_isBasicUint8Array(new Uint8Array())).to.equal(true)
       expect(_isBasicUint8Array(new Uint8Array([1, 2, 3]))).to.equal(true)
       expect(_isBasicUint8Array(new SI.Uint8Array())).to.equal(true)
@@ -246,7 +246,7 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_isArbitraryObject', () => {
-    it.skip('should return whether value is an arbitrary object', async () => {
+    it.skip('returns whether arbitrary object', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -274,7 +274,7 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_isUndefined', () => {
-    it('should return whether value is undefined', () => {
+    it('returns whether undefined', () => {
       expect(_isUndefined()).to.equal(true)
       expect(_isUndefined(undefined)).to.equal(true)
       expect(_isUndefined(null)).to.equal(false)
@@ -288,7 +288,7 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_isBoolean', () => {
-    it('should return whether value is a boolean', () => {
+    it('returns whether boolean', () => {
       expect(_isBoolean(true)).to.equal(true)
       expect(_isBoolean(false)).to.equal(true)
       expect(_isBoolean()).to.equal(false)
@@ -320,7 +320,7 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_text', () => {
-    it('should create short names', () => {
+    it('short names', () => {
     // Strings
       expect(_text('')).to.equal('""')
       expect(_text('abc')).to.equal('"abc"')
@@ -372,29 +372,29 @@ describe('Misc', () => {
       expect(normalize(sandboxSrc)).to.equal(normalize(src))
     }
 
-    it('should get code for basic class', () => {
+    it('basic class', () => {
       class A {}
       expectNormalizedSourceCode(A, 'class A {}')
     })
 
-    it('should get code for basic function', () => {
+    it('basic function', () => {
       function f () { return 1 }
       expectNormalizedSourceCode(f, 'function f () { return 1 }')
     })
 
-    it('should get code for class that extends another class', () => {
+    it('class that extends another class', () => {
       const SomeLibrary = { B: class B { } }
       class A extends SomeLibrary.B {}
       expectNormalizedSourceCode(A, 'class A extends B {}')
     })
 
-    it('should get code for single-line class', () => {
+    it('single-line class', () => {
       class B { }
       class A extends B { f () {} }
       expectNormalizedSourceCode(A, 'class A extends B { f () {} }')
     })
 
-    it('should get code for method', () => {
+    it('method', () => {
       class B { f () { } }
       expectNormalizedSourceCode(B.prototype.f, 'function f() { }')
     })

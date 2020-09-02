@@ -1033,7 +1033,7 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should throw if inconsistent worldview from upgrade', async () => {
+    it('throws if inconsistent worldview from upgrade', async () => {
       const run = new Run()
       class A { }
       class B { }

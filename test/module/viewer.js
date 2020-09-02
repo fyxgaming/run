@@ -16,14 +16,14 @@ const { Viewer, StandardLock } = Run
 
 describe('Viewer', () => {
   describe('constructor', () => {
-    it('should support address owners', () => {
+    it('address owners', () => {
       const address = new PrivateKey().toAddress().toString()
       const viewer = new Viewer(address)
       expect(viewer.lock instanceof StandardLock).to.equal(true)
       expect(viewer.lock.address).to.equal(address)
     })
 
-    it('should support pubkey owners', () => {
+    it('pubkey owners', () => {
       const pubkey = new PrivateKey().publicKey.toString()
       const address = new PublicKey(pubkey).toAddress().toString()
       const viewer = new Viewer(pubkey)
@@ -31,7 +31,7 @@ describe('Viewer', () => {
       expect(viewer.lock.address).to.equal(address)
     })
 
-    it('should support lock object owners', () => {
+    it('lock object owners', () => {
       class CustomLock {
         script () { return new Uint8Array([0, 1, 2]) }
         domain () { return 1 }
@@ -41,7 +41,7 @@ describe('Viewer', () => {
       expect(viewer.lock).to.deep.equal(lock)
     })
 
-    it('should throw if owner is invalid', () => {
+    it('throws if owner is invalid', () => {
       expect(() => new Viewer()).to.throw('Invalid owner: undefined')
       expect(() => new Viewer(null)).to.throw('Invalid owner: null')
       expect(() => new Viewer(new (class {})())).to.throw('Invalid owner: [anonymous object]')
@@ -49,7 +49,7 @@ describe('Viewer', () => {
   })
 
   describe('owner', () => {
-    it('should always return the lock', () => {
+    it('always returns the lock', () => {
       class CustomLock {
         script () { return new Uint8Array([0, 1, 2]) }
         domain () { return 1 }
@@ -61,7 +61,7 @@ describe('Viewer', () => {
   })
 
   describe('sign', () => {
-    it('should not sign', async () => {
+    it('does not sign', async () => {
       const address = new PrivateKey().toAddress().toString()
       const viewer = new Viewer(address)
       const tx = new Transaction()

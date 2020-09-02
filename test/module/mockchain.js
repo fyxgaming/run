@@ -18,7 +18,7 @@ const { Mockchain } = Run
 
 describe('Mockchain', () => {
   describe('broadcast', () => {
-    it('should support broadcasting bsv transaction', async () => {
+    it('bsv transaction', async () => {
       const mockchain = new Mockchain()
       const privkey = new PrivateKey('testnet')
       const address = privkey.toAddress()
@@ -33,7 +33,7 @@ describe('Mockchain', () => {
   })
 
   describe('utxos', () => {
-    it('should support querying by address and bsv script', async () => {
+    it('query by address and bsv script', async () => {
       const mockchain = new Mockchain()
       const privkey = new PrivateKey('testnet')
       const address = privkey.toAddress()
@@ -45,7 +45,7 @@ describe('Mockchain', () => {
   })
 
   describe('block', () => {
-    it('should respect 25 chain limit', async () => {
+    it('respects 25 chain limit', async () => {
       const mockchain = new Mockchain()
       const privkey = new PrivateKey('testnet')
       const address = privkey.toAddress()
@@ -66,7 +66,7 @@ describe('Mockchain', () => {
   })
 
   describe('fund', () => {
-    it('should directly fund address with amount', async () => {
+    it('funds directly', async () => {
       const mockchain = new Mockchain()
       const address = new PrivateKey('testnet').toAddress()
       const txid = mockchain.fund(address, 10000)
@@ -82,7 +82,7 @@ describe('Mockchain', () => {
 
 if (PERF) {
   describe('Mockchain Performance', () => {
-    it('should support fast broadcsts', async () => {
+    it('fast broadcasts', async () => {
       const mockchain = new Mockchain()
       const privkey = new PrivateKey('testnet')
       const address = privkey.toAddress()
@@ -96,7 +96,7 @@ if (PERF) {
       expect(new Date() - start < 30).to.equal(true)
     })
 
-    it('should support fast fetches', async () => {
+    it('fast fetches', async () => {
       const mockchain = new Mockchain()
       const privkey = new PrivateKey('testnet')
       const address = privkey.toAddress()
@@ -123,7 +123,7 @@ if (PERF) {
       expect(end < 10).to.equal(true)
     })
 
-    it('should support fast utxo queries', async () => {
+    it('fast utxo queries', async () => {
       const mockchain = new Mockchain()
 
       // Generate 10 private keys and fund their addresses

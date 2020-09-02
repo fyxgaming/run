@@ -16,7 +16,7 @@ const { StandardLock } = Run
 
 describe('StandardLock', () => {
   describe('script', () => {
-    it('should create script for valid addresses', () => {
+    it('valid addresses', () => {
       new StandardLock('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').script() // eslint-disable-line
       new StandardLock('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').script() // eslint-disable-line
     })
@@ -30,7 +30,7 @@ describe('StandardLock', () => {
       expect(() => new StandardLock('3P14').script()).to.throw('Address too short: 3P14')
     })
 
-    it('should correctly return P2PKH buffer', () => {
+    it('returns P2PKH buffer', () => {
       const addr = '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
       const script = bsv.Script.fromAddress(addr)
       const buffer1 = new Uint8Array(script.toBuffer())
@@ -40,7 +40,7 @@ describe('StandardLock', () => {
   })
 
   describe('domain', () => {
-    it('should return P2PKH unlock script max size', () => {
+    it('returns P2PKH unlock script max size', () => {
       expect(new StandardLock('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').domain()).to.equal(108)
     })
   })

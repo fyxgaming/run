@@ -76,7 +76,7 @@ describe('Code', () => {
   // --------------------------------------------------------------------------
 
   describe('toString', () => {
-    it('should return source code for class', () => {
+    it('returns source code for class', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -85,7 +85,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should return source code for function', () => {
+    it('returns source code for function', () => {
       const run = new Run()
       function f () { }
       const cf = run.deploy(f)
@@ -94,7 +94,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should return source code for jig class', () => {
+    it('returns source code for jig class', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
@@ -103,7 +103,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should return source code for child code class', () => {
+    it('returns source code for child code class', () => {
       const run = new Run()
       class A { }
       class B extends A { }
@@ -113,7 +113,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should return source code for child non-code class', () => {
+    it('returns source code for child non-code class', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -123,7 +123,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should return same method for different code', () => {
+    it('returnsj same method for different code', () => {
       const run = new Run()
       class A { }
       function f () { }

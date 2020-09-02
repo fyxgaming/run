@@ -18,7 +18,7 @@ describe('Bindings', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_location', () => {
-    it('should parse valid locations', () => {
+    it('valid locations', () => {
       // Jigs
       expect(_location('abc_o0')).to.deep.equal({ txid: 'abc', vout: 0 })
       expect(_location('abc_d1')).to.deep.equal({ txid: 'abc', vdel: 1 })
@@ -45,7 +45,7 @@ describe('Bindings', () => {
       expect(_location('commit://abc_d2')).to.deep.equal({ commitid: 'commit://abc', vdel: 2 })
     })
 
-    it('should throw for invalid locations', () => {
+    it('throws for invalid locations', () => {
       // Invalid types
       expect(() => _location()).to.throw()
       expect(() => _location(1)).to.throw()
@@ -111,7 +111,7 @@ describe('Bindings', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_owner', () => {
-    it('should support valid owners on different networks', () => {
+    it('supports valid owners on different networks', () => {
       for (const bsvNetwork of ['mainnet', 'testnet']) {
         const privkey = new PrivateKey(bsvNetwork)
         const pubkey = privkey.publicKey.toString()
@@ -123,7 +123,7 @@ describe('Bindings', () => {
       }
     })
 
-    it('should throw if bad owner', () => {
+    it('throws if bad owner', () => {
       expect(() => _owner()).to.throw('Invalid owner: undefined')
       expect(() => _owner(null)).to.throw('Invalid owner: null')
       expect(() => _owner(123)).to.throw('Invalid owner: 123')
@@ -133,7 +133,7 @@ describe('Bindings', () => {
       expect(() => _owner([new PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
     })
 
-    it('allow null', () => {
+    it('allows null', () => {
       expect(_owner(null, true)).to.equal(null)
     })
   })
@@ -143,14 +143,14 @@ describe('Bindings', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_satoshis', () => {
-    it('should support allowed values', () => {
+    it('allowed values', () => {
       expect(() => _satoshis(0)).not.to.throw()
       expect(() => _satoshis(1)).not.to.throw()
       expect(() => _satoshis(Transaction.DUST_AMOUNT)).not.to.throw()
       expect(() => _satoshis(100000000)).not.to.throw()
     })
 
-    it('should throw if bad satoshis', () => {
+    it('throws if bad satoshis', () => {
       expect(() => _satoshis()).to.throw('satoshis must be a number')
       expect(() => _satoshis(-1)).to.throw('satoshis must be non-negative')
       expect(() => _satoshis('0')).to.throw('satoshis must be a number')
@@ -167,7 +167,7 @@ describe('Bindings', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_init', () => {
-    it('should initialize undeployed bindings', () => {
+    it('initializess undeployed bindings', () => {
       const o = {}
       _init(o)
       expect(o.origin).to.equal('error://Undeployed')

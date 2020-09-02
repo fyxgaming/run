@@ -37,7 +37,7 @@ const decodeFail = y => expect(() => unmangle(new Codec())._decode(y)).to.throw(
 
 describe('Codec', () => {
   describe('_encode', () => {
-    it('should supported non-symbol primitives', () => {
+    it('non-symbol primitives', () => {
       new Run() // eslint-disable-line
       // Booleans
       encodePass(true, true)
@@ -69,7 +69,7 @@ describe('Codec', () => {
       encodePass(null, null)
     })
 
-    it('should fail to encode symbols', () => {
+    it('throws for symbols', () => {
       new Run() // eslint-disable-line
       encodeFail(Symbol.hasInstance)
       encodeFail(Symbol.iterator)
@@ -77,7 +77,7 @@ describe('Codec', () => {
       encodeFail(Symbol.unscopables)
     })
 
-    it('should support basic objects', () => {
+    it('basic objects', () => {
       new Run() // eslint-disable-line
       encodePass({}, {})
       encodePass({ n: 1 }, { n: 1 })
@@ -87,7 +87,7 @@ describe('Codec', () => {
       encodePass(new Proxy({}, {}), {})
     })
 
-    it('should support objects with $ properties', () => {
+    it('objects with $ properties', () => {
       new Run() // eslint-disable-line
       encodePass({ $n: 1 }, { $obj: { $n: 1 } })
       encodePass({ $obj: {} }, { $obj: { $obj: {} } })
@@ -95,7 +95,7 @@ describe('Codec', () => {
       encodePass({ $und: 1 }, { $obj: { $und: 1 } })
     })
 
-    it('should support basic arrays', () => {
+    it('basic arrays', () => {
       new Run() // eslint-disable-line
       encodePass([], [])
       encodePass([1, 'a', false, {}], [1, 'a', false, {}])
@@ -104,7 +104,7 @@ describe('Codec', () => {
       encodePass([0, undefined, 2], [0, { $und: 1 }, 2])
     })
 
-    it('should support sparse arrays', () => {
+    it('sparse arrays', () => {
       new Run() // eslint-disable-line
       const a = []
       a[0] = 0
@@ -112,7 +112,7 @@ describe('Codec', () => {
       encodePass(a, { $arr: { 0: 0, 9: 9 } })
     })
 
-    it('should support arrays with non-numeric properties', () => {
+    it('arrays with non-numeric properties', () => {
       new Run() // eslint-disable-line
       const a = [1]
       a[9] = 9
@@ -123,7 +123,7 @@ describe('Codec', () => {
       encodePass(a, { $arr: { 0: 1, 9: 9, '-1': -1, x: 'a', '': true, $obj: {} } })
     })
 
-    it('should support complex objects', () => {
+    it('complex objects', () => {
       new Run() // eslint-disable-line
       const o = {}
       o.o = { a: [] }
@@ -133,7 +133,7 @@ describe('Codec', () => {
       encodePass(o, { a: [{ n: 1 }], o: { a: [] }, u: { $und: 1 }, b: { $ui8a: '' } })
     })
 
-    it('should support duplicate objects', () => {
+    it('duplicate objects', () => {
       new Run() // eslint-disable-line
       const o = {}
       const p = [1]
@@ -146,13 +146,13 @@ describe('Codec', () => {
       encodePass([o, o, p, [o, p], { z: p }], { $top: [d0, d0, d1, [d0, d1], { z: d1 }], dups: [{}, [1]] })
     })
 
-    it('should support duplicate $ objects', () => {
+    it('duplicate $ objects', () => {
       new Run() // eslint-disable-line
       const o = { $n: 1 }
       encodePass([o, o], { $top: [{ $dup: 0 }, { $dup: 0 }], dups: [{ $obj: { $n: 1 } }] })
     })
 
-    it('should support circular references', () => {
+    it('circular references', () => {
       new Run() // eslint-disable-line
       const o = {}
       o.o = o
@@ -164,7 +164,7 @@ describe('Codec', () => {
       encodePass(a, { $top: { $dup: 2 }, dups: [{ x: { $dup: 1 } }, [{ $dup: 0 }], { $arr: { 0: { $dup: 0 }, 1: { $dup: 1 }, a: { $dup: 2 } } }] })
     })
 
-    it('should support sets', () => {
+    it('sets', () => {
       new Run() // eslint-disable-line
       // Basic keys and values
       encodePass(new Set(), { $set: [] })
@@ -188,7 +188,7 @@ describe('Codec', () => {
       encodePass(s4, { $top: { $dup: 0 }, dups: [{ $set: [{ $dup: 0 }], props: { s: { $dup: 0 } } }] })
     })
 
-    it('should support maps', () => {
+    it('maps', () => {
       new Run() // eslint-disable-line
       // Basic keys and values
       encodePass(new Map(), { $map: [] })
@@ -220,7 +220,7 @@ describe('Codec', () => {
       encodePass(m5, { $top: { $dup: 0 }, dups: [{ $map: [[{ $dup: 0 }, 1]], props: { x: { $dup: 0 } } }] })
     })
 
-    it('should support buffers', () => {
+    it('buffers', () => {
       new Run() // eslint-disable-line
       encodePass(new Uint8Array(), { $ui8a: '' })
       encodePass(new Uint8Array([0, 1]), { $ui8a: 'AAE=' })
@@ -230,14 +230,14 @@ describe('Codec', () => {
       encodePass(new Uint8Array(random), { $ui8a: random.toString('base64') })
     })
 
-    it('should fail for buffers with props', () => {
+    it('throws for buffers with props', () => {
       new Run() // eslint-disable-line
       const b = new Uint8Array()
       b.x = 1
       encodeFail(b)
     })
 
-    it('should fail for extensions to built-in types', () => {
+    it('throws for extensions to built-in types', () => {
       new Run() // eslint-disable-line
       encodeFail(new (class CustomArray extends Array {})())
       encodeFail(new (class CustomObject extends Object {})())
@@ -246,7 +246,7 @@ describe('Codec', () => {
       encodeFail(new (class CustomUint8Array extends Uint8Array {})())
     })
 
-    it('should maintain key order', () => {
+    it('maintains key order', () => {
       new Run() // eslint-disable-line
       const o = {}
       o.x = 'x'
@@ -259,13 +259,13 @@ describe('Codec', () => {
       expect(Object.keys(o)).to.deep.equal(Object.keys(o2))
     })
 
-    it('should default to host intrinsics', () => {
+    it('defaults to host intrinsics', () => {
       new Run() // eslint-disable-line
       expect(unmangle(new Codec())._encode({}).constructor).to.equal(Object)
       expect(unmangle(new Codec())._encode([]).constructor).to.equal(Array)
     })
 
-    it('should fail for raw intrinsics', () => {
+    it('throws for raw intrinsics', () => {
       new Run() // eslint-disable-line
       encodeFail(console)
       encodeFail(Object)
@@ -297,7 +297,7 @@ describe('Codec', () => {
       encodeFail(SI.Uint8Array)
     })
 
-    it('should fail for unsupported objects intrinsics', () => {
+    it('throws for unsupported objects intrinsics', () => {
       new Run() // eslint-disable-line
       encodeFail(new Date())
       encodeFail(new WeakSet())
@@ -309,7 +309,7 @@ describe('Codec', () => {
       encodeFail(Buffer.alloc(0))
     })
 
-    it('should fail for unrecognized intrinsics', () => {
+    it('throws for unrecognized intrinsics', () => {
       new Run() // eslint-disable-line
       const vm = require('vm')
       const [VMSet, VMMap, VMUint8Array] = vm.runInNewContext('[Set, Map, Uint8Array]')
@@ -320,7 +320,7 @@ describe('Codec', () => {
   })
 
   describe('_decode', () => {
-    it('should fail to decode unsupported types', () => {
+    it('throws for unsupported types', () => {
       new Run() // eslint-disable-line
       // Undefined
       decodeFail(undefined)
@@ -379,7 +379,7 @@ describe('Codec', () => {
       decodeFail({ $top: { $dup: '0' }, dups: [] })
     })
 
-    it('should default to host intrinsics', () => {
+    it('defaults to host intrinsics', () => {
       new Run() // eslint-disable-line
       expect(unmangle(new Codec())._decode({}).constructor).to.equal(Object)
       expect(unmangle(new Codec())._decode([]).constructor).to.equal(Array)
@@ -441,7 +441,7 @@ describe('Codec', () => {
   })
 
   describe.skip('jigs', () => {
-    it('should save jigs with location', () => {
+    it('saves jigs with location', () => {
       new Run() // eslint-disable-line
       class Dragon extends Jig { }
       const dragon = new Dragon()
@@ -451,7 +451,7 @@ describe('Codec', () => {
       expect(json.constructor).to.equal(HI.Object)
     })
 
-    it('should encode to sandbox', () => {
+    it('to sandbox intrinsics', () => {
       new Run() // eslint-disable-line
       class Dragon extends Jig { }
       const dragon = new Dragon()
@@ -460,7 +460,7 @@ describe('Codec', () => {
       expect(json.constructor).to.equal(SI.Object)
     })
 
-    it('should load jigs from location', () => {
+    it('loads jigs from location', () => {
       new Run() // eslint-disable-line
       class Dragon extends Jig { }
       const dragon = new Dragon()
@@ -468,7 +468,7 @@ describe('Codec', () => {
       expect(codec._decode({ $jig: '123' })).to.equal(dragon)
     })
 
-    it('should save and load jigs in complex structures', () => {
+    it('saves and loads jigs in complex structures', () => {
       new Run() // eslint-disable-line
       class Dragon extends Jig { }
       const dragon = new Dragon()
@@ -480,21 +480,21 @@ describe('Codec', () => {
       expect(output).to.deep.equal(x)
     })
 
-    it('should fail to decode bad ref', () => {
+    it('throws for bad jig ref', () => {
       new Run() // eslint-disable-line
       const codec = unmangle(new Codec())._loadJigs(x => {})
       expect(() => codec._decode({ $jig: 1, $jig2: 2 })).to.throw()
       expect(() => codec._decode({ $jig: '123' })).to.throw()
     })
 
-    it('should replace code jigs with location', () => {
+    it('replaces code with location', () => {
       const run = new Run()
       const codec = unmangle(new Codec())._saveJigs(x => '123')
       expect(codec._encode(run.install(class B { constructor () { this.x = 1 } }))).to.deep.equal({ $jig: '123' })
       expect(codec._encode(run.install(function add (a, b) { return a + b }))).to.deep.equal({ $jig: '123' })
     })
 
-    it('should replace and revive berries', async () => {
+    it('replaces and revives berries', async () => {
       const run = new Run()
       class CustomBerry extends Berry { }
       const CustomBerrySandbox = await run.load(await run.deploy(CustomBerry))
@@ -505,7 +505,7 @@ describe('Codec', () => {
       expect(json).to.deep.equal({ $jig: '123' })
     })
 
-    it('should fail to encode functions that are not code jigs', () => {
+    it('throws for functions that are not code jigs', () => {
       new Run() // eslint-disable-line
       const codec = unmangle(new Codec())._saveJigs(x => '123')
       expect(() => codec._encode(Math.random)).to.throw('Cannot encode')
@@ -524,7 +524,7 @@ describe('Codec', () => {
   })
 
   describe.skip('arbitrary objects', () => {
-    it('should support basic arbitrary objects', () => {
+    it('basic arbitrary objects', () => {
       const run = new Run()
       const jigs = []
       const codec = unmangle(new Codec())
@@ -539,7 +539,7 @@ describe('Codec', () => {
       expect(codec._decode(json)).to.deep.equal(a)
     })
 
-    it('should support arbitrary objects with circular references', () => {
+    it('arbitrary objects with circular references', () => {
       const run = new Run()
       const jigs = []
       const codec = unmangle(new Codec())
@@ -554,7 +554,7 @@ describe('Codec', () => {
       expect(codec._decode(json)).to.deep.equal(a)
     })
 
-    it('should support arbitrary objects with duplicate inners', () => {
+    it('arbitrary objects with duplicate inners', () => {
       const run = new Run() // eslint-disable-line
       const jigs = []
       const codec = unmangle(new Codec())

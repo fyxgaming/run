@@ -18,37 +18,37 @@ const { Blockchain, Purse, Logger, Cache, Lock, Owner } = Run.api
 
 describe('Blockchain API', () => {
   describe('broadcast', () => {
-    it('should throw UnimplementedError by default', async () => {
+    it('throws UnimplementedError by default', async () => {
       await expect(new Blockchain().broadcast()).to.be.rejectedWith(UnimplementedError)
     })
   })
 
   describe('fetch', () => {
-    it('should throw UnimplementedError by default', async () => {
+    it('throws UnimplementedError by default', async () => {
       await expect(new Blockchain().fetch()).to.be.rejectedWith(UnimplementedError)
     })
   })
 
   describe('utxos', () => {
-    it('should throw UnimplementedError by default', async () => {
+    it('throws UnimplementedError by default', async () => {
       await expect(new Blockchain().utxos()).to.be.rejectedWith(UnimplementedError)
     })
   })
 
   describe('time', () => {
-    it('should throw UnimplementedError by default', async () => {
+    it('throws UnimplementedError by default', async () => {
       await expect(new Blockchain().time()).to.be.rejectedWith(UnimplementedError)
     })
   })
 
   describe('spends', () => {
-    it('should throw UnimplementedError by default', async () => {
+    it('throws UnimplementedError by default', async () => {
       await expect(new Blockchain().spends()).to.be.rejectedWith(UnimplementedError)
     })
   })
 
   describe('network', () => {
-    it('should throw UnimplementedError by default', async () => {
+    it('throws UnimplementedError by default', async () => {
       expect(() => new Blockchain().network).to.throw(UnimplementedError)
     })
   })
@@ -111,13 +111,13 @@ describe('Blockchain API', () => {
 
 describe('Purse API ', () => {
   describe('pay', () => {
-    it('should throw UnimplementedError by default', async () => {
+    it('throws UnimplementedError by default', async () => {
       await expect(new Purse().pay()).to.be.rejectedWith(UnimplementedError)
     })
   })
 
   describe('broadcast', () => {
-    it('should throw UnimplementedError by default', async () => {
+    it('throws UnimplementedError by default', async () => {
       await expect(new Purse().broadcast()).to.be.rejectedWith(UnimplementedError)
     })
   })
@@ -153,13 +153,13 @@ describe('Purse API ', () => {
 
 describe('Owner API', () => {
   describe('sign', () => {
-    it('should throw UnimplementedError by default', async () => {
+    it('throws UnimplementedError by default', async () => {
       await expect(new Owner().sign()).to.be.rejectedWith(UnimplementedError)
     })
   })
 
   describe('owner', () => {
-    it('should throw UnimplementedError by default', async () => {
+    it('throws UnimplementedError by default', async () => {
       expect(() => new Owner().owner()).to.throw(UnimplementedError)
     })
   })
@@ -199,25 +199,25 @@ describe('Owner API', () => {
 
 describe('Logger API', () => {
   describe('info', () => {
-    it('should not throw UnimplementedError by default', () => {
+    it('does not throw by default', () => {
       expect(() => new Logger().info()).not.to.throw()
     })
   })
 
   describe('warn', () => {
-    it('should not throw UnimplementedError by default', () => {
+    it('does not throw by default', () => {
       expect(() => new Logger().warn()).not.to.throw()
     })
   })
 
   describe('debug', () => {
-    it('should not throw UnimplementedError by default', () => {
+    it('does not throw by default', () => {
       expect(() => new Logger().debug()).not.to.throw()
     })
   })
 
   describe('error', () => {
-    it('should not throw UnimplementedError by default', () => {
+    it('does not throw by default', () => {
       expect(() => new Logger().error()).not.to.throw()
     })
   })
@@ -251,13 +251,13 @@ describe('Logger API', () => {
 
 describe('Cache API', () => {
   describe('get', () => {
-    it('should throw UnimplementedError by default', async () => {
+    it('does not throw by default', async () => {
       await expect(new Cache().get()).to.be.rejectedWith(UnimplementedError)
     })
   })
 
   describe('set', () => {
-    it('should throw UnimplementedError by default', async () => {
+    it('does not throw by default', async () => {
       await expect(new Cache().set()).to.be.rejectedWith(UnimplementedError)
     })
   })
@@ -292,13 +292,13 @@ describe('Cache API', () => {
 
 describe('Lock API', () => {
   describe('script', () => {
-    it('should throw UnimplementedError by default', () => {
+    it('throws UnimplementedError by default', () => {
       expect(() => new Lock().script()).to.throw(UnimplementedError)
     })
   })
 
   describe('domain', () => {
-    it('should throw UnimplementedError by default', () => {
+    it('throws UnimplementedError by default', () => {
       expect(() => new Lock().domain()).to.throw(UnimplementedError)
     })
   })
