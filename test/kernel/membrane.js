@@ -9,6 +9,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
 const unmangle = require('../env/unmangle')
+const { testRecord } = require('../env/misc')
 const { mangle } = unmangle
 const Membrane = unmangle(Run)._Membrane
 const Rules = unmangle(Run)._Rules
@@ -24,18 +25,6 @@ const SI = unmangle(Run.sandbox)._intrinsics
 // ------------------------------------------------------------------------------------------------
 
 const DUMMY_OWNER = '1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N'
-
-// Helper to test recording calls and then roll back any changes
-function testRecord (f) {
-  const Record = unmangle(unmangle(Run)._Record)
-  const CURRENT_RECORD = unmangle(Record._CURRENT_RECORD)
-  try {
-    CURRENT_RECORD._begin()
-    return f(CURRENT_RECORD)
-  } finally {
-    CURRENT_RECORD._rollback()
-  }
-}
 
 // Reads and updates must happen in action to be recorded. This simulates one for ease of testing.
 function simulateAction (f) {

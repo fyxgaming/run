@@ -6,6 +6,7 @@
 
 const { describe, it } = require('mocha')
 const Run = require('../env/run')
+const { testRecord } = require('../env/misc')
 const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -17,8 +18,11 @@ describe('Jig', () => {
     it('basic jig', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
-      const a = new A()
-      await a.sync()
+      testRecord(record => {
+        const a = new A() //eslint-disable-line
+        console.log(record._creates.length)
+      })
+      // await a.sync()
 
       // TODO
       /*

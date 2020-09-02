@@ -95,5 +95,21 @@ function expectTx (opts) {
 }
 
 // ------------------------------------------------------------------------------------------------
+// testRecord
+// ------------------------------------------------------------------------------------------------
 
-module.exports = { populatePreviousOutputs, payFor, expectTx }
+// Helper to test recording calls and then roll back any changes
+function testRecord (f) {
+  const Record = unmangle(unmangle(Run)._Record)
+  const CURRENT_RECORD = unmangle(Record._CURRENT_RECORD)
+  try {
+    CURRENT_RECORD._begin()
+    return f(CURRENT_RECORD)
+  } finally {
+    CURRENT_RECORD._rollback()
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { populatePreviousOutputs, payFor, expectTx, testRecord }
