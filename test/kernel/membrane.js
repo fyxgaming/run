@@ -880,9 +880,11 @@ describe('Membrane', () => {
     it('construct', () => {
       const A = makeJig(class A { }, { _recordable: true })
       testRecord(record => {
+        simulateAction(() => {
         new A() // eslint-disable-line
-        expect(record._reads.includes(A)).to.equal(true)
-        expect(record._snapshots.has(A)).to.equal(true)
+          expect(record._reads.includes(A)).to.equal(true)
+          expect(record._snapshots.has(A)).to.equal(true)
+        })
       })
     })
 
@@ -892,11 +894,13 @@ describe('Membrane', () => {
       const A = makeJig(class A { }, { _recordable: true })
       const B = makeJig(class B extends A { }, { _recordable: true })
       testRecord(record => {
+        simulateAction(() => {
         new B() // eslint-disable-line
-        expect(record._reads.includes(A)).to.equal(true)
-        expect(record._reads.includes(B)).to.equal(true)
-        expect(record._snapshots.has(A)).to.equal(true)
-        expect(record._snapshots.has(B)).to.equal(true)
+          expect(record._reads.includes(A)).to.equal(true)
+          expect(record._reads.includes(B)).to.equal(true)
+          expect(record._snapshots.has(A)).to.equal(true)
+          expect(record._snapshots.has(B)).to.equal(true)
+        })
       })
     })
 
@@ -912,7 +916,6 @@ describe('Membrane', () => {
         expect(record._actions.length).to.equal(1)
         expect(unmangle(record._actions[0])._method).to.equal('f')
         expect(unmangle(record._actions[0])._jig).to.equal(A2)
-        expect(record._snapshots.size).to.equal(1)
         expect(record._snapshots.has(A2)).to.equal(true)
         expect(record._updates.length).to.equal(1)
         expect(record._updates.includes(A2)).to.equal(true)
@@ -933,7 +936,6 @@ describe('Membrane', () => {
         expect(record._actions.length).to.equal(1)
         expect(unmangle(record._actions[0])._method).to.equal('f')
         expect(unmangle(record._actions[0])._jig).to.equal(a2)
-        expect(record._snapshots.size).to.equal(2)
         expect(record._snapshots.has(a2)).to.equal(true)
         expect(record._snapshots.has(A2)).to.equal(true)
         expect(record._updates.length).to.equal(1)
@@ -948,11 +950,12 @@ describe('Membrane', () => {
       const o = makeJig({}, { _recordable: true })
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       testRecord(record => {
-        Object.defineProperty(o, 'n', desc)
-        expect(record._snapshots.size).to.equal(1)
-        expect(record._snapshots.has(o)).to.equal(true)
-        expect(record._updates.length).to.equal(1)
-        expect(record._updates.includes(o)).to.equal(true)
+        simulateAction(() => {
+          Object.defineProperty(o, 'n', desc)
+          expect(record._snapshots.has(o)).to.equal(true)
+          expect(record._updates.length).to.equal(1)
+          expect(record._updates.includes(o)).to.equal(true)
+        })
       })
     })
 
@@ -961,11 +964,12 @@ describe('Membrane', () => {
     it('delete', () => {
       const o = makeJig({}, { _recordable: true })
       testRecord(record => {
-        delete o.n
-        expect(record._snapshots.size).to.equal(1)
-        expect(record._snapshots.has(o)).to.equal(true)
-        expect(record._updates.length).to.equal(1)
-        expect(record._updates.includes(o)).to.equal(true)
+        simulateAction(() => {
+          delete o.n
+          expect(record._snapshots.has(o)).to.equal(true)
+          expect(record._updates.length).to.equal(1)
+          expect(record._updates.includes(o)).to.equal(true)
+        })
       })
     })
 
@@ -978,7 +982,6 @@ describe('Membrane', () => {
           o.n // eslint-disable-line
           expect(record._reads.length).to.equal(1)
           expect(record._reads.includes(o)).to.equal(true)
-          expect(record._snapshots.size).to.equal(1)
           expect(record._snapshots.has(o)).to.equal(true)
         })
       })
@@ -990,13 +993,14 @@ describe('Membrane', () => {
       const A = makeJig(class A { f () { } }, { _recordable: true })
       const a = makeJig(new A(), { _recordable: true })
       testRecord(record => {
+        simulateAction(() => {
         a.f // eslint-disable-line
-        expect(record._reads.length).to.equal(2)
-        expect(record._reads.includes(A)).to.equal(true)
-        expect(record._reads.includes(a)).to.equal(true)
-        expect(record._snapshots.size).to.equal(2)
-        expect(record._snapshots.has(A)).to.equal(true)
-        expect(record._snapshots.has(a)).to.equal(true)
+          expect(record._reads.length).to.equal(2)
+          expect(record._reads.includes(A)).to.equal(true)
+          expect(record._reads.includes(a)).to.equal(true)
+          expect(record._snapshots.has(A)).to.equal(true)
+          expect(record._snapshots.has(a)).to.equal(true)
+        })
       })
     })
 
@@ -1007,15 +1011,16 @@ describe('Membrane', () => {
       const B = makeJig(class B extends A { }, { _recordable: true })
       const b = makeJig(new B(), { _recordable: true })
       testRecord(record => {
+        simulateAction(() => {
         b.f // eslint-disable-line
-        expect(record._reads.length).to.equal(3)
-        expect(record._reads.includes(A)).to.equal(true)
-        expect(record._reads.includes(B)).to.equal(true)
-        expect(record._reads.includes(b)).to.equal(true)
-        expect(record._snapshots.size).to.equal(3)
-        expect(record._snapshots.has(A)).to.equal(true)
-        expect(record._snapshots.has(B)).to.equal(true)
-        expect(record._snapshots.has(b)).to.equal(true)
+          expect(record._reads.length).to.equal(3)
+          expect(record._reads.includes(A)).to.equal(true)
+          expect(record._reads.includes(B)).to.equal(true)
+          expect(record._reads.includes(b)).to.equal(true)
+          expect(record._snapshots.has(A)).to.equal(true)
+          expect(record._snapshots.has(B)).to.equal(true)
+          expect(record._snapshots.has(b)).to.equal(true)
+        })
       })
     })
 
@@ -1024,11 +1029,12 @@ describe('Membrane', () => {
     it('getOwnPropertyDescriptor', () => {
       const o = makeJig({}, { _recordable: true })
       testRecord(record => {
-        Object.getOwnPropertyDescriptor(o, 'n')
-        expect(record._reads.length).to.equal(1)
-        expect(record._reads.includes(o)).to.equal(true)
-        expect(record._snapshots.size).to.equal(1)
-        expect(record._snapshots.has(o)).to.equal(true)
+        simulateAction(() => {
+          Object.getOwnPropertyDescriptor(o, 'n')
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(o)).to.equal(true)
+          expect(record._snapshots.has(o)).to.equal(true)
+        })
       })
     })
 
@@ -1038,11 +1044,12 @@ describe('Membrane', () => {
       const A = makeJig(class A { f () { } }, { _recordable: true })
       const a = makeJig(new A(), { _recordable: true })
       testRecord(record => {
-        Object.getPrototypeOf(a)
-        expect(record._reads.length).to.equal(1)
-        expect(record._reads.includes(a)).to.equal(true)
-        expect(record._snapshots.size).to.equal(1)
-        expect(record._snapshots.has(a)).to.equal(true)
+        simulateAction(() => {
+          Object.getPrototypeOf(a)
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(a)).to.equal(true)
+          expect(record._snapshots.has(a)).to.equal(true)
+        })
       })
     })
 
@@ -1051,11 +1058,12 @@ describe('Membrane', () => {
     it('has', () => {
       const o = makeJig({}, { _recordable: true })
       testRecord(record => {
+        simulateAction(() => {
         'n' in o // eslint-disable-line
-        expect(record._reads.length).to.equal(1)
-        expect(record._reads.includes(o)).to.equal(true)
-        expect(record._snapshots.size).to.equal(1)
-        expect(record._snapshots.has(o)).to.equal(true)
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(o)).to.equal(true)
+          expect(record._snapshots.has(o)).to.equal(true)
+        })
       })
     })
 
@@ -1064,11 +1072,12 @@ describe('Membrane', () => {
     it('ownKeys', () => {
       const o = makeJig({}, { _recordable: true })
       testRecord(record => {
-        Object.keys(o)
-        expect(record._reads.length).to.equal(1)
-        expect(record._reads.includes(o)).to.equal(true)
-        expect(record._snapshots.size).to.equal(1)
-        expect(record._snapshots.has(o)).to.equal(true)
+        simulateAction(() => {
+          Object.keys(o)
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(o)).to.equal(true)
+          expect(record._snapshots.has(o)).to.equal(true)
+        })
       })
     })
 
@@ -1077,11 +1086,12 @@ describe('Membrane', () => {
     it('set', () => {
       const o = makeJig({}, { _recordable: true })
       testRecord(record => {
-        o.n = 1
-        expect(record._snapshots.size).to.equal(1)
-        expect(record._snapshots.has(o)).to.equal(true)
-        expect(record._updates.length).to.equal(1)
-        expect(record._updates.includes(o)).to.equal(true)
+        simulateAction(() => {
+          o.n = 1
+          expect(record._snapshots.has(o)).to.equal(true)
+          expect(record._updates.length).to.equal(1)
+          expect(record._updates.includes(o)).to.equal(true)
+        })
       })
     })
 
@@ -1090,11 +1100,12 @@ describe('Membrane', () => {
     it('intrinsicGetMethod', () => {
       const s = makeJig(new Set(), { _recordable: true })
       testRecord(record => {
+        simulateAction(() => {
         s.add // eslint-disable-line
-        expect(record._reads.length).to.equal(1)
-        expect(record._reads.includes(s)).to.equal(true)
-        expect(record._snapshots.size).to.equal(1)
-        expect(record._snapshots.has(s)).to.equal(true)
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(s)).to.equal(true)
+          expect(record._snapshots.has(s)).to.equal(true)
+        })
       })
     })
 
@@ -1103,11 +1114,12 @@ describe('Membrane', () => {
     it('intrinsicRead', () => {
       const m = makeJig(new Map(), { _recordable: true })
       testRecord(record => {
-        m.has(1)
-        expect(record._reads.length).to.equal(1)
-        expect(record._reads.includes(m)).to.equal(true)
-        expect(record._snapshots.size).to.equal(1)
-        expect(record._snapshots.has(m)).to.equal(true)
+        simulateAction(() => {
+          m.has(1)
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(m)).to.equal(true)
+          expect(record._snapshots.has(m)).to.equal(true)
+        })
       })
     })
 
@@ -1116,11 +1128,12 @@ describe('Membrane', () => {
     it('intrinsicUpdate', () => {
       const m = makeJig(new Map(), { _recordable: true })
       testRecord(record => {
-        m.set(1, 2)
-        expect(record._snapshots.size).to.equal(1)
-        expect(record._snapshots.has(m)).to.equal(true)
-        expect(record._updates.length).to.equal(1)
-        expect(record._updates.includes(m)).to.equal(true)
+        simulateAction(() => {
+          m.set(1, 2)
+          expect(record._snapshots.has(m)).to.equal(true)
+          expect(record._updates.length).to.equal(1)
+          expect(record._updates.includes(m)).to.equal(true)
+        })
       })
     })
   })
