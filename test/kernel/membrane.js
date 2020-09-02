@@ -2261,6 +2261,34 @@ describe('Membrane', () => {
       expect(A2.f()).to.equal(undefined)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Disabled Methods
+  // --------------------------------------------------------------------------
+
+  describe('Disabled Methods', () => {
+    it('disables static class methods', () => {
+      class A { static f () { } }
+      const A2 = new Membrane(A, mangle({ _disabledMethods: ['f'] }))
+      expect(() => A2.f()).to.throw('f disabled')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('disables instance methods', () => {
+      const A = makeJig(class A { f () { } })
+      const a = new Membrane(new A(), mangle({ _disabledMethods: ['f'] }))
+      expect(() => a.f()).to.throw('f disabled')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('class does not disable instance', () => {
+      const A = makeJig(class A { f () { } }, { _disabledMethods: ['f'] })
+      const a = new Membrane(new A())
+      expect(() => a.f()).not.to.throw()
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
