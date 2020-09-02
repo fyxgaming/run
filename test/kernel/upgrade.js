@@ -296,13 +296,15 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it('remove parent', async () => {
+    it.only('remove parent', async () => {
       const run = new Run()
 
       class A { }
       class B extends A { }
       const CB = run.deploy(B)
       await CB.sync()
+      console.log(CB.location)
+      console.log(A.location)
 
       function test (CO) {
         expect(Object.getPrototypeOf(CO)).to.equal(SI.Function.prototype)
@@ -331,9 +333,11 @@ describe('Upgrade', () => {
       await CB.sync()
       test(CB)
 
+      console.log('---------')
       const CB2 = await run.load(CB.location)
       test(CB2)
 
+      console.log('---------')
       run.cache = new LocalCache()
       const CB3 = await run.load(CB.location)
       test(CB3)

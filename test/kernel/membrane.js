@@ -35,6 +35,20 @@ function testRecord (f) {
   }
 }
 
+// Reads and updates must happen in action to be recorded. This simulates one for ease of testing.
+function simulateAction (f) {
+  const Record = unmangle(unmangle(Run)._Record)
+  const CURRENT_RECORD = unmangle(Record._CURRENT_RECORD)
+  try {
+    const jig = makeJig({})
+    const action = mangle({ _jig: jig })
+    CURRENT_RECORD._stack.push(action)
+    f()
+  } finally {
+    CURRENT_RECORD._stack.pop()
+  }
+}
+
 // Helpers to make a mock jig with a membrane
 function makeJig (x, options = {}) {
   options = mangle(Object.assign(options, { _admin: true }))
@@ -960,11 +974,13 @@ describe('Membrane', () => {
     it('get', () => {
       const o = makeJig({}, { _recordable: true })
       testRecord(record => {
-        o.n // eslint-disable-line
-        expect(record._reads.length).to.equal(1)
-        expect(record._reads.includes(o)).to.equal(true)
-        expect(record._snapshots.size).to.equal(1)
-        expect(record._snapshots.has(o)).to.equal(true)
+        simulateAction(() => {
+          o.n // eslint-disable-line
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(o)).to.equal(true)
+          expect(record._snapshots.size).to.equal(1)
+          expect(record._snapshots.has(o)).to.equal(true)
+        })
       })
     })
 
