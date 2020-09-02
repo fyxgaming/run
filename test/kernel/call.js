@@ -65,6 +65,41 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
+    it('can only call static methods on class they are from', async () => {
+      const run = new Run()
+
+      class A extends Jig {
+        static f () { this.calledF = 'a' }
+        static g () { this.calledG = 'a' }
+      }
+
+      class B extends A {
+        static g () { this.calledG = 'b' }
+        static h () { this.calledH = 'b' }
+      }
+
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      const CB = run.deploy(B)
+      await CB.sync()
+
+      CA.f()
+      CA.g()
+      await CA.sync()
+      expect(Object.getOwnPropertyDescriptor(CA, 'calledF').value).to.equal('a')
+      expect(Object.getOwnPropertyDescriptor(CA, 'calledG').value).to.equal('a')
+
+      CB.g()
+      CB.h()
+      expect(Object.getOwnPropertyDescriptor(CB, 'calledG').value).to.equal('b')
+      expect(Object.getOwnPropertyDescriptor(CB, 'calledH').value).to.equal('b')
+
+      expect(() => CA.g.apply(CB, [])).to.throw('Cannot call g on B')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws for unsupported args', () => {
       const run = new Run()
       class A extends Jig { static f () { } }
@@ -105,33 +140,6 @@ describe('Call', () => {
       test(C3)
     })
   })
-
-  // --------------------------------------------------------------------------
-
-  /*
-    it('can only call static methods on class they are from', async () => {
-      const run = new Run()
-
-      class A extends Jig {
-        static f () { this.f = 'a' }
-        static g () { this.g = 'a' }
-      }
-
-      class B extends A {
-        static g () { this.g = 'b' }
-        static h () { this.h = 'b' }
-      }
-
-      const CA = run.deploy(A)
-      await CA.sync()
-
-      const CB = run.deploy(B)
-      await CB.sync()
-      // CB.h()
-      // await CB.sync()
-      // console.log(CB)
-    })
-    */
 })
 
 // ------------------------------------------------------------------------------------------------
