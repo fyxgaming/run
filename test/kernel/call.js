@@ -7,7 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig } = Run
+const { Jig, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Call
@@ -24,28 +24,38 @@ describe('Call', () => {
     class A extends Jig { static f (x) { return 123 + x } }
     const C = run.deploy(A)
     await C.sync()
+    const location = C.location
     expect(C.f(1)).to.equal(124)
     expect(C.origin).to.equal(C.location)
+    expect(C.location).to.equal(location)
+  })
+
+  // ------------------------------------------------------------------------
+
+  it('calls static set method on jig', async () => {
+    const run = new Run()
+    class A extends Jig { static f (x) { this.x = x } }
+    const C = run.deploy(A)
+    await C.sync()
+    C.f(1)
+    expect(C.x).to.equal(1)
+    await C.sync()
+    expect(C.location).not.to.equal(C.origin)
+
+    function test (C2) {
+      expect(C.location).to.equal(C2.location)
+      expect(C.x).to.equal(C2.x)
+    }
+
+    const C2 = await run.load(C.location)
+    test(C2)
+
+    run.cache = new LocalCache()
+    const C3 = await run.load(C.location)
+    test(C3)
   })
 
   /*
-    it('calls static set method on jig', async () => {
-      const run = new Run()
-      class A extends Jig { static f (x) { this.x = x } }
-      const C = run.deploy(A)
-      await C.sync()
-      C.f(1)
-      expect(C.x).to.equal(1)
-      await C.sync()
-      expect(C.location).not.to.equal(C.origin)
-
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      const C2 = await run2.load(C.location)
-
-      expect(C.location).to.equal(C2.location)
-      expect(C.x).to.equal(C2.x)
-    })
 
     // ------------------------------------------------------------------------
 
