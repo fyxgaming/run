@@ -19,7 +19,7 @@ describe('Static Code', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   // --------------------------------------------------------------------------
-  // Static functions
+  // Functions
   // --------------------------------------------------------------------------
 
   describe('Functions', () => {
@@ -82,9 +82,18 @@ describe('Static Code', () => {
   })
 
   // --------------------------------------------------------------------------
+  // Classes
+  // --------------------------------------------------------------------------
 
   describe('Classes', () => {
-      // TODO
+    it('can call other static classes', () => {
+      const run = new Run()
+      class A { static f () { return 1 } }
+      class B { static g () { return A.f() } }
+      B.deps = { A }
+      const CB = run.deploy(B)
+      expect(CB.g()).to.equal(1)
+    })
   })
 })
 
