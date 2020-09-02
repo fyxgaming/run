@@ -432,7 +432,7 @@ describe('Deploy', () => {
       })
 
       function test (T) {
-        const Tprops = Object.assign({}, T)
+        const Tprops = _sudo(() => Object.assign({}, T))
         const bindings = ['location', 'origin', 'nonce', 'owner', 'satoshis']
         bindings.forEach(x => { delete Tprops[x] })
 
