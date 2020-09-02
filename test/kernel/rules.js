@@ -34,6 +34,7 @@ describe('Rules', () => {
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
       expect(rules._cowProps).to.equal(false)
+      expect(rules._disabledMethods).to.deep.equal([])
     })
   })
 
@@ -56,6 +57,7 @@ describe('Rules', () => {
       expect(rules._thisless).to.equal(true)
       expect(rules._cow).to.equal(false)
       expect(rules._cowProps).to.equal(false)
+      expect(rules._disabledMethods).to.deep.equal([])
     })
   })
 
@@ -78,6 +80,7 @@ describe('Rules', () => {
       expect(rules._thisless).to.equal(true)
       expect(rules._cow).to.equal(false)
       expect(rules._cowProps).to.equal(false)
+      expect(rules._disabledMethods).to.deep.equal([])
     })
   })
 
@@ -100,6 +103,7 @@ describe('Rules', () => {
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
       expect(rules._cowProps).to.equal(false)
+      expect(rules._disabledMethods).to.deep.equal([])
     })
   })
 
@@ -122,6 +126,7 @@ describe('Rules', () => {
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
       expect(rules._cowProps).to.equal(false)
+      expect(rules._disabledMethods).to.deep.equal([])
     })
   })
 
@@ -144,6 +149,7 @@ describe('Rules', () => {
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(true)
       expect(rules._cowProps).to.equal(false)
+      expect(rules._disabledMethods).to.deep.equal([])
     })
   })
 
@@ -181,6 +187,7 @@ describe('Rules', () => {
       expect(rules._thisless).to.equal(parentRules._thisless && owned)
       expect(rules._cow).to.equal(parentRules._cow)
       expect(rules._cowProps).to.equal(parentRules._cowProps)
+      expect(rules._disabledMethods).to.deep.equal([])
     })
 
     it('method are immutable', () => {
