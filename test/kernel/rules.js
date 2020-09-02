@@ -196,42 +196,4 @@ describe('Rules', () => {
       expect(rules._immutable).to.equal(true)
     })
   })
-
-  // --------------------------------------------------------------------------
-
-  describe('equals', () => {
-    it('returns true if same', () => {
-      const r1 = new Rules()
-      const r2 = new Rules()
-      expect(r1.equals(r2)).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('returns false if more rules', () => {
-      const r1 = new Rules()
-      const r2 = new Rules()
-      r1.abc = 'def'
-      expect(r1.equals(r2)).to.equal(false)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('returns false if less rules', () => {
-      const r1 = new Rules()
-      const r2 = new Rules()
-      delete unmangle(r1)._immutable
-      expect(r1.equals(r2)).to.equal(false)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('returns false if different rules', () => {
-      const r1 = new Rules()
-      const r2 = new Rules()
-      const key = Object.keys(r1)[Math.floor(Math.random() * Object.keys(r1).length)]
-      r1[key] = !r1.key
-      expect(r1.equals(r2)).to.equal(false)
-    })
-  })
 })
