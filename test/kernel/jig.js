@@ -153,6 +153,22 @@ describe('Jig', () => {
       class A extends Jig { init () { JigDeps._stack.push(1) } } // eslint-disable-line
       expect(() => new A()).to.throw('JigDeps is not defined')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if access globals', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        isUndefined (x) {
+          if (typeof window !== 'undefined') return typeof window[x] === 'undefined'
+          if (typeof global !== 'undefined') return typeof global[x] === 'undefined'
+          return true
+        }
+      }
+      const a = new A()
+      const bad = ['Date', 'Math', 'eval', 'XMLHttpRequest', 'FileReader', 'WebSocket', 'setTimeout', 'setInterval']
+      bad.forEach(x => expect(a.isUndefined(x)).to.equal(true))
+    })
   })
 })
 

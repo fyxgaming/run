@@ -24,20 +24,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('sandbox', () => {
-    it('should throw if access globals', () => {
-      createHookedRun()
-      class A extends Jig {
-        isUndefined (x) {
-          if (typeof window !== 'undefined') return typeof window[x] === 'undefined'
-          if (typeof global !== 'undefined') return typeof global[x] === 'undefined'
-          return true
-        }
-      }
-      const a = new A()
-      const bad = ['Date', 'Math', 'eval', 'XMLHttpRequest', 'FileReader', 'WebSocket', 'setTimeout', 'setInterval']
-      bad.forEach(x => expect(a.isUndefined(x)).to.equal(true))
-    })
-
     it('should throw useful error when using Date and Math', () => {
       createHookedRun()
       class A extends Jig {
