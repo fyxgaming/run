@@ -131,7 +131,7 @@ describe('Jig', () => {
   // init
   // --------------------------------------------------------------------------
 
-  describe.only('init', () => {
+  describe('init', () => {
     it('should throw if called by user', () => {
       new Run() // eslint-disable-line
       class A extends Jig { init (n) { this.n = n } }
@@ -157,6 +157,36 @@ describe('Jig', () => {
       new Run() // eslint-disable-line
       class A extends Jig { init () { return {} }}
       expect(() => new A()).to.throw('init must not return a value')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('may call super.init on Jig', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { init () { super.init() } }
+      new A() // eslint-disable-line
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('may call super.init on parent', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { init () { this.a = true } }
+      class B extends A { init () { super.init(); this.b = true } }
+      const b = new B()
+      expect(b.a).to.equal(true)
+      expect(b.b).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('is not required to call super.init', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { init () { this.a = true } }
+      class B extends A { init () { this.b = true } }
+      const b = new B()
+      expect(b.a).to.equal(undefined)
+      expect(b.b).to.equal(true)
     })
   })
 
