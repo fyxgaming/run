@@ -406,7 +406,7 @@ describe('Jig', () => {
       const a = new A()
       const b = new A()
       a.set(b)
-      expect(a.b instanceof Jig).to.equal(true)
+      expect(a.x instanceof Jig).to.equal(true)
     })
   })
 
