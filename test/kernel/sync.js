@@ -242,6 +242,22 @@ describe('Sync', () => {
         run.deactivate()
       }
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if spend is incorrect', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      const b = new A()
+      await run.sync()
+      run.blockchain.spends = () => b.location.slice(0, 64)
+      try {
+        await expect(a.sync()).to.be.rejectedWith('Blockchain returned an incorrect spend')
+      } finally {
+        run.deactivate()
+      }
+    })
   })
 })
 

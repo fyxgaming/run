@@ -23,18 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('sync', () => {
-    it('should throw if spend is incorrect', async () => {
-      const run = createHookedRun()
-      class A extends Jig { }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const b = new A()
-      expectAction(b, 'init', [], [], [b], [])
-      await run.sync()
-      run.blockchain.spends = () => b.location.slice(0, 64)
-      await expect(a.sync()).to.be.rejectedWith('Blockchain returned an incorrect spend')
-    })
-
     it('should not throw if sync jig updated by another', async () => {
       const run = createHookedRun()
       class A extends Jig {
