@@ -23,33 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('method', () => {
-    it('should update basic jig', async () => {
-      const run = createHookedRun()
-      class Sword extends Jig {
-        upgrade () { this.upgrades = (this.upgrades || 0) + 1 }
-      }
-      const sword = new Sword()
-      await run.sync()
-      sword.upgrade()
-      await run.sync()
-      expect(sword.upgrades).to.equal(1)
-    })
-
-    it('should support passing null in args', async () => {
-      const run = createHookedRun()
-      class Dragon extends Jig {
-        init (lair) {
-          this.lair = lair
-        }
-      }
-      const dragon = new Dragon(null)
-      await dragon.sync()
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      const dragon2 = await run2.load(dragon.location)
-      expect(dragon).to.deep.equal(dragon2)
-    })
-
     it('should support swapping inner jigs', () => {
       createHookedRun()
       class A extends Jig {

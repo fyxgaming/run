@@ -557,6 +557,43 @@ describe('Jig', () => {
       c.f()
       await c.sync()
     })
+
+    // ------------------------------------------------------------------------
+
+    it('should support passing null in args', async () => {
+      const run = new Run()
+      class Dragon extends Jig {
+        init (lair) {
+          this.lair = lair
+        }
+      }
+      await run.deploy(Dragon).sync()
+
+      expectTx({
+        nin: 0,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'NEW',
+            data: [
+              { $jig: 0 },
+              [null]
+            ]
+          }
+        ]
+      })
+
+      const dragon = new Dragon(null)
+      await dragon.sync()
+
+      run.cache = new LocalCache()
+      const dragon2 = await run.load(dragon.location)
+
+      expect(dragon).to.deep.equal(dragon2)
+    })
   })
 })
 
