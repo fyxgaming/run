@@ -23,16 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('sync', () => {
-    it('should throw if spend tx does not exist', async () => {
-      const run = createHookedRun()
-      class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      expectAction(a, 'init', [], [], [a], [])
-      run.blockchain.spends = () => '123'
-      await expect(a.sync()).to.be.rejectedWith('No such mempool or blockchain transaction')
-    })
-
     it('should throw if spend is incorrect', async () => {
       const run = createHookedRun()
       class A extends Jig { }

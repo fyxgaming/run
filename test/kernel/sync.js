@@ -227,6 +227,21 @@ describe('Sync', () => {
       await expect(a.sync()).to.be.rejectedWith('txn-mempool-conflict')
       expect(a.x).to.equal(1)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if spend tx does not exist', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      run.blockchain.spends = () => '123'
+      try {
+        await expect(a.sync()).to.be.rejectedWith('No such mempool or blockchain transaction')
+      } finally {
+        run.deactivate()
+      }
+    })
   })
 })
 
