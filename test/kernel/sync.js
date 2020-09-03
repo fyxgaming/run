@@ -216,7 +216,28 @@ describe('Sync', () => {
       const CA = run.deploy(A)
       CA.destroy()
       await CA.sync()
+      const location = CA.location
       await CA.sync()
+      expect(CA.location).to.equal(location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('disable inner sync', async () => {
+      const run = new Run()
+      class A extends Jig { set (n) { this.n = n } }
+      const a = new A()
+      const b = new A()
+      a.set(b)
+      await a.sync()
+      const a2 = await run.load(a.location)
+      b.set(1)
+      await b.sync()
+      expect(a2.n.n).to.equal(undefined)
+      await a2.sync({ inner: false })
+      expect(a2.n.n).to.equal(undefined)
+      await a2.sync()
+      expect(a2.n.n).to.equal(1)
     })
   })
 
