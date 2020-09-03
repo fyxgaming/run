@@ -23,9 +23,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('constructor', () => {
-  })
-
   describe('sandbox', () => {
     it('should throw if access external variables', () => {
       createHookedRun()
