@@ -192,13 +192,46 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may call super.init on parent', () => {
-      new Run() // eslint-disable-line
+    it('may call super.init on parent', async () => {
+      const run = new Run()
       class A extends Jig { init () { this.a = true } }
       class B extends A { init () { super.init(); this.b = true } }
+
+      expectTx({
+        nin: 0,
+        nref: 1,
+        nout: 3,
+        ndel: 0,
+        ncre: 3,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              A.toString(),
+              { deps: { Jig: { $jig: 0 } } },
+              B.toString(),
+              { deps: { A: { $jig: 1 } } }
+            ]
+          },
+          {
+            op: 'NEW',
+            data: [{ $jig: 2 }, []]
+          }
+        ]
+      })
+
+      function test (b) {
+        expect(b.a).to.equal(true)
+        expect(b.b).to.equal(true)
+      }
+
       const b = new B()
-      expect(b.a).to.equal(true)
-      expect(b.b).to.equal(true)
+      test(b)
+      await b.sync()
+
+      run.cache = new LocalCache()
+      const b2 = await run.load(b.location)
+      test(b2)
     })
 
     // ------------------------------------------------------------------------

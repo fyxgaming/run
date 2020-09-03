@@ -77,12 +77,17 @@ function expectTx (opts) {
   function verify (rawtx) {
     const tx = new Transaction(rawtx)
     const payload = _payload(tx)
-    if ('nin' in opts) expect(payload.in).to.equal(opts.nin)
-    if ('nref' in opts) expect(payload.ref.length).to.equal(opts.nref)
-    if ('nout' in opts) expect(payload.out.length).to.equal(opts.nout)
-    if ('ndel' in opts) expect(payload.del.length).to.equal(opts.ndel)
-    if ('ncre' in opts) expect(payload.cre.length).to.equal(opts.ncre)
-    if ('exec' in opts) expect(payload.exec).to.deep.equal(opts.exec)
+    if ('nin' in opts) expect(payload.in).to.equal(opts.nin, 'bad nin')
+    if ('nref' in opts) expect(payload.ref.length).to.equal(opts.nref, 'bad nref')
+    if ('nout' in opts) expect(payload.out.length).to.equal(opts.nout, 'bad nout')
+    if ('ndel' in opts) expect(payload.del.length).to.equal(opts.ndel, 'bad ndel')
+    if ('ncre' in opts) expect(payload.cre.length).to.equal(opts.ncre, 'bad ncre')
+    try {
+      if ('exec' in opts) expect(payload.exec).to.deep.equal(opts.exec, 'bad exec')
+    } catch (e) {
+      console.log('Broadcast payload:', JSON.stringify(payload, 0, 3))
+      throw e
+    }
   }
 
   // Hook run.blockchain to verify the next transaction then disable the hook
