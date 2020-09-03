@@ -24,30 +24,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('sync', () => {
-    it('should throw if override sync', () => {
-      createHookedRun()
-      class A extends Jig { sync () { } }
-      expect(() => new A()).to.throw()
-      expectNoAction()
-    })
-
-    it('should forward sync', async () => {
-      const run = createHookedRun()
-      class A extends Jig { set (x) { this.x = x } }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      await run.sync()
-      const run2 = new Run({ owner: run.owner.privkey })
-      const a2 = await run2.load(a.location)
-      a2.set(1)
-      a2.set(2)
-      await a2.sync()
-      run.activate()
-      expect(a.x).to.equal(undefined)
-      await a.sync()
-      expect(a.x).to.equal(2)
-    })
-
     it('should forward sync inner jigs', async () => {
       const run = createHookedRun()
       class Store extends Jig { set (x, y) { this[x] = y } }

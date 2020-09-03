@@ -9,7 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { Transaction } = require('bsv')
 const Run = require('../env/run')
-const { Jig } = Run
+const { Jig, LocalCache } = Run
 const { payFor } = require('../env/misc')
 
 // ------------------------------------------------------------------------------------------------
@@ -26,6 +26,7 @@ describe('Sync', () => {
   // TODO: Check records
   // TODO: Sync a destroyed jig
   // TODO: Sync a jig that failed to deploy to deploy it again
+  // TODO: Forward sync code
 
   // --------------------------------------------------------------------------
   // Sync
@@ -120,6 +121,26 @@ describe('Sync', () => {
       expect(() => new A()).to.throw('sync cannot be called internally')
       const b = new B()
       expect(() => b.f()).to.throw('sync cannot be called internally')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('should forward sync', async () => {
+      const run = new Run()
+      class A extends Jig { set (x) { this.x = x } }
+      const a = new A()
+      await a.sync()
+
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+
+      a2.set(1)
+      a2.set(2)
+      await a2.sync()
+
+      expect(a.x).to.equal(undefined)
+      await a.sync()
+      expect(a.x).to.equal(2)
     })
   })
 })
