@@ -338,6 +338,33 @@ describe('Call', () => {
       const a = new A()
       expect(() => a.f()).to.throw('some error message')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('call super', async () => {
+      const run = new Run()
+      class A extends Jig { f () { this.a = true } }
+      class B extends A { f () { super.f(); this.b = true } }
+      class C extends B { f () { super.f(); this.c = true } }
+
+      function test (c) {
+        expect(c.a).to.equal(true)
+        expect(c.b).to.equal(true)
+        expect(c.c).to.equal(true)
+      }
+
+      const c = new C()
+      c.f()
+      test(c)
+      await c.sync()
+
+      const c2 = await run.load(c.location)
+      test(c2)
+
+      run.cache = new LocalCache()
+      const c3 = await run.load(c.location)
+      test(c3)
+    })
   })
 })
 

@@ -23,20 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('method', () => {
-    it('should support calling super method', async () => {
-      createHookedRun()
-      class A extends Jig { f () { this.a = true }}
-      class B extends A { f () { super.f(); this.b = true }}
-      class C extends B { f () { super.f(); this.c = true }}
-      const c = new C()
-      expectAction(c, 'init', [], [], [c], [])
-      c.f()
-      expectAction(c, 'f', [], [c], [c], [])
-      expect(c.a).to.equal(true)
-      expect(c.b).to.equal(true)
-      expect(c.c).to.equal(true)
-    })
-
     it('should support calling static helpers', () => {
       createHookedRun()
       class Preconditions { static checkArgument (b) { if (!b) throw new Error() } }
