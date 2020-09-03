@@ -479,9 +479,55 @@ describe('Jig', () => {
     })
   })
 
-  // METHODS
-  // TODO
+  // --------------------------------------------------------------------------
+  // Method
+  // --------------------------------------------------------------------------
+
   describe('Method', () => {
+    it('should update basic jig', async () => {
+      const run = new Run()
+      class Sword extends Jig {
+        upgrade () { this.upgrades = (this.upgrades || 0) + 1 }
+      }
+      const sword = new Sword()
+      await sword.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [
+              { $jig: 0 },
+              'upgrade',
+              []
+            ]
+          }
+        ]
+      })
+
+      function test (sword) {
+        expect(sword.upgrades).to.equal(1)
+      }
+
+      sword.upgrade()
+      await sword.sync()
+      test(sword)
+
+      const sword2 = await run.load(sword.location)
+      test(sword2)
+
+      run.cache = new LocalCache()
+      const sword3 = await run.load(sword.location)
+      test(sword3)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('adds class references for each super call', () => {
       // TODO
       // in method, not init
