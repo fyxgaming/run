@@ -161,7 +161,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('may call super.init on Jig', () => {
+    it('may call super.init on Jig', () => {
       new Run() // eslint-disable-line
       class A extends Jig { init () { super.init() } }
       new A() // eslint-disable-line
@@ -169,7 +169,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('may call super.init on parent', () => {
+    it('may call super.init on parent', () => {
       new Run() // eslint-disable-line
       class A extends Jig { init () { this.a = true } }
       class B extends A { init () { super.init(); this.b = true } }
@@ -180,7 +180,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('is not required to call super.init', () => {
+    it('is not required to call super.init', () => {
       new Run() // eslint-disable-line
       class A extends Jig { init () { this.a = true } }
       class B extends A { init () { this.b = true } }
