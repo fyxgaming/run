@@ -132,7 +132,7 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('init', () => {
-    it('should throw if called externally', () => {
+    it('should throw if called by user', () => {
       new Run() // eslint-disable-line
       class A extends Jig { init (n) { this.n = n } }
       const a = new A(5)
@@ -141,7 +141,7 @@ describe('Jig', () => {
 
     /*
 
-    it('should throw if called internally', () => {
+    it('should throw if called by other jig code', () => {
       createHookedRun()
       class A extends Jig {
         init (n) { this.n = n }

@@ -9,6 +9,7 @@ const { stub } = require('sinon')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { Jig } = Run
 const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
 const { Code, LocalCache } = unmangle(Run)
@@ -1000,6 +1001,20 @@ describe('Upgrade', () => {
       expect(() => CO.upgrade(B)).to.throw(error)
       expect(() => CO.upgrade(C)).to.throw(error)
       expect(() => CO.upgrade(D)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if override jig methods', () => {
+      const run = new Run()
+      function O () { }
+      const CO = run.deploy(O)
+      const error = 'Cannot override jig methods'
+      expect(() => CO.upgrade(class A extends Jig { sync () { } })).to.throw(error)
+      expect(() => CO.upgrade(class A extends Jig { toString () { } })).to.throw(error)
+      expect(() => CO.upgrade(class A extends Jig { auth () { } })).to.throw(error)
+      expect(() => CO.upgrade(class A extends Jig { destroy () { } })).to.throw(error)
+      expect(() => CO.upgrade(class A extends Jig { [Symbol.hasInstance] () { } })).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
