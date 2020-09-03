@@ -211,6 +211,22 @@ describe('Sync', () => {
         run.deactivate()
       }
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if attempt to update an old state', async () => {
+      const run = new Run()
+      class A extends Jig { set (x) { this.x = x } }
+      const a = new A()
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      a2.set(1)
+      await a2.sync()
+      a.set(2)
+      await expect(a.sync()).to.be.rejectedWith('txn-mempool-conflict')
+      expect(a.x).to.equal(1)
+    })
   })
 })
 
