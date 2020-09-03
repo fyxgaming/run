@@ -113,7 +113,7 @@ describe('Sync', () => {
       await run.sync()
       run.blockchain.spends = () => b.location.slice(0, 64)
       try {
-        await expect(a.sync()).to.be.rejectedWith('Blockchain returned an incorrect spend')
+        await expect(a.sync()).to.be.rejectedWith('Jig not spent in the transaction')
       } finally {
         run.deactivate()
       }
@@ -223,6 +223,16 @@ describe('Sync', () => {
       expect(A2.toString()).to.equal(A.toString())
       expect(A2.origin).to.equal(A.origin)
       expect(A2.location).to.equal(A.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('deploys code', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.install(A)
+      await CA.sync()
+      expect(CA.location.length).to.equal(67)
     })
   })
 
