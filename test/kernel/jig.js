@@ -282,7 +282,7 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('instanceof', () => {
-    it('should match basic jigs', async () => {
+    it('matches basic jigs', async () => {
       const run = new Run()
       class A extends Jig { }
 
@@ -305,7 +305,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should match class extensions', async () => {
+    it('matches class extensions', async () => {
       const run = new Run()
 
       class A extends Jig { }
@@ -338,7 +338,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should not match non-instances', () => {
+    it('does not match non-instances', () => {
       new Run() // eslint-disable-line
       expect(new class { }()).not.to.be.instanceOf(Jig)
       expect(new class { }() instanceof Jig).to.equal(false)
@@ -346,7 +346,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should match loaded jigs', async () => {
+    it('matches loaded jigs', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
@@ -359,7 +359,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should not match prototypes', () => {
+    it('does not match prototypes', () => {
       new Run // eslint-disable-line
       class A extends Jig { }
       const a = new A()
@@ -400,7 +400,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should match inner jigs set from outside', () => {
+    it('matches inner jigs set from outside', () => {
       new Run() // eslint-disable-line
       class A extends Jig { set (x) { this.x = x } }
       const a = new A()
