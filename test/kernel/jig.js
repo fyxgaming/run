@@ -528,9 +528,34 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('adds class references for each super call', () => {
-      // TODO
-      // in method, not init
+    it('adds class references for each super call', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { h () { return 1 } }
+      class B extends A { g () { return super.h() + 2 } }
+      class C extends B { f () { return super.g() + 3 } }
+      const c = new C()
+      await c.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 3,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [
+              { $jig: 0 },
+              'f',
+              []
+            ]
+          }
+        ]
+      })
+
+      c.f()
+      await c.sync()
     })
   })
 })
