@@ -46,6 +46,8 @@ describe.skip('Universal', () => {
     it('primitives are not universals', () => {
       // TODO
     })
+
+    // TODO: Check Jig, Berry, and Code itself are not universals
   })
 })
 

@@ -247,15 +247,33 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('adds references to entire class chain during create', () => {
-      // TODO
-    })
+    it('adds references for entire class chain', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      class B extends A { }
+      class C extends B { }
+      run.deploy(C)
+      await run.sync()
 
-    // ------------------------------------------------------------------------
+      expectTx({
+        nin: 0,
+        nref: 3,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'NEW',
+            data: [{ $jig: 0 }, []]
+          }
+        ]
+      })
 
-    it('adds class references for each super call', () => {
-      // TODO
-      // in method, not init
+      const c = new C()
+      await c.sync()
+
+      run.cache = new LocalCache()
+      await run.load(c.location)
     })
   })
 
@@ -447,6 +465,15 @@ describe('Jig', () => {
         }
       }
       expect(() => new A().changeGlobals()).to.throw()
+    })
+  })
+
+  // METHODS
+  // TODO
+  describe('Method', () => {
+    it('adds class references for each super call', () => {
+      // TODO
+      // in method, not init
     })
   })
 })
