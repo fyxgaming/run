@@ -182,6 +182,18 @@ describe('Jig', () => {
       expect(() => a.createDate()).to.throw('Date is not defined\n\nHint: Date is disabled because it is non-deterministic.')
       expect(() => a.useMath()).to.throw('Math is not defined\n\nHint: Math is disabled because it is non-deterministic.')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot change globals', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        changeGlobals () {
+          Set.n = 1
+        }
+      }
+      expect(() => new A().changeGlobals()).to.throw()
+    })
   })
 })
 
