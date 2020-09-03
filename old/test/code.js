@@ -62,7 +62,7 @@ describe('Code', () => {
       class B { }
       class A { createB () { return new B() } }
       const A2 = await run.load(await run.deploy(A))
-      expect(() => new A2().createB()).to.throw('B is not defined')
+      expect(() => new A2().createB()).to.throw()
     })
 
     it('should support circular dependencies', async () => {

@@ -131,7 +131,7 @@ describe('Jig', () => {
   // init
   // --------------------------------------------------------------------------
 
-  describe('init', () => {
+  describe.only('init', () => {
     it('should throw if called by user', () => {
       new Run() // eslint-disable-line
       class A extends Jig { init (n) { this.n = n } }
@@ -294,10 +294,10 @@ describe('Jig', () => {
         new Run() // eslint-disable-line
         let n = 1 // eslint-disable-line
         class A extends Jig { init () { n = 2 } }
-        expect(() => new A()).to.throw('n is not defined')
+        expect(() => new A()).to.throw()
         global.x = 1 // eslint-disable-line
         class B extends Jig { init () { x = 2 } } // eslint-disable-line
-        expect(() => new B()).to.throw('x is not defined')
+        expect(() => new B()).to.throw()
       } finally {
         delete global.x
       }
@@ -308,7 +308,7 @@ describe('Jig', () => {
     it('throws if access JigDeps', () => {
       new Run() // eslint-disable-line
       class A extends Jig { init () { JigDeps._stack.push(1) } } // eslint-disable-line
-      expect(() => new A()).to.throw('JigDeps is not defined')
+      expect(() => new A()).to.throw()
     })
 
     // ------------------------------------------------------------------------
