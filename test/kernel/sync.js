@@ -23,7 +23,6 @@ describe('Sync', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   // Only waits for current record
-  // TODO: Check records
   // TODO: Sync a destroyed jig
   // TODO: Sync a jig that failed to deploy to deploy it again
   // TODO: Forward sync code
@@ -71,6 +70,142 @@ describe('Sync', () => {
       class C extends B2 { }
       run.deploy(C)
       await run.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if attempt to update an old state', async () => {
+      const run = new Run()
+      class A extends Jig { set (x) { this.x = x } }
+      const a = new A()
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      a2.set(1)
+      await a2.sync()
+      a.set(2)
+      await expect(a.sync()).to.be.rejectedWith('txn-mempool-conflict')
+      expect(a.x).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if spend tx does not exist', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      run.blockchain.spends = () => '123'
+      try {
+        await expect(a.sync()).to.be.rejectedWith('No such mempool or blockchain transaction')
+      } finally {
+        run.deactivate()
+      }
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if spend is incorrect', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      const b = new A()
+      await run.sync()
+      run.blockchain.spends = () => b.location.slice(0, 64)
+      try {
+        await expect(a.sync()).to.be.rejectedWith('Blockchain returned an incorrect spend')
+      } finally {
+        run.deactivate()
+      }
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('disable forward sync', async () => {
+      const run = new Run()
+      class A extends Jig { set (x) { this.x = x } }
+      const a = new A()
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      a2.set(1)
+      await a2.sync()
+      expect(a.x).to.equal(undefined)
+      await a.sync({ forward: false })
+      expect(a.x).to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if forward sync is unsupported', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync() // pending transactions must publish first
+      run.blockchain.spends = async () => { throw new Error('spends') }
+      try {
+        await expect(a.sync()).to.be.rejected
+      } finally {
+        run.deactivate()
+      }
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('forward sync inner jigs', async () => {
+      const run = new Run()
+      class Store extends Jig { set (x, y) { this[x] = y } }
+      const a = new Store()
+      const b = new Store()
+      a.set('b', b)
+      await run.sync()
+      run.cache = new LocalCache()
+      const b2 = await run.load(b.location)
+      b2.set('n', 1)
+      await b2.sync()
+      expect(a.b.n).to.equal(undefined)
+      await a.sync()
+      expect(a.b.n).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('forward sync circularly referenced jigs', async () => {
+      const run = new Run()
+      class A extends Jig { setB (b) { this.b = b } }
+      class B extends Jig { setA (a) { this.a = a } }
+      const a = new A()
+      const b = new B()
+      a.setB(b)
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      const b2 = await run.load(b.location)
+      b2.setA(a2)
+      await b2.sync()
+      expect(a.b.a).to.equal(undefined)
+      await a.sync()
+      expect(a.b.a.location).to.equal(a.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('forward sync', async () => {
+      const run = new Run()
+      class A extends Jig { set (x) { this.x = x } }
+      const a = new A()
+      await a.sync()
+
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+
+      a2.set(1)
+      a2.set(2)
+      await a2.sync()
+
+      expect(a.x).to.equal(undefined)
+      await a.sync()
+      expect(a.x).to.equal(2)
     })
   })
 
@@ -125,138 +260,21 @@ describe('Sync', () => {
 
     // ------------------------------------------------------------------------
 
-    it('forward sync', async () => {
+    it('sync jig updated by another', async () => {
       const run = new Run()
-      class A extends Jig { set (x) { this.x = x } }
-      const a = new A()
-      await a.sync()
-
-      run.cache = new LocalCache()
-      const a2 = await run.load(a.location)
-
-      a2.set(1)
-      a2.set(2)
-      await a2.sync()
-
-      expect(a.x).to.equal(undefined)
-      await a.sync()
-      expect(a.x).to.equal(2)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('forward sync inner jigs', async () => {
-      const run = new Run()
-      class Store extends Jig { set (x, y) { this[x] = y } }
-      const a = new Store()
-      const b = new Store()
-      a.set('b', b)
-      await run.sync()
-      run.cache = new LocalCache()
-      const b2 = await run.load(b.location)
-      b2.set('n', 1)
-      await b2.sync()
-      expect(a.b.n).to.equal(undefined)
-      await a.sync()
-      expect(a.b.n).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('forward sync circularly referenced jigs', async () => {
-      const run = new Run()
-      class A extends Jig { setB (b) { this.b = b } }
-      class B extends Jig { setA (a) { this.a = a } }
-      const a = new A()
-      const b = new B()
-      a.setB(b)
-      await run.sync()
-      run.cache = new LocalCache()
-      const a2 = await run.load(a.location)
-      const b2 = await run.load(b.location)
-      b2.setA(a2)
-      await b2.sync()
-      expect(a.b.a).to.equal(undefined)
-      await a.sync()
-      expect(a.b.a.location).to.equal(a.location)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('disable forward sync', async () => {
-      const run = new Run()
-      class A extends Jig { set (x) { this.x = x } }
-      const a = new A()
-      await run.sync()
-      run.cache = new LocalCache()
-      const a2 = await run.load(a.location)
-      a2.set(1)
-      await a2.sync()
-      expect(a.x).to.equal(undefined)
-      await a.sync({ forward: false })
-      expect(a.x).to.equal(undefined)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if forward sync is unsupported', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const a = new A()
-      await a.sync() // pending transactions must publish first
-      run.blockchain.spends = async () => { throw new Error('spends') }
-      try {
-        await expect(a.sync()).to.be.rejected
-      } finally {
-        run.deactivate()
+      class A extends Jig {
+        set (x) { this.x = x }
       }
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if attempt to update an old state', async () => {
-      const run = new Run()
-      class A extends Jig { set (x) { this.x = x } }
-      const a = new A()
-      await run.sync()
-      run.cache = new LocalCache()
-      const a2 = await run.load(a.location)
-      a2.set(1)
-      await a2.sync()
-      a.set(2)
-      await expect(a.sync()).to.be.rejectedWith('txn-mempool-conflict')
-      expect(a.x).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if spend tx does not exist', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      run.blockchain.spends = () => '123'
-      try {
-        await expect(a.sync()).to.be.rejectedWith('No such mempool or blockchain transaction')
-      } finally {
-        run.deactivate()
+      class B extends Jig {
+        init (a) { this.a = a }
+        setA (x) { this.a.set(x) }
       }
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if spend is incorrect', async () => {
-      const run = new Run()
-      class A extends Jig { }
       const a = new A()
-      const b = new A()
+      const b = new B(a)
+      b.setA(1)
       await run.sync()
-      run.blockchain.spends = () => b.location.slice(0, 64)
-      try {
-        await expect(a.sync()).to.be.rejectedWith('Blockchain returned an incorrect spend')
-      } finally {
-        run.deactivate()
-      }
+      const a2 = await run.load(a.origin)
+      await expect(a2.sync()).not.to.be.rejected
     })
   })
 })
