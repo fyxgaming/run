@@ -208,11 +208,11 @@ describe('Code', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
-      expect(() => CA.location).to.throw('location is undetermined')
-      expect(() => CA.origin).to.throw('origin is undetermined')
-      expect(() => CA.nonce).to.throw('nonce is undetermined')
-      expect(() => CA.owner).to.throw('owner is undetermined')
-      expect(() => CA.satoshis).to.throw('satoshis is undetermined')
+      expect(() => CA.location).to.throw('Cannot read location')
+      expect(() => CA.origin).to.throw('Cannot read origin')
+      expect(() => CA.nonce).to.throw('Cannot read nonce')
+      expect(() => CA.owner).to.throw('Cannot read owner')
+      expect(() => CA.satoshis).to.throw('Cannot read satoshis')
     })
 
     // ------------------------------------------------------------------------
