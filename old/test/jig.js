@@ -23,41 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('method', () => {
-    it('should restore old state if method throws', () => {
-      createHookedRun()
-      class Outer extends Jig { setN () { this.n = 1 } }
-      class Inner extends Jig { setZ () { this.z = 1 } }
-      class Revertable extends Jig {
-        init () {
-          this.n = 1
-          this.arr = ['a', { b: 1 }]
-          this.self = this
-          this.inner = new Inner()
-        }
-
-        methodThatThrows (outer) {
-          outer.setN()
-          this.n = 2
-          this.arr[1].b = 2
-          this.arr.push(3)
-          this.inner.setZ()
-          throw new Error('an error')
-        }
-      }
-      Revertable.deps = { Inner }
-      const main = new Revertable()
-      expectAction(main, 'init', [], [], [main, main.inner], [])
-      const outer = new Outer()
-      expectAction(outer, 'init', [], [], [outer], [])
-      expect(() => main.methodThatThrows(outer)).to.throw()
-      expectNoAction()
-      expect(main.n).to.equal(1)
-      expect(main.arr).to.deep.equal(['a', { b: 1 }])
-      expect(main.self).to.equal(main)
-      expect(main.inner.z).to.equal(undefined)
-      expect(outer.n).to.equal(undefined)
-    })
-
     it('should throw if swallow internal errors', () => {
       createHookedRun()
       class B extends Jig { init () { throw new Error('some error message') } }

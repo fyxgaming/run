@@ -630,6 +630,40 @@ describe('Jig', () => {
       const a3 = await run.load(a.location)
       test(a3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('restores old state if method throws', () => {
+      new Run() // eslint-disable-line
+      class Outer extends Jig { setN () { this.n = 1 } }
+      class Inner extends Jig { setZ () { this.z = 1 } }
+      class Revertable extends Jig {
+        init () {
+          this.n = 1
+          this.arr = ['a', { b: 1 }]
+          this.self = this
+          this.inner = new Inner()
+        }
+
+        methodThatThrows (outer) {
+          outer.setN()
+          this.n = 2
+          this.arr[1].b = 2
+          this.arr.push(3)
+          this.inner.setZ()
+          throw new Error('an error')
+        }
+      }
+      Revertable.deps = { Inner }
+      const main = new Revertable()
+      const outer = new Outer()
+      expect(() => main.methodThatThrows(outer)).to.throw()
+      expect(main.n).to.equal(1)
+      expect(main.arr).to.deep.equal(['a', { b: 1 }])
+      expect(main.self).to.equal(main)
+      expect(main.inner.z).to.equal(undefined)
+      expect(outer.n).to.equal(undefined)
+    })
   })
 })
 
