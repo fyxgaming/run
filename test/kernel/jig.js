@@ -153,23 +153,38 @@ describe('Jig', () => {
       test(a3)
     })
 
-    /*
-    it('should match class extensions', () => {
-      createHookedRun()
+    it('should match class extensions', async () => {
+      const run = new Run()
+
       class A extends Jig { }
       class B extends A { }
       class C extends Jig { }
+
+      function test (b, c) {
+        expect(b).to.be.instanceOf(A)
+        expect(b).to.be.instanceOf(B)
+        expect(b).to.be.instanceOf(Jig)
+        expect(c).not.to.be.instanceOf(B)
+        expect(c).to.be.instanceOf(Jig)
+      }
+
       const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
       const c = new C()
-      expectAction(c, 'init', [], [], [c], [])
-      expect(b).to.be.instanceOf(A)
-      expect(b).to.be.instanceOf(B)
-      expect(b).to.be.instanceOf(Jig)
-      expect(c).not.to.be.instanceOf(B)
-      expect(c).to.be.instanceOf(Jig)
+
+      test(b, c)
+      await run.sync()
+
+      const b2 = await run.load(b.location)
+      const c2 = await run.load(c.location)
+      test(b2, c2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(b.location)
+      const c3 = await run.load(c.location)
+      test(b3, c3)
     })
 
+    /*
     it('should not match non-instances', () => {
       createHookedRun()
       expect(new class { }()).not.to.be.instanceOf(Jig)
