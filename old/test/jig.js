@@ -23,17 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('method', () => {
-    it('should throw if swallow internal errors', () => {
-      createHookedRun()
-      class B extends Jig { init () { throw new Error('some error message') } }
-      class A extends Jig { f () { try { return new B() } catch (e) { } } }
-      A.deps = { B }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f()).to.throw('internal errors must not be swallowed\n\nError: some error message')
-      expectNoAction()
-    })
-
     it('should support calling super method', async () => {
       createHookedRun()
       class A extends Jig { f () { this.a = true }}
