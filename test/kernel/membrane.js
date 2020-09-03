@@ -2225,12 +2225,33 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if call overridden method', () => {
+    it('throws if call jig method on another jig from inside', () => {
+      const options = { _recordable: true, _replayable: true }
+      const A = makeJig(class A { static f () { } }, options)
+      const B = makeJig(class B { static f () { return Reflect.apply(A.f, B, []) } }, options)
+      const C = makeJig(class C { static f () { return B.f.apply(this, []) } }, options)
+      const error = 'Cannot call f'
+      expect(() => testRecord(() => C.f())).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if call overridden method from outside', () => {
       const options = { _recordable: true, _replayable: true }
       const A = makeJig(class A { static f () { } }, options)
       const B = makeJig(class B extends A { static f () { } }, options)
       const error = 'Cannot call f'
       expect(() => testRecord(() => Reflect.apply(A.f, B, []))).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('may call overridden method from inside', () => {
+      const options = { _recordable: true, _replayable: true }
+      const A = makeJig(class A { static f () { return 1 } }, options)
+      const B = makeJig(class B extends A { static f () { return Reflect.apply(A.f, this, []) + 1 } }, options)
+      const C = makeJig(class C extends B { static f () { return Reflect.apply(B.f, this, []) + 2 } }, options)
+      expect(C.f()).to.equal(4)
     })
 
     // ------------------------------------------------------------------------
