@@ -132,16 +132,79 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('instanceof', () => {
-    it.skip('should match basic jigs', () => {
-      new Run() // eslint-disable-line
+    it('should match basic jigs', async () => {
+      const run = new Run()
+      class A extends Jig { }
+
+      function test (a) {
+        expect(a).to.be.instanceOf(A)
+        expect(a).to.be.instanceOf(Jig)
+      }
+
+      const a = new A()
+      test(a)
+      await a.sync()
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    /*
+    it('should match class extensions', () => {
+      createHookedRun()
+      class A extends Jig { }
+      class B extends A { }
+      class C extends Jig { }
+      const b = new B()
+      expectAction(b, 'init', [], [], [b], [])
+      const c = new C()
+      expectAction(c, 'init', [], [], [c], [])
+      expect(b).to.be.instanceOf(A)
+      expect(b).to.be.instanceOf(B)
+      expect(b).to.be.instanceOf(Jig)
+      expect(c).not.to.be.instanceOf(B)
+      expect(c).to.be.instanceOf(Jig)
+    })
+
+    it('should not match non-instances', () => {
+      createHookedRun()
+      expect(new class { }()).not.to.be.instanceOf(Jig)
+      expect(new class { }() instanceof Jig).to.equal(false)
+    })
+
+    it('should support searching owner for an uninstalled class', async () => {
+      const run = createHookedRun()
+      class A extends Jig { }
+      class B extends Jig { }
+      const a = new A() // eslint-disable-line
+      await a.sync()
+      run.inventory.jigs.find(jig => jig instanceof B)
+    })
+
+    it('should match loaded instances', async () => {
+      const run = createHookedRun()
       class A extends Jig { }
       const a = new A()
-
-      // TEST FULLY
-
-      expect(a).to.be.instanceOf(A)
-      expect(a).to.be.instanceOf(Jig)
+      await run.sync()
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      const a2 = await run2.load(a.location)
+      expect(a2 instanceof A).to.equal(true)
     })
+
+    it('should not match prototypes', () => {
+      createHookedRun()
+      class A extends Jig { }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      expect(a.constructor.prototype instanceof Jig).to.equal(false)
+      expect(Object.getPrototypeOf(a) instanceof Jig).to.equal(false)
+    })
+    */
   })
 
   // --------------------------------------------------------------------------
