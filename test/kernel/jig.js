@@ -139,27 +139,25 @@ describe('Jig', () => {
       expect(() => a.init(6)).to.throw('init disabled')
     })
 
-    /*
+    // ------------------------------------------------------------------------
 
     it('should throw if called by other jig code', () => {
-      createHookedRun()
+      new Run() // eslint-disable-line
       class A extends Jig {
         init (n) { this.n = n }
-
         f (n) { this.init(n) }
       }
       const a = new A(5)
-      expectAction(a, 'init', [5], [], [a], [])
-      expect(() => a.f(6)).to.throw()
-      expectNoAction()
+      expect(() => a.f(6)).to.throw('init disabled')
     })
 
+    // ------------------------------------------------------------------------
+
     it('should throw if init returns a value', async () => {
-      createHookedRun()
+      new Run() // eslint-disable-line
       class A extends Jig { init () { return {} }}
-      expect(() => new A()).to.throw()
+      expect(() => new A()).to.throw('init must not return a value')
     })
-    */
   })
 
   // --------------------------------------------------------------------------
