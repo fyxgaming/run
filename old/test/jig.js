@@ -23,19 +23,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('sandbox', () => {
-    it('should throw useful error when using Date and Math', () => {
-      createHookedRun()
-      class A extends Jig {
-        createDate () { return new Date() }
-        useMath () { return Math.random() }
-      }
-      const a = new A()
-      expect(() => a.createDate()).to.throw('Date is not defined\n\nHint: Date is disabled because it is non-deterministic.')
-      expect(() => a.useMath()).to.throw('Math is not defined\n\nHint: Math is disabled because it is non-deterministic.')
-    })
-  })
-
   describe('instanceof', () => {
     it('should match basic jigs', () => {
       createHookedRun()

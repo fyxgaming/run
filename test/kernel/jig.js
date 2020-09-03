@@ -156,7 +156,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if access globals', () => {
+    it('throws if access disabled globals', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         isUndefined (x) {
@@ -168,6 +168,19 @@ describe('Jig', () => {
       const a = new A()
       const bad = ['Date', 'Math', 'eval', 'XMLHttpRequest', 'FileReader', 'WebSocket', 'setTimeout', 'setInterval']
       bad.forEach(x => expect(a.isUndefined(x)).to.equal(true))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws useful error for Date and Math', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        createDate () { return new Date() }
+        useMath () { return Math.random() }
+      }
+      const a = new A()
+      expect(() => a.createDate()).to.throw('Date is not defined\n\nHint: Date is disabled because it is non-deterministic.')
+      expect(() => a.useMath()).to.throw('Math is not defined\n\nHint: Math is disabled because it is non-deterministic.')
     })
   })
 })
