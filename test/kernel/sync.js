@@ -196,6 +196,21 @@ describe('Sync', () => {
       await a.sync({ forward: false })
       expect(a.x).to.equal(undefined)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if forward sync is unsupported', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync() // pending transactions must publish first
+      run.blockchain.spends = async () => { throw new Error('spends') }
+      try {
+        await expect(a.sync()).to.be.rejected
+      } finally {
+        run.deactivate()
+      }
+    })
   })
 })
 
