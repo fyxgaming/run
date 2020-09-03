@@ -24,15 +24,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('instanceof', () => {
-    it('should match basic jigs', () => {
-      createHookedRun()
-      class A extends Jig { }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(a).to.be.instanceOf(A)
-      expect(a).to.be.instanceOf(Jig)
-    })
-
     it('should match class extensions', () => {
       createHookedRun()
       class A extends Jig { }

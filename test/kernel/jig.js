@@ -128,6 +128,23 @@ describe('Jig', () => {
   })
 
   // --------------------------------------------------------------------------
+  // instanceof
+  // --------------------------------------------------------------------------
+
+  describe('instanceof', () => {
+    it.skip('should match basic jigs', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+
+      // TEST FULLY
+
+      expect(a).to.be.instanceOf(A)
+      expect(a).to.be.instanceOf(Jig)
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // Sandbox
   // --------------------------------------------------------------------------
 
