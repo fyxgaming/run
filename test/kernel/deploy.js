@@ -1517,7 +1517,7 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it('returns different code for a copy with same presets', () => {
+    it('returns same code for a copy with same presets', () => {
       const run = new Run()
       const network = run.blockchain.network
       class A { }
@@ -1534,7 +1534,7 @@ describe('Deploy', () => {
       Object.assign(B, A)
       const CA = run.deploy(A)
       const CB = run.deploy(B)
-      expect(CA).not.to.equal(CB)
+      expect(CA).to.equal(CB)
     })
 
     // ------------------------------------------------------------------------
