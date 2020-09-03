@@ -24,19 +24,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('sandbox', () => {
-    it('should throw if access external variables', () => {
-      createHookedRun()
-      let n = 1 // eslint-disable-line
-      class A extends Jig { init () { n = 2 } }
-      expect(() => new A()).to.throw()
-      expectNoAction()
-      global.x = 1 // eslint-disable-line
-      class B extends Jig { init () { x = 2 } } // eslint-disable-line
-      expect(() => new B()).to.throw()
-      expectNoAction()
-      delete global.x
-    })
-
     it('should throw if access jig control', () => {
       createHookedRun()
       class A extends Jig { init () { JigControl._stack.push(1) } } // eslint-disable-line
