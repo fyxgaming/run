@@ -594,6 +594,42 @@ describe('Jig', () => {
 
       expect(dragon).to.deep.equal(dragon2)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('swap inner jigs', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init (name) { this.name = name }
+        setX (a) { this.x = a }
+
+        setY (a) { this.y = a }
+
+        swapXY () { const t = this.x; this.x = this.y; this.y = t }
+      }
+      const a = new A('a')
+      const b = new A('b')
+      const c = new A('c')
+      a.setX(b)
+      a.setY(c)
+      a.swapXY()
+
+      function test (a) {
+        expect(a.x).not.to.equal(a.y)
+        expect(a.x.name).to.equal('c')
+        expect(a.y.name).to.equal('b')
+      }
+
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
   })
 })
 

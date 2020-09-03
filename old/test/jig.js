@@ -23,29 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('method', () => {
-    it('should support swapping inner jigs', () => {
-      createHookedRun()
-      class A extends Jig {
-        setX (a) { this.x = a }
-
-        setY (a) { this.y = a }
-
-        swapXY () { const t = this.x; this.x = this.y; this.y = t }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const b = new A()
-      expectAction(b, 'init', [], [], [b], [])
-      const c = new A()
-      expectAction(c, 'init', [], [], [c], [])
-      a.setX(b)
-      expectAction(a, 'setX', [b], [a], [a], [])
-      a.setY(c)
-      expectAction(a, 'setY', [c], [a], [a], [])
-      a.swapXY()
-      expectAction(a, 'swapXY', [], [a], [a], [a])
-    })
-
     it('should restore old state if method throws', () => {
       createHookedRun()
       class Outer extends Jig { setN () { this.n = 1 } }
