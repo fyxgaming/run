@@ -24,23 +24,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('sync', () => {
-    it('should set origins and locations on class and instance', async () => {
-      createHookedRun()
-      class A extends Jig { }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const a2 = await a.sync()
-      expect(a).to.equal(a2)
-      expect(A.origin.length).to.equal(67)
-      expect(A.origin.endsWith('_o1')).to.equal(true)
-      expect(A.location.length).to.equal(67)
-      expect(A.location.endsWith('_o1')).to.equal(true)
-      expect(a.origin.length).to.equal(67)
-      expect(a.origin.endsWith('_o2')).to.equal(true)
-      expect(a.location.length).to.equal(67)
-      expect(a.location.endsWith('_o2')).to.equal(true)
-    })
-
     it('should throw if called internally', () => {
       createHookedRun()
       class A extends Jig { init () { this.sync() } }
