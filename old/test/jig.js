@@ -24,13 +24,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('constructor', () => {
-    it('throws if constructor method exists', () => {
-      createHookedRun()
-      class A extends Jig { constructor () { super(); this.n = 1 } }
-      expect(() => new A()).to.throw('Jig must use init() instead of constructor()')
-      expectNoAction()
-    })
-
     it('should call init method with constructor args', () => {
       createHookedRun()
       class A extends Jig { init (a, b) { this.a = a; this.b = b } }
