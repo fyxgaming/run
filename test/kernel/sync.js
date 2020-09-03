@@ -160,6 +160,26 @@ describe('Sync', () => {
       await a.sync()
       expect(a.b.n).to.equal(1)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('forward sync circularly referenced jigs', async () => {
+      const run = new Run()
+      class A extends Jig { setB (b) { this.b = b } }
+      class B extends Jig { setA (a) { this.a = a } }
+      const a = new A()
+      const b = new B()
+      a.setB(b)
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      const b2 = await run.load(b.location)
+      b2.setA(a2)
+      await b2.sync()
+      expect(a.b.a).to.equal(undefined)
+      await a.sync()
+      expect(a.b.a.location).to.equal(a.location)
+    })
   })
 })
 
