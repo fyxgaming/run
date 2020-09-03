@@ -24,22 +24,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('sync', () => {
-    it('should support disabling forward sync', async () => {
-      const run = createHookedRun()
-      class A extends Jig { set (x) { this.x = x } }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      await run.sync()
-      const run2 = new Run({ owner: run.owner.privkey })
-      const a2 = await run2.load(a.location)
-      a2.set(1)
-      await a2.sync()
-      run.activate()
-      expect(a.x).to.equal(undefined)
-      await a.sync({ forward: false })
-      expect(a.x).to.equal(undefined)
-    })
-
     it('should throw if forward sync is unsupported', async () => {
       const run = createHookedRun()
       class A extends Jig { }

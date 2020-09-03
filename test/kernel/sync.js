@@ -180,6 +180,22 @@ describe('Sync', () => {
       await a.sync()
       expect(a.b.a.location).to.equal(a.location)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('disable forward sync', async () => {
+      const run = new Run()
+      class A extends Jig { set (x) { this.x = x } }
+      const a = new A()
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      a2.set(1)
+      await a2.sync()
+      expect(a.x).to.equal(undefined)
+      await a.sync({ forward: false })
+      expect(a.x).to.equal(undefined)
+    })
   })
 })
 
