@@ -66,6 +66,13 @@ describe('Jig', () => {
       const a3 = await run.load(a.location)
       test(a3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('should throw if not extended', () => {
+      new Run() // eslint-disable-line
+      expect(() => new Jig()).to.throw('Jig must be extended')
+    })
   })
 })
 

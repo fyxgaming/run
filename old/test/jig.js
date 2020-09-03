@@ -24,22 +24,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('constructor', () => {
-    it('should create basic jig', async () => {
-      const run = createHookedRun()
-      class A extends Jig { }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(unmangle(run.code)._installs.has(A)).to.equal(true)
-      await run.sync()
-      expect(A.origin.length).to.equal(67)
-    })
-
-    it('should throw if not extended', () => {
-      createHookedRun()
-      expect(() => new Jig()).to.throw()
-      expectNoAction()
-    })
-
     it('throws if constructor method exists', () => {
       createHookedRun()
       class A extends Jig { constructor () { super(); this.n = 1 } }
