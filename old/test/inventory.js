@@ -16,6 +16,17 @@ const { Jig, Token, Viewer } = Run
 // Inventory
 // ------------------------------------------------------------------------------------------------
 
+/*
+it('should support searching owner for an uninstalled class', async () => {
+  const run = createHookedRun()
+  class A extends Jig { }
+  class B extends Jig { }
+  const a = new A() // eslint-disable-line
+  await a.sync()
+  run.inventory.jigs.find(jig => jig instanceof B)
+})
+*/
+
 describe('Inventory', () => {
   // Todo:
   // Todo: sync

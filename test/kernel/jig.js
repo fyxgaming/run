@@ -153,6 +153,8 @@ describe('Jig', () => {
       test(a3)
     })
 
+    // ------------------------------------------------------------------------
+
     it('should match class extensions', async () => {
       const run = new Run()
 
@@ -184,42 +186,67 @@ describe('Jig', () => {
       test(b3, c3)
     })
 
-    /*
+    // ------------------------------------------------------------------------
+
     it('should not match non-instances', () => {
-      createHookedRun()
+      new Run() // eslint-disable-line
       expect(new class { }()).not.to.be.instanceOf(Jig)
       expect(new class { }() instanceof Jig).to.equal(false)
     })
 
-    it('should support searching owner for an uninstalled class', async () => {
-      const run = createHookedRun()
-      class A extends Jig { }
-      class B extends Jig { }
-      const a = new A() // eslint-disable-line
-      await a.sync()
-      run.inventory.jigs.find(jig => jig instanceof B)
-    })
+    // ------------------------------------------------------------------------
 
-    it('should match loaded instances', async () => {
-      const run = createHookedRun()
+    it('should match loaded jigs', async () => {
+      const run = new Run()
       class A extends Jig { }
       const a = new A()
-      await run.sync()
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      const a2 = await run2.load(a.location)
+      await a.sync()
+      const A2 = await run.load(A.location)
+      const a2 = await run.load(a.location)
       expect(a2 instanceof A).to.equal(true)
+      expect(a2 instanceof A2).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
 
     it('should not match prototypes', () => {
-      createHookedRun()
+      new Run // eslint-disable-line
       class A extends Jig { }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       expect(a.constructor.prototype instanceof Jig).to.equal(false)
       expect(Object.getPrototypeOf(a) instanceof Jig).to.equal(false)
     })
-    */
+
+    // ------------------------------------------------------------------------
+
+    it('cannot use Reflect to create instance', () => {
+      const run = new Run()
+      class A extends Jig { }
+      const o = { }
+      const A2 = run.deploy(A)
+      Object.setPrototypeOf(o, A2.prototype)
+      expect(o instanceof A).to.equal(false)
+      expect(o instanceof A2).to.equal(false)
+      expect(o instanceof Jig).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('matches updated classes', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () { this.n = 1 }
+        g () { this.n = 1 }
+      }
+      const A2 = run.deploy(A)
+      const a = new A()
+      await A2.sync()
+      const A3 = await run.load(A2.location)
+      expect(a.constructor).not.to.equal(A3)
+      expect(a instanceof A3).to.equal(true)
+      A3.f()
+      expect(a instanceof A3).to.equal(true)
+    })
   })
 
   // --------------------------------------------------------------------------
