@@ -397,6 +397,17 @@ describe('Jig', () => {
       A3.f()
       expect(a instanceof A3).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('should match inner jigs set from outside', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { set (x) { this.x = x } }
+      const a = new A()
+      const b = new A()
+      a.set(b)
+      expect(a.b instanceof Jig).to.equal(true)
+    })
   })
 
   // --------------------------------------------------------------------------

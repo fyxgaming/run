@@ -125,7 +125,7 @@ describe('Sync', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should forward sync', async () => {
+    it('forward sync', async () => {
       const run = new Run()
       class A extends Jig { set (x) { this.x = x } }
       const a = new A()
@@ -141,6 +141,24 @@ describe('Sync', () => {
       expect(a.x).to.equal(undefined)
       await a.sync()
       expect(a.x).to.equal(2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('forward sync inner jigs', async () => {
+      const run = new Run()
+      class Store extends Jig { set (x, y) { this[x] = y } }
+      const a = new Store()
+      const b = new Store()
+      a.set('b', b)
+      await run.sync()
+      run.cache = new LocalCache()
+      const b2 = await run.load(b.location)
+      b2.set('n', 1)
+      await b2.sync()
+      expect(a.b.n).to.equal(undefined)
+      await a.sync()
+      expect(a.b.n).to.equal(1)
     })
   })
 })
