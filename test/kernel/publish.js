@@ -20,28 +20,35 @@ describe('Publish', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  it('should throw if inconsistent classes', async () => {
+  it('should throw if inconsistent jig classes', async () => {
     const run = new Run()
-
     class A extends Jig {
       static f () { this.n = 1 }
       g (a2) { this.a2 = a2 }
     }
-
     const A2 = run.deploy(A)
     await A2.sync()
-
     const a1 = new A2()
-
     const A3 = await run.load(A2.location)
     A3.f()
     await A3.sync()
     expect(A2.location).not.to.equal(A3.location)
-
     const a2 = new A3()
-
     a2.g(a1)
     await expect(a2.sync()).to.be.rejectedWith('Inconsistent worldview')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('should throw if inconsistent jig instances', async () => {
+    const run = new Run()
+    class A extends Jig { set (x) { this.x = x } }
+    const a1 = new A()
+    a1.set(1)
+    await a1.sync()
+    const a2 = await run.load(a1.origin)
+    const b = new A()
+    expect(() => b.set(a1, a2)).to.throw('Inconsistent worldview')
   })
 })
 
