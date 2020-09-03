@@ -69,6 +69,50 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
+    it('calls init method with constructor args', async () => {
+      const run = new Run()
+      class A extends Jig { init (a, b) { this.a = a; this.b = b } }
+
+      expectTx({
+        nin: 0,
+        nref: 1,
+        nout: 2,
+        ndel: 0,
+        ncre: 2,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              A.toString(),
+              { deps: { Jig: { $jig: 0 } } }
+            ]
+          },
+          {
+            op: 'NEW',
+            data: [{ $jig: 1 }, [1, 'z']]
+          }
+        ]
+      })
+
+      function test (a) {
+        expect(a.a).to.equal(1)
+        expect(a.b).to.equal('z')
+      }
+
+      const a = new A(1, 'z')
+      test(a)
+      await a.sync()
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('should throw if not extended', () => {
       new Run() // eslint-disable-line
       expect(() => new Jig()).to.throw('Jig must be extended')

@@ -24,14 +24,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('constructor', () => {
-    it('should call init method with constructor args', () => {
-      createHookedRun()
-      class A extends Jig { init (a, b) { this.a = a; this.b = b } }
-      const a = new A(1, 'z')
-      expectAction(a, 'init', [1, 'z'], [], [a], [])
-      expect(a.a).to.equal(1)
-      expect(a.b).to.equal('z')
-    })
   })
 
   describe('sandbox', () => {
