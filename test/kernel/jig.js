@@ -145,6 +145,14 @@ describe('Jig', () => {
         delete global.x
       }
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if access JigDeps', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { init () { JigDeps._stack.push(1) } } // eslint-disable-line
+      expect(() => new A()).to.throw('JigDeps is not defined')
+    })
   })
 })
 

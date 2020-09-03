@@ -24,13 +24,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('sandbox', () => {
-    it('should throw if access jig control', () => {
-      createHookedRun()
-      class A extends Jig { init () { JigControl._stack.push(1) } } // eslint-disable-line
-      expect(() => new A()).to.throw()
-      expectNoAction()
-    })
-
     it('should throw if access globals', () => {
       createHookedRun()
       class A extends Jig {
