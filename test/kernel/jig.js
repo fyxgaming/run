@@ -161,10 +161,33 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may call super.init on Jig', () => {
+    it('may call super.init on Jig', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { init () { super.init() } }
-      new A() // eslint-disable-line
+
+      expectTx({
+        nin: 0,
+        nref: 1,
+        nout: 2,
+        ndel: 0,
+        ncre: 2,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              A.toString(),
+              { deps: { Jig: { $jig: 0 } } }
+            ]
+          },
+          {
+            op: 'NEW',
+            data: [{ $jig: 1 }, []]
+          }
+        ]
+      })
+
+      const a = new A()
+      await a.sync()
     })
 
     // ------------------------------------------------------------------------
@@ -187,6 +210,19 @@ describe('Jig', () => {
       const b = new B()
       expect(b.a).to.equal(undefined)
       expect(b.b).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('adds references to entire class chain during create', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('adds class references for each super call', () => {
+      // TODO
+      // in method, not init
     })
   })
 
