@@ -5,7 +5,6 @@
  */
 
 const { describe, it, afterEach } = require('mocha')
-require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
@@ -23,19 +22,18 @@ describe('Publish', () => {
   it('should throw if inconsistent jig classes', async () => {
     const run = new Run()
     class A extends Jig {
-      static f () { this.n = 1 }
-      g (a2) { this.a2 = a2 }
+      static setOnClass (s) { this.s = s }
+      setOnInstance (t) { this.t = t.toString() }
     }
-    const A2 = run.deploy(A)
-    await A2.sync()
-    const a1 = new A2()
-    const A3 = await run.load(A2.location)
-    A3.f()
-    await A3.sync()
-    expect(A2.location).not.to.equal(A3.location)
-    const a2 = new A3()
-    a2.g(a1)
-    await expect(a2.sync()).to.be.rejectedWith('Inconsistent worldview')
+    const CA = run.deploy(A)
+    await CA.sync()
+    const a1 = new CA()
+    const CA2 = await run.load(CA.location)
+    CA2.setOnClass(1)
+    await CA2.sync()
+    expect(CA.location).not.to.equal(CA2.location)
+    const a2 = new CA2()
+    expect(() => a2.setOnInstance(a1)).to.throw('Inconsistent worldview')
   })
 
   // --------------------------------------------------------------------------
