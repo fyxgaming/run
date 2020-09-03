@@ -110,6 +110,17 @@ describe('Sync', () => {
       expect(a.location.length).to.equal(67)
       expect(a.location.endsWith('_o2')).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if called inside', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { init () { this.sync() } }
+      class B extends Jig { f () { this.sync() } }
+      expect(() => new A()).to.throw('sync cannot be called internally')
+      const b = new B()
+      expect(() => b.f()).to.throw('sync cannot be called internally')
+    })
   })
 })
 

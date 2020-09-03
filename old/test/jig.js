@@ -24,18 +24,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('sync', () => {
-    it('should throw if called internally', () => {
-      createHookedRun()
-      class A extends Jig { init () { this.sync() } }
-      class B extends Jig { f () { this.sync() } }
-      expect(() => new A()).to.throw()
-      expectNoAction()
-      const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f()).to.throw()
-      expectNoAction()
-    })
-
     it('should throw if override sync', () => {
       createHookedRun()
       class A extends Jig { sync () { } }
