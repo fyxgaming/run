@@ -128,6 +128,41 @@ describe('Jig', () => {
   })
 
   // --------------------------------------------------------------------------
+  // init
+  // --------------------------------------------------------------------------
+
+  describe('init', () => {
+    it('should throw if called externally', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { init (n) { this.n = n } }
+      const a = new A(5)
+      expect(() => a.init(6)).to.throw('init disabled')
+    })
+
+    /*
+
+    it('should throw if called internally', () => {
+      createHookedRun()
+      class A extends Jig {
+        init (n) { this.n = n }
+
+        f (n) { this.init(n) }
+      }
+      const a = new A(5)
+      expectAction(a, 'init', [5], [], [a], [])
+      expect(() => a.f(6)).to.throw()
+      expectNoAction()
+    })
+
+    it('should throw if init returns a value', async () => {
+      createHookedRun()
+      class A extends Jig { init () { return {} }}
+      expect(() => new A()).to.throw()
+    })
+    */
+  })
+
+  // --------------------------------------------------------------------------
   // instanceof
   // --------------------------------------------------------------------------
 
