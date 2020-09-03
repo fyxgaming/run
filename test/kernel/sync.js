@@ -207,6 +207,17 @@ describe('Sync', () => {
       await a.sync()
       expect(a.x).to.equal(2)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('sync destroyed jig', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      CA.destroy()
+      await CA.sync()
+      await CA.sync()
+    })
   })
 
   // --------------------------------------------------------------------------
