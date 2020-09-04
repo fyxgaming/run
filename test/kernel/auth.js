@@ -115,7 +115,6 @@ describe('Auth', () => {
     it.skip('auth code in a jig method', () => {
 
     })
-
     // ------------------------------------------------------------------------
 
     it.skip('auth multiple in a batch', () => {

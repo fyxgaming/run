@@ -507,7 +507,7 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('depoys code in args', async () => {
+    it('depoys code in args', async () => {
       const run = new Run()
       class A extends Jig { }
       class B { }
