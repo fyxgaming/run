@@ -830,7 +830,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if inconsistent worldview', async () => {
+    it('throws if different read instances', async () => {
       const run = new Run()
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
@@ -845,6 +845,21 @@ describe('Jig', () => {
       }
       const b = new B(a)
       expect(() => b.apply(a2)).to.throw('Inconsistent worldview')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if read different instance than written', async () => {
+      const run = new Run()
+      class A extends Jig { set (n) { this.n = n } }
+      class B extends Jig { apply (a, a2) { this.n = a.n; a2.set(3) } }
+      const a = new A()
+      a.set(1)
+      await run.sync()
+      const a2 = await run.load(a.location)
+      a2.set(2)
+      const b = new B()
+      expect(() => b.apply(a, a2)).to.throw('Inconsistent worldview')
     })
   })
 })
