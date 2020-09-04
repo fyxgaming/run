@@ -1062,16 +1062,16 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('cannot set methods on builtin methods', () => {
+    it('cannot set methods on builtin methods', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         init () { this.arr = [] }
         f () { this.sync.n = 1 }
-        g () { this.arr.filter.n = 2; return this.arr.filter.n }
+        h () { Array.n = 1 }
       }
       const a = new A()
       expect(() => a.f()).to.throw('set disabled')
-      expect(a.g()).to.equal(undefined)
+      expect(() => a.g()).to.throw()
     })
 
     // ------------------------------------------------------------------------
