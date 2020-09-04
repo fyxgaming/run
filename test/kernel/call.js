@@ -562,25 +562,32 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
-    it('should allow checking jig constructors', async () => {
-      const run = createHookedRun()
-      class A extends Jig { init (b) { this.test = b.constructor === B } }
-      class B extends Jig { init () { this.x = A.owner } }
+    it.only('should allow checking jig constructors', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init (b) {
+          this.test = b.constructor === B
+          console.log(this.test)
+        }
+      }
+      class B extends Jig { }
       A.deps = { B }
       B.deps = { A }
-      await run.deploy(A)
-      await run.deploy(B)
+      run.deploy(A)
+      run.deploy(B)
+      await run.sync()
       const b = new B()
       const a = new A(b)
-      expect(b.x).to.equal(run.owner.address)
       expect(a.test).to.equal(true)
       await run.sync()
-      run.deactivate()
-      const run2 = new Run({ owner: run.owner.privkey })
-      await run2.sync()
+      await run.load(a.location)
+      await run.load(b.location)
+      run.cache = new LocalCache()
+      console.log('2')
+      await run.load(a.location)
+      console.log('2')
+      await run.load(b.location)
     })
-    */
   })
 })
 
