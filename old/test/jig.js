@@ -4,7 +4,7 @@
  * Tests for lib/kernel/jig.js
  */
 
-const { describe, it, afterEach, beforeEach } = require('mocha')
+const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { stub } = require('sinon')
@@ -21,110 +21,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
-
-  describe('arguments', () => {
-    const run = createHookedRun()
-    beforeEach(() => run.activate())
-
-    async function testArgumentPass (...args) {
-      class A extends Jig { f (...args) { this.args = args } }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      a.f(...args)
-      expectAction(a, 'f', args, [a], [a], [])
-      await a.sync()
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      await run2.load(a.location)
-      // TODO: Re-enable. Right now, proxy objects are always different. Infinite loop.
-      // const a2 = ...
-      // expect(a2.args).to.deep.equal(args)
-    }
-
-    it('should pass nothing', () => testArgumentPass())
-    it('should pass positive zero', () => testArgumentPass(0))
-    it('should pass negative zero', () => testArgumentPass(-0))
-    it('should pass integer', () => testArgumentPass(1))
-    it('should pass negative float', () => testArgumentPass(-1.5))
-    it('should pass min integer', () => testArgumentPass(Number.MIN_SAFE_INTEGER))
-    it('should pass max value', () => testArgumentPass(Number.MAX_VALUE))
-    it('should pass NaN', () => testArgumentPass(NaN))
-    it('should pass Infinity', () => testArgumentPass(Infinity))
-    it('should pass true', () => testArgumentPass(true))
-    it('should pass false', () => testArgumentPass(false))
-    it('should pass empty string', () => testArgumentPass(''))
-    it('should pass normal strings', () => testArgumentPass('abc'))
-    it('should pass multiple', () => testArgumentPass(1, true, 'a', [], {}, new Set(), new Map()))
-    it('should pass objects', () => testArgumentPass({ n: 1, m: [], k: { l: new Set([1]) } }))
-    it('should pass set', () => testArgumentPass(new Set(['a', {}, null])))
-    it('should pass map', () => testArgumentPass(new Map([[0, 0]])))
-    const o = { }
-    o.o = o
-    it('should pass circular reference', () => testArgumentPass(o))
-    it('should pass arbitrary object', () => testArgumentPass(new (class Blob {})()))
-    it('should pass class', () => testArgumentPass(class Dragon extends Jig { }))
-    it('should pass anonymous function', () => testArgumentPass(() => {}))
-    it('should pass jig', () => testArgumentPass(new (class A extends Jig {})()))
-
-    function testArgumentFail (...args) {
-      createHookedRun()
-      class A extends Jig { f (...args) { this.args = args } }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f(Symbol.hasInstance)).to.throw('Cannot serialize Symbol(Symbol.hasInstance)')
-    }
-
-    it('should throw if pass symbol', () => testArgumentFail(Symbol.hasInstance))
-    it('should throw if pass built-in intrinsic', () => testArgumentFail(Math))
-    it('should throw if pass date', () => testArgumentFail(new Date()))
-
-    it('should dedup resources passed in set', async () => {
-      const run = createHookedRun()
-      class A extends Jig { f (...args) { this.args = args } }
-      const b1 = new A()
-      await run.sync()
-      const b2 = await run.load(b1.location)
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const set = new Set([b1, b2])
-      expect(set.size).to.equal(2)
-      a.f(set)
-      expectAction(a, 'f', [set], [a], [a], [b1, b2])
-      expect(a.args[0].size).to.equal(1)
-      await a.sync()
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      const a2 = await run2.load(a.location)
-      expect(a2.args[0].size).to.equal(1)
-    })
-
-    it('should support changing args in method', () => {
-      createHookedRun()
-      class A extends Jig { f (arr, obj) { arr.pop(); obj.n = 1; this.n = 0 } }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      a.f([1], { n: 0 })
-      expectAction(a, 'f', [[1], { n: 0 }], [a], [a], [])
-    })
-
-    it('should allow checking jig constructors', async () => {
-      const run = createHookedRun()
-      class A extends Jig { init (b) { this.test = b.constructor === B } }
-      class B extends Jig { init () { this.x = A.owner } }
-      A.deps = { B }
-      B.deps = { A }
-      await run.deploy(A)
-      await run.deploy(B)
-      const b = new B()
-      const a = new A(b)
-      expect(b.x).to.equal(run.owner.address)
-      expect(a.test).to.equal(true)
-      await run.sync()
-      run.deactivate()
-      const run2 = new Run({ owner: run.owner.privkey })
-      await run2.sync()
-    })
-  })
 
   describe('get', () => {
     it('should not publish transaction if no changes', () => {
