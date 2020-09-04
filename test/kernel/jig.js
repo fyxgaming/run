@@ -986,6 +986,25 @@ describe('Jig', () => {
       test(a3)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Set
+  // --------------------------------------------------------------------------
+
+  describe('set', () => {
+    it('throws if not serializable', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f () { this.n = new WeakMap() }
+        g () { this.n = Symbol.hasInstance }
+      }
+      const a = new A()
+      expect(() => a.f()).to.throw('Not serializable')
+      expect(typeof a.n).to.equal('undefined')
+      expect(() => a.g()).to.throw('Not serializable')
+      expect(typeof a.n).to.equal('undefined')
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
