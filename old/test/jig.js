@@ -23,19 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('set', () => {
-    it('should not create transaction if no value change', () => {
-      createHookedRun()
-      class A extends Jig {
-        init () { this.n = 1 }
-
-        set (n) { this.n = n }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      a.set(1)
-      expectNoAction()
-    })
-
     it('should support setting zero-length properties', async () => {
       const run = createHookedRun()
       class A extends Jig {

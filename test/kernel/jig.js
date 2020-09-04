@@ -1004,75 +1004,119 @@ describe('Jig', () => {
       expect(() => a.g()).to.throw('Not serializable')
       expect(typeof a.n).to.equal('undefined')
     })
-  })
 
-  // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
-  it('throws if external', () => {
+    it('throws if external', () => {
       new Run() // eslint-disable-line
-    class A extends Jig { }
-    class B extends Jig { init () { this.a = new A(); this.a.n = 1 }}
-    B.deps = { A }
-    const a = new A()
-    expect(() => { a.n = 1 }).to.throw()
-    expect(() => new B()).to.throw()
-  })
+      class A extends Jig { }
+      class B extends Jig { init () { this.a = new A(); this.a.n = 1 }}
+      B.deps = { A }
+      const a = new A()
+      expect(() => { a.n = 1 }).to.throw()
+      expect(() => new B()).to.throw()
+    })
 
-  // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
-  it('throws if override jig methods', () => {
+    it('throws if override jig methods', () => {
     new Run() // eslint-disable-line
-    class A extends Jig {
-      h () { this.sync = [] }
+      class A extends Jig {
+        h () { this.sync = [] }
 
-      i () { this.init = 'hello' }
-    }
-    const a = new A()
-    expect(() => a.h()).to.throw('Cannot set sync')
-    expect(() => a.i()).to.throw('Cannot set init')
-  })
+        i () { this.init = 'hello' }
+      }
+      const a = new A()
+      expect(() => a.h()).to.throw('Cannot set sync')
+      expect(() => a.i()).to.throw('Cannot set init')
+    })
 
-  // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
-  it('allowed to override user methods', () => {
+    it('allowed to override user methods', () => {
     // With class upgrades we can't stop it. So allow it by design.
     new Run() // eslint-disable-line
-    class A extends Jig {
-      f () { }
+      class A extends Jig {
+        f () { }
 
-      g () { this.f = 1 }
+        g () { this.f = 1 }
 
-      h () { this.sync = [] }
+        h () { this.sync = [] }
 
-      i () { this.init = 'hello' }
-    }
-    const a = new A()
-    expect(() => a.g()).not.to.throw()
-  })
+        i () { this.init = 'hello' }
+      }
+      const a = new A()
+      expect(() => a.g()).not.to.throw()
+    })
 
-  // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
-  it('should throw if set properties on custom methods', () => {
+    it('should throw if set properties on custom methods', () => {
     new Run() // eslint-disable-line
-    class A extends Jig {
-      f () { this.f.n = 1 }
-    }
-    const a = new A()
-    expect(() => a.f()).to.throw('set disabled')
-  })
+      class A extends Jig {
+        f () { this.f.n = 1 }
+      }
+      const a = new A()
+      expect(() => a.f()).to.throw('set disabled')
+    })
 
-  // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
-  it.only('cannot set methods on builtin methods', () => {
+    it.only('cannot set methods on builtin methods', () => {
     new Run() // eslint-disable-line
-    class A extends Jig {
-      init () { this.arr = [] }
-      f () { this.sync.n = 1; return this.sync.n }
-      g () { this.arr.filter.n = 2; return this.arr.filter.n }
-    }
-    const a = new A()
-    expect(a.f()).to.equal(undefined)
-    expect(a.g()).to.equal(undefined)
+      class A extends Jig {
+        init () { this.arr = [] }
+        f () { this.sync.n = 1; return this.sync.n }
+        g () { this.arr.filter.n = 2; return this.arr.filter.n }
+      }
+      const a = new A()
+      expect(a.f()).to.equal(undefined)
+      expect(a.g()).to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('should still create transaction if no value change', async () => {
+      const run = new Run()
+
+      class A extends Jig {
+        init () { this.n = 1 }
+
+        set (n) { this.n = n }
+      }
+      const a = new A()
+      await a.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'set', [1]]
+          }
+        ]
+      })
+
+      function test (a) {
+        expect(a.nonce).to.equal(2)
+        expect(a.n).to.equal(1)
+      }
+
+      a.set(1)
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
   })
 })
 
