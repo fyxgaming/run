@@ -22,34 +22,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('delete', () => {
-    it('should throw if delete externally', () => {
-      createHookedRun()
-      class A extends Jig { init () { this.n = 1 }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => { delete a.n }).to.throw()
-      expectNoAction()
-    })
-
-    it('should throw if delete method', () => {
-      createHookedRun()
-      class A extends Jig { f () { } }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => { delete a.sync }).to.throw()
-    })
-
-    it('should not create transaction if delete did not change object', () => {
-      createHookedRun()
-      class A extends Jig { delete () { this.n = 1; delete this.n } }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      a.delete()
-      expectNoAction()
-    })
-  })
-
   describe('getPrototypeOf', () => {
     it('should not spend or reference jigs', () => {
       createHookedRun()

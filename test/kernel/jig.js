@@ -1147,7 +1147,7 @@ describe('Jig', () => {
   // Delete
   // --------------------------------------------------------------------------
 
-  describe.only('Delete', () => {
+  describe('Delete', () => {
     it('delete properties', async () => {
       const run = new Run()
       class A extends Jig {
@@ -1185,6 +1185,53 @@ describe('Jig', () => {
       run.cache = new LocalCache()
       const a3 = await run.load(a.location)
       test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if delete externally', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { init () { this.n = 1 }}
+      const a = new A()
+      expect(() => { delete a.n }).to.throw('Updates must be performed in the jig\'s methods')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot delete user method', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f () {
+          delete this.constructor.prototype.f
+          return !!this.constructor.prototype.f
+        }
+      }
+      const a = new A()
+      expect(a.f()).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if delete jig method', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { delete this.sync } }
+      const a = new A()
+      expect(() => { delete a.sync }).to.throw('Cannot delete sync')
+      expect(() => { a.f() }).to.throw('Cannot delete sync')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('creates transactions if no change', async () => {
+      const run = new Run()
+      class A extends Jig { delete () { this.n = 1; delete this.n } }
+      const a = new A()
+      await a.sync()
+      a.delete()
+      await a.sync()
+      await run.load(a.location)
+      run.cache = new LocalCache()
+      await run.load(a.location)
     })
   })
 })
