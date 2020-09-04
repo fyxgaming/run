@@ -1052,18 +1052,27 @@ describe('Jig', () => {
 
   // ------------------------------------------------------------------------
 
-  it.only('should throw if set properties on methods', () => {
-      new Run() // eslint-disable-line
+  it('should throw if set properties on custom methods', () => {
+    new Run() // eslint-disable-line
     class A extends Jig {
-      init () { this.arr = [] }
-
-      f () { this.sync.n = 1 }
-
-      g () { this.arr.filter.n = 2 }
+      f () { this.f.n = 1 }
     }
     const a = new A()
-    expect(() => a.f()).to.throw('must not set n on method sync')
-    expect(() => a.g()).to.throw('must not set n on method filter')
+    expect(() => a.f()).to.throw('set disabled')
+  })
+
+  // ------------------------------------------------------------------------
+
+  it.only('cannot set methods on builtin methods', () => {
+    new Run() // eslint-disable-line
+    class A extends Jig {
+      init () { this.arr = [] }
+      f () { this.sync.n = 1; return this.sync.n }
+      g () { this.arr.filter.n = 2; return this.arr.filter.n }
+    }
+    const a = new A()
+    expect(a.f()).to.equal(undefined)
+    expect(a.g()).to.equal(undefined)
   })
 })
 
