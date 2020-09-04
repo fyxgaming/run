@@ -23,23 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('non-spending reads', () => {
-    it('should throw if read different instances of same jig', async () => {
-      const run = createHookedRun()
-      class A extends Jig { set (n) { this.n = n } }
-      const a = new A()
-      a.set(1)
-      await a.sync()
-      const a2 = await run.load(a.location)
-      a2.set(2)
-      class B extends Jig {
-        init (a) { this.a = a }
-
-        apply (a2) { this.n = this.a + a2.n }
-      }
-      const b = new B(a)
-      expect(() => b.apply(a2)).to.throw('Inconsistent worldview')
-    })
-
     it('should throw if read different instance than written', async () => {
       const run = createHookedRun()
       class A extends Jig { set (n) { this.n = n } }
