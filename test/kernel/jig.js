@@ -569,6 +569,48 @@ describe('Jig', () => {
       const b3 = await run.load(b.location)
       test(a3, b3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('spends all creators', async () => {
+      const run = new Run()
+      class A extends Jig { create () { return new A() } }
+      const a = new A()
+      await a.sync()
+
+      function test (a, b) {
+        expect(a.nonce).to.equal(2)
+        expect(b.nonce).to.equal(1)
+        expect(a.owner).to.deep.equal(b.owner)
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 2,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'create', []]
+          }
+        ]
+      })
+
+      const b = a.create()
+      await b.sync()
+      test(a, b)
+
+      const a2 = await run.load(a.location)
+      const b2 = await run.load(b.location)
+      test(a2, b2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      const b3 = await run.load(b.location)
+      test(a3, b3)
+    })
   })
 })
 

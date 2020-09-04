@@ -23,17 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('spending rules', () => {
-    it('should spend all callers for instantiation', async () => {
-      const run = createHookedRun()
-      class A extends Jig { create () { return new A() } }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const a2 = a.create()
-      expectAction(a, 'create', [], [a], [a, a2], [])
-      await run.sync()
-      await run.load(a2.location)
-    })
-
     it('should spend all callers across multiple call stacks', async () => {
       const run = createHookedRun()
       class A extends Jig { set (n) { this.n = n } }
