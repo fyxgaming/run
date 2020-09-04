@@ -8,6 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { Jig } = Run
 const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
 const { stub } = require('sinon')
@@ -110,6 +111,12 @@ describe('Destroy', () => {
     it.skip('create and destroy in same transaction', () => {
 
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if destroy non-code', () => {
+
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -117,8 +124,52 @@ describe('Destroy', () => {
   // --------------------------------------------------------------------------
 
   describe('Jig', () => {
-    it.skip('destroys jig', () => {
-      // TODO
+    it('destroys jig', async () => {
+      const run = new Run()
+
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+
+      function test (a) {
+        expect(a.location.endsWith('_d0')).to.equal(true)
+        expect(a.owner).to.equal(null)
+        expect(a.satoshis).to.equal(0)
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 0,
+        ndel: 1,
+        ncre: 0,
+        exec: [
+          {
+            op: 'DESTROY',
+            data: { $jig: 0 }
+          }
+        ]
+      })
+
+      expect(a.destroy()).to.equal(a)
+      expect(a.owner).to.equal(null)
+      expect(a.satoshis).to.equal(0)
+
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if destroy non-jig', () => {
+
     })
   })
 

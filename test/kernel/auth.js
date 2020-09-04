@@ -8,6 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { Jig } = Run
 const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
 const { stub } = require('sinon')
@@ -126,6 +127,12 @@ describe('Auth', () => {
     it.skip('create and auth in same transaction', () => {
 
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if auth non-jig', () => {
+
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -133,8 +140,47 @@ describe('Auth', () => {
   // --------------------------------------------------------------------------
 
   describe('Jig', () => {
-    it.skip('auths jig', () => {
-      // TODO
+    it('auths jig', async () => {
+      const run = new Run()
+
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+
+      function test (CA) {
+        expect(CA.origin).not.to.equal(CA.location)
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'AUTH',
+            data: { $jig: 0 }
+          }
+        ]
+      })
+
+      expect(a.auth()).to.equal(a)
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if auth non-jig', () => {
+
     })
   })
 
