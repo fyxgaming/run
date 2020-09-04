@@ -474,6 +474,8 @@ describe('Call', () => {
       test(a3)
     }
 
+    // ------------------------------------------------------------------------
+
     it('nothing', () => testArgumentPass([]))
     it('positive zero', () => testArgumentPass([0]))
     it('negative zero', () => testArgumentPass([-0]))
@@ -501,6 +503,8 @@ describe('Call', () => {
     // it('anonymous function', () => testArgumentPass([() => {}]))
     // it('jig', () => testArgumentPass([new (class A extends Jig {})()]))
 
+    // ------------------------------------------------------------------------
+
     function testArgumentFail (...args) {
       new Run() // eslint-disable-line
       class A extends Jig { f (...args) { this.args = args } }
@@ -508,40 +512,57 @@ describe('Call', () => {
       expect(() => a.f(...args)).to.throw('Cannot clone')
     }
 
-    it('should throw if pass symbol', () => testArgumentFail(Symbol.hasInstance))
-    it('should throw if pass built-in intrinsic', () => testArgumentFail(Math))
-    it('should throw if pass date', () => testArgumentFail(new Date()))
+    // ------------------------------------------------------------------------
 
-    /*
-    it('should dedup resources passed in set', async () => {
-      const run = createHookedRun()
-      class A extends Jig { f (...args) { this.args = args } }
-      const b1 = new A()
-      await run.sync()
-      const b2 = await run.load(b1.location)
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const set = new Set([b1, b2])
-      expect(set.size).to.equal(2)
-      a.f(set)
-      expectAction(a, 'f', [set], [a], [a], [b1, b2])
-      expect(a.args[0].size).to.equal(1)
-      await a.sync()
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      const a2 = await run2.load(a.location)
-      expect(a2.args[0].size).to.equal(1)
-    })
+    it('throws if pass symbol', () => testArgumentFail(Symbol.hasInstance))
+    it('throws if pass built-in intrinsic', () => testArgumentFail(Math))
+    it('throws if pass date', () => testArgumentFail(new Date()))
 
-    it('should support changing args in method', () => {
-      createHookedRun()
+    // ------------------------------------------------------------------------
+
+    it('changing args from outside', async () => {
+      const run = new Run()
       class A extends Jig { f (arr, obj) { arr.pop(); obj.n = 1; this.n = 0 } }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      a.f([1], { n: 0 })
-      expectAction(a, 'f', [[1], { n: 0 }], [a], [a], [])
+      const arr = [1]
+      const obj = { n: 0 }
+      a.f(arr, obj)
+      expect(arr.length).to.equal(1)
+      expect(obj.n).to.equal(0)
+      await a.sync()
+      await run.load(a.location)
+      run.cache = new LocalCache()
+      await run.load(a.location)
     })
 
+    // ------------------------------------------------------------------------
+
+    it('changing args from another jig', async () => {
+      const run = new Run()
+      class A extends Jig { f (arr, obj) { arr.pop(); obj.n = 1; this.n = 0 } }
+      class B extends Jig {
+        test (a) {
+          const arr = [1]
+          const obj = { n: 0 }
+          a.f(arr, obj)
+          this.result = arr.length === 1 && obj.n === 0
+        }
+      }
+      const a = new A()
+      const b = new B()
+      b.test(a)
+      expect(b.result).to.equal(true)
+      await b.sync()
+      const b2 = await run.load(b.location)
+      expect(b2.result).to.equal(true)
+      run.cache = new LocalCache()
+      const b3 = await run.load(b.location)
+      expect(b3.result).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    /*
     it('should allow checking jig constructors', async () => {
       const run = createHookedRun()
       class A extends Jig { init (b) { this.test = b.constructor === B } }
