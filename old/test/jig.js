@@ -22,48 +22,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('get', () => {
-    it('should support gettesr', async () => {
-      const run = createHookedRun()
-      class A extends Jig {
-        init () { this.n = 1 }
-
-        get nplusone () { return this.n + 1 }
-      }
-      class B extends Jig {
-        init (a) { this.n = a.nplusone }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(a.nplusone).to.equal(2)
-      const b = new B(a)
-      expectAction(b, 'init', [a], [], [b], [a])
-      expect(b.n).to.equal(2)
-      await run.sync()
-      const b2 = await run.load(b.location)
-      expect(b2.n).to.equal(2)
-    })
-
-    it('should get host intrinsics to user', () => {
-      createHookedRun()
-      class A extends Jig {
-        init () {
-          this.object = {}
-          this.array = []
-          this.set = new Set()
-          this.map = new Map()
-          this.buffer = new Uint8Array()
-        }
-      }
-      const a = new A()
-      expect(a.object.constructor).to.equal(Object)
-      expect(a.array.constructor).to.equal(Array)
-      expect(a.set.constructor).to.equal(Set)
-      expect(a.map.constructor).to.equal(Map)
-      expect(a.buffer.constructor).to.equal(Uint8Array)
-    })
-  })
-
   describe('spending rules', () => {
     it('should spend all callers when a jig changes', async () => {
       const run = createHookedRun()
