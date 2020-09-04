@@ -23,16 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('get', () => {
-    it('should not spend reads', () => {
-      createHookedRun()
-      class B extends Jig { }
-      class A extends Jig { init (b) { this.n = b.n } }
-      const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      const a = new A(b)
-      expectAction(a, 'init', [b], [], [a], [b])
-    })
-
     it('should support gettesr', async () => {
       const run = createHookedRun()
       class A extends Jig {

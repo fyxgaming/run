@@ -484,21 +484,41 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('get', () => {
-    it('no publish if no changes', () => {
-      new Run() // eslint-disable-line
-      class B extends Jig {
-        set (n) { this.n = n }
+    it('reads become refs', async () => {
+      const run = new Run()
+      class B extends Jig { }
+      class A extends Jig { init (b) { this.n = b.n } }
+      const b = new B()
+      await b.sync()
 
-        get (n) { return this.n + n }
-      }
-      class A extends B {
-        init () { this.b = new B(); this.b.set(1) }
+      expectTx({
+        nin: 0,
+        nref: 2,
+        nout: 2,
+        ndel: 0,
+        ncre: 2,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              A.toString(),
+              { deps: { Jig: { $jig: 0 } } }
+            ]
+          },
+          {
+            op: 'NEW',
+            data: [{ $jig: 2 }, [{ $jig: 1 }]]
+          }
+        ]
+      })
 
-        get (n) { return this.b.get(4) + super.get(n) }
-      }
-      const a = new A()
-      a.set(2)
-      expect(a.get(3)).to.equal(10)
+      const a = new A(b)
+      await a.sync()
+
+      await run.load(a.location)
+
+      run.cache = new LocalCache()
+      await run.load(a.location)
     })
   })
 })
