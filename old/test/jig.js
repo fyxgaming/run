@@ -23,35 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('set', () => {
-    it('should throw if unserializable value', () => {
-      createHookedRun()
-      class A extends Jig {
-        f () { this.n = new WeakMap() }
-        g () { this.n = Symbol.hasInstance }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f()).to.throw('Cannot serialize WeakMap')
-      expectNoAction()
-      expect(typeof a.n).to.equal('undefined')
-      expect(() => a.g()).to.throw('Cannot serialize Symbol(Symbol.hasInstance)')
-      expectNoAction()
-      expect(typeof a.n).to.equal('undefined')
-    })
-
-    it('should throw if set is external', () => {
-      createHookedRun()
-      class A extends Jig { }
-      class B extends Jig { init () { this.a = new A(); this.a.n = 1 }}
-      B.deps = { A }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => { a.n = 1 }).to.throw()
-      expectNoAction()
-      expect(() => new B()).to.throw()
-      expectNoAction()
-    })
-
     it('should throw if attempt to override methods', () => {
       createHookedRun()
       class A extends Jig {

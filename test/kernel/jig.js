@@ -1005,6 +1005,18 @@ describe('Jig', () => {
       expect(typeof a.n).to.equal('undefined')
     })
   })
+
+  // ------------------------------------------------------------------------
+
+  it('throws if external', () => {
+      new Run() // eslint-disable-line
+    class A extends Jig { }
+    class B extends Jig { init () { this.a = new A(); this.a.n = 1 }}
+    B.deps = { A }
+    const a = new A()
+    expect(() => { a.n = 1 }).to.throw()
+    expect(() => new B()).to.throw()
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
