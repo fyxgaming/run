@@ -478,6 +478,29 @@ describe('Jig', () => {
       expect(() => new A().changeGlobals()).to.throw()
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Get
+  // --------------------------------------------------------------------------
+
+  describe('get', () => {
+    it('no publish if no changes', () => {
+      new Run() // eslint-disable-line
+      class B extends Jig {
+        set (n) { this.n = n }
+
+        get (n) { return this.n + n }
+      }
+      class A extends B {
+        init () { this.b = new B(); this.b.set(1) }
+
+        get (n) { return this.b.get(4) + super.get(n) }
+      }
+      const a = new A()
+      a.set(2)
+      expect(a.get(3)).to.equal(10)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

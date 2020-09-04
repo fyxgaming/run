@@ -23,26 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('get', () => {
-    it('should not publish transaction if no changes', () => {
-      createHookedRun()
-      class B extends Jig {
-        set (n) { this.n = n }
-
-        get (n) { return this.n + n }
-      }
-      class A extends B {
-        init () { this.b = new B(); this.b.set(1) }
-
-        get (n) { return this.b.get(4) + super.get(n) }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a, a.b], [a])
-      a.set(2)
-      expectAction(a, 'set', [2], [a], [a], [])
-      expect(a.get(3)).to.equal(10)
-      expectNoAction()
-    })
-
     it('should not spend reads', () => {
       createHookedRun()
       class B extends Jig { }
