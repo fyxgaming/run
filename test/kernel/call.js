@@ -494,13 +494,11 @@ describe('Call', () => {
     it('multiple', () => testArgumentPass([1, true, 'a', [], {}, new Set(), new Map()], false))
     const o = { }
     o.o = o
-    it.only('circular reference', () => testArgumentPass([o]))
-    /*
-    it('arbitrary object', () => testArgumentPass([new (class Blob {})()]))
-    it('class', () => testArgumentPass([class Dragon extends Jig { }]))
-    it('anonymous function', () => testArgumentPass([() => {}]))
-    it('jig', () => testArgumentPass([new (class A extends Jig {})()]))
-    */
+    it('circular reference', () => testArgumentPass([o]))
+    // it('arbitrary object', () => testArgumentPass([new (class Blob {})()]))
+    // it('class', () => testArgumentPass([class Dragon extends Jig { }]))
+    // it('anonymous function', () => testArgumentPass([() => {}]))
+    // it('jig', () => testArgumentPass([new (class A extends Jig {})()]))
 
     /*
     function testArgumentFail (...args) {
