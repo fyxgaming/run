@@ -23,27 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('set', () => {
-    it('should throw if attempt to override methods', () => {
-      createHookedRun()
-      class A extends Jig {
-        f () { }
-
-        g () { this.f = 1 }
-
-        h () { this.sync = [] }
-
-        i () { this.init = 'hello' }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.g()).to.throw()
-      expectNoAction()
-      expect(() => a.h()).to.throw()
-      expectNoAction()
-      expect(() => a.i()).to.throw()
-      expectNoAction()
-    })
-
     it('should throw if set properties on methods', () => {
       createHookedRun()
       class A extends Jig {
