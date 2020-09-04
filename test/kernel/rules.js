@@ -80,7 +80,7 @@ describe('Rules', () => {
       expect(rules._recordable).to.equal(false)
       expect(rules._callable).to.equal(false)
       expect(rules._owned).to.equal(true)
-      expect(rules._thisless).to.equal(true)
+      expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
       expect(rules._cowProps).to.equal(false)
       expect(rules._disabledMethods).to.deep.equal([])
