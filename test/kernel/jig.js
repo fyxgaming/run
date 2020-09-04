@@ -1066,17 +1066,17 @@ describe('Jig', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         init () { this.arr = [] }
-        f () { this.sync.n = 1; return this.sync.n }
+        f () { this.sync.n = 1 }
         g () { this.arr.filter.n = 2; return this.arr.filter.n }
       }
       const a = new A()
-      expect(a.f()).to.equal(undefined)
+      expect(() => a.f()).to.throw('set disabled')
       expect(a.g()).to.equal(undefined)
     })
 
     // ------------------------------------------------------------------------
 
-    it('should still create transaction if no value change', async () => {
+    it('creates transaction if no change', async () => {
       const run = new Run()
 
       class A extends Jig {
@@ -1120,7 +1120,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should support setting zero-length properties', async () => {
+    it('zero-length properties', async () => {
       const run = new Run()
       class A extends Jig {
         init () { this[''] = 1 }
