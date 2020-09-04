@@ -458,7 +458,7 @@ describe('Call', () => {
   // Arguments
   // --------------------------------------------------------------------------
 
-  describe.only('Arguments', async () => {
+  describe('Arguments', async () => {
     async function testArgumentPass (args, testEquality = true) {
       const run = new Run()
       class A extends Jig { f (...args) { this.args = args } }
@@ -520,7 +520,7 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it('changing args from outside', async () => {
+    it('change args from outside', async () => {
       const run = new Run()
       class A extends Jig { f (arr, obj) { arr.pop(); obj.n = 1; this.n = 0 } }
       const a = new A()
@@ -537,7 +537,7 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it('changing args from another jig', async () => {
+    it('change args from another jig', async () => {
       const run = new Run()
       class A extends Jig { f (arr, obj) { arr.pop(); obj.n = 1; this.n = 0 } }
       class B extends Jig {
@@ -562,12 +562,11 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('should allow checking jig constructors', async () => {
+    it('compare jig constructors', async () => {
       const run = new Run()
       class A extends Jig {
         init (b) {
           this.test = b.constructor === B
-          console.log(this.test)
         }
       }
       class B extends Jig { }
@@ -583,9 +582,7 @@ describe('Call', () => {
       await run.load(a.location)
       await run.load(b.location)
       run.cache = new LocalCache()
-      console.log('2')
       await run.load(a.location)
-      console.log('2')
       await run.load(b.location)
     })
   })
