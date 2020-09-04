@@ -22,54 +22,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('method', () => {
-    it('should return host intrinsics to user', () => {
-      createHookedRun()
-      class A extends Jig {
-        returnObject () { return {} }
-        returnArray () { return [] }
-        returnSet () { return new Set() }
-        returnMap () { return new Map() }
-        returnUint8Array () { return new Uint8Array() }
-      }
-      const a = new A()
-      expect(a.returnObject().constructor).to.equal(Object)
-      expect(a.returnArray().constructor).to.equal(Array)
-      expect(a.returnSet().constructor).to.equal(Set)
-      expect(a.returnMap().constructor).to.equal(Map)
-      expect(a.returnUint8Array().constructor).to.equal(Uint8Array)
-    })
-
-    it.skip('should throw if async', async () => {
-      createHookedRun()
-      class A extends Jig {
-        async f () {}
-        g () { return new Promise((resolve, reject) => { }) }
-      }
-      const a = new A()
-      expect(() => a.f()).to.throw('123')
-      expect(() => a.g()).to.throw('123')
-    })
-
-    it.skip('should not be able to modify return values', async () => {
-      createHookedRun()
-      class A extends Jig {
-        f () {
-          const x = { }
-          this.x = x
-          return x
-        }
-      }
-      const a = new A()
-      expect(() => { a.f().n = 1 }).to.throw('123')
-      class B extends Jig {
-        f (a) { a.f().n = 1 }
-      }
-      const b = new B()
-      expect(() => b.f(a)).to.throw('123')
-    })
-  })
-
   describe('arguments', () => {
     const run = createHookedRun()
     beforeEach(() => run.activate())

@@ -509,7 +509,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot swallow inner errors', () => {
-      const options = { _recordable: true, _replayable: true, _bindings: true }
+      const options = { _recordable: true, _callable: true, _bindings: true }
       class A {
         static f () {
           try { this.location = '123' } catch (e) { }
@@ -976,7 +976,7 @@ describe('Membrane', () => {
 
     it('apply static method to code', () => {
       class A { static f () { this._n = 1 }}
-      const A2 = makeJig(A, { _recordable: true, _replayable: true })
+      const A2 = makeJig(A, { _recordable: true, _callable: true })
       testRecord(record => {
         A2.f()
         expect(record._reads.length).to.equal(1)
@@ -995,9 +995,9 @@ describe('Membrane', () => {
 
     it('apply method to instance', () => {
       class A { f () { this._n = 1 }}
-      const A2 = makeJig(A, { _recordable: true, _replayable: true })
+      const A2 = makeJig(A, { _recordable: true, _callable: true })
       const a = new A2()
-      const a2 = makeJig(a, { _recordable: true, _replayable: true })
+      const a2 = makeJig(a, { _recordable: true, _callable: true })
       testRecord(record => {
         a2.f()
         expect(record._reads.includes(A2)).to.equal(true)
@@ -1207,12 +1207,12 @@ describe('Membrane', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Replayable
+  // Callable
   // --------------------------------------------------------------------------
 
-  describe('Replayable', () => {
+  describe('Callable', () => {
     it('delete throws if outside method', () => {
-      const a = makeJig({}, { _replayable: true })
+      const a = makeJig({}, { _callable: true, _owned: true })
       const error = 'Updates must be performed in the jig\'s methods'
       expect(() => { delete a.n }).to.throw(error)
     })
@@ -1221,7 +1221,7 @@ describe('Membrane', () => {
 
     it('delete allowed in jig methods', () => {
       class A { static f () { delete this.n } }
-      const a = makeJig(A, { _replayable: true })
+      const a = makeJig(A, { _callable: true, _owned: true })
       testRecord(record => a.f())
     })
 
@@ -1229,8 +1229,8 @@ describe('Membrane', () => {
 
     it('delete throws from another jigs method', () => {
       class A { static f (b) { delete b.n } }
-      const a = makeJig(A, { _replayable: true })
-      const b = makeJig({}, { _replayable: true })
+      const a = makeJig(A, { _callable: true, _owned: true })
+      const b = makeJig({}, { _callable: true, _owned: true })
       const error = 'Updates must be performed in the jig\'s methods'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
@@ -1238,7 +1238,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('defineProperty throws if outside method', () => {
-      const a = makeJig({}, { _replayable: true })
+      const a = makeJig({}, { _callable: true, _owned: true })
       const error = 'Updates must be performed in the jig\'s methods'
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(a, 'n', desc)).to.throw(error)
@@ -1253,21 +1253,21 @@ describe('Membrane', () => {
           Object.defineProperty(this, 'n', desc)
         }
       }
-      const a = makeJig(A, { _replayable: true })
+      const a = makeJig(A, { _callable: true, _owned: true })
       testRecord(record => a.f())
     })
 
     // ------------------------------------------------------------------------
 
-    it('delete throws from another jigs method', () => {
+    it('defineProperty throws from another jigs method', () => {
       class A {
         static f (b) {
           const desc = { value: 1, configurable: true, enumerable: true, writable: true }
           Object.defineProperty(b, 'n', desc)
         }
       }
-      const a = makeJig(A, { _replayable: true })
-      const b = makeJig({}, { _replayable: true })
+      const a = makeJig(A, { _callable: true, _owned: true })
+      const b = makeJig({}, { _callable: true, _owned: true })
       const error = 'Updates must be performed in the jig\'s methods'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
@@ -1275,7 +1275,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('set throws if outside method', () => {
-      const a = makeJig({}, { _replayable: true })
+      const a = makeJig({}, { _callable: true, _owned: true })
       const error = 'Updates must be performed in the jig\'s methods'
       expect(() => { a.n = 1 }).to.throw(error)
     })
@@ -1284,7 +1284,7 @@ describe('Membrane', () => {
 
     it('set allowed in jig methods', () => {
       class A { static f () { this.n = 1 } }
-      const a = makeJig(A, { _replayable: true })
+      const a = makeJig(A, { _callable: true, _owned: true })
       testRecord(record => a.f())
     })
 
@@ -1292,8 +1292,8 @@ describe('Membrane', () => {
 
     it('set throws from another jigs method', () => {
       class A { static f (b) { b.n = 1 } }
-      const a = makeJig(A, { _replayable: true })
-      const b = makeJig({}, { _replayable: true })
+      const a = makeJig(A, { _callable: true, _owned: true })
+      const b = makeJig({}, { _callable: true, _owned: true })
       const error = 'Updates must be performed in the jig\'s methods'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
@@ -1301,7 +1301,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('intrinsicUpdate throws if outside method', () => {
-      const s = makeJig(new Set(), { _replayable: true })
+      const s = makeJig(new Set(), { _callable: true, _owned: true })
       const error = 'Updates must be performed in the jig\'s methods'
       expect(() => s.add(1)).to.throw(error)
     })
@@ -1311,7 +1311,7 @@ describe('Membrane', () => {
     it('intrinsicUpdate allowed in jig methods', () => {
       class A { static f () { this.set.add(1) } }
       A.set = new Set()
-      const a = makeJig(A, { _replayable: true })
+      const a = makeJig(A, { _callable: true, _owned: true })
       testRecord(record => a.f())
     })
 
@@ -1319,33 +1319,33 @@ describe('Membrane', () => {
 
     it('intrinsicUpdate throws from another jigs method', () => {
       class A { static f (b) { b.add(1) } }
-      const a = makeJig(A, { _replayable: true })
-      const b = makeJig(new Set(), { _replayable: true })
+      const a = makeJig(A, { _callable: true, _owned: true })
+      const b = makeJig(new Set(), { _callable: true, _owned: true })
       const error = 'Updates must be performed in the jig\'s methods'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
 
     // ------------------------------------------------------------------------
 
-    it('args passed through if not replayable', () => {
+    it('args passed through if not callable', () => {
       class A { static f (x) { return typeof x === 'symbol' } }
-      const A2 = makeJig(A, { _replayable: false })
+      const A2 = makeJig(A, { _callable: false, _owned: true })
       expect(A2.f(Symbol.hasInstance)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it('return values passed through if not replayable', () => {
+    it('return values passed through if not callable', () => {
       class A { static f () { return Symbol.hasInstance } }
-      const A2 = makeJig(A, { _replayable: false })
+      const A2 = makeJig(A, { _callable: false, _owned: true })
       expect(A2.f()).to.equal(Symbol.hasInstance)
     })
 
     // ------------------------------------------------------------------------
 
-    it('no action if not replayable', () => {
+    it('no action if not callable', () => {
       class A { static f () { } }
-      const A2 = makeJig(A, { _replayable: false })
+      const A2 = makeJig(A, { _callable: false, _owned: true })
       testRecord(record => {
         A2.f()
         expect(record._actions.length).to.equal(0)
@@ -1354,11 +1354,11 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('replayable method depends on thisArg', () => {
-      // Returning a WeakMap will fail when replayable due to unserializability
-      const f = new Membrane(function f () { return new WeakMap() }, { _replayable: false })
-      const a = makeJig({ f }, { _replayable: false })
-      const b = makeJig({ f }, { _replayable: true })
+    it('callable method depends on thisArg', () => {
+      // Returning a WeakMap will fail when callable due to unserializability
+      const f = new Membrane(function f () { return new WeakMap() }, { _callable: false, _owned: true })
+      const a = makeJig({ f }, { _callable: false })
+      const b = makeJig({ f }, { _callable: true })
       expect(() => a.f()).not.to.throw()
       testRecord(() => expect(() => b.f()).to.throw())
     })
@@ -1378,7 +1378,7 @@ describe('Membrane', () => {
 
     it('delete allowed in jig methods', () => {
       class A { static f () { delete this._n } }
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       testRecord(() => a.f())
     })
@@ -1387,7 +1387,7 @@ describe('Membrane', () => {
 
     it('delete throws from another jigs method', () => {
       class A { static f (b) { delete b._n } }
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       const error = 'Cannot delete private property _n'
@@ -1411,7 +1411,7 @@ describe('Membrane', () => {
           Object.defineProperty(this, '_n', desc)
         }
       }
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       testRecord(() => a.f())
     })
@@ -1425,7 +1425,7 @@ describe('Membrane', () => {
           Object.defineProperty(b, '_n', desc)
         }
       }
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       const error = 'Cannot define private property _n'
@@ -1445,7 +1445,7 @@ describe('Membrane', () => {
     it('get allowed in jig methods', () => {
       class A { static f () { return this._n } }
       A._n = 1
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       testRecord(() => a.f())
     })
@@ -1454,7 +1454,7 @@ describe('Membrane', () => {
 
     it('get throws from another jigs method', () => {
       class A { static f (b) { return b._n } }
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       const error = 'Cannot access private property _n'
@@ -1472,7 +1472,7 @@ describe('Membrane', () => {
 
     it('getOwnPropertyDescriptor allowed in jig methods', () => {
       class A { static f () { return Object.getOwnPropertyDescriptor(this, '_n') } }
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       testRecord(() => a.f())
     })
@@ -1481,7 +1481,7 @@ describe('Membrane', () => {
 
     it('getOwnPropertyDescriptor throws from another jigs method', () => {
       class A { static f (b) { return Object.getOwnPropertyDescriptor(b, '_n') } }
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       const error = 'Cannot access private property _n'
@@ -1499,7 +1499,7 @@ describe('Membrane', () => {
 
     it('has allowed in jig methods', () => {
       class A { static f () { return '_n' in this } }
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       testRecord(() => a.f())
     })
@@ -1508,7 +1508,7 @@ describe('Membrane', () => {
 
     it('has throws from another jigs method', () => {
       class A { static f (b) { return '_n' in b } }
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       const error = 'Cannot access private property _n'
@@ -1528,7 +1528,7 @@ describe('Membrane', () => {
     it('ownKeys returns private properties in jig methods', () => {
       class A { static f () { return Object.getOwnPropertyNames(this).includes('_n') } }
       A._n = 1
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       expect(testRecord(() => a.f())).to.equal(true)
     })
@@ -1538,7 +1538,7 @@ describe('Membrane', () => {
     it('ownKeys filters private properties from another jigs method', () => {
       class A { static f (b) { return Object.getOwnPropertyNames(b).includes('_n') } }
       A._n = 1
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       expect(testRecord(() => a.f(b))).to.equal(false)
@@ -1555,7 +1555,7 @@ describe('Membrane', () => {
 
     it('set allowed in jig methods', () => {
       class A { static f () { this._n = 1 } }
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       testRecord(() => a.f())
     })
@@ -1564,7 +1564,7 @@ describe('Membrane', () => {
 
     it('set throws from another jigs method', () => {
       class A { static f (b) { b._n = 1 } }
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       const error = 'Cannot set private property _n'
@@ -1578,7 +1578,7 @@ describe('Membrane', () => {
         g () { return this._f() }
         _f (b) { return 1 }
       }
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const A2 = makeJig(A, options)
       const b = makeJig(new A2(), options)
       expect(testRecord(() => b.g())).to.equal(1)
@@ -1591,7 +1591,7 @@ describe('Membrane', () => {
         constructor () { this._n = 1 }
         f (b) { return b._n }
       }
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       const A2 = makeJig(A, options)
       const a = makeJig(new A2(), options)
       const b = makeJig(new A2(1), options)
@@ -1601,7 +1601,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('accessible from inner object of same jig', () => {
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       class A { static f (b) { return b._n } }
       const a = makeJig(A, options)
       const b = makeJig({ _n: 1 }, Object.assign({ _parentJig: a }, options))
@@ -1611,7 +1611,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws when access parent class property', () => {
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       class A { static testGet () { return this._n } }
       const A2 = makeJig(A, options)
       class B extends A2 { }
@@ -1623,7 +1623,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('accessible if access child class property with parent method', () => {
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       class A { static testGet () { return this._n } }
       const A2 = makeJig(A, options)
       class B extends A2 { }
@@ -1636,7 +1636,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot access on instance with different class chain', () => {
-      const options = { _privacy: true, _recordable: true, _replayable: true }
+      const options = { _privacy: true, _recordable: true, _callable: true }
       class A { f (z) { return z._n } }
       const A2 = makeJig(A, options)
       class B extends A2 { }
@@ -1896,7 +1896,7 @@ describe('Membrane', () => {
         }
       }
       A.a = []
-      const A2 = makeJig(A, { _recordable: true, _replayable: true, _cowProps: true })
+      const A2 = makeJig(A, { _recordable: true, _callable: true, _cowProps: true })
       testRecord(() => {
         A2.f()
         expect(A2.a[0]).to.equal(1)
@@ -2014,7 +2014,7 @@ describe('Membrane', () => {
           return this.x === o
         }
       }
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       const A2 = makeJig(A, options)
       const a = makeJig(new A2(), options)
       testRecord(() => expect(a.f()).to.equal(true))
@@ -2035,7 +2035,7 @@ describe('Membrane', () => {
         }
       }
 
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       const A2 = makeJig(A, options)
       testRecord(() => expect(A2.f()).to.equal(true))
     })
@@ -2055,7 +2055,7 @@ describe('Membrane', () => {
           return this.m.get(1) === o
         }
       }
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       const A2 = makeJig(A, options)
       testRecord(() => expect(A2.f()).to.equal(true))
     })
@@ -2078,7 +2078,7 @@ describe('Membrane', () => {
         }
       }
 
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       const A2 = makeJig(A, options)
       const B2 = makeJig(B, options)
       testRecord(() => expect(B2.g(A2)).to.equal(true))
@@ -2135,7 +2135,7 @@ describe('Membrane', () => {
   describe('Methods', () => {
     it('apply args are cow from outside', () => {
       class A { static f (o) { o.n = 2 } }
-      const A2 = makeJig(A, { _replayable: true, _recordable: true })
+      const A2 = makeJig(A, { _callable: true, _recordable: true })
       const o = { n: 1 }
       testRecord(() => A2.f(o))
       expect(o.n).to.equal(1)
@@ -2144,7 +2144,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('apply args are cow from another jig', () => {
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true, _owned: true }
       class B { static g (a) { this.o = { n: 1 }; a.f(this.o) } }
       class A { static f (o) { o.n = 2 } }
       const A2 = makeJig(A, options)
@@ -2158,7 +2158,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('universals are intact from outside', () => {
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       class A { }
       const A2 = makeJig(A, options)
       class B { static f (A2) { return A2 === B.A2 } }
@@ -2170,7 +2170,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('unifies worldview with args', () => {
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       const a1 = makeJig({}, options)
       const a2 = makeJig({}, options)
       _sudo(() => Object.assign(a2, a1))
@@ -2183,7 +2183,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('async methods not supported', () => {
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       const A = makeJig(class A { static async f () { } }, options)
       expect(() => testRecord(() => A.f())).to.throw('Async methods not supported')
     })
@@ -2191,7 +2191,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('deploys new code as args from outside', () => {
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       const A = makeJig(class A { static f () { this.n = 1 } }, options)
       testRecord(record => {
         A.f(function f () { })
@@ -2204,7 +2204,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if pass new code as args from inside', () => {
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       class A {
         static f () { this.g(class B { }) }
         static g () { this.n = 1 }
@@ -2216,7 +2216,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if call jig method on another jig', () => {
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       const A = makeJig(class A { static f () { } }, options)
       const B = makeJig(class B { }, options)
       const error = 'Cannot call f'
@@ -2226,7 +2226,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if call jig method on another jig from inside', () => {
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       const A = makeJig(class A { static f () { } }, options)
       const B = makeJig(class B { static f () { return Reflect.apply(A.f, B, []) } }, options)
       const C = makeJig(class C { static f () { return B.f.apply(this, []) } }, options)
@@ -2237,7 +2237,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if call overridden method from outside', () => {
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       const A = makeJig(class A { static f () { } }, options)
       const B = makeJig(class B extends A { static f () { } }, options)
       const error = 'Cannot call f'
@@ -2247,7 +2247,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('may call overridden method from inside', () => {
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       const A = makeJig(class A { static f () { return 1 } }, options)
       const B = makeJig(class B extends A { static f () { return Reflect.apply(A.f, this, []) + 1 } }, options)
       const C = makeJig(class C extends B { static f () { return Reflect.apply(B.f, this, []) + 2 } }, options)
@@ -2257,7 +2257,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('clones args with sandbox intrinsics', () => {
-      const options = { _recordable: true, _replayable: true }
+      const options = { _recordable: true, _callable: true }
       const A = makeJig(class A { static f (x) { return x } }, options)
       const set = testRecord(() => A.f(new Set()))
       expect(set instanceof SI.Set)

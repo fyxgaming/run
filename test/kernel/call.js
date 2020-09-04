@@ -418,6 +418,40 @@ describe('Call', () => {
       b.setA(a)
       expect(() => b.f()).to.throw('Updates must be performed in the jig\'s methods')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if async', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        async f () {}
+        g () { return new Promise((resolve, reject) => { }) }
+      }
+      const a = new A()
+      expect(() => a.f()).to.throw('Async methods not supported')
+      expect(() => a.g()).to.throw('Async methods not supported')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if modify return value values', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f () {
+          const x = { }
+          this.x = x
+          return x
+        }
+      }
+      const a = new A()
+      const error = 'Updates must be performed in the jig\'s methods'
+      expect(() => { a.f().n = 1 }).to.throw(error)
+      class B extends Jig {
+        f (a) { a.f().n = 1 }
+      }
+      const b = new B()
+      expect(() => b.f(a)).to.throw(error)
+    })
   })
 })
 
