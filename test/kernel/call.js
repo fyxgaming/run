@@ -541,7 +541,7 @@ describe('Call', () => {
             op: 'NEW',
             data: [
               { $jig: 1 },
-              [{ $jig: 3 }]
+              [{ $jig: 2 }]
             ]
           }
         ]
