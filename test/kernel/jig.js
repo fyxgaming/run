@@ -1240,7 +1240,7 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('getPrototypeOf', () => {
-    it.only('reads jig', async () => {
+    it('reads jig', async () => {
       const run = new Run()
       class A extends Jig {
         f () { this.a2 = new A() }
@@ -1302,6 +1302,42 @@ describe('Jig', () => {
       const a3 = await run.load(a.location)
       test(a3)
     })
+  })
+
+  // --------------------------------------------------------------------------
+  // setPrototypeOf
+  // --------------------------------------------------------------------------
+
+  describe('setPrototypeOf', () => {
+    /*
+      it('should throw if change prototype', () => {
+        createHookedRun()
+        class A extends Jig { f () { Reflect.setPrototypeOf(this, Object) }}
+        const a = new A()
+        expectAction(a, 'init', [], [], [a], [])
+        expect(() => Reflect.setPrototypeOf(a, Object)).to.throw()
+        expect(() => a.f()).to.throw()
+        expectNoAction()
+      })
+      */
+  })
+
+  // --------------------------------------------------------------------------
+  // preventExtensions
+  // --------------------------------------------------------------------------
+
+  describe('preventExtensions', () => {
+    /*
+    it('should throw if prevent extensions', () => {
+      createHookedRun()
+      class A extends Jig { f () { Object.preventExtensions(this) }}
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      expect(() => Object.preventExtensions(a)).to.throw()
+      expect(() => a.f()).to.throw()
+      expectNoAction()
+    })
+    */
   })
 })
 

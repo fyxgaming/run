@@ -22,30 +22,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('setPrototypeOf', () => {
-    it('should throw if change prototype', () => {
-      createHookedRun()
-      class A extends Jig { f () { Reflect.setPrototypeOf(this, Object) }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => Reflect.setPrototypeOf(a, Object)).to.throw()
-      expect(() => a.f()).to.throw()
-      expectNoAction()
-    })
-  })
-
-  describe('preventExtensions', () => {
-    it('should throw if prevent extensions', () => {
-      createHookedRun()
-      class A extends Jig { f () { Object.preventExtensions(this) }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => Object.preventExtensions(a)).to.throw()
-      expect(() => a.f()).to.throw()
-      expectNoAction()
-    })
-  })
-
   describe('defineProperty', () => {
     it('should throw is define property', () => {
       createHookedRun()
