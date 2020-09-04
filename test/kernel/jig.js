@@ -659,6 +659,121 @@ describe('Jig', () => {
       const c3 = await run.load(c.location)
       test(a3, b3, c3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('update self through many jigs', async () => {
+      const run = new Run()
+
+      class A extends Jig {
+        g (b, c) { b.h(this, c) }
+
+        set (n) { this.n = n }
+      }
+
+      class B extends Jig {
+        f (a, c) { a.g(this, c) }
+
+        h (a, c) { c.set(a, 1) }
+      }
+
+      class C extends Jig {
+        set (a, n) { a.set(n) }
+      }
+
+      const a = new A()
+      const b = new B()
+      const c = new C()
+      await run.sync()
+
+      function test (a, b, c) {
+        expect(a.n).to.equal(1)
+      }
+
+      expectTx({
+        nin: 3,
+        nref: 3,
+        nout: 3,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 1 }, 'f', [{ $jig: 0 }, { $jig: 2 }]]
+          }
+        ]
+      })
+
+      b.f(a, c)
+      await b.sync()
+      test(a, b, c)
+
+      const a2 = await run.load(a.location)
+      const b2 = await run.load(a.location)
+      const c2 = await run.load(a.location)
+      test(a2, b2, c2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      const b3 = await run.load(b.location)
+      const c3 = await run.load(c.location)
+      test(a3, b3, c3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('should not spend reads involved in update', async () => {
+      const run = new Run()
+      class A extends Jig {
+        set (n) { this.n = n }
+
+        get () { return this.n }
+      }
+      class B extends Jig {
+        f (a, c) { a.set(1); a.set(c.get(a) + 1) }
+      }
+      class C extends Jig {
+        get (a) { return a.get() }
+      }
+
+      const a = new A()
+      const b = new B()
+      const c = new C()
+      await run.sync()
+
+      expectTx({
+        nin: 2,
+        nref: 4,
+        nout: 2,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 1 }, 'f', [{ $jig: 0 }, { $jig: 2 }]]
+          }
+        ]
+      })
+
+      function test (a, b, c) {
+        expect(a.n).to.equal(2)
+      }
+
+      b.f(a, c)
+      await b.sync()
+      test(a, b, c)
+
+      const a2 = await run.load(a.location)
+      const b2 = await run.load(a.location)
+      const c2 = await run.load(a.location)
+      test(a2, b2, c2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      const b3 = await run.load(b.location)
+      const c3 = await run.load(c.location)
+      test(a3, b3, c3)
+    })
   })
 })
 

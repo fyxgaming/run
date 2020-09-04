@@ -22,65 +22,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('spending rules', () => {
-    it('should support calling self', async () => {
-      const run = createHookedRun()
-      class A extends Jig {
-        g (b, c) { b.h(this, c) }
-
-        set (n) { this.n = n }
-      }
-      class B extends Jig {
-        f (a, c) { a.g(this, c) }
-
-        h (a, c) { c.set(a, 1) }
-      }
-      class C extends Jig {
-        set (a, n) { a.set(n) }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      const c = new C()
-      expectAction(c, 'init', [], [], [c], [])
-      b.f(a, c)
-      expectAction(b, 'f', [a, c], [b, a, c], [b, a, c], [])
-      expect(a.n).to.equal(1)
-      await run.sync()
-      const a2 = await run.load(a.location)
-      expect(a2.n).to.equal(1)
-    })
-
-    // TODO: Long term, this probably should not spend if we can figure out a way to do it.
-    it('should spend reads uninvolved in the change', async () => {
-      const run = createHookedRun()
-      class A extends Jig {
-        set (n) { this.n = n }
-
-        get () { return this.n }
-      }
-      class B extends Jig {
-        f (a, c) { a.set(1); a.set(c.get(a) + 1) }
-      }
-      class C extends Jig {
-        get (a) { return a.get() }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      const c = new C()
-      expectAction(c, 'init', [], [], [c], [])
-      b.f(a, c)
-      expectAction(b, 'f', [a, c], [b, c, a], [b, c, a], [a])
-      expect(a.n).to.equal(2)
-      await run.sync()
-      const a2 = await run.load(a.location)
-      expect(a2.n).to.equal(2)
-    })
-  })
-
   describe('non-spending reads', () => {
     it('should reference but not spend reads', async () => {
       const run = createHookedRun()
