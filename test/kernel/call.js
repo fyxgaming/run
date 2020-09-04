@@ -461,6 +461,7 @@ describe('Call', () => {
   describe('Arguments', async () => {
     async function testArgumentPass (args, testEquality = true) {
       const run = new Run()
+      if (typeof args === 'function') args = args(run)
       class A extends Jig { f (...args) { this.args = args } }
       const a = new A()
       function test (a) { if (testEquality) expect(args).to.deep.equal(a.args) }
@@ -497,11 +498,12 @@ describe('Call', () => {
     const o = { }
     o.o = o
     it('circular reference', () => testArgumentPass([o]))
-    // TODO
-    // it('arbitrary object', () => testArgumentPass([new (class Blob {})()]))
-    // it('class', () => testArgumentPass([class Dragon extends Jig { }]))
-    // it('anonymous function', () => testArgumentPass([() => {}]))
-    // it('jig', () => testArgumentPass([new (class A extends Jig {})()]))
+    it('arbitrary object', () => testArgumentPass(run => {
+      const Blob = run.deploy(class Blob {})
+      return [new Blob()]
+    }))
+    it('class', () => testArgumentPass(run => [run.deploy(class Blob {})], false))
+    it('jig', () => testArgumentPass(run => [new (class A extends Jig { })()], false))
 
     // ------------------------------------------------------------------------
 
@@ -509,14 +511,15 @@ describe('Call', () => {
       new Run() // eslint-disable-line
       class A extends Jig { f (...args) { this.args = args } }
       const a = new A()
-      expect(() => a.f(...args)).to.throw('Cannot clone')
+      expect(() => a.f(...args)).to.throw()
     }
 
     // ------------------------------------------------------------------------
 
-    it('throws if pass symbol', () => testArgumentFail(Symbol.hasInstance))
-    it('throws if pass built-in intrinsic', () => testArgumentFail(Math))
-    it('throws if pass date', () => testArgumentFail(new Date()))
+    it('throws if symbol', () => testArgumentFail(Symbol.hasInstance))
+    it('throws if built-in intrinsic', () => testArgumentFail(Math))
+    it('throws if date', () => testArgumentFail(new Date()))
+    it('throws if anonymous function', () => testArgumentFail(() => {}))
 
     // ------------------------------------------------------------------------
 
