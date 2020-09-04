@@ -23,30 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('method', () => {
-    it('should throw if set a property directly on another jig in the call stack', () => {
-      createHookedRun()
-      class A extends Jig {
-        setB (b) { this.b = b }
-
-        g () { this.b.n = 1 }
-      }
-      class B extends Jig {
-        setA (a) { this.a = a }
-
-        f () { this.a.g() }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      a.setB(b)
-      expectAction(a, 'setB', [b], [a], [a], [])
-      b.setA(a)
-      expectAction(b, 'setA', [a], [b], [b], [])
-      expect(() => b.f()).to.throw()
-      expectNoAction()
-    })
-
     it('should throw if update on different network', async () => {
       const run = createHookedRun()
       class A extends Jig { f () { this.n = 1 } }

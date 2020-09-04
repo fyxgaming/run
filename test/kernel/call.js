@@ -399,6 +399,25 @@ describe('Call', () => {
       run.cache = new LocalCache()
       await run.load(a.location)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if set directly on another jig', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        setB (b) { this.b = b }
+        g () { this.b.n = 1 }
+      }
+      class B extends Jig {
+        setA (a) { this.a = a }
+        f () { this.a.g() }
+      }
+      const a = new A()
+      const b = new B()
+      a.setB(b)
+      b.setA(a)
+      expect(() => b.f()).to.throw('Updates must be performed in the jig\'s methods')
+    })
   })
 })
 

@@ -1213,7 +1213,7 @@ describe('Membrane', () => {
   describe('Replayable', () => {
     it('delete throws if outside method', () => {
       const a = makeJig({}, { _replayable: true })
-      const error = 'Updates must be performed in this jig\'s methods'
+      const error = 'Updates must be performed in the jig\'s methods'
       expect(() => { delete a.n }).to.throw(error)
     })
 
@@ -1231,7 +1231,7 @@ describe('Membrane', () => {
       class A { static f (b) { delete b.n } }
       const a = makeJig(A, { _replayable: true })
       const b = makeJig({}, { _replayable: true })
-      const error = 'Updates must be performed in this jig\'s methods'
+      const error = 'Updates must be performed in the jig\'s methods'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
 
@@ -1239,7 +1239,7 @@ describe('Membrane', () => {
 
     it('defineProperty throws if outside method', () => {
       const a = makeJig({}, { _replayable: true })
-      const error = 'Updates must be performed in this jig\'s methods'
+      const error = 'Updates must be performed in the jig\'s methods'
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(a, 'n', desc)).to.throw(error)
     })
@@ -1268,7 +1268,7 @@ describe('Membrane', () => {
       }
       const a = makeJig(A, { _replayable: true })
       const b = makeJig({}, { _replayable: true })
-      const error = 'Updates must be performed in this jig\'s methods'
+      const error = 'Updates must be performed in the jig\'s methods'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
 
@@ -1276,7 +1276,7 @@ describe('Membrane', () => {
 
     it('set throws if outside method', () => {
       const a = makeJig({}, { _replayable: true })
-      const error = 'Updates must be performed in this jig\'s methods'
+      const error = 'Updates must be performed in the jig\'s methods'
       expect(() => { a.n = 1 }).to.throw(error)
     })
 
@@ -1294,7 +1294,7 @@ describe('Membrane', () => {
       class A { static f (b) { b.n = 1 } }
       const a = makeJig(A, { _replayable: true })
       const b = makeJig({}, { _replayable: true })
-      const error = 'Updates must be performed in this jig\'s methods'
+      const error = 'Updates must be performed in the jig\'s methods'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
 
@@ -1302,7 +1302,7 @@ describe('Membrane', () => {
 
     it('intrinsicUpdate throws if outside method', () => {
       const s = makeJig(new Set(), { _replayable: true })
-      const error = 'Updates must be performed in this jig\'s methods'
+      const error = 'Updates must be performed in the jig\'s methods'
       expect(() => s.add(1)).to.throw(error)
     })
 
@@ -1321,7 +1321,7 @@ describe('Membrane', () => {
       class A { static f (b) { b.add(1) } }
       const a = makeJig(A, { _replayable: true })
       const b = makeJig(new Set(), { _replayable: true })
-      const error = 'Updates must be performed in this jig\'s methods'
+      const error = 'Updates must be performed in the jig\'s methods'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
 
