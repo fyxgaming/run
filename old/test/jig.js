@@ -23,27 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('non-spending reads', () => {
-    it('should reference but not spend reads', async () => {
-      const run = createHookedRun()
-      class A extends Jig { init (n) { this.n = n } }
-      class B extends Jig {
-        init () { this.a = new A(3) }
-
-        set (a) { this.n = a.n + this.a.n }
-      }
-      B.deps = { A }
-      const b = new B()
-      expectAction(b, 'init', [], [], [b, b.a], [])
-      const a = new A(2)
-      expectAction(a, 'init', [2], [], [a], [])
-      b.set(a)
-      expect(b.n).to.equal(5)
-      expectAction(b, 'set', [a], [b], [b], [a, b, b.a])
-      await run.sync()
-      const b2 = await run.load(b.location)
-      expect(b2.n).to.equal(5)
-    })
-
     it('should throw if read different instances of same jig', async () => {
       const run = createHookedRun()
       class A extends Jig { set (n) { this.n = n } }
