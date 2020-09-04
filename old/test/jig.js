@@ -11,7 +11,7 @@ const { stub } = require('sinon')
 const { PrivateKey } = require('bsv')
 const { Run } = require('../env/config')
 const { unmangle } = require('../env/unmangle')
-const { Jig, Mockchain } = Run
+const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Jig tests
@@ -23,16 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('method', () => {
-    it('should throw if update on different network', async () => {
-      const run = createHookedRun()
-      class A extends Jig { f () { this.n = 1 } }
-      const a = new A()
-      await run.sync()
-      const run2 = new Run({ blockchain: new Mockchain() })
-      a.f()
-      await expect(run2.sync()).to.be.rejectedWith('No such mempool or blockchain transaction')
-    })
-
     it('should return host intrinsics to user', () => {
       createHookedRun()
       class A extends Jig {

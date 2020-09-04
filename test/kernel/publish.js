@@ -5,9 +5,10 @@
  */
 
 const { describe, it, afterEach } = require('mocha')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig } = Run
+const { Jig, Mockchain } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Publish
@@ -47,6 +48,18 @@ describe('Publish', () => {
     const a2 = await run.load(a1.origin)
     const b = new A()
     expect(() => b.set(a1, a2)).to.throw('Inconsistent worldview')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('should throw if update on different network', async () => {
+    const run = new Run()
+    class A extends Jig { f () { this.n = 1 } }
+    const a = new A()
+    await run.sync()
+    const run2 = new Run({ blockchain: new Mockchain() })
+    a.f()
+    await expect(run2.sync()).to.be.rejectedWith('No such mempool or blockchain transaction')
   })
 })
 
