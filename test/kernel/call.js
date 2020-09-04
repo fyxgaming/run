@@ -511,10 +511,47 @@ describe('Call', () => {
       const run = new Run()
       class A extends Jig { }
       class B { }
+
+      expectTx({
+        nin: 0,
+        nref: 1,
+        nout: 3,
+        ndel: 0,
+        ncre: 3,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              'class A extends Jig { }',
+              {
+                deps: {
+                  Jig: { $jig: 0 }
+                }
+              }
+            ]
+          },
+          {
+            op: 'DEPLOY',
+            data: [
+              'class B { }',
+              {}
+            ]
+          },
+          {
+            op: 'NEW',
+            data: [
+              { $jig: 1 },
+              [{ $jig: 3 }]
+            ]
+          }
+        ]
+      })
+
       const a = new A(B)
       await a.sync()
-      console.log(a)
+
       await run.load(a.location)
+
       run.cache = new LocalCache()
       await run.load(a.location)
     })

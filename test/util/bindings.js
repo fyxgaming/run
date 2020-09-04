@@ -40,9 +40,11 @@ describe('Bindings', () => {
       expect(_location('error://Something bad happened')).to.deep.equal({ error: 'Something bad happened' })
       expect(_location('error://line1\nline2')).to.deep.equal({ error: 'line1\nline2' })
       expect(_location('error://Undeployed')).to.deep.equal({ error: 'Undeployed', undeployed: true })
-      // Record locations
+      // Commit locations
       expect(_location('commit://abc_o1')).to.deep.equal({ commitid: 'commit://abc', vout: 1 })
       expect(_location('commit://abc_d2')).to.deep.equal({ commitid: 'commit://abc', vdel: 2 })
+      // Record locations
+      expect(_location('record://abc_j1')).to.deep.equal({ commitid: 'record://abc', vjig: 1 })
     })
 
     it('throws for invalid locations', () => {
@@ -69,6 +71,8 @@ describe('Bindings', () => {
       expect(() => _location('commit://abc_j1')).to.throw()
       expect(() => _location('commit://_o1')).to.throw()
       expect(() => _location('commit://_d2')).to.throw()
+      expect(() => _location('record://_j2')).to.throw()
+      expect(() => _location('record://abc')).to.throw()
       expect(() => _location('native://')).to.throw()
       expect(() => _location('native://!')).to.throw()
       // Invalid chars
