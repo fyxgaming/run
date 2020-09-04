@@ -23,19 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('method', () => {
-    it('should support calling static helpers', () => {
-      createHookedRun()
-      class Preconditions { static checkArgument (b) { if (!b) throw new Error() } }
-      class A extends Jig { set (n) { $.checkArgument(n > 0); this.n = n } } // eslint-disable-line
-      A.deps = { $: Preconditions }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.set(0)).to.throw()
-      expectNoAction()
-      a.set(1)
-      expectAction(a, 'set', [1], [a], [a], [])
-    })
-
     it('should throw if set a property directly on another jig in the call stack', () => {
       createHookedRun()
       class A extends Jig {
