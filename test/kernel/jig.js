@@ -521,6 +521,55 @@ describe('Jig', () => {
       await run.load(a.location)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Spending rules
+  // --------------------------------------------------------------------------
+
+  describe('Spending rules', async () => {
+    it('spend all callers for a change', async () => {
+      const run = new Run()
+      class A extends Jig { set (n) { this.n = n }}
+      class B extends Jig { set (a, n) { a.set(n); return this } }
+      const a = new A()
+      const b = new B()
+      await run.sync()
+
+      expectTx({
+        nin: 2,
+        nref: 2,
+        nout: 2,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 1 }, 'set', [{ $jig: 0 }, 2]]
+          }
+        ]
+      })
+
+      function test (a, b) {
+        expect(a.nonce).to.equal(2)
+        expect(b.nonce).to.equal(2)
+        expect(a.n).to.equal(2)
+      }
+
+      b.set(a, 2)
+      await a.sync()
+      await b.sync()
+      test(a, b)
+
+      const a2 = await run.load(a.location)
+      const b2 = await run.load(b.location)
+      test(a2, b2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      const b3 = await run.load(b.location)
+      test(a3, b3)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

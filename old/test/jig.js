@@ -23,21 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('spending rules', () => {
-    it('should spend all callers when a jig changes', async () => {
-      const run = createHookedRun()
-      class A extends Jig { set (n) { this.n = n }}
-      class B extends Jig { set (a, n) { a.set(n); return this } }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      b.set(a, 2)
-      expectAction(b, 'set', [a, 2], [b, a], [b, a], [])
-      await run.sync()
-      const a2 = await run.load(a.location)
-      expect(a2.n).to.equal(2)
-    })
-
     it('should spend all callers for instantiation', async () => {
       const run = createHookedRun()
       class A extends Jig { create () { return new A() } }
