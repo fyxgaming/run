@@ -22,20 +22,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('set', () => {
-    it('should support setting zero-length properties', async () => {
-      const run = createHookedRun()
-      class A extends Jig {
-        init () { this[''] = 1 }
-      }
-      const a = new A()
-      await a.sync()
-      expect(a['']).to.equal(1)
-      const a2 = await run.load(a.location)
-      expect(a2['']).to.equal(1)
-    })
-  })
-
   describe('delete', () => {
     it('should support deleting internally', () => {
       createHookedRun()

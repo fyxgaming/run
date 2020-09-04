@@ -1020,7 +1020,7 @@ describe('Jig', () => {
     // ------------------------------------------------------------------------
 
     it('throws if override jig methods', () => {
-    new Run() // eslint-disable-line
+      new Run() // eslint-disable-line
       class A extends Jig {
         h () { this.sync = [] }
 
@@ -1034,8 +1034,8 @@ describe('Jig', () => {
     // ------------------------------------------------------------------------
 
     it('allowed to override user methods', () => {
-    // With class upgrades we can't stop it. So allow it by design.
-    new Run() // eslint-disable-line
+      // With class upgrades we can't stop it. So allow it by design.
+      new Run() // eslint-disable-line
       class A extends Jig {
         f () { }
 
@@ -1052,7 +1052,7 @@ describe('Jig', () => {
     // ------------------------------------------------------------------------
 
     it('should throw if set properties on custom methods', () => {
-    new Run() // eslint-disable-line
+      new Run() // eslint-disable-line
       class A extends Jig {
         f () { this.f.n = 1 }
       }
@@ -1063,7 +1063,7 @@ describe('Jig', () => {
     // ------------------------------------------------------------------------
 
     it.only('cannot set methods on builtin methods', () => {
-    new Run() // eslint-disable-line
+      new Run() // eslint-disable-line
       class A extends Jig {
         init () { this.arr = [] }
         f () { this.sync.n = 1; return this.sync.n }
@@ -1107,6 +1107,30 @@ describe('Jig', () => {
       }
 
       a.set(1)
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('should support setting zero-length properties', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init () { this[''] = 1 }
+      }
+
+      function test (a) {
+        expect(a['']).to.equal(1)
+      }
+
+      const a = new A()
       await a.sync()
       test(a)
 
