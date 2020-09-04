@@ -23,25 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('spending rules', () => {
-    it('should spend all callers across multiple call stacks', async () => {
-      const run = createHookedRun()
-      class A extends Jig { set (n) { this.n = n } }
-      class B extends Jig { f (a, c) { a.set(1); c.g(a) } }
-      class C extends Jig { g (a) { a.set(2) } }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      const c = new C()
-      expectAction(c, 'init', [], [], [c], [])
-      b.f(a, c)
-      expectAction(b, 'f', [a, c], [b, c, a], [b, c, a], [])
-      expect(a.n).to.equal(2)
-      await run.sync()
-      const a2 = await run.load(a.location)
-      expect(a2.n).to.equal(2)
-    })
-
     it('should support calling self', async () => {
       const run = createHookedRun()
       class A extends Jig {
