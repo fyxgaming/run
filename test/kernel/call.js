@@ -343,9 +343,9 @@ describe('Call', () => {
 
     it('call super', async () => {
       const run = new Run()
-      class A extends Jig { f () { this.a = true } }
-      class B extends A { f () { super.f(); this.b = true } }
-      class C extends B { f () { super.f(); this.c = true } }
+      class A extends Jig { h () { this.a = true } }
+      class B extends A { g () { super.h(); this.b = true } }
+      class C extends B { f () { super.g(); this.c = true } }
 
       function test (c) {
         expect(c.a).to.equal(true)

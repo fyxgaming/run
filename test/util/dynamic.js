@@ -9,6 +9,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const Dynamic = unmangle(unmangle(Run)._Dynamic)
+const { _sudo } = unmangle(Run)
 
 // ------------------------------------------------------------------------------------------------
 // Dynamic
@@ -661,6 +662,30 @@ describe('Dynamic', () => {
       const b = new B()
       expect(b.constructor).to.equal(B)
       expect(Object.getPrototypeOf(b.constructor)).to.equal(DA)
+    })
+
+    it('super works with changed class', () => {
+      const DA = new Dynamic()
+      const DB = new Dynamic()
+      const DC = new Dynamic()
+
+      class A { f () { return 'A' } }
+      class B { f () { return 'B' } }
+      Dynamic._setInnerType(DA, A)
+      Dynamic._setInnerType(DB, B)
+
+      class C extends DA { f () { return super.f() } }
+      Dynamic._setInnerType(DC, C)
+
+      const c = new DC()
+      expect(c.f()).to.equal('A')
+
+      _sudo(() => {
+        Reflect.setPrototypeOf(DC, DB)
+        Reflect.setPrototypeOf(Object.getPrototypeOf(DC.prototype), DB.prototype)
+      })
+
+      expect(c.f()).to.equal('B')
     })
   })
 
