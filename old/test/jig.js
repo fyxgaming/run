@@ -22,27 +22,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('getPrototypeOf', () => {
-    it('should not spend or reference jigs', () => {
-      createHookedRun()
-      class A extends Jig {
-        f () { this.a2 = new A() }
-
-        g () {
-          this.x = this.a2 instanceof A
-          this.y = this.a2.constructor.prototype === 'hello'
-          this.z = Object.getPrototypeOf(this.a2) === 'world'
-        }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      a.f()
-      expectAction(a, 'f', [], [a], [a, a.a2], [])
-      a.g()
-      expectAction(a, 'g', [], [a], [a], [a])
-    })
-  })
-
   describe('setPrototypeOf', () => {
     it('should throw if change prototype', () => {
       createHookedRun()

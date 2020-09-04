@@ -1234,6 +1234,75 @@ describe('Jig', () => {
       await run.load(a.location)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // getPrototypeOf
+  // --------------------------------------------------------------------------
+
+  describe('getPrototypeOf', () => {
+    it.only('reads jig', async () => {
+      const run = new Run()
+      class A extends Jig {
+        f () { this.a2 = new A() }
+
+        g () {
+          this.x = this.a2 instanceof A
+          this.y = this.a2.constructor.prototype === 'hello'
+          this.z = Object.getPrototypeOf(this.a2) === 'world'
+        }
+      }
+      const a = new A()
+      await a.sync()
+
+      function test (a) {
+        expect(a.x).to.equal(true)
+        expect(a.y).to.equal(false)
+        expect(a.z).to.equal(false)
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 2,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'f', []]
+          }
+        ]
+      })
+
+      a.f()
+      await a.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'g', []]
+          }
+        ]
+      })
+
+      a.g()
+      test(a)
+      await a.sync()
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
