@@ -1049,6 +1049,22 @@ describe('Jig', () => {
     const a = new A()
     expect(() => a.g()).not.to.throw()
   })
+
+  // ------------------------------------------------------------------------
+
+  it.only('should throw if set properties on methods', () => {
+      new Run() // eslint-disable-line
+    class A extends Jig {
+      init () { this.arr = [] }
+
+      f () { this.sync.n = 1 }
+
+      g () { this.arr.filter.n = 2 }
+    }
+    const a = new A()
+    expect(() => a.f()).to.throw('must not set n on method sync')
+    expect(() => a.g()).to.throw('must not set n on method filter')
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

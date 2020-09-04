@@ -23,23 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('set', () => {
-    it('should throw if set properties on methods', () => {
-      createHookedRun()
-      class A extends Jig {
-        init () { this.arr = [] }
-
-        f () { this.sync.n = 1 }
-
-        g () { this.arr.filter.n = 2 }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f()).to.throw('must not set n on method sync')
-      expectNoAction()
-      expect(() => a.g()).to.throw('must not set n on method filter')
-      expectNoAction()
-    })
-
     it('should not create transaction if no value change', () => {
       createHookedRun()
       class A extends Jig {
