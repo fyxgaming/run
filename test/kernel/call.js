@@ -507,6 +507,20 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
+    it.only('depoys code in args', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      class B { }
+      const a = new A(B)
+      await a.sync()
+      console.log(a)
+      await run.load(a.location)
+      run.cache = new LocalCache()
+      await run.load(a.location)
+    })
+
+    // ------------------------------------------------------------------------
+
     function testArgumentFail (...args) {
       new Run() // eslint-disable-line
       class A extends Jig { f (...args) { this.args = args } }
