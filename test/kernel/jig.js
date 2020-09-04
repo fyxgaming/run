@@ -9,6 +9,8 @@ const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
 const { expect } = require('chai')
 const { Jig, LocalCache } = Run
+const unmangle = require('../env/unmangle')
+const SI = unmangle(Run.sandbox)._intrinsics
 
 // ------------------------------------------------------------------------------------------------
 // Jig
@@ -916,6 +918,72 @@ describe('Jig', () => {
       b.set(a, 2)
       expect(() => b.set(a2, 3)).to.throw('Different location for [jig Store] found in set()')
       run.transaction.rollback()
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Uint8Array
+  // --------------------------------------------------------------------------
+
+  describe('Uint8Array', () => {
+    it('matches instanceof', async () => {
+      const run = new Run()
+      class A extends Jig {
+        set () { this.buf = Uint8Array.from([1, 2, 3]) }
+
+        check1 (buf) { return buf instanceof Uint8Array }
+
+        check2 () { return this.buf instanceof Uint8Array }
+      }
+      class B extends A {
+        check3 () { return this.buf instanceof Uint8Array }
+      }
+      const a = new A()
+      a.set()
+      expect(a.check1(new Uint8Array([1, 2, 3]))).to.equal(true)
+      const b = new B()
+      b.set()
+      await b.sync()
+      const b2 = await run.load(b.location)
+      expect(b.buf.length).to.equal(b2.buf.length)
+      for (let i = 0; i < b.buf.length; i++) {
+        expect(b.buf[i]).to.equal(b2.buf[i])
+      }
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('return', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init () { this.buf = new Uint8Array([1, 2, 3]) }
+
+        getBuf () { return this.buf }
+      }
+
+      function testBuf (buf) {
+        expect(buf.length).to.equal(3)
+        expect(buf[0]).to.equal(1)
+        expect(buf[1]).to.equal(2)
+        expect(buf[2]).to.equal(3)
+        expect(buf.constructor === SI.Uint8Array).to.equal(true)
+      }
+
+      function test (a) {
+        testBuf(a.buf)
+        testBuf(a.getBuf())
+      }
+
+      const a = new A()
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
     })
   })
 })

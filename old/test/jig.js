@@ -22,60 +22,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('uint8array', () => {
-    it('should match instanceof checks', async () => {
-      const run = createHookedRun()
-      class A extends Jig {
-        set () { this.buf = Uint8Array.from([1, 2, 3]) }
-
-        check1 (buf) { return buf instanceof Uint8Array }
-
-        check2 () { return this.buf instanceof Uint8Array }
-      }
-      class B extends A {
-        check3 () { return this.buf instanceof Uint8Array }
-      }
-      const a = new A()
-      a.set()
-      expect(a.check1(new Uint8Array([1, 2, 3]))).to.equal(true)
-      const b = new B()
-      b.set()
-      await b.sync()
-      const b2 = await run.load(b.location)
-      expect(b.buf.length).to.equal(b2.buf.length)
-      for (let i = 0; i < b.buf.length; i++) {
-        expect(b.buf[i]).to.equal(b2.buf[i])
-      }
-    })
-
-    it('should support gets and returns', async () => {
-      const run = createHookedRun()
-      class A extends Jig {
-        init () { this.buf = new Uint8Array([1, 2, 3]) }
-
-        get buf2 () { return this.buf }
-
-        getBuf () { return this.buf }
-      }
-      const a = new A()
-      function testBuf (buf) {
-        expect(buf.length).to.equal(3)
-        expect(buf[0]).to.equal(1)
-        expect(buf[1]).to.equal(2)
-        expect(buf[2]).to.equal(3)
-        expect(buf.constructor === Uint8Array).to.equal(true)
-      }
-      testBuf(a.buf)
-      testBuf(a.buf2)
-      testBuf(a.getBuf())
-      await run.sync()
-      const a2 = await run.load(a.location)
-      testBuf(a2.buf)
-      testBuf(a2.buf2)
-      testBuf(a2.getBuf())
-    })
-  })
-
   describe('set', () => {
     it('should throw if unserializable value', () => {
       createHookedRun()
