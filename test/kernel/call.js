@@ -495,24 +495,24 @@ describe('Call', () => {
     const o = { }
     o.o = o
     it('circular reference', () => testArgumentPass([o]))
+    // TODO
     // it('arbitrary object', () => testArgumentPass([new (class Blob {})()]))
     // it('class', () => testArgumentPass([class Dragon extends Jig { }]))
     // it('anonymous function', () => testArgumentPass([() => {}]))
     // it('jig', () => testArgumentPass([new (class A extends Jig {})()]))
 
-    /*
     function testArgumentFail (...args) {
-      createHookedRun()
+      new Run() // eslint-disable-line
       class A extends Jig { f (...args) { this.args = args } }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f(Symbol.hasInstance)).to.throw('Cannot serialize Symbol(Symbol.hasInstance)')
+      expect(() => a.f(...args)).to.throw('Cannot clone')
     }
 
     it('should throw if pass symbol', () => testArgumentFail(Symbol.hasInstance))
     it('should throw if pass built-in intrinsic', () => testArgumentFail(Math))
     it('should throw if pass date', () => testArgumentFail(new Date()))
 
+    /*
     it('should dedup resources passed in set', async () => {
       const run = createHookedRun()
       class A extends Jig { f (...args) { this.args = args } }
