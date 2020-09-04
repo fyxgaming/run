@@ -1142,6 +1142,51 @@ describe('Jig', () => {
       test(a3)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Delete
+  // --------------------------------------------------------------------------
+
+  describe.only('Delete', () => {
+    it('delete properties', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init () { this.n = 1 }
+        delete () { delete this.n }
+      }
+      const a = new A()
+      await a.sync()
+
+      function test (a) {
+        expect(a.n).to.equal(undefined)
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'delete', []]
+          }
+        ]
+      })
+
+      a.delete()
+      test(a)
+      await a.sync()
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

@@ -23,20 +23,6 @@ describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   describe('delete', () => {
-    it('should support deleting internally', () => {
-      createHookedRun()
-      class A extends Jig {
-        init () { this.n = 1 }
-
-        delete () { delete this.n }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      a.delete()
-      expectAction(a, 'delete', [], [a], [a], [])
-      expect(a.n).to.equal(undefined)
-    })
-
     it('should throw if delete externally', () => {
       createHookedRun()
       class A extends Jig { init () { this.n = 1 }}
