@@ -22,61 +22,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('has', () => {
-    it('should add non-permanent properties to reads', () => {
-      createHookedRun()
-      class A extends Jig { init () { this.arr = [1] }}
-      class B extends Jig {
-        f (a) { this.x = 'n' in a }
-
-        g (a) { this.y = 'arr' in a }
-
-        h (a) { this.z = '1' in a.arr }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      b.f(a)
-      expectAction(b, 'f', [a], [b], [b], [a])
-      b.g(a)
-      expectAction(b, 'g', [a], [b], [b], [a])
-      b.h(a)
-      expectAction(b, 'h', [a], [b], [b], [a])
-    })
-
-    it('should not add permanant properties to reads', () => {
-      createHookedRun()
-      class A extends Jig { f () {} }
-      class B extends Jig {
-        f (a) {
-          this.x1 = 'f' in a
-          this.x2 = 'origin' in a
-          this.x3 = 'location' in a
-          this.x4 = 'owner' in a
-          this.x5 = 'satoshis' in a
-          this.x6 = 'sync' in a
-          this.x7 = 'constructor' in a
-        }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      b.f(a)
-      expectAction(b, 'f', [a], [b], [b], [])
-    })
-
-    it('should support has for undefined values', () => {
-      createHookedRun()
-      class A extends Jig {
-        init () { this.x = undefined }
-      }
-      const a = new A()
-      expect('x' in a).to.equal(true)
-    })
-  })
-
   describe('ownKeys', () => {
     it('should add to reads if call ownKeys', () => {
       createHookedRun()
