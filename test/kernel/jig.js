@@ -1766,7 +1766,9 @@ describe('Jig', () => {
       expect(() => new A()).to.throw('Cannot override Jig')
     })
 
-    it('should add to reads', async () => {
+    // ------------------------------------------------------------------------
+
+    it('reads jig', async () => {
       const run = new Run()
       class A extends Jig { f (a) { this.x = a.owner }}
       const a = new A()
@@ -1803,23 +1805,23 @@ describe('Jig', () => {
       test(a3, b3)
     })
 
-    /*
-    it('should support only class owner creating instances', async () => {
+    // ------------------------------------------------------------------------
+
+    it('only class can create instance', async () => {
       class A extends Jig {
-        init (owner) {
-          if (this.owner !== A.owner) throw new Error()
-          this.owner = owner
-        }
+        init () { if (this.owner !== A.owner) throw new Error() }
+        static create () { return new A() }
       }
       const run = new Run()
-      const privkey = new PrivateKey()
-      const a = new A(privkey.publicKey.toString())
-      await run.sync()
-      run.deactivate()
-      const run2 = new Run({ owner: privkey, blockchain: run.blockchain })
-      await run2.load(a.location)
+      const A2 = run.deploy(A)
+      await A2.sync()
+      expect(() => new A()).to.throw()
+      const a = A2.create()
+      await a.sync()
+      await run.load(a.location)
+      run.cache = new LocalCache()
+      await run.load(a.location)
     })
-    */
   })
 })
 
