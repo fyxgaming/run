@@ -1736,17 +1736,18 @@ describe('Jig', () => {
       expect(() => a.f(undefined)).to.throw()
     })
 
-    /*
+    // ------------------------------------------------------------------------
 
-    it('should throw if set to address on another network', async () => {
-      createHookedRun()
+    it.only('throws if set to address on another network', async () => {
+      new Run() // eslint-disable-line
       class A extends Jig { send (addr) { this.owner = addr } }
       const a = new A()
       await a.sync()
-      expectAction(a, 'init', [], [], [a], [])
       const addr = new PrivateKey('mainnet').toAddress().toString()
       expect(() => a.send(addr)).to.throw('Invalid owner')
     })
+
+    /*
 
     it('should throw if delete owner', () => {
       createHookedRun()
