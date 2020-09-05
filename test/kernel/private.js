@@ -639,7 +639,7 @@ describe('Private', () => {
   // Inner objects
   // --------------------------------------------------------------------------
 
-  describe.only('Inner objects', () => {
+  describe('Inner objects', () => {
     it('get throws', async () => {
       const run = new Run()
       class A extends Jig { }
@@ -683,6 +683,28 @@ describe('Private', () => {
       run.cache = new LocalCache()
       const a3 = await run.load(a.location)
       test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('has throws', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.o = { }
+      const CA = run.deploy(A)
+      class B extends Jig { has (A) { return '_n' in A.o } }
+      const b = new B()
+      await CA.sync()
+      await b.sync()
+      function test (CA, b) { expect(() => b.has(CA)).to.throw('Cannot access private property _n') }
+      test(CA, b)
+      const CA2 = await run.load(CA.location)
+      const b2 = await run.load(b.location)
+      test(CA2, b2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      const b3 = await run.load(b.location)
+      test(CA3, b3)
     })
   })
 
