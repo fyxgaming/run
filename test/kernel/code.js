@@ -593,6 +593,23 @@ describe('Code', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('set satoshis', async () => {
+      const run = new Run()
+      class A extends Jig { static f (satoshis) { this.satoshis = satoshis } }
+      const CA = run.deploy(A)
+      CA.f(1000)
+      await CA.sync()
+      function test (CA) { expect(CA.satoshis).to.equal(1000) }
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
   })
 
   // --------------------------------------------------------------------------
