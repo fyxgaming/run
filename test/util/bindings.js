@@ -12,6 +12,10 @@ const { StandardLock } = Run
 const unmangle = require('../env/unmangle')
 const { _location, _nonce, _satoshis, _owner, _init } = unmangle(unmangle(Run)._bindings)
 
+// ------------------------------------------------------------------------------------------------
+// Bindings
+// ------------------------------------------------------------------------------------------------
+
 describe('Bindings', () => {
   // ----------------------------------------------------------------------------------------------
   // _location
@@ -46,6 +50,8 @@ describe('Bindings', () => {
       // Record locations
       expect(_location('record://abc_j1')).to.deep.equal({ recordid: 'record://abc', vjig: 1 })
     })
+
+    // ------------------------------------------------------------------------
 
     it('throws for invalid locations', () => {
       // Invalid types
@@ -98,6 +104,8 @@ describe('Bindings', () => {
       _nonce(Number.MAX_SAFE_INTEGER)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if invalid nonce', () => {
       expect(() => _nonce(0)).to.throw()
       expect(() => _nonce(-1)).to.throw()
@@ -127,6 +135,8 @@ describe('Bindings', () => {
       }
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if bad owner', () => {
       expect(() => _owner()).to.throw('Invalid owner: undefined')
       expect(() => _owner(null)).to.throw('Invalid owner: null')
@@ -136,6 +146,8 @@ describe('Bindings', () => {
       expect(() => _owner(new PrivateKey().publicKey)).to.throw('Invalid owner')
       expect(() => _owner([new PrivateKey().publicKey.toString()])).to.throw('Invalid owner')
     })
+
+    // ------------------------------------------------------------------------
 
     it('allows null', () => {
       expect(_owner(null, true)).to.equal(null)
@@ -153,6 +165,8 @@ describe('Bindings', () => {
       expect(() => _satoshis(Transaction.DUST_AMOUNT)).not.to.throw()
       expect(() => _satoshis(100000000)).not.to.throw()
     })
+
+    // ------------------------------------------------------------------------
 
     it('throws if bad satoshis', () => {
       expect(() => _satoshis()).to.throw('satoshis must be a number')
@@ -181,6 +195,6 @@ describe('Bindings', () => {
       expect(o.satoshis).to.deep.equal(unmangle.mangle({ _value: undefined }))
     })
   })
-
-  // ----------------------------------------------------------------------------------------------
 })
+
+// ------------------------------------------------------------------------------------------------

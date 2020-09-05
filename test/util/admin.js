@@ -19,6 +19,8 @@ describe('Admin', () => {
     it('returns false by default', () => {
       expect(_admin()).to.equal(false)
     })
+    
+    // ------------------------------------------------------------------------
 
     it('returns true only within sudo', () => {
       expect(_admin()).to.equal(false)
@@ -28,6 +30,8 @@ describe('Admin', () => {
       expect(_admin()).to.equal(false)
     })
   })
+
+  // --------------------------------------------------------------------------
 
   describe('_sudo', () => {
     it('supports nested sudo', () => {
