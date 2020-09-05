@@ -127,17 +127,23 @@ describe('Caller', () => {
     test(a3)
   })
 
-/*
-    it('should allow local variables named caller', async () => {
-      const run = createHookedRun()
-      class A extends Jig { init () { const caller = 2; this.n = caller } }
-      const a = new A()
-      await a.sync()
-      expect(a.n).to.equal(2)
-      const a2 = await run.load(a.location)
-      expect(a2.n).to.equal(2)
-    })
+  // --------------------------------------------------------------------------
 
+  it('local variable named caller', async () => {
+    const run = new Run()
+    class A extends Jig { init () { const caller = 2; this.n = caller } }
+    const a = new A()
+    await a.sync()
+    function test (a) { expect(a.n).to.equal(2) }
+    test(a)
+    const a2 = await run.load(a.location)
+    test(a2)
+    run.cache = new LocalCache()
+    const a3 = await run.load(a.location)
+    test(a3)
+  })
+
+/*
     it('should allow dependencies named caller', async () => {
       const run = createHookedRun()
       function caller () { return 2 }
