@@ -182,34 +182,33 @@ describe('Private', () => {
     })
 
     // ------------------------------------------------------------------------
-    // set
-    // ------------------------------------------------------------------------
-
-    describe('get', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-    // defineProperty
-    // ------------------------------------------------------------------------
-
-    describe('get', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
     // getOwnPropertyDescriptor
     // ------------------------------------------------------------------------
 
-    describe('get', () => {
-      // TODO
+    describe('getOwnPropertyDescriptor', () => {
+      it('available internally', async () => {
+        const run = new Run()
+        class A extends Jig {
+          init () { this._x = 1 }
+          get () { return Object.getOwnPropertyDescriptor(this, '_x').value }
+        }
+        function test (a) { expect(a.get()).to.equal(1) }
+        const a = new A()
+        test(a)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        test(a2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        test(a3)
+      })
     })
 
     // ------------------------------------------------------------------------
     // ownKeys
     // ------------------------------------------------------------------------
 
-    describe('get', () => {
+    describe('ownKeys', () => {
       // TODO
     })
   })
@@ -217,22 +216,6 @@ describe('Private', () => {
   // Inheritance
 
   /*
-    it('should handle get of private property', () => {
-      createHookedRun()
-      class J extends Jig {
-        init () { this._x = 1 }
-
-        get (a, x) { return a[x] }
-      }
-      class K extends J { }
-      class L extends Jig { get (a, x) { return a[x] } }
-      expect(new J()._x).to.equal(1)
-      expect(new K().get(new K(), '_x')).to.equal(1)
-      expect(() => new L().get(new J(), '_x')).to.throw('cannot get _x because it is private')
-      expect(() => new K().get(new J(), '_x')).to.throw('cannot get _x because it is private')
-      expect(() => new J().get(new K(), '_x')).to.throw('cannot get _x because it is private')
-    })
-
     it('should handle private method', () => {
       createHookedRun()
       class J extends Jig {
