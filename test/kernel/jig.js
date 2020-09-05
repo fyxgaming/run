@@ -10,6 +10,7 @@ const { expectTx } = require('../env/misc')
 const { expect } = require('chai')
 const { Jig, LocalCache } = Run
 const unmangle = require('../env/unmangle')
+const PrivateKey = require('bsv/lib/privatekey')
 const SI = unmangle(Run.sandbox)._intrinsics
 
 // ------------------------------------------------------------------------------------------------
@@ -1688,33 +1689,34 @@ describe('Jig', () => {
     // ------------------------------------------------------------------------
 
     it('throws if creator owner is undetermined', () => {
-
+      new Run() // eslint-disable-line
+      class A extends Jig { init () { } }
+      class B extends Jig { create () { return new A() } }
+      B.deps = { A }
+      const b = new B()
+      expect(() => b.create()).to.throw('Cannot read owner')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('can set owner during init', async () => {
+      const run = new Run()
+      class A extends Jig { init (owner) { this.owner = owner } }
+      const addr = new PrivateKey().toPublicKey().toAddress().toString()
+      function test (a) { expect(a.owner).to.equal(addr) }
+      const a = new A(addr)
+      await a.sync()
+      test(a)
+      const a2 = await run.load(a.location)
+      test(a2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    // Change twice...
 
     /*
-    it('should be assigned to creator', async () => {
-      const run = createHookedRun()
-      class A extends Jig {
-        send (to) { this.owner = to }
-
-        createA () { return new A() }
-      }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const bsvNetwork = unmangle(unmangle(Run)._util)._bsvNetwork(run.blockchain.network)
-      const privateKey = new PrivateKey(bsvNetwork)
-      const pubkey = privateKey.publicKey.toString()
-      a.send(pubkey)
-      expectAction(a, 'send', [pubkey], [a], [a], [])
-      await a.sync()
-      const run2 = hookStoreAction(new Run({ owner: privateKey }))
-      const a2 = await run2.load(a.location)
-      const a3 = a2.createA()
-      expectAction(a2, 'createA', [], [a2], [a2, a3], [])
-      await a2.sync()
-      expect(a3.owner).to.equal(pubkey)
-    })
-
     it('should throw if set to an invalid owner', async () => {
       createHookedRun()
       class A extends Jig { send (owner) { this.owner = owner }}
