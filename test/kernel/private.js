@@ -472,7 +472,36 @@ describe('Private', () => {
   // Code
   // --------------------------------------------------------------------------
 
-  describe('Code', () => {
+  describe.only('Code', () => {
+    it('accessible from same class', async () => {
+      const run = new Run()
+      class A extends Jig { static f () { return this._n } }
+      A._n = 1
+      const CA = run.deploy(A)
+      function test (CA) { expect(CA.f()).to.equal(1) }
+      test(CA)
+      await CA.sync()
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Static Code
+  // --------------------------------------------------------------------------
+
+  describe('Static Code', () => {
+    // TODO
+  })
+
+  // --------------------------------------------------------------------------
+  // Berry
+  // --------------------------------------------------------------------------
+
+  describe('Berry', () => {
     // TODO
   })
 })
