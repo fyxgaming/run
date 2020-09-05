@@ -63,6 +63,25 @@ describe('Caller', () => {
     test(parent3)
   })
 
+  // --------------------------------------------------------------------------
+
+  it.only('called in a hierarchy', async () => {
+    const run = new Run()
+    class A extends Jig { init () { B.f() } }
+    class B extends Jig { static f () { this.c = new C() } }
+    class C extends Jig { init () { this.initCaller = caller } }
+    A.deps = { B }
+    B.deps = { C }
+    const a = new A()
+    function test (a) { expect(a.deps.B.c.initCaller).to.equal(a.deps.B) }
+    test(a)
+    const a2 = await run.load(a.location)
+    test(a2)
+    run.cache = new LocalCache()
+    const a3 = await run.load(a.location)
+    test(a3)
+  })
+
 /*
     it('should support caller being this', async () => {
       const run = createHookedRun()
