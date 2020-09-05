@@ -1243,15 +1243,18 @@ describe('Jig', () => {
     it('reads jig', async () => {
       const run = new Run()
       class A extends Jig {
-        init () { this.a2 = new A() }
+        init () { }
 
-        f () {
+        f () { this.a2 = new A() }
+
+        g () {
           this.x = this.a2 instanceof A
           this.y = this.a2.constructor.prototype === 'hello'
           this.z = Object.getPrototypeOf(this.a2) === 'world'
         }
       }
       const a = new A()
+      a.f()
       await a.sync()
 
       function test (a) {
@@ -1269,12 +1272,12 @@ describe('Jig', () => {
         exec: [
           {
             op: 'CALL',
-            data: [{ $jig: 0 }, 'f', []]
+            data: [{ $jig: 0 }, 'g', []]
           }
         ]
       })
 
-      a.f()
+      a.g()
       test(a)
       await a.sync()
 
@@ -1306,17 +1309,35 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('preventExtensions', () => {
-    /*
-    it('should throw if prevent extensions', () => {
-      createHookedRun()
+    it('throws', () => {
+        new Run() // eslint-disable-line
       class A extends Jig { f () { Object.preventExtensions(this) }}
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       expect(() => Object.preventExtensions(a)).to.throw()
+      expect(() => a.f()).to.throw()
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // defineProperty
+  // --------------------------------------------------------------------------
+
+  describe('defineProperty', () => {
+    /*
+    it('should throw is define property', () => {
+      createHookedRun()
+      class A extends Jig { f () { Object.defineProperty(this, 'n', { value: 1 }) }}
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      expect(() => Object.defineProperty(a, 'n', { value: 1 })).to.throw()
       expect(() => a.f()).to.throw()
       expectNoAction()
     })
     */
+
+    // throws if external
+    // allowed internal
+    // throws if non-configurable, nonwritable, or non-enumerable
   })
 })
 

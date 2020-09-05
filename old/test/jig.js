@@ -22,18 +22,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('defineProperty', () => {
-    it('should throw is define property', () => {
-      createHookedRun()
-      class A extends Jig { f () { Object.defineProperty(this, 'n', { value: 1 }) }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => Object.defineProperty(a, 'n', { value: 1 })).to.throw()
-      expect(() => a.f()).to.throw()
-      expectNoAction()
-    })
-  })
-
   describe('has', () => {
     it('should add non-permanent properties to reads', () => {
       createHookedRun()
