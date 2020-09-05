@@ -65,7 +65,7 @@ describe('Caller', () => {
 
   // --------------------------------------------------------------------------
 
-  it.only('called in a hierarchy', async () => {
+  it.skip('called in a hierarchy', async () => {
     const run = new Run()
     class A extends Jig { init () { B.f() } }
     class B extends Jig { static f () { this.c = new C() } }
@@ -86,36 +86,48 @@ describe('Caller', () => {
     test(CB3)
   })
 
+  // --------------------------------------------------------------------------
+
+  it('caller is this', async () => {
+    const run = new Run()
+    class A extends Jig {
+      init () { this.f() }
+      f () { this.caller = caller }
+    }
+    const a = new A()
+    await a.sync()
+    function test (a) { expect(a.caller).to.equal(a) }
+    test(a)
+    const a2 = await run.load(a.location)
+    test(a2)
+    run.cache = new LocalCache()
+    const a3 = await run.load(a.location)
+    test(a3)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('call method on caller', async () => {
+    const run = new Run()
+    class A extends Jig {
+      set (n) { this.n = n }
+      apply (b) { b.apply() }
+    }
+    class B extends Jig { apply () { caller.set(1) } }
+    const a = new A()
+    const b = new B()
+    a.apply(b)
+    function test (a) { expect(a.n).to.equal(1) }
+    test(a)
+    await run.sync()
+    const a2 = await run.load(a.location)
+    test(a2)
+    run.cache = new LocalCache()
+    const a3 = await run.load(a.location)
+    test(a3)
+  })
+
 /*
-    it('should support caller being this', async () => {
-      const run = createHookedRun()
-      class A extends Jig {
-        init () { this.f() }
-        f () { this.caller = caller }
-      }
-      const a = new A()
-      await a.sync()
-      expect(a.caller).to.equal(a)
-      const a2 = await run.load(a.location)
-      expect(a2.caller).to.equal(a2)
-    })
-
-    it('should support calling a method on the caller', async () => {
-      const run = createHookedRun()
-      class A extends Jig {
-        set (n) { this.n = n }
-        apply (b) { b.apply() }
-      }
-      class B extends Jig { apply () { caller.set(1) } }
-      const a = new A()
-      const b = new B()
-      a.apply(b)
-      expect(a.n).to.equal(1)
-      await run.sync()
-      const a2 = await run.load(a.location)
-      expect(a2.n).to.equal(1)
-    })
-
     it('should allow local variables named caller', async () => {
       const run = createHookedRun()
       class A extends Jig { init () { const caller = 2; this.n = caller } }
