@@ -1322,22 +1322,48 @@ describe('Jig', () => {
   // defineProperty
   // --------------------------------------------------------------------------
 
-  describe('defineProperty', () => {
-    /*
-    it('should throw is define property', () => {
-      createHookedRun()
-      class A extends Jig { f () { Object.defineProperty(this, 'n', { value: 1 }) }}
+  describe.only('defineProperty', () => {
+    it('throws if external', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => Object.defineProperty(a, 'n', { value: 1 })).to.throw()
-      expect(() => a.f()).to.throw()
-      expectNoAction()
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      const error = 'Updates must be performed in the jig\'s methods'
+      expect(() => Object.defineProperty(a, 'n', desc)).to.throw(error)
     })
-    */
 
-    // throws if external
-    // allowed internal
-    // throws if non-configurable, nonwritable, or non-enumerable
+    // ------------------------------------------------------------------------
+
+    it('allowed internally', async () => {
+      const run = new Run()
+      class A extends Jig {
+        f () {
+          const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+          Object.defineProperty(this, 'n', desc)
+        }
+      }
+      const a = new A()
+      a.f()
+      function test (a) { expect(a.n).to.equal(1) }
+      test(a)
+      await a.sync()
+      const a2 = await run.load(a.location)
+      test(a2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if non-configurable, non-enumerable, or non-writable', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f (desc) { Object.defineProperty(this, 'n', desc) } }
+      const a = new A()
+      expect(() => a.f({ value: 1, configurable: true, enumerable: true })).to.throw()
+      expect(() => a.f({ value: 1, configurable: true, writable: true })).to.throw()
+      expect(() => a.f({ value: 1, enumerable: true, writable: true })).to.throw()
+    })
   })
 })
 
