@@ -22,34 +22,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('ownKeys', () => {
-    it('should add to reads if call ownKeys', () => {
-      createHookedRun()
-      class A extends Jig {}
-      class B extends Jig { f (a) { this.x = Reflect.ownKeys(a) }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      b.f(a)
-      expectAction(b, 'f', [a], [b], [b], [a])
-    })
-  })
-
-  describe('getOwnPropertyDescriptor', () => {
-    it('should add to reads if call getOwnPropertyDescriptor', () => {
-      createHookedRun()
-      class A extends Jig { init () { this.n = 1 }}
-      class B extends Jig { f (a) { this.x = Object.getOwnPropertyDescriptor(a, 'n') }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      b.f(a)
-      expectAction(b, 'f', [a], [b], [b], [a])
-    })
-  })
-
   describe('array', () => {
     it('should support calling push internally', async () => {
       createHookedRun()

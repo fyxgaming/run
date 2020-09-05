@@ -1371,9 +1371,8 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('has', () => {
-    /*
-    it('should add non-permanent properties to reads', () => {
-      createHookedRun()
+    it('reads jig', async () => {
+      const run = new Run()
       class A extends Jig { init () { this.arr = [1] }}
       class B extends Jig {
         f (a) { this.x = 'n' in a }
@@ -1382,47 +1381,124 @@ describe('Jig', () => {
 
         h (a) { this.z = '1' in a.arr }
       }
+      function test (a) {
+        expect(b.x).to.equal(false)
+        expect(b.y).to.equal(true)
+        expect(b.z).to.equal(false)
+      }
+      const a = new A()
+      const b = new B()
+      await run.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'f', [{ $jig: 1 }]]
+          }
+        ]
+      })
+
+      b.f(a)
+      await b.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'g', [{ $jig: 1 }]]
+          }
+        ]
+      })
+
+      b.g(a)
+      await b.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'h', [{ $jig: 1 }]]
+          }
+        ]
+      })
+
+      b.h(a)
+      await b.sync()
+
+      test(b)
+
+      const b2 = await run.load(b.location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(b.location)
+      test(b3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('should support has for undefined values', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        init () { this.x = undefined }
+      }
+      const a = new A()
+      expect('x' in a).to.equal(true)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // ownKeys
+  // --------------------------------------------------------------------------
+
+  describe.only('ownKeys', () => {
+    /*
+    it('should add to reads if call ownKeys', () => {
+      createHookedRun()
+      class A extends Jig {}
+      class B extends Jig { f (a) { this.x = Reflect.ownKeys(a) }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
       b.f(a)
       expectAction(b, 'f', [a], [b], [b], [a])
-      b.g(a)
-      expectAction(b, 'g', [a], [b], [b], [a])
-      b.h(a)
-      expectAction(b, 'h', [a], [b], [b], [a])
     })
+    */
+  })
 
-    it('should not add permanant properties to reads', () => {
+  // --------------------------------------------------------------------------
+  // getOwnPropertyDescriptor
+  // --------------------------------------------------------------------------
+
+  describe.only('getOwnPropertyDescriptor', () => {
+    /*
+    it('should add to reads if call getOwnPropertyDescriptor', () => {
       createHookedRun()
-      class A extends Jig { f () {} }
-      class B extends Jig {
-        f (a) {
-          this.x1 = 'f' in a
-          this.x2 = 'origin' in a
-          this.x3 = 'location' in a
-          this.x4 = 'owner' in a
-          this.x5 = 'satoshis' in a
-          this.x6 = 'sync' in a
-          this.x7 = 'constructor' in a
-        }
-      }
+      class A extends Jig { init () { this.n = 1 }}
+      class B extends Jig { f (a) { this.x = Object.getOwnPropertyDescriptor(a, 'n') }}
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
       const b = new B()
       expectAction(b, 'init', [], [], [b], [])
       b.f(a)
-      expectAction(b, 'f', [a], [b], [b], [])
-    })
-
-    it('should support has for undefined values', () => {
-      createHookedRun()
-      class A extends Jig {
-        init () { this.x = undefined }
-      }
-      const a = new A()
-      expect('x' in a).to.equal(true)
+      expectAction(b, 'f', [a], [b], [b], [a])
     })
     */
   })
