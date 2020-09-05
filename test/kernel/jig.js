@@ -1570,9 +1570,10 @@ describe('Jig', () => {
       test(a3)
     })
 
-    /*
+    // ------------------------------------------------------------------------
+
     it('throws if change external', async () => {
-      createHookedRun()
+      new Run() // eslint-disable-line
       class A extends Jig {
         init () { this.a = [3, 1, 2, 5, 0] }
 
@@ -1581,11 +1582,9 @@ describe('Jig', () => {
       class B extends Jig { init () { new A().a.push(1) } }
       B.deps = { A }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
+      const error = "Updates must be performed in the jig's methods"
       const expectArrayError = (method, ...args) => {
-        const err = `internal method ${method} may not be called to change state`
-        expect(() => a.a[method](...args)).to.throw(err)
-        expectNoAction()
+        expect(() => a.a[method](...args)).to.throw(error)
       }
       expectArrayError('copyWithin', 1)
       expectArrayError('pop')
@@ -1596,10 +1595,10 @@ describe('Jig', () => {
       expectArrayError('splice', 0, 1)
       expectArrayError('unshift', 4)
       expectArrayError('fill', 0)
-      expect(() => new B()).to.throw()
-      expectNoAction()
+      expect(() => new B()).to.throw(error)
     })
 
+    /*
     it('read without spending', () => {
       createHookedRun()
       class A extends Jig { init () { this.a = [] } }
