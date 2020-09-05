@@ -291,6 +291,32 @@ describe('Code', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('overrides parent on child', async () => {
+      const run = new Run()
+      class A extends Jig { static f (n) { this.n = n } }
+      class B extends A { }
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      CA.f(1)
+      CB.f(2)
+      await CB.sync()
+      await CA.sync()
+      function test (CA, CB) {
+        expect(CA.n).to.equal(1)
+        expect(CB.n).to.equal(2)
+      }
+      test(CA, CB)
+      const CA2 = await run.load(CA.location)
+      const CB2 = await run.load(CB.location)
+      test(CA2, CB2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      const CB3 = await run.load(CB.location)
+      test(CA3, CB3)
+    })
   })
 
   // --------------------------------------------------------------------------
