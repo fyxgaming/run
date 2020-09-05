@@ -545,8 +545,58 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('jig', () => {
+    it('jig reference', async () => {
+      const run = new Run()
 
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      class O { }
+      const CO = run.deploy(O)
+      await CO.sync()
+
+      class C extends Jig { }
+      const c = new C()
+      await c.sync()
+
+      class B { }
+
+      function test (CO) {
+        expect(CO.c instanceof Jig).to.equal(true)
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              B.toString(),
+              {
+                c: { $jig: 1 }
+              }
+            ]
+          }
+        ]
+      })
+
+      B.c = c
+      CO.upgrade(B)
+      test(CO)
+      await CO.sync()
+
+      const CO2 = await run.load(CO.location)
+      test(CO2)
+
+      run.cache = new LocalCache()
+      const CO3 = await run.load(CO.location)
+      test(CO3)
     })
 
     // ------------------------------------------------------------------------
@@ -799,8 +849,60 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('jig', () => {
-      // TODO
+    it('jig reference', async () => {
+      const run = new Run()
+
+      function f () { }
+      const cf = run.deploy(f)
+      await cf.sync()
+
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+
+      function o () { }
+      const co = run.deploy(o)
+      await co.sync()
+
+      function test (co) {
+        expect(co.deps.a.origin).to.equal(a.origin)
+        expect(co.deps.a.location).to.equal(a.location)
+        expect(co().location).to.equal(a.location)
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              g.toString(),
+              {
+                deps: { a: { $jig: 1 } }
+              }
+            ]
+          }
+        ]
+      })
+
+      function g () { return a }
+      g.deps = { a }
+
+      co.upgrade(g)
+      test(co)
+      await co.sync()
+
+      const co2 = await run.load(co.location)
+      test(co2)
+
+      run.cache = new LocalCache()
+      const co3 = await run.load(co.location)
+      test(co3)
     })
 
     // ------------------------------------------------------------------------
@@ -925,14 +1027,22 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if upgrade normal jig class to static code', () => {
-      // TODO
+    it('throws if upgrade normal jig class to static code', () => {
+      const run = new Run()
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      const error = 'Cannot change staticness of code in upgrade'
+      expect(() => CA.upgrade(class B { })).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if upgrade static code to normal jig class', () => {
-      // TODO
+    it('throws if upgrade static code to normal jig class', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      const error = 'Cannot change staticness of code in upgrade'
+      expect(() => CA.upgrade(class B extends Jig { })).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
@@ -1023,8 +1133,11 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('cannot upgrade in a method', () => {
-      // TODO
+    it('cannot upgrade in a method', () => {
+      const run = new Run()
+      class A extends Jig { static f() { this.upgrade(class B { } )} }
+      const CA = run.deploy(A)
+      expect(() => CA.f()).to.throw('upgrade unavailable')
     })
 
     // ------------------------------------------------------------------------
