@@ -17,7 +17,7 @@ const Universal = unmangle(Run)._Universal
 
 describe('Universal', () => {
   describe('hasInstance', () => {
-    it.only('jigs are universals', () => {
+    it('jig', () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
       const a = new A()
@@ -26,14 +26,38 @@ describe('Universal', () => {
 
     // ------------------------------------------------------------------------
 
-    it('code are universals', () => {
-      // TODO
+    it('code', () => {
+      const run = new Run()
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      expect(CA instanceof Universal).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it('static code are universals', () => {
-      // TODO
+    it('undeployed code', () => {
+      class A { }
+      class B extends Jig { }
+      expect(A instanceof Universal).to.equal(false)
+      expect(B instanceof Universal).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('static class', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      expect(CA instanceof Universal).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('static function', () => {
+      const run = new Run()
+      function f () { }
+      const cf = run.deploy(f)
+      expect(cf instanceof Universal).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
