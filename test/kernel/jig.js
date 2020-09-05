@@ -1533,22 +1533,44 @@ describe('Jig', () => {
   // Array
   // --------------------------------------------------------------------------
 
-  describe('Array', () => {
-    /*
+  describe.only('Array', () => {
     it('push internal', async () => {
-      createHookedRun()
+      const run = new Run()
       class A extends Jig {
         init () { this.a = [] }
-
         add (n) { this.a.push(n) }
       }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
+      await a.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'add', [1]]
+          }
+        ]
+      })
+
+      function test (a) { expect(a.a[0]).to.equal(1) }
+
       a.add(1)
-      expect(a.a[0]).to.equal(1)
-      expectAction(a, 'add', [1], [a], [a], [a])
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      const a3 = await run.load(a.location)
+      test(a3)
     })
 
+    /*
     it('throws if change external', async () => {
       createHookedRun()
       class A extends Jig {
