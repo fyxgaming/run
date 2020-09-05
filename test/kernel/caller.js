@@ -65,7 +65,7 @@ describe('Caller', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('called in a hierarchy', async () => {
+  it.only('called in a hierarchy', async () => {
     const run = new Run()
     class A extends Jig { init () { B.f() } }
     class B extends Jig { static f () { this.c = new C() } }
@@ -165,8 +165,8 @@ describe('Caller', () => {
   // --------------------------------------------------------------------------
 
   it('should throw if set caller', () => {
-      new Run() // eslint-disable-line
-      class A extends Jig { init () { caller = 1 } } // eslint-disable-line
+    new Run() // eslint-disable-line
+    class A extends Jig { init () { caller = 1 } } // eslint-disable-line
     expect(() => new A()).to.throw('Cannot set caller')
   })
 })
