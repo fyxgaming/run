@@ -151,12 +151,6 @@ describe('Destroy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('create and destroy in same transaction', () => {
-
-    })
-
-    // ------------------------------------------------------------------------
-
     it('throws if destroy non-code', () => {
       const run = new Run()
       class A { }
@@ -180,10 +174,40 @@ describe('Destroy', () => {
       expect(() => Code.prototype.destroy.call(B)).to.throw('destroy unavailable')
     })
 
+    // --------------------------------------------------------------------------
+
+    it('destroy jig not synced', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      CA.destroy()
+      await CA.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('rollback if error', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+      stub(run.blockchain, 'broadcast').throwsException()
+      CA.destroy()
+      await expect(CA.sync()).to.be.rejected
+      expect(CA.location.endsWith('_d0')).to.equal(false)
+      expect(CA.nonce).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('create and destroy in same transaction in batch', () => {
+      // TODO
+    })
+
     // ------------------------------------------------------------------------
 
     it.skip('destroy multiple in a batch', () => {
-
+      // TODO
     })
 
     // ------------------------------------------------------------------------
@@ -248,35 +272,29 @@ describe('Destroy', () => {
 
     // ------------------------------------------------------------------------
 
+    it('create and destroy in same transaction', async () => {
+      const run = new Run()
+      class A extends Jig { init() { this.destroy() } }
+      const CA = run.deploy(A)
+      await CA.sync()
+      const a = new A()
+      await a.sync()
+      console.log(a)
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('throws if destroy non-jig', () => {
 
     })
   })
 
   // --------------------------------------------------------------------------
-  // Errors
+  // Berry
   // --------------------------------------------------------------------------
 
-  describe('errors', () => {
-    // ------------------------------------------------------------------------
-
-    // ------------------------------------------------------------------------
-
-    it('rollback if error', async () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      await CA.sync()
-      stub(run.blockchain, 'broadcast').throwsException()
-      CA.destroy()
-      await expect(CA.sync()).to.be.rejected
-      expect(CA.location.endsWith('_d0')).to.equal(false)
-      expect(CA.nonce).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if auth undeployed berry class', () => {
+  describe('Berry', () => {
+    it.skip('throws if destroy undeployed berry class', () => {
     // TODO
     })
   })
