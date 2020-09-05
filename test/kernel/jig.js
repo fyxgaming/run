@@ -1766,18 +1766,44 @@ describe('Jig', () => {
       expect(() => new A()).to.throw('Cannot override Jig')
     })
 
-    /*
-    it('should add to reads', () => {
-      createHookedRun()
+    it('should add to reads', async () => {
+      const run = new Run()
       class A extends Jig { f (a) { this.x = a.owner }}
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const a2 = new A()
-      expectAction(a2, 'init', [], [], [a2], [])
-      a.f(a2)
-      expectAction(a, 'f', [a2], [a], [a], [a2])
+      const b = new A()
+      await a.sync()
+
+      function test (a, b) { expect(b.x).to.equal(a.owner) }
+
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'f', [{ $jig: 1 }]]
+          }
+        ]
+      })
+
+      b.f(a)
+      test(a, b)
+      await b.sync()
+
+      const a2 = await run.load(a.location)
+      const b2 = await run.load(b.location)
+      test(a2, b2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      const b3 = await run.load(b.location)
+      test(a3, b3)
     })
 
+    /*
     it('should support only class owner creating instances', async () => {
       class A extends Jig {
         init (owner) {
