@@ -596,8 +596,24 @@ describe('Private', () => {
   // Static Code
   // --------------------------------------------------------------------------
 
-  describe('Static Code', () => {
-    // TODO
+  describe.only('Static Code', () => {
+    it('accessible from outside', async () => {
+      const run = new Run()
+      class A { }
+      A._n = 1
+      function test (A) { expect(A._n).to.equal(1) }
+      const CA = run.deploy(A)
+      await CA.sync()
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+
+    it('accessible from another jig', () => {
+
+    })
   })
 
   // --------------------------------------------------------------------------
