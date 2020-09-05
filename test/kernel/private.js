@@ -386,7 +386,7 @@ describe('Private', () => {
 
       // ----------------------------------------------------------------------
 
-      it('throws from dfferent jig of different class', async () => {
+      it('throws from different jig of different class', async () => {
         const run = new Run()
         class A extends Jig { _g () { return 1 } }
         class B extends Jig { f (a) { return a._g() } }
@@ -407,7 +407,23 @@ describe('Private', () => {
       // ----------------------------------------------------------------------
 
       it('available from different jig of same class', async () => {
-        // TODO
+        const run = new Run()
+        class A extends Jig {
+          _g () { return 1 }
+          f (a) { return a._g() }
+        }
+        function test (a, b) { expect(b.f(a)).to.equal(1) }
+        const a = new A()
+        const b = new A()
+        test(a, b)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        const b2 = await run.load(b.location)
+        test(a2, b2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        const b3 = await run.load(b.location)
+        test(a3, b3)
       })
     })
   })
