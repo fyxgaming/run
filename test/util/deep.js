@@ -382,19 +382,6 @@ describe('_deepClone', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('throws for extensions of supported types', () => {
-    // TODO: Extend Set, Map, etc.
-    // TODO: Move below
-  })
-
-  // --------------------------------------------------------------------------
-
-  it.skip('throws for arbitrary objects of undeployed static code', () => {
-    // TODO: Move below
-  })
-
-  // --------------------------------------------------------------------------
-
   it('basic objects', () => {
     const o = { p: { m: 1 } }
     expect(_deepClone(o)).to.deep.equal({ p: { m: 1 } })
@@ -521,6 +508,19 @@ describe('_deepClone', () => {
     expect(() => _deepClone(new WeakSet())).to.throw('Cannot clone')
     expect(() => _deepClone(/123/)).to.throw('Cannot clone')
     expect(() => _deepClone(Promise)).to.throw('Cannot clone')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('throws for extensions of supported types', () => {
+    expect(() => _deepClone(new (class MySet extends Set {})())).to.throw('Cannot clone')
+    expect(() => _deepClone(new (class MySet extends Map {})())).to.throw('Cannot clone')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('throws for arbitrary objects of undeployed code', () => {
+    // TODO: Move below
   })
 
   // --------------------------------------------------------------------------
