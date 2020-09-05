@@ -1760,6 +1760,17 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if set externally', () => {
+      new Run () // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      const error = 'Updates must be performed in the jig\'s methods'
+      const addr = new PrivateKey().publicKey.toAddress().toString()
+      expect(() => { a.owner = addr }).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if owner method', () => {
       new Run() // eslint-disable-line
       class A extends Jig { owner () {} }
@@ -1828,7 +1839,7 @@ describe('Jig', () => {
   // satoshis
   // --------------------------------------------------------------------------
 
-  describe.only('satoshis', () => {
+  describe('satoshis', () => {
     async function testSatoshisPass (amount) {
       const run = new Run()
       class A extends Jig { f (s) { this.satoshis = s } }
@@ -1842,6 +1853,8 @@ describe('Jig', () => {
       expect(a3.satoshis).to.equal(amount)
     }
 
+    // ------------------------------------------------------------------------
+
     // minimum amount
     it('set to 0', () => testSatoshisPass(0))
 
@@ -1851,73 +1864,60 @@ describe('Jig', () => {
     // more than dust
     it('set to 600', () => testSatoshisPass(600))
 
-    /*
-    function testFailToSet (amount, err) {
-      createHookedRun()
+    // ------------------------------------------------------------------------
+
+    function testFailToSet (amount, error) {
+      new Run() // eslint-disable-line
       class A extends Jig { f (s) { this.satoshis = s } }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.f(amount)).to.throw(err)
-      expectNoAction()
+      expect(() => a.f(amount)).to.throw(error)
     }
 
-    it('should throw if set to negative', () => testFailToSet(-1, 'satoshis must be non-negative'))
-    it('should throw if set to float', () => testFailToSet(1.1, 'satoshis must be an integer'))
-    it('should throw if set to string', () => testFailToSet('1', 'satoshis must be a number'))
-    it('should throw if set above 100M', () => testFailToSet(100000001, 'satoshis must be <= 100000000'))
-    it('should throw if set to NaN', () => testFailToSet(NaN, 'satoshis must be an integer'))
-    it('should throw if set to Infinity', () => testFailToSet(Infinity, 'satoshis must be an integer'))
-    it('should throw if set to undefined', () => testFailToSet(undefined, 'satoshis must be a number'))
+    // ------------------------------------------------------------------------
 
-    it('should initialize to 0 satoshis', () => {
-      createHookedRun()
+    it('throws if set to negative', () => testFailToSet(-1, 'satoshis must be non-negative'))
+    it('throws if set to float', () => testFailToSet(1.1, 'satoshis must be an integer'))
+    it('throws if set to string', () => testFailToSet('1', 'satoshis must be a number'))
+    it('throws if set above 100M', () => testFailToSet(100000001, 'satoshis must be <= 100000000'))
+    it('throws if set to NaN', () => testFailToSet(NaN, 'satoshis must be an integer'))
+    it('throws if set to Infinity', () => testFailToSet(Infinity, 'satoshis must be an integer'))
+    it('throws if set to undefined', () => testFailToSet(undefined, 'satoshis must be a number'))
+
+    // ------------------------------------------------------------------------
+
+    it('throws if read while unbound', () => {
+      new Run() // eslint-disable-line
       class A extends Jig { init () { this.satoshisAtInit = this.satoshis }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [a])
-      expect(a.satoshisAtInit).to.equal(0)
+      expect(() => new A()).to.throw('Cannot read satoshis')
     })
 
-    it('should throw if satoshis method exists', () => {
-      createHookedRun()
-      class A extends Jig { owner () {} }
+    // ------------------------------------------------------------------------
+
+    it('throws if satoshis method exists', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { satoshis () {} }
       expect(() => new A()).to.throw()
-      expectNoAction()
     })
 
-    it('should throw if delete satoshis property', () => {
-      createHookedRun()
+    // ------------------------------------------------------------------------
+
+    it('throws if delete', () => {
+      new Run() // eslint-disable-line
       class A extends Jig { f () { delete this.satoshis }}
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => { delete a.satoshis }).to.throw()
-      expectNoAction()
-      expect(() => a.f()).to.throw('must not delete satoshis')
-      expectNoAction()
+      expect(() => { delete a.satoshis }).to.throw('Cannot delete satoshis')
+      expect(() => a.f()).to.throw('Cannot delete satoshis')
     })
 
-    it('should throw if set externally', () => {
-      createHookedRun()
+    // ------------------------------------------------------------------------
+
+    it('throws if set externally', () => {
+      new Run () // eslint-disable-line
       class A extends Jig { }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => { a.satoshis = 1 }).to.throw('must not set satoshis outside of a method')
-      expectNoAction()
+      const error = 'Updates must be performed in the jig\'s methods'
+      expect(() => { a.satoshis = 1 }).to.throw(error)
     })
-
-    it('should add to purse when satoshis decreased', async () => {
-      const run = createHookedRun()
-      class A extends Jig { f (satoshis) { this.satoshis = satoshis; return this }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      await a.f(5000).sync()
-      expectAction(a, 'f', [5000], [a], [a], [])
-      const before = await run.purse.balance()
-      await a.f(0).sync()
-      expectAction(a, 'f', [0], [a], [a], [])
-      const after = await run.purse.balance()
-      expect(after - before > 3000).to.equal(true)
-    })
-    */
   })
 })
 
