@@ -10,8 +10,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
-const { _deepEqual } = require('../../lib/util/deep')
-const { _deepVisit, _deepReplace, _deepClone } = unmangle(unmangle(Run)._deep)
+const { _deepVisit, _deepReplace, _deepClone, _deepEqual } = unmangle(unmangle(Run)._deep)
 
 // ------------------------------------------------------------------------------------------------
 // _deepVisit
@@ -595,6 +594,7 @@ describe('_deepEqual', () => {
 
   it('object', () => {
     expect(_deepEqual({ }, { })).to.equal(true)
+    expect(_deepEqual({ }, 123)).to.equal(false)
     expect(_deepEqual({ }, { n: 1 })).to.equal(false)
     expect(_deepEqual({ n: 1 }, { n: 1 })).to.equal(true)
     expect(_deepEqual({ o: { n: 1 } }, { o: { n: 1 } })).to.equal(true)
@@ -604,6 +604,7 @@ describe('_deepEqual', () => {
 
   it('array', () => {
     expect(_deepEqual([], [])).to.equal(true)
+    expect(_deepEqual([], {})).to.equal(false)
     expect(_deepEqual([], [null])).to.equal(false)
     expect(_deepEqual([1, 2, 3], [1, 2, 3])).to.equal(true)
     expect(_deepEqual([[], []], [[], []])).to.equal(true)
@@ -616,6 +617,7 @@ describe('_deepEqual', () => {
 
   it('set', () => {
     expect(_deepEqual(new Set(), new Set())).to.equal(true)
+    expect(_deepEqual(new Set(), new (class MySet extends Set {})())).to.equal(false)
     expect(_deepEqual(new Set(), new Set([1]))).to.equal(false)
     expect(_deepEqual(new Set([new Set([1])]), new Set([new Set([1])]))).to.equal(true)
     const s1 = new Set()
@@ -631,6 +633,7 @@ describe('_deepEqual', () => {
 
   it('map', () => {
     expect(_deepEqual(new Map(), new Map())).to.equal(true)
+    expect(_deepEqual(new Map(), new Set())).to.equal(false)
     expect(_deepEqual(new Map(), new Map([[1, 2]]))).to.equal(false)
     expect(_deepEqual(new Map([[1, {}]]), new Map([[1, {}]]))).to.equal(true)
     expect(_deepEqual(new Map([[1, { n: 1 }]]), new Map([[1, {}]]))).to.equal(false)
@@ -643,6 +646,15 @@ describe('_deepEqual', () => {
     expect(_deepEqual(m1, m2)).to.equal(true)
     m1.n = 2
     expect(_deepEqual(m1, m2)).to.equal(false)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('uint8array', () => {
+    expect(_deepEqual(new Uint8Array(), new Uint8Array())).to.equal(true)
+    expect(_deepEqual(new Uint8Array(), [])).to.equal(false)
+    expect(_deepEqual(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3]))).to.equal(true)
+    expect(_deepEqual(new Uint8Array([1, 2]), new Uint8Array([1, 2, 3]))).to.equal(false)
   })
 })
 
