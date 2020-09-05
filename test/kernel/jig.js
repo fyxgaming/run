@@ -784,7 +784,7 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('Reads', () => {
-    it('does not spend', async () => {
+    it('do not spend', async () => {
       const run = new Run()
 
       class A extends Jig { init (n) { this.n = n } }
@@ -1573,7 +1573,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if change external', async () => {
+    it('throws if change externally', async () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         init () { this.a = [3, 1, 2, 5, 0] }
@@ -1690,7 +1690,7 @@ describe('Jig', () => {
 
     it('throws if creator owner is undetermined', () => {
       new Run() // eslint-disable-line
-      class A extends Jig { init () { } }
+      class A extends Jig { init () { this.ownerAtInit = this.owner } }
       class B extends Jig { create () { return new A() } }
       B.deps = { A }
       const b = new B()
