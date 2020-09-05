@@ -183,11 +183,29 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if auth non-jig', () => {
+    it('throws if auth non-code', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
+      const error = 'auth unavailable'
       expect(() => CA.auth.apply(A, [])).to.throw('auth unavailable')
+      expect(() => Code.prototype.auth.call({})).to.throw(error)
+      expect(() => Code.prototype.auth.call(class A { })).to.throw(error)
+      expect(() => Code.prototype.auth.call(null)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('rollback if error', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+      stub(run.blockchain, 'broadcast').throwsException()
+      CA.auth()
+      await expect(CA.sync()).to.be.rejected
+      expect(CA.location).to.equal(CA.origin)
+      expect(CA.nonce).to.equal(1)
     })
   })
 
@@ -282,69 +300,37 @@ describe('Auth', () => {
       class A extends Jig { }
       const a = new A()
       expect(() => a.auth.apply({}, [])).to.throw('auth unavailable')
+      expect(() => Jig.prototype.auth.apply(A, [])).to.throw('auth unavailable')
     })
 
     // ------------------------------------------------------------------------
 
-    it.only('auth in init', async () => {
-      const run = new Run()
+    it('throws if undeployed', async () => {
+      new Run() // eslint-disable-line
       class A extends Jig { init () { this.auth() } }
-      const a = new A()
-      await a.sync()
-      await run.load(a.location)
-      run.cache = new LocalCache()
-      await run.load(a.location)
+      expect(() => new A()).to.throw('Cannot auth undeployed')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if unbound', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws destroyed', () => {
+      // TODO
     })
   })
 
   // --------------------------------------------------------------------------
-  // Errors
+  // Berry
   // --------------------------------------------------------------------------
 
-  describe('errors', () => {
-    it('cannot auth non-code', () => {
-      const error = 'auth unavailable'
-      expect(() => Code.prototype.auth.call({})).to.throw(error)
-      expect(() => Code.prototype.auth.call(class A { })).to.throw(error)
-      expect(() => Code.prototype.auth.call(null)).to.throw(error)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('rollback if error', async () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      await CA.sync()
-      stub(run.blockchain, 'broadcast').throwsException()
-      CA.auth()
-      await expect(CA.sync()).to.be.rejected
-      expect(CA.location).to.equal(CA.origin)
-      expect(CA.nonce).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if auth jig destroyed in same transaction', () => {
-
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if auth new jig', () => {
-
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if auth transferred jig', () => {
-
-    })
-
-    // ------------------------------------------------------------------------
-
+  describe('Berry', () => {
     it.skip('cannot auth undeployed berry class', () => {
-    // TODO
+      // TODO
     })
   })
 })
