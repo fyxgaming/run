@@ -1653,16 +1653,14 @@ describe('Jig', () => {
   // Owner
   // --------------------------------------------------------------------------
 
-  describe('Owner', () => {
-    /*
-    it('should be defined before init is called', () => {
-      const run = createHookedRun()
+  describe.only('Owner', () => {
+    it('throws if read before assigned', () => {
+      new Run() // eslint-disable-line
       class A extends Jig { init () { this.ownerAtInit = this.owner }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [a])
-      expect(a.ownerAtInit).to.equal(run.owner.address)
+      expect(() => new A()).to.throw('Cannot read owner')
     })
 
+    /*
     it('should be assigned to creator', async () => {
       const run = createHookedRun()
       class A extends Jig {
