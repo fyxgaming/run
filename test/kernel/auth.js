@@ -345,6 +345,16 @@ describe('Auth', () => {
       await a.sync()
       expect(() => a.f()).not.to.throw()
     })
+
+    // ------------------------------------------------------------------------
+
+    it('auth twice in same method', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { this.auth(); this.auth() } }
+      const a = new A()
+      await a.sync()
+      expect(() => a.f()).not.to.throw()
+    })
   })
 
   // --------------------------------------------------------------------------

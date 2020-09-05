@@ -7,6 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
+const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { Jig } = Run
 const { expectTx } = require('../env/misc')
@@ -277,17 +278,13 @@ describe('Destroy', () => {
       class A extends Jig { init () { this.destroy() } }
       const CA = run.deploy(A)
       await CA.sync()
-      function test (a) {
-        expect(a.location).to.equal(a.origin)
-        expect(a.location.endsWith('_d0')).to.equal(true)
-      }
 
       expectTx({
         nin: 0,
         nref: 1,
         nout: 0,
         ndel: 1,
-        ncre: 0,
+        ncre: 1,
         exec: [
           {
             op: 'NEW',
@@ -295,6 +292,11 @@ describe('Destroy', () => {
           }
         ]
       })
+
+      function test (a) {
+        expect(a.location).to.equal(a.origin)
+        expect(a.location.endsWith('_d0')).to.equal(true)
+      }
 
       const a = new A()
       await a.sync()
@@ -310,8 +312,77 @@ describe('Destroy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if destroy non-jig', () => {
+    it('destroys code in method', async () => {
+      const run = new Run()
 
+      class A extends Jig { f (B) { B.destroy() } }
+      class B { }
+      const a = new A()
+      const CB = run.deploy(B)
+      await a.sync()
+      await CB.sync()
+
+      expectTx({
+        nin: 2,
+        nref: 1,
+        nout: 1,
+        ndel: 1,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'f', [{ $jig: 1 }]]
+          }
+        ]
+      })
+
+      function test (B) {
+        expect(B.location).not.to.equal(B.origin)
+        expect(B.location.endsWith('_d0')).to.equal(true)
+      }
+
+      a.f(CB)
+      await a.sync()
+      test(CB)
+
+      const CB2 = await run.load(CB.location)
+      test(CB2)
+
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      test(CB3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if destroy non-jig', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      expect(() => a.destroy.apply({}, [])).to.throw('destroy unavailable')
+      expect(() => Jig.prototype.destroy.apply(A, [])).to.throw('destroy unavailable')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('send and destroy in same method', async () => {
+      // destroy is a request to happen at method start
+      new Run() // eslint-disable-line
+      class A extends Jig { f (owner) { this.owner = owner; this.destroy() } }
+      const a = new A()
+      await a.sync()
+      const owner = new PrivateKey().toPublicKey().toString()
+      expect(() => a.f(owner)).not.to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('destroy twice in same method', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { this.destroy(); this.destroy() } }
+      const a = new A()
+      await a.sync()
+      expect(() => a.f()).not.to.throw()
     })
   })
 

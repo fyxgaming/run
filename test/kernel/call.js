@@ -261,7 +261,7 @@ describe('Call', () => {
     // ------------------------------------------------------------------------
 
     it('swap inner jigs', async () => {
-      const run = new Run({ importLimit: 20 })
+      const run = new Run()
       class A extends Jig {
         init (name) { this.name = name }
         setX (a) { this.x = a }
