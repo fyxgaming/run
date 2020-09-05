@@ -524,6 +524,48 @@ describe('Private', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('accessible from instance', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static _g () { return 1 }
+        f () { return A._g() }
+      }
+      const a = new A()
+      function test (a) { expect(a.f()).to.equal(1) }
+      test(a)
+      await a.sync()
+      const a2 = await run.load(a.location)
+      test(a2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can access instance', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f (a) { return a._g() }
+        _g () { return 1 }
+      }
+      const CA = await run.deploy(A)
+      const a = new A()
+      function test (CA, a) { expect(CA.f(a)).to.equal(1) }
+      test(CA, a)
+      await a.sync()
+      await CA.sync()
+      const a2 = await run.load(a.location)
+      const CA2 = await run.load(CA.location)
+      test(CA2, a2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      const CA3 = await run.load(CA.location)
+      test(CA3, a3)
+    })
   })
 
   // --------------------------------------------------------------------------
