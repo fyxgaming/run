@@ -2444,6 +2444,171 @@ describe('Jig', () => {
       expect(() => new A()).to.throw('Cannot override Jig methods or properties')
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Inner objects
+  // --------------------------------------------------------------------------
+
+  describe.only('Inner objects', () => {
+    /*
+    it('should support calling a read-only method on an internal property from outside', () => {
+      createHookedRun()
+      class A extends Jig {
+        init () {
+          this.obj = { n: 1 }
+          this.arr = [1, 2, 3]
+          this.buf = new Uint8Array([1, 2])
+        }
+      }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      expect(() => a.obj.toString()).not.to.throw()
+      expect(() => a.arr.indexOf(3)).not.to.throw()
+      expect(() => a.buf.indexOf(2)).not.to.throw()
+    })
+
+    it('should support calling a read-only method on an internal property from another jig', () => {
+      createHookedRun()
+      class A extends Jig {
+        init () {
+          this.obj = { n: 1 }
+          this.arr = [1, 2, 3]
+          this.buf = new Uint8Array([1, 2])
+        }
+      }
+      class B extends Jig {
+        f (a) {
+          this.x = a.obj.toString()
+          this.y = a.arr.indexOf(3)
+          this.z = a.buf.indexOf(2)
+        }
+      }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      const b = new B()
+      expectAction(b, 'init', [], [], [b], [])
+      expect(() => b.f(a)).not.to.throw()
+    })
+
+    it('should support calling a write method on an internal property from outside', () => {
+      createHookedRun()
+      class A extends Jig {
+        init () {
+          this.arr = [1, 2, 3]
+          this.buf = new Uint8Array([3, 2, 1])
+        }
+      }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      expect(() => a.arr.push(1)).to.throw('internal method push may not be called to change state')
+      expectNoAction()
+      expect(() => a.buf.sort()).to.throw('internal method sort may not be called to change state')
+      expectNoAction()
+    })
+
+    it('should support calling a write method on an internal property from another jig', () => {
+      createHookedRun()
+      class A extends Jig {
+        init () {
+          this.arr = [1, 2, 3]
+          this.buf = new Uint8Array([3, 2, 1])
+        }
+      }
+      class B extends Jig {
+        f (a) { a.arr.push(1) }
+
+        g (a) { a.buf.sort() }
+      }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      const b = new B()
+      expectAction(b, 'init', [], [], [b], [])
+      expect(() => b.f(a)).to.throw('internal method push may not be called to change state')
+      expectNoAction()
+      expect(() => b.g(a)).to.throw('internal method sort may not be called to change state')
+      expectNoAction()
+    })
+
+    it('should support internal methods that do not require args to be serializable', () => {
+      createHookedRun()
+      class A extends Jig { init () { this.arr = [1, 2, 3] } }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      expect(() => a.arr.filter(x => x === 1)).not.to.throw()
+      expect(() => a.arr.indexOf(Symbol.hasInstance)).not.to.throw()
+    })
+
+    it('should throw if save an internal property on another jig', () => {
+      createHookedRun()
+      class A extends Jig {
+        init () {
+          this.obj = { n: 1 }
+          this.arr = [1, 2, 3]
+          this.buf = new Uint8Array([1, 2])
+        }
+      }
+      class B extends Jig {
+        f (a) { this.x = a.obj }
+
+        g (a) { this.y = a.arr }
+
+        h (a) { this.z = a.buf }
+      }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      const b = new B()
+      expectAction(b, 'init', [], [], [b], [])
+      expect(() => b.f(a)).to.throw('[object Object] belongs to a different resource')
+      expect(() => b.g(a)).to.throw('[object Array] belongs to a different resource')
+      expect(() => b.h(a)).to.throw('[object Uint8Array] belongs to a different resource')
+    })
+
+    it('should throw if save an arbitrary object from another jig', () => {
+      createHookedRun()
+      class A extends Jig {
+        init () {
+          class Blob { f () { return 2 } }
+          this.blob = new Blob()
+        }
+      }
+      class B extends Jig {
+        set (a) { this.x = a.blob }
+      }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      const b = new B()
+      expectAction(b, 'init', [], [], [b], [])
+      expect(() => b.set(a)).to.throw('[object Blob] belongs to a different resource')
+    })
+
+    it('should not throw if save a copy of an internal property on another jig', () => {
+      createHookedRun()
+      class A extends Jig {
+        init () {
+          this.obj = { n: 1 }
+          this.arr = [1, 2, 3]
+          this.buf = new Uint8Array([1, 2])
+        }
+      }
+      class B extends Jig {
+        f (a) { this.x = Object.assign({}, a.obj) }
+
+        g (a) { this.y = [...a.arr] }
+
+        h (a) {
+          this.z = new Uint8Array(a.buf)
+        }
+      }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      const b = new B()
+      expectAction(b, 'init', [], [], [b], [])
+      expect(() => b.f(a)).not.to.throw()
+      expect(() => b.g(a)).not.to.throw()
+      expect(() => b.h(a)).not.to.throw()
+    })
+    */
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
