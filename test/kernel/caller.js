@@ -1,18 +1,43 @@
-/*
-  describe('caller', () => {
-    it('should be null when called externally', async () => {
-      const run = createHookedRun()
-      class A extends Jig {
-        init () { expect(caller).toBeNull() }
-        f () { expect(caller).toBeNull() }
-      }
-      A.deps = { expect: Run.expect }
-      const a = new A()
-      a.f()
-      await run.sync()
-      await run.load(a.location)
-    })
+/**
+ * caller.js
+ *
+ * Tests for the caller special property
+ */
 
+const { describe, it } = require('mocha')
+const { expect } = require('chai')
+const Run = require('../env/run')
+const { Jig, LocalCache } = Run
+
+// ------------------------------------------------------------------------------------------------
+// Caller
+// ------------------------------------------------------------------------------------------------
+
+describe('Caller', () => {
+  it('null externally', async () => {
+    const run = new Run()
+    class A extends Jig {
+      init () { this.initCaller = caller }
+      f () { this.fCaller = caller }
+    }
+    const a = new A()
+    a.f()
+    function test (a) {
+      expect(a.initCaller).to.equal(null)
+      expect(a.fCaller).to.equal(null)
+    }
+    test(a)
+    await a.sync()
+    const a2 = await run.load(a.location)
+    test(a2)
+    run.cache = new LocalCache()
+    const a3 = await run.load(a.location)
+    test(a3)
+  })
+
+  // --------------------------------------------------------------------------
+
+/*
     it('should be the calling jig when called from another jig', async () => {
       const run = createHookedRun()
       class Parent extends Jig {
@@ -88,5 +113,7 @@
       class A extends Jig { init () { caller = 1 } } // eslint-disable-line
       expect(() => new A()).to.throw('Cannot set caller')
     })
-  })
   */
+})
+
+// ------------------------------------------------------------------------------------------------
