@@ -932,9 +932,9 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it('jigs', async() => {
+    it('jigs', async () => {
       const run = new Run()
-      
+
       class A extends Jig { }
       class B extends Jig { }
 
@@ -962,7 +962,7 @@ describe('Deploy', () => {
               {
                 A: { $jig: 0 },
                 a: { $jig: 1 },
-                deps: { Jig: { $jig: 2 }}
+                deps: { Jig: { $jig: 2 } }
               }
             ]
           }
@@ -1283,11 +1283,11 @@ describe('Deploy', () => {
     it('jig deps', async () => {
       const run = new Run()
 
-      class A { static f() { return b } }
+      class A { static f () { return b } }
       class B extends Jig { }
       const b = new B()
       await b.sync()
-      A.deps = { b } 
+      A.deps = { b }
 
       function test (CA) {
         expect(A.f()).to.equal(A.deps.b)
@@ -1572,7 +1572,7 @@ describe('Deploy', () => {
       expect(CA.C.toString()).to.equal(C.toString())
       expect(CA.C).to.equal(run.deploy(C))
     })
-    
+
     // ------------------------------------------------------------------------
 
     it.skip('copies berry presets', async () => {

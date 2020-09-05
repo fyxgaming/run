@@ -5,15 +5,34 @@
  */
 
 const { describe, it } = require('mocha')
-// const { expect } = require('chai')
+const Run = require('../env/run')
+const unmangle = require('../env/unmangle')
+const { expect } = require('chai')
+const { Jig } = Run
+const Universal = unmangle(Run)._Universal
 
 // ------------------------------------------------------------------------------------------------
 // Universal
 // ------------------------------------------------------------------------------------------------
 
-describe.skip('Universal', () => {
+describe('Universal', () => {
   describe('hasInstance', () => {
-    it('jigs are universals', () => {
+    it.only('jigs are universals', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      expect(a instanceof Universal).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('code are universals', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('static code are universals', () => {
       // TODO
     })
 
