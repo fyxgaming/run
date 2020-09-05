@@ -2266,7 +2266,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should throw if origin method exists', () => {
+    it('throws if method exists', () => {
       new Run() // eslint-disable-line
       class A extends Jig { origin () {} }
       expect(() => new A()).to.throw('Cannot override Jig methods or properties')
@@ -2277,76 +2277,172 @@ describe('Jig', () => {
   // Location
   // --------------------------------------------------------------------------
 
-  describe.only('location', () => {
-    /*
-    it('should throw if read before sync', async () => {
-      createHookedRun()
+  describe('location', () => {
+    it('throws if read before sync', async () => {
+      new Run() // eslint-disable-line
       class A extends Jig {}
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.location).to.throw('sync() required before reading location')
+      expect(() => a.location).to.throw('Cannot read location')
       await a.sync()
       expect(() => a.location).not.to.throw()
     })
 
-    it('should support reading internally after sync', async () => {
-      createHookedRun()
+    // ------------------------------------------------------------------------
+
+    it('read after sync', async () => {
+      new Run() // eslint-disable-line
       class A extends Jig { f () { this.location2 = this.location }}
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       await a.sync()
       a.f()
-      expectAction(a, 'f', [], [a], [a], [a])
       expect(a.location2).to.equal(a.origin)
-      expect(() => a.f()).to.throw('sync() required before reading location')
-      expectNoAction()
+      expect(() => a.f()).to.throw('Cannot read location')
       await a.sync()
       const secondLocation = a.location
       a.f()
-      expectAction(a, 'f', [], [a], [a], [a])
       expect(a.location2).to.equal(secondLocation)
     })
 
-    // TODO: This is probably possible to support in many cases
-    it.skip('should support reading location quickly', async () => {
-      createHookedRun()
-      class A extends Jig { f () { this.n = 1 } }
-      const a = new A()
-      expect(a.location).not.to.throw()
-      a.f()
-      expect(a.location).not.to.throw()
-    })
+    // ------------------------------------------------------------------------
 
-    it('should throw if delete location', () => {
-      createHookedRun()
+    it('throws if delete', () => {
+      new Run() // eslint-disable-line
       class A extends Jig { f () { delete this.location }}
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => { delete a.location }).to.throw('must not delete location')
-      expectNoAction()
-      expect(() => a.f()).to.throw('must not delete location')
-      expectNoAction()
+      expect(() => { delete a.location }).to.throw('Cannot delete location')
+      expect(() => a.f()).to.throw('Cannot delete location')
     })
 
-    it('should throw if set location', () => {
-      createHookedRun()
+    // ------------------------------------------------------------------------
+
+    it('throws if set', () => {
+      new Run() // eslint-disable-line
       class A extends Jig { f () { this.location = '123' }}
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => { a.location = '123' }).to.throw('must not set location')
-      expectNoAction()
-      expect(() => a.f()).to.throw('must not set location')
-      expectNoAction()
+      expect(() => { a.location = '123' }).to.throw('Cannot set location')
+      expect(() => a.f()).to.throw('Cannot set location')
     })
 
-    it('should throw if location method exists', () => {
-      createHookedRun()
+    // ------------------------------------------------------------------------
+
+    it('throws if define', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f () {
+          const desc = { value: '123', configurable: true, enumerable: true, writable: true }
+          Object.defineProperty(this, 'location', desc)
+        }
+      }
+      const a = new A()
+      const desc = { value: '123', configurable: true, enumerable: true, writable: true }
+      expect(() => Object.defineProperty(a, 'location', desc)).to.throw('Cannot set location')
+      expect(() => a.f()).to.throw('Cannot set location')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if method exists', () => {
+      new Run() // eslint-disable-line
       class A extends Jig { location () {} }
-      expect(() => new A()).to.throw('must not override location')
-      expectNoAction()
+      expect(() => new A()).to.throw('Cannot override Jig methods or properties')
     })
   })
-  */
+
+  // --------------------------------------------------------------------------
+  // Nonce
+  // --------------------------------------------------------------------------
+
+  describe('nonce', () => {
+    it('updates with every action', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        update () { this.n += 1; return this.nonce }
+      }
+
+      const a = new A()
+      await a.sync()
+      expect(a.nonce).to.equal(1)
+
+      expect(a.update()).to.equal(1)
+      await a.sync()
+      expect(a.nonce).to.equal(2)
+
+      expect(a.update()).to.equal(2)
+      await a.sync()
+      expect(a.nonce).to.equal(3)
+
+      expect(a.update()).to.equal(3)
+      await a.sync()
+      expect(a.nonce).to.equal(4)
+    })
+
+    it('throws if read before sync', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {}
+      const a = new A()
+      expect(() => a.nonce).to.throw('Cannot read nonce')
+      await a.sync()
+      expect(() => a.nonce).not.to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('read after sync', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { this.nonce2 = this.nonce }}
+      const a = new A()
+      await a.sync()
+      a.f()
+      expect(() => a.f()).to.throw('Cannot read nonce')
+      await a.sync()
+      const secondNonce = a.nonce
+      a.f()
+      expect(a.nonce2).to.equal(secondNonce)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if delete', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { delete this.nonce }}
+      const a = new A()
+      expect(() => { delete a.nonce }).to.throw('Cannot delete nonce')
+      expect(() => a.f()).to.throw('Cannot delete nonce')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if set', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { this.nonce = '123' }}
+      const a = new A()
+      expect(() => { a.nonce = '123' }).to.throw('Cannot set nonce')
+      expect(() => a.f()).to.throw('Cannot set nonce')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if define', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f () {
+          const desc = { value: '123', configurable: true, enumerable: true, writable: true }
+          Object.defineProperty(this, 'nonce', desc)
+        }
+      }
+      const a = new A()
+      const desc = { value: '123', configurable: true, enumerable: true, writable: true }
+      expect(() => Object.defineProperty(a, 'nonce', desc)).to.throw('Cannot set nonce')
+      expect(() => a.f()).to.throw('Cannot set nonce')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if method exists', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { nonce () {} }
+      expect(() => new A()).to.throw('Cannot override Jig methods or properties')
+    })
   })
 })
 
