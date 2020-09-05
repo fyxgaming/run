@@ -370,19 +370,43 @@ describe('Private', () => {
 
       // ----------------------------------------------------------------------
 
-      it('throws externally', () => {
-        // TODO
+      it('throws externally', async () => {
+        const run = new Run()
+        class A extends Jig { _f () { return 1 } }
+        function test (a) { expect(() => a._f()).to.throw('Cannot access private property _f') }
+        const a = new A()
+        test(a)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        test(a2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        test(a3)
       })
 
       // ----------------------------------------------------------------------
 
-      it('throws from dfferent jig of different class', () => {
-        // TODO
+      it('throws from dfferent jig of different class', async () => {
+        const run = new Run()
+        class A extends Jig { _g () { return 1 } }
+        class B extends Jig { f (a) { return a._g() } }
+        function test (a, b) { expect(() => b.f(a)).to.throw('Cannot access private property _g') }
+        const a = new A()
+        const b = new B()
+        test(a, b)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        const b2 = await run.load(b.location)
+        test(a2, b2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        const b3 = await run.load(b.location)
+        test(a3, b3)
       })
 
       // ----------------------------------------------------------------------
 
-      it('available from different jig of same class', () => {
+      it('available from different jig of same class', async () => {
         // TODO
       })
     })
