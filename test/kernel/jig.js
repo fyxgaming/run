@@ -2450,9 +2450,8 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe.only('Inner objects', () => {
-    /*
-    it('should support calling a read-only method on an internal property from outside', () => {
-      createHookedRun()
+    it('read-only method on an internal property from outside', () => {
+      new Run() // eslint-disable-line
       class A extends Jig {
         init () {
           this.obj = { n: 1 }
@@ -2461,12 +2460,14 @@ describe('Jig', () => {
         }
       }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       expect(() => a.obj.toString()).not.to.throw()
       expect(() => a.arr.indexOf(3)).not.to.throw()
       expect(() => a.buf.indexOf(2)).not.to.throw()
     })
 
+    // ------------------------------------------------------------------------
+
+    /*
     it('should support calling a read-only method on an internal property from another jig', () => {
       createHookedRun()
       class A extends Jig {
