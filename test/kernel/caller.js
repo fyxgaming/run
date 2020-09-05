@@ -72,14 +72,16 @@ describe('Caller', () => {
     class C extends Jig { init () { this.initCaller = caller } }
     A.deps = { B }
     B.deps = { C }
+    const CB = run.deploy(B)
     const a = new A()
-    function test (a) { expect(a.deps.B.c.initCaller).to.equal(a.deps.B) }
-    test(a)
-    const a2 = await run.load(a.location)
-    test(a2)
+    await a.sync()
+    function test (B) { expect(B.c.initCaller).to.equal(B) }
+    test(CB)
+    const CB2 = await run.load(B.location)
+    test(CB2)
     run.cache = new LocalCache()
-    const a3 = await run.load(a.location)
-    test(a3)
+    const CB3 = await run.load(B.location)
+    test(CB3)
   })
 
 /*
