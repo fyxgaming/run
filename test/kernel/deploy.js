@@ -204,6 +204,25 @@ describe('Deploy', () => {
       expect(CA.owner).to.equal(A.owner)
       expect(CA.satoshis).to.equal(A.satoshis)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if read before sync', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      expect(() => CA.location).to.throw('Cannot read location')
+      expect(() => CA.origin).to.throw('Cannot read origin')
+      expect(() => CA.nonce).to.throw('Cannot read nonce')
+      expect(() => CA.owner).to.throw('Cannot read owner')
+      expect(() => CA.satoshis).to.throw('Cannot read satoshis')
+      await CA.sync()
+      expect(() => CA.location).not.to.throw()
+      expect(() => CA.origin).not.to.throw()
+      expect(() => CA.nonce).not.to.throw()
+      expect(() => CA.owner).not.to.throw()
+      expect(() => CA.satoshis).not.to.throw()
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -1695,6 +1714,8 @@ describe('Deploy', () => {
       expect(() => CA.owner).to.throw(error('owner'))
       expect(() => CA.satoshis).to.throw(error('satoshis'))
     })
+
+    // ------------------------------------------------------------------------
 
     it('throws if non-function', () => {
       const run = new Run()
