@@ -94,6 +94,17 @@ describe('Static Code', () => {
       const CB = run.deploy(B)
       expect(CB.g()).to.equal(1)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot delete properties', () => {
+      const run = new Run()
+      class A { static f() { delete A.n } }
+      A.n
+      const CA = run.deploy(A)
+      expect(() => { delete CA.n }).to.throw('delete disabled')
+      expect(() => CA.f()).to.throw('delete disabled')
+    })
   })
 })
 
