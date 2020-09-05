@@ -1598,12 +1598,12 @@ describe('Jig', () => {
       expect(() => new B()).to.throw(error)
     })
 
-    /*
+    // ------------------------------------------------------------------------
+
     it('read without spending', () => {
-      createHookedRun()
+      new Run() // eslint-disable-line
       class A extends Jig { init () { this.a = [] } }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       const readOps = [
         () => expect(a.a.length).to.equal(0),
         () => expect(() => a.a.concat([1])).not.to.throw(),
@@ -1626,11 +1626,10 @@ describe('Jig', () => {
         () => expect(() => a.a.toLocaleString()).not.to.throw(),
         () => expect(() => a.a.toString()).not.to.throw()
       ]
-      readOps.forEach(op => { op(); expectNoAction() })
-
-      // TODO: test no change
+      readOps.forEach(op => op())
     })
 
+    /*
     it('iterator', () => {
       createHookedRun()
       class A extends Jig {
