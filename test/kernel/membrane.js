@@ -1356,7 +1356,8 @@ describe('Membrane', () => {
 
     it('callable method depends on thisArg', () => {
       // Returning a WeakMap will fail when callable due to unserializability
-      const f = new Membrane(function f () { return new WeakMap() }, { _recordable: true, _callable: false, _owned: true })
+      const options = mangle({ _recordable: true, _callable: false, _owned: true })
+      const f = new Membrane(function f () { return new WeakMap() }, options)
       const a = makeJig({ f }, { _recordable: true, _callable: false })
       const b = makeJig({ f }, { _recordable: true, _callable: true })
       expect(() => a.f()).not.to.throw()
