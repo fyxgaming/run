@@ -143,25 +143,32 @@ describe('Caller', () => {
     test(a3)
   })
 
-/*
-    it('should allow dependencies named caller', async () => {
-      const run = createHookedRun()
-      function caller () { return 2 }
-      class A extends Jig { init () { this.n = caller() } }
-      A.deps = { caller }
-      const a = new A()
-      await a.sync()
-      expect(a.n).to.equal(2)
-      const a2 = await run.load(a.location)
-      expect(a2.n).to.equal(2)
-    })
+  // --------------------------------------------------------------------------
 
-    it('should throw if set caller', () => {
-      createHookedRun()
+  it.skip('dependency named caller', async () => {
+    const run = new Run()
+    function caller () { return 2 }
+    class A extends Jig { static f () { this.n = caller() } }
+    A.deps = { caller }
+    const CA = run.deploy(A)
+    CA.f()
+    await CA.sync()
+    function test (CA) { expect(CA.n).to.equal(2) }
+    test(CA)
+    const CA2 = await run.load(CA.location)
+    test(CA2)
+    run.cache = new LocalCache()
+    const CA3 = await run.load(CA.location)
+    test(CA3)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('should throw if set caller', () => {
+      new Run() // eslint-disable-line
       class A extends Jig { init () { caller = 1 } } // eslint-disable-line
-      expect(() => new A()).to.throw('Cannot set caller')
-    })
-  */
+    expect(() => new A()).to.throw('Cannot set caller')
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
