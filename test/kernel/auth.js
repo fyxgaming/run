@@ -7,6 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
+const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { Jig } = Run
 const { expectTx } = require('../env/misc')
@@ -314,13 +315,22 @@ describe('Auth', () => {
     // ------------------------------------------------------------------------
 
     it('throws if unbound', async () => {
-      // TODO
+      new Run() // eslint-disable-line
+      class A extends Jig { f (owner) { this.owner = owner; this.auth() } }
+      const a = new A()
+      await a.sync()
+      const owner = new PrivateKey().toPublicKey().toString()
+      expect(() => a.f(owner)).to.throw('hell')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws destroyed', () => {
-      // TODO
+    it('throws destroyed', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { this.destroy(); this.auth() } }
+      const a = new A()
+      await a.sync()
+      expect(() => a.f()).to.throw('hell')
     })
   })
 
