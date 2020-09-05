@@ -208,6 +208,18 @@ describe('Auth', () => {
       expect(CA.location).to.equal(CA.origin)
       expect(CA.nonce).to.equal(1)
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if send then auth in batch', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if destroy then auth in batch', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -314,23 +326,25 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if unbound', async () => {
+    it('send and auth in same method', async () => {
+      // auth is a request to happen on the owner at method start
       new Run() // eslint-disable-line
       class A extends Jig { f (owner) { this.owner = owner; this.auth() } }
       const a = new A()
       await a.sync()
       const owner = new PrivateKey().toPublicKey().toString()
-      expect(() => a.f(owner)).to.throw('hell')
+      expect(() => a.f(owner)).not.to.throw()
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws destroyed', async () => {
+    it('destroy and auth in same method', async () => {
+      // destroy is a request to happen after the method ends
       new Run() // eslint-disable-line
       class A extends Jig { f () { this.destroy(); this.auth() } }
       const a = new A()
       await a.sync()
-      expect(() => a.f()).to.throw('hell')
+      expect(() => a.f()).not.to.throw()
     })
   })
 
