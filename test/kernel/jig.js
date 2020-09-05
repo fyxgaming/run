@@ -2022,7 +2022,14 @@ describe('Jig', () => {
   // Misc
   // --------------------------------------------------------------------------
 
-  describe('Misc', () => {
+  describe.only('Misc', () => {
+    it('toJSON', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { toJSON () { return [1, 2, 3] } }
+      const a = new A()
+      expect(JSON.stringify(a)).to.equal('[1,2,3]')
+    })
+
     /*
     it('should serialize complex self-reference', async () => {
       // This test came from Cryptofights
@@ -2047,14 +2054,6 @@ describe('Jig', () => {
       await a2.sync()
       // Simulates a console.log, that would throw in the past
       Object.keys(a2.f)
-    })
-
-    it('should support custom toJSON method', () => {
-      createHookedRun()
-      class A extends Jig { toJSON () { return [1, 2, 3] } }
-      const a = new A()
-      expect(JSON.stringify(a)).to.equal('[1,2,3]')
-      expectAction(a, 'init', [], [], [a], [])
     })
 
     it('should support $ properties and args', () => {
