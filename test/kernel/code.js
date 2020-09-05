@@ -492,6 +492,8 @@ describe('Code', () => {
     it('throws if delete', async () => {
       const run = new Run()
       class A extends Jig { static f(name) { delete this[name] } }
+      const CA = run.deploy(A)
+      await CA.sync()
       function test(A) {
         expect(() => A.f('location')).to.throw('Cannot delete location')
         expect(() => A.f('origin')).to.throw('Cannot delete origin')
@@ -499,8 +501,26 @@ describe('Code', () => {
         expect(() => A.f('owner')).to.throw('Cannot delete owner')
         expect(() => A.f('satoshis')).to.throw('Cannot delete satoshis')
       }
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if set location, origin, or nonce', async () => {
+      const run = new Run()
+      class A extends Jig { static f(name, value) { this[name] = value } }
       const CA = run.deploy(A)
       await CA.sync()
+      function test(A) {
+        expect(() => A.f('location', '123')).to.throw('Cannot set location')
+        expect(() => A.f('origin', '123')).to.throw('Cannot set origin')
+        expect(() => A.f('nonce', 10)).to.throw('Cannot set nonce')
+      }
       test(CA)
       const CA2 = await run.load(CA.location)
       test(CA2)
