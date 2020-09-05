@@ -19,7 +19,7 @@ describe('Admin', () => {
     it('returns false by default', () => {
       expect(_admin()).to.equal(false)
     })
-    
+
     // ------------------------------------------------------------------------
 
     it('returns true only within sudo', () => {
