@@ -1500,18 +1500,151 @@ describe('Jig', () => {
   // getOwnPropertyDescriptor
   // --------------------------------------------------------------------------
 
-  describe.only('getOwnPropertyDescriptor', () => {
-    /*
-    it('should add to reads if call getOwnPropertyDescriptor', () => {
-      createHookedRun()
+  describe('getOwnPropertyDescriptor', () => {
+    it('reads jig', async () => {
+      const run = new Run()
       class A extends Jig { init () { this.n = 1 }}
       class B extends Jig { f (a) { this.x = Object.getOwnPropertyDescriptor(a, 'n') }}
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
+      await run.sync()
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'f', [{ $jig: 1 }]]
+          }
+        ]
+      })
       b.f(a)
-      expectAction(b, 'f', [a], [b], [b], [a])
+      await b.sync()
+      await run.load(b.location)
+      run.cache = new LocalCache()
+      await run.load(b.location)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Array
+  // --------------------------------------------------------------------------
+
+  describe('Array', () => {
+    /*
+    it('push internal', async () => {
+      createHookedRun()
+      class A extends Jig {
+        init () { this.a = [] }
+
+        add (n) { this.a.push(n) }
+      }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      a.add(1)
+      expect(a.a[0]).to.equal(1)
+      expectAction(a, 'add', [1], [a], [a], [a])
+    })
+
+    it('throws if change external', async () => {
+      createHookedRun()
+      class A extends Jig {
+        init () { this.a = [3, 1, 2, 5, 0] }
+
+        add (n) { this.a.push(n) }
+      }
+      class B extends Jig { init () { new A().a.push(1) } }
+      B.deps = { A }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      const expectArrayError = (method, ...args) => {
+        const err = `internal method ${method} may not be called to change state`
+        expect(() => a.a[method](...args)).to.throw(err)
+        expectNoAction()
+      }
+      expectArrayError('copyWithin', 1)
+      expectArrayError('pop')
+      expectArrayError('push', 1)
+      expectArrayError('reverse')
+      expectArrayError('shift')
+      expectArrayError('sort')
+      expectArrayError('splice', 0, 1)
+      expectArrayError('unshift', 4)
+      expectArrayError('fill', 0)
+      expect(() => new B()).to.throw()
+      expectNoAction()
+    })
+
+    it('read without spending', () => {
+      createHookedRun()
+      class A extends Jig { init () { this.a = [] } }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      const readOps = [
+        () => expect(a.a.length).to.equal(0),
+        () => expect(() => a.a.concat([1])).not.to.throw(),
+        () => expect(() => a.a.entries()).not.to.throw(),
+        () => expect(() => a.a.every(() => true)).not.to.throw(),
+        () => expect(() => a.a.filter(() => true)).not.to.throw(),
+        () => expect(() => a.a.find(() => true)).not.to.throw(),
+        () => expect(() => a.a.findIndex(() => true)).not.to.throw(),
+        () => expect(() => a.a.forEach(() => {})).not.to.throw(),
+        () => expect(() => a.a.includes(1)).not.to.throw(),
+        () => expect(() => a.a.indexOf(1)).not.to.throw(),
+        () => expect(() => a.a.join()).not.to.throw(),
+        () => expect(() => a.a.keys()).not.to.throw(),
+        () => expect(() => a.a.lastIndexOf(1)).not.to.throw(),
+        () => expect(() => a.a.map(() => true)).not.to.throw(),
+        () => expect(() => a.a.reduce(() => true, 0)).not.to.throw(),
+        () => expect(() => a.a.reduceRight(() => true, 0)).not.to.throw(),
+        () => expect(() => a.a.slice(0)).not.to.throw(),
+        () => expect(() => a.a.some(() => true)).not.to.throw(),
+        () => expect(() => a.a.toLocaleString()).not.to.throw(),
+        () => expect(() => a.a.toString()).not.to.throw()
+      ]
+      readOps.forEach(op => { op(); expectNoAction() })
+
+      // TODO: test no change
+    })
+
+    it('iterator', () => {
+      createHookedRun()
+      class A extends Jig {
+        init () { this.a = [] }
+
+        add (x) { this.a.push(x) }
+      }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      a.add(1)
+      expectAction(a, 'add', [1], [a], [a], [a])
+      a.add(2)
+      expectAction(a, 'add', [2], [a], [a], [a])
+      expect(Array.from(a.a)).to.deep.equal([1, 2])
+      expectNoAction()
+      const e = [1, 2]
+      for (const x of a.a) { expect(x).to.equal(e.shift()) }
+      expectNoAction()
+    })
+
+    it('throws if overwrite or delete method on array', () => {
+      createHookedRun()
+      class A extends Jig {
+        init () { this.a = [] }
+
+        f () { this.a.filter = 2 }
+
+        g () { delete this.a.filter }
+      }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      expect(() => a.f()).to.throw()
+      expectNoAction()
+      expect(() => a.g()).to.throw()
+      expectNoAction()
     })
     */
   })
