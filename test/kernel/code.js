@@ -572,6 +572,27 @@ describe('Code', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if set invalid owner', async () => {
+      const run = new Run()
+      class A extends Jig { static f (owner) { this.owner = owner } }
+      const CA = run.deploy(A)
+      await CA.sync()
+      function test (CA) {
+        expect(() => CA.f('123')).to.throw('Invalid owner')
+        expect(() => CA.f(null)).to.throw('Invalid owner')
+        expect(() => CA.f(undefined)).to.throw('Invalid owner')
+        expect(() => CA.f(true)).to.throw('Invalid owner')
+      }
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
   })
 
   // --------------------------------------------------------------------------
