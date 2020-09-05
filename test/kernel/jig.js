@@ -2030,32 +2030,46 @@ describe('Jig', () => {
       expect(JSON.stringify(a)).to.equal('[1,2,3]')
     })
 
-    /*
-    it('should serialize complex self-reference', async () => {
-      // This test came from Cryptofights
-      const run = new Run({ network: 'mock' })
-      class f { }
-      run.deploy(f)
+    // ------------------------------------------------------------------------
+
+    it('complex self-reference', async () => {
+      const run = new Run()
+      class C { }
+
       class A extends Jig {
-        init (f) {
-          this.f = f
+        init (C) {
+          this.C = C
           this.b = new B()
         }
       }
+
       class B extends Jig {
-        init () { this.x = caller }
+        init () {
+          this.x = caller
+        }
       }
       A.deps = { B }
-      const a = new A(f)
+
+      function test (a) {
+        Object.keys(a.C) // simulates console.log
+        expect(a.b.x).to.equal(a)
+      }
+
+      const a = new A(C)
       await a.sync()
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      const a2 = await run2.load(a.location)
-      await a2.sync()
-      // Simulates a console.log, that would throw in the past
-      Object.keys(a2.f)
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
     })
 
+    // ------------------------------------------------------------------------
+
+    /*
     it('should support $ properties and args', () => {
       createHookedRun()
       class A extends Jig {
