@@ -35,15 +35,6 @@ describe('Universal', () => {
 
     // ------------------------------------------------------------------------
 
-    it('undeployed code', () => {
-      class A { }
-      class B extends Jig { }
-      expect(A instanceof Universal).to.equal(false)
-      expect(B instanceof Universal).to.equal(false)
-    })
-
-    // ------------------------------------------------------------------------
-
     it('static class', () => {
       const run = new Run()
       class A { }
@@ -62,35 +53,27 @@ describe('Universal', () => {
 
     // ------------------------------------------------------------------------
 
-    it('code are universals', () => {
+    it.skip('berry', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('berries are universals', () => {
-      // TODO
+    it('undeployed code', () => {
+      class A { }
+      class B extends Jig { }
+      expect(A instanceof Universal).to.equal(false)
+      expect(B instanceof Universal).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
 
-    it('non-jig objects are not universals', () => {
-      // TODO
+    it('non-jigs', () => {
+      expect(1 instanceof Universal).to.equal(false)
+      expect(undefined instanceof Universal).to.equal(false)
+      expect(null instanceof Universal).to.equal(false)
+      expect({} instanceof Universal).to.equal(false)
     })
-
-    // ------------------------------------------------------------------------
-
-    it('non-jig functions are not universals', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('primitives are not universals', () => {
-      // TODO
-    })
-
-    // TODO: Check Jig, Berry, and Code itself are not universals
   })
 })
 
