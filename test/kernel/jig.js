@@ -1919,6 +1919,104 @@ describe('Jig', () => {
       expect(() => { a.satoshis = 1 }).to.throw(error)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Class
+  // --------------------------------------------------------------------------
+
+  describe('Class', () => {
+    it('access class properties from outside', async () => {
+      const run = new Run()
+      class A extends Jig {}
+      A.n = 1
+      const a = new A()
+      await a.sync()
+      const a2 = await run.load(a.location)
+      expect(a2.constructor.n).to.equal(1)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      expect(a3.constructor.n).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('read class properties from inside', async () => {
+      const run = new Run()
+      class A extends Jig { f () { this.n = this.constructor.n }}
+      A.n = 1
+      const a = new A()
+      a.f()
+      await a.sync()
+      expect(a.n).to.equal(1)
+      const a2 = await run.load(a.location)
+      expect(a2.n).to.equal(1)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      expect(a3.n).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('call class method from instance', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () { this.n = 1 }
+        f () { A.f(); this.n = this.constructor.n + 1 }
+      }
+      const CA = run.deploy(A)
+      const a = new A()
+      await a.sync()
+
+      expectTx({
+        nin: 2,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 1 }, 'f', []]
+          }
+        ]
+      })
+
+      function test (A, a) {
+        expect(A.n).to.equal(1)
+        expect(a.n).to.equal(2)
+      }
+
+      a.f()
+      await a.sync()
+      test(CA, a)
+
+      const A2 = await run.load(CA.location)
+      const a2 = await run.load(a.location)
+      test(A2, a2)
+
+      run.cache = new LocalCache()
+      const A3 = await run.load(CA.location)
+      const a3 = await run.load(a.location)
+      test(A3, a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('should support reading presets', async () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class B extends Jig { init () { this.n = B.n } }
+      B.presets = { [network]: { n: 1 } }
+      const b = new B()
+      expect(b.n).to.equal(1)
+      await b.sync()
+      const b2 = await run.load(b.location)
+      expect(b2.n).to.equal(1)
+      run.cache = new LocalCache()
+      const b3 = await run.load(b.location)
+      expect(b3.n).to.equal(1)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

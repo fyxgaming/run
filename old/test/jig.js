@@ -621,42 +621,6 @@ describe('Jig', () => {
     })
   })
 
-  describe('class props', () => {
-    it('should be able to access class properties from instances', async () => {
-      createHookedRun()
-      class A extends Jig {}
-      A.n = 1
-      const a = new A()
-      await a.sync()
-      const run2 = new Run()
-      const a2 = await run2.load(a.location)
-      expect(a2.constructor.n).to.equal(1)
-    })
-
-    it('should support reads of class properties from inside jig methods', () => {
-      createHookedRun()
-      class A extends Jig { f () { this.n = this.constructor.n }}
-      A.n = 1
-      const a = new A()
-      a.f()
-      expect(a.n).to.equal(1)
-    })
-
-    it('should support reading properties on preset classes', () => {
-      createHookedRun()
-      class B extends Jig { }
-      B.originMocknet = B.locationMocknet = '123'
-      B.ownerMocknet = 'abc'
-      B.n = 1
-      class A extends Jig { init () { this.n = B.n }}
-      A.originMocknet = A.locationMocknet = '456'
-      A.ownerMocknet = 'def'
-      A.deps = { B }
-      const a = new A()
-      expect(a.n).to.equal(1)
-    })
-  })
-
   describe('batch', () => {
     it('should support load of batch with multiple instantiations', async () => {
       const run = createHookedRun()
