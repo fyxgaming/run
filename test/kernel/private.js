@@ -472,7 +472,7 @@ describe('Private', () => {
   // Code
   // --------------------------------------------------------------------------
 
-  describe.only('Code', () => {
+  describe('Code', () => {
     it('accessible from same class', async () => {
       const run = new Run()
       class A extends Jig { static f () { return this._n } }
@@ -565,6 +565,30 @@ describe('Private', () => {
       const a3 = await run.load(a.location)
       const CA3 = await run.load(CA.location)
       test(CA3, a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if access from child instance', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static _g () { return 1 }
+        f () { return A._g() }
+      }
+      class B extends A { }
+      const a = new A()
+      const b = new B()
+      function test (a, b) { expect(() => b.f(a)).to.throw('Cannot access private property _g') }
+      test(a, b)
+      await a.sync()
+      await b.sync()
+      const a2 = await run.load(a.location)
+      const b2 = await run.load(b.location)
+      test(a2, b2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      const b3 = await run.load(b.location)
+      test(a3, b3)
     })
   })
 
