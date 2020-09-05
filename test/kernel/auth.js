@@ -148,15 +148,33 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('auth in a static method', () => {
+    it('auth in a static method', async () => {
+      const run = new Run()
+      class A { static f () { A.auth() } }
+      const CA = run.deploy(A)
+      await CA.sync()
 
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'AUTH',
+            data: { $jig: 0 }
+          }
+        ]
+      })
+
+      CA.f()
+      await CA.sync()
+      await run.load(CA.location)
+      run.cache = new LocalCache()
+      await run.load(CA.location)
     })
 
-    // ------------------------------------------------------------------------
-
-    it.skip('auth code in a jig method', () => {
-
-    })
     // ------------------------------------------------------------------------
 
     it.skip('auth multiple in a batch', () => {
@@ -165,14 +183,11 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('create and auth in same transaction', () => {
-
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if auth non-jig', () => {
-
+    it('throws if auth non-jig', () => {
+      const run = new Run()
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      expect(() => CA.auth.apply(A, [])).to.throw('auth unavailable')
     })
   })
 
@@ -262,8 +277,23 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if auth non-jig', () => {
+    it('throws if auth non-jig', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      expect(() => a.auth.apply({}, [])).to.throw('auth unavailable')
+    })
 
+    // ------------------------------------------------------------------------
+
+    it.only('auth in init', async () => {
+      const run = new Run()
+      class A extends Jig { init () { this.auth() } }
+      const a = new A()
+      await a.sync()
+      await run.load(a.location)
+      run.cache = new LocalCache()
+      await run.load(a.location)
     })
   })
 
