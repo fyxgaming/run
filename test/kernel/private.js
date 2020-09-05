@@ -715,13 +715,13 @@ describe('Private', () => {
   describe('Misc', () => {
     it('access through static helper', async () => {
       const run = new Run()
-      function read(A) { return A._n }
-      class A extends Jig { static f() { return read(this) } }
+      function read (A) { return A._n }
+      class A extends Jig { static f () { return read(this) } }
       A.deps = { read }
       A._n = 1
       const CA = run.deploy(A)
       await CA.sync()
-      function test(A) { expect(A.f()).to.equal(1) }
+      function test (A) { expect(A.f()).to.equal(1) }
       test(CA)
       const CA2 = await run.load(CA.location)
       test(CA2)

@@ -9,6 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
+const PrivateKey = require('bsv/lib/privatekey')
 const { Code, Jig, Berry, LocalCache } = unmangle(Run)
 
 // ------------------------------------------------------------------------------------------------
@@ -491,10 +492,10 @@ describe('Code', () => {
   describe.only('Bindings', () => {
     it('throws if delete', async () => {
       const run = new Run()
-      class A extends Jig { static f(name) { delete this[name] } }
+      class A extends Jig { static f (name) { delete this[name] } }
       const CA = run.deploy(A)
       await CA.sync()
-      function test(A) {
+      function test (A) {
         expect(() => A.f('location')).to.throw('Cannot delete location')
         expect(() => A.f('origin')).to.throw('Cannot delete origin')
         expect(() => A.f('nonce')).to.throw('Cannot delete nonce')
@@ -513,10 +514,10 @@ describe('Code', () => {
 
     it('throws if set location, origin, or nonce', async () => {
       const run = new Run()
-      class A extends Jig { static f(name, value) { this[name] = value } }
+      class A extends Jig { static f (name, value) { this[name] = value } }
       const CA = run.deploy(A)
       await CA.sync()
-      function test(A) {
+      function test (A) {
         expect(() => A.f('location', '123')).to.throw('Cannot set location')
         expect(() => A.f('origin', '123')).to.throw('Cannot set origin')
         expect(() => A.f('nonce', 10)).to.throw('Cannot set nonce')
@@ -534,18 +535,36 @@ describe('Code', () => {
     it('throws if define location, origin, or nonce', async () => {
       const run = new Run()
       class A extends Jig {
-        static f(name, value) {
+        static f (name, value) {
           const desc = { value, configurable: true, enumerable: true, writable: true }
           Object.defineProperty(this, name, desc)
         }
       }
       const CA = run.deploy(A)
       await CA.sync()
-      function test(A) {
+      function test (A) {
         expect(() => A.f('location', '123')).to.throw('Cannot set location')
         expect(() => A.f('origin', '123')).to.throw('Cannot set origin')
         expect(() => A.f('nonce', 10)).to.throw('Cannot set nonce')
       }
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set owner', async () => {
+      const run = new Run()
+      class A extends Jig { static f (owner) { this.owner = owner } }
+      const CA = run.deploy(A)
+      const pubkey = new PrivateKey().toPublicKey().toString()
+      CA.f(pubkey)
+      await CA.sync()
+      function test (CA) { expect(CA.owner).to.equal(pubkey) }
       test(CA)
       const CA2 = await run.load(CA.location)
       test(CA2)
