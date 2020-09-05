@@ -302,6 +302,26 @@ describe('Private', () => {
         const a3 = await run.load(a.location)
         test(a3)
       })
+
+      // ----------------------------------------------------------------------
+
+      it('filters from another jig of different class', async () => {
+        const run = new Run()
+        class A extends Jig { init () { this._x = 1 } }
+        class B extends Jig { includes (a) { return Reflect.ownKeys(a).includes('_x') } }
+        function test (a, b) { expect(b.includes(a)).to.equal(false) }
+        const a = new A()
+        const b = new B()
+        test(a, b)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        const b2 = await run.load(b.location)
+        test(a2, b2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        const b3 = await run.load(b.location)
+        test(a3, b3)
+      })
     })
   })
 
@@ -326,22 +346,6 @@ describe('Private', () => {
       expect(() => new L().call(new J(), '_f')).to.throw('cannot get _f because it is private')
       expect(() => new K().call(new J(), '_f')).to.throw('cannot get _f because it is private')
       expect(() => new J().call(new K(), '_f')).to.throw('cannot get _f because it is private')
-    })
-
-    it('should not return private properties in ownKeys', () => {
-      createHookedRun()
-      class J extends Jig {
-        init () { this._x = 1 }
-
-        ownKeys (a) { return Reflect.ownKeys(a) }
-      }
-      class K extends J { }
-      class L extends Jig { ownKeys (a) { return Reflect.ownKeys(a) } }
-      expect(Reflect.ownKeys(new J()).includes('_x')).to.equal(true)
-      expect(new K().ownKeys(new K()).includes('_x')).to.equal(true)
-      expect(new L().ownKeys(new J()).includes('_x')).to.equal(false)
-      expect(new K().ownKeys(new J()).includes('_x')).to.equal(false)
-      expect(new J().ownKeys(new K()).includes('_x')).to.equal(false)
     })
   */
 })
