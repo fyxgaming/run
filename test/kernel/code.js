@@ -431,20 +431,42 @@ describe('Code', () => {
   })
 
   // --------------------------------------------------------------------------
-  // setPrototypeOf
+  // preventExtensions
   // --------------------------------------------------------------------------
 
-  describe('setPrototypeOf', () => {
-    it('throws if change externally', () => {
+  describe('preventExtensions', () => {
+    it('throws externally', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
-      expect(() => Object.setPrototypeOf(CA, {})).to.throw()
+      expect(() => Object.preventExtensions(CA)).to.throw('preventExtensions disabled')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if change internally', () => {
+    it('throws internally', () => {
+      const run = new Run()
+      class A extends Jig { static f () { Object.preventExtensions(this) } }
+      const CA = run.deploy(A)
+      expect(() => CA.f()).to.throw('preventExtensions disabled')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // setPrototypeOf
+  // --------------------------------------------------------------------------
+
+  describe('setPrototypeOf', () => {
+    it('throws externally', () => {
+      const run = new Run()
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      expect(() => Object.setPrototypeOf(CA, {})).to.throw('setPrototypeOf disabled')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws internally', () => {
       const run = new Run()
       class A extends Jig { static f () { Object.setPrototypeOf(this, { }) } }
       const CA = run.deploy(A)
@@ -453,7 +475,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('allowed to change on non-code child', () => {
+    it('allowed on non-code child', () => {
       const run = new Run()
       class A extends Jig {}
       const CA = run.deploy(A)
