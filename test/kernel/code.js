@@ -528,6 +528,31 @@ describe('Code', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if define location, origin, or nonce', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f(name, value) {
+          const desc = { value, configurable: true, enumerable: true, writable: true }
+          Object.defineProperty(this, name, desc)
+        }
+      }
+      const CA = run.deploy(A)
+      await CA.sync()
+      function test(A) {
+        expect(() => A.f('location', '123')).to.throw('Cannot set location')
+        expect(() => A.f('origin', '123')).to.throw('Cannot set origin')
+        expect(() => A.f('nonce', 10)).to.throw('Cannot set nonce')
+      }
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
   })
 
   // --------------------------------------------------------------------------
