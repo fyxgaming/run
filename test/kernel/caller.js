@@ -76,6 +76,8 @@ describe('Caller', () => {
     const a = new A()
     await a.sync()
     function test (B) { expect(B.c.initCaller).to.equal(B) }
+    console.log(CB)
+    console.log(B)
     test(CB)
     const CB2 = await run.load(B.location)
     test(CB2)
