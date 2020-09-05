@@ -539,7 +539,7 @@ describe('Jig', () => {
     it('should throw if set caller', () => {
       createHookedRun()
       class A extends Jig { init () { caller = 1 } } // eslint-disable-line
-      expect(() => new A()).to.throw('Must not set caller')
+      expect(() => new A()).to.throw('Cannot set caller')
     })
   })
 

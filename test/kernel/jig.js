@@ -2219,46 +2219,58 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
-    it('should support reading internally after sync', async () => {
-      createHookedRun()
+    it('read after sync', async () => {
+      new Run() // eslint-disable-line
       class A extends Jig { f () { this.origin2 = this.origin }}
       const a = new A()
       await a.sync()
-      expectAction(a, 'init', [], [], [a], [])
       a.f()
-      expectAction(a, 'f', [], [a], [a], [])
+      expect(this.origin2).to.equal(this.origin)
     })
 
-    it('should throw if delete origin', () => {
-      createHookedRun()
+    // ------------------------------------------------------------------------
+
+    it('throws if delete', () => {
+      new Run() // eslint-disable-line
       class A extends Jig { f () { delete this.origin }}
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => { delete a.origin }).to.throw('must not delete origin')
-      expectNoAction()
-      expect(() => a.f()).to.throw('must not delete origin')
-      expectNoAction()
+      expect(() => { delete a.origin }).to.throw('Cannot delete origin')
+      expect(() => a.f()).to.throw('Cannot delete origin')
     })
 
-    it('should throw if set origin', () => {
-      createHookedRun()
+    // ------------------------------------------------------------------------
+
+    it('throws if set', () => {
+      new Run() // eslint-disable-line
       class A extends Jig { f () { this.origin = '123' }}
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => { a.origin = '123' }).to.throw('must not set origin')
-      expectNoAction()
-      expect(() => a.f()).to.throw('must not set origin')
-      expectNoAction()
+      expect(() => { a.origin = '123' }).to.throw('Cannot set origin')
+      expect(() => a.f()).to.throw('Cannot set origin')
     })
 
-    it('should throw if origin method exists', () => {
-      createHookedRun()
-      class A extends Jig { origin () {} }
-      expect(() => new A()).to.throw('must not override origin')
-      expectNoAction()
+    // ------------------------------------------------------------------------
+
+    it('throws if define', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f () {
+          const desc = { value: '123', configurable: true, enumerable: true, writable: true }
+          Object.defineProperty(this, 'origin', desc)
+        }
+      }
+      const a = new A()
+      const desc = { value: '123', configurable: true, enumerable: true, writable: true }
+      expect(() => Object.defineProperty(a, 'origin', desc)).to.throw('Cannot set origin')
+      expect(() => a.f()).to.throw('Cannot set origin')
     })
-    */
+
+    // ------------------------------------------------------------------------
+
+    it('should throw if origin method exists', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { origin () {} }
+      expect(() => new A()).to.throw('Cannot override Jig methods or properties')
+    })
   })
 })
 

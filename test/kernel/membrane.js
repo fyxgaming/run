@@ -516,7 +516,7 @@ describe('Membrane', () => {
         }
       }
       const A2 = makeJig(A, options)
-      expect(() => testRecord(() => A2.f())).to.throw('Must not set location')
+      expect(() => testRecord(() => A2.f())).to.throw('Cannot set location')
     })
   })
 
@@ -772,9 +772,9 @@ describe('Membrane', () => {
 
     it('cannot set location, origin, or nonce', () => {
       const A = new Membrane(class A { }, mangle({ _bindings: true }))
-      expect(() => { A.location = 'abc_o1' }).to.throw('Must not set location')
-      expect(() => { A.origin = 'def_d2' }).to.throw('Must not set origin')
-      expect(() => { A.nonce = 1 }).to.throw('Must not set nonce')
+      expect(() => { A.location = 'abc_o1' }).to.throw('Cannot set location')
+      expect(() => { A.origin = 'def_d2' }).to.throw('Cannot set origin')
+      expect(() => { A.nonce = 1 }).to.throw('Cannot set nonce')
     })
 
     // ------------------------------------------------------------------------
