@@ -277,9 +277,20 @@ describe('Destroy', () => {
       class A extends Jig { init() { this.destroy() } }
       const CA = run.deploy(A)
       await CA.sync()
+      function test(a) {
+        expect(a.location).to.equal(a.origin)
+        expect(a.location.endsWith('_d0')).to.equal(true)
+      }
       const a = new A()
       await a.sync()
-      console.log(a)
+      test(a)
+      const a2 = await run.load(a.location)
+      test(a2)
+      run.cache = new LocalCache()
+      console.log('3')
+      const a3 = await run.load(a.location)
+      console.log('4')
+      test(a3)
     })
 
     // ------------------------------------------------------------------------
