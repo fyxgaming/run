@@ -636,6 +636,57 @@ describe('Private', () => {
   })
 
   // --------------------------------------------------------------------------
+  // Inner objects
+  // --------------------------------------------------------------------------
+
+  describe.only('Inner objects', () => {
+    it('get throws', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.a = []
+      A.a._a = 1
+      A.m = new Map()
+      A.m._b = 1
+      A.m.set(10, { _c: 1 })
+      const CA = run.deploy(A)
+      function test (CA) {
+        expect(() => CA.a._a).to.throw('Cannot access private property _a')
+        expect(() => CA.m._b).to.throw('Cannot access private property _b')
+        expect(() => CA.m.get(10)._c).to.throw('Cannot access private property _c')
+      }
+      await CA.sync()
+      test(CA)
+      const CA2 = await run.load(A.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(A.location)
+      test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('ownKeys filters', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init () { this.o = { _n: 1 } }
+        keys () { return Reflect.ownKeys(this.o) }
+      }
+      const a = new A()
+      await a.sync()
+      function test (a) {
+        expect(Reflect.ownKeys(a.o).includes('_n')).to.equal(false)
+        expect(a.keys().includes('_n')).to.equal(true)
+      }
+      test(a)
+      const a2 = await run.load(a.location)
+      test(a2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // Berry
   // --------------------------------------------------------------------------
 
