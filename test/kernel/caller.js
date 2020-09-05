@@ -145,7 +145,7 @@ describe('Caller', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('dependency named caller', async () => {
+  it('dependency named caller', async () => {
     const run = new Run()
     function caller () { return 2 }
     class A extends Jig { static f () { this.n = caller() } }
