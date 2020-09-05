@@ -1776,7 +1776,7 @@ describe('Jig', () => {
     it('throws if owner method', () => {
       new Run() // eslint-disable-line
       class A extends Jig { owner () {} }
-      expect(() => new A()).to.throw('Cannot override Jig')
+      expect(() => new A()).to.throw('Cannot override Jig methods or properties')
     })
 
     // ------------------------------------------------------------------------
@@ -2176,6 +2176,28 @@ describe('Jig', () => {
       await run.load(a.location)
       run.cache.clear()
       await run.load(a.location)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // toString
+  // --------------------------------------------------------------------------
+
+  describe('toString', () => {
+    it('returns default value', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      expect(a.toString()).to.equal('[jig A]')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns overridden value', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { toString () { return 'hello' }}
+      const a = new A()
+      expect(a.toString()).to.equal('hello')
     })
   })
 })

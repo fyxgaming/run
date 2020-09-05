@@ -1009,10 +1009,9 @@ describe('Upgrade', () => {
       const run = new Run()
       function O () { }
       const CO = run.deploy(O)
-      const error = 'Cannot override Jig'
+      const error = 'Cannot override Jig methods or properties'
       expect(() => CO.upgrade(class A extends Jig { static [Symbol.hasInstance] () { } })).to.throw(error)
       expect(() => CO.upgrade(class A extends Jig { sync () { } })).to.throw(error)
-      expect(() => CO.upgrade(class A extends Jig { toString () { } })).to.throw(error)
       expect(() => CO.upgrade(class A extends Jig { auth () { } })).to.throw(error)
       expect(() => CO.upgrade(class A extends Jig { destroy () { } })).to.throw(error)
       expect(() => CO.upgrade(class A extends Jig { origin () { } })).to.throw(error)

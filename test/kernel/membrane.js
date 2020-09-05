@@ -633,7 +633,6 @@ describe('Membrane', () => {
       expect(() => { a.destroy = 1 }).to.throw('Cannot set destroy')
       expect(() => { a.auth = 1 }).to.throw('Cannot set auth')
       expect(() => { a.init = 1 }).to.throw('Cannot set init')
-      expect(() => { a.toString = 1 }).to.throw('Cannot set toString')
     })
 
     // ------------------------------------------------------------------------
@@ -646,7 +645,6 @@ describe('Membrane', () => {
       expect(() => Object.defineProperty(a, 'destroy', desc)).to.throw('Cannot define destroy')
       expect(() => Object.defineProperty(a, 'auth', desc)).to.throw('Cannot define auth')
       expect(() => Object.defineProperty(a, 'init', desc)).to.throw('Cannot define init')
-      expect(() => Object.defineProperty(a, 'toString', desc)).to.throw('Cannot define toString')
     })
 
     // ------------------------------------------------------------------------
@@ -658,7 +656,6 @@ describe('Membrane', () => {
       expect(() => { delete a.destroy }).to.throw('Cannot delete destroy')
       expect(() => { delete a.auth }).to.throw('Cannot delete auth')
       expect(() => { delete a.init }).to.throw('Cannot delete init')
-      expect(() => { delete a.toString }).to.throw('Cannot delete toString')
     })
   })
 

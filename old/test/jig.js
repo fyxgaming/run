@@ -21,47 +21,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('mempool chain', () => {
-    it('should support long mempool chain for purse', async () => {
-      const run = createHookedRun()
-      class A extends Jig { }
-      for (let i = 0; i < 100; i++) { new A() } // eslint-disable-line
-      await run.sync()
-    })
-
-    it.skip('should support long mempool chain for jig', async () => {
-      createHookedRun()
-      class A extends Jig { set (n) { this.n = n } }
-      const a = new A()
-      for (let i = 0; i < 100; i++) {
-        a.set(i)
-        await a.sync()
-      }
-    })
-
-    it.skip('should support multiple jigs with different length chains', async () => {
-      // TODO
-    })
-  })
-
-  describe('toString', () => {
-    it('should return a default value', () => {
-      createHookedRun()
-      class A extends Jig { }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(a.toString()).to.equal('[jig A]')
-    })
-
-    it('should support overriding toString', () => {
-      createHookedRun()
-      class A extends Jig { toString () { return 'hello' }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(a.toString()).to.equal('hello')
-    })
-  })
-
   describe('origin', () => {
     it('throw if read origin before sync', async () => {
       createHookedRun()

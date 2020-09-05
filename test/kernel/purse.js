@@ -17,3 +17,12 @@
         expect(after - before > 3000).to.equal(true)
       })
       */
+
+/*
+    it('should support long mempool chain for purse', async () => {
+      const run = createHookedRun()
+      class A extends Jig { }
+      for (let i = 0; i < 100; i++) { new A() } // eslint-disable-line
+      await run.sync()
+    })
+    */

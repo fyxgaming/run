@@ -1837,10 +1837,9 @@ describe('Deploy', () => {
 
     it('throws if override jig methods', () => {
       const run = new Run()
-      const error = 'Cannot override Jig'
+      const error = 'Cannot override Jig methods or properties'
       expect(() => run.deploy(class A extends Jig { static [Symbol.hasInstance] () { } })).to.throw(error)
       expect(() => run.deploy(class A extends Jig { sync () { } })).to.throw(error)
-      expect(() => run.deploy(class A extends Jig { toString () { } })).to.throw(error)
       expect(() => run.deploy(class A extends Jig { auth () { } })).to.throw(error)
       expect(() => run.deploy(class A extends Jig { destroy () { } })).to.throw(error)
       expect(() => run.deploy(class A extends Jig { origin () { } })).to.throw(error)
