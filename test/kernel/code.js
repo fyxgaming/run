@@ -324,6 +324,17 @@ describe('Code', () => {
   // --------------------------------------------------------------------------
 
   describe('defineProperty', () => {
+    it('throws if external', () => {
+      const run = new Run()
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      const desc = { value: true, configurable: true, enumerable: true, writable: true }
+      const error = "Updates must be performed in the jig's methods"
+      expect(() => Object.defineProperty(CA, 'n', desc)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('defines on current class', async () => {
       const run = new Run()
       class A extends Jig {
