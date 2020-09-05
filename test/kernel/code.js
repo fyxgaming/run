@@ -9,50 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { Code, Jig, Berry } = unmangle(Run)
-
-// When in an error state, all actions fail
-
-// Written Tests:
-//
-// Jig
-//  - Code methods not present
-//  - Can assign properties to code methods (only upgrade)
-//  - Getter that sets
-//  - Ownership: Create object, pass into another method, set on other jig, then set on current jig => fail
-//
-// Code
-//  - defineProperty disabled
-//  - getters and setters either allowed, or not allowed
-//  - Code methods cannot be deleted, or redefined, either from inside or outside
-//  - Code that was previously deployed, so a ref
-//  - Cannot set to "presets" or "deps" in a static method, or "sealed"? Or maybe you can set sealed.
-
-// Code functions are not available inside functions
-// Unfiled
-// Constructing Code objects inside... they would normally construct sandbox. How to do base?
-//      Need for arb objects
-// Spend all stack when set
-// Spend all stack when delete
-// Spend all stack when create too
-// Handle auth and destroy
-// Borrowing
-// Cache protocol
-// Inheritance and upgrading parents
-// TODO: Delete a parent class property from a child?
-// Classes should always operate on themselves
-// Test set properties on child when there is a similar property on parent class
-// Same for delete. There's a comment in membrane about this.
-// Call auth in a jig
-// Owner is parent ... for new jigs
-// Async updates
-// Sync
-// - Sync a jig to gets its newer code. Test
-// - Sync a code to gets a newer code prop. Test
-
-// TODO Deploy
-//  -Presets are assigned on locals, but not until synced
-//  -Failures, reverts
+const { Code, Jig, Berry, LocalCache } = unmangle(Run)
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -135,10 +92,10 @@ describe('Code', () => {
   })
 
   // --------------------------------------------------------------------------
-  // get
+  // Code methods
   // --------------------------------------------------------------------------
 
-  describe('get', () => {
+  describe('Code methods', () => {
     it('adds invisible code methods to class', () => {
       const run = new Run()
       class A { }
@@ -179,31 +136,13 @@ describe('Code', () => {
       const CA = run.deploy(A)
       CODE_METHODS.forEach(name => expect(Object.isFrozen(CA[name])))
     })
+  })
 
-    // ------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
+  // get
+  // --------------------------------------------------------------------------
 
-    it('same method is returned every time', () => {
-      const run = new Run()
-      class A { static f () { } }
-      const CA = run.deploy(A)
-      expect(typeof CA.f).to.equal('function')
-      expect(CA.f).to.equal(CA.f)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('same method is returned for child code', () => {
-      const run = new Run()
-      class A { static f () { } }
-      const CA = run.deploy(A)
-      class B extends CA {}
-      const CB = run.deploy(B)
-      expect(typeof CB.f).to.equal('function')
-      expect(CB.f).to.equal(CA.f)
-    })
-
-    // ------------------------------------------------------------------------
-
+  describe('get', () => {
     it('initial bindings are unreadable', () => {
       const run = new Run()
       class A { }
@@ -237,6 +176,71 @@ describe('Code', () => {
       function f () { return f }
       const f2 = run.deploy(f)
       expect(f2()).to.equal(f2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns parent property if not set on child', () => {
+      const run = new Run()
+      class A { }
+      A.n = 1
+      class B extends A { }
+      const CB = run.deploy(B)
+      expect(CB.n).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('same method is returned every time', () => {
+      const run = new Run()
+      class A { static f () { } }
+      const CA = run.deploy(A)
+      expect(typeof CA.f).to.equal('function')
+      expect(CA.f).to.equal(CA.f)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('same method is returned for child code', () => {
+      const run = new Run()
+      class A { static f () { } }
+      const CA = run.deploy(A)
+      class B extends CA {}
+      const CB = run.deploy(B)
+      expect(typeof CB.f).to.equal('function')
+      expect(CB.f).to.equal(CA.f)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // delete
+  // --------------------------------------------------------------------------
+
+  describe.only('delete', () => {
+    it('throws if external', () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.n = 1
+      const CA = run.deploy(A)
+      expect(() => { delete CA.n }).to.throw('Updates must be performed in the jig\'s methods')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('allowed inside', async () => {
+      const run = new Run()
+      class A extends Jig { static f () { delete this.n } }
+      A.n = 1
+      const CA = run.deploy(A)
+      CA.f()
+      test(CA)
+      await CA.sync()
+      function test (CA) { expect('n' in CA).to.equal(false) }
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
   })
 
@@ -332,14 +336,6 @@ describe('Code', () => {
       class B extends CA { }
       Object.setPrototypeOf(B, {})
     })
-  })
-
-  // --------------------------------------------------------------------------
-  // Caller
-  // --------------------------------------------------------------------------
-
-  describe.skip('caller', () => {
-    // TODO
   })
 
   // --------------------------------------------------------------------------
