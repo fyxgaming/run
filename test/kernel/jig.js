@@ -1758,23 +1758,15 @@ describe('Jig', () => {
       expect(() => a.f()).to.throw('Cannot delete owner')
     })
 
-    /*
-    it('should throw if set owner externally', () => {
-      createHookedRun()
-      class A extends Jig { }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => { a.owner = '123' }).to.throw()
-      expectNoAction()
-    })
+    // ------------------------------------------------------------------------
 
-    it('should throw if define owner method', () => {
-      createHookedRun()
+    it('throws if owner method', () => {
+      new Run() // eslint-disable-line
       class A extends Jig { owner () {} }
-      expect(() => new A()).to.throw()
-      expectNoAction()
+      expect(() => new A()).to.throw('Cannot override Jig')
     })
 
+    /*
     it('should add to reads', () => {
       createHookedRun()
       class A extends Jig { f (a) { this.x = a.owner }}
