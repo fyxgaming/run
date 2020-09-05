@@ -66,6 +66,48 @@ describe('Auth', () => {
       test(CA3)
     })
 
+    // ------------------------------------------------------------------------
+
+    it('auths jig in method', async () => {
+      const run = new Run()
+
+      class A extends Jig { static f (b) { b.auth() } }
+      class B extends Jig { }
+      const CA = run.deploy(A)
+      const b = new B()
+      await CA.sync()
+      await b.sync()
+
+      expectTx({
+        nin: 2,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 1 }, 'f', [{ $jig: 0 }]]
+          }
+        ]
+      })
+
+      function test (b) {
+        expect(b.location).not.to.equal(b.origin)
+      }
+
+      CA.f(b)
+      await CA.sync()
+      test(b)
+
+      const b2 = await run.load(b.location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(b.location)
+      test(b3)
+    })
+
     // --------------------------------------------------------------------------
 
     it('cannot auth non-code children', async () => {
@@ -174,6 +216,48 @@ describe('Auth', () => {
       run.cache = new LocalCache()
       const a3 = await run.load(a.location)
       test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('auths code in method', async () => {
+      const run = new Run()
+
+      class A extends Jig { f (B) { B.auth() } }
+      class B { }
+      const a = new A()
+      const CB = run.deploy(B)
+      await a.sync()
+      await CB.sync()
+
+      expectTx({
+        nin: 2,
+        nref: 1,
+        nout: 2,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 1 }, 'f', [{ $jig: 0 }]]
+          }
+        ]
+      })
+
+      function test (B) {
+        expect(B.location).not.to.equal(B.origin)
+      }
+
+      a.f(CB)
+      await a.sync()
+      test(CB)
+
+      const CB2 = await run.load(CB.location)
+      test(CB2)
+
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      test(CB3)
     })
 
     // ------------------------------------------------------------------------
