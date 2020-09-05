@@ -11,6 +11,22 @@ const { _payload } = unmangle(Run)
 const { expect } = require('chai')
 
 // ------------------------------------------------------------------------------------------------
+// payFor
+// ------------------------------------------------------------------------------------------------
+
+async function payFor (tx, run) {
+  const rawtx = tx.toString('hex')
+  const prevtxids = tx.inputs.map(input => input.prevTxId.toString('hex'))
+  const prevrawtxs = await Promise.all(prevtxids.map(txid => run.blockchain.fetch(txid)))
+  const prevtxs = prevrawtxs.map(rawtx => new Transaction(rawtx))
+  const parents = tx.inputs.map((input, n) => prevtxs[n].outputs[input.outputIndex])
+  const paidhex = await run.purse.pay(rawtx, parents)
+  const paidtx = new Transaction(paidhex)
+  await populatePreviousOutputs(paidtx, run.blockchain)
+  return paidtx
+}
+
+// ------------------------------------------------------------------------------------------------
 // populatePreviousOutputs
 // ------------------------------------------------------------------------------------------------
 
@@ -38,22 +54,6 @@ async function populatePreviousOutputs (tx, blockchain) {
       }
     }
   }
-}
-
-// ------------------------------------------------------------------------------------------------
-// payFor
-// ------------------------------------------------------------------------------------------------
-
-async function payFor (tx, run) {
-  const rawtx = tx.toString('hex')
-  const prevtxids = tx.inputs.map(input => input.prevTxId.toString('hex'))
-  const prevrawtxs = await Promise.all(prevtxids.map(txid => run.blockchain.fetch(txid)))
-  const prevtxs = prevrawtxs.map(rawtx => new Transaction(rawtx))
-  const parents = tx.inputs.map((input, n) => prevtxs[n].outputs[input.outputIndex])
-  const paidhex = await run.purse.pay(rawtx, parents)
-  const paidtx = new Transaction(paidhex)
-  await populatePreviousOutputs(paidtx, run.blockchain)
-  return paidtx
 }
 
 // ------------------------------------------------------------------------------------------------
