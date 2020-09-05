@@ -2069,22 +2069,35 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
-    it('should support $ properties and args', () => {
-      createHookedRun()
+    it('$ properties and args', async () => {
+      const run = new Run()
       class A extends Jig {
         init () { this.o = { $class: 'undefined' } }
         f () { this.$ref = '123' }
         g (x) { this.x = x }
       }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       a.f()
-      expectAction(a, 'f', [], [a], [a], [])
       a.g({ $undef: 1 })
-      expectAction(a, 'g', [{ $undef: 1 }], [a], [a], [])
+
+      function test (a) {
+        expect(a.$ref).to.equal('123')
+        expect(a.x).to.deep.equal({ $undef: 1 })
+        expect(a.o).to.deep.equal({ $class: 'undefined' })
+      }
+
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
     })
 
+    /*
     it('should be unusable after deploy fails', async () => {
       const run = createHookedRun()
       const oldPay = run.purse.pay
