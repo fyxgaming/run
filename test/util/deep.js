@@ -476,7 +476,19 @@ describe('_deepClone', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('arbitrary objects', () => {
+  it('arbitrary objects', () => {
+    const run = new Run()
+    class A { }
+    const A2 = run.deploy(A)
+    const a = new A2()
+    const a2 = _deepClone(a)
+    expect(a).to.deep.equal(a2)
+    expect(A2).to.equal(a2.constructor)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('undeployed arbitrary objects', () => {
     const run = new Run()
     class A { }
     const A2 = run.install(A)
@@ -484,6 +496,7 @@ describe('_deepClone', () => {
     const a2 = _deepClone(a)
     expect(a).to.deep.equal(a2)
     expect(A2).to.equal(a2.constructor)
+    expect(() => A2.location).to.throw()
   })
 
   // --------------------------------------------------------------------------
@@ -527,12 +540,6 @@ describe('_deepClone', () => {
   it('throws for extensions of supported types', () => {
     expect(() => _deepClone(new (class MySet extends Set {})())).to.throw('Cannot clone')
     expect(() => _deepClone(new (class MySet extends Map {})())).to.throw('Cannot clone')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it.skip('throws for arbitrary objects of undeployed code', () => {
-    // TODO: Move below
   })
 
   // --------------------------------------------------------------------------
