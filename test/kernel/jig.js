@@ -1654,7 +1654,7 @@ describe('Jig', () => {
   // Owner
   // --------------------------------------------------------------------------
 
-  describe.only('Owner', () => {
+  describe('Owner', () => {
     it('throws if read before assigned', () => {
       new Run() // eslint-disable-line
       class A extends Jig { init () { this.ownerAtInit = this.owner }}
