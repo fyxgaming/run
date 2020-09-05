@@ -2024,7 +2024,7 @@ describe('Jig', () => {
   // Misc
   // --------------------------------------------------------------------------
 
-  describe.only('Misc', () => {
+  describe('Misc', () => {
     it('toJSON', () => {
       new Run() // eslint-disable-line
       class A extends Jig { toJSON () { return [1, 2, 3] } }
@@ -2118,106 +2118,38 @@ describe('Jig', () => {
       expect(() => console.log(a.n)).to.throw(error)
     })
 
-    /*
-
-    it('should pass reads and writes in correct order', async () => {
-      createHookedRun()
-      class B extends Jig {
-        init (n) { this.n = n }
-
-        inc () { this.n += 1 }
-      }
-      class A extends Jig {
-        add (arr) {
-          arr[1].inc()
-          arr[0].inc()
-          this.n = arr.reduce((s, t) => s + t.n, 0)
-          return [new B(1), new B(2)]
-        }
-      }
-      A.deps = { B }
-      const b = new B(1)
-      expectAction(b, 'init', [1], [], [b], [])
-      const b2 = new B(2)
-      expectAction(b2, 'init', [2], [], [b2], [])
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      const [b3, b4] = a.add([b, b2])
-      expectAction(a, 'add', [[b, b2]], [a, b2, b], [a, b2, b, b3, b4], [b2, b])
-    })
+    // ------------------------------------------------------------------------
 
     it('should detect uncaught errors', async () => {
-      const run = createHookedRun()
+      const run = new Run()
       class A extends Jig { f () { this.n = 1 } }
       const a = new A()
       await a.sync()
-      expectAction(a, 'init', [], [], [a], [])
-      const oldBroadcast = run.blockchain.broadcast
-      run.blockchain.broadcast = async (tx) => { throw new Error() }
+      stub(run.blockchain, 'broadcast').throws()
       expect(a.n).to.equal(undefined)
       a.f()
-      expectAction(a, 'f', [], [a], [a], [])
       expect(a.n).to.equal(1)
       await new Promise(resolve => {
         setTimeout(() => {
           let completed = false
           try { a.origin } catch (e) { completed = true } // eslint-disable-line
           if (completed) {
-            run.blockchain.broadcast = oldBroadcast
-            expect(() => a.origin).to.throw('A previous update failed')
-            expect(() => a.location).to.throw('A previous update failed')
-            expect(() => a.owner).to.throw('A previous update failed')
-            expect(() => a.n).to.throw('A previous update failed')
-            expect(() => a.f()).to.throw('A previous update failed')
+            const error = 'Unhandled Error'
+            expect(() => a.origin).to.throw(error)
+            expect(() => a.location).to.throw(error)
+            expect(() => a.owner).to.throw(error)
+            expect(() => a.n).to.throw(error)
+            expect(() => a.f()).to.throw(error)
             resolve()
           }
-        }, 1)
+        }, 0)
       })
     })
 
-    it('should use SafeSet', async () => {
-      const run = createHookedRun()
-      class B extends Jig {}
-      class A extends Jig {
-        init () { this.set = new Set() }
-        add (x) { this.set.add(x) }
-      }
-      const a = new A()
-      const b = new B()
-      await run.sync()
-      const b2 = await run.load(b.location)
-      a.add(b)
-      a.add(b2)
-      expect(a.set.size).to.equal(1)
-      await run.sync()
-      await run.load(a.location)
-      run.cache.clear()
-      await run.load(a.location)
-    })
-
-    it('should use SafeMap', async () => {
-      const run = createHookedRun()
-      class B extends Jig {}
-      class A extends Jig {
-        init () { this.map = new Map() }
-        set (x, y) { this.map.set(x, y) }
-      }
-      const a = new A()
-      await a.sync()
-      const b = new B()
-      await b.sync()
-      const b2 = await run.load(b.location)
-      a.set(b, 1)
-      a.set(b2, 2)
-      expect(a.map.size).to.equal(1)
-      await run.sync()
-      await run.load(a.location)
-      run.cache.clear()
-      await run.load(a.location)
-    })
+    // ------------------------------------------------------------------------
 
     it('should support arbitrary objects', async () => {
-      const run = createHookedRun()
+      const run = new Run()
       class Store extends Jig { set (x) { this.x = x } }
       const store = new Store()
       class Dragon { }
@@ -2229,8 +2161,10 @@ describe('Jig', () => {
       await run.load(store.location)
     })
 
+    // ------------------------------------------------------------------------
+
     it('should support circular objects', async () => {
-      const run = createHookedRun()
+      const run = new Run()
       class A extends Jig {
         init () {
           this.x = []
@@ -2243,7 +2177,6 @@ describe('Jig', () => {
       run.cache.clear()
       await run.load(a.location)
     })
-    */
   })
 })
 

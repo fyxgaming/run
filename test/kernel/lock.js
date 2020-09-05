@@ -1,5 +1,5 @@
 /**
- * locks.js
+ * lock.js
  *
  * Tests for custom owner locks
  */
@@ -10,10 +10,10 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 
 // ------------------------------------------------------------------------------------------------
-// Locks
+// Lock
 // ------------------------------------------------------------------------------------------------
 
-describe('Locks', () => {
+describe('Lock', () => {
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
   // Deactivate the current run instance. This stops leaks across tests.
