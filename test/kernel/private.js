@@ -1,22 +1,107 @@
+/**
+ * private.js
+ *
+ * Tests for private properties and methods on jigs
+ */
 
-/*
-  describe('private', () => {
-    it('should handle has of private property', () => {
-      createHookedRun()
-      class J extends Jig {
-        init () { this._x = 1 }
+const { describe, it } = require('mocha')
+const { expect } = require('chai')
+const Run = require('../env/run')
+const { Jig, LocalCache } = Run
 
-        has (a, x) { return x in a }
-      }
-      class K extends J { }
-      class L extends Jig { has (a, x) { return x in a } }
-      expect('_x' in new J()).to.equal(true)
-      expect(new K().has(new K(), '_x')).to.equal(true)
-      expect(() => new L().has(new J(), '_x')).to.throw('cannot check _x because it is private')
-      expect(() => new K().has(new J(), '_x')).to.throw('cannot check _x because it is private')
-      expect(() => new J().has(new K(), '_x')).to.throw('cannot check _x because it is private')
+// ------------------------------------------------------------------------------------------------
+// Private
+// ------------------------------------------------------------------------------------------------
+
+describe('Private', () => {
+  // --------------------------------------------------------------------------
+  // Jig
+  // --------------------------------------------------------------------------
+
+  describe('Jig', () => {
+    // ------------------------------------------------------------------------
+    // has
+    // ------------------------------------------------------------------------
+
+    describe('has', () => {
+      it('available internally', async () => {
+        const run = new Run()
+        class A extends Jig {
+          init () { this._x = 1 }
+          has () { return '_x' in this }
+        }
+        function test (a) { expect(a.has()).to.equal(true) }
+        const a = new A()
+        test(a)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        test(a2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        test(a3)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('throws externally', async () => {
+        const run = new Run()
+        class A extends Jig { init () { this._x = 1 } }
+        function test (a) { expect(() => ('_x' in a)).to.throw('Cannot access private property _x') }
+        const a = new A()
+        test(a)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        test(a2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        test(a3)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('throws from another jig of different class', async () => {
+        const run = new Run()
+        class A extends Jig { init () { this._x = 1 } }
+        class B extends Jig { has (a) { return '_x' in a }}
+        function test (a, b) { expect(() => b.has(a)).to.throw('Cannot access private property _x') }
+        const a = new A()
+        const b = new B()
+        test(a, b)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        const b2 = await run.load(b.location)
+        test(a2, b2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        const b3 = await run.load(b.location)
+        test(a3, b3)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('available from another jig of same class', async () => {
+        const run = new Run()
+        class A extends Jig {
+          init () { this._x = 1 }
+          has (a) { return '_x' in a }
+        }
+        function test (a, b) { expect(b.has(a)).to.equal(true) }
+        const a = new A()
+        const b = new A()
+        test(a, b)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        const b2 = await run.load(b.location)
+        test(a2, b2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        const b3 = await run.load(b.location)
+        test(a3, b3)
+      })
     })
+  })
 
+  /*
     it('should handle get of private property', () => {
       createHookedRun()
       class J extends Jig {
@@ -68,5 +153,7 @@
       expect(new K().ownKeys(new J()).includes('_x')).to.equal(false)
       expect(new J().ownKeys(new K()).includes('_x')).to.equal(false)
     })
-  })
   */
+})
+
+// ------------------------------------------------------------------------------------------------
