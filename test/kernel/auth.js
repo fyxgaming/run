@@ -111,19 +111,6 @@ describe('Auth', () => {
 
     // --------------------------------------------------------------------------
 
-    it('cannot auth non-code children', async () => {
-      const run = new Run()
-
-      class A { }
-      const CA = run.deploy(A)
-      await CA.sync()
-
-      class B extends CA { }
-      expect(() => Code.prototype.auth.apply(B)).to.throw('auth unavailable')
-    })
-
-    // --------------------------------------------------------------------------
-
     it('throws if auth jig destroyed in another transaction', async () => {
       const run = new Run()
 
@@ -178,12 +165,6 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('auth multiple in a batch', () => {
-
-    })
-
-    // ------------------------------------------------------------------------
-
     it('throws if auth non-code', () => {
       const run = new Run()
       class A extends Jig { }
@@ -193,6 +174,18 @@ describe('Auth', () => {
       expect(() => Code.prototype.auth.call({})).to.throw(error)
       expect(() => Code.prototype.auth.call(class A { })).to.throw(error)
       expect(() => Code.prototype.auth.call(null)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if auth non-code children', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+      class B extends CA { }
+      expect(() => B.auth()).to.throw('auth unavailable')
+      expect(() => Code.prototype.auth.call(B)).to.throw('auth unavailable')
     })
 
     // ------------------------------------------------------------------------
@@ -207,6 +200,12 @@ describe('Auth', () => {
       await expect(CA.sync()).to.be.rejected
       expect(CA.location).to.equal(CA.origin)
       expect(CA.nonce).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('auth multiple in a batch', () => {
+
     })
 
     // ------------------------------------------------------------------------
@@ -353,7 +352,7 @@ describe('Auth', () => {
   // --------------------------------------------------------------------------
 
   describe('Berry', () => {
-    it.skip('cannot auth undeployed berry class', () => {
+    it.skip('throws if auth undeployed berry class', () => {
       // TODO
     })
   })

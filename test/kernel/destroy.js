@@ -90,19 +90,36 @@ describe('Destroy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('destroy in a static method', () => {
+    it('destroy in a static method', async () => {
+      const run = new Run()
+      class A { static f () { A.destroy() } }
+      const CA = run.deploy(A)
+      await CA.sync()
 
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 0,
+        ndel: 1,
+        ncre: 0,
+        exec: [
+          {
+            op: 'DESTROY',
+            data: { $jig: 0 }
+          }
+        ]
+      })
+
+      CA.f()
+      await CA.sync()
+      await run.load(CA.location)
+      run.cache = new LocalCache()
+      await run.load(CA.location)
     })
 
     // ------------------------------------------------------------------------
 
     it.skip('destroy code in a jig method', () => {
-
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('destroy multiple in a batch', () => {
 
     })
 
@@ -114,8 +131,45 @@ describe('Destroy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if destroy non-code', () => {
+    it('throws if destroy non-code', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      const error = 'destroy unavailable'
+      expect(() => CA.destroy.apply(A, [])).to.throw(error)
+      expect(() => Code.prototype.destroy.call({})).to.throw(error)
+      expect(() => Code.prototype.destroy.call(class A { })).to.throw(error)
+      expect(() => Code.prototype.destroy.call(null)).to.throw(error)
+    })
 
+    // ------------------------------------------------------------------------
+
+    it('throws if destroy non-code children', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      await CA.sync()
+      class B extends CA { }
+      expect(() => B.destroy()).to.throw('destroy unavailable')
+      expect(() => Code.prototype.destroy.call(B)).to.throw('destroy unavailable')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('destroy multiple in a batch', () => {
+
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if send then destroy in batch', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if destroy then destroy in batch', () => {
+      // TODO
     })
   })
 
@@ -178,25 +232,7 @@ describe('Destroy', () => {
   // --------------------------------------------------------------------------
 
   describe('errors', () => {
-    it('cannot destroy non-code', () => {
-      const error = 'destroy unavailable'
-      expect(() => Code.prototype.destroy.call({})).to.throw(error)
-      expect(() => Code.prototype.destroy.call(class A { })).to.throw(error)
-      expect(() => Code.prototype.destroy.call(null)).to.throw(error)
-    })
-
     // ------------------------------------------------------------------------
-
-    it('cannot destroy non-code children', async () => {
-      const run = new Run()
-
-      class A { }
-      const CA = run.deploy(A)
-      await CA.sync()
-
-      class B extends CA { }
-      expect(() => Code.prototype.destroy.call(B)).to.throw('destroy unavailable')
-    })
 
     // ------------------------------------------------------------------------
 
@@ -214,7 +250,7 @@ describe('Destroy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('cannot auth undeployed berry class', () => {
+    it.skip('throws if auth undeployed berry class', () => {
     // TODO
     })
   })
