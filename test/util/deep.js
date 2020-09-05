@@ -377,13 +377,7 @@ describe('_deepClone', () => {
 
   it('throws for symbols', () => {
     expect(() => _deepClone(Symbol.hasInstance)).to.throw('Cannot clone')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it.skip('throws for intrinsics', () => {
-    // TODO
-    // TODO: Move below
+    expect(() => _deepClone(Symbol.iterator)).to.throw('Cannot clone')
   })
 
   // --------------------------------------------------------------------------
@@ -518,6 +512,15 @@ describe('_deepClone', () => {
     expect(o2.z.z).to.equal(o2.z)
     expect(o2.s.s).to.equal(o2.s)
     expect(o2.m.m).to.equal(o2.m)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('throws for intrinsics', () => {
+    expect(() => _deepClone(Math)).to.throw('Cannot clone')
+    expect(() => _deepClone(new WeakSet())).to.throw('Cannot clone')
+    expect(() => _deepClone(/123/)).to.throw('Cannot clone')
+    expect(() => _deepClone(Promise)).to.throw('Cannot clone')
   })
 
   // --------------------------------------------------------------------------
