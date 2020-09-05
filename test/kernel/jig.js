@@ -2205,7 +2205,7 @@ describe('Jig', () => {
   // origin
   // --------------------------------------------------------------------------
 
-  describe.only('origin', () => {
+  describe('origin', () => {
     it('throws if read before sync', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { f () { this.origin2 = this.origin }}
@@ -2271,6 +2271,82 @@ describe('Jig', () => {
       class A extends Jig { origin () {} }
       expect(() => new A()).to.throw('Cannot override Jig methods or properties')
     })
+  })
+
+  // --------------------------------------------------------------------------
+  // Location
+  // --------------------------------------------------------------------------
+
+  describe.only('location', () => {
+    /*
+    it('should throw if read before sync', async () => {
+      createHookedRun()
+      class A extends Jig {}
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      expect(() => a.location).to.throw('sync() required before reading location')
+      await a.sync()
+      expect(() => a.location).not.to.throw()
+    })
+
+    it('should support reading internally after sync', async () => {
+      createHookedRun()
+      class A extends Jig { f () { this.location2 = this.location }}
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      await a.sync()
+      a.f()
+      expectAction(a, 'f', [], [a], [a], [a])
+      expect(a.location2).to.equal(a.origin)
+      expect(() => a.f()).to.throw('sync() required before reading location')
+      expectNoAction()
+      await a.sync()
+      const secondLocation = a.location
+      a.f()
+      expectAction(a, 'f', [], [a], [a], [a])
+      expect(a.location2).to.equal(secondLocation)
+    })
+
+    // TODO: This is probably possible to support in many cases
+    it.skip('should support reading location quickly', async () => {
+      createHookedRun()
+      class A extends Jig { f () { this.n = 1 } }
+      const a = new A()
+      expect(a.location).not.to.throw()
+      a.f()
+      expect(a.location).not.to.throw()
+    })
+
+    it('should throw if delete location', () => {
+      createHookedRun()
+      class A extends Jig { f () { delete this.location }}
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      expect(() => { delete a.location }).to.throw('must not delete location')
+      expectNoAction()
+      expect(() => a.f()).to.throw('must not delete location')
+      expectNoAction()
+    })
+
+    it('should throw if set location', () => {
+      createHookedRun()
+      class A extends Jig { f () { this.location = '123' }}
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      expect(() => { a.location = '123' }).to.throw('must not set location')
+      expectNoAction()
+      expect(() => a.f()).to.throw('must not set location')
+      expectNoAction()
+    })
+
+    it('should throw if location method exists', () => {
+      createHookedRun()
+      class A extends Jig { location () {} }
+      expect(() => new A()).to.throw('must not override location')
+      expectNoAction()
+    })
+  })
+  */
   })
 })
 
