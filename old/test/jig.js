@@ -21,59 +21,6 @@ const createHookedRun = () => hookStoreAction(new Run())
 describe('Jig', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  describe('origin', () => {
-    it('throw if read origin before sync', async () => {
-      createHookedRun()
-      class A extends Jig { f () { this.origin2 = this.origin }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.origin).to.throw('sync() required before reading origin')
-      expect(() => a.f()).to.throw('sync() required before reading origin')
-      await a.sync()
-      expect(() => a.origin).not.to.throw()
-      expect(() => a.f()).not.to.throw()
-    })
-
-    it('should support reading internally after sync', async () => {
-      createHookedRun()
-      class A extends Jig { f () { this.origin2 = this.origin }}
-      const a = new A()
-      await a.sync()
-      expectAction(a, 'init', [], [], [a], [])
-      a.f()
-      expectAction(a, 'f', [], [a], [a], [])
-    })
-
-    it('should throw if delete origin', () => {
-      createHookedRun()
-      class A extends Jig { f () { delete this.origin }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => { delete a.origin }).to.throw('must not delete origin')
-      expectNoAction()
-      expect(() => a.f()).to.throw('must not delete origin')
-      expectNoAction()
-    })
-
-    it('should throw if set origin', () => {
-      createHookedRun()
-      class A extends Jig { f () { this.origin = '123' }}
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => { a.origin = '123' }).to.throw('must not set origin')
-      expectNoAction()
-      expect(() => a.f()).to.throw('must not set origin')
-      expectNoAction()
-    })
-
-    it('should throw if origin method exists', () => {
-      createHookedRun()
-      class A extends Jig { origin () {} }
-      expect(() => new A()).to.throw('must not override origin')
-      expectNoAction()
-    })
-  })
-
   describe('location', () => {
     it('should throw if read before sync', async () => {
       createHookedRun()
