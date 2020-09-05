@@ -2449,7 +2449,7 @@ describe('Jig', () => {
   // Ownership
   // --------------------------------------------------------------------------
 
-  describe.only('Ownership', () => {
+  describe('Ownership', () => {
     it('read-only method from outside', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
@@ -2526,7 +2526,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if save an internal property on another jig', () => {
+    it('throws if store inner object', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         init () {
@@ -2549,27 +2549,29 @@ describe('Jig', () => {
       expect(() => b.h(a)).to.throw('Ownership violation')
     })
 
-    /*
-    it('should throw if save an arbitrary object from another jig', () => {
-      createHookedRun()
+    // ------------------------------------------------------------------------
+
+    it('throws for store arbitrary objects', () => {
+      new Run() // eslint-disable-line
+      class Blob { f () { return 2 } }
       class A extends Jig {
         init () {
-          class Blob { f () { return 2 } }
           this.blob = new Blob()
         }
       }
+      A.deps = { Blob }
       class B extends Jig {
         set (a) { this.x = a.blob }
       }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.set(a)).to.throw('[object Blob] belongs to a different resource')
+      expect(() => b.set(a)).to.throw('Ownership violation')
     })
 
-    it('should not throw if save a copy of an internal property on another jig', () => {
-      createHookedRun()
+    // ------------------------------------------------------------------------
+
+    it('save copy', () => {
+      new Run() // eslint-disable-line
       class A extends Jig {
         init () {
           this.obj = { n: 1 }
@@ -2587,14 +2589,11 @@ describe('Jig', () => {
         }
       }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
       expect(() => b.f(a)).not.to.throw()
       expect(() => b.g(a)).not.to.throw()
       expect(() => b.h(a)).not.to.throw()
     })
-    */
   })
 })
 
