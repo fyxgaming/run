@@ -485,6 +485,32 @@ describe('Code', () => {
   })
 
   // --------------------------------------------------------------------------
+  // Bindings
+  // --------------------------------------------------------------------------
+
+  describe.only('Bindings', () => {
+    it('throws if delete', async () => {
+      const run = new Run()
+      class A extends Jig { static f(name) { delete this[name] } }
+      function test(A) {
+        expect(() => A.f('location')).to.throw('Cannot delete location')
+        expect(() => A.f('origin')).to.throw('Cannot delete origin')
+        expect(() => A.f('nonce')).to.throw('Cannot delete nonce')
+        expect(() => A.f('owner')).to.throw('Cannot delete owner')
+        expect(() => A.f('satoshis')).to.throw('Cannot delete satoshis')
+      }
+      const CA = run.deploy(A)
+      await CA.sync()
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // Activate
   // --------------------------------------------------------------------------
 
