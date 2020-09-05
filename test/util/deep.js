@@ -593,9 +593,31 @@ describe('_deepEqual', () => {
 
   // --------------------------------------------------------------------------
 
-  it('objects', () => {
+  it('object', () => {
+    expect(_deepEqual({ }, { })).to.equal(true)
+    expect(_deepEqual({ }, { n: 1 })).to.equal(false)
     expect(_deepEqual({ n: 1 }, { n: 1 })).to.equal(true)
     expect(_deepEqual({ o: { n: 1 } }, { o: { n: 1 } })).to.equal(true)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('array', () => {
+    expect(_deepEqual([], [])).to.equal(true)
+    expect(_deepEqual([], [null])).to.equal(false)
+    expect(_deepEqual([1, 2, 3], [1, 2, 3])).to.equal(true)
+    expect(_deepEqual([[], []], [[], []])).to.equal(true)
+    expect(_deepEqual([[], []], [[], [], []])).to.equal(false)
+    expect(_deepEqual([[1]], [[1]])).to.equal(true)
+    expect(_deepEqual([[1]], [[2]])).to.equal(false)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('set', () => {
+    expect(_deepEqual(new Set(), new Set())).to.equal(true)
+    expect(_deepEqual(new Set(), new Set([1]))).to.equal(false)
+    expect(_deepEqual(new Set([new Set([1])]), new Set(new Set([1])))).to.equal(true)
   })
 })
 
