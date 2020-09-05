@@ -119,8 +119,34 @@ describe('Destroy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('destroy code in a jig method', () => {
+    it('destroy jig in a code method', async () => {
+      const run = new Run()
+      class A extends Jig { static f(a) { a.destroy() } }
+      const CA = run.deploy(A)
+      const a = new A()
+      await a.sync()
 
+      expectTx({
+        nin: 2,
+        nref: 0,
+        nout: 1,
+        ndel: 1,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'f', [{ $jig: 1 }]]
+          }
+        ]
+      })
+
+      CA.f(a)
+      await CA.sync()
+
+      await run.load(CA.location)
+
+      run.cache = new LocalCache()
+      await run.load(CA.location)
     })
 
     // ------------------------------------------------------------------------
