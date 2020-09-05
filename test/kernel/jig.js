@@ -1829,27 +1829,29 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe.only('satoshis', () => {
-    /*
-    async function testSetAndLoad (amount) {
-      const run = createHookedRun()
+    async function testSatoshisPass (amount) {
+      const run = new Run()
       class A extends Jig { f (s) { this.satoshis = s } }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       a.f(amount)
-      await run.sync()
+      await a.sync()
       const a2 = await run.load(a.location)
       expect(a2.satoshis).to.equal(amount)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      expect(a3.satoshis).to.equal(amount)
     }
 
     // minimum amount
-    it('should set and load 0 satoshis', () => testSetAndLoad(0))
+    it('set to 0', () => testSatoshisPass(0))
 
     // less than dust
-    it('should set and load 50 satoshis', () => testSetAndLoad(50))
+    it('set to 50', () => testSatoshisPass(50))
 
     // more than dust
-    it('should set and load 600 satoshis', () => testSetAndLoad(600))
+    it('set to 600', () => testSatoshisPass(600))
 
+    /*
     function testFailToSet (amount, err) {
       createHookedRun()
       class A extends Jig { f (s) { this.satoshis = s } }
