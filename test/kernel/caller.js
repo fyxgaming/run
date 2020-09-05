@@ -37,26 +37,33 @@ describe('Caller', () => {
 
   // --------------------------------------------------------------------------
 
-/*
-    it('should be the calling jig when called from another jig', async () => {
-      const run = createHookedRun()
-      class Parent extends Jig {
-        init () { this.child = new Child(this) }
-        f () { this.self = this.child.f(this) }
-      }
-      class Child extends Jig {
-        init (parent) { expect(caller).toBe(parent) }
-        f (parent) { expect(caller).toBe(parent); return parent }
-      }
-      Parent.deps = { Child }
-      Child.deps = { expect: Run.expect }
-      const parent = new Parent()
-      parent.f()
-      expect(parent.self).to.equal(parent)
-      await run.sync()
-      await run.load(parent.location)
-    })
+  it('called from another jig', async () => {
+    const run = new Run()
+    class Parent extends Jig {
+      init () { this.child = new Child(this) }
+      f () { this.self = this.child.f(this) }
+    }
+    class Child extends Jig {
+      init () { this.initCaller = caller }
+      f () { this.fCaller = caller }
+    }
+    Parent.deps = { Child }
+    const parent = new Parent()
+    parent.f()
+    function test (parent) {
+      expect(parent.child.initCaller).to.equal(parent)
+      expect(parent.child.fCaller).to.equal(parent)
+    }
+    test(parent)
+    await run.sync()
+    const parent2 = await run.load(parent.location)
+    test(parent2)
+    run.cache = new LocalCache()
+    const parent3 = await run.load(parent.location)
+    test(parent3)
+  })
 
+/*
     it('should support caller being this', async () => {
       const run = createHookedRun()
       class A extends Jig {
