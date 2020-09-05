@@ -2450,7 +2450,7 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe.only('Inner objects', () => {
-    it('read-only method on an inner object from outside', () => {
+    it('read-only method from outside', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         init () {
@@ -2467,7 +2467,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('read-only method on an inner object from another jig', async () => {
+    it('read-only method from another jig', async () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         init () {
@@ -2488,9 +2488,10 @@ describe('Jig', () => {
       expect(() => b.f(a)).not.to.throw()
     })
 
-    /*
-    it('should support calling a write method on an internal property from outside', () => {
-      createHookedRun()
+    // ------------------------------------------------------------------------
+
+    it('throws if call a write method from outside', () => {
+      new Run() // eslint-disable-line
       class A extends Jig {
         init () {
           this.arr = [1, 2, 3]
@@ -2498,13 +2499,11 @@ describe('Jig', () => {
         }
       }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.arr.push(1)).to.throw('internal method push may not be called to change state')
-      expectNoAction()
-      expect(() => a.buf.sort()).to.throw('internal method sort may not be called to change state')
-      expectNoAction()
+      expect(() => a.arr.push(1)).to.throw('Updates must be performed in the jig\'s methods')
+      expect(() => a.buf.sort()).to.throw('Updates must be performed in the jig\'s methods')
     })
 
+    /*
     it('should support calling a write method on an internal property from another jig', () => {
       createHookedRun()
       class A extends Jig {
