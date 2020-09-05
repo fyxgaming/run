@@ -1280,8 +1280,29 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('jig deps', () => {
-      // TODO
+    it('jig deps', async () => {
+      const run = new Run()
+
+      class A { static f() { return b } }
+      class B extends Jig { }
+      const b = new B()
+      await b.sync()
+      A.deps = { b } 
+
+      function test (CA) {
+        expect(A.f()).to.equal(A.deps.b)
+      }
+
+      const CA = run.deploy(A)
+      test(CA)
+      await CA.sync()
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     // ------------------------------------------------------------------------
@@ -1537,22 +1558,25 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('copies jig and berry presets', async () => {
+    it('copies jig presets', async () => {
       const run = new Run()
       const network = run.blockchain.network
       class J extends Jig { }
       const j = new J()
-      class B extends Berry { static pluck () { return new B() } }
-      const b = await run.load('', B)
       class C {}
       class A { }
-      A.presets = { [network]: { b, j, C } }
+      A.presets = { [network]: { j, C } }
       const CA = run.deploy(A)
-      expect(CA.b).to.equal(b)
       expect(CA.j).to.equal(j)
       expect(CA.C).not.to.equal(C)
       expect(CA.C.toString()).to.equal(C.toString())
       expect(CA.C).to.equal(run.deploy(C))
+    })
+    
+    // ------------------------------------------------------------------------
+
+    it.skip('copies berry presets', async () => {
+      // TODO
     })
 
     // ------------------------------------------------------------------------
