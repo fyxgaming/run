@@ -880,12 +880,6 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('creates and deploys arbitrary objects', async () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
     it('circular code props', async () => {
       const run = new Run()
 
@@ -938,8 +932,54 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('jigs', () => {
-      // TODO
+    it('jigs', async() => {
+      const run = new Run()
+      
+      class A extends Jig { }
+      class B extends Jig { }
+
+      const a = new A()
+      await a.sync()
+      B.A = A
+      B.a = a
+
+      function test (CB) {
+        expect(CB.a instanceof Jig).to.equal(true)
+        expect(CB.a.constructor).to.equal(CB.A)
+      }
+
+      expectTx({
+        nin: 0,
+        nref: 3,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              B.toString(),
+              {
+                A: { $jig: 0 },
+                a: { $jig: 1 },
+                deps: { Jig: { $jig: 2 }}
+              }
+            ]
+          }
+        ]
+      })
+
+      const CB = run.deploy(B)
+      await CB.sync()
+      test(CB)
+
+      await run.sync()
+      const CB2 = await run.load(CB.location)
+      test(CB2)
+
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      test(CB3)
     })
 
     // ------------------------------------------------------------------------
@@ -1240,13 +1280,13 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('berry deps', () => {
+    it.skip('jig deps', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('jig deps', () => {
+    it.skip('berry deps', () => {
       // TODO
     })
 
