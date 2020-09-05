@@ -1748,19 +1748,17 @@ describe('Jig', () => {
       await expect(a.sync()).to.be.rejectedWith('Invalid owner')
     })
 
-    /*
+    // ------------------------------------------------------------------------
 
-    it('should throw if delete owner', () => {
-      createHookedRun()
+    it('throws if delete owner', () => {
+      new Run() // eslint-disable-line
       class A extends Jig { f () { delete this.owner }}
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => { delete a.owner }).to.throw()
-      expectNoAction()
-      expect(() => a.f()).to.throw()
-      expectNoAction()
+      expect(() => { delete a.owner }).to.throw('Cannot delete owner')
+      expect(() => a.f()).to.throw('Cannot delete owner')
     })
 
+    /*
     it('should throw if set owner externally', () => {
       createHookedRun()
       class A extends Jig { }

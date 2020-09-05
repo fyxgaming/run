@@ -800,11 +800,11 @@ describe('Membrane', () => {
 
     it('cannot delete jig bindings', () => {
       const A = new Membrane(class A { }, mangle({ _bindings: true }))
-      expect(() => { delete A.location }).to.throw('Cannot delete binding location')
-      expect(() => { delete A.origin }).to.throw('Cannot delete binding origin')
-      expect(() => { delete A.nonce }).to.throw('Cannot delete binding nonce')
-      expect(() => { delete A.owner }).to.throw('Cannot delete binding owner')
-      expect(() => { delete A.satoshis }).to.throw('Cannot delete binding satoshis')
+      expect(() => { delete A.location }).to.throw('Cannot delete location')
+      expect(() => { delete A.origin }).to.throw('Cannot delete origin')
+      expect(() => { delete A.nonce }).to.throw('Cannot delete nonce')
+      expect(() => { delete A.owner }).to.throw('Cannot delete owner')
+      expect(() => { delete A.satoshis }).to.throw('Cannot delete satoshis')
     })
 
     // ------------------------------------------------------------------------
