@@ -157,6 +157,28 @@ describe('Private', () => {
         const b3 = await run.load(b.location)
         test(a3, b3)
       })
+
+      // ----------------------------------------------------------------------
+
+      it('available from another jig of same class', async () => {
+        const run = new Run()
+        class A extends Jig {
+          init () { this._x = 1 }
+          get (a) { return a._x }
+        }
+        function test (a, b) { expect(b.get(a)).to.equal(1) }
+        const a = new A()
+        const b = new A()
+        test(a, b)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        const b2 = await run.load(b.location)
+        test(a2, b2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        const b3 = await run.load(b.location)
+        test(a3, b3)
+      })
     })
 
     // ------------------------------------------------------------------------
