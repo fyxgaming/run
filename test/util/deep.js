@@ -656,6 +656,26 @@ describe('_deepEqual', () => {
     expect(_deepEqual(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3]))).to.equal(true)
     expect(_deepEqual(new Uint8Array([1, 2]), new Uint8Array([1, 2, 3]))).to.equal(false)
   })
+
+  // --------------------------------------------------------------------------
+
+  it('jig', async () => {
+    const run = new Run()
+    class A extends Jig { }
+    const a = new A()
+    expect(_deepEqual(a, a)).to.equal(true)
+    await a.sync()
+    const a2 = await run.load(a.location)
+    expect(_deepEqual(a, a2)).to.equal(true)
+    expect(_deepEqual(a, a.constructor)).to.equal(false)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('throws if unsupported', () => {
+    expect(() => _deepEqual(new WeakSet(), new WeakSet())).to.throw('Unsupported')
+    expect(() => _deepEqual(new RegExp(), new RegExp())).to.throw('Unsupported')
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
