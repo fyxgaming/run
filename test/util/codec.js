@@ -601,7 +601,7 @@ describe('Codec', () => {
   // Arbitrary objects
   // --------------------------------------------------------------------------
 
-  describe.skip('Arbitrary objects', () => {
+  describe('Arbitrary objects', () => {
     it('basic arbitrary objects', () => {
       const run = new Run()
       const jigs = []
