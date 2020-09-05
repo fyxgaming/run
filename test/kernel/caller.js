@@ -65,7 +65,7 @@ describe('Caller', () => {
 
   // --------------------------------------------------------------------------
 
-  it.only('called in a hierarchy', async () => {
+  it('called in a hierarchy', async () => {
     const run = new Run()
     class A extends Jig { init () { B.f() } }
     class B extends Jig { static f () { this.c = new C() } }
@@ -76,13 +76,11 @@ describe('Caller', () => {
     const a = new A()
     await a.sync()
     function test (B) { expect(B.c.initCaller).to.equal(B) }
-    console.log(CB)
-    console.log(B)
     test(CB)
-    const CB2 = await run.load(B.location)
+    const CB2 = await run.load(CB.location)
     test(CB2)
     run.cache = new LocalCache()
-    const CB3 = await run.load(B.location)
+    const CB3 = await run.load(CB.location)
     test(CB3)
   })
 
