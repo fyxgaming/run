@@ -2097,9 +2097,10 @@ describe('Jig', () => {
       test(a3)
     })
 
-    /*
-    it('should be unusable after deploy fails', async () => {
-      const run = createHookedRun()
+    // ------------------------------------------------------------------------
+
+    it('unusable if deploy fails', async () => {
+      const run = new Run()
       const oldPay = run.purse.pay
       run.purse.pay = async txhex => txhex
       class A extends Jig {
@@ -2125,6 +2126,7 @@ describe('Jig', () => {
       }
     })
 
+    /*
     it('should throw if transaction is unpaid', async () => {
       const run = createHookedRun()
       class Store extends Jig { set (x) { this.x = x } }
