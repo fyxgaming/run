@@ -242,6 +242,25 @@ describe('Code', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('deletes on current class not parent', async () => {
+      const run = new Run()
+      class A extends Jig { static f () { delete this.n } }
+      A.n = 1
+      class B extends A { }
+      const CB = run.deploy(B)
+      function test (CB) { expect(CB.n).to.equal(1) }
+      CB.f()
+      await CB.sync()
+      test(CB)
+      const CB2 = await run.load(CB.location)
+      test(CB2)
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      test(CB3)
+    })
   })
 
   // --------------------------------------------------------------------------
