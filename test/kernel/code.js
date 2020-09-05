@@ -489,7 +489,7 @@ describe('Code', () => {
   // Bindings
   // --------------------------------------------------------------------------
 
-  describe.only('Bindings', () => {
+  describe('Bindings', () => {
     it('throws if delete', async () => {
       const run = new Run()
       class A extends Jig { static f (name) { delete this[name] } }
@@ -603,6 +603,30 @@ describe('Code', () => {
       CA.f(1000)
       await CA.sync()
       function test (CA) { expect(CA.satoshis).to.equal(1000) }
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if set invalid satoshis', async () => {
+      const run = new Run()
+      class A extends Jig { static f (satoshis) { this.satoshis = satoshis } }
+      const CA = run.deploy(A)
+      await CA.sync()
+      function test (CA) {
+        expect(() => CA.f('123')).to.throw()
+        expect(() => CA.f(-1)).to.throw()
+        expect(() => CA.f(1.5)).to.throw()
+        expect(() => CA.f(Number.MAX_VALUE)).to.throw()
+        expect(() => CA.f(Infinity)).to.throw()
+        expect(() => CA.f()).to.throw()
+        expect(() => CA.f(false)).to.throw()
+      }
       test(CA)
       const CA2 = await run.load(CA.location)
       test(CA2)
