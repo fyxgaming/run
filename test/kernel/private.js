@@ -596,13 +596,14 @@ describe('Private', () => {
   // Static Code
   // --------------------------------------------------------------------------
 
-  describe.only('Static Code', () => {
+  describe('Static Code', () => {
     it('accessible from outside', async () => {
       const run = new Run()
       class A { }
       A._n = 1
       function test (A) { expect(A._n).to.equal(1) }
       const CA = run.deploy(A)
+      test(CA)
       await CA.sync()
       const CA2 = await run.load(CA.location)
       test(CA2)
@@ -611,8 +612,26 @@ describe('Private', () => {
       test(CA3)
     })
 
-    it('accessible from another jig', () => {
+    // ------------------------------------------------------------------------
 
+    it('accessible from another jig', async () => {
+      const run = new Run()
+      class A { }
+      A._n = 1
+      class B extends Jig { static f (A) { return A._n } }
+      function test (A, B) { expect(B.f(A)).to.equal(1) }
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      test(CA, CB)
+      await CA.sync()
+      await CB.sync()
+      const CA2 = await run.load(CA.location)
+      const CB2 = await run.load(CB.location)
+      test(CA2, CB2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      const CB3 = await run.load(CB.location)
+      test(CA3, CB3)
     })
   })
 
@@ -621,7 +640,9 @@ describe('Private', () => {
   // --------------------------------------------------------------------------
 
   describe('Berry', () => {
-    // TODO
+    it.skip('placeholder', () => {
+      // TODO
+    })
   })
 })
 
