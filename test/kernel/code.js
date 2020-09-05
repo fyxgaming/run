@@ -267,8 +267,30 @@ describe('Code', () => {
   // set
   // --------------------------------------------------------------------------
 
-  describe('set', () => {
-    // TODO
+  describe.only('set', () => {
+    it('throws if external', () => {
+      const run = new Run()
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      expect(() => { CA.n = 1 }).to.throw("Updates must be performed in the jig's methods")
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('allowed internally', async () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.n = 1 } }
+      const CA = run.deploy(A)
+      CA.f()
+      await CA.sync()
+      function test (CA) { expect(CA.n).to.equal(1) }
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
   })
 
   // --------------------------------------------------------------------------
