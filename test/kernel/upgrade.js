@@ -1135,7 +1135,7 @@ describe('Upgrade', () => {
 
     it('cannot upgrade in a method', () => {
       const run = new Run()
-      class A extends Jig { static f() { this.upgrade(class B { } )} }
+      class A extends Jig { static f () { this.upgrade(class B { }) } }
       const CA = run.deploy(A)
       expect(() => CA.f()).to.throw('upgrade unavailable')
     })

@@ -22,11 +22,6 @@ describe('Sync', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  // Only waits for current record
-  // TODO: Sync a destroyed jig
-  // TODO: Sync a jig that failed to deploy to deploy it again
-  // TODO: Forward sync code
-
   // --------------------------------------------------------------------------
   // Sync
   // --------------------------------------------------------------------------
