@@ -2446,10 +2446,10 @@ describe('Jig', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Inner objects
+  // Ownership
   // --------------------------------------------------------------------------
 
-  describe.only('Inner objects', () => {
+  describe.only('Ownership', () => {
     it('read-only method from outside', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
@@ -2524,18 +2524,10 @@ describe('Jig', () => {
       expect(() => b.g(a)).to.throw("Updates must be performed in the jig's methods")
     })
 
-    /*
-    it('should support internal methods that do not require args to be serializable', () => {
-      createHookedRun()
-      class A extends Jig { init () { this.arr = [1, 2, 3] } }
-      const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      expect(() => a.arr.filter(x => x === 1)).not.to.throw()
-      expect(() => a.arr.indexOf(Symbol.hasInstance)).not.to.throw()
-    })
+    // ------------------------------------------------------------------------
 
-    it('should throw if save an internal property on another jig', () => {
-      createHookedRun()
+    it('throws if save an internal property on another jig', () => {
+      new Run() // eslint-disable-line
       class A extends Jig {
         init () {
           this.obj = { n: 1 }
@@ -2551,14 +2543,13 @@ describe('Jig', () => {
         h (a) { this.z = a.buf }
       }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).to.throw('[object Object] belongs to a different resource')
-      expect(() => b.g(a)).to.throw('[object Array] belongs to a different resource')
-      expect(() => b.h(a)).to.throw('[object Uint8Array] belongs to a different resource')
+      expect(() => b.f(a)).to.throw('Ownership violation')
+      expect(() => b.g(a)).to.throw('Ownership violation')
+      expect(() => b.h(a)).to.throw('Ownership violation')
     })
 
+    /*
     it('should throw if save an arbitrary object from another jig', () => {
       createHookedRun()
       class A extends Jig {
