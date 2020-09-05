@@ -1660,6 +1660,37 @@ describe('Jig', () => {
       expect(() => new A()).to.throw('Cannot read owner')
     })
 
+    // ------------------------------------------------------------------------
+
+    it('assigned to creator owner', async () => {
+      const run = new Run()
+      class A extends Jig { init () { this.ownerAtInit = this.owner } }
+      class B extends Jig { create () { return new A() } }
+      B.deps = { A }
+      function test (a, b) {
+        expect(a.owner).to.equal(b.owner)
+        expect(a.ownerAtInit).to.equal(b.owner)
+      }
+      const b = new B()
+      await b.sync()
+      const a = b.create()
+      test(a, b)
+      await a.sync()
+      const a2 = await run.load(a.location)
+      const b2 = await run.load(b.location)
+      test(a2, b2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      const b3 = await run.load(b.location)
+      test(a3, b3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if creator owner is undetermined', () => {
+
+    })
+
     /*
     it('should be assigned to creator', async () => {
       const run = createHookedRun()
