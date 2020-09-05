@@ -2119,51 +2119,6 @@ describe('Jig', () => {
     })
 
     /*
-    it('should throw if transaction is unpaid', async () => {
-      const run = createHookedRun()
-      class Store extends Jig { set (x) { this.x = x } }
-      const a = new Store()
-      await a.sync()
-      const oldPay = run.purse.pay
-      run.purse.pay = async txhex => txhex
-      const b = new Store()
-      // test when just init, no inputs
-      expectAction(b, 'init', [], [], [b], [])
-      await expect(run.sync()).to.be.rejectedWith('tx has no inputs')
-      // test with a spend, pre-existing inputs
-      a.set(1)
-      expectAction(a, 'set', [1], [a], [a], [])
-      await expect(run.sync()).to.be.rejectedWith('insufficient priority')
-      run.purse.pay = oldPay
-    })
-
-    it('should throw if already spent', async () => {
-      const run = createHookedRun()
-      class Store extends Jig { set (x) { this.x = x } }
-      const a = new Store()
-      a.set(1)
-      await a.sync()
-      const a2 = await run.load(a.origin)
-      a2.set(2)
-      await expect(a2.sync()).to.be.rejectedWith('[jig Store] was spent in another transaction')
-    })
-
-    it('should throw if owner signature is missing', async () => {
-      const run = createHookedRun()
-      class A extends Jig {
-        init () { this.n = 1 }
-
-        f () { this.n = 2 }
-      }
-      const a = new A()
-      await a.sync()
-      expectAction(a, 'init', [], [], [a], [])
-      const oldSign = run.owner.sign
-      run.owner.sign = async (tx) => { return tx }
-      a.f()
-      await expect(a.sync()).to.be.rejectedWith('Missing signature for A')
-      run.owner.sign = oldSign
-    })
 
     it('should pass reads and writes in correct order', async () => {
       createHookedRun()

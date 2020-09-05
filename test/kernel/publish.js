@@ -8,6 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { stub } = require('sinon')
 const { Jig, Mockchain } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -60,6 +61,35 @@ describe('Publish', () => {
     const run2 = new Run({ blockchain: new Mockchain() })
     a.f()
     await expect(run2.sync()).to.be.rejectedWith('No such mempool or blockchain transaction')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('should throw if already spent', async () => {
+    const run = new Run()
+    class Store extends Jig { set (x) { this.x = x } }
+    const a = new Store()
+    a.set(1)
+    await a.sync()
+    const a2 = await run.load(a.origin)
+    a2.set(2)
+    await expect(a2.sync()).to.be.rejectedWith('[jig Store] was spent in another transaction')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('should throw if owner signature is missing', async () => {
+    const run = new Run()
+    class A extends Jig {
+      init () { this.n = 1 }
+
+      f () { this.n = 2 }
+    }
+    const a = new A()
+    await a.sync()
+    stub(run.owner, 'sign').callsFake(x => x)
+    a.f()
+    await expect(a.sync()).to.be.rejected
   })
 })
 
