@@ -1533,7 +1533,7 @@ describe('Jig', () => {
   // Array
   // --------------------------------------------------------------------------
 
-  describe.only('Array', () => {
+  describe('Array', () => {
     it('push internal', async () => {
       const run = new Run()
       class A extends Jig {
@@ -1647,23 +1647,185 @@ describe('Jig', () => {
       const e = [1, 2]
       for (const x of a.a) { expect(x).to.equal(e.shift()) }
     })
+  })
 
+  // --------------------------------------------------------------------------
+  // Owner
+  // --------------------------------------------------------------------------
+
+  describe('Owner', () => {
     /*
-    it('throws if overwrite or delete method on array', () => {
-      createHookedRun()
+    it('should be defined before init is called', () => {
+      const run = createHookedRun()
+      class A extends Jig { init () { this.ownerAtInit = this.owner }}
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [a])
+      expect(a.ownerAtInit).to.equal(run.owner.address)
+    })
+
+    it('should be assigned to creator', async () => {
+      const run = createHookedRun()
       class A extends Jig {
-        init () { this.a = [] }
+        send (to) { this.owner = to }
 
-        f () { this.a.filter = 2 }
-
-        g () { delete this.a.filter }
+        createA () { return new A() }
       }
       const a = new A()
       expectAction(a, 'init', [], [], [a], [])
+      const bsvNetwork = unmangle(unmangle(Run)._util)._bsvNetwork(run.blockchain.network)
+      const privateKey = new PrivateKey(bsvNetwork)
+      const pubkey = privateKey.publicKey.toString()
+      a.send(pubkey)
+      expectAction(a, 'send', [pubkey], [a], [a], [])
+      await a.sync()
+      const run2 = hookStoreAction(new Run({ owner: privateKey }))
+      const a2 = await run2.load(a.location)
+      const a3 = a2.createA()
+      expectAction(a2, 'createA', [], [a2], [a2, a3], [])
+      await a2.sync()
+      expect(a3.owner).to.equal(pubkey)
+    })
+
+    it('should throw if set to an invalid owner', async () => {
+      createHookedRun()
+      class A extends Jig { send (owner) { this.owner = owner }}
+      const a = new A()
+      await a.sync()
+      expectAction(a, 'init', [], [], [a], [])
+      const publicKey = new PrivateKey().publicKey
+      expect(() => a.send(publicKey)).to.throw('is not deployable')
+      expect(() => a.send(JSON.parse(JSON.stringify(publicKey)))).to.throw('Invalid owner: [object Object]')
+      expect(() => a.send('123')).to.throw('Invalid owner: "123"')
+      expectNoAction()
+    })
+
+    it('should throw if set to address on another network', async () => {
+      createHookedRun()
+      class A extends Jig { send (addr) { this.owner = addr } }
+      const a = new A()
+      await a.sync()
+      expectAction(a, 'init', [], [], [a], [])
+      const addr = new PrivateKey('mainnet').toAddress().toString()
+      expect(() => a.send(addr)).to.throw('Invalid owner')
+    })
+
+    it('should throw if delete owner', () => {
+      createHookedRun()
+      class A extends Jig { f () { delete this.owner }}
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      expect(() => { delete a.owner }).to.throw()
+      expectNoAction()
       expect(() => a.f()).to.throw()
       expectNoAction()
-      expect(() => a.g()).to.throw()
+    })
+
+    it('should throw if set owner externally', () => {
+      createHookedRun()
+      class A extends Jig { }
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      expect(() => { a.owner = '123' }).to.throw()
       expectNoAction()
+    })
+
+    it('should throw if define owner method', () => {
+      createHookedRun()
+      class A extends Jig { owner () {} }
+      expect(() => new A()).to.throw()
+      expectNoAction()
+    })
+
+    it('should add to reads', () => {
+      createHookedRun()
+      class A extends Jig { f (a) { this.x = a.owner }}
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      const a2 = new A()
+      expectAction(a2, 'init', [], [], [a2], [])
+      a.f(a2)
+      expectAction(a, 'f', [a2], [a], [a], [a2])
+    })
+
+    it('should support only class owner creating instances', async () => {
+      class A extends Jig {
+        init (owner) {
+          if (this.owner !== A.owner) throw new Error()
+          this.owner = owner
+        }
+      }
+      const run = new Run()
+      const privkey = new PrivateKey()
+      const a = new A(privkey.publicKey.toString())
+      await run.sync()
+      run.deactivate()
+      const run2 = new Run({ owner: privkey, blockchain: run.blockchain })
+      await run2.load(a.location)
+    })
+
+    it('should load non-standard owner', async () => {
+      class CustomLock {
+        script () { return new Uint8Array([1, 2, 3]) }
+        domain () { return 1 }
+      }
+      class CustomOwner {
+        owner () { return new CustomLock() }
+        async sign (rawtx) { return rawtx }
+      }
+      const run = new Run({ owner: new CustomOwner() })
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      run.deactivate()
+      const run2 = new Run({ blockchain: run.blockchain })
+      await run2.load(a.location)
+    })
+
+    it('should support copying non-standard owner to another jig', async () => {
+      createHookedRun()
+      class CustomLock {
+        script () { return new Uint8Array([1, 2, 3]) }
+        domain () { return 1 }
+      }
+      class A extends Jig { init () { this.owner = new CustomLock() } }
+      A.deps = { CustomLock }
+      class B extends Jig { init (a) { this.owner = a.owner } }
+      expect(() => new B(new A())).not.to.throw()
+    })
+
+    it('should return a copy of owners to outside', async () => {
+      createHookedRun()
+      class CustomLock {
+        constructor (n) { this.n = n }
+        script () { return new Uint8Array([this.n]) }
+        domain () { return 1 }
+      }
+      class A extends Jig { init (n) { this.owner = new CustomLock(n) } }
+      A.deps = { CustomLock }
+      class B extends Jig {
+        init (a, n) { this.owner = a.owner; this.owner.n = n }
+      }
+      const a = new A(1)
+      const b = new B(a, 2)
+      expect(a.owner.n).to.equal(1)
+      expect(b.owner.n).to.equal(2)
+    })
+
+    it('should return the original owner inside', async () => {
+      createHookedRun()
+      class A extends Jig {
+        init (owner) { this.owner = owner }
+        copyOwner () { this.owner2 = this.owner; this.owner2.n = 2 }
+      }
+      class CustomLock {
+        constructor () { this.n = 1 }
+        script () { return new Uint8Array([this.n]) }
+        domain () { return 1 }
+      }
+      const a = new A(new CustomLock())
+      a.copyOwner()
+      expect(a.owner).to.deep.equal(a.owner2)
+      await expect(a.sync()).to.be.rejected
     })
     */
   })
