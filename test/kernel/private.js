@@ -79,6 +79,26 @@ describe('Private', () => {
 
       // ----------------------------------------------------------------------
 
+      it('throws from another jig of child class', async () => {
+        const run = new Run()
+        class A extends Jig { init () { this._x = 1 } }
+        class B extends A { has (a) { return '_x' in a }}
+        function test (a, b) { expect(() => b.has(a)).to.throw('Cannot access private property _x') }
+        const a = new A()
+        const b = new B()
+        test(a, b)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        const b2 = await run.load(b.location)
+        test(a2, b2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        const b3 = await run.load(b.location)
+        test(a3, b3)
+      })
+
+      // ----------------------------------------------------------------------
+
       it('available from another jig of same class', async () => {
         const run = new Run()
         class A extends Jig {
@@ -144,6 +164,26 @@ describe('Private', () => {
         const run = new Run()
         class A extends Jig { init () { this._x = 1 } }
         class B extends Jig { get (a) { return a._x }}
+        function test (a, b) { expect(() => b.get(a)).to.throw('Cannot access private property _x') }
+        const a = new A()
+        const b = new B()
+        test(a, b)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        const b2 = await run.load(b.location)
+        test(a2, b2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        const b3 = await run.load(b.location)
+        test(a3, b3)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('throws from another jig of parent class', async () => {
+        const run = new Run()
+        class B extends Jig { get (a) { return a._x }}
+        class A extends B { init () { this._x = 1 } }
         function test (a, b) { expect(() => b.get(a)).to.throw('Cannot access private property _x') }
         const a = new A()
         const b = new B()
@@ -428,29 +468,13 @@ describe('Private', () => {
     })
   })
 
-  // Inheritance
+  // --------------------------------------------------------------------------
+  // Code
+  // --------------------------------------------------------------------------
 
-  /*
-    it('should handle private method', () => {
-      createHookedRun()
-      class J extends Jig {
-        g () { return this._f() }
-
-        _f () { return 1 }
-
-        call (a, x) { return a[x]() }
-      }
-      class K extends J { }
-      class L extends Jig { call (a, x) { return a[x]() } }
-      expect(new J().g()).to.equal(1)
-      expect(new K().call(new K(), '_f')).to.equal(1)
-      expect(new L().call(new J(), 'g')).to.equal(1)
-      expect(() => new J()._f()).to.throw('cannot call _f because it is private')
-      expect(() => new L().call(new J(), '_f')).to.throw('cannot get _f because it is private')
-      expect(() => new K().call(new J(), '_f')).to.throw('cannot get _f because it is private')
-      expect(() => new J().call(new K(), '_f')).to.throw('cannot get _f because it is private')
-    })
-  */
+  describe('Code', () => {
+    // TODO
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
