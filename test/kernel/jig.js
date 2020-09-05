@@ -2503,9 +2503,10 @@ describe('Jig', () => {
       expect(() => a.buf.sort()).to.throw('Updates must be performed in the jig\'s methods')
     })
 
-    /*
-    it('should support calling a write method on an internal property from another jig', () => {
-      createHookedRun()
+    // ------------------------------------------------------------------------
+
+    it('throws if call a write method from another jig', () => {
+      new Run() // eslint-disable-line
       class A extends Jig {
         init () {
           this.arr = [1, 2, 3]
@@ -2518,15 +2519,12 @@ describe('Jig', () => {
         g (a) { a.buf.sort() }
       }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
-      expect(() => b.f(a)).to.throw('internal method push may not be called to change state')
-      expectNoAction()
-      expect(() => b.g(a)).to.throw('internal method sort may not be called to change state')
-      expectNoAction()
+      expect(() => b.f(a)).to.throw("Updates must be performed in the jig's methods")
+      expect(() => b.g(a)).to.throw("Updates must be performed in the jig's methods")
     })
 
+    /*
     it('should support internal methods that do not require args to be serializable', () => {
       createHookedRun()
       class A extends Jig { init () { this.arr = [1, 2, 3] } }
