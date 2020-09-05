@@ -487,6 +487,27 @@ describe('Private', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws from child class', async () => {
+      const run = new Run()
+      class A extends Jig { static _g () { return 1 } }
+      class B extends A { static f (a) { return a._g() } }
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      function test (CA, CB) { expect(() => CB.f(CA)).to.throw('Cannot access private property _g') }
+      test(CA, CB)
+      await CA.sync()
+      await CB.sync()
+      const CA2 = await run.load(CA.location)
+      const CB2 = await run.load(CB.location)
+      test(CA2, CB2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      const CB3 = await run.load(CB.location)
+      test(CA3, CB3)
+    })
   })
 
   // --------------------------------------------------------------------------
