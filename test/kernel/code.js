@@ -437,22 +437,25 @@ describe('Code', () => {
   describe('setPrototypeOf', () => {
     it('throws if change externally', () => {
       const run = new Run()
-      class A { }
+      class A extends Jig { }
       const CA = run.deploy(A)
       expect(() => Object.setPrototypeOf(CA, {})).to.throw()
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if change internally', () => {
-      // TODO
+    it('throws if change internally', () => {
+      const run = new Run()
+      class A extends Jig { static f () { Object.setPrototypeOf(this, { }) } }
+      const CA = run.deploy(A)
+      expect(() => CA.f()).to.throw('setPrototypeOf disabled')
     })
 
     // ------------------------------------------------------------------------
 
     it('allowed to change on non-code child', () => {
       const run = new Run()
-      class A {}
+      class A extends Jig {}
       const CA = run.deploy(A)
       class B extends CA { }
       Object.setPrototypeOf(B, {})
