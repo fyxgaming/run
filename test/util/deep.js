@@ -427,19 +427,7 @@ describe('_deepClone', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('arbitrary objects', () => {
-    const run = new Run()
-    class A { }
-    const A2 = run.install(A)
-    const a = new A2()
-    const a2 = _deepClone(a)
-    expect(a).to.deep.equal(a2)
-    expect(A2).to.equal(a2.constructor)
-  })
-
-  // --------------------------------------------------------------------------
-
-  it.skip('jigs', () => {
+  it('jig', () => {
     new Run() // eslint-disable-line
     class A extends Jig { }
     const a = new A()
@@ -467,11 +455,23 @@ describe('_deepClone', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('berries', async () => {
+  it.skip('berry', async () => {
     const run = new Run()
     class A extends Berry { static pluck () { return new A() } }
     const berry = await run.load('123', A)
     expect(_deepClone(berry)).to.equal(berry)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('arbitrary objects', () => {
+    const run = new Run()
+    class A { }
+    const A2 = run.install(A)
+    const a = new A2()
+    const a2 = _deepClone(a)
+    expect(a).to.deep.equal(a2)
+    expect(A2).to.equal(a2.constructor)
   })
 
   // --------------------------------------------------------------------------
