@@ -351,8 +351,21 @@ describe('Private', () => {
     // ------------------------------------------------------------------------
 
     describe('Method', () => {
-      it('available internally', () => {
-        // TODO
+      it('available internally', async () => {
+        const run = new Run()
+        class A extends Jig {
+          f () { return this._g() }
+          _g () { return 1 }
+        }
+        function test (a) { expect(a.f()).to.equal(1) }
+        const a = new A()
+        test(a)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        test(a2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        test(a3)
       })
 
       // ----------------------------------------------------------------------
