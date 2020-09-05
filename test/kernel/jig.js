@@ -1600,7 +1600,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('read without spending', () => {
+    it('read without spending', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { init () { this.a = [] } }
       const a = new A()
@@ -1627,29 +1627,28 @@ describe('Jig', () => {
         () => expect(() => a.a.toString()).not.to.throw()
       ]
       readOps.forEach(op => op())
+      await a.sync()
+      expect(a.origin).to.equal(a.location)
     })
 
-    /*
+    // ------------------------------------------------------------------------
+
     it('iterator', () => {
-      createHookedRun()
+      new Run() // eslint-disable-line
       class A extends Jig {
         init () { this.a = [] }
 
         add (x) { this.a.push(x) }
       }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       a.add(1)
-      expectAction(a, 'add', [1], [a], [a], [a])
       a.add(2)
-      expectAction(a, 'add', [2], [a], [a], [a])
       expect(Array.from(a.a)).to.deep.equal([1, 2])
-      expectNoAction()
       const e = [1, 2]
       for (const x of a.a) { expect(x).to.equal(e.shift()) }
-      expectNoAction()
     })
 
+    /*
     it('throws if overwrite or delete method on array', () => {
       createHookedRun()
       class A extends Jig {
