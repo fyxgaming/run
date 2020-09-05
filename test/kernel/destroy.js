@@ -121,7 +121,7 @@ describe('Destroy', () => {
 
     it('destroy jig in a code method', async () => {
       const run = new Run()
-      class A extends Jig { static f(a) { a.destroy() } }
+      class A extends Jig { static f (a) { a.destroy() } }
       const CA = run.deploy(A)
       const a = new A()
       await a.sync()
@@ -274,22 +274,37 @@ describe('Destroy', () => {
 
     it('create and destroy in same transaction', async () => {
       const run = new Run()
-      class A extends Jig { init() { this.destroy() } }
+      class A extends Jig { init () { this.destroy() } }
       const CA = run.deploy(A)
       await CA.sync()
-      function test(a) {
+      function test (a) {
         expect(a.location).to.equal(a.origin)
         expect(a.location.endsWith('_d0')).to.equal(true)
       }
+
+      expectTx({
+        nin: 0,
+        nref: 1,
+        nout: 0,
+        ndel: 1,
+        ncre: 0,
+        exec: [
+          {
+            op: 'NEW',
+            data: [{ $jig: 0 }, []]
+          }
+        ]
+      })
+
       const a = new A()
       await a.sync()
       test(a)
+
       const a2 = await run.load(a.location)
       test(a2)
+
       run.cache = new LocalCache()
-      console.log('3')
       const a3 = await run.load(a.location)
-      console.log('4')
       test(a3)
     })
 
