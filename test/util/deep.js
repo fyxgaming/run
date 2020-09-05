@@ -617,7 +617,12 @@ describe('_deepEqual', () => {
   it('set', () => {
     expect(_deepEqual(new Set(), new Set())).to.equal(true)
     expect(_deepEqual(new Set(), new Set([1]))).to.equal(false)
-    expect(_deepEqual(new Set([new Set([1])]), new Set(new Set([1])))).to.equal(true)
+    expect(_deepEqual(new Set([new Set([1])]), new Set([new Set([1])]))).to.equal(true)
+    const s1 = new Set()
+    const s2 = new Set()
+    s1.n = 1
+    s2.n = 1
+    expect(_deepEqual(s1, s2)).to.equal(true)
   })
 })
 
