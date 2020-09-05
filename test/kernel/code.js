@@ -488,19 +488,39 @@ describe('Code', () => {
   // Activate
   // --------------------------------------------------------------------------
 
-  describe.skip('activate', () => {
-    it('simple activate test', async () => {
+  describe('activate', () => {
+    it('deactivate removes bindings', async () => {
+      const run = new Run()
+      class A { }
+      run.deploy(A)
+      await run.sync()
+      run.deactivate()
+      expect(typeof A.location).to.equal('undefined')
+      expect(typeof A.origin).to.equal('undefined')
+      expect(typeof A.nonce).to.equal('undefined')
+      expect(typeof A.owner).to.equal('undefined')
+      expect(typeof A.satoshis).to.equal('undefined')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('activate adds bindings', async () => {
       const run = new Run()
       class A { }
       run.deploy(A)
       await run.sync()
       const location = A.location
-
+      const origin = A.origin
+      const nonce = A.nonce
+      const owner = A.owner
+      const satoshis = A.satoshis
       run.deactivate()
-      expect(typeof A.location).to.equal('undefined')
-
       run.activate()
       expect(A.location).to.equal(location)
+      expect(A.origin).to.equal(origin)
+      expect(A.nonce).to.equal(nonce)
+      expect(A.owner).to.equal(owner)
+      expect(A.satoshis).to.equal(satoshis)
     })
   })
 })
