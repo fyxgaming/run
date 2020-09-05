@@ -267,7 +267,7 @@ describe('Code', () => {
   // set
   // --------------------------------------------------------------------------
 
-  describe.only('set', () => {
+  describe('set', () => {
     it('throws if external', () => {
       const run = new Run()
       class A extends Jig { }
@@ -307,6 +307,41 @@ describe('Code', () => {
       function test (CA, CB) {
         expect(CA.n).to.equal(1)
         expect(CB.n).to.equal(2)
+      }
+      test(CA, CB)
+      const CA2 = await run.load(CA.location)
+      const CB2 = await run.load(CB.location)
+      test(CA2, CB2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      const CB3 = await run.load(CB.location)
+      test(CA3, CB3)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // defineProperty
+  // --------------------------------------------------------------------------
+
+  describe('defineProperty', () => {
+    it('defines on current class', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f (s) {
+          const desc = { value: s, configurable: true, enumerable: true, writable: true }
+          Object.defineProperty(this, 's', desc)
+        }
+      }
+      class B extends A { }
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      CA.f('abc')
+      CB.f('def')
+      await CB.sync()
+      await CA.sync()
+      function test (CA, CB) {
+        expect(CA.s).to.equal('abc')
+        expect(CB.s).to.equal('def')
       }
       test(CA, CB)
       const CA2 = await run.load(CA.location)
