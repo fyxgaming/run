@@ -10,6 +10,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
+const { _deepEqual } = require('../../lib/util/deep')
 const { _deepVisit, _deepReplace, _deepClone } = unmangle(unmangle(Run)._deep)
 
 // ------------------------------------------------------------------------------------------------
@@ -570,8 +571,24 @@ describe('_deepClone', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('_deepEqual', () => {
-  it.skip('placeholder', () => {
-    // TODO
+  it('primitives', () => {
+    function test (x) { expect(_deepEqual(x, x)).to.equal(true) }
+    test(undefined)
+    test(false)
+    test(true)
+    test(0)
+    test(1)
+    test(NaN)
+    test(-Infinity)
+    test(Infinity)
+    test(-0.5)
+    test('')
+    test('abc')
+    test('😃')
+    test(Symbol.hasInstance)
+    test(Symbol.toStringTag)
+    test(Symbol.species)
+    test(null)
   })
 })
 
