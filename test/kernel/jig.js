@@ -5,9 +5,11 @@
  */
 
 const { describe, it, afterEach } = require('mocha')
+require('chai').use(require('chai-as-promised'))
+const { expect } = require('chai')
+const { stub } = require('sinon')
 const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
-const { expect } = require('chai')
 const { Jig, LocalCache } = Run
 const unmangle = require('../env/unmangle')
 const PrivateKey = require('bsv/lib/privatekey')
@@ -2101,29 +2103,19 @@ describe('Jig', () => {
 
     it('unusable if deploy fails', async () => {
       const run = new Run()
-      const oldPay = run.purse.pay
-      run.purse.pay = async txhex => txhex
+      stub(run.purse, 'pay').returns()
       class A extends Jig {
         init () { this.n = 1 }
-
         f () {}
       }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       await expect(a.sync()).to.be.rejected
-      expect(() => a.origin).to.throw()
-      expect(() => a.n).to.throw()
-      expect(() => Reflect.ownKeys(a)).to.throw()
-      expect(() => a.f()).to.throw()
-      expectNoAction()
-      try {
-        console.log(a.n)
-      } catch (e) {
-        expect(e.toString().startsWith('Error: Deploy failed')).to.equal(true)
-        expect(e.toString().indexOf('Error: Broadcast failed: tx has no inputs')).not.to.equal(-1)
-      } finally {
-        run.purse.pay = oldPay
-      }
+      const error = 'Deploy failed'
+      expect(() => a.origin).to.throw(error)
+      expect(() => a.n).to.throw(error)
+      expect(() => Reflect.ownKeys(a)).to.throw(error)
+      expect(() => a.f()).to.throw(error)
+      expect(() => console.log(a.n)).to.throw(error)
     })
 
     /*
