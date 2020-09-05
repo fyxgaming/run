@@ -1467,20 +1467,33 @@ describe('Jig', () => {
   // ownKeys
   // --------------------------------------------------------------------------
 
-  describe.only('ownKeys', () => {
-    /*
-    it('should add to reads if call ownKeys', () => {
-      createHookedRun()
+  describe('ownKeys', () => {
+    it('reads jig', async () => {
+      const run = new Run()
       class A extends Jig {}
       class B extends Jig { f (a) { this.x = Reflect.ownKeys(a) }}
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
       const b = new B()
-      expectAction(b, 'init', [], [], [b], [])
+      await run.sync()
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'f', [{ $jig: 1 }]]
+          }
+        ]
+      })
       b.f(a)
-      expectAction(b, 'f', [a], [b], [b], [a])
+      await b.sync()
+      await run.load(b.location)
+      run.cache = new LocalCache()
+      await run.load(b.location)
     })
-    */
   })
 
   // --------------------------------------------------------------------------
