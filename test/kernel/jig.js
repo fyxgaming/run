@@ -1699,7 +1699,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('can set owner during init', async () => {
+    it('set owner during init', async () => {
       const run = new Run()
       class A extends Jig { init (owner) { this.owner = owner } }
       const addr = new PrivateKey().toPublicKey().toAddress().toString()
@@ -1714,21 +1714,29 @@ describe('Jig', () => {
       test(a3)
     })
 
-    // Change twice...
+    // ------------------------------------------------------------------------
+
+    it('throws if change while unbound', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f (owner) { this.owner = owner; this.owner = owner } }
+      const addr = new PrivateKey().toPublicKey().toAddress().toString()
+      const a = new A(addr)
+      expect(() => a.f(addr)).to.throw('Cannot set owner')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f (owner) { this.owner = owner } }
+      const a = new A()
+      expect(() => a.f(new PrivateKey().publicKey)).to.throw()
+      expect(() => a.f('123')).to.throw()
+      expect(() => a.f(null)).to.throw()
+      expect(() => a.f(undefined)).to.throw()
+    })
 
     /*
-    it('should throw if set to an invalid owner', async () => {
-      createHookedRun()
-      class A extends Jig { send (owner) { this.owner = owner }}
-      const a = new A()
-      await a.sync()
-      expectAction(a, 'init', [], [], [a], [])
-      const publicKey = new PrivateKey().publicKey
-      expect(() => a.send(publicKey)).to.throw('is not deployable')
-      expect(() => a.send(JSON.parse(JSON.stringify(publicKey)))).to.throw('Invalid owner: [object Object]')
-      expect(() => a.send('123')).to.throw('Invalid owner: "123"')
-      expectNoAction()
-    })
 
     it('should throw if set to address on another network', async () => {
       createHookedRun()

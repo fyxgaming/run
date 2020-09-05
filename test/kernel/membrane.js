@@ -785,7 +785,7 @@ describe('Membrane', () => {
     it('cannot change owner once unbound', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       _sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
-      expect(() => { A.owner = DUMMY_OWNER }).to.throw('Cannot set binding owner again')
+      expect(() => { A.owner = DUMMY_OWNER }).to.throw('Cannot set owner')
     })
 
     // ------------------------------------------------------------------------
@@ -793,7 +793,7 @@ describe('Membrane', () => {
     it('cannot change satoshis once unbound', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
       _sudo(() => { A.satoshis = new Unbound(1) })
-      expect(() => { A.satoshis = 1 }).to.throw('Cannot set binding satoshis again')
+      expect(() => { A.satoshis = 1 }).to.throw('Cannot set satoshis')
     })
 
     // ------------------------------------------------------------------------
