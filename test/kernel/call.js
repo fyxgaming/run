@@ -260,7 +260,7 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it('swap inner jigs', async () => {
+    it.only('swap inner jigs', async () => {
       const run = new Run()
       class A extends Jig {
         init (name) { this.name = name }

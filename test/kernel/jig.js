@@ -1704,7 +1704,8 @@ describe('Jig', () => {
     it('set owner during init', async () => {
       const run = new Run()
       class A extends Jig { init (owner) { this.owner = owner } }
-      const addr = new PrivateKey().toPublicKey().toAddress().toString()
+      const network = run.blockchain.network === 'main' ? 'mainnet' : 'testnet'
+      const addr = new PrivateKey(network).toPublicKey().toAddress().toString()
       function test (a) { expect(a.owner).to.equal(addr) }
       const a = new A(addr)
       await a.sync()
