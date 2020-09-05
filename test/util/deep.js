@@ -436,21 +436,33 @@ describe('_deepClone', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('code', () => {
+  it('code', () => {
+    const run = new Run()
+    class A extends Jig { }
+    const CA = run.deploy(A)
+    expect(_deepClone(CA)).to.equal(CA)
+  })
+  // --------------------------------------------------------------------------
+
+  it('static code', () => {
     const run = new Run()
     function f () { }
-    const f2 = run.install(f)
-    const f3 = _deepClone(f2)
-    expect(f3).to.equal(f2)
+    const cf = run.deploy(f)
+    expect(_deepClone(cf)).to.equal(cf)
+    class A { }
+    const CA = run.deploy(A)
+    expect(_deepClone(CA)).to.equal(CA)
   })
 
   // --------------------------------------------------------------------------
 
-  it('static code', () => {
+  it('non-jig code', () => {
     function f () { }
     expect(() => _deepClone(f)).to.throw('Cannot clone non-code function')
     class A { }
     expect(() => _deepClone(A)).to.throw('Cannot clone non-code function')
+    class B extends Jig { }
+    expect(() => _deepClone(B)).to.throw('Cannot clone non-code function')
   })
 
   // --------------------------------------------------------------------------
