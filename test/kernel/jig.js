@@ -1243,9 +1243,9 @@ describe('Jig', () => {
     it('reads jig', async () => {
       const run = new Run()
       class A extends Jig {
-        f () { this.a2 = new A() }
+        init () { this.a2 = new A() }
 
-        g () {
+        f () {
           this.x = this.a2 instanceof A
           this.y = this.a2.constructor.prototype === 'hello'
           this.z = Object.getPrototypeOf(this.a2) === 'world'
@@ -1262,10 +1262,10 @@ describe('Jig', () => {
 
       expectTx({
         nin: 1,
-        nref: 1,
-        nout: 2,
+        nref: 2,
+        nout: 1,
         ndel: 0,
-        ncre: 1,
+        ncre: 0,
         exec: [
           {
             op: 'CALL',
@@ -1275,23 +1275,6 @@ describe('Jig', () => {
       })
 
       a.f()
-      await a.sync()
-
-      expectTx({
-        nin: 1,
-        nref: 2,
-        nout: 1,
-        ndel: 0,
-        ncre: 0,
-        exec: [
-          {
-            op: 'CALL',
-            data: [{ $jig: 0 }, 'g', []]
-          }
-        ]
-      })
-
-      a.g()
       test(a)
       await a.sync()
 
@@ -1309,17 +1292,13 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('setPrototypeOf', () => {
-    /*
-      it('should throw if change prototype', () => {
-        createHookedRun()
-        class A extends Jig { f () { Reflect.setPrototypeOf(this, Object) }}
-        const a = new A()
-        expectAction(a, 'init', [], [], [a], [])
-        expect(() => Reflect.setPrototypeOf(a, Object)).to.throw()
-        expect(() => a.f()).to.throw()
-        expectNoAction()
-      })
-      */
+    it('throws', () => {
+        new Run() // eslint-disable-line
+      class A extends Jig { f () { Reflect.setPrototypeOf(this, Object) }}
+      const a = new A()
+      expect(() => Reflect.setPrototypeOf(a, Object)).to.throw('setPrototypeOf disabled')
+      expect(() => a.f()).to.throw('setPrototypeOf disabled')
+    })
   })
 
   // --------------------------------------------------------------------------
