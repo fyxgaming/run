@@ -623,6 +623,26 @@ describe('_deepEqual', () => {
     s1.n = 1
     s2.n = 1
     expect(_deepEqual(s1, s2)).to.equal(true)
+    delete s1.n
+    expect(_deepEqual(s1, s2)).to.equal(false)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('map', () => {
+    expect(_deepEqual(new Map(), new Map())).to.equal(true)
+    expect(_deepEqual(new Map(), new Map([[1, 2]]))).to.equal(false)
+    expect(_deepEqual(new Map([[1, {}]]), new Map([[1, {}]]))).to.equal(true)
+    expect(_deepEqual(new Map([[1, { n: 1 }]]), new Map([[1, {}]]))).to.equal(true)
+    expect(_deepEqual(new Map([[{ n: 1 }, 1]]), new Map([[{}, 1]]))).to.equal(true)
+    expect(_deepEqual(new Map(), new Map([[1, 2]]))).to.equal(false)
+    const m1 = new Map()
+    const m2 = new Map()
+    m1.n = 1
+    m2.n = 1
+    expect(_deepEqual(m1, m2)).to.equal(true)
+    m1.n = 2
+    expect(_deepEqual(m1, m2)).to.equal(false)
   })
 })
 
