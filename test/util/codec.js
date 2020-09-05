@@ -500,7 +500,7 @@ describe('Codec', () => {
   // Jigs
   // --------------------------------------------------------------------------
 
-  describe.skip('Jigs', () => {
+  describe('Jigs', () => {
     it('saves jigs with location', () => {
       new Run() // eslint-disable-line
       class Dragon extends Jig { }
@@ -566,19 +566,6 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    it('replaces and revives berries', async () => {
-      const run = new Run()
-      class CustomBerry extends Berry { }
-      const CustomBerrySandbox = await run.load(await run.deploy(CustomBerry))
-      const berry = { location: '_o1' }
-      Object.setPrototypeOf(berry, CustomBerrySandbox.prototype)
-      const codec = unmangle(new Codec())._saveJigs(x => '123')
-      const json = codec._encode(berry)
-      expect(json).to.deep.equal({ $jig: '123' })
-    })
-
-    // ------------------------------------------------------------------------
-
     it('throws for functions that are not code jigs', () => {
       new Run() // eslint-disable-line
       const codec = unmangle(new Codec())._saveJigs(x => '123')
@@ -594,6 +581,19 @@ describe('Codec', () => {
       expect(() => codec._encode(() => {})).to.throw('Cannot encode')
       expect(() => codec._encode(function a () { })).to.throw('Cannot encode')
       expect(() => codec._encode(class A { })).to.throw('Cannot encode')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('replaces and revives berries', async () => {
+      const run = new Run()
+      class CustomBerry extends Berry { }
+      const CustomBerrySandbox = await run.load(await run.deploy(CustomBerry))
+      const berry = { location: '_o1' }
+      Object.setPrototypeOf(berry, CustomBerrySandbox.prototype)
+      const codec = unmangle(new Codec())._saveJigs(x => '123')
+      const json = codec._encode(berry)
+      expect(json).to.deep.equal({ $jig: '123' })
     })
   })
 
