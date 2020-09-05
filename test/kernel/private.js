@@ -270,7 +270,22 @@ describe('Private', () => {
     // ------------------------------------------------------------------------
 
     describe('ownKeys', () => {
-      // TODO
+      it('includes private properties internally', async () => {
+        const run = new Run()
+        class A extends Jig {
+          init () { this._x = 1 }
+          includes () { return Reflect.ownKeys(this).includes('_x') }
+        }
+        function test (a) { expect(a.includes()).to.equal(true) }
+        const a = new A()
+        test(a)
+        await a.sync()
+        const a2 = await run.load(a.location)
+        test(a2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        test(a3)
+      })
     })
   })
 
