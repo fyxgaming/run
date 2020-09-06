@@ -451,7 +451,6 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('decodes to sandbox intrinsics', () => {
       const codec = unmangle(new Codec())._toSandbox()
       expect(codec._decode({}).constructor).to.equal(SI.Object)
@@ -469,6 +468,7 @@ describe('Codec', () => {
   // --------------------------------------------------------------------------
 
   describe('Jigs', () => {
+    /*
     it('saves jigs with location', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
