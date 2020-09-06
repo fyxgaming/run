@@ -7,7 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, Berry } = Run
+const { Jig } = Run
 const unmangle = require('../env/unmangle')
 const Sandbox = Run.sandbox
 const {
@@ -28,6 +28,8 @@ describe('Misc', () => {
       expect(_kernel()).to.equal(run._kernel)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if no run instance is active', () => {
       new Run().deactivate() // eslint-disable-line
       expect(() => _kernel()).to.throw('Run instance not active')
@@ -43,6 +45,8 @@ describe('Misc', () => {
       _assert(true)
       _assert(1)
     })
+
+    // ------------------------------------------------------------------------
 
     it('fail', () => {
       expect(() => _assert(false)).to.throw()
@@ -75,10 +79,14 @@ describe('Misc', () => {
       expect(_parent(A)).to.equal(B)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns undefined when no parent', () => {
       expect(_parent(function () { })).to.equal(undefined)
       expect(_parent(class {})).to.equal(undefined)
     })
+
+    // ------------------------------------------------------------------------
 
     it('returns undefined for non-functions', () => {
       expect(_parent(null)).to.equal(undefined)
@@ -98,15 +106,21 @@ describe('Misc', () => {
       expect(_parentName(src)).to.equal(null)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns null for functions', () => {
       const src = 'function f() { }'
       expect(_parentName(src)).to.equal(null)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns parent name if there is a parent', () => {
       const src = 'class A extends B { }'
       expect(_parentName(src)).to.equal('B')
     })
+
+    // ------------------------------------------------------------------------
 
     it('supports multi-line class definitions', () => {
       const src = 'class A\nextends B\n{ }'
@@ -128,6 +142,8 @@ describe('Misc', () => {
       expect(_extendsFrom(C, B)).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false when class is not an ancestor', () => {
       class A { }
       class B extends A { }
@@ -137,10 +153,14 @@ describe('Misc', () => {
       expect(_extendsFrom(A, B)).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false for self', () => {
       class A { }
       expect(_extendsFrom(A, A)).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
 
     it('returns false when args are not classes', () => {
       expect(_extendsFrom()).to.equal(false)
@@ -246,26 +266,31 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_isArbitraryObject', () => {
-    it.skip('returns whether arbitrary object', async () => {
+    it('returns whether arbitrary object', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
-      await CA.sync()
-      class B extends Jig { }
-      const CB = run.deploy(B)
-      await CB.sync()
-      class C extends Berry { static pluck () { return new C() } }
-      const berry = await run.load('123', C)
       expect(_isArbitraryObject(new CA())).to.equal(true)
       expect(_isArbitraryObject(new A())).to.equal(false)
-      expect(_isArbitraryObject(new CB())).to.equal(false)
-      expect(_isArbitraryObject(new B())).to.equal(false)
-      expect(berry.constructor instanceof Run.Code).to.equal(true)
-      expect(_isArbitraryObject(berry)).to.equal(false)
+    })
+
+    it('non-arbitrary objects', () => {
       expect(_isArbitraryObject(new Map())).to.equal(false)
       expect(_isArbitraryObject(new Set())).to.equal(false)
       expect(_isArbitraryObject(null)).to.equal(false)
       expect(_isArbitraryObject({ $arb: 1 })).to.equal(false)
+    })
+
+    it('jigs', () => {
+      const run = new Run()
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      expect(_isArbitraryObject(new CA())).to.equal(false)
+      expect(_isArbitraryObject(new A())).to.equal(false)
+    })
+
+    it.skip('berries', () => {
+      // TODO
     })
   })
 
