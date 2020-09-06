@@ -560,8 +560,16 @@ describe('Call', () => {
       const Blob = run.deploy(class Blob {})
       return [new Blob()]
     }))
-    it('class', () => testArgumentPass(run => [run.deploy(class Blob {})], false))
+    it('code', () => testArgumentPass(run => [run.deploy(class Blob {})], false))
     it('jig', () => testArgumentPass(run => [new (class A extends Jig { })()], false))
+    it('undeployed arbitrary object', () => testArgumentPass(run => [new (class Blob {})()], false))
+    it('undeployed jig class', () => testArgumentPass(run => [class A extends Jig {}], false))
+    it('undeployed static class', () => testArgumentPass(run => [class A {}], false))
+    it('undeployed static function', () => testArgumentPass(run => [function f () { }], false))
+
+    it.skip('berry', () => {
+      // tODO
+    })
 
     // ------------------------------------------------------------------------
 
@@ -706,25 +714,47 @@ describe('Call', () => {
   describe('Unify worldview', () => {
     it('updates jigs', async () => {
       const run = new Run()
-      class A extends Jig { set (key, value) { this[key] = value } }
+      class A extends Jig { update () { this.n = 1 } }
+      class B extends Jig {
+        setX (x) { this.x = x }
+        setY (y) { this.y = y }
+      }
+
+      function test (b) { expect(b.x.constructor).to.equal(b.y.constructor) }
 
       const a1 = new A()
-      a1.set('n', 1)
+      const b = new B()
+      b.setX(a1)
       await a1.sync()
-
-      const b = new A()
-      b.set('a0', a1)
-      await b.sync()
-
       const a2 = await run.load(a1.location)
-      a2.set('n', 2)
+      a2.update()
       await a2.sync()
-
-      await b.sync()
-      b.set('a2', a2)
       await b.sync()
 
-      await run.sync()
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'setY', [{ $jig: 1 }]]
+          }
+        ]
+      })
+
+      b.setY(a2)
+      await b.sync()
+      test(b)
+
+      const b2 = await run.load(b.location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(b.location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
