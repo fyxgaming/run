@@ -29,7 +29,7 @@ function encodePass (x, y) {
 }
 
 const encodeFail = x => expect(() => unmangle(new Codec())._encode(x)).to.throw('Cannot encode')
-// const decodeFail = y => expect(() => unmangle(new Codec())._decode(y)).to.throw('Cannot decode')
+const decodeFail = y => expect(() => unmangle(new Codec())._decode(y)).to.throw('Cannot decode')
 
 // ------------------------------------------------------------------------------------------------
 // Codec
@@ -346,9 +346,7 @@ describe('Codec', () => {
   // --------------------------------------------------------------------------
 
   describe('_decode', () => {
-    /*
     it('throws for unsupported types', () => {
-
       // Undefined
       decodeFail(undefined)
       // Numbers
@@ -395,21 +393,15 @@ describe('Codec', () => {
       decodeFail({ $ui8a: {} })
       decodeFail({ $ui8a: '*' })
       decodeFail({ $ui8a: new Uint8Array() })
-      // Dedup
-      decodeFail({ $top: null })
-      decodeFail({ $top: {} })
-      decodeFail({ $top: {}, dups: {} })
-      decodeFail({ $top: { $dup: 0 }, dups: [] })
-      decodeFail({ $top: { $dup: 1 }, dups: [{}] })
-      decodeFail({ $top: { $dup: 0 }, dups: [{ $dup: 1 }] })
-      decodeFail({ $top: { $top: { }, dups: [] }, dups: [] })
-      decodeFail({ $top: { $dup: '0' }, dups: [] })
+      // Dups
+      decodeFail({ $dup: null })
+      decodeFail({ $dup: {} })
+      decodeFail({ $dup: [null] })
     })
 
     // ------------------------------------------------------------------------
 
     it('defaults to host intrinsics', () => {
-
       expect(unmangle(new Codec())._decode({}).constructor).to.equal(Object)
       expect(unmangle(new Codec())._decode([]).constructor).to.equal(Array)
     })
@@ -420,8 +412,8 @@ describe('Codec', () => {
   // --------------------------------------------------------------------------
 
   describe('_toSandbox', () => {
+    /*
     it('encodes to sandbox intrinsics', () => {
-
       const codec = unmangle(new Codec())._toSandbox()
       // Primitives
       expect(codec._encode({}).constructor).to.equal(SI.Object)
@@ -463,7 +455,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('decodes to sandbox intrinsics', () => {
-
       const codec = unmangle(new Codec())._toSandbox()
       expect(codec._decode({}).constructor).to.equal(SI.Object)
       expect(codec._decode({ $obj: {} }).constructor).to.equal(SI.Object)
@@ -481,7 +472,6 @@ describe('Codec', () => {
 
   describe('Jigs', () => {
     it('saves jigs with location', () => {
-
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const codec = unmangle(new Codec())._saveJigs(x => '123')
@@ -493,7 +483,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('to sandbox intrinsics', () => {
-
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const codec = unmangle(new Codec())._toSandbox()._saveJigs(x => '123')
@@ -504,7 +493,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('loads jigs from location', () => {
-
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const codec = unmangle(new Codec())._loadJigs(x => dragon)
@@ -514,7 +502,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('saves and loads jigs in complex structures', () => {
-
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const codec = unmangle(new Codec())._saveJigs(x => '123')._loadJigs(x => dragon)
@@ -528,7 +515,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('throws for bad jig ref', () => {
-
       const codec = unmangle(new Codec())._loadJigs(x => {})
       expect(() => codec._decode({ $jig: 1, $jig2: 2 })).to.throw()
       expect(() => codec._decode({ $jig: '123' })).to.throw()
@@ -546,7 +532,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('throws for functions that are not code jigs', () => {
-
       const codec = unmangle(new Codec())._saveJigs(x => '123')
       expect(() => codec._encode(Math.random)).to.throw('Cannot encode')
       expect(() => codec._encode(Array.prototype.indexOf)).to.throw('Cannot encode')
