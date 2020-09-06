@@ -50,7 +50,7 @@ Run.configure({
 })
 
 if (COVER) {
-  Run.sandbox.excludes = [Run.Token, Run.expect, Run.GroupLock]
+  Run.sandbox.excludes = ['Token', 'expect', 'GroupLock']
 }
 
 // ------------------------------------------------------------------------------------------------

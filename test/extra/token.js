@@ -41,19 +41,18 @@ describe('Token', () => {
       class TestToken extends Token { }
       expect(() => new TestToken(100)).to.throw('Use TestToken.mint to mint')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('should throw if class is not extended', () => {
+      new Run() // eslint-disable-line
+      expect(() => Token.mint(100)).to.throw('Token must be extended')
+    })
+
     /*
   })
 
   /*
-    it('should throw if owner is not minting', async () => {
-      await run.deploy(TestToken)
-      new Run({ blockchain: run.blockchain }) // eslint-disable-line
-      expect(() => new TestToken(100)).to.throw('Only TestToken\'s owner may mint')
-    })
-
-    it('should throw if class is not extended', () => {
-      expect(() => new Token(100)).to.throw('Token must be extended')
-    })
 
     it('should support large amounts', () => {
       expect(new TestToken(2147483647).amount).to.equal(2147483647)
