@@ -27,19 +27,13 @@ describe('Token', () => {
   // --------------------------------------------------------------------------
 
   describe('Mint', () => {
-    it('should mint new tokens', () => {
-      const run = new Run()
-      const { Jig } = Run
-      class A extends Jig { }
-      const a = new A()
-      console.log(a.constructor.name)
+    it('should mint new tokens', async () => {
+      new Run() // eslint-disable-line
+      const a = TestToken.mint(100)
 
-      const CTestToken = run.deploy(TestToken)
-      console.log(CTestToken.name)
-      const token = CTestToken.mint(100)
-      console.log(token.amount)
-
-      TestToken.mint(100)
+      console.log('----------')
+      await a.sync()
+      console.log(a)
 
       // const token = TestToken.mint(100)
       // console.log(token)
