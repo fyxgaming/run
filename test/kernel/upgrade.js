@@ -1168,7 +1168,39 @@ describe('Upgrade', () => {
   // --------------------------------------------------------------------------
 
   describe.only('Jig', () => {
-    // TODO
+    it('upgrades instances on sync', async () => {
+      const run = new Run()
+      class A extends Jig { f() { return 1 } }
+      class B extends Jig { f() { return 2 } }
+      const CA = run.deploy(A)
+      await CA.sync()
+      const a = new CA()
+      expect(a.f()).to.equal(1)
+      CA.upgrade(B)
+      expect(a.f()).to.equal(2)
+      await a.sync()
+      const a2 = await run.load(a.origin)
+      expect(a2.f()).to.equal(1)
+      await a2.sync()
+      expect(a2.f()).to.equal(2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.origin)
+      expect(a3.f()).to.equal(1)
+      await a3.sync()
+      expect(a3.f()).to.equal(2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can create old instances', () => {
+
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can delay upgrade instances', () => {
+
+    })
   })
 })
 
