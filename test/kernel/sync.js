@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const { Transaction } = require('bsv')
 const Run = require('../env/run')
 const { Jig, LocalCache } = Run
-const { payFor } = require('../env/misc')
+const { payFor, populatePreviousOutputs } = require('../env/misc')
 
 // ------------------------------------------------------------------------------------------------
 // Sync
@@ -233,6 +233,23 @@ describe('Sync', () => {
       expect(a2.n.n).to.equal(undefined)
       await a2.sync()
       expect(a2.n.n).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('improper spend does not destroy', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      await CA.sync()
+      const utxos = await run.blockchain.utxos(run.owner.address)
+      const tx = new Transaction().from(utxos).to(run.purse.address, Transaction.DUST_AMOUNT)
+      const paid = new Transaction(await payFor(tx, run))
+      await populatePreviousOutputs(paid, run.blockchain)
+      paid.sign(run.owner.privkey)
+      await run.blockchain.broadcast(paid.toString('hex'))
+      await CA.sync()
+      expect(CA.location).to.equal(CA.origin)
     })
   })
 

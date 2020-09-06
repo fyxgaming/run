@@ -14,6 +14,8 @@ describe('Recent', () => {
   it('TODO', () => {
   })
 
+  // A destroyed jig does not fail recent
+
   /*
     it('should throw if unknown whether read is stale', async () => {
       const run = createHookedRun()
