@@ -212,7 +212,7 @@ describe('Codec', () => {
       encodePass(new Map([[{}, []], [new Set(), new Map()]]), { $map: [[{}, []], [{ $set: [] }, { $map: [] }]] })
       // Duplicate keys and values
       const m = new Map()
-      encodePass(new Map([[m, m]]), { $map: [[{ $map: [] }, { $dup: ['$map', 0, 0] }]] })
+      encodePass(new Map([[m, m]]), { $map: [[{ $map: [] }, { $dup: ['$map', '0', '0'] }]] })
       // Circular keys
       const m2 = new Map()
       m2.set(m2, 1)
@@ -397,6 +397,7 @@ describe('Codec', () => {
       decodeFail({ $dup: null })
       decodeFail({ $dup: {} })
       decodeFail({ $dup: [null] })
+      decodeFail({ $dup: [0] })
     })
 
     // ------------------------------------------------------------------------
