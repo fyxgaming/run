@@ -24,7 +24,7 @@ describe('Token', () => {
   // Mint
   // --------------------------------------------------------------------------
 
-  describe('Mint', () => {
+  describe('mint', () => {
     it('should mint new tokens', async () => {
       new Run() // eslint-disable-line
       class TestToken extends Token { }
@@ -57,27 +57,32 @@ describe('Token', () => {
       expect(TestToken.mint(2147483647).amount).to.equal(2147483647)
       expect(TestToken.mint(Number.MAX_SAFE_INTEGER).amount).to.equal(Number.MAX_SAFE_INTEGER)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('should throw for bad amounts', () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
+      expect(() => TestToken.mint()).to.throw('amount is not a number')
+      expect(() => TestToken.mint('1')).to.throw('amount is not a number')
+      expect(() => TestToken.mint(0)).to.throw('amount must be positive')
+      expect(() => TestToken.mint(-1)).to.throw('amount must be positive')
+      expect(() => TestToken.mint(Number.MAX_SAFE_INTEGER + 1)).to.throw('amount too large')
+      expect(() => TestToken.mint(1.5)).to.throw('amount must be an integer')
+      expect(() => TestToken.mint(Infinity)).to.throw('amount must be an integer')
+      expect(() => TestToken.mint(NaN)).to.throw('amount must be an integer')
+    })
     /*
   })
 
   /*
 
-    it('should throw for bad amounts', () => {
-      expect(() => new TestToken()).to.throw('amount is not a number')
-      expect(() => new TestToken('1')).to.throw('amount is not a number')
-      expect(() => new TestToken(0)).to.throw('amount must be positive')
-      expect(() => new TestToken(-1)).to.throw('amount must be positive')
-      expect(() => new TestToken(Number.MAX_SAFE_INTEGER + 1)).to.throw('amount too large')
-      expect(() => new TestToken(1.5)).to.throw('amount must be an integer')
-      expect(() => new TestToken(Infinity)).to.throw('amount must be an integer')
-      expect(() => new TestToken(NaN)).to.throw('amount must be an integer')
-    })
   })
 
   describe('send', () => {
     it('should support sending full amount', () => {
       const address = new bsv.PrivateKey().toAddress().toString()
-      const token = new TestToken(100)
+      const token = TestToken.mint(100)
       expect(token.send(address)).to.equal(null)
       expect(token.owner).to.equal(address)
       expect(token.amount).to.equal(100)
@@ -85,7 +90,7 @@ describe('Token', () => {
 
     it('should support sending partial amount', () => {
       const address = new bsv.PrivateKey().toAddress().toString()
-      const token = new TestToken(100)
+      const token = TestToken.mint(100)
       const change = token.send(address, 30)
       expect(change).to.be.instanceOf(TestToken)
       expect(change.owner).to.equal(run.owner.address)
@@ -96,13 +101,13 @@ describe('Token', () => {
 
     it('should throw if send too much', () => {
       const address = new bsv.PrivateKey().toAddress().toString()
-      const token = new TestToken(100)
+      const token = TestToken.mint(100)
       expect(() => token.send(address, 101)).to.throw('not enough funds')
     })
 
     it('should throw if send bad amount', () => {
       const address = new bsv.PrivateKey().toAddress().toString()
-      const token = new TestToken(100)
+      const token = TestToken.mint(100)
       expect(() => token.send(address, {})).to.throw('amount is not a number')
       expect(() => token.send(address, '1')).to.throw('amount is not a number')
       expect(() => token.send(address, 0)).to.throw('amount must be positive')
@@ -114,7 +119,7 @@ describe('Token', () => {
     })
 
     it('should throw if send to bad owner', () => {
-      const token = new TestToken(100)
+      const token = TestToken.mint(100)
       expect(() => token.send(10)).to.throw('Invalid owner: 10')
       expect(() => token.send('abc', 10)).to.throw('Invalid owner: "abc"')
     })
@@ -122,8 +127,8 @@ describe('Token', () => {
 
   describe('combine', () => {
     it('should support combining two tokens', () => {
-      const a = new TestToken(30)
-      const b = new TestToken(70)
+      const a = TestToken.mint(30)
+      const b = TestToken.mint(70)
       const c = TestToken.combine(a, b)
       expect(c).to.be.instanceOf(TestToken)
       expect(c.amount).to.equal(100)
@@ -136,7 +141,7 @@ describe('Token', () => {
 
     it('should support combining many tokens', () => {
       const tokens = []
-      for (let i = 0; i < 10; ++i) tokens.push(new TestToken(1))
+      for (let i = 0; i < 10; ++i) tokens.push(TestToken.mint(1))
       const combined = TestToken.combine(...tokens)
       expect(combined).to.be.instanceOf(TestToken)
       expect(combined.amount).to.equal(10)
@@ -148,8 +153,8 @@ describe('Token', () => {
     })
 
     it('should support load after combine', async () => {
-      const a = new TestToken(30)
-      const b = new TestToken(70)
+      const a = TestToken.mint(30)
+      const b = TestToken.mint(70)
       const c = TestToken.combine(a, b)
       await run.sync()
       run.deactivate()
@@ -160,21 +165,21 @@ describe('Token', () => {
     })
 
     it('should throw if combine different owners without signatures', async () => {
-      const a = new TestToken(1)
-      const b = new TestToken(2)
+      const a = TestToken.mint(1)
+      const b = TestToken.mint(2)
       const address = new bsv.PrivateKey().toAddress().toString()
       b.send(address)
       await expect(TestToken.combine(a, b).sync()).to.be.rejectedWith('Missing signature for TestToken')
     })
 
     it('should throw if combined amount is too large', () => {
-      const a = new TestToken(Number.MAX_SAFE_INTEGER)
-      const b = new TestToken(1)
+      const a = TestToken.mint(Number.MAX_SAFE_INTEGER)
+      const b = TestToken.mint(1)
       expect(() => TestToken.combine(a, b)).to.throw('amount too large')
     })
 
     it('should throw if combine only one token', () => {
-      expect(() => TestToken.combine(new TestToken(1))).to.throw('must combine at least two tokens')
+      expect(() => TestToken.combine(TestToken.mint(1))).to.throw('must combine at least two tokens')
     })
 
     it('should throw if combine no tokens', () => {
@@ -183,21 +188,21 @@ describe('Token', () => {
 
     it('should throw if combine non-tokens', () => {
       const error = 'cannot combine different token classes'
-      expect(() => TestToken.combine(new TestToken(1), 1)).to.throw(error)
-      expect(() => TestToken.combine(new TestToken(1), {})).to.throw(error)
-      expect(() => TestToken.combine(new TestToken(1), new TestToken(1), {})).to.throw(error)
+      expect(() => TestToken.combine(TestToken.mint(1), 1)).to.throw(error)
+      expect(() => TestToken.combine(TestToken.mint(1), {})).to.throw(error)
+      expect(() => TestToken.combine(TestToken.mint(1), TestToken.mint(1), {})).to.throw(error)
     })
 
     it('should throw if combine different token classes', () => {
       const error = 'cannot combine different token classes'
       class DifferentToken extends Token { }
       class ExtendedToken extends TestToken { }
-      expect(() => TestToken.combine(new TestToken(1), new DifferentToken(1))).to.throw(error)
-      expect(() => TestToken.combine(new TestToken(1), new ExtendedToken(1))).to.throw(error)
+      expect(() => TestToken.combine(TestToken.mint(1), new DifferentToken(1))).to.throw(error)
+      expect(() => TestToken.combine(TestToken.mint(1), new ExtendedToken(1))).to.throw(error)
     })
 
     it('should throw if combine duplicate tokens', () => {
-      const token = new TestToken(1)
+      const token = TestToken.mint(1)
       expect(() => TestToken.combine(token, token)).to.throw('cannot combine duplicate tokens')
     })
   })
@@ -210,7 +215,7 @@ describe('Token', () => {
     })
 
     it('should divide amount by decimals', () => {
-      expect(new TestToken(120).value).to.equal(1.2)
+      expect(TestToken.mint(120).value).to.equal(1.2)
     })
   */
   })
