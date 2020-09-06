@@ -110,20 +110,40 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('calls super', async () => {
+    it('calls super', async () => {
       const run = new Run()
-      class A extends Jig { static f() { return 1 } }
-      class B extends Jig { static g() { this.n = super.f() + 10 } }
+      class A extends Jig { static f () { return 1 } }
+      class B extends A { static g () { this.n = super.f() + 10 } }
       const CB = run.deploy(B)
       await CB.sync()
-      console.log('1')
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [
+              { $jig: 0 },
+              'g',
+              []
+            ]
+          }
+        ]
+      })
+
+      function test (CB) { expect(CB.n).to.equal(11) }
+
       CB.g()
-      console.log('2')
       await CB.sync()
       test(CB)
-      function test(CB) { expect(CB.n).to.equal(11) }
+
       const CB2 = await run.load(CB.location)
       test(CB2)
+
       run.cache = new LocalCache()
       const CB3 = await run.load(CB.location)
       test(CB3)
@@ -164,14 +184,14 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('calls super', async () => {
+    it('calls super', async () => {
       const run = new Run()
-      class A { static f() { return 1 } }
-      class B { static f() { return super.f() + 10 } }
+      class A { static f () { return 1 } }
+      class B extends A { static f () { return super.f() + 10 } }
       const CB = run.deploy(B)
       await CB.sync()
       test(CB)
-      function test(CB) { expect(CB.f()).to.equal(11) }
+      function test (CB) { expect(CB.f()).to.equal(11) }
       const CB2 = await run.load(CB.location)
       test(CB2)
       run.cache = new LocalCache()
