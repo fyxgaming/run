@@ -22,6 +22,7 @@ function encodePass (x, y) {
   const codec = unmangle(new Codec())
   const encoded = codec._encode(x)
   const jsonString = JSON.stringify(encoded)
+  console.log(jsonString)
   const json = JSON.parse(jsonString)
   expect(json).to.deep.equal(y)
   const decoded = codec._decode(json)
@@ -166,21 +167,20 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
-    it('circular references', () => {
-
-      const o = {}
-      o.o = o
-      encodePass(o, { $top: { $dup: 0 }, dups: [{ o: { $dup: 0 } }] })
+    it.only('circular references', () => {
+      // const o = {}
+      // o.o = o
+      // encodePass(o, { o: { $dup: [] } })
       const a = [{}, []]
       a[0].x = a[1]
       a[1].push(a[0])
       a.a = a
-      encodePass(a, { $top: { $dup: 2 }, dups: [{ x: { $dup: 1 } }, [{ $dup: 0 }], { $arr: { 0: { $dup: 0 }, 1: { $dup: 1 }, a: { $dup: 2 } } }] })
+      encodePass(a, { $arr: { 0: { x: { $dup: ['1'] } }, 1: [{ $dup: ['0'] }], a: { $dup: [] } } })
     })
 
     // ------------------------------------------------------------------------
 
+    /*
     it('sets', () => {
 
       // Basic keys and values
