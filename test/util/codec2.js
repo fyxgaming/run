@@ -265,7 +265,6 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('maintains key order', () => {
       const o = {}
       o.x = 'x'
@@ -280,6 +279,7 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
+    /*
     it('defaults to host intrinsics', () => {
       expect(unmangle(new Codec())._encode({}).constructor).to.equal(Object)
       expect(unmangle(new Codec())._encode([]).constructor).to.equal(Array)
