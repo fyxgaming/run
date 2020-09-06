@@ -6,6 +6,7 @@
 
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
+const { expect } = require('chai')
 const Run = require('../env/run')
 const { Token } = Run
 
@@ -19,9 +20,6 @@ describe('Token', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  class TestToken extends Token { }
-  TestToken.decimals = 2
-
   // --------------------------------------------------------------------------
   // Mint
   // --------------------------------------------------------------------------
@@ -29,22 +27,21 @@ describe('Token', () => {
   describe('Mint', () => {
     it('should mint new tokens', async () => {
       new Run() // eslint-disable-line
-      const a = TestToken.mint(100)
-
-      console.log('----------')
-      await a.sync()
-      console.log(a)
-
-      // const token = TestToken.mint(100)
-      // console.log(token)
-      // expect(token.amount).to.equal(100)
-      // expect(token.owner).to.equal(TestToken.owner)
+      class TestToken extends Token { }
+      const token = TestToken.mint(100)
+      await token.sync()
+      expect(token.amount).to.equal(100)
+      expect(token.owner).to.equal(TestToken.owner)
     })
 
-    /*
+    // ------------------------------------------------------------------------
+
     it('throws if mint outside', () => {
-
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
+      expect(() => new TestToken(100)).to.throw('Use TestToken.mint to mint')
     })
+    /*
   })
 
   /*
