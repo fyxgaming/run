@@ -332,7 +332,6 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('throws for unrecognized intrinsics', () => {
       const vm = require('vm')
       const [VMSet, VMMap, VMUint8Array] = vm.runInNewContext('[Set, Map, Uint8Array]')
@@ -347,6 +346,7 @@ describe('Codec', () => {
   // --------------------------------------------------------------------------
 
   describe('_decode', () => {
+    /*
     it('throws for unsupported types', () => {
 
       // Undefined
