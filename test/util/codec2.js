@@ -247,7 +247,6 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('throws for buffers with props', () => {
       const b = new Uint8Array()
       b.x = 1
@@ -256,6 +255,7 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
+    /*
     it('throws for extensions to built-in types', () => {
       encodeFail(new (class CustomArray extends Array {})())
       encodeFail(new (class CustomObject extends Object {})())
