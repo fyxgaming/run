@@ -480,8 +480,8 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('to sandbox intrinsics', () => {
+      new Run() // eslint-disable-line
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const codec = unmangle(new Codec())._toSandbox()._saveJigs(x => '123')
@@ -492,6 +492,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('loads jigs from location', () => {
+      new Run() // eslint-disable-line
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const codec = unmangle(new Codec())._loadJigs(x => dragon)
@@ -501,6 +502,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('saves and loads jigs in complex structures', () => {
+      new Run() // eslint-disable-line
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const codec = unmangle(new Codec())._saveJigs(x => '123')._loadJigs(x => dragon)
@@ -513,6 +515,7 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
+    /*
     it('throws for bad jig ref', () => {
       const codec = unmangle(new Codec())._loadJigs(x => {})
       expect(() => codec._decode({ $jig: 1, $jig2: 2 })).to.throw()
