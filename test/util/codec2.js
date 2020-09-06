@@ -6,7 +6,7 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-// const bsv = require('bsv')
+const bsv = require('bsv')
 const Run = require('../env/run')
 // const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
@@ -22,11 +22,9 @@ function encodePass (x, y) {
   const codec = unmangle(new Codec())
   const encoded = codec._encode(x)
   const jsonString = JSON.stringify(encoded)
-  console.log(jsonString)
   const json = JSON.parse(jsonString)
   expect(json).to.deep.equal(y)
   const decoded = codec._decode(json)
-  console.log(decoded, '-', x)
   expect(decoded).to.deep.equal(x)
 }
 
@@ -240,9 +238,7 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('buffers', () => {
-
       encodePass(new Uint8Array(), { $ui8a: '' })
       encodePass(new Uint8Array([0, 1]), { $ui8a: 'AAE=' })
       const hello = Buffer.from('hello', 'utf8')
@@ -253,8 +249,8 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
+    /*
     it('throws for buffers with props', () => {
-
       const b = new Uint8Array()
       b.x = 1
       encodeFail(b)
@@ -263,7 +259,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('throws for extensions to built-in types', () => {
-
       encodeFail(new (class CustomArray extends Array {})())
       encodeFail(new (class CustomObject extends Object {})())
       encodeFail(new (class CustomSet extends Set {})())
@@ -274,7 +269,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('maintains key order', () => {
-
       const o = {}
       o.x = 'x'
       o[3] = 3
@@ -289,7 +283,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('defaults to host intrinsics', () => {
-
       expect(unmangle(new Codec())._encode({}).constructor).to.equal(Object)
       expect(unmangle(new Codec())._encode([]).constructor).to.equal(Array)
     })
@@ -297,7 +290,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('throws for raw intrinsics', () => {
-
       encodeFail(console)
       encodeFail(Object)
       encodeFail(Function)
@@ -331,7 +323,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('throws for unsupported objects intrinsics', () => {
-
       encodeFail(new Date())
       encodeFail(new WeakSet())
       encodeFail(new WeakMap())
@@ -345,7 +336,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('throws for unrecognized intrinsics', () => {
-
       const vm = require('vm')
       const [VMSet, VMMap, VMUint8Array] = vm.runInNewContext('[Set, Map, Uint8Array]')
       encodeFail(new VMSet())
