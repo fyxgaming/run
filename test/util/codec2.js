@@ -8,11 +8,11 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
-// const { Jig, Berry } = Run
+const { Jig } = Run
 const unmangle = require('../env/unmangle')
 const Codec = unmangle(Run)._Codec2
 const SI = unmangle(Run.sandbox)._intrinsics
-// const HI = unmangle(Run.sandbox)._hostIntrinsics
+const HI = unmangle(Run.sandbox)._hostIntrinsics
 
 // ------------------------------------------------------------------------------------------------
 // Helpers
@@ -468,8 +468,8 @@ describe('Codec', () => {
   // --------------------------------------------------------------------------
 
   describe('Jigs', () => {
-    /*
     it('saves jigs with location', () => {
+      new Run() // eslint-disable-line
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const codec = unmangle(new Codec())._saveJigs(x => '123')
@@ -480,6 +480,7 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
+    /*
     it('to sandbox intrinsics', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
