@@ -79,6 +79,18 @@ describe('Static Code', () => {
       const cf = run.deploy(f)
       expect(cf()).to.equal(1)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('has code methods', () => {
+      const run = new Run()
+      function f () { }
+      const cf = run.deploy(f)
+      expect(typeof cf.sync).to.equal('function')
+      expect(typeof cf.upgrade).to.equal('function')
+      expect(typeof cf.auth).to.equal('function')
+      expect(typeof cf.destroy).to.equal('function')
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -104,6 +116,18 @@ describe('Static Code', () => {
       const CA = run.deploy(A)
       expect(() => { delete CA.n }).to.throw('delete disabled')
       expect(() => CA.f()).to.throw('delete disabled')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('has code methods', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      expect(typeof CA.sync).to.equal('function')
+      expect(typeof CA.upgrade).to.equal('function')
+      expect(typeof CA.auth).to.equal('function')
+      expect(typeof CA.destroy).to.equal('function')
     })
   })
 })
