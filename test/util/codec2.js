@@ -255,7 +255,6 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('throws for extensions to built-in types', () => {
       encodeFail(new (class CustomArray extends Array {})())
       encodeFail(new (class CustomObject extends Object {})())
@@ -266,6 +265,7 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
+    /*
     it('maintains key order', () => {
       const o = {}
       o.x = 'x'
