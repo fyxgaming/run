@@ -107,6 +107,27 @@ describe('Call', () => {
       const C = run.deploy(A)
       expect(() => C.f(Symbol.hasInstance)).to.throw('Cannot clone')
     })
+
+    // ------------------------------------------------------------------------
+
+    it.only('calls super', async () => {
+      const run = new Run()
+      class A extends Jig { static f() { return 1 } }
+      class B extends Jig { static g() { this.n = super.f() + 10 } }
+      const CB = run.deploy(B)
+      await CB.sync()
+      console.log('1')
+      CB.g()
+      console.log('2')
+      await CB.sync()
+      test(CB)
+      function test(CB) { expect(CB.n).to.equal(11) }
+      const CB2 = await run.load(CB.location)
+      test(CB2)
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      test(CB3)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -139,6 +160,23 @@ describe('Call', () => {
       run.cache = new LocalCache()
       const C3 = await run.load(C.location)
       test(C3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('calls super', async () => {
+      const run = new Run()
+      class A { static f() { return 1 } }
+      class B { static f() { return super.f() + 10 } }
+      const CB = run.deploy(B)
+      await CB.sync()
+      test(CB)
+      function test(CB) { expect(CB.f()).to.equal(11) }
+      const CB2 = await run.load(CB.location)
+      test(CB2)
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      test(CB3)
     })
   })
 
