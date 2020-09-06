@@ -7,6 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
+const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { Token } = Run
 
@@ -21,11 +22,11 @@ describe('Token', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   // --------------------------------------------------------------------------
-  // Mint
+  // mint
   // --------------------------------------------------------------------------
 
   describe('mint', () => {
-    it('should mint new tokens', async () => {
+    it('new tokens', async () => {
       new Run() // eslint-disable-line
       class TestToken extends Token { }
       const token = TestToken.mint(100)
@@ -44,14 +45,14 @@ describe('Token', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should throw if class is not extended', () => {
+    it('throws if class is not extended', () => {
       new Run() // eslint-disable-line
       expect(() => Token.mint(100)).to.throw('Token must be extended')
     })
 
     // ------------------------------------------------------------------------
 
-    it('should support large amounts', () => {
+    it('large amounts', () => {
       new Run() // eslint-disable-line
       class TestToken extends Token { }
       expect(TestToken.mint(2147483647).amount).to.equal(2147483647)
@@ -60,7 +61,7 @@ describe('Token', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should throw for bad amounts', () => {
+    it('throws for bad amounts', () => {
       new Run() // eslint-disable-line
       class TestToken extends Token { }
       expect(() => TestToken.mint()).to.throw('amount is not a number')
@@ -72,24 +73,29 @@ describe('Token', () => {
       expect(() => TestToken.mint(Infinity)).to.throw('amount must be an integer')
       expect(() => TestToken.mint(NaN)).to.throw('amount must be an integer')
     })
-    /*
   })
 
-  /*
-
-  })
+  // --------------------------------------------------------------------------
+  // send
+  // --------------------------------------------------------------------------
 
   describe('send', () => {
-    it('should support sending full amount', () => {
-      const address = new bsv.PrivateKey().toAddress().toString()
+    it('send full amount', () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
+      const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
       expect(token.send(address)).to.equal(null)
       expect(token.owner).to.equal(address)
       expect(token.amount).to.equal(100)
     })
+  })
+
+  /*
+  describe('send', () => {
 
     it('should support sending partial amount', () => {
-      const address = new bsv.PrivateKey().toAddress().toString()
+      const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
       const change = token.send(address, 30)
       expect(change).to.be.instanceOf(TestToken)
@@ -100,13 +106,13 @@ describe('Token', () => {
     })
 
     it('should throw if send too much', () => {
-      const address = new bsv.PrivateKey().toAddress().toString()
+      const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
       expect(() => token.send(address, 101)).to.throw('not enough funds')
     })
 
     it('should throw if send bad amount', () => {
-      const address = new bsv.PrivateKey().toAddress().toString()
+      const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
       expect(() => token.send(address, {})).to.throw('amount is not a number')
       expect(() => token.send(address, '1')).to.throw('amount is not a number')
@@ -167,7 +173,7 @@ describe('Token', () => {
     it('should throw if combine different owners without signatures', async () => {
       const a = TestToken.mint(1)
       const b = TestToken.mint(2)
-      const address = new bsv.PrivateKey().toAddress().toString()
+      const address = new PrivateKey().toAddress().toString()
       b.send(address)
       await expect(TestToken.combine(a, b).sync()).to.be.rejectedWith('Missing signature for TestToken')
     })
@@ -217,8 +223,8 @@ describe('Token', () => {
     it('should divide amount by decimals', () => {
       expect(TestToken.mint(120).value).to.equal(1.2)
     })
-  */
   })
+  */
 })
 
 // ------------------------------------------------------------------------------------------------
