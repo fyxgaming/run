@@ -412,7 +412,6 @@ describe('Codec', () => {
   // --------------------------------------------------------------------------
 
   describe('_toSandbox', () => {
-    /*
     it('encodes to sandbox intrinsics', () => {
       const codec = unmangle(new Codec())._toSandbox()
       // Primitives
@@ -444,16 +443,15 @@ describe('Codec', () => {
       // Uint8Array
       const b = new Uint8Array()
       expect(codec._encode(b).constructor).to.equal(SI.Object)
-      // Dedup
+      // Dups
       const o = { }
-      expect(codec._encode([o, o]).constructor).to.equal(SI.Object)
-      expect(codec._encode([o, o]).$top.constructor).to.equal(SI.Array)
-      expect(codec._encode([o, o]).dups.constructor).to.equal(SI.Array)
-      expect(codec._encode([o, o]).dups[0].constructor).to.equal(SI.Object)
+      expect(codec._encode([o, o]).constructor).to.equal(SI.Array)
+      expect(codec._encode([o, o])[1].$dup.constructor).to.equal(SI.Array)
     })
 
     // ------------------------------------------------------------------------
 
+    /*
     it('decodes to sandbox intrinsics', () => {
       const codec = unmangle(new Codec())._toSandbox()
       expect(codec._decode({}).constructor).to.equal(SI.Object)
