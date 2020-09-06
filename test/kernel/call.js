@@ -704,8 +704,27 @@ describe('Call', () => {
   // --------------------------------------------------------------------------
 
   describe.only('Unify worldview', () => {
-    it('updates jigs', () => {
-      // TODO
+    it('updates jigs', async () => {
+      const run = new Run()
+      class A extends Jig { set (key, value) { this[key] = value } }
+
+      const a1 = new A()
+      a1.set('n', 1)
+      await a1.sync()
+
+      const b = new A()
+      b.set('a0', a1)
+      await b.sync()
+
+      const a2 = await run.load(a1.location)
+      a2.set('n', 2)
+      await a2.sync()
+
+      await b.sync()
+      b.set('a2', a2)
+      await b.sync()
+
+      await run.sync()
     })
 
     // ------------------------------------------------------------------------
