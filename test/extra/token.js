@@ -80,7 +80,7 @@ describe('Token', () => {
   // --------------------------------------------------------------------------
 
   describe('send', () => {
-    it('send full amount', () => {
+    it('full amount', () => {
       new Run() // eslint-disable-line
       class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
@@ -89,21 +89,26 @@ describe('Token', () => {
       expect(token.owner).to.equal(address)
       expect(token.amount).to.equal(100)
     })
-  })
 
-  /*
-  describe('send', () => {
+    // ------------------------------------------------------------------------
 
-    it('should support sending partial amount', () => {
+    it('partial amount', async () => {
+      const run = new Run()
+      class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
       const change = token.send(address, 30)
+      await run.sync()
       expect(change).to.be.instanceOf(TestToken)
       expect(change.owner).to.equal(run.owner.address)
       expect(change.amount).to.equal(70)
       expect(token.owner).to.equal(address)
       expect(token.amount).to.equal(30)
     })
+  })
+
+  /*
+  describe('send', () => {
 
     it('should throw if send too much', () => {
       const address = new PrivateKey().toAddress().toString()
