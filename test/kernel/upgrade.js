@@ -1167,11 +1167,11 @@ describe('Upgrade', () => {
   // Jig
   // --------------------------------------------------------------------------
 
-  describe.only('Jig', () => {
+  describe('Jig', () => {
     it('upgrades instances on sync', async () => {
       const run = new Run()
-      class A extends Jig { f() { return 1 } }
-      class B extends Jig { f() { return 2 } }
+      class A extends Jig { f () { return 1 } }
+      class B extends Jig { f () { return 2 } }
       const CA = run.deploy(A)
       await CA.sync()
       const a = new CA()
@@ -1192,14 +1192,39 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it('can create old instances', () => {
-
+    it('can create old instances', async () => {
+      const run = new Run()
+      class A extends Jig { f () { return 1 } }
+      class B extends Jig { f () { return 2 } }
+      const C = run.deploy(A)
+      C.upgrade(B)
+      await C.sync()
+      const CO = await run.load(C.origin)
+      const a = new CO()
+      const b = new C()
+      expect(a.constructor.location).not.to.equal(b.constructor.location)
+      await a.sync()
+      expect(a.constructor.location).to.equal(b.constructor.location)
     })
 
     // ------------------------------------------------------------------------
 
-    it('can delay upgrade instances', () => {
-
+    it('can delay upgrade instances', async () => {
+      const run = new Run()
+      class A extends Jig { f (n) { this.n = n } }
+      class B extends Jig { f () { this.n = 'error' } }
+      const C = run.deploy(A)
+      C.upgrade(B)
+      await C.sync()
+      const CO = await run.load(C.origin)
+      const a = new CO()
+      a.f(1)
+      expect(a.n).to.equal(1)
+      a.f(2)
+      expect(a.n).to.equal(2)
+      await a.sync()
+      a.f(3)
+      expect(a.n).to.equal('error')
     })
   })
 })
