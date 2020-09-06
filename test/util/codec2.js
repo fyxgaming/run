@@ -26,6 +26,7 @@ function encodePass (x, y) {
   const json = JSON.parse(jsonString)
   expect(json).to.deep.equal(y)
   const decoded = codec._decode(json)
+  console.log(decoded, '-', x)
   expect(decoded).to.deep.equal(x)
 }
 
@@ -206,9 +207,7 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('maps', () => {
-
       // Basic keys and values
       encodePass(new Map(), { $map: [] })
       encodePass(new Map([['a', 'b']]), { $map: [['a', 'b']] })
@@ -217,16 +216,16 @@ describe('Codec', () => {
       encodePass(new Map([[{}, []], [new Set(), new Map()]]), { $map: [[{}, []], [{ $set: [] }, { $map: [] }]] })
       // Duplicate keys and values
       const m = new Map()
-      encodePass(new Map([[m, m]]), { $top: { $map: [[{ $dup: 0 }, { $dup: 0 }]] }, dups: [{ $map: [] }] })
+      encodePass(new Map([[m, m]]), { $map: [[{ $map: [] }, { $dup: ['$map', 0, 0] }]] })
       // Circular keys
       const m2 = new Map()
       m2.set(m2, 1)
-      encodePass(m2, { $top: { $dup: 0 }, dups: [{ $map: [[{ $dup: 0 }, 1]] }] })
+      encodePass(m2, { $map: [[{ $dup: [] }, 1]] })
       // Circular values
       const m3 = new Map()
       const a = [m3]
       m3.set(1, a)
-      encodePass(a, { $top: { $dup: 0 }, dups: [[{ $map: [[1, { $dup: 0 }]] }]] })
+      encodePass(a, [{ $map: [[1, { $dup: [] }]] }])
       // Props
       const m4 = new Map([[1, 2]])
       m4.x = 'abc'
@@ -236,11 +235,12 @@ describe('Codec', () => {
       const m5 = new Map()
       m5.x = m5
       m5.set(m5.x, 1)
-      encodePass(m5, { $top: { $dup: 0 }, dups: [{ $map: [[{ $dup: 0 }, 1]], props: { x: { $dup: 0 } } }] })
+      encodePass(m5, { $map: [[{ $dup: [] }, 1]], props: { x: { $dup: [] } } })
     })
 
     // ------------------------------------------------------------------------
 
+    /*
     it('buffers', () => {
 
       encodePass(new Uint8Array(), { $ui8a: '' })
