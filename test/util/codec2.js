@@ -22,6 +22,7 @@ function encodePass (x, y) {
   const codec = unmangle(new Codec())
   const encoded = codec._encode(x)
   const jsonString = JSON.stringify(encoded)
+  console.log(jsonString)
   const json = JSON.parse(jsonString)
   expect(json).to.deep.equal(y)
   const decoded = codec._decode(json)
@@ -180,9 +181,7 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('sets', () => {
-
       // Basic keys and values
       encodePass(new Set(), { $set: [] })
       encodePass(new Set([0, false, null]), { $set: [0, false, null] })
@@ -193,7 +192,7 @@ describe('Codec', () => {
       // Circular entries
       const s2 = new Set()
       s2.add(s2)
-      encodePass(s2, { $top: { $dup: 0 }, dups: [{ $set: [{ $dup: 0 }] }] })
+      encodePass(s2, { $set: [{ $dup: [] }] })
       // Props
       const s3 = new Set([1])
       s3.x = null
@@ -202,11 +201,12 @@ describe('Codec', () => {
       const s4 = new Set([])
       s4.add(s4)
       s4.s = s4
-      encodePass(s4, { $top: { $dup: 0 }, dups: [{ $set: [{ $dup: 0 }], props: { s: { $dup: 0 } } }] })
+      encodePass(s4, { $set: [{ $dup: [] }], props: { s: { $dup: [] } } })
     })
 
     // ------------------------------------------------------------------------
 
+    /*
     it('maps', () => {
 
       // Basic keys and values
