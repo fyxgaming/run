@@ -567,7 +567,6 @@ describe('Codec', () => {
   // --------------------------------------------------------------------------
 
   describe('Arbitrary objects', () => {
-    /*
     it('basic arbitrary objects', () => {
       const run = new Run()
       const jigs = []
@@ -595,7 +594,7 @@ describe('Codec', () => {
       const a = new A2()
       a.a = a
       const json = codec._encode(a)
-      const expected = { $top: { $dup: 0 }, dups: [{ $arb: { a: { $dup: 0 } }, T: { $jig: 0 } }] }
+      const expected = { $arb: { a: { $dup: [] } }, T: { $jig: 0 } }
       expect(json).to.deep.equal(expected)
       expect(codec._decode(json)).to.deep.equal(a)
     })
@@ -613,12 +612,11 @@ describe('Codec', () => {
       const a = new A2()
       a.o1 = o
       a.o2 = o
-      const expected = { $top: { $arb: { o1: { $dup: 0 }, o2: { $dup: 0 } }, T: { $jig: 0 } }, dups: [{ }] }
+      const expected = { $arb: { o1: { }, o2: { $dup: ['$arb', 'o1'] } }, T: { $jig: 0 } }
       const json = codec._encode(a)
       expect(json).to.deep.equal(expected)
       expect(codec._decode(json)).to.deep.equal(a)
     })
-  */
   })
 })
 
