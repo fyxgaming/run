@@ -150,19 +150,19 @@ describe('Codec', () => {
     it('duplicate objects', () => {
       const o = {}
       const p = [1]
-      encodePass([o, o], [{}, { $dup: ['$arr', '0'] }])
+      encodePass([o, o], [{}, { $dup: ['0'] }])
       encodePass({ a: o, b: o }, { a: {}, b: { $dup: ['a'] } })
-      encodePass([o, { o }], [{}, { o: { $dup: ['$arr', '0'] } }])
-      encodePass([o, p, o, p], [{}, [1], { $dup: ['$arr', '0'] }, { $dup: ['$arr', '1'] }])
-      encodePass([o, o, p, [o, p], { z: p }], [{}, { $dup: ['$arr', '0'] }, [1],
-        [{ $dup: ['$arr', '0'] }, { $dup: ['$arr', '2'] }], { z: { $dup: ['$arr', '2'] } }])
+      encodePass([o, { o }], [{}, { o: { $dup: ['0'] } }])
+      encodePass([o, p, o, p], [{}, [1], { $dup: ['0'] }, { $dup: ['1'] }])
+      encodePass([o, o, p, [o, p], { z: p }], [{}, { $dup: ['0'] }, [1],
+        [{ $dup: ['0'] }, { $dup: ['2'] }], { z: { $dup: ['2'] } }])
     })
 
     // ------------------------------------------------------------------------
 
     it('duplicate $ objects', () => {
       const o = { $n: 1 }
-      encodePass([o, o], [{ $obj: { $n: 1 } }, { $dup: ['$arr', '0'] }])
+      encodePass([o, o], [{ $obj: { $n: 1 } }, { $dup: ['0'] }])
     })
 
     // ------------------------------------------------------------------------
