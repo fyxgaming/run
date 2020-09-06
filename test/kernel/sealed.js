@@ -9,8 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
-const unmangle = require('../env/unmangle')
-const { LocalCache } = unmangle(Run)
+const { Jig, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Sealed
@@ -218,8 +217,24 @@ describe('Sealed', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('unseal and extend then reseal in a method', () => {
-      // TODO
+    it('unseal and extend then reseal in a method', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static unseal () { this.sealed = false }
+        static seal () { this.sealed = true }
+      }
+      A.sealed = true
+      const CA = run.deploy(A)
+      CA.unseal()
+      class B extends CA { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      CA.seal()
+      class C extends CA { }
+      expect(() => run.deploy(C)).to.throw('Parent class sealed')
+      await run.load(CB.location)
+      run.cache = new LocalCache()
+      await run.load(CB.location)
     })
   })
 
@@ -448,8 +463,26 @@ describe('Sealed', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('unseal and extend then reseal in a method', () => {
-      // TODO
+    it('unseal and extend then reseal in a method', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static unseal () { this.sealed = false }
+        static seal () { this.sealed = true }
+      }
+      A.sealed = true
+      const CA = run.deploy(A)
+      CA.unseal()
+      class B extends CA { }
+      class O extends Jig { }
+      const CO = run.deploy(O)
+      CO.upgrade(B)
+      await CO.sync()
+      CA.seal()
+      class C extends CA { }
+      expect(() => CO.upgrade(C)).to.throw('Parent class sealed')
+      await run.load(CO.location)
+      run.cache = new LocalCache()
+      await run.load(CO.location)
     })
   })
 })
