@@ -319,7 +319,6 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('throws for unsupported objects intrinsics', () => {
       encodeFail(new Date())
       encodeFail(new WeakSet())
@@ -333,6 +332,7 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
+    /*
     it('throws for unrecognized intrinsics', () => {
       const vm = require('vm')
       const [VMSet, VMMap, VMUint8Array] = vm.runInNewContext('[Set, Map, Uint8Array]')
