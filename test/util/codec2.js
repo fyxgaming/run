@@ -515,7 +515,6 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('throws for bad jig ref', () => {
       const codec = unmangle(new Codec())._loadJigs(x => {})
       expect(() => codec._decode({ $jig: 1, $jig2: 2 })).to.throw()
@@ -524,6 +523,7 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
+    /*
     it('replaces code with location', () => {
       const run = new Run()
       const codec = unmangle(new Codec())._saveJigs(x => '123')
