@@ -759,8 +759,31 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it('updates code', () => {
-      // TODO
+    it('updates code', async () => {
+      const run = new Run()
+      class A extends Jig { static set (n) { this.n = n } }
+      const CA = run.deploy(A)
+      await CA.sync()
+      const CA2 = await run.load(CA.location)
+      CA2.set(1)
+      await CA2.sync()
+      class B extends Jig { static set (Y) { this.Y = Y } }
+      B.X = CA
+      const CB = run.deploy(B)
+      await CB.sync()
+
+      function test (CB) { expect(CB.X).to.equal(CB.Y) }
+
+      CB.set(CA2)
+      await CB.sync()
+      test(CB)
+
+      const CB2 = await run.load(CB.location)
+      test(CB2)
+
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      test(CB3)
     })
 
     // ------------------------------------------------------------------------
