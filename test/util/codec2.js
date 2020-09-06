@@ -28,7 +28,7 @@ function encodePass (x, y) {
   expect(decoded).to.deep.equal(x)
 }
 
-// const encodeFail = x => expect(() => unmangle(new Codec())._encode(x)).to.throw('Cannot encode')
+const encodeFail = x => expect(() => unmangle(new Codec())._encode(x)).to.throw('Cannot encode')
 // const decodeFail = y => expect(() => unmangle(new Codec())._decode(y)).to.throw('Cannot decode')
 
 // ------------------------------------------------------------------------------------------------
@@ -42,7 +42,6 @@ describe('Codec', () => {
 
   describe('_encode', () => {
     it('non-symbol primitives', () => {
-      new Run() // eslint-disable-line
       // Booleans
       encodePass(true, true)
       encodePass(false, false)
@@ -73,11 +72,9 @@ describe('Codec', () => {
       encodePass(null, null)
     })
 
-    /*
     // ------------------------------------------------------------------------
 
     it('throws for symbols', () => {
-      new Run() // eslint-disable-line
       encodeFail(Symbol.hasInstance)
       encodeFail(Symbol.iterator)
       encodeFail(Symbol.species)
@@ -86,8 +83,8 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
+    /*
     it('basic objects', () => {
-      new Run() // eslint-disable-line
       encodePass({}, {})
       encodePass({ n: 1 }, { n: 1 })
       encodePass({ a: 'a', b: true, c: {}, d: null }, { a: 'a', b: true, c: {}, d: null })
@@ -99,7 +96,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('objects with $ properties', () => {
-      new Run() // eslint-disable-line
       encodePass({ $n: 1 }, { $obj: { $n: 1 } })
       encodePass({ $obj: {} }, { $obj: { $obj: {} } })
       encodePass({ a: { $a: { a: {} } } }, { a: { $obj: { $a: { a: {} } } } })
@@ -109,7 +105,6 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('basic arrays', () => {
-      new Run() // eslint-disable-line
       encodePass([], [])
       encodePass([1, 'a', false, {}], [1, 'a', false, {}])
       encodePass([[[]]], [[[]]])
@@ -120,7 +115,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('sparse arrays', () => {
-      new Run() // eslint-disable-line
+
       const a = []
       a[0] = 0
       a[9] = 9
@@ -130,7 +125,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('arrays with non-numeric properties', () => {
-      new Run() // eslint-disable-line
+
       const a = [1]
       a[9] = 9
       a[-1] = -1
@@ -143,7 +138,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('complex objects', () => {
-      new Run() // eslint-disable-line
+
       const o = {}
       o.o = { a: [] }
       o.a = [{ n: 1 }]
@@ -155,7 +150,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('duplicate objects', () => {
-      new Run() // eslint-disable-line
+
       const o = {}
       const p = [1]
       const d0 = { $dup: 0 }
@@ -170,7 +165,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('duplicate $ objects', () => {
-      new Run() // eslint-disable-line
+
       const o = { $n: 1 }
       encodePass([o, o], { $top: [{ $dup: 0 }, { $dup: 0 }], dups: [{ $obj: { $n: 1 } }] })
     })
@@ -178,7 +173,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('circular references', () => {
-      new Run() // eslint-disable-line
+
       const o = {}
       o.o = o
       encodePass(o, { $top: { $dup: 0 }, dups: [{ o: { $dup: 0 } }] })
@@ -192,7 +187,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('sets', () => {
-      new Run() // eslint-disable-line
+
       // Basic keys and values
       encodePass(new Set(), { $set: [] })
       encodePass(new Set([0, false, null]), { $set: [0, false, null] })
@@ -218,7 +213,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('maps', () => {
-      new Run() // eslint-disable-line
+
       // Basic keys and values
       encodePass(new Map(), { $map: [] })
       encodePass(new Map([['a', 'b']]), { $map: [['a', 'b']] })
@@ -252,7 +247,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('buffers', () => {
-      new Run() // eslint-disable-line
+
       encodePass(new Uint8Array(), { $ui8a: '' })
       encodePass(new Uint8Array([0, 1]), { $ui8a: 'AAE=' })
       const hello = Buffer.from('hello', 'utf8')
@@ -264,7 +259,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('throws for buffers with props', () => {
-      new Run() // eslint-disable-line
+
       const b = new Uint8Array()
       b.x = 1
       encodeFail(b)
@@ -273,7 +268,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('throws for extensions to built-in types', () => {
-      new Run() // eslint-disable-line
+
       encodeFail(new (class CustomArray extends Array {})())
       encodeFail(new (class CustomObject extends Object {})())
       encodeFail(new (class CustomSet extends Set {})())
@@ -284,7 +279,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('maintains key order', () => {
-      new Run() // eslint-disable-line
+
       const o = {}
       o.x = 'x'
       o[3] = 3
@@ -299,7 +294,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('defaults to host intrinsics', () => {
-      new Run() // eslint-disable-line
+
       expect(unmangle(new Codec())._encode({}).constructor).to.equal(Object)
       expect(unmangle(new Codec())._encode([]).constructor).to.equal(Array)
     })
@@ -307,7 +302,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('throws for raw intrinsics', () => {
-      new Run() // eslint-disable-line
+
       encodeFail(console)
       encodeFail(Object)
       encodeFail(Function)
@@ -341,7 +336,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('throws for unsupported objects intrinsics', () => {
-      new Run() // eslint-disable-line
+
       encodeFail(new Date())
       encodeFail(new WeakSet())
       encodeFail(new WeakMap())
@@ -355,7 +350,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('throws for unrecognized intrinsics', () => {
-      new Run() // eslint-disable-line
+
       const vm = require('vm')
       const [VMSet, VMMap, VMUint8Array] = vm.runInNewContext('[Set, Map, Uint8Array]')
       encodeFail(new VMSet())
@@ -370,7 +365,7 @@ describe('Codec', () => {
 
   describe('_decode', () => {
     it('throws for unsupported types', () => {
-      new Run() // eslint-disable-line
+
       // Undefined
       decodeFail(undefined)
       // Numbers
@@ -431,7 +426,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('defaults to host intrinsics', () => {
-      new Run() // eslint-disable-line
+
       expect(unmangle(new Codec())._decode({}).constructor).to.equal(Object)
       expect(unmangle(new Codec())._decode([]).constructor).to.equal(Array)
     })
@@ -443,7 +438,7 @@ describe('Codec', () => {
 
   describe('_toSandbox', () => {
     it('encodes to sandbox intrinsics', () => {
-      new Run() // eslint-disable-line
+
       const codec = unmangle(new Codec())._toSandbox()
       // Primitives
       expect(codec._encode({}).constructor).to.equal(SI.Object)
@@ -485,7 +480,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('decodes to sandbox intrinsics', () => {
-      new Run() // eslint-disable-line
+
       const codec = unmangle(new Codec())._toSandbox()
       expect(codec._decode({}).constructor).to.equal(SI.Object)
       expect(codec._decode({ $obj: {} }).constructor).to.equal(SI.Object)
@@ -503,7 +498,7 @@ describe('Codec', () => {
 
   describe('Jigs', () => {
     it('saves jigs with location', () => {
-      new Run() // eslint-disable-line
+
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const codec = unmangle(new Codec())._saveJigs(x => '123')
@@ -515,7 +510,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('to sandbox intrinsics', () => {
-      new Run() // eslint-disable-line
+
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const codec = unmangle(new Codec())._toSandbox()._saveJigs(x => '123')
@@ -526,7 +521,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('loads jigs from location', () => {
-      new Run() // eslint-disable-line
+
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const codec = unmangle(new Codec())._loadJigs(x => dragon)
@@ -536,7 +531,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('saves and loads jigs in complex structures', () => {
-      new Run() // eslint-disable-line
+
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const codec = unmangle(new Codec())._saveJigs(x => '123')._loadJigs(x => dragon)
@@ -550,7 +545,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('throws for bad jig ref', () => {
-      new Run() // eslint-disable-line
+
       const codec = unmangle(new Codec())._loadJigs(x => {})
       expect(() => codec._decode({ $jig: 1, $jig2: 2 })).to.throw()
       expect(() => codec._decode({ $jig: '123' })).to.throw()
@@ -568,7 +563,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('throws for functions that are not code jigs', () => {
-      new Run() // eslint-disable-line
+
       const codec = unmangle(new Codec())._saveJigs(x => '123')
       expect(() => codec._encode(Math.random)).to.throw('Cannot encode')
       expect(() => codec._encode(Array.prototype.indexOf)).to.throw('Cannot encode')
@@ -638,7 +633,7 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('arbitrary objects with duplicate inners', () => {
-      const run = new Run() // eslint-disable-line
+      const run = new Run()
       const jigs = []
       const codec = unmangle(new Codec())
         ._saveJigs(x => { jigs.push(x); return jigs.length - 1 })
