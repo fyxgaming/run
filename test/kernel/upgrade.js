@@ -493,6 +493,22 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
+    it('upgrade to self-reference', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B { }
+      B.A = CA
+      CA.upgrade(B)
+      expect(CA.A).to.equal(CA)
+      await CA.sync()
+      await run.load(CA.location)
+      run.cache = new LocalCache()
+      await run.load(CA.location)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('code reference', async () => {
       const run = new Run()
 
