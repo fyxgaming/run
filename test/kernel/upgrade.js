@@ -358,7 +358,7 @@ describe('Upgrade', () => {
   // --------------------------------------------------------------------------
 
   describe('props', () => {
-    it('complex props', async () => {
+    it.only('complex props', async () => {
       const run = new Run()
 
       class O { }
@@ -674,7 +674,7 @@ describe('Upgrade', () => {
   // --------------------------------------------------------------------------
 
   describe('deps', () => {
-    it('complex deps', async () => {
+    it.only('complex deps', async () => {
       const run = new Run()
 
       class O { }
