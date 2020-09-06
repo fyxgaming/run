@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
-const { Jig } = Run
+const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const Codec = unmangle(Run)._Codec2
 const SI = unmangle(Run.sandbox)._intrinsics
@@ -523,7 +523,6 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('replaces code with location', () => {
       const run = new Run()
       const codec = unmangle(new Codec())._saveJigs(x => '123')
@@ -568,6 +567,7 @@ describe('Codec', () => {
   // --------------------------------------------------------------------------
 
   describe('Arbitrary objects', () => {
+    /*
     it('basic arbitrary objects', () => {
       const run = new Run()
       const jigs = []
