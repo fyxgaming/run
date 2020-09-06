@@ -94,7 +94,6 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('objects with $ properties', () => {
       encodePass({ $n: 1 }, { $obj: { $n: 1 } })
       encodePass({ $obj: {} }, { $obj: { $obj: {} } })
@@ -104,6 +103,7 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
+    /*
     it('basic arrays', () => {
       encodePass([], [])
       encodePass([1, 'a', false, {}], [1, 'a', false, {}])
