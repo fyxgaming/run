@@ -703,7 +703,7 @@ describe('Call', () => {
   // Unify worldview
   // --------------------------------------------------------------------------
 
-  describe.only('Unify worldview', () => {
+  describe('Unify worldview', () => {
     it('updates jigs', async () => {
       const run = new Run()
       class A extends Jig { set (key, value) { this[key] = value } }

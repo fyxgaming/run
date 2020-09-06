@@ -74,6 +74,16 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
+    it('creates same jig class', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      const b = new A()
+      expect(a.constructor).to.equal(b.constructor)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('calls init method with constructor args', async () => {
       const run = new Run()
       class A extends Jig { init (a, b) { this.a = a; this.b = b } }
