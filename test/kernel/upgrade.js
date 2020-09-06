@@ -358,7 +358,7 @@ describe('Upgrade', () => {
   // --------------------------------------------------------------------------
 
   describe('props', () => {
-    it.only('complex props', async () => {
+    it('complex props', async () => {
       const run = new Run()
 
       class O { }
@@ -393,19 +393,12 @@ describe('Upgrade', () => {
               { $jig: 0 },
               'class A { }',
               {
-                $top: {
-                  n: 1,
-                  b: false,
-                  s: 'abc',
-                  o: { $dup: 0 },
-                  set: { $set: [{ $dup: 1 }], props: { A: { $dup: 1 } } },
-                  arr: { $dup: 2 }
-                },
-                dups: [
-                  { o: { $dup: 0 } },
-                  { $jig: 0 },
-                  [{ $dup: 2 }]
-                ]
+                n: 1,
+                b: false,
+                s: 'abc',
+                o: { o: { $dup: ['2', 'o'] } },
+                set: { $set: [{ $dup: ['0'] }], props: { A: { $dup: ['0'] } } },
+                arr: [{ $dup: ['2', 'arr'] }]
               }
             ]
           }
@@ -674,7 +667,7 @@ describe('Upgrade', () => {
   // --------------------------------------------------------------------------
 
   describe('deps', () => {
-    it.only('complex deps', async () => {
+    it('complex deps', async () => {
       const run = new Run()
 
       class O { }
@@ -709,21 +702,14 @@ describe('Upgrade', () => {
               { $jig: 0 },
               'class A { }',
               {
-                $top: {
-                  deps: {
-                    n: 1,
-                    b: false,
-                    s: 'abc',
-                    o: { $dup: 0 },
-                    set: { $set: [{ $dup: 1 }], props: { A: { $dup: 1 } } },
-                    arr: { $dup: 2 }
-                  }
-                },
-                dups: [
-                  { o: { $dup: 0 } },
-                  { $jig: 0 },
-                  [{ $dup: 2 }]
-                ]
+                deps: {
+                  n: 1,
+                  b: false,
+                  s: 'abc',
+                  o: { o: { $dup: ['2', 'deps', 'o'] } },
+                  set: { $set: [{ $dup: ['0'] }], props: { A: { $dup: ['0'] } } },
+                  arr: [{ $dup: ['2', 'deps', 'arr'] }]
+                }
               }
             ]
           }
