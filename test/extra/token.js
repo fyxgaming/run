@@ -49,15 +49,18 @@ describe('Token', () => {
       expect(() => Token.mint(100)).to.throw('Token must be extended')
     })
 
+    // ------------------------------------------------------------------------
+
+    it('should support large amounts', () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
+      expect(TestToken.mint(2147483647).amount).to.equal(2147483647)
+      expect(TestToken.mint(Number.MAX_SAFE_INTEGER).amount).to.equal(Number.MAX_SAFE_INTEGER)
+    })
     /*
   })
 
   /*
-
-    it('should support large amounts', () => {
-      expect(new TestToken(2147483647).amount).to.equal(2147483647)
-      expect(new TestToken(Number.MAX_SAFE_INTEGER).amount).to.equal(Number.MAX_SAFE_INTEGER)
-    })
 
     it('should throw for bad amounts', () => {
       expect(() => new TestToken()).to.throw('amount is not a number')
