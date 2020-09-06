@@ -17,9 +17,8 @@ const { Token } = Run
 
 describe('Token', () => {
   // Wait for every test to finish. This makes debugging easier.
+  // Don't deactive the current run instance between tests. Token needs to stay deployed.
   afterEach(() => Run.instance && Run.instance.sync())
-  // Deactivate the current run instance. This stops leaks across tests.
-  // afterEach(() => Run.instance && Run.instance.deactivate())
 
   // --------------------------------------------------------------------------
   // mint
