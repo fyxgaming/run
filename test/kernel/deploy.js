@@ -712,7 +712,7 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('circular', async () => {
+    it('circular', async () => {
       const obj = {}
       obj.obj = obj
 
@@ -721,9 +721,7 @@ describe('Deploy', () => {
 
       const props = { obj, arr }
 
-      const encodedProps = {
-
-      }
+      const encodedProps = { obj: { obj: { $dup: ['obj'] } }, arr: [{ $dup: ['arr'] }] }
 
       await runPropTest(props, encodedProps)
     })
