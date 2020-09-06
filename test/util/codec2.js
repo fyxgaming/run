@@ -11,7 +11,7 @@ const Run = require('../env/run')
 // const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const Codec = unmangle(Run)._Codec2
-// const SI = unmangle(Run.sandbox)._intrinsics
+const SI = unmangle(Run.sandbox)._intrinsics
 // const HI = unmangle(Run.sandbox)._hostIntrinsics
 
 // ------------------------------------------------------------------------------------------------
@@ -286,7 +286,6 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('throws for raw intrinsics', () => {
       encodeFail(console)
       encodeFail(Object)
@@ -320,6 +319,7 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
+    /*
     it('throws for unsupported objects intrinsics', () => {
       encodeFail(new Date())
       encodeFail(new WeakSet())
