@@ -13,7 +13,8 @@ const Sandbox = Run.sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
   _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
-  _isUndefined, _isBoolean, _protoLen, _checkArgument, _checkState
+  _isUndefined, _isBoolean, _protoLen, _checkArgument, _checkState, _anonymizeSourceCode,
+  _deanonymizeSourceCode
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -207,6 +208,141 @@ describe('Misc', () => {
   })
 
   // ----------------------------------------------------------------------------------------------
+  // _text
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_text', () => {
+    it('short names', () => {
+    // Strings
+      expect(_text('')).to.equal('""')
+      expect(_text('abc')).to.equal('"abc"')
+      expect(_text('The quick brown fox jumped over blah blah')).to.equal('"The quick brown fox …"')
+      // Booleans
+      expect(_text(true)).to.equal('true')
+      expect(_text(false)).to.equal('false')
+      // Numbers
+      expect(_text(1)).to.equal('1')
+      expect(_text(-1)).to.equal('-1')
+      expect(_text(1.5)).to.equal('1.5')
+      expect(_text(NaN)).to.equal('NaN')
+      expect(_text(-Infinity)).to.equal('-Infinity')
+      // Symbols
+      expect(_text(Symbol.iterator)).to.equal('Symbol(Symbol.iterator)')
+      expect(_text(Symbol.unscopables)).to.equal('Symbol(Symbol.unscopables)')
+      // Undefined
+      expect(_text(undefined)).to.equal('undefined')
+      // Objects
+      expect(_text(null)).to.equal('null')
+      expect(_text({})).to.equal('[object Object]')
+      expect(_text({ a: 1 })).to.equal('[object Object]')
+      expect(_text([1, 2, 3])).to.equal('[object Array]')
+      expect(_text(new class Dragon {}())).to.equal('[object Dragon]')
+      expect(_text(new class {}())).to.equal('[anonymous object]')
+      // Functions
+      expect(_text(function f () { })).to.equal('f')
+      expect(_text(class A { })).to.equal('A')
+      expect(_text(function () { })).to.equal('[anonymous function]')
+      expect(_text(() => { })).to.equal('[anonymous function]')
+      expect(_text((x, y) => { })).to.equal('[anonymous function]')
+      expect(_text(_$xX123 => _$xX123)).to.equal('[anonymous function]')
+      expect(_text(class { })).to.equal('[anonymous class]')
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _sandboxSourceCode
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_sandboxSourceCode', () => {
+    // Node 8 and Node 12 have slightly different spacing for getNormalizedSourceCode('function () { return 1 }')
+    // We don't need the normalized code to always be exactly the same, as long as it functions the same.
+    // Compiled build also add semicolons, so we normlize that too.
+
+    function expectNormalizedSourceCode (T, src) {
+      const normalize = s => s.replace(/\s+/g, '').replace(/;/g, '')
+      const sandboxSrc = _sandboxSourceCode(T.toString(), T)
+      expect(normalize(sandboxSrc)).to.equal(normalize(src))
+    }
+
+    // ------------------------------------------------------------------------
+
+    it('basic class', () => {
+      class A {}
+      expectNormalizedSourceCode(A, 'class A {}')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('basic function', () => {
+      function f () { return 1 }
+      expectNormalizedSourceCode(f, 'function f() { return 1 }')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('class that extends another class', () => {
+      const SomeLibrary = { B: class B { } }
+      class A extends SomeLibrary.B {}
+      expectNormalizedSourceCode(A, 'class A extends B {}')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('single-line class', () => {
+      class B { }
+      class A extends B { f () {} }
+      expectNormalizedSourceCode(A, 'class A extends B { f () {} }')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('method', () => {
+      class B { f () { } }
+      expectNormalizedSourceCode(B.prototype.f, 'function f () { }')
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _anonymizeSourceCode
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_anonymizeSourceCode', () => {
+    it('anonymizes', () => {
+      expect(_anonymizeSourceCode('class A { }')).to.equal('class  { }')
+      expect(_anonymizeSourceCode('class A{f(){}}')).to.equal('class {f(){}}')
+      expect(_anonymizeSourceCode('class A extends B { }')).to.equal('class  extends B { }')
+      expect(_anonymizeSourceCode('function f() { }')).to.equal('function () { }')
+      expect(_anonymizeSourceCode('function f    () {\n}')).to.equal('function     () {\n}')
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _deanonymizeSourceCode
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_deanonymizeSourceCode', () => {
+    it('deanonymizes', () => {
+      expect(_deanonymizeSourceCode('class { }', 'A')).to.equal('class A{ }')
+      expect(_deanonymizeSourceCode('class  extends B{ }', 'A')).to.equal('class A extends B{ }')
+      expect(_deanonymizeSourceCode('function () { }', 'f')).to.equal('function f() { }')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('converts', () => {
+      function test (x, n) { expect(_deanonymizeSourceCode(_anonymizeSourceCode(x), n)).to.equal(x) }
+      test('class A { }', 'A')
+      test('class A{ }', 'A')
+      test('class A extends C { }', 'A')
+      test('class A extends C\n{ }', 'A')
+      test('class A extends C{ }', 'A')
+      test('function f() { }', 'f')
+      test('function f () { }', 'f')
+      test('function f () {\n}', 'f')
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
   // _isBasicObject
   // ----------------------------------------------------------------------------------------------
 
@@ -310,12 +446,16 @@ describe('Misc', () => {
       expect(_isArbitraryObject(new A())).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
     it('non-arbitrary objects', () => {
       expect(_isArbitraryObject(new Map())).to.equal(false)
       expect(_isArbitraryObject(new Set())).to.equal(false)
       expect(_isArbitraryObject(null)).to.equal(false)
       expect(_isArbitraryObject({ $arb: 1 })).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
 
     it('jigs', () => {
       const run = new Run()
@@ -324,6 +464,8 @@ describe('Misc', () => {
       expect(_isArbitraryObject(new CA())).to.equal(false)
       expect(_isArbitraryObject(new A())).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
 
     it.skip('berries', () => {
       // TODO
@@ -360,6 +502,30 @@ describe('Misc', () => {
   })
 
   // ----------------------------------------------------------------------------------------------
+  // _isIntrinsic
+  // ----------------------------------------------------------------------------------------------
+
+  describe.skip('_isIntrinsic', () => {
+    // TODO
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _isSerializable
+  // ----------------------------------------------------------------------------------------------
+
+  describe.skip('_isSerializable', () => {
+    // TODO
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _isAnonymous
+  // ----------------------------------------------------------------------------------------------
+
+  describe.skip('_isAnonymous', () => {
+    // TODO
+  })
+
+  // ----------------------------------------------------------------------------------------------
   // _protoLen
   // ----------------------------------------------------------------------------------------------
 
@@ -377,88 +543,75 @@ describe('Misc', () => {
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _text
+  // _getOwnProperty
   // ----------------------------------------------------------------------------------------------
 
-  describe('_text', () => {
-    it('short names', () => {
-    // Strings
-      expect(_text('')).to.equal('""')
-      expect(_text('abc')).to.equal('"abc"')
-      expect(_text('The quick brown fox jumped over blah blah')).to.equal('"The quick brown fox …"')
-      // Booleans
-      expect(_text(true)).to.equal('true')
-      expect(_text(false)).to.equal('false')
-      // Numbers
-      expect(_text(1)).to.equal('1')
-      expect(_text(-1)).to.equal('-1')
-      expect(_text(1.5)).to.equal('1.5')
-      expect(_text(NaN)).to.equal('NaN')
-      expect(_text(-Infinity)).to.equal('-Infinity')
-      // Symbols
-      expect(_text(Symbol.iterator)).to.equal('Symbol(Symbol.iterator)')
-      expect(_text(Symbol.unscopables)).to.equal('Symbol(Symbol.unscopables)')
-      // Undefined
-      expect(_text(undefined)).to.equal('undefined')
-      // Objects
-      expect(_text(null)).to.equal('null')
-      expect(_text({})).to.equal('[object Object]')
-      expect(_text({ a: 1 })).to.equal('[object Object]')
-      expect(_text([1, 2, 3])).to.equal('[object Array]')
-      expect(_text(new class Dragon {}())).to.equal('[object Dragon]')
-      expect(_text(new class {}())).to.equal('[anonymous object]')
-      // Functions
-      expect(_text(function f () { })).to.equal('f')
-      expect(_text(class A { })).to.equal('A')
-      expect(_text(function () { })).to.equal('[anonymous function]')
-      expect(_text(() => { })).to.equal('[anonymous function]')
-      expect(_text((x, y) => { })).to.equal('[anonymous function]')
-      expect(_text(_$xX123 => _$xX123)).to.equal('[anonymous function]')
-      expect(_text(class { })).to.equal('[anonymous class]')
-    })
+  describe.skip('_getOwnProperty', () => {
+    // TODO
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _sandboxSourceCode
+  // _hasOwnProperty
   // ----------------------------------------------------------------------------------------------
 
-  describe('_sandboxSourceCode', () => {
-    // Node 8 and Node 12 have slightly different spacing for getNormalizedSourceCode('function () { return 1 }')
-    // We don't need the normalized code to always be exactly the same, as long as it functions the same.
-    // Compiled build also add semicolons, so we normlize that too.
+  describe.skip('_hasOwnProperty', () => {
+    // TODO
+  })
 
-    function expectNormalizedSourceCode (T, src) {
-      const normalize = s => s.replace(/\s+/g, '').replace(/;/g, '')
-      const sandboxSrc = _sandboxSourceCode(T.toString(), T)
-      expect(normalize(sandboxSrc)).to.equal(normalize(src))
-    }
+  // ----------------------------------------------------------------------------------------------
+  // _setOwnProperty
+  // ----------------------------------------------------------------------------------------------
 
-    it('basic class', () => {
-      class A {}
-      expectNormalizedSourceCode(A, 'class A {}')
-    })
+  describe.skip('_setOwnProperty', () => {
+    // TODO
+  })
 
-    it('basic function', () => {
-      function f () { return 1 }
-      expectNormalizedSourceCode(f, 'function f () { return 1 }')
-    })
+  // ----------------------------------------------------------------------------------------------
+  // _ownGetters
+  // ----------------------------------------------------------------------------------------------
 
-    it('class that extends another class', () => {
-      const SomeLibrary = { B: class B { } }
-      class A extends SomeLibrary.B {}
-      expectNormalizedSourceCode(A, 'class A extends B {}')
-    })
+  describe.skip('_ownGetters', () => {
+    // TODO
+  })
 
-    it('single-line class', () => {
-      class B { }
-      class A extends B { f () {} }
-      expectNormalizedSourceCode(A, 'class A extends B { f () {} }')
-    })
+  // ----------------------------------------------------------------------------------------------
+  // _ownMethods
+  // ----------------------------------------------------------------------------------------------
 
-    it('method', () => {
-      class B { f () { } }
-      expectNormalizedSourceCode(B.prototype.f, 'function f() { }')
-    })
+  describe.skip('_ownMethods', () => {
+    // TODO
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _sameJig
+  // ----------------------------------------------------------------------------------------------
+
+  describe.skip('_sameJig', () => {
+    // TODO
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _hasJig
+  // ----------------------------------------------------------------------------------------------
+
+  describe.skip('_hasJig', () => {
+    // TODO
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _addJigs
+  // ----------------------------------------------------------------------------------------------
+
+  describe.skip('_addJigs', () => {
+    // TODO
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _subtractJigs
+  // ----------------------------------------------------------------------------------------------
+
+  describe.skip('_subtractJigs', () => {
+    // TODO
   })
 
   // ----------------------------------------------------------------------------------------------
