@@ -721,7 +721,7 @@ describe('Deploy', () => {
 
       const props = { obj, arr }
 
-      const encodedProps = { obj: { obj: { $dup: ['obj'] } }, arr: [{ $dup: ['arr'] }] }
+      const encodedProps = { obj: { obj: { $dup: ['1', 'obj'] } }, arr: [{ $dup: ['1', 'arr'] }] }
 
       await runPropTest(props, encodedProps)
     })
