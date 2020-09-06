@@ -279,7 +279,6 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    /*
     it('defaults to host intrinsics', () => {
       expect(unmangle(new Codec())._encode({}).constructor).to.equal(Object)
       expect(unmangle(new Codec())._encode([]).constructor).to.equal(Array)
@@ -287,6 +286,7 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
+    /*
     it('throws for raw intrinsics', () => {
       encodeFail(console)
       encodeFail(Object)
