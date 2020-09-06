@@ -788,14 +788,35 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it('updates jig classes', () => {
-      // TODO
-    })
+    it('updates in maps', async () => {
+      const run = new Run()
+      function f () { return 1 }
+      function g () { return 2 }
+      const cg = run.deploy(f)
+      cg.upgrade(g)
+      await cg.sync()
+      const cf = await run.load(cg.origin)
+      class A extends Jig {
+        init () { this.m = new Map() }
+        setX (x) { this.m.set('x', x) }
+        setY (y) { this.m.set('y', y) }
+      }
+      const a = new A()
+      a.setX(cf)
+      await a.sync()
 
-    // ------------------------------------------------------------------------
+      function test (a) { expect(a.m.get('x')).to.equal(a.m.get('y')) }
 
-    it('updates in sets and maps', () => {
-      // TODO
+      a.setY(cg)
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
     })
   })
 })
