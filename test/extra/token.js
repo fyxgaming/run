@@ -19,7 +19,7 @@ describe('Token', () => {
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
   // Deactivate the current run instance. This stops leaks across tests.
-  afterEach(() => Run.instance && Run.instance.deactivate())
+  // afterEach(() => Run.instance && Run.instance.deactivate())
 
   // --------------------------------------------------------------------------
   // mint
