@@ -28,7 +28,21 @@ describe('Token', () => {
 
   describe('Mint', () => {
     it('should mint new tokens', () => {
+      const run = new Run()
+      const { Jig } = Run
+      class A extends Jig { }
+      const a = new A()
+      console.log(a.constructor.name)
+
+      const CTestToken = run.deploy(TestToken)
+      console.log(CTestToken.name)
+      const token = CTestToken.mint(100)
+      console.log(token.amount)
+
+      TestToken.mint(100)
+
       // const token = TestToken.mint(100)
+      // console.log(token)
       // expect(token.amount).to.equal(100)
       // expect(token.owner).to.equal(TestToken.owner)
     })
