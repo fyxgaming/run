@@ -160,7 +160,7 @@ describe('Owner API', () => {
 
   describe('owner', () => {
     it('throws UnimplementedError by default', async () => {
-      expect(() => new Owner().owner()).to.throw(UnimplementedError)
+      await expect(new Owner().owner()).to.be.rejectedWith(UnimplementedError)
     })
   })
 

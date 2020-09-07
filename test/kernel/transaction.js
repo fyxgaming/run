@@ -72,6 +72,25 @@ describe('Transaction', () => {
     expect(typeof rawtx).to.equal('string')
     expect(rawtx.length > 0).to.equal(true)
   })
+
+  // --------------------------------------------------------------------------
+
+  it('import', async () => {
+    const run = new Run()
+    class A extends Jig { }
+    const tx = new Transaction(() => run.deploy(A))
+    const rawtx = await tx.export()
+    const tx2 = await run.import(rawtx)
+    tx2.update(() => run.deploy(class B { }))
+    await tx2.publish()
+  })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('placeholder', () => {
+    // TODO
+    // - Between begin and end, dont allow sync. nor load. nor import.
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
