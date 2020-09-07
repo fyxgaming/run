@@ -9,7 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
-const { Token, LocalCache } = Run
+const { LocalCache, Token } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Token
