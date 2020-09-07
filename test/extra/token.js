@@ -39,7 +39,7 @@ describe('Token', () => {
     it('throws if mint outside', () => {
       new Run() // eslint-disable-line
       class TestToken extends Token { }
-      expect(() => new TestToken(100)).to.throw('Use TestToken.mint to mint')
+      expect(() => new TestToken()).to.throw('Use TestToken.mint to mint')
     })
 
     // ------------------------------------------------------------------------
@@ -153,7 +153,7 @@ describe('Token', () => {
       class TestToken extends Token { }
       const a = TestToken.mint(30)
       const b = TestToken.mint(70)
-      const c = TestToken.combine(a, b)
+      const c = new TestToken(a, b)
       await run.sync()
       expect(c).to.be.instanceOf(TestToken)
       expect(c.amount).to.equal(100)
@@ -163,6 +163,10 @@ describe('Token', () => {
       expect(b.amount).to.equal(0)
       expect(b.owner).not.to.equal(run.owner.address)
     })
+
+    // Throws if 0
+    // Throws if 1
+    // ...
   })
 
   /*
