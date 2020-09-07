@@ -104,16 +104,20 @@ describe('Token', () => {
       expect(token.owner).to.equal(address)
       expect(token.amount).to.equal(30)
     })
-  })
 
-  /*
-  describe('send', () => {
+    // ------------------------------------------------------------------------
 
-    it('should throw if send too much', () => {
+    it('throws if send too much', () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
       expect(() => token.send(address, 101)).to.throw('not enough funds')
     })
+  })
+
+  /*
+  describe('send', () => {
 
     it('should throw if send bad amount', () => {
       const address = new PrivateKey().toAddress().toString()
