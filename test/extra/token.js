@@ -143,6 +143,28 @@ describe('Token', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // combine
+  // --------------------------------------------------------------------------
+
+  describe('combine', () => {
+    it('two tokens', async () => {
+      const run = new Run()
+      class TestToken extends Token { }
+      const a = TestToken.mint(30)
+      const b = TestToken.mint(70)
+      const c = TestToken.combine(a, b)
+      await run.sync()
+      expect(c).to.be.instanceOf(TestToken)
+      expect(c.amount).to.equal(100)
+      expect(c.owner).to.equal(run.owner.address)
+      expect(a.amount).to.equal(0)
+      expect(a.owner).not.to.equal(run.owner.address)
+      expect(b.amount).to.equal(0)
+      expect(b.owner).not.to.equal(run.owner.address)
+    })
+  })
+
   /*
 
   describe('combine', () => {
