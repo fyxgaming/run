@@ -38,17 +38,14 @@ async function main () {
   // Town creates an atomic swap proposal and signs it
   // ------------------------------------------------------------------------
 
-  townRun.transaction.begin()
+  const swap = new Run.Transaction(() => {
+    gold.send(dragonRun.owner.pubkey)
+    princess.send(townRun.owner.pubkey)
+  })
 
-  gold.send(dragonRun.owner.pubkey)
-  princess.send(townRun.owner.pubkey)
+  const swapTransaction = await swap.export()
 
-  await townRun.transaction.pay()
-  await townRun.transaction.sign()
-
-  const swapTransaction = townRun.transaction.export()
-
-  townRun.transaction.rollback()
+  swap.rollback()
 
   // ------------------------------------------------------------------------
   // Town sends the proposal to the dragon

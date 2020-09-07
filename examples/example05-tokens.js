@@ -24,9 +24,10 @@ async function main () {
   Gold.source = 'Bitcoin Land'
   Gold.quality = 'Excellent'
 
-  let alicesGold = new Gold(100)
+  const alicesGold = Gold.mint(100)
 
-  alicesGold = alicesGold.send(bob, 20).send(bob, 30)
+  alicesGold.send(bob, 20)
+  alicesGold.send(bob, 30)
 
   await aliceRun.sync()
 
@@ -39,7 +40,7 @@ async function main () {
   await bobRun.sync()
 
   const pieces = bobRun.inventory.jigs.filter(jig => jig instanceof Gold)
-  const bobsGold = Gold.combine(...pieces)
+  const bobsGold = new Gold(...pieces)
 
   // ------------------------------------------------------------------------
   // Alice mints 30 more gold for herself
@@ -47,9 +48,9 @@ async function main () {
 
   aliceRun.activate()
 
-  const newGold = new Gold(30)
+  const newGold = Gold.mint(30)
 
-  alicesGold = Gold.combine(alicesGold, newGold)
+  alicesGold = new Gold(alicesGold, newGold)
 
   // ------------------------------------------------------------------------
   // Display the final balances
