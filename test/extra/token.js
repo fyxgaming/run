@@ -9,6 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
+const unmangle = require('../env/unmangle')
 const { Token } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -36,10 +37,13 @@ describe('Token', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if mint outside', () => {
-      new Run() // eslint-disable-line
-      class TestToken extends Token { }
-      expect(() => new TestToken()).to.throw('Use TestToken.mint to mint')
+    it('updates supply', () => {
+      const run = new Run()
+      const TestToken = run.deploy(class TestToken extends Token { })
+      TestToken.mint(100)
+      TestToken.mint(200)
+      TestToken.mint(300)
+      expect(TestToken.supply).to.equal(600)
     })
 
     // ------------------------------------------------------------------------
@@ -112,7 +116,7 @@ describe('Token', () => {
       class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
-      expect(() => token.send(address, 101)).to.throw('not enough funds')
+      expect(() => token.send(address, 101)).to.throw('Not enough funds')
     })
 
     // ------------------------------------------------------------------------
@@ -164,31 +168,15 @@ describe('Token', () => {
       expect(b.owner).not.to.equal(run.owner.address)
     })
 
-    // Throws if 0
-    // Throws if 1
-    // ...
-  })
+    // ------------------------------------------------------------------------
 
-  /*
-
-  describe('combine', () => {
-    it('should support combining two tokens', () => {
-      const a = TestToken.mint(30)
-      const b = TestToken.mint(70)
-      const c = TestToken.combine(a, b)
-      expect(c).to.be.instanceOf(TestToken)
-      expect(c.amount).to.equal(100)
-      expect(c.owner).to.equal(run.owner.address)
-      expect(a.amount).to.equal(0)
-      expect(a.owner).not.to.equal(run.owner.address)
-      expect(b.amount).to.equal(0)
-      expect(b.owner).not.to.equal(run.owner.address)
-    })
-
-    it('should support combining many tokens', () => {
+    it('many tokens', async () => {
+      const run = new Run()
+      class TestToken extends Token { }
       const tokens = []
       for (let i = 0; i < 10; ++i) tokens.push(TestToken.mint(1))
-      const combined = TestToken.combine(...tokens)
+      const combined = new TestToken(...tokens)
+      await combined.sync()
       expect(combined).to.be.instanceOf(TestToken)
       expect(combined.amount).to.equal(10)
       expect(combined.owner).to.equal(run.owner.address)
@@ -198,10 +186,14 @@ describe('Token', () => {
       })
     })
 
-    it('should support load after combine', async () => {
+    // ------------------------------------------------------------------------
+
+    it('load after combine', async () => {
+      const run = new Run()
+      class TestToken extends Token { }
       const a = TestToken.mint(30)
       const b = TestToken.mint(70)
-      const c = TestToken.combine(a, b)
+      const c = new TestToken(a, b)
       await run.sync()
       run.deactivate()
       const code = unmangle(unmangle(run)._kernel)._code
@@ -210,61 +202,77 @@ describe('Token', () => {
       expect(c2.amount).to.equal(c.amount)
     })
 
-    it('should throw if combine different owners without signatures', async () => {
+    // ------------------------------------------------------------------------
+
+    it('throws if combine different owners without signatures', async () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
       const a = TestToken.mint(1)
       const b = TestToken.mint(2)
       const address = new PrivateKey().toAddress().toString()
       b.send(address)
-      await expect(TestToken.combine(a, b).sync()).to.be.rejectedWith('Missing signature for TestToken')
+      await expect(new TestToken(a, b).sync()).to.be.rejected
     })
 
-    it('should throw if combined amount is too large', () => {
+    // ------------------------------------------------------------------------
+
+    it('throws if empty', () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
+      expect(() => new TestToken()).to.throw('Invalid tokens to combine')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if one', () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
+      const token = TestToken.mint(1)
+      expect(() => new TestToken(token)).to.throw('Invalid tokens to combine')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if combined amount is too large', () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
       const a = TestToken.mint(Number.MAX_SAFE_INTEGER)
       const b = TestToken.mint(1)
-      expect(() => TestToken.combine(a, b)).to.throw('amount too large')
+      expect(() => new TestToken(a, b)).to.throw('amount too large')
     })
 
-    it('should throw if combine only one token', () => {
-      expect(() => TestToken.combine(TestToken.mint(1))).to.throw('must combine at least two tokens')
+    // ------------------------------------------------------------------------
+
+    it('throws if combine non-tokens', () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
+      const error = 'Cannot combine different token classes'
+      expect(() => new TestToken(TestToken.mint(1), 1)).to.throw(error)
+      expect(() => new TestToken(TestToken.mint(1), {})).to.throw(error)
+      expect(() => new TestToken(TestToken.mint(1), TestToken.mint(1), {})).to.throw(error)
     })
 
-    it('should throw if combine no tokens', () => {
-      expect(() => TestToken.combine()).to.throw('must combine at least two tokens')
-    })
+    // ------------------------------------------------------------------------
 
-    it('should throw if combine non-tokens', () => {
-      const error = 'cannot combine different token classes'
-      expect(() => TestToken.combine(TestToken.mint(1), 1)).to.throw(error)
-      expect(() => TestToken.combine(TestToken.mint(1), {})).to.throw(error)
-      expect(() => TestToken.combine(TestToken.mint(1), TestToken.mint(1), {})).to.throw(error)
-    })
-
-    it('should throw if combine different token classes', () => {
-      const error = 'cannot combine different token classes'
+    it('throws if combine different token classes', () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
+      const error = 'Cannot combine different token classes'
       class DifferentToken extends Token { }
       class ExtendedToken extends TestToken { }
-      expect(() => TestToken.combine(TestToken.mint(1), new DifferentToken(1))).to.throw(error)
-      expect(() => TestToken.combine(TestToken.mint(1), new ExtendedToken(1))).to.throw(error)
+      expect(() => new TestToken(TestToken.mint(1), DifferentToken.mint(1))).to.throw(error)
+      expect(() => new TestToken(TestToken.mint(1), ExtendedToken.mint(1))).to.throw(error)
     })
 
-    it('should throw if combine duplicate tokens', () => {
+    // ------------------------------------------------------------------------
+
+    it('throws if combine duplicate tokens', () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
       const token = TestToken.mint(1)
-      expect(() => TestToken.combine(token, token)).to.throw('cannot combine duplicate tokens')
+      expect(() => new TestToken(token, token)).to.throw('Cannot combine duplicate tokens')
     })
   })
-
-  describe('value', () => {
-    it('should default to 0', () => {
-      class Token2 extends Token { }
-      expect(Token2.decimals).to.equal(0)
-      expect(new Token2(120).value).to.equal(120)
-    })
-
-    it('should divide amount by decimals', () => {
-      expect(TestToken.mint(120).value).to.equal(1.2)
-    })
-  })
-  */
 })
 
 // ------------------------------------------------------------------------------------------------
