@@ -131,17 +131,19 @@ describe('Token', () => {
       expect(() => token.send(address, Infinity)).to.throw('amount must be an integer')
       expect(() => token.send(address, NaN)).to.throw('amount must be an integer')
     })
-  })
 
-  /*
-  describe('send', () => {
+    // ------------------------------------------------------------------------
 
-    it('should throw if send to bad owner', () => {
+    it('throws if send to bad owner', () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
       const token = TestToken.mint(100)
       expect(() => token.send(10)).to.throw('Invalid owner: 10')
       expect(() => token.send('abc', 10)).to.throw('Invalid owner: "abc"')
     })
   })
+
+  /*
 
   describe('combine', () => {
     it('should support combining two tokens', () => {
