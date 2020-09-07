@@ -30,7 +30,7 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('basic jig', async () => {
+    it.only('basic jig', async () => {
       const run = new Run()
       class A extends Jig { }
 
