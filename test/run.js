@@ -24,13 +24,13 @@ describe('Run', () => {
     await run2.load(A.location)
   })
 
-  it('payload', async() => {
+  it('payload', async () => {
     const run = new Run()
     class A extends Jig { }
     run.deploy(A)
     await run.sync()
     const txid = A.location.slice(0, 64)
     const tx = await run.blockchain.fetch(txid)
-    // console.log(run.payload(tx))
+    expect(typeof run.payload(tx)).to.equal('object')
   })
 })

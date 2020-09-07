@@ -82,14 +82,17 @@ describe('Token', () => {
   // --------------------------------------------------------------------------
 
   describe('send', () => {
-    it('full amount', () => {
+    it('full amount', async () => {
       new Run() // eslint-disable-line
       class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
-      expect(token.send(address)).to.equal(null)
-      expect(token.owner).to.equal(address)
-      expect(token.amount).to.equal(100)
+      const sent = token.send(address)
+      await sent.sync()
+      expect(sent.owner).to.equal(address)
+      expect(sent.amount).to.equal(100)
+      expect(token.owner).to.equal(null)
+      expect(token.amount).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
@@ -99,13 +102,13 @@ describe('Token', () => {
       class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
-      const change = token.send(address, 30)
+      const sent = token.send(address, 30)
       await run.sync()
-      expect(change).to.be.instanceOf(TestToken)
-      expect(change.owner).to.equal(run.owner.address)
-      expect(change.amount).to.equal(70)
-      expect(token.owner).to.equal(address)
-      expect(token.amount).to.equal(30)
+      expect(token.owner).to.equal(run.owner.address)
+      expect(token.amount).to.equal(70)
+      expect(sent).to.be.instanceOf(TestToken)
+      expect(sent.owner).to.equal(address)
+      expect(sent.amount).to.equal(30)
     })
 
     // ------------------------------------------------------------------------
