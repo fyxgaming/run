@@ -114,12 +114,12 @@ describe('Token', () => {
       const token = TestToken.mint(100)
       expect(() => token.send(address, 101)).to.throw('not enough funds')
     })
-  })
 
-  /*
-  describe('send', () => {
+    // ------------------------------------------------------------------------
 
-    it('should throw if send bad amount', () => {
+    it('throws if send bad amount', () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
       expect(() => token.send(address, {})).to.throw('amount is not a number')
@@ -131,6 +131,10 @@ describe('Token', () => {
       expect(() => token.send(address, Infinity)).to.throw('amount must be an integer')
       expect(() => token.send(address, NaN)).to.throw('amount must be an integer')
     })
+  })
+
+  /*
+  describe('send', () => {
 
     it('should throw if send to bad owner', () => {
       const token = TestToken.mint(100)
