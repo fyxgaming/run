@@ -30,6 +30,7 @@ require('./kernel/sealed')
 require('./kernel/state')
 require('./kernel/static')
 require('./kernel/sync')
+require('./kernel/transaction')
 require('./kernel/upgrade')
 require('./kernel/universal')
 
