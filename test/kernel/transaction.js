@@ -46,6 +46,32 @@ describe('Transaction', () => {
     a.f()
     await a.sync()
   })
+
+  // --------------------------------------------------------------------------
+
+  it('rollback', async () => {
+    new Run() // eslint-disable-line
+    class A extends Jig { f () { this.n = 1 } }
+    const a = new A()
+    await a.sync()
+    const tx = new Transaction()
+    tx.update(() => a.f())
+    expect(a.n).to.equal(1)
+    tx.rollback()
+    expect(typeof a.n).to.equal('undefined')
+    expect(a.location).to.equal(a.origin)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('export', async () => {
+    const run = new Run()
+    class A extends Jig { }
+    const tx = new Transaction(() => run.deploy(A))
+    const rawtx = await tx.export()
+    expect(typeof rawtx).to.equal('string')
+    expect(rawtx.length > 0).to.equal(true)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
