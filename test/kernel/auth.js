@@ -81,7 +81,7 @@ describe('Auth', () => {
 
       expectTx({
         nin: 2,
-        nref: 0,
+        nref: 1,
         nout: 2,
         ndel: 0,
         ncre: 0,

@@ -618,8 +618,6 @@ describe('Membrane', () => {
       const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect(Object.getOwnPropertyDescriptor(a, 'sync')).to.equal(undefined)
-      expect(Object.getOwnPropertyDescriptor(a, 'destroy')).to.equal(undefined)
-      expect(Object.getOwnPropertyDescriptor(a, 'auth')).to.equal(undefined)
       expect(Object.getOwnPropertyDescriptor(a, 'init')).to.equal(undefined)
       expect(Object.getOwnPropertyDescriptor(a, 'tostring')).to.equal(undefined)
     })
@@ -630,8 +628,6 @@ describe('Membrane', () => {
       const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect(() => { a.sync = 1 }).to.throw('Cannot set sync')
-      expect(() => { a.destroy = 1 }).to.throw('Cannot set destroy')
-      expect(() => { a.auth = 1 }).to.throw('Cannot set auth')
       expect(() => { a.init = 1 }).to.throw('Cannot set init')
     })
 
@@ -642,8 +638,6 @@ describe('Membrane', () => {
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(a, 'sync', desc)).to.throw('Cannot define sync')
-      expect(() => Object.defineProperty(a, 'destroy', desc)).to.throw('Cannot define destroy')
-      expect(() => Object.defineProperty(a, 'auth', desc)).to.throw('Cannot define auth')
       expect(() => Object.defineProperty(a, 'init', desc)).to.throw('Cannot define init')
     })
 
@@ -653,8 +647,6 @@ describe('Membrane', () => {
       const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect(() => { delete a.sync }).to.throw('Cannot delete sync')
-      expect(() => { delete a.destroy }).to.throw('Cannot delete destroy')
-      expect(() => { delete a.auth }).to.throw('Cannot delete auth')
       expect(() => { delete a.init }).to.throw('Cannot delete init')
     })
   })

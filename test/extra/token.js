@@ -9,8 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
-const unmangle = require('../env/unmangle')
-const { Token } = Run
+const { Token, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Token
@@ -18,7 +17,7 @@ const { Token } = Run
 
 describe('Token', () => {
   // Wait for every test to finish. This makes debugging easier.
-  // Don't deactive the current run instance between tests. Token needs to stay deployed.
+  // Don't deactivate the current run instance between tests. Token needs to stay deployed.
   afterEach(() => Run.instance && Run.instance.sync())
 
   // --------------------------------------------------------------------------
@@ -189,16 +188,15 @@ describe('Token', () => {
     // ------------------------------------------------------------------------
 
     it('load after combine', async () => {
-      const run = new Run()
+      // TODO: REMOVE IMPORT LIMIT
+      const run = new Run({ importLimit: 30 })
       class TestToken extends Token { }
       const a = TestToken.mint(30)
       const b = TestToken.mint(70)
       const c = new TestToken(a, b)
       await run.sync()
-      run.deactivate()
-      const code = unmangle(unmangle(run)._kernel)._code
-      const run2 = new Run({ blockchain: run.blockchain, code })
-      const c2 = await run2.load(c.location)
+      run.cache = new LocalCache()
+      const c2 = await run.load(c.location)
       expect(c2.amount).to.equal(c.amount)
     })
 
