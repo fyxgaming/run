@@ -191,8 +191,7 @@ describe('Token', () => {
     // ------------------------------------------------------------------------
 
     it('load after combine', async () => {
-      // TODO: REMOVE IMPORT LIMIT
-      const run = new Run({ importLimit: 30 })
+      const run = new Run()
       class TestToken extends Token { }
       const a = TestToken.mint(30)
       const b = TestToken.mint(70)

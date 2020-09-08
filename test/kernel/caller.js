@@ -14,6 +14,11 @@ const { Jig, LocalCache } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('Caller', () => {
+  // Wait for every test to finish. This makes debugging easier.
+  afterEach(() => Run.instance && Run.instance.sync())
+  // Deactivate the current run instance. This stops leaks across tests.
+  afterEach(() => Run.instance && Run.instance.deactivate())
+
   it('null externally', async () => {
     const run = new Run()
     class A extends Jig {
