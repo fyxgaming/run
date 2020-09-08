@@ -22,7 +22,6 @@
       this.done = false
       const markDone = () => { this.done = true }
 
-
       mocha.reporter(class {
         constructor (runner, options) {
           new mocha.Mocha.reporters.Spec(runner, options)

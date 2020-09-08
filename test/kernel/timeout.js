@@ -35,15 +35,13 @@ describe('Timeout', () => {
 
   // ------------------------------------------------------------------------
 
-  it.only('sync', async () => {
+  it('sync', async () => {
     const run = new Run()
     class A extends Jig { inc () { this.n = (this.n || 0) + 1 } }
     const a = new A()
     for (let i = 0; i < 10; i++) { a.inc() }
     await run.sync()
     const a2 = await run.load(a.origin)
-    console.log(a)
-    console.log(a2)
     run.cache = new LocalCache()
     run.timeout = 10
     await expect(a2.sync()).to.be.rejectedWith('sync timeout')
