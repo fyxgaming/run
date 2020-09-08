@@ -69,8 +69,15 @@ describe('Timeout', () => {
 
   // ------------------------------------------------------------------------
 
-  it('no timeout', () => {
-
+  it('infinite timeout', async () => {
+    const run = new Run()
+    class A extends Jig { inc () { this.n = (this.n || 0) + 1 } }
+    const a = new A()
+    for (let i = 0; i < 10; i++) { a.inc() }
+    await run.sync()
+    run.cache = new LocalCache()
+    run.timeout = Infinity
+    await run.load(a.location)
   })
 })
 
