@@ -420,6 +420,22 @@ describe('Deploy', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('classes named Math and Date', async () => {
+      const run = new Run()
+      class Math { }
+      const Math2 = run.deploy(Math)
+      class Date { }
+      const Date2 = run.deploy(Date)
+      await run.sync()
+      await run.load(Math2.location)
+      await run.load(Date2.location)
+      run.cache = new LocalCache()
+      await run.load(Math2.location)
+      await run.load(Date2.location)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -1488,11 +1504,35 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
+    it('does not throw if different instances of same parent', async () => {
+      const run = new Run()
+      class A { }
+      class B extends A { }
+      const A2 = run.deploy(A)
+      await A2.sync()
+      const A3 = await run.load(A2.location)
+      B.deps = { A: A3 }
+      expect(() => run.deploy(B)).not.to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if dep is class name', () => {
       const run = new Run()
       class A { }
       A.deps = { A }
       expect(() => run.deploy(A)).to.throw('Illegal dependency')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('dependencies named Math and Date', () => {
+      const run = new Run()
+      class Math { }
+      class Date { }
+      class A { }
+      A.deps = { Math, Date }
+      run.deploy(A)
     })
   })
 

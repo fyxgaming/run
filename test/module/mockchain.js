@@ -17,6 +17,24 @@ const { Mockchain } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('Mockchain', () => {
+  describe('mempoolChainLimit', () => {
+    it('disable', async () => {
+      const mockchain = new Mockchain()
+      mockchain.mempoolChainLimit = Infinity
+
+      const privkey = new PrivateKey('testnet')
+      const address = privkey.toAddress()
+      const script = Script.fromAddress(address)
+      mockchain.fund(address, 100000000)
+
+      for (let i = 0; i < 50; i++) {
+        const utxo = (await mockchain.utxos(script))[0]
+        const tx = new Transaction().from(utxo).change(address).sign(privkey)
+        await mockchain.broadcast(tx)
+      }
+    })
+  })
+
   describe('broadcast', () => {
     it('bsv transaction', async () => {
       const mockchain = new Mockchain()
