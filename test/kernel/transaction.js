@@ -19,6 +19,8 @@ describe('Transaction', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
+  // ------------------------------------------------------------------------
+
   it('basic', async () => {
     const run = new Run()
     class A extends Jig { }

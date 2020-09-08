@@ -21,6 +21,8 @@ describe('Publish', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
+  // ------------------------------------------------------------------------
+
   it('throws if inconsistent jig classes', async () => {
     const run = new Run()
     class A extends Jig {

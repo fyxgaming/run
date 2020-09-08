@@ -19,6 +19,8 @@ describe('Lock', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
+  // ------------------------------------------------------------------------
+
   describe('deploy', () => {
     it.skip('deploys with custom lock', async () => {
       // TODO: Use custom owner
