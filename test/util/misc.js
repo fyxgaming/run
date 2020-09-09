@@ -15,7 +15,7 @@ const {
   _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
   _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
   _anonymizeSourceCode, _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty,
-  _setOwnProperty, _ownGetters, _ownMethods, _sameJig, _hasJig
+  _setOwnProperty, _ownGetters, _ownMethods, _sameJig, _hasJig, _addJigs
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -816,14 +816,47 @@ describe('Misc', () => {
       const a = new A()
       expect(_hasJig([{}], a)).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if inconsistent worldview', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      a.auth()
+      await a.sync()
+      const a2 = await run.load(a.origin)
+      expect(() => _hasJig([a], a2)).to.throw('Inconsistent worldview')
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
   // _addJigs
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_addJigs', () => {
-    // TODO
+  describe('_addJigs', () => {
+    it('adds jigs once', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const a2 = await run.load(a.location)
+      const arr = [a]
+      _addJigs(arr, [a2])
+      expect(arr).to.deep.equal([a])
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if inconsistent worldview', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      a.auth()
+      await a.sync()
+      const a2 = await run.load(a.origin)
+      expect(() => _addJigs([a], [a2])).to.throw('Inconsistent worldview')
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
