@@ -15,7 +15,7 @@ const {
   _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
   _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
   _anonymizeSourceCode, _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty,
-  _setOwnProperty, _ownGetters, _ownMethods
+  _setOwnProperty, _ownGetters, _ownMethods, _sameJig
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -737,8 +737,56 @@ describe('Misc', () => {
   // _sameJig
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_sameJig', () => {
-    // TODO
+  describe('_sameJig', () => {
+    it('true if same', () => {
+      const run = new Run()
+      const A = run.deploy(class A { })
+      expect(_sameJig(A, A)).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('true if different instances of same jig', async () => {
+      const run = new Run()
+      const A = run.deploy(class A { })
+      await A.sync()
+      const A2 = await run.load(A.location)
+      expect(_sameJig(A, A2)).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if different jigs', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      class B extends Jig { }
+      const a = new A()
+      const a2 = new A()
+      const b = new B()
+      expect(_sameJig(a, a2)).to.equal(false)
+      expect(_sameJig(a, b)).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if different locations', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      a.auth()
+      await a.sync()
+      const a2 = await run.load(a.origin)
+      expect(() => _sameJig(a, a2)).to.throw('Inconsistent worldview')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('false if non-jig', () => {
+      expect(_sameJig({}, {})).to.equal(false)
+      expect(_sameJig(null, null)).to.equal(false)
+      class A { }
+      expect(_sameJig(A, A)).to.equal(false)
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
