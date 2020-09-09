@@ -18,6 +18,7 @@ if (PERF) {
       const run = new Run({ timeout: Number.MAX_VALUE })
       let last = null
       class B extends Jig { set (n) { this.n = n } }
+
       const b = new B()
       for (let i = 0; i < 100; i++) {
         run.transaction(() => {
@@ -29,6 +30,7 @@ if (PERF) {
         if (i % 10 === 0) run.blockchain.block()
         await last.sync()
       }
+
       const start = new Date()
       await run.load(last.location)
       expect(new Date() - start < 1000).to.equal(true)

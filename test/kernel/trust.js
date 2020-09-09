@@ -1,7 +1,7 @@
 /**
  * trust.js
  *
- * Tests for the code trust list
+ * Tests for loading trusted and untrusted code
  */
 
 const { describe, it } = require('mocha')
@@ -27,8 +27,6 @@ describe('Trust', () => {
     run2.codeWhitelist = [A.location.slice(0, 64)]
     await run2.load(A.location)
   })
-
-  // Does the trustlist copy to new run instances?
 
   // --------------------------------------------------------------------------
   // trustlist
@@ -143,6 +141,12 @@ describe('Trust', () => {
 
     it('deploy adds to trustlist', () => {
       // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('trustlist copies to new run instances', () => {
+    // Exact object
     })
   })
 })
