@@ -218,8 +218,13 @@ describe('Trust', () => {
 
     // ------------------------------------------------------------------------
 
-    it('trusted code copies to new run instance', () => {
-    // Exact object
+    it('trusted code copies to new run instance', async () => {
+      const run = new Run({ trust: [] })
+      const A = run.deploy(class A extends Jig { })
+      A.upgrade(class B extends Jig { })
+      await run.sync()
+      const run2 = new Run()
+      await run2.load(A.location)
     })
   })
 })
