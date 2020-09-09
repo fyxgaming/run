@@ -21,6 +21,7 @@ const Run = process.env.LIB ? require(path.join(process.cwd(), process.env.LIB))
 // Prefer mocknet and no logs for testing
 Run.defaults.network = 'mock'
 Run.defaults.logger = null
+Run.defaults.trust = '*'
 
 // Read the local environment vars to configure Run for the tests
 
