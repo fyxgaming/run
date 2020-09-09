@@ -9,13 +9,13 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
 const unmangle = require('../env/unmangle')
-const { _setOwnProperty } = require('../../lib/util/misc')
 const Sandbox = Run.sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
   _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
   _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
-  _anonymizeSourceCode, _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty
+  _anonymizeSourceCode, _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty,
+  _setOwnProperty, _ownGetters
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -525,7 +525,7 @@ describe('Misc', () => {
 
     it('false for non-intrinsic', () => {
       expect(_isIntrinsic(class A { })).to.equal(false)
-      expect(_isIntrinsic(function f() { })).to.equal(false)
+      expect(_isIntrinsic(function f () { })).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -569,8 +569,8 @@ describe('Misc', () => {
       expect(_isSerializable(new SI.Map())).to.equal(true)
       expect(_isSerializable(new SI.Uint8Array())).to.equal(true)
       expect(_isSerializable(run.deploy(class A {}))).to.equal(true)
-      expect(_isSerializable(new (class A extends Jig { }))).to.equal(true)
-      expect(_isSerializable(new (run.deploy(class A { })))).to.equal(true)
+      expect(_isSerializable(new (class A extends Jig { })())).to.equal(true)
+      expect(_isSerializable(new (run.deploy(class A { }))())).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -583,7 +583,7 @@ describe('Misc', () => {
       expect(_isSerializable(new Uint16Array())).to.equal(false)
       expect(_isSerializable(class A { })).to.equal(false)
       expect(_isSerializable(class A extends Jig { })).to.equal(false)
-      expect(_isSerializable(function f() { })).to.equal(false)
+      expect(_isSerializable(function f () { })).to.equal(false)
       expect(_isSerializable(() => { })).to.equal(false)
     })
   })
@@ -615,7 +615,7 @@ describe('Misc', () => {
       expect(_isAnonymous(undefined)).to.equal(false)
       expect(_isAnonymous('function f() { }')).to.equal(false)
       expect(_isAnonymous({})).to.equal(false)
-      expect(_isAnonymous(function f() { })).to.equal(false)
+      expect(_isAnonymous(function f () { })).to.equal(false)
       expect(_isAnonymous(class A { })).to.equal(false)
     })
   })
@@ -711,8 +711,13 @@ describe('Misc', () => {
   // _ownGetters
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_ownGetters', () => {
-    // TODO
+  describe('_ownGetters', () => {
+    it('gets getters', () => {
+      class b { static get m () { } }
+      class A { static get n () { } }
+      Object.defineProperty(A, 'l', { get: () => { } })
+      expect(_ownGetters(A)).to.deep.equal(['n', 'l'])
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
