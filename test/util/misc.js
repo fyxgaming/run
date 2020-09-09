@@ -13,8 +13,8 @@ const Sandbox = Run.sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
   _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
-  _isUndefined, _isBoolean, _protoLen, _checkArgument, _checkState, _anonymizeSourceCode,
-  _deanonymizeSourceCode
+  _isUndefined, _isBoolean, _isIntrinsic, _protoLen, _checkArgument, _checkState,
+  _anonymizeSourceCode, _deanonymizeSourceCode
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -505,8 +505,37 @@ describe('Misc', () => {
   // _isIntrinsic
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_isIntrinsic', () => {
-    // TODO
+  describe('_isIntrinsic', () => {
+    it('true for intrinsic', () => {
+      expect(_isIntrinsic(Math)).to.equal(true)
+      expect(_isIntrinsic(Set)).to.equal(true)
+      expect(_isIntrinsic(RegExp)).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('true for sandbox intrinsic', () => {
+      expect(_isIntrinsic(SI.Object)).to.equal(true)
+      expect(_isIntrinsic(SI.Uint8Array)).to.equal(true)
+      expect(_isIntrinsic(SI.Date)).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('false for non-intrinsic', () => {
+      expect(_isIntrinsic(class A { })).to.equal(false)
+      expect(_isIntrinsic(function f() { })).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('false for intrinsic instance', () => {
+      expect(_isIntrinsic({})).to.equal(false)
+      expect(_isIntrinsic([])).to.equal(false)
+      expect(_isIntrinsic(new Set())).to.equal(false)
+      expect(_isIntrinsic(new Map())).to.equal(false)
+      expect(_isIntrinsic(new Date())).to.equal(false)
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
