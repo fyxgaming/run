@@ -9,13 +9,12 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
 const unmangle = require('../env/unmangle')
-const { _isAnonymous } = require('../../lib/util/misc')
 const Sandbox = Run.sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
   _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
   _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
-  _anonymizeSourceCode, _deanonymizeSourceCode, _getOwnProperty
+  _anonymizeSourceCode, _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -663,8 +662,22 @@ describe('Misc', () => {
   // _hasOwnProperty
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_hasOwnProperty', () => {
-    // TODO
+  describe('_hasOwnProperty', () => {
+    it('returns property exists', () => {
+      class A { }
+      A.n = 1
+      expect(_hasOwnProperty(A, 'n')).to.equal(true)
+      expect(_hasOwnProperty({ n: 1 }, 'n')).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('does not return prototype property exists', () => {
+      class A { }
+      A.n = 1
+      class B extends A { }
+      expect(_hasOwnProperty(B, 'n')).to.equal(false)
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
