@@ -6,6 +6,7 @@
 
 const { describe, it, afterEach } = require('mocha')
 const Run = require('../env/run')
+const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Inventory
@@ -17,8 +18,12 @@ describe('Inventory', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  it('test', () => {
-    console.log('hello')
+  it('test', async () => {
+    const run = new Run()
+    class A extends Jig { }
+    const a = new A()
+    await a.sync()
+    console.log(run.inventory.jigs)
   })
 })
 
