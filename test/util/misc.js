@@ -9,14 +9,14 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
 const unmangle = require('../env/unmangle')
-const { _subtractJigs } = require('../../lib/util/misc')
 const Sandbox = Run.sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
   _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
   _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
   _anonymizeSourceCode, _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty,
-  _setOwnProperty, _ownGetters, _ownMethods, _sameJig, _hasJig, _addJigs
+  _setOwnProperty, _ownGetters, _ownMethods, _sameJig, _hasJig, _addJigs, _subtractJigs, _limit,
+  _Timeout
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -893,16 +893,32 @@ describe('Misc', () => {
   // _limit
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_limit', () => {
-    // TODO
+  describe('_limit', () => {
+    it('limits values', () => {
+      expect(_limit(null)).to.equal(Number.MAX_VALUE)
+      expect(_limit(Infinity)).to.equal(Number.MAX_VALUE)
+      expect(_limit(0)).to.equal(0)
+      expect(_limit(10)).to.equal(10)
+      expect(_limit(Number.MAX_SAFE_INTEGER)).to.equal(Number.MAX_SAFE_INTEGER)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      expect(() => _limit()).to.throw('Invalid limit')
+      expect(() => _limit(-1)).to.throw('Invalid limit')
+      expect(() => _limit(-Infinity)).to.throw('Invalid limit')
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
   // _Timeout
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_Timeout', () => {
-    // TODO
+  describe('_Timeout', () => {
+    it('done', () => {
+      console.log(_Timeout)
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
