@@ -913,6 +913,7 @@ describe('Misc', () => {
   describe('_limit', () => {
     it('limits values', () => {
       expect(_limit(null)).to.equal(Number.MAX_VALUE)
+      expect(_limit(-1)).to.equal(Number.MAX_VALUE)
       expect(_limit(Infinity)).to.equal(Number.MAX_VALUE)
       expect(_limit(0)).to.equal(0)
       expect(_limit(10)).to.equal(10)
@@ -923,7 +924,7 @@ describe('Misc', () => {
 
     it('throws if invalid', () => {
       expect(() => _limit()).to.throw('Invalid limit')
-      expect(() => _limit(-1)).to.throw('Invalid limit')
+      expect(() => _limit(-2)).to.throw('Invalid limit')
       expect(() => _limit(-Infinity)).to.throw('Invalid limit')
     })
   })
