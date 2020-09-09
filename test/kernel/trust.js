@@ -199,8 +199,21 @@ describe('Trust', () => {
 
     // ------------------------------------------------------------------------
 
-    it('deploy trusts', () => {
-      // TODO
+    it('deploy trusts', async () => {
+      const run = new Run({ trust: [] })
+      const A = run.deploy(class A extends Jig { })
+      await run.sync()
+      await run.load(A.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('upgrade trusts', async () => {
+      const run = new Run({ trust: [] })
+      const A = run.deploy(class A extends Jig { })
+      A.upgrade(class B extends Jig { })
+      await run.sync()
+      await run.load(A.location)
     })
 
     // ------------------------------------------------------------------------
