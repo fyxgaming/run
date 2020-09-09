@@ -15,7 +15,7 @@ const {
   _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
   _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
   _anonymizeSourceCode, _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty,
-  _setOwnProperty, _ownGetters
+  _setOwnProperty, _ownGetters, _ownMethods
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -713,8 +713,8 @@ describe('Misc', () => {
 
   describe('_ownGetters', () => {
     it('gets getters', () => {
-      class b { static get m () { } }
-      class A { static get n () { } }
+      class B { static get m () { } }
+      class A extends B { static get n () { } }
       Object.defineProperty(A, 'l', { get: () => { } })
       expect(_ownGetters(A)).to.deep.equal(['n', 'l'])
     })
@@ -724,8 +724,13 @@ describe('Misc', () => {
   // _ownMethods
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_ownMethods', () => {
-    // TODO
+  describe('_ownMethods', () => {
+    it('gets methods', () => {
+      class B { static m () { } }
+      class A extends B { static n () { } }
+      A.l = () => { }
+      expect(_ownMethods(A)).to.deep.equal(['n', 'l'])
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
