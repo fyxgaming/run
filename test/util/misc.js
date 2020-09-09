@@ -13,7 +13,7 @@ const Sandbox = Run.sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
   _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
-  _isUndefined, _isBoolean, _isIntrinsic, _protoLen, _checkArgument, _checkState,
+  _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
   _anonymizeSourceCode, _deanonymizeSourceCode
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
@@ -542,8 +542,48 @@ describe('Misc', () => {
   // _isSerializable
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_isSerializable', () => {
-    // TODO
+  describe('_isSerializable', () => {
+    it('true if serializable', () => {
+      const run = new Run()
+      expect(_isSerializable(true)).to.equal(true)
+      expect(_isSerializable(false)).to.equal(true)
+      expect(_isSerializable(0)).to.equal(true)
+      expect(_isSerializable(1)).to.equal(true)
+      expect(_isSerializable(-1.5)).to.equal(true)
+      expect(_isSerializable(NaN)).to.equal(true)
+      expect(_isSerializable(Infinity)).to.equal(true)
+      expect(_isSerializable(-Infinity)).to.equal(true)
+      expect(_isSerializable(-0)).to.equal(true)
+      expect(_isSerializable('')).to.equal(true)
+      expect(_isSerializable('abc')).to.equal(true)
+      expect(_isSerializable('😃')).to.equal(true)
+      expect(_isSerializable(null)).to.equal(true)
+      expect(_isSerializable({})).to.equal(true)
+      expect(_isSerializable([])).to.equal(true)
+      expect(_isSerializable(new Set())).to.equal(true)
+      expect(_isSerializable(new Map())).to.equal(true)
+      expect(_isSerializable(new Uint8Array())).to.equal(true)
+      expect(_isSerializable(new SI.Set())).to.equal(true)
+      expect(_isSerializable(new SI.Map())).to.equal(true)
+      expect(_isSerializable(new SI.Uint8Array())).to.equal(true)
+      expect(_isSerializable(run.deploy(class A {}))).to.equal(true)
+      expect(_isSerializable(new (class A extends Jig { }))).to.equal(true)
+      expect(_isSerializable(new (run.deploy(class A { })))).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('false if unserializable', () => {
+      expect(_isSerializable(new RegExp())).to.equal(false)
+      expect(_isSerializable(Math)).to.equal(false)
+      expect(_isSerializable(Date)).to.equal(false)
+      expect(_isSerializable(new Date())).to.equal(false)
+      expect(_isSerializable(new Uint16Array())).to.equal(false)
+      expect(_isSerializable(class A { })).to.equal(false)
+      expect(_isSerializable(class A extends Jig { })).to.equal(false)
+      expect(_isSerializable(function f() { })).to.equal(false)
+      expect(_isSerializable(() => { })).to.equal(false)
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
