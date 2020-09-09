@@ -75,20 +75,35 @@ describe('Trust', () => {
   // --------------------------------------------------------------------------
 
   describe('Trusted Code', () => {
-    it('imports trusted', () => {
-      // TODO
+    it('imports trusted', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      await run.sync()
+      const run2 = new Run({ trust: '*' })
+      const rawtx = await run.blockchain.fetch(A.location.slice(0, 64))
+      await run2.import(rawtx)
     })
 
     // ------------------------------------------------------------------------
 
-    it('loads via import trusted', () => {
-      // TODO
+    it('loads via import trusted', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      await run.sync()
+      const run2 = new Run({ trust: A.location.slice(0, 64) })
+      run2.cache = new LocalCache()
+      await run2.load(A.location)
     })
 
     // ------------------------------------------------------------------------
 
-    it('loads via cache trusted', () => {
-      // TODO
+    it('loads via cache trusted', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      await run.sync()
+      const run2 = new Run({ trust: [] })
+      run2.trust(A.location.slice(0, 64))
+      await run2.load(A.location)
     })
   })
 
@@ -143,12 +158,14 @@ describe('Trust', () => {
   describe('Misc', () => {
     it('load untrusted with trust option', () => {
       // TODO
+      // Twice
     })
 
     // ------------------------------------------------------------------------
 
     it('import untrusted with trust option', () => {
       // TODO
+      // Twice
     })
 
     // ------------------------------------------------------------------------
