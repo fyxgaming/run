@@ -9,6 +9,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
 const unmangle = require('../env/unmangle')
+const { _setOwnProperty } = require('../../lib/util/misc')
 const Sandbox = Run.sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
@@ -684,8 +685,26 @@ describe('Misc', () => {
   // _setOwnProperty
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_setOwnProperty', () => {
-    // TODO
+  describe('_setOwnProperty', () => {
+    it('sets current property', () => {
+      class A { }
+      A.n = 1
+      _setOwnProperty(A, 'n', 1)
+      expect(A.n).to.equal(1)
+      const o = {}
+      _setOwnProperty(o, 'n', 1)
+      expect(o.n).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('does not set parent property', () => {
+      class A { }
+      A.n = 1
+      class B extends A { }
+      _setOwnProperty(B, 'n', 2)
+      expect(B.n).to.equal(2)
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
