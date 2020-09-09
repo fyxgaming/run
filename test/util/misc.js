@@ -804,6 +804,9 @@ describe('Misc', () => {
       expect(_sameJig(null, null)).to.equal(false)
       class A { }
       expect(_sameJig(A, A)).to.equal(false)
+      const run = new Run()
+      const A2 = run.deploy(A)
+      expect(_sameJig(A2, {})).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
