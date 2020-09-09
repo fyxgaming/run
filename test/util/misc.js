@@ -675,6 +675,14 @@ describe('Misc', () => {
       class B extends A { }
       expect(_getOwnProperty(B, 'n')).to.equal(undefined)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('returns undefined for non-objects', () => {
+      expect(_getOwnProperty(1, 'n')).to.equal(undefined)
+      expect(_getOwnProperty(null, 'n')).to.equal(undefined)
+      expect(_getOwnProperty('abc', 'n')).to.equal(undefined)
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
