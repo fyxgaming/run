@@ -15,7 +15,7 @@ const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
   _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
   _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
-  _anonymizeSourceCode, _deanonymizeSourceCode
+  _anonymizeSourceCode, _deanonymizeSourceCode, _getOwnProperty
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -641,8 +641,22 @@ describe('Misc', () => {
   // _getOwnProperty
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_getOwnProperty', () => {
-    // TODO
+  describe('_getOwnProperty', () => {
+    it('returns property', () => {
+      class A { }
+      A.n = 1
+      expect(_getOwnProperty(A, 'n')).to.equal(1)
+      expect(_getOwnProperty({ n: 1 }, 'n')).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('does not return prototype property', () => {
+      class A { }
+      A.n = 1
+      class B extends A { }
+      expect(_getOwnProperty(B, 'n')).to.equal(undefined)
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
