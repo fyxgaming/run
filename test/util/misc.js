@@ -805,6 +805,16 @@ describe('Misc', () => {
       class A { }
       expect(_sameJig(A, A)).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('returns false if undeployed', () => {
+      const run = new Run()
+      const A = run.install(class A { })
+      const B = run.deploy(class B { })
+      expect(_sameJig(A, B)).to.equal(false)
+      expect(_sameJig(B, A)).to.equal(false)
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
