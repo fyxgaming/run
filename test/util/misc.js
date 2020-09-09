@@ -340,7 +340,7 @@ describe('Misc', () => {
 
     // ------------------------------------------------------------------------
 
-    it('converts', () => {
+    it('same after anonymize and deanonymize', () => {
       function test (x, n) { expect(_deanonymizeSourceCode(_anonymizeSourceCode(x), n)).to.equal(x) }
       test('class A { }', 'A')
       test('class A{ }', 'A')
@@ -350,6 +350,14 @@ describe('Misc', () => {
       test('function f() { }', 'f')
       test('function f () { }', 'f')
       test('function f () {\n}', 'f')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if bad source', () => {
+      expect(() => _deanonymizeSourceCode('hello world', '')).to.throw('Bad source code')
+      expect(() => _deanonymizeSourceCode('() => { }', '')).to.throw('Bad source code')
+      expect(() => _deanonymizeSourceCode('class{}', '')).to.throw('Bad source code')
     })
   })
 
