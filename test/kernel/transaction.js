@@ -94,6 +94,16 @@ describe('Transaction', () => {
 
   // --------------------------------------------------------------------------
 
+  it('upstream commits', async () => {
+    const run = new Run()
+    class A { }
+    run.deploy(A)
+    const B = run.transaction(() => run.deploy(class B extends A {}))
+    await B.sync()
+  })
+
+  // --------------------------------------------------------------------------
+
   it.skip('placeholder', () => {
     // TODO
     // - Between begin and end, dont allow sync. nor load. nor import.
