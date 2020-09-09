@@ -149,20 +149,34 @@ describe('Trust', () => {
   // --------------------------------------------------------------------------
 
   describe('Untrusted Code', () => {
-    it('throws if untrusted import', () => {
-      // TODO
+    it('throws if untrusted import', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      await run.sync()
+      const run2 = new Run({ trust: [] })
+      const rawtx = await run.blockchain.fetch(A.location.slice(0, 64))
+      await expect(run2.import(rawtx)).to.be.rejectedWith('Cannot load untrusted code')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if untrusted load via import', () => {
-      // TODO
+    it('throws if untrusted load via import', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      await run.sync()
+      const run2 = new Run({ trust: [] })
+      run2.cache = new LocalCache()
+      await expect(run2.load(A.location)).to.be.rejectedWith('Cannot load untrusted code')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if untrusted load via cache', () => {
-      // TODO
+    it('throws if untrusted load via cache', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      await run.sync()
+      const run2 = new Run({ trust: [] })
+      await expect(run2.load(A.location)).to.be.rejectedWith('Cannot load untrusted code')
     })
   })
 
