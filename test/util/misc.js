@@ -9,6 +9,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
 const unmangle = require('../env/unmangle')
+const { _isAnonymous } = require('../../lib/util/misc')
 const Sandbox = Run.sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
@@ -545,6 +546,7 @@ describe('Misc', () => {
   describe('_isSerializable', () => {
     it('true if serializable', () => {
       const run = new Run()
+      expect(_isSerializable(undefined)).to.equal(true)
       expect(_isSerializable(true)).to.equal(true)
       expect(_isSerializable(false)).to.equal(true)
       expect(_isSerializable(0)).to.equal(true)
@@ -590,8 +592,32 @@ describe('Misc', () => {
   // _isAnonymous
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_isAnonymous', () => {
-    // TODO
+  describe('_isAnonymous', () => {
+    it('true if anonymous', () => {
+      const A = class { }
+      const f = function () { }
+      const g = () => { }
+      expect(_isAnonymous(A)).to.equal(true)
+      expect(_isAnonymous(f)).to.equal(true)
+      expect(_isAnonymous(g)).to.equal(true)
+      expect(_isAnonymous(() => { })).to.equal(true)
+      expect(_isAnonymous(x => x)).to.equal(true)
+      expect(_isAnonymous(class { })).to.equal(true)
+      expect(_isAnonymous(class extends A { })).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('false if non-anonymous', () => {
+      expect(_isAnonymous(0)).to.equal(false)
+      expect(_isAnonymous(true)).to.equal(false)
+      expect(_isAnonymous(null)).to.equal(false)
+      expect(_isAnonymous(undefined)).to.equal(false)
+      expect(_isAnonymous('function f() { }')).to.equal(false)
+      expect(_isAnonymous({})).to.equal(false)
+      expect(_isAnonymous(function f() { })).to.equal(false)
+      expect(_isAnonymous(class A { })).to.equal(false)
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
