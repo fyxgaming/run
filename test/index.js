@@ -37,6 +37,7 @@ require('./kernel/trust')
 require('./kernel/upgrade')
 require('./kernel/universal')
 
+require('./module/inventory')
 require('./module/mockchain')
 require('./module/viewer')
 
