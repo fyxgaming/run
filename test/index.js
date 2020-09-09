@@ -33,6 +33,7 @@ require('./kernel/stress')
 require('./kernel/sync')
 require('./kernel/timeout')
 require('./kernel/transaction')
+require('./kernel/trust')
 require('./kernel/upgrade')
 require('./kernel/universal')
 
