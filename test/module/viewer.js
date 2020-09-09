@@ -15,6 +15,10 @@ const { Viewer, StandardLock } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('Viewer', () => {
+  // --------------------------------------------------------------------------
+  // constructor
+  // --------------------------------------------------------------------------
+
   describe('constructor', () => {
     it('address owners', () => {
       const address = new PrivateKey().toAddress().toString()
@@ -23,6 +27,8 @@ describe('Viewer', () => {
       expect(viewer.lock.address).to.equal(address)
     })
 
+    // ------------------------------------------------------------------------
+
     it('pubkey owners', () => {
       const pubkey = new PrivateKey().publicKey.toString()
       const address = new PublicKey(pubkey).toAddress().toString()
@@ -30,6 +36,8 @@ describe('Viewer', () => {
       expect(viewer.lock instanceof StandardLock).to.equal(true)
       expect(viewer.lock.address).to.equal(address)
     })
+
+    // ------------------------------------------------------------------------
 
     it('lock object owners', () => {
       class CustomLock {
@@ -41,12 +49,18 @@ describe('Viewer', () => {
       expect(viewer.lock).to.deep.equal(lock)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if owner is invalid', () => {
       expect(() => new Viewer()).to.throw('Invalid owner: undefined')
       expect(() => new Viewer(null)).to.throw('Invalid owner: null')
       expect(() => new Viewer(new (class {})())).to.throw('Invalid owner: [anonymous object]')
     })
   })
+
+  // --------------------------------------------------------------------------
+  // owner
+  // --------------------------------------------------------------------------
 
   describe('owner', () => {
     it('always returns the lock', () => {
@@ -59,6 +73,10 @@ describe('Viewer', () => {
       expect(viewer.owner()).to.equal(lock)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // sign
+  // --------------------------------------------------------------------------
 
   describe('sign', () => {
     it('does not sign', async () => {

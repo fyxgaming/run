@@ -35,6 +35,8 @@ describe('Mockchain', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+
   describe('broadcast', () => {
     it('bsv transaction', async () => {
       const mockchain = new Mockchain()
@@ -50,6 +52,8 @@ describe('Mockchain', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+
   describe('utxos', () => {
     it('query by address and bsv script', async () => {
       const mockchain = new Mockchain()
@@ -61,6 +65,8 @@ describe('Mockchain', () => {
       await mockchain.utxos(script)
     })
   })
+
+  // --------------------------------------------------------------------------
 
   describe('block', () => {
     it('respects 25 chain limit', async () => {
@@ -82,6 +88,8 @@ describe('Mockchain', () => {
       await mockchain.broadcast(tx)
     })
   })
+
+  // --------------------------------------------------------------------------
 
   describe('fund', () => {
     it('funds directly', async () => {
@@ -114,6 +122,8 @@ if (PERF) {
       expect(new Date() - start < 30).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('fast fetches', async () => {
       const mockchain = new Mockchain()
       const privkey = new PrivateKey('testnet')
@@ -140,6 +150,8 @@ if (PERF) {
       expect(start < 10).to.equal(true)
       expect(end < 10).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
 
     it('fast utxo queries', async () => {
       const mockchain = new Mockchain()
