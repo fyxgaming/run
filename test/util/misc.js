@@ -315,6 +315,15 @@ describe('Misc', () => {
       expect(_anonymizeSourceCode('class A extends B { }')).to.equal('class  extends B { }')
       expect(_anonymizeSourceCode('function f() { }')).to.equal('function () { }')
       expect(_anonymizeSourceCode('function f    () {\n}')).to.equal('function     () {\n}')
+      expect(_anonymizeSourceCode('class A extends SomeLibrary.B { }')).to.equal('class  extends SomeLibrary.B { }')
+      expect(_anonymizeSourceCode('class A extends C["B"] { }')).to.equal('class  extends C["B"] { }')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if bad source', () => {
+      expect(() => _anonymizeSourceCode('hello world')).to.throw('Bad source code')
+      expect(() => _anonymizeSourceCode('() => { }')).to.throw('Bad source code')
     })
   })
 
