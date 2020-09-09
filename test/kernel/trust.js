@@ -79,7 +79,7 @@ describe('Trust', () => {
       const run = new Run()
       const A = run.deploy(class A extends Jig { })
       await run.sync()
-      const run2 = new Run({ trust: '*' })
+      const run2 = new Run({ trust: A.location.slice(0, 64) })
       const rawtx = await run.blockchain.fetch(A.location.slice(0, 64))
       await run2.import(rawtx)
     })
@@ -112,20 +112,35 @@ describe('Trust', () => {
   // --------------------------------------------------------------------------
 
   describe('Trust All Code', () => {
-    it('imports when trust all', () => {
-      // TODO
+    it('imports when trust all', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      await run.sync()
+      const run2 = new Run({ trust: '*' })
+      const rawtx = await run.blockchain.fetch(A.location.slice(0, 64))
+      await run2.import(rawtx)
     })
 
     // ------------------------------------------------------------------------
 
-    it('loads via import when trust all', () => {
-      // TODO
+    it('loads via import when trust all', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      await run.sync()
+      const run2 = new Run({ trust: ['*'] })
+      run2.cache = new LocalCache()
+      await run2.load(A.location)
     })
 
     // ------------------------------------------------------------------------
 
-    it('loads via cache when trust all', () => {
-      // TODO
+    it('loads via cache when trust all', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      await run.sync()
+      const run2 = new Run({ trust: [] })
+      run2.trust('*')
+      await run2.load(A.location)
     })
   })
 
