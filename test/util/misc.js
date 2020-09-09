@@ -916,8 +916,17 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_Timeout', () => {
-    it('done', () => {
-      console.log(_Timeout)
+    it('does not throw before timeout', () => {
+      unmangle(new _Timeout('', 1000))._check()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws after timeout', async () => {
+      const timeout = new _Timeout('hello', 0)
+      await new Promise((resolve, reject) => setTimeout(resolve, 10))
+      expect(() => unmangle(timeout)._check()).to.throw('hello timeout')
+      expect(() => unmangle(timeout)._check()).to.throw('hello timeout')
     })
   })
 
