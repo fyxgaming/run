@@ -9,6 +9,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
 const unmangle = require('../env/unmangle')
+const { _subtractJigs } = require('../../lib/util/misc')
 const Sandbox = Run.sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
@@ -842,8 +843,8 @@ describe('Misc', () => {
       await a.sync()
       const a2 = await run.load(a.location)
       const arr = [a]
-      _addJigs(arr, [a2])
-      expect(arr).to.deep.equal([a])
+      const b = new A()
+      expect(_addJigs(arr, [a2, b])).to.deep.equal([a, b])
     })
 
     // ------------------------------------------------------------------------
@@ -863,8 +864,29 @@ describe('Misc', () => {
   // _subtractJigs
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_subtractJigs', () => {
-    // TODO
+  describe('_subtractJigs', () => {
+    it('removes same jigs', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const a2 = await run.load(a.location)
+      const b = new A()
+      const arr = [a, b]
+      expect(_subtractJigs(arr, [a2, b])).to.deep.equal([])
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if inconsistent worldview', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      a.auth()
+      await a.sync()
+      const a2 = await run.load(a.origin)
+      expect(() => _subtractJigs([a], [a2])).to.throw('Inconsistent worldview')
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
