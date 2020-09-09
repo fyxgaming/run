@@ -21,37 +21,37 @@ describe('Trust', () => {
     run.deploy(A)
     await run.sync()
 
-    const run2 = new Run({ codeWhitelist: [] })
+    const run2 = new Run({ trust: [] })
     run2.cache = new LocalCache()
-    await expect(run2.load(A.location)).to.be.rejectedWith('Transaction not whitelisted for code')
-    run2.codeWhitelist = [A.location.slice(0, 64)]
+    await expect(run2.load(A.location)).to.be.rejectedWith('Cannot load untrusted code')
+    run2.trust(A.location.slice(0, 64))
     await run2.load(A.location)
   })
 
   // --------------------------------------------------------------------------
-  // trustlist
+  // trust
   // --------------------------------------------------------------------------
 
-  describe('trustlist', () => {
-    it('should match *', () => {
+  describe('trust', () => {
+    it('should trust *', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('should match location', () => {
+    it('should trust location', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('should match txid', () => {
+    it('should trust txid', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('should warn if unknown', () => {
+    it('throws if invalid', () => {
       // TODO
     })
   })
@@ -139,13 +139,13 @@ describe('Trust', () => {
 
     // ------------------------------------------------------------------------
 
-    it('deploy adds to trustlist', () => {
+    it('deploy trusts', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('trustlist copies to new run instances', () => {
+    it('trusted code copies to new run instance', () => {
     // Exact object
     })
   })
