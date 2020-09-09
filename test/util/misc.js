@@ -15,7 +15,7 @@ const {
   _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
   _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
   _anonymizeSourceCode, _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty,
-  _setOwnProperty, _ownGetters, _ownMethods, _sameJig
+  _setOwnProperty, _ownGetters, _ownMethods, _sameJig, _hasJig
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -793,8 +793,29 @@ describe('Misc', () => {
   // _hasJig
   // ----------------------------------------------------------------------------------------------
 
-  describe.skip('_hasJig', () => {
-    // TODO
+  describe('_hasJig', () => {
+    it('returns true if jig in array', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      expect(_hasJig([a], a)).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns false for nonjig', () => {
+      const o = { }
+      expect(_hasJig([o], o)).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('return false if jig not in array', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      expect(_hasJig([{}], a)).to.equal(false)
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
