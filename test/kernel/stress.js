@@ -49,8 +49,28 @@ if (PERF) {
 
     // -------------------------------------------------------------------------
 
-    it.skip('long time', () => {
-      // TODO
+    it('many publishes', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      for (let i = 0; i < 1000; i++) {
+        const a = new A()
+        await a.sync()
+        if (i % 10 === 0) run.blockchain.block()
+      }
+    })
+
+    // -------------------------------------------------------------------------
+
+    it('many loads', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      for (let i = 0; i < 1000; i++) {
+        run.cache = new LocalCache()
+        await run.load(a.location)
+        await run.load(a.location)
+      }
     })
   })
 }
