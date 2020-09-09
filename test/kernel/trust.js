@@ -4,7 +4,7 @@
  * Tests for loading trusted and untrusted code
  */
 
-const { describe, it } = require('mocha')
+const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
@@ -15,6 +15,11 @@ const { Jig, LocalCache } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('Trust', () => {
+  // Wait for every test to finish. This makes debugging easier.
+  afterEach(() => Run.instance && Run.instance.sync())
+  // Deactivate the current run instance. This stops leaks across tests.
+  afterEach(() => Run.instance && Run.instance.deactivate())
+
   // --------------------------------------------------------------------------
   // constructor
   // --------------------------------------------------------------------------
