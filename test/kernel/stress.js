@@ -14,7 +14,7 @@ const { Jig, LocalCache } = Run
 
 if (PERF) {
   describe('Stress', () => {
-    it('jig and class updates', async () => {
+    it('long chain', async () => {
       const run = new Run({ timeout: Number.MAX_VALUE })
       let last = null
       class B extends Jig { set (n) { this.n = n } }
@@ -37,6 +37,18 @@ if (PERF) {
       run.cache = new LocalCache()
       await run.load(b.location)
       expect(new Date() - start2 < 10000).to.equal(true)
+    })
+
+    // -------------------------------------------------------------------------
+
+    it.skip('large graph', () => {
+      // TODO
+    })
+
+    // -------------------------------------------------------------------------
+
+    it.skip('long time', () => {
+      // TODO
     })
   })
 }
