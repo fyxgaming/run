@@ -33,6 +33,15 @@ describe('Inventory', () => {
       expect(run.inventory.jigs).to.deep.equal([a])
       expect(run.inventory.code).to.deep.equal([run.install(A)])
     })
+    // ------------------------------------------------------------------------
+
+    it('does not add unowned jigs', () => {
+      const run = new Run()
+      class A extends Jig { init (owner) { this.owner = owner } }
+      new A(new PrivateKey().publicKey.toString()) // eslint-disable-line
+      expect(run.inventory.jigs.length).to.equal(0)
+      expect(run.inventory.code.length).to.equal(0)
+    })
 
     // ------------------------------------------------------------------------
 
@@ -58,18 +67,22 @@ describe('Inventory', () => {
     })
   })
 
-  /*
-  it('test', async () => {
-    const run = new Run()
-    class A extends Jig { send (to) { this.owner = to } }
-    const a = new A()
-    a.send('mymNoVDJNnh1SRQrMBPkwK1FmKX6HXZbfF')
-    await a.sync()
-    await run.inventory.sync()
-    console.log(run.inventory.jigs)
-    console.log(run.inventory.code)
+  // --------------------------------------------------------------------------
+  // sync
+  // --------------------------------------------------------------------------
+
+  describe('sync', () => {
+    it('adds owned jigs', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const run2 = new Run({ owner: run.owner })
+      await run2.inventory.sync()
+      expect(run2.inventory.jigs.length).to.equal(1)
+      expect(run2.inventory.code.length).to.equal(1)
+    })
   })
-  */
 })
 
 // ------------------------------------------------------------------------------------------------
