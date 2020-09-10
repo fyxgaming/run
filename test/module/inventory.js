@@ -118,8 +118,23 @@ describe('Inventory', () => {
 
     // ------------------------------------------------------------------------
 
-    it('dedups syncs', () => {
-      // TODO
+    it('dedups syncs', async () => {
+      const run = new Run()
+      class A extends Jig { f () { this.n = 1 } }
+      const a = new A()
+      await a.sync()
+      const start = new Date()
+      await run.inventory.sync()
+      const time = new Date() - start
+      const promises = []
+      const start2 = new Date()
+      await run.inventory.sync()
+      for (let i = 0; i < 1000; i++) {
+        promises.push(run.inventory.sync())
+      }
+      await Promise.all(promises)
+      const time2 = new Date() - start2
+      expect(Math.abs(time2 - time) < 50).to.equal(true)
     })
   })
 })
