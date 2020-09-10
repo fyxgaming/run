@@ -176,12 +176,12 @@ describe('Trust', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if untrusted load via cache', async () => {
+    it('loads untrusted via cache', async () => {
       const run = new Run()
       const A = run.deploy(class A extends Jig { })
       await run.sync()
       const run2 = new Run({ trust: [] })
-      await expect(run2.load(A.location)).to.be.rejectedWith('Cannot load untrusted code')
+      await run2.load(A.location)
     })
   })
 
