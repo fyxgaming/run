@@ -46,7 +46,7 @@ describe('Owner', () => {
           this.n = 0
         }
 
-        owner () { return this.addr(this.n++) }
+        nextOwner () { return this.addr(this.n++) }
 
         async sign (rawtx, parents, locks) {
           const tx = new Transaction(rawtx)
@@ -101,7 +101,7 @@ describe('Owner', () => {
       OnePlusOneLock.deps = { asm }
 
       class CustomOwner {
-        owner () { return new OnePlusOneLock() }
+        nextOwner () { return new OnePlusOneLock() }
 
         async sign (rawtx, parents, locks) {
           const tx = new Transaction(rawtx)
@@ -138,7 +138,7 @@ describe('Owner', () => {
       OnePlusOneLock.deps = { asm }
 
       class CustomOwner {
-        owner () { return new OnePlusOneLock() }
+        nextOwner () { return new OnePlusOneLock() }
 
         async sign (rawtx, parents, locks) {
           const tx = new Transaction(rawtx)

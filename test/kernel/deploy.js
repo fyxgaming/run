@@ -186,7 +186,7 @@ describe('Deploy', () => {
       expect(CA.location.endsWith('_o1')).to.equal(true)
       expect(CA.origin.endsWith('_o1')).to.equal(true)
       expect(CA.nonce).to.equal(1)
-      const owner = await run.owner.owner()
+      const owner = await run.owner.nextOwner()
       expect(CA.owner).to.equal(owner)
       expect(CA.satoshis).to.equal(0)
     })

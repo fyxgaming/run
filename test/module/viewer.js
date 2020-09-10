@@ -59,10 +59,10 @@ describe('Viewer', () => {
   })
 
   // --------------------------------------------------------------------------
-  // owner
+  // nextOwner
   // --------------------------------------------------------------------------
 
-  describe('owner', () => {
+  describe('nextOwner', () => {
     it('always returns the lock', () => {
       class CustomLock {
         script () { return new Uint8Array([0, 1, 2]) }
@@ -70,7 +70,7 @@ describe('Viewer', () => {
       }
       const lock = new CustomLock()
       const viewer = new Viewer(lock)
-      expect(viewer.owner()).to.equal(lock)
+      expect(viewer.nextOwner()).to.equal(lock)
     })
   })
 

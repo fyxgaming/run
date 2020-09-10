@@ -88,7 +88,7 @@ class Inventory {
    */
   async _syncLatest () {
     const locations = []
-    const owner = this._owner.owner()
+    const owner = this._owner.nextOwner()
     const owners = Array.isArray(owner) ? owner : [owner]
     const promises = owners.map(async owner => {
       const script = new bsv.Script(bsv.deps.Buffer.from(_owner(owner).script()))
@@ -170,7 +170,7 @@ class Inventory {
 
   _ours (resource) {
     try {
-      const owner = this._owner.owner()
+      const owner = this._owner.nextOwner()
       const owners = Array.isArray(owner) ? owner : [owner]
       const locks = owners.map(owner => _owner(owner))
       const resourceOwner = _owner(resource.owner)

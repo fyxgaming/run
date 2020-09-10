@@ -59,7 +59,7 @@ describe('Lock', () => {
         domain () { return 1 }
       }
       class CustomOwner {
-        owner () { return new CustomLock() }
+        nextOwner () { return new CustomLock() }
         async sign (rawtx) { return rawtx }
       }
       const run = new Run({ owner: new CustomOwner() })

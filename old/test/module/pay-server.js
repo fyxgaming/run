@@ -59,7 +59,7 @@ describe('PayServer', () => {
         domain () { return 1 }
       }
       class CustomKey {
-        owner () { return new CustomLock() }
+        nextOwner () { return new CustomLock() }
         sign (rawtx, parents) {
           const tx = new Transaction(rawtx)
           parents[0].lock && tx.inputs[0].setScript('OP_1')

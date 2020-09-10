@@ -158,28 +158,28 @@ describe('Owner API', () => {
     })
   })
 
-  describe('owner', () => {
+  describe('nextOwner', () => {
     it('throws UnimplementedError by default', async () => {
-      await expect(new Owner().owner()).to.be.rejectedWith(UnimplementedError)
+      await expect(new Owner().nextOwner()).to.be.rejectedWith(UnimplementedError)
     })
   })
 
   describe('instanceof', () => {
-    it('returns true if owner and sign are present', () => {
-      expect(({ owner: () => '', sign: () => {} }) instanceof Owner).to.equal(true)
-      expect(Object.assign(() => {}, { owner: () => [''], sign: () => {} }) instanceof Owner).to.equal(true)
+    it('returns true if nextOwner and sign are present', () => {
+      expect(({ nextOwner: () => '', sign: () => {} }) instanceof Owner).to.equal(true)
+      expect(Object.assign(() => {}, { nextOwner: () => [''], sign: () => {} }) instanceof Owner).to.equal(true)
     })
 
     it('returns false if sign is not a function', () => {
-      expect(({ owner: () => '' }) instanceof Owner).to.equal(false)
-      expect(({ owner: () => '', sign: 123 }) instanceof Owner).to.equal(false)
-      expect(({ owner: () => '', get sign () { } }) instanceof Owner).to.equal(false)
+      expect(({ nextOwner: () => '' }) instanceof Owner).to.equal(false)
+      expect(({ nextOwner: () => '', sign: 123 }) instanceof Owner).to.equal(false)
+      expect(({ nextOwner: () => '', get sign () { } }) instanceof Owner).to.equal(false)
     })
 
-    it('returns false if owner is not a function', () => {
+    it('returns false if nextOwner is not a function', () => {
       expect(({ sign: () => '' }) instanceof Owner).to.equal(false)
-      expect(({ sign: () => '', owner: 123 }) instanceof Owner).to.equal(false)
-      expect(({ sign: () => '', get owner () { } }) instanceof Owner).to.equal(false)
+      expect(({ sign: () => '', nextOwner: 123 }) instanceof Owner).to.equal(false)
+      expect(({ sign: () => '', get nextOwner () { } }) instanceof Owner).to.equal(false)
     })
 
     it('returns false for non-objects', () => {
