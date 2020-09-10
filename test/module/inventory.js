@@ -47,7 +47,7 @@ describe('Inventory', () => {
       class A extends Jig { init (owner) { this.owner = owner } }
       new A(new PrivateKey().publicKey.toString()) // eslint-disable-line
       expect(run.inventory.jigs.length).to.equal(0)
-      expect(run.inventory.code.length).to.equal(0)
+      expect(run.inventory.code.length).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
