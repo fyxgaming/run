@@ -7,6 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Static Code
@@ -128,6 +129,29 @@ describe('Static Code', () => {
       expect(typeof CA.upgrade).to.equal('function')
       expect(typeof CA.auth).to.equal('function')
       expect(typeof CA.destroy).to.equal('function')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('instances with properties', async () => {
+      const run = new Run()
+      class A { constructor () { this.n = 1 } }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      function test (A) {
+        const a = new A()
+        expect(a.n).to.equal(1)
+      }
+
+      test(CA)
+
+      const CA2 = await run.load(A.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(A.location)
+      test(CA3)
     })
   })
 })
