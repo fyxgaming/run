@@ -116,7 +116,7 @@ describe('Trust', () => {
   // Dependencies
   // --------------------------------------------------------------------------
 
-  describe ('Dependencies', () => {
+  describe('Dependencies', () => {
     it('imports dependencies if trusted', async () => {
       const run = new Run()
       const A = run.deploy(class A extends Jig { })
