@@ -137,6 +137,19 @@ describe('Inventory', () => {
       expect(Math.abs(time2 - time) < 50).to.equal(true)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Misc
+  // --------------------------------------------------------------------------
+
+  describe('Misc', () => {
+    it('new owner new inventory', () => {
+      const run = new Run()
+      const inventory = run.inventory
+      run.owner = new PrivateKey()
+      expect(run.inventory).not.to.equal(inventory)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
