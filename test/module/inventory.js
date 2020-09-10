@@ -23,6 +23,7 @@ describe('Inventory', () => {
     class A extends Jig { }
     const a = new A()
     await a.sync()
+    await run.inventory.sync()
     console.log(run.inventory.jigs)
   })
 })
