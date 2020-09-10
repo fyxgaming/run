@@ -62,7 +62,7 @@ class Inventory {
     _allowInconsistentWorldview(() => {
       remove.forEach(resource => {
         const removed = this._resources.delete(resource)
-        if (removed) Log._info(TAG, 'Removed', _text(resource))
+        if (removed && Log._infoOn) Log._info(TAG, 'Removed', _text(resource))
       })
     })
 
@@ -120,7 +120,7 @@ class Inventory {
     _allowInconsistentWorldview(() => {
       toRemove.forEach(resource => {
         const removed = this._resources.delete(resource)
-        if (removed) Log._info(TAG, 'Removed', _text(resource))
+        if (removed && Log._infoOn) Log._info(TAG, 'Removed', _text(resource))
       })
     })
 
@@ -137,7 +137,7 @@ class Inventory {
       try {
         resource = await this._kernel._load(location)
       } catch (e) {
-        Log._warn(TAG, `Failed to load owner location ${location}\n\n${e.toString()}`)
+        if (Log._warnOn) Log._warn(TAG, `Failed to load owner location ${location}\n\n${e.toString()}`)
         continue
       }
 
@@ -145,7 +145,7 @@ class Inventory {
         // This will prefer the existing resource, because it's likely to be the latest
         const had = this._resources.has(resource)
         this._resources.add(resource)
-        if (!had) Log._info(TAG, 'Added', _text(resource))
+        if (!had && Log._infoOn) Log._info(TAG, 'Added', _text(resource))
       })
     }
   }
@@ -161,9 +161,9 @@ class Inventory {
 
       if (this._ours(resource)) {
         this._resources.add(resource)
-        if (!had) Log._info(TAG, 'Added', _text(resource))
+        if (!had && Log._infoOn) Log._info(TAG, 'Added', _text(resource))
       } else {
-        if (had) Log._info(TAG, 'Removed', _text(resource))
+        if (had && Log._infoOn) Log._info(TAG, 'Removed', _text(resource))
       }
     })
   }
