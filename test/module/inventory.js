@@ -8,6 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
+const { stub } = require('sinon')
 const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -27,28 +28,19 @@ describe('Inventory', () => {
   describe('update', () => {
     it('adds synced jigs', async () => {
       const run = new Run()
-      class A extends Jig { send (to) { this.owner = to } }
+      class A extends Jig { }
       const a = new A()
       await a.sync()
       expect(run.inventory.jigs).to.deep.equal([a])
       expect(run.inventory.code).to.deep.equal([run.install(A)])
     })
+
     // ------------------------------------------------------------------------
 
     it('does not add unowned jigs', () => {
       const run = new Run()
       class A extends Jig { init (owner) { this.owner = owner } }
       new A(new PrivateKey().publicKey.toString()) // eslint-disable-line
-      expect(run.inventory.jigs.length).to.equal(0)
-      expect(run.inventory.code.length).to.equal(0)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('does not add unsynced jigs', () => {
-      const run = new Run()
-      class A extends Jig { send (to) { this.owner = to } }
-      new A() // eslint-disable-line
       expect(run.inventory.jigs.length).to.equal(0)
       expect(run.inventory.code.length).to.equal(0)
     })
@@ -64,6 +56,28 @@ describe('Inventory', () => {
       a.send(new PrivateKey().publicKey.toString())
       await a.sync()
       expect(run.inventory.jigs.length).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('add unsynced jigs', () => {
+      const run = new Run()
+      class A extends Jig { send (to) { this.owner = to } }
+      new A() // eslint-disable-line
+      expect(run.inventory.jigs.length).to.equal(1)
+      expect(run.inventory.code.length).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('removes if fail to post', async () => {
+      const run = new Run()
+      class A extends Jig { send (to) { this.owner = to } }
+      const a = new A()
+      stub(run.purse, 'pay').throws()
+      await a.sync()
+      expect(run.inventory.jigs.length).to.equal(0)
+      expect(run.inventory.code.length).to.equal(0)
     })
   })
 
