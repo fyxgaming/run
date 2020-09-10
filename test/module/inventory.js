@@ -25,6 +25,7 @@ describe('Inventory', () => {
     await a.sync()
     await run.inventory.sync()
     console.log(run.inventory.jigs)
+    console.log(run.inventory.code)
   })
 })
 
