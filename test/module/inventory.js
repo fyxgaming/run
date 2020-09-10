@@ -5,11 +5,16 @@
  */
 
 const { describe, it, afterEach } = require('mocha')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { stub } = require('sinon')
 const { Jig } = Run
+
+// Todo:
+// - load
+// - import
 
 // ------------------------------------------------------------------------------------------------
 // Inventory
@@ -75,7 +80,7 @@ describe('Inventory', () => {
       class A extends Jig { send (to) { this.owner = to } }
       const a = new A()
       stub(run.purse, 'pay').throws()
-      await a.sync()
+      await expect(a.sync()).to.be.rejected
       expect(run.inventory.jigs.length).to.equal(0)
       expect(run.inventory.code.length).to.equal(0)
     })
