@@ -20,8 +20,9 @@ describe('Inventory', () => {
 
   it('test', async () => {
     const run = new Run()
-    class A extends Jig { }
+    class A extends Jig { send (to) { this.owner = to } }
     const a = new A()
+    a.send('mymNoVDJNnh1SRQrMBPkwK1FmKX6HXZbfF')
     await a.sync()
     await run.inventory.sync()
     console.log(run.inventory.jigs)
