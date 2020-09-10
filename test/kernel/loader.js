@@ -1,4 +1,41 @@
+/**
+ * loader.js
+ *
+ * Tests for lib/kernel/loader
+ */
 
+const { describe, it } = require('mocha')
+const Run = require('../env/run')
+
+// ------------------------------------------------------------------------------------------------
+// Loader
+// ------------------------------------------------------------------------------------------------
+
+describe('Loader', () => {
+  it('mixture of cached and replay with parent property', async () => {
+    // A very particular test for a particular key ordering bug
+
+    let run = new Run()
+
+    class A { }
+    A.n = 1
+    run.deploy(A)
+
+    const B = run.deploy(class B extends A { })
+    await B.sync()
+    const middleLocation = B.location
+
+    run.deploy(class C extends B { })
+    await run.sync()
+
+    run.deactivate()
+    run = new Run({ blockchain: run.blockchain })
+    const B2 = await run.load(middleLocation)
+    await B2.sync()
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
 /*
   describe('load', () => {
     it('should load single jig', async () => {
