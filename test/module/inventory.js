@@ -6,6 +6,7 @@
 
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
+const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { Jig } = Run
 
@@ -41,6 +42,19 @@ describe('Inventory', () => {
       new A() // eslint-disable-line
       expect(run.inventory.jigs.length).to.equal(0)
       expect(run.inventory.code.length).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('removes jigs sent away', async () => {
+      const run = new Run()
+      class A extends Jig { send (to) { this.owner = to } }
+      const a = new A()
+      await a.sync()
+      expect(run.inventory.jigs.length).to.equal(1)
+      a.send(new PrivateKey().publicKey.toString())
+      await a.sync()
+      expect(run.inventory.jigs.length).to.equal(0)
     })
   })
 

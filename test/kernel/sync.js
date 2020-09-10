@@ -7,6 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
+const { stub } = require('sinon')
 const { Transaction } = require('bsv')
 const Run = require('../env/run')
 const { Jig, LocalCache } = Run
@@ -250,6 +251,21 @@ describe('Sync', () => {
       await run.blockchain.broadcast(paid.toString('hex'))
       await CA.sync()
       expect(CA.location).to.equal(CA.origin)
+    })
+
+    // --------------------------------------------------------------------------
+
+    it('should sync while replaying', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      const a = new A()
+      await a.sync()
+      run.cache = new LocalCache()
+      let syncPromise = null
+      // Stub the cache set so that we know we're somewhere in the middle of importing
+      stub(run.cache, 'set').callsFake(async () => { syncPromise = run.sync() })
+      await run.load(a.location)
+      await syncPromise
     })
   })
 
