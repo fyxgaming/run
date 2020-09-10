@@ -82,6 +82,22 @@ describe('Inventory', () => {
       expect(run2.inventory.jigs.length).to.equal(1)
       expect(run2.inventory.code.length).to.equal(1)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('removes unowned jigs', async () => {
+      const run = new Run()
+      class A extends Jig { send (to) { this.owner = to } }
+      const a = new A()
+      await a.sync()
+      const run2 = new Run({ owner: run.owner })
+      const a2 = await run2.load(a.location)
+      a2.send(new PrivateKey().publicKey.toString())
+      await a2.sync()
+      expect(run.inventory.jigs.length).to.equal(1)
+      await run.inventory.sync()
+      expect(run.inventory.jigs.length).to.equal(1)
+    })
   })
 })
 
