@@ -113,6 +113,51 @@ describe('Trust', () => {
   })
 
   // --------------------------------------------------------------------------
+  // Dependencies
+  // --------------------------------------------------------------------------
+
+  describe ('Dependencies', () => {
+    it('imports dependencies if trusted', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      const B = run.deploy(class B extends A { })
+      await run.sync()
+      const run2 = new Run({ trust: [] })
+      run2.trust(B.location.slice(0, 64))
+      run2.cache = new LocalCache()
+      const rawtx = await run2.blockchain.fetch(B.location.slice(0, 64))
+      await run2.import(rawtx)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('loads dependencies if trusted', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      const B = run.deploy(class B extends A { })
+      await run.sync()
+      const run2 = new Run({ trust: [] })
+      run2.trust(B.location.slice(0, 64))
+      run2.cache = new LocalCache()
+      await run2.load(B.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('trusts dependencies if trusted', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      const B = run.deploy(class B extends A { })
+      await run.sync()
+      const run2 = new Run({ trust: [] })
+      run2.trust(B.location.slice(0, 64))
+      run2.cache = new LocalCache()
+      await run2.load(B.location)
+      await run2.load(A.location)
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // Trust all
   // --------------------------------------------------------------------------
 
