@@ -133,7 +133,7 @@ describe('Static Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('instances with properties', async () => {
+    it('construct instance with property', async () => {
       const run = new Run()
       class A { constructor () { this.n = 1 } }
       const CA = run.deploy(A)
@@ -141,6 +141,30 @@ describe('Static Code', () => {
 
       function test (A) {
         const a = new A()
+        expect(a.n).to.equal(1)
+      }
+
+      test(CA)
+
+      const CA2 = await run.load(A.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(A.location)
+      test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('call instance with property', async () => {
+      const run = new Run()
+      class A { f () { this.n = 1 } }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      function test (A) {
+        const a = new A()
+        a.f()
         expect(a.n).to.equal(1)
       }
 
