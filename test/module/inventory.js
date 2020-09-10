@@ -98,6 +98,29 @@ describe('Inventory', () => {
       await run.inventory.sync()
       expect(run.inventory.jigs.length).to.equal(1)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('replaces with newer jig', async () => {
+      const run = new Run()
+      class A extends Jig { f () { this.n = 1 } }
+      const a = new A()
+      await a.sync()
+      const run2 = new Run({ owner: run.owner })
+      const a2 = await run2.load(a.location)
+      a2.f()
+      await a2.sync()
+      expect(run.inventory.jigs.length).to.equal(1)
+      await run.inventory.sync()
+      expect(run.inventory.jigs.length).to.equal(1)
+      expect(run.inventory.jigs[0].location).to.equal(a2.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('dedups syncs', () => {
+      // TODO
+    })
   })
 })
 
