@@ -11,8 +11,7 @@ const { expect } = require('chai')
 const { stub } = require('sinon')
 const { PrivateKey, Transaction } = require('bsv')
 const Run = require('../env/run')
-const { LocalCache } = require('../../lib/run')
-const { Jig } = Run
+const { Jig, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Inventory
@@ -200,20 +199,20 @@ describe('Inventory', () => {
   // --------------------------------------------------------------------------
 
   describe('load', () => {
-    it('load cached adds to inventory', async () => {
+    it('load via cache does not add to inventory', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
       await a.sync()
       const run2 = new Run({ owner: run.owner })
       await run2.load(a.location)
-      expect(run2.inventory.jigs.length).to.equal(1)
-      expect(run2.inventory.code.length).to.equal(1)
+      expect(run2.inventory.jigs.length).to.equal(0)
+      expect(run2.inventory.code.length).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
 
-    it('load via replay adds to inventory', async () => {
+    it('load via replay does not add to inventory', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
@@ -221,31 +220,67 @@ describe('Inventory', () => {
       const run2 = new Run({ owner: run.owner })
       run2.cache = new LocalCache()
       await run2.load(a.location)
-      expect(run2.inventory.jigs.length).to.equal(1)
-      expect(run2.inventory.code.length).to.equal(1)
+      expect(run2.inventory.jigs.length).to.equal(0)
+      expect(run2.inventory.code.length).to.equal(0)
     })
+  })
 
-    // ------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
+  // jig sync
+  // --------------------------------------------------------------------------
 
-    it('load old state keeps newer', async () => {
+  describe('jig sync', () => {
+    it('sync after load via cache adds to inventory', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
-      a.auth()
       await a.sync()
       const run2 = new Run({ owner: run.owner })
-      await run2.inventory.sync()
+      const a2 = await run2.load(a.location)
+      expect(run2.inventory.jigs.length).to.equal(0)
+      expect(run2.inventory.code.length).to.equal(0)
+      await a2.sync()
       expect(run2.inventory.jigs.length).to.equal(1)
       expect(run2.inventory.code.length).to.equal(1)
-      const a2 = await run2.load(a.origin)
-      expect(run2.inventory.jigs.length).to.equal(1)
-      expect(run2.inventory.code.length).to.equal(1)
-      expect(run2.inventory.jigs[0]).not.to.equal(a2)
     })
 
     // ------------------------------------------------------------------------
 
-    it('sync send removes', async () => {
+    it('sync after load via replay adds to inventory', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const run2 = new Run({ owner: run.owner })
+      run2.cache = new LocalCache()
+      const a2 = await run2.load(a.location)
+      expect(run2.inventory.jigs.length).to.equal(0)
+      expect(run2.inventory.code.length).to.equal(0)
+      await a2.sync()
+      expect(run2.inventory.jigs.length).to.equal(1)
+      expect(run2.inventory.code.length).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('publish after import adds to inventory', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const run2 = new Run({ owner: run.owner })
+      const rawtx = await run2.blockchain.fetch(a.location.slice(0, 64))
+      const transaction = await run2.import(rawtx)
+      expect(run2.inventory.jigs.length).to.equal(0)
+      expect(run2.inventory.code.length).to.equal(0)
+      await transaction.publish()
+      expect(run2.inventory.jigs.length).to.equal(1)
+      expect(run2.inventory.code.length).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('sync send does not add', async () => {
       const run = new Run()
       class A extends Jig { send (to) { this.owner = to } }
       const a = new A()
@@ -253,8 +288,8 @@ describe('Inventory', () => {
       await a.sync()
       const run2 = new Run({ owner: run.owner })
       const a2 = await run2.load(a.origin)
-      expect(run2.inventory.jigs.length).to.equal(1)
-      expect(run2.inventory.code.length).to.equal(1)
+      expect(run2.inventory.jigs.length).to.equal(0)
+      expect(run2.inventory.code.length).to.equal(0)
       await a2.sync()
       expect(run2.inventory.jigs.length).to.equal(0)
       expect(run2.inventory.code.length).to.equal(1)
@@ -278,6 +313,22 @@ describe('Inventory', () => {
       expect(run2.inventory.jigs.length).to.equal(1)
       expect(run2.inventory.code.length).to.equal(0)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('sync duplicate only adds once', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const run2 = new Run({ owner: run.owner })
+      const a2 = await run2.load(a.location)
+      const a3 = await run2.load(a.location)
+      await a2.sync()
+      await a3.sync()
+      expect(run2.inventory.jigs.length).to.equal(1)
+      expect(run2.inventory.code.length).to.equal(1)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -285,7 +336,7 @@ describe('Inventory', () => {
   // --------------------------------------------------------------------------
 
   describe('import', () => {
-    it('adds to inventory', async () => {
+    it('does not add to inventory', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
@@ -293,21 +344,6 @@ describe('Inventory', () => {
       const run2 = new Run({ owner: run.owner })
       const rawtx = await run2.blockchain.fetch(a.location.slice(0, 64))
       await run2.import(rawtx)
-      expect(run2.inventory.jigs.length).to.equal(1)
-      expect(run2.inventory.code.length).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('rollback removes from inventory', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      const run2 = new Run({ owner: run.owner })
-      const rawtx = await run2.blockchain.fetch(a.location.slice(0, 64))
-      const transaction = await run2.import(rawtx)
-      transaction.rollback()
       expect(run2.inventory.jigs.length).to.equal(0)
       expect(run2.inventory.code.length).to.equal(0)
     })
