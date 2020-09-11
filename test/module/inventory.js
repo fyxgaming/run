@@ -139,7 +139,7 @@ describe('Inventory', () => {
 
     it('dedups syncs', async () => {
       const run = new Run()
-      class A extends Jig { f () { this.n = 1 } }
+      class A extends Jig { }
       const a = new A()
       await a.sync()
       const start = new Date()
@@ -174,7 +174,7 @@ describe('Inventory', () => {
     it('rollback in transaction', () => {
       const run = new Run()
       expect(() => run.transaction(() => {
-        class A extends Jig { f () { this.n = 1 } }
+        class A extends Jig { }
         new A() // eslint-disable-line
         expect(run.inventory.jigs.length).to.equal(1)
         expect(run.inventory.code.length).to.equal(1)
@@ -182,6 +182,24 @@ describe('Inventory', () => {
       })).to.throw()
       expect(run.inventory.jigs.length).to.equal(0)
       expect(run.inventory.code.length).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('receive in transaction', async () => {
+      const run = new Run()
+      class A extends Jig { send (to) { this.owner = to } }
+      const a = new A()
+      await run.sync()
+      const run2 = new Run()
+      await run2.inventory.sync()
+      run2.transaction(() => {
+        expect(run2.inventory.jigs.length).to.equal(0)
+        expect(run2.inventory.code.length).to.equal(0)
+        a.send(run2.owner.address)
+        expect(run2.inventory.jigs.length).to.equal(1)
+        expect(run2.inventory.code.length).to.equal(0)
+      })
     })
   })
 })
