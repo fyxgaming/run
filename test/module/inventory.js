@@ -269,13 +269,24 @@ describe('Inventory', () => {
 
     // ------------------------------------------------------------------------
 
-    it('supports non-async owners', async () => {
+    it('supports non-async nextOwner', async () => {
       const owner = {
         nextOwner () { return new PrivateKey().toAddress().toString() },
         async sign () { }
       }
       const run = new Run({ owner })
       await run.inventory.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('disabled if nextOwner fails', async () => {
+      const owner = {
+        async nextOwner () { throw new Error() },
+        async sign () { }
+      }
+      const run = new Run({ owner })
+      await expect(run.inventory.sync()).to.be.rejected
     })
   })
 })
