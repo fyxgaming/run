@@ -168,6 +168,21 @@ describe('Inventory', () => {
       run.owner = new PrivateKey()
       expect(run.inventory).not.to.equal(inventory)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('rollback in transaction', () => {
+      const run = new Run()
+      expect(() => run.transaction(() => {
+        class A extends Jig { f () { this.n = 1 } }
+        new A() // eslint-disable-line
+        expect(run.inventory.jigs.length).to.equal(1)
+        expect(run.inventory.code.length).to.equal(1)
+        throw new Error()
+      })).to.throw()
+      expect(run.inventory.jigs.length).to.equal(0)
+      expect(run.inventory.code.length).to.equal(0)
+    })
   })
 })
 
