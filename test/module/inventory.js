@@ -200,7 +200,7 @@ describe('Inventory', () => {
   // --------------------------------------------------------------------------
 
   describe('load', () => {
-    it('cached adds to inventory', async () => {
+    it('load cached adds to inventory', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
@@ -213,7 +213,7 @@ describe('Inventory', () => {
 
     // ------------------------------------------------------------------------
 
-    it('replay adds to inventory', async () => {
+    it('load via replay adds to inventory', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
@@ -223,6 +223,24 @@ describe('Inventory', () => {
       await run2.load(a.location)
       expect(run2.inventory.jigs.length).to.equal(1)
       expect(run2.inventory.code.length).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('load old state keeps newer', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      a.auth()
+      await a.sync()
+      const run2 = new Run({ owner: run.owner })
+      await run2.inventory.sync()
+      expect(run2.inventory.jigs.length).to.equal(1)
+      expect(run2.inventory.code.length).to.equal(1)
+      const a2 = await run2.load(a.origin)
+      expect(run2.inventory.jigs.length).to.equal(1)
+      expect(run2.inventory.code.length).to.equal(1)
+      expect(run2.inventory.jigs[0]).not.to.equal(a2)
     })
   })
 
