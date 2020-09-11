@@ -266,6 +266,17 @@ describe('Inventory', () => {
       expect(run.inventory.jigs.length).to.equal(1)
       expect(run.inventory.code.length).to.equal(1)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('supports non-async owners', async () => {
+      const owner = {
+        nextOwner () { return new PrivateKey().toAddress().toString() },
+        async sign () { }
+      }
+      const run = new Run({ owner })
+      await run.inventory.sync()
+    })
   })
 })
 
