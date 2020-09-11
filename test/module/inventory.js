@@ -6,8 +6,9 @@
 
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
+const { payFor } = require('../env/misc')
 const { expect } = require('chai')
-const { PrivateKey } = require('bsv')
+const { PrivateKey, Transaction } = require('bsv')
 const Run = require('../env/run')
 const { stub } = require('sinon')
 const { Jig } = Run
@@ -154,6 +155,18 @@ describe('Inventory', () => {
       await Promise.all(promises)
       const time2 = new Date() - start2
       expect(Math.abs(time2 - time) < 50).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('non-jig utxo', async () => {
+      const run = new Run()
+      const utxos = await run.blockchain.utxos(run.purse.address)
+      const tx = await payFor(new Transaction().from(utxos).to(run.owner.address, 1000), run)
+      await run.blockchain.broadcast(tx.toString('hex'))
+      await run.inventory.sync()
+      expect(run.inventory.jigs.length).to.equal(0)
+      expect(run.inventory.code.length).to.equal(0)
     })
   })
 

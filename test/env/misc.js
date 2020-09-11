@@ -23,7 +23,8 @@ async function payFor (tx, run) {
   const paidhex = await run.purse.pay(rawtx, parents)
   const paidtx = new Transaction(paidhex)
   await populatePreviousOutputs(paidtx, run.blockchain)
-  return paidtx
+  const signedtx = paidtx.sign(run.purse.bsvPrivateKey)
+  return signedtx
 }
 
 // ------------------------------------------------------------------------------------------------
