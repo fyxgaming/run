@@ -845,7 +845,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if different read instances', async () => {
+    it.only('throws if different read instances', async () => {
       const run = new Run()
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
@@ -864,7 +864,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if read different instance than written', async () => {
+    it.only('throws if read different instance than written', async () => {
       const run = new Run()
       class A extends Jig { set (n) { this.n = n } }
       class B extends Jig { apply (a, a2) { this.n = a.n; a2.set(3) } }

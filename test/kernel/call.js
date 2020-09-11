@@ -712,7 +712,7 @@ describe('Call', () => {
   // --------------------------------------------------------------------------
 
   describe('Unify worldview', () => {
-    it('updates jigs', async () => {
+    it('unifies jigs', async () => {
       const run = new Run()
       class A extends Jig { update () { this.n = 1 } }
       class B extends Jig {
@@ -759,7 +759,7 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it('updates code', async () => {
+    it('unifies code', async () => {
       const run = new Run()
       class A extends Jig { static set (n) { this.n = n } }
       const CA = run.deploy(A)
@@ -788,7 +788,7 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it('updates in maps', async () => {
+    it('unifies jigs in maps', async () => {
       const run = new Run()
       function f () { return 1 }
       function g () { return 2 }
@@ -817,6 +817,11 @@ describe('Call', () => {
       run.cache = new LocalCache()
       const a3 = await run.load(a.location)
       test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('unifies jigs in latest states', () => {
     })
   })
 })

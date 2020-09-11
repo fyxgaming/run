@@ -1213,7 +1213,7 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if inconsistent worldview', async () => {
+    it.only('throws if inconsistent worldview', async () => {
       const run = new Run()
       class A extends Jig {
         init (n) { this.n = 1 }

@@ -23,7 +23,7 @@ describe('Publish', () => {
 
   // ------------------------------------------------------------------------
 
-  it('throws if inconsistent jig classes', async () => {
+  it.only('throws if inconsistent jig classes', async () => {
     const run = new Run()
     class A extends Jig {
       static setOnClass (s) { this.s = s }
@@ -42,7 +42,7 @@ describe('Publish', () => {
 
   // --------------------------------------------------------------------------
 
-  it('throws if inconsistent jig instances', async () => {
+  it.only('throws if inconsistent jig instances', async () => {
     const run = new Run()
     class A extends Jig { set (x) { this.x = x } }
     const a1 = new A()
