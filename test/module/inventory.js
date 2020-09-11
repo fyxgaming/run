@@ -11,6 +11,7 @@ const { expect } = require('chai')
 const { stub } = require('sinon')
 const { PrivateKey, Transaction } = require('bsv')
 const Run = require('../env/run')
+const { LocalCache } = require('../../lib/run')
 const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -199,12 +200,26 @@ describe('Inventory', () => {
   // --------------------------------------------------------------------------
 
   describe('load', () => {
-    it('adds to inventory', async () => {
+    it('cached adds to inventory', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
       await a.sync()
       const run2 = new Run({ owner: run.owner })
+      await run2.load(a.location)
+      expect(run2.inventory.jigs.length).to.equal(1)
+      expect(run2.inventory.code.length).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('replay adds to inventory', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const run2 = new Run({ owner: run.owner })
+      run2.cache = new LocalCache()
       await run2.load(a.location)
       expect(run2.inventory.jigs.length).to.equal(1)
       expect(run2.inventory.code.length).to.equal(1)
