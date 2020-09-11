@@ -821,7 +821,48 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('unifies jigs in latest states', () => {
+    it.only('autounify', async () => {
+      const run = new Run()
+      class A extends Jig { set(x) { this.x = x } }
+      const CA = run.deploy(A)
+      const a = new A()
+      await a.sync()
+      const a2 = await run.load(a.origin)
+      a2.set(1)
+      a2.constructor.auth()
+      await a2.sync()
+      const b = new A()
+      await b.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'set', [{ $jig: 1 }, { $dup: ['2', '0'] }]]
+          }
+        ]
+      })
+
+      b.set(a, a2)
+
+      function test (b) {
+        expect(b.x[0]).to.equal(b.x[1])
+      }
+
+      await b.sync()
+      test(b)
+
+      const b2 = await run.load(b.location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(b.location)
+      test(b3)
     })
   })
 })
