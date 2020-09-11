@@ -218,6 +218,27 @@ describe('Inventory', () => {
         expect(run2.inventory.code.length).to.equal(0)
       })
     })
+
+    // ------------------------------------------------------------------------
+
+    it('send after switch run instances', async () => {
+      const run = new Run()
+      class A extends Jig { send (to) { this.owner = to } }
+      const a = new A()
+      await run.sync()
+      const run2 = new Run()
+      expect(run.inventory.jigs.length).to.equal(1)
+      expect(run.inventory.code.length).to.equal(1)
+      const transaction = new Run.Transaction(() => a.send(run2.owner.pubkey))
+      expect(run.inventory.jigs.length).to.equal(0)
+      expect(run.inventory.code.length).to.equal(1)
+      transaction.rollback()
+      expect(run.inventory.jigs.length).to.equal(0)
+      expect(run.inventory.code.length).to.equal(1)
+      await run.inventory.sync()
+      expect(run.inventory.jigs.length).to.equal(1)
+      expect(run.inventory.code.length).to.equal(1)
+    })
   })
 })
 
