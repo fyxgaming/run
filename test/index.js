@@ -38,6 +38,7 @@ require('./kernel/upgrade')
 require('./kernel/universal')
 
 require('./module/inventory')
+require('./module/local-cache')
 require('./module/mockchain')
 require('./module/viewer')
 

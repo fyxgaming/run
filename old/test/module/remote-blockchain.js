@@ -90,7 +90,8 @@ describe('RemoteBlockchain', () => {
   })
 
   describe('utxos', () => {
-    it('should correct for server returning duplicates', async () => {
+    // SAVE AND RESTORE LOGGER
+    it.skip('should correct for server returning duplicates', async () => {
       const address = new PrivateKey('mainnet').toAddress().toString()
       const script = Script.fromAddress(address)
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'

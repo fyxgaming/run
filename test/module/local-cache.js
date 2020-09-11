@@ -7,7 +7,7 @@
 const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
-const { Run } = require('../env/config')
+const Run = require('../env/run')
 const { LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -15,6 +15,10 @@ const { LocalCache } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('LocalCache', () => {
+  // --------------------------------------------------------------------------
+  // constructor
+  // --------------------------------------------------------------------------
+
   describe('constructor', () => {
     it('should accept valid maxSizeMB', () => {
       new LocalCache({ maxSizeMB: 0 }) // eslint-disable-line
@@ -23,6 +27,8 @@ describe('LocalCache', () => {
       new LocalCache({ maxSizeMB: 100 }) // eslint-disable-line
       new LocalCache({ maxSizeMB: Infinity }) // eslint-disable-line
     })
+
+    // ------------------------------------------------------------------------
 
     it('should throw if invalid maxSizeMB', () => {
       expect(() => new LocalCache({ maxSizeMB: NaN })).to.throw('Invalid maxSizeMB')
@@ -33,10 +39,16 @@ describe('LocalCache', () => {
       expect(() => new LocalCache({ maxSizeMB: () => 10 })).to.throw('Invalid maxSizeMB')
     })
 
+    // ------------------------------------------------------------------------
+
     it('should set default maxSizeMB to 10', () => {
       expect(new LocalCache().maxSizeMB).to.equal(10)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // maxSizeMB
+  // --------------------------------------------------------------------------
 
   describe('maxSizeMB', () => {
     it('should allow setting valid maxSizeMB', () => {
@@ -47,6 +59,8 @@ describe('LocalCache', () => {
       new LocalCache().maxSizeMB = Infinity
     })
 
+    // ------------------------------------------------------------------------
+
     it('should throw if set invalid maxSizeMB', () => {
       expect(() => { new LocalCache().maxSizeMB = NaN }).to.throw('Invalid maxSizeMB')
       expect(() => { new LocalCache().maxSizeMB = -Infinity }).to.throw('Invalid maxSizeMB')
@@ -55,6 +69,8 @@ describe('LocalCache', () => {
       expect(() => { new LocalCache().maxSizeMB = '1' }).to.throw('Invalid maxSizeMB')
       expect(() => { new LocalCache().maxSizeMB = () => 10 }).to.throw('Invalid maxSizeMB')
     })
+
+    // ------------------------------------------------------------------------
 
     it('should reduce size if necessary', async () => {
       const cache = new LocalCache()
@@ -66,6 +82,10 @@ describe('LocalCache', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // get
+  // --------------------------------------------------------------------------
+
   describe('get', () => {
     it('should return value previously set', async () => {
       const cache = new LocalCache()
@@ -73,10 +93,14 @@ describe('LocalCache', () => {
       expect(await cache.get('a')).to.equal(1)
     })
 
+    // ------------------------------------------------------------------------
+
     it('should return undefined if missing', async () => {
       const cache = new LocalCache()
       expect(await cache.get('a')).to.equal(undefined)
     })
+
+    // ------------------------------------------------------------------------
 
     it('should bump value to the front', async () => {
       const cache = new LocalCache()
@@ -89,6 +113,10 @@ describe('LocalCache', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // set
+  // --------------------------------------------------------------------------
+
   describe('set', () => {
     it('should set json values', async () => {
       const cache = new LocalCache()
@@ -100,6 +128,8 @@ describe('LocalCache', () => {
       await cache.set('array', [1])
     })
 
+    // ------------------------------------------------------------------------
+
     it('should throw for non-json values', async () => {
       const cache = new LocalCache()
       await expect(cache.set('function', x => x)).to.be.rejectedWith('Cannot cache function')
@@ -108,6 +138,8 @@ describe('LocalCache', () => {
       await expect(cache.set('NaN', NaN)).to.be.rejectedWith('Cannot cache number')
       await expect(cache.set('Infinity', Infinity)).to.be.rejectedWith('Cannot cache number')
     })
+
+    // ------------------------------------------------------------------------
 
     it('should throw if set different value', async () => {
       const cache = new LocalCache()
@@ -120,6 +152,8 @@ describe('LocalCache', () => {
       await cache.set('a', { n: 1 })
     })
 
+    // ------------------------------------------------------------------------
+
     it('should bump entry to the front', async () => {
       const cache = new LocalCache()
       await cache.set('a', 'a')
@@ -131,6 +165,10 @@ describe('LocalCache', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // clear
+  // --------------------------------------------------------------------------
+
   describe('clear', () => {
     it('should remove all entries', async () => {
       const cache = new LocalCache()
@@ -138,6 +176,8 @@ describe('LocalCache', () => {
       await cache.clear()
       expect(await cache.get('a')).to.equal(undefined)
     })
+
+    // ------------------------------------------------------------------------
 
     it('should reset cache size', async () => {
       const maxSizeMB = 10 / 1000 / 1000
