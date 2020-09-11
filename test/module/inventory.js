@@ -206,8 +206,8 @@ describe('Inventory', () => {
       await a.sync()
       const run2 = new Run({ owner: run.owner })
       await run2.load(a.location)
-      expect(run.inventory.jigs.length).to.equal(1)
-      expect(run.inventory.code.length).to.equal(1)
+      expect(run2.inventory.jigs.length).to.equal(1)
+      expect(run2.inventory.code.length).to.equal(1)
     })
   })
 
@@ -216,14 +216,31 @@ describe('Inventory', () => {
   // --------------------------------------------------------------------------
 
   describe('import', () => {
-    it('does not add to inventory', () => {
-
+    it('does not add to inventory', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const run2 = new Run({ owner: run.owner })
+      const rawtx = await run2.blockchain.fetch(a.location.slice(0, 64))
+      await run2.import(rawtx)
+      expect(run2.inventory.jigs.length).to.equal(0)
+      expect(run2.inventory.code.length).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
 
-    it('publish adds to inventory', () => {
-
+    it('publish adds to inventory', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const run2 = new Run({ owner: run.owner })
+      const rawtx = await run2.blockchain.fetch(a.location.slice(0, 64))
+      const transaction = await run2.import(rawtx)
+      await transaction.publish()
+      expect(run2.inventory.jigs.length).to.equal(1)
+      expect(run2.inventory.code.length).to.equal(1)
     })
   })
 
