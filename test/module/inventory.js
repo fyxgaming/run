@@ -186,6 +186,23 @@ describe('Inventory', () => {
 
     // ------------------------------------------------------------------------
 
+    it('send in transaction', async () => {
+      const run = new Run()
+      class A extends Jig { send (to) { this.owner = to } }
+      const a = new A()
+      await run.sync()
+      await run.inventory.sync()
+      run.transaction(() => {
+        expect(run.inventory.jigs.length).to.equal(1)
+        expect(run.inventory.code.length).to.equal(1)
+        a.send(new PrivateKey().publicKey.toString())
+        expect(run.inventory.jigs.length).to.equal(0)
+        expect(run.inventory.code.length).to.equal(1)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
     it('receive in transaction', async () => {
       const run = new Run()
       class A extends Jig { send (to) { this.owner = to } }
