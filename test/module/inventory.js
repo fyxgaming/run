@@ -457,6 +457,17 @@ describe('Inventory', () => {
       expect(run.inventory.jigs.length).to.equal(0)
       expect(run.inventory.code.length).to.equal(0)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('supports deprecated owner api', async () => {
+      const owner = {
+        async owner () { return new PrivateKey().toAddress().toString() },
+        async sign () { }
+      }
+      const run = new Run({ owner })
+      await run.inventory.sync()
+    })
   })
 })
 
