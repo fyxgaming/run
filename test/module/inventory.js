@@ -242,6 +242,42 @@ describe('Inventory', () => {
       expect(run2.inventory.code.length).to.equal(1)
       expect(run2.inventory.jigs[0]).not.to.equal(a2)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('sync send removes', async () => {
+      const run = new Run()
+      class A extends Jig { send (to) { this.owner = to } }
+      const a = new A()
+      a.send(new PrivateKey().publicKey.toString())
+      await a.sync()
+      const run2 = new Run({ owner: run.owner })
+      const a2 = await run2.load(a.origin)
+      expect(run2.inventory.jigs.length).to.equal(1)
+      expect(run2.inventory.code.length).to.equal(1)
+      await a2.sync()
+      expect(run2.inventory.jigs.length).to.equal(0)
+      expect(run2.inventory.code.length).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('sync receive adds', async () => {
+      const run = new Run()
+      const run2 = new Run()
+      run.activate()
+      class A extends Jig { send (to) { this.owner = to } }
+      const a = new A()
+      a.send(run2.owner.address)
+      await a.sync()
+      run2.activate()
+      const a2 = await run2.load(a.origin)
+      expect(run2.inventory.jigs.length).to.equal(0)
+      expect(run2.inventory.code.length).to.equal(0)
+      await a2.sync()
+      expect(run2.inventory.jigs.length).to.equal(1)
+      expect(run2.inventory.code.length).to.equal(0)
+    })
   })
 
   // --------------------------------------------------------------------------
