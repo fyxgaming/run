@@ -168,6 +168,20 @@ describe('Inventory', () => {
       expect(run.inventory.jigs.length).to.equal(0)
       expect(run.inventory.code.length).to.equal(0)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('dedup sync failure', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      stub(run.blockchain, 'utxos').throws()
+      const promise1 = run.inventory.sync()
+      const promise2 = run.inventory.sync()
+      await expect(promise1).to.be.rejected
+      await expect(promise2).to.be.rejected
+    })
   })
 
   // --------------------------------------------------------------------------
