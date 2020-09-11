@@ -216,7 +216,7 @@ describe('Inventory', () => {
   // --------------------------------------------------------------------------
 
   describe('import', () => {
-    it('does not add to inventory', async () => {
+    it('adds to inventory', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
@@ -224,13 +224,13 @@ describe('Inventory', () => {
       const run2 = new Run({ owner: run.owner })
       const rawtx = await run2.blockchain.fetch(a.location.slice(0, 64))
       await run2.import(rawtx)
-      expect(run2.inventory.jigs.length).to.equal(0)
-      expect(run2.inventory.code.length).to.equal(0)
+      expect(run2.inventory.jigs.length).to.equal(1)
+      expect(run2.inventory.code.length).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
-    it('publish adds to inventory', async () => {
+    it('rollback removes from inventory', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
@@ -238,9 +238,9 @@ describe('Inventory', () => {
       const run2 = new Run({ owner: run.owner })
       const rawtx = await run2.blockchain.fetch(a.location.slice(0, 64))
       const transaction = await run2.import(rawtx)
-      await transaction.publish()
-      expect(run2.inventory.jigs.length).to.equal(1)
-      expect(run2.inventory.code.length).to.equal(1)
+      transaction.rollback()
+      expect(run2.inventory.jigs.length).to.equal(0)
+      expect(run2.inventory.code.length).to.equal(0)
     })
   })
 
