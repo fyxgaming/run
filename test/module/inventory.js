@@ -8,14 +8,10 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { payFor } = require('../env/misc')
 const { expect } = require('chai')
+const { stub } = require('sinon')
 const { PrivateKey, Transaction } = require('bsv')
 const Run = require('../env/run')
-const { stub } = require('sinon')
 const { Jig } = Run
-
-// Todo:
-// - load
-// - import
 
 // ------------------------------------------------------------------------------------------------
 // Inventory
@@ -295,12 +291,16 @@ describe('Inventory', () => {
     // ------------------------------------------------------------------------
 
     it('disabled if nextOwner fails', async () => {
-      const owner = {
-        async nextOwner () { throw new Error() },
-        async sign () { }
-      }
-      const run = new Run({ owner })
-      await expect(run.inventory.sync()).to.be.rejected
+      const run0 = new Run()
+      stub(run0.owner, 'nextOwner').throws()
+      const run = new Run({ owner: run0.owner })
+      await run.inventory.sync()
+      run.owner.nextOwner.restore()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      expect(run.inventory.jigs.length).to.equal(0)
+      expect(run.inventory.code.length).to.equal(0)
     })
   })
 })
