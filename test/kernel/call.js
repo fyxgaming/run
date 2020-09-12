@@ -823,8 +823,7 @@ describe('Call', () => {
 
     it.only('autounify', async () => {
       const run = new Run()
-      class A extends Jig { set(x) { this.x = x } }
-      const CA = run.deploy(A)
+      class A extends Jig { set (x) { this.x = x } }
       const a = new A()
       await a.sync()
       const a2 = await run.load(a.origin)

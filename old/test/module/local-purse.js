@@ -232,7 +232,7 @@ describe('LocalPurse', () => {
       class Dragon extends Jig { }
       new Dragon() // eslint-disable-line
       await run.sync()
-      const run2 = new Run({ purse: run.owner.privkey, autofund: false })
+      const run2 = new Run({ purse: run.owner.privkey, manual: true })
       new Dragon() // eslint-disable-line
       await expect(run2.sync()).to.be.rejectedWith('Not enough funds')
     })

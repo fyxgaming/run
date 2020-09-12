@@ -845,8 +845,10 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
+    // Manual mode: Loads don't sync by default, no auto-unify, syncs only current
+
     it.only('throws if different read instances', async () => {
-      const run = new Run()
+      const run = new Run({ manual: true })
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       a.set(1)
