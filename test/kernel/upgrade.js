@@ -13,7 +13,7 @@ const { Jig } = Run
 const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
 const { Code, LocalCache } = unmangle(Run)
-const SI = unmangle(Run.sandbox)._intrinsics
+const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
 
 // ------------------------------------------------------------------------------------------------
 // Upgrade
@@ -1213,7 +1213,7 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('throws if inconsistent worldview', async () => {
+    it('autounifies from upgrade', async () => {
       const run = new Run()
       class A extends Jig {
         init (n) { this.n = 1 }
@@ -1227,7 +1227,28 @@ describe('Upgrade', () => {
       const a = new CA()
       const b = new CO()
       class C extends Jig { init (a, b) { this.n = a.f() + b.f() } }
-      expect(() => new C(a, b)).to.throw('Inconsistent worldview')
+      new C(a, b) // eslint-disable-line
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if inconsistent worldview from upgrade', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init (n) { this.n = 1 }
+        f () { return this.n }
+      }
+      const CA = run.deploy(A)
+      CA.auth()
+      await CA.sync()
+      const CO = await run.load(CA.origin)
+      expect(CA.location).not.to.equal(CO.location)
+      const a = new CA()
+      const b = new CO()
+      class C extends Jig { init (a, b) { this.n = a.f() + b.f() } }
+      const C2 = run.deploy(C)
+      run.manual = true
+      expect(() => new C2(a, b)).to.throw('Inconsistent worldview')
     })
   })
 })

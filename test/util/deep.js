@@ -152,7 +152,7 @@ describe('_deepVisit', () => {
   // --------------------------------------------------------------------------
 
   it('recognizes sandbox intrinsics', () => {
-    const SI = unmangle(Run.sandbox)._intrinsics
+    const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
     new Run() // eslint-disable-line
     const o = new SI.Object()
     o.s = new SI.Set()
@@ -328,7 +328,7 @@ describe('_deepReplace', () => {
   // --------------------------------------------------------------------------
 
   it('recognizes sandbox intrinsics', () => {
-    const SI = unmangle(Run.sandbox)._intrinsics
+    const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
     new Run() // eslint-disable-line
     const o = new SI.Object()
     o.s = new SI.Set()
@@ -545,7 +545,7 @@ describe('_deepClone', () => {
   // --------------------------------------------------------------------------
 
   it('to sandbox intrinsics', () => {
-    const SI = unmangle(Run.sandbox)._intrinsics
+    const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
     expect(_deepClone(new Set(), SI) instanceof SI.Set).to.equal(true)
     expect(_deepClone(new Map(), SI) instanceof SI.Map).to.equal(true)
     expect(_deepClone(new Uint8Array(), SI) instanceof SI.Uint8Array).to.equal(true)
@@ -556,7 +556,7 @@ describe('_deepClone', () => {
   // --------------------------------------------------------------------------
 
   it('from sandbox intrinsics', () => {
-    const SI = unmangle(Run.sandbox)._intrinsics
+    const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
     expect(_deepClone(new SI.Set()) instanceof Set).to.equal(true)
     expect(_deepClone(new SI.Map()) instanceof Map).to.equal(true)
     expect(_deepClone(new SI.Uint8Array()) instanceof Uint8Array).to.equal(true)

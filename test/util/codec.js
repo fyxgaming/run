@@ -11,8 +11,8 @@ const Run = require('../env/run')
 const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const Codec = unmangle(Run)._Codec
-const SI = unmangle(Run.sandbox)._intrinsics
-const HI = unmangle(Run.sandbox)._hostIntrinsics
+const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
+const HI = unmangle(unmangle(Run)._Sandbox)._hostIntrinsics
 
 // ------------------------------------------------------------------------------------------------
 // Helpers

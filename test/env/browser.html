@@ -31,7 +31,6 @@
       })
 
       mocha.setup('bdd')
-      mocha.checkLeaks()
 
       const urlParams = new URLSearchParams(window.location.search)
       mocha.Mocha.reporters.Base.useColors = JSON.parse(urlParams.get('colors')) || chrome

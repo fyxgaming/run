@@ -18,7 +18,7 @@ const Unbound = unmangle(Run)._Unbound
 const _sudo = unmangle(Run)._sudo
 const JIGS = unmangle(unmangle(Run)._Universal)._JIGS
 const _RESERVED_PROPS = unmangle(Run)._RESERVED_PROPS
-const SI = unmangle(Run.sandbox)._intrinsics
+const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
 
 // ------------------------------------------------------------------------------------------------
 // Globals

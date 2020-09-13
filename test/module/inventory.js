@@ -49,13 +49,14 @@ describe('Inventory', () => {
 
     // ------------------------------------------------------------------------
 
-    it('does not add unowned jigs with locks', () => {
+    it('does not add unowned jigs with locks', async () => {
       const run = new Run()
       class A extends Jig { init (owner) { this.owner = owner } }
       class CustomLock {
         script () { return new Uint8Array() }
         domain () { return 0 }
       }
+      await run.deploy(CustomLock).sync()
       new A(new CustomLock()) // eslint-disable-line
       expect(run.inventory.jigs.length).to.equal(0)
       expect(run.inventory.code.length).to.equal(2)

@@ -313,7 +313,7 @@ describe('Lock API', () => {
     })
 
     it('returns true if script returns a sandbox Uint8Array', () => {
-      const SandboxUint8Array = unmangle(Run.sandbox)._intrinsics.Uint8Array
+      const SandboxUint8Array = unmangle(unmangle(Run)._Sandbox)._intrinsics.Uint8Array
       class CustomLock {
         script () { return new SandboxUint8Array() }
         domain () { return 1 }

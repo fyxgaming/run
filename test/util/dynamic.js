@@ -110,7 +110,7 @@ describe('Dynamic', () => {
     })
 
     it('supports types from sandbox', () => {
-      const f = unmangle(Run.sandbox)._evaluate('function f() { }')[0]
+      const f = unmangle(unmangle(Run)._Sandbox)._evaluate('function f() { }')[0]
       const D = new Dynamic()
       Dynamic._setInnerType(D, f)
     })

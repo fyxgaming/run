@@ -821,7 +821,7 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('autounify', async () => {
+    it('autounifies', async () => {
       const run = new Run()
       class A extends Jig { set (x) { this.x = x } }
       const a = new A()

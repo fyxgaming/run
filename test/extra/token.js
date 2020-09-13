@@ -9,6 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
+const { COVER } = require('../env/config')
 const { LocalCache, Token } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -19,6 +20,8 @@ describe('Token', () => {
   // Wait for every test to finish. This makes debugging easier.
   // Don't deactivate the current run instance between tests. Token needs to stay deployed.
   afterEach(() => Run.instance && Run.instance.sync())
+
+  Run.cover('TestToken')
 
   // --------------------------------------------------------------------------
   // mint
@@ -190,17 +193,20 @@ describe('Token', () => {
 
     // ------------------------------------------------------------------------
 
-    it('load after combine', async () => {
-      const run = new Run()
-      class TestToken extends Token { }
-      const a = TestToken.mint(30)
-      const b = TestToken.mint(70)
-      const c = new TestToken(a, b)
-      await run.sync()
-      run.cache = new LocalCache()
-      const c2 = await run.load(c.location)
-      expect(c2.amount).to.equal(c.amount)
-    })
+    // load() does not work in cover mode for preinstalls
+    if (!COVER) {
+      it('load after combine', async () => {
+        const run = new Run()
+        class TestToken extends Token { }
+        const a = TestToken.mint(30)
+        const b = TestToken.mint(70)
+        const c = new TestToken(a, b)
+        await run.sync()
+        run.cache = new LocalCache()
+        const c2 = await run.load(c.location)
+        expect(c2.amount).to.equal(c.amount)
+      })
+    }
 
     // ------------------------------------------------------------------------
 

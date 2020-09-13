@@ -13,7 +13,7 @@ const { expectTx } = require('../env/misc')
 const { Jig, LocalCache } = Run
 const unmangle = require('../env/unmangle')
 const PrivateKey = require('bsv/lib/privatekey')
-const SI = unmangle(Run.sandbox)._intrinsics
+const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
 
 // ------------------------------------------------------------------------------------------------
 // Jig
@@ -845,10 +845,8 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    // Manual mode: Loads don't sync by default, no auto-unify, syncs only current
-
-    it.only('throws if different read instances', async () => {
-      const run = new Run({ manual: true })
+    it('throws if different read instances', async () => {
+      const run = new Run()
       class A extends Jig { set (n) { this.n = n } }
       const a = new A()
       a.set(1)
@@ -861,12 +859,13 @@ describe('Jig', () => {
         apply (a2) { this.n = this.a + a2.n }
       }
       const b = new B(a)
+      run.manual = true
       expect(() => b.apply(a2)).to.throw('Inconsistent worldview')
     })
 
     // ------------------------------------------------------------------------
 
-    it.only('throws if read different instance than written', async () => {
+    it('throws if read different instance than written', async () => {
       const run = new Run()
       class A extends Jig { set (n) { this.n = n } }
       class B extends Jig { apply (a, a2) { this.n = a.n; a2.set(3) } }
@@ -876,6 +875,7 @@ describe('Jig', () => {
       const a2 = await run.load(a.location)
       a2.set(2)
       const b = new B()
+      run.manual = true
       expect(() => b.apply(a, a2)).to.throw('Inconsistent worldview')
     })
 

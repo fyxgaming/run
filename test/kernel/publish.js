@@ -23,7 +23,7 @@ describe('Publish', () => {
 
   // ------------------------------------------------------------------------
 
-  it.only('throws if inconsistent jig classes', async () => {
+  it('throws if inconsistent jig classes', async () => {
     const run = new Run()
     class A extends Jig {
       static setOnClass (s) { this.s = s }
@@ -37,12 +37,13 @@ describe('Publish', () => {
     await CA2.sync()
     expect(CA.location).not.to.equal(CA2.location)
     const a2 = new CA2()
+    run.manual = true
     expect(() => a2.setOnInstance(a1)).to.throw('Inconsistent worldview')
   })
 
   // --------------------------------------------------------------------------
 
-  it.only('throws if inconsistent jig instances', async () => {
+  it('throws if inconsistent jig instances', async () => {
     const run = new Run()
     class A extends Jig { set (x) { this.x = x } }
     const a1 = new A()
@@ -50,6 +51,7 @@ describe('Publish', () => {
     await a1.sync()
     const a2 = await run.load(a1.origin)
     const b = new A()
+    run.manual = true
     expect(() => b.set(a1, a2)).to.throw('Inconsistent worldview')
   })
 
