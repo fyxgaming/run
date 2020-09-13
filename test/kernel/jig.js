@@ -796,7 +796,7 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('Reads', () => {
-    it('do not spend', async () => {
+    it.only('do not spend', async () => {
       const run = new Run()
 
       class A extends Jig { init (n) { this.n = n } }
@@ -1255,7 +1255,7 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('getPrototypeOf', () => {
-    it('reads jig', async () => {
+    it.only('reads jig', async () => {
       const run = new Run()
       class A extends Jig {
         init () { }
@@ -1794,7 +1794,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('reads jig', async () => {
+    it.only('reads jig', async () => {
       const run = new Run()
       class A extends Jig { f (a) { this.x = a.owner }}
       const a = new A()
@@ -2084,7 +2084,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('$ properties and args', async () => {
+    it.only('$ properties and args', async () => {
       const run = new Run()
       class A extends Jig {
         init () { this.o = { $class: 'undefined' } }

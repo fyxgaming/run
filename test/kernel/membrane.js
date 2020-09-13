@@ -122,7 +122,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('defineProperty on existing', () => {
+    it.only('defineProperty on existing', () => {
       const o = makeJig({})
       o.n = 1
       Object.defineProperty(o, 'n', { value: 2 })
@@ -411,7 +411,7 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Admin', () => {
-    it('admin mode runs directly on target', () => {
+    it.only('admin mode runs directly on target', () => {
       class A { }
       const A2 = new Membrane(A, mangle({ _admin: true }))
       function f () { return f }
@@ -1343,7 +1343,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('callable method depends on thisArg', () => {
+    it.only('callable method depends on thisArg', () => {
       // Returning a WeakMap will fail when callable due to unserializability
       const options = mangle({ _recordable: true, _callable: false, _owned: true })
       const f = new Membrane(function f () { return new WeakMap() }, options)

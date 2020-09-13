@@ -359,7 +359,7 @@ describe('Proxy2', () => {
       p.findIndex(() => {})
       p.forEach(() => {})
       p.includes()
-      p.indexOf()
+      p.indexOf(0)
       p.lastIndexOf()
       p.join()
       p.keys()
