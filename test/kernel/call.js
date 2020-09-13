@@ -759,7 +759,7 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it('unifies code', async () => {
+    it.only('unifies code', async () => {
       const run = new Run()
       class A extends Jig { static set (n) { this.n = n } }
       const CA = run.deploy(A)

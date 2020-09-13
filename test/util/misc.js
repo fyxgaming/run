@@ -9,6 +9,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
 const unmangle = require('../env/unmangle')
+const { stub } = require('sinon')
 const Sandbox = unmangle(Run)._Sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
@@ -16,7 +17,7 @@ const {
   _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
   _anonymizeSourceCode, _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty,
   _setOwnProperty, _ownGetters, _ownMethods, _sameJig, _hasJig, _addJigs, _subtractJigs, _limit,
-  _Timeout
+  _Timeout, _safeJSONStringify
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -966,6 +967,25 @@ describe('Misc', () => {
       await new Promise((resolve, reject) => setTimeout(resolve, 10))
       expect(() => unmangle(timeout)._check()).to.throw('hello timeout')
       expect(() => unmangle(timeout)._check()).to.throw('hello timeout')
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _safeJSONStringify
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_safeJSONStringify', () => {
+    it('stringifies', () => {
+      expect(_safeJSONStringify({ a: [{ b: 2 }, '3'] })).to.equal('{"a":[{"b":2},"3"]}')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if key order mismatch', () => {
+      const handler = { ownKeys: target => Reflect.ownKeys(target) }
+      stub(handler, 'ownKeys').onFirstCall().returns(['a', 'b']).onSecondCall().returns(['b', 'a'])
+      const o = new Proxy({ }, handler)
+      _safeJSONStringify(o)
     })
   })
 
