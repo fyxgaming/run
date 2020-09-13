@@ -574,7 +574,7 @@ describe('Private', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('throws if access from child instance', async () => {
+    it('throws if access from child instance', async () => {
       const run = new Run()
       class A extends Jig {
         static _g () { return 1 }

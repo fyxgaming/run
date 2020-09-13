@@ -132,6 +132,14 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('define __proto__ disabled', () => {
+      const a = makeJig({ })
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      expect(() => Object.defineProperty(a, '__proto__', desc) ) .to.throw('define __proto__ disabled')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('delete', () => {
       class A { }
       A.n = 1
@@ -147,6 +155,14 @@ describe('Membrane', () => {
       const a = new Membrane(new A())
       delete a.f
       expect('f' in a).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('delete __proto__ throws', () => {
+      class A { f () { } }
+      const a = new Membrane(new A())
+      expect(() => { delete a.__proto__ }).to.throw('delete __proto__ disabled')
     })
 
     // ------------------------------------------------------------------------
@@ -228,6 +244,13 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('get __proto__ returns prototype', () => {
+      const a = new Membrane(class A { })
+      expect(a.__proto__).to.equal(Object.getPrototypeOf(a))
+    })
+
+    // ------------------------------------------------------------------------
+
     it('getOwnPropertyDescriptor', () => {
       class A { }
       A.n = 1
@@ -252,6 +275,13 @@ describe('Membrane', () => {
       class A { }
       const A2 = new Membrane(A)
       expect(Object.getOwnPropertyDescriptor(A2, 'prototype').value).to.equal(A.prototype)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('getOwnPropertyDescriptor for __proto__ returns undefined', () => {
+      const a = new Membrane({ })
+      expect(Object.getOwnPropertyDescriptor(a, '__proto__')).to.equal(undefined)
     })
 
     // ------------------------------------------------------------------------
@@ -330,6 +360,13 @@ describe('Membrane', () => {
       const A = makeJig(class A { f () { } })
       const a = makeJig(new A())
       expect(() => { a.f.n = 1 }).to.throw('set disabled')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set __proto__ disabled', () => {
+      const a = new Membrane(class A { })
+      expect(() => { a.__proto__ = {} }).to.throw('set __proto__ disabled')
     })
 
     // ------------------------------------------------------------------------
@@ -1355,10 +1392,10 @@ describe('Membrane', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Privacy
+  // Private
   // --------------------------------------------------------------------------
 
-  describe('Privacy', () => {
+  describe('Private', () => {
     it('delete throws if outside', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
       expect(() => { delete A._n }).to.throw('Cannot delete private property _n')
@@ -1428,6 +1465,13 @@ describe('Membrane', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
       _sudo(() => { A._n = 1 })
       expect(() => A._n).to.throw('Cannot access private property _n')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get __proto__ allowed from outside', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
+      expect(() => A.__proto__).not.to.throw()
     })
 
     // ------------------------------------------------------------------------
