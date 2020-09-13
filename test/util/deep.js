@@ -672,6 +672,16 @@ describe('_deepEqual', () => {
 
   // --------------------------------------------------------------------------
 
+  it('key order', () => {
+    const a = { n: 1 }
+    const b = { m: 2 }
+    b.n = 1
+    a.m = 2
+    expect(_deepEqual(a, b)).to.equal(false)
+  })
+
+  // --------------------------------------------------------------------------
+
   it('throws if unsupported', () => {
     expect(() => _deepEqual(new WeakSet(), new WeakSet())).to.throw('Unsupported')
     expect(() => _deepEqual(new RegExp(), new RegExp())).to.throw('Unsupported')
