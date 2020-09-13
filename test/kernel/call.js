@@ -759,7 +759,7 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('unifies code', async () => {
+    it('unifies code', async () => {
       const run = new Run()
       class A extends Jig { static set (n) { this.n = n } }
       const CA = run.deploy(A)
@@ -778,11 +778,9 @@ describe('Call', () => {
       await CB.sync()
       test(CB)
 
-      console.log('----')
       const CB2 = await run.load(CB.location)
       test(CB2)
 
-      console.log('----')
       run.cache = new LocalCache()
       const CB3 = await run.load(CB.location)
       test(CB3)
