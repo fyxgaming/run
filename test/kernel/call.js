@@ -205,7 +205,7 @@ describe('Call', () => {
   // --------------------------------------------------------------------------
 
   describe('Jig', () => {
-    it('should update basic jig', async () => {
+    it('basic jig', async () => {
       const run = new Run()
       class Sword extends Jig {
         upgrade () { this.upgrades = (this.upgrades || 0) + 1 }
@@ -759,7 +759,7 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('unifies code', async () => {
+    it('unifies code', async () => {
       const run = new Run()
       class A extends Jig { static set (n) { this.n = n } }
       const CA = run.deploy(A)

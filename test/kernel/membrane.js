@@ -466,8 +466,11 @@ describe('Membrane', () => {
       expect(_sudo(() => 'n' in A2)).to.equal(true)
       expect(_sudo(() => Object.isExtensible(A2))).to.equal(Object.isExtensible(A))
       A._privacy = 1
-      expect(_sudo(() => Object.getOwnPropertyNames(A2)))
-        .to.deep.equal(['length', 'prototype', 'name', 'n', '_privacy'])
+      const keys = _sudo(() => Object.getOwnPropertyNames(A2))
+      const expectedKeys = ['length', 'prototype', 'name', 'n', '_privacy']
+      // Check that each key is present, but in admin mode, ordering is not guaranteed
+      expect(keys.length).to.equal(expectedKeys.length)
+      expect(keys.some(key => !expectedKeys.includes(key))).to.equal(false)
       _sudo(() => Object.preventExtensions(A2))
       expect(Object.isExtensible(A)).to.equal(false)
       _sudo(() => { f2.n = 1 })

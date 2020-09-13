@@ -820,12 +820,12 @@ describe('Deploy', () => {
             data: [
               'class A { }',
               {
-                f: { $jig: 1 },
-                B: { $jig: 2 }
+                B: { $jig: 1 },
+                f: { $jig: 2 }
               },
-              f.toString(),
-              { },
               B.toString(),
+              { },
+              f.toString(),
               { }
             ]
           }
@@ -1024,8 +1024,8 @@ describe('Deploy', () => {
             data: [
               'class A { }',
               {
-                Jig: { $jig: 0 },
-                Berry: { $jig: 1 }
+                Berry: { $jig: 0 },
+                Jig: { $jig: 1 }
               }
             ]
           }
