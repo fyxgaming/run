@@ -12,7 +12,7 @@ const Run = require('../env/run')
 // ------------------------------------------------------------------------------------------------
 
 describe('Loader', () => {
-  it.only('mixture of cached and replay with parent property', async () => {
+  it('mixture of cached and replay with parent property', async () => {
     // A very particular test for a particular key ordering bug
 
     let run = new Run()

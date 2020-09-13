@@ -106,6 +106,7 @@ function expectTx (opts) {
 
 // Helper to test recording calls and then roll back any changes
 function testRecord (f) {
+  if (!Run.instance) new Run() // eslint-disable-line
   const Record = unmangle(unmangle(Run)._Record)
   const CURRENT_RECORD = unmangle(Record._CURRENT_RECORD)
   try {

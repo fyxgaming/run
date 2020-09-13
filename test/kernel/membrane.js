@@ -1382,7 +1382,8 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('callable method depends on thisArg', () => {
+    // This test takes several seconds on WebKit but milliseconds on other browsers
+    it('callable method depends on thisArg', () => {
       // Returning a WeakMap will fail when callable due to unserializability
       const options = mangle({ _recordable: true, _callable: false, _owned: true })
       const f = new Membrane(function f () { return new WeakMap() }, options)
@@ -1390,7 +1391,7 @@ describe('Membrane', () => {
       const b = makeJig({ f }, { _recordable: true, _callable: true })
       expect(() => a.f()).not.to.throw()
       testRecord(() => expect(() => b.f()).to.throw())
-    })
+    }).timeout(10000)
   })
 
   // --------------------------------------------------------------------------

@@ -360,7 +360,7 @@ describe('Proxy2', () => {
       p.forEach(() => {})
       p.includes()
       p.indexOf(0)
-      p.lastIndexOf()
+      p.lastIndexOf(0)
       p.join()
       p.keys()
       p.map(() => {})

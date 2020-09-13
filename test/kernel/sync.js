@@ -330,7 +330,7 @@ describe('Sync', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('sync jig updated by another', async () => {
+    it('sync jig updated by another', async () => {
       const run = new Run()
       class A extends Jig {
         set (x) { this.x = x }
