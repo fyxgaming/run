@@ -65,10 +65,10 @@ jobs:
 
     - name: Collect Coverage
       run:
-        env PERF=1 npm run test:cover
+        env STRESS=1 npm run test:cover
         env NETWORK=test env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/module/blockchain-api.js test/kernel/blockchain.js test/module/pay-server.js
       env:
-        PERF: 1
+        STRESS: 1
 
     - name: Publish Coverage
       uses: codecov/codecov-action@v1

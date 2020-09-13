@@ -22,7 +22,7 @@ Various environment variables may be used to configure the tests:
 |-------------------|-------------------------------------------------|------------------------------------------------|-------------|
 | `NETWORK`         | Network to test on                              | `mock`, `main`, `test`, `stn`                  | `mock`      |
 | `BROWSER`         | Browser used for testing                        | `chrome`, `firefox`, `safari`, `MicrosoftEdge` | `chrome`    |
-| `PERF`            | Whether to run the performance tests            | `true`, `false`                                | `false`     |
+| `STRESS`          | Whether to run the stress tests                 | `true`, `false`                                | `false`     |
 | `PURSE_[network]` | Purse key used on a specific network            | your string privkey                            | `undefined` |
 | `API`             | Blockchain API when not using the mock network  | `run`, `mattercloud`, `whatsonchain`           | `undefined` |
 | `APIKEY_[api]`    | API key used with a specific blockchain API     | your string api key                            | `undefined` |
@@ -31,7 +31,7 @@ Various environment variables may be used to configure the tests:
 ### Examples
 
 - `env BROWSER=safari npm run test:browser` - Test the browser build on Safari
-- `env PERF=1 npm run test` - Test library with performance tests
+- `env STRESS=1 npm run test` - Test library with stress tests
 - `env NETWORK=test env PURSE=<funded_private_key> npm run test` - Run all tests on testnet
 
 ### .env file

@@ -9,7 +9,7 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { PERF } = require('../env/config')
+const { STRESS } = require('../env/config')
 const { Mockchain } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -103,10 +103,10 @@ describe('Mockchain', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
-// Mockchain Performance Tests
+// Mockchain Stress Tests
 // ------------------------------------------------------------------------------------------------
 
-if (PERF) {
+if (STRESS) {
   describe('Mockchain Performance', () => {
     it('fast broadcasts', async () => {
       const mockchain = new Mockchain()

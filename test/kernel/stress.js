@@ -5,14 +5,14 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { PERF } = require('../env/config')
+const { STRESS } = require('../env/config')
 const { Jig, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Stress
 // ------------------------------------------------------------------------------------------------
 
-if (PERF) {
+if (STRESS) {
   describe('Stress', () => {
     it('long chain', async () => {
       const run = new Run({ timeout: Number.MAX_VALUE })
@@ -52,7 +52,7 @@ if (PERF) {
     it('many publishes', async () => {
       const run = new Run()
       class A extends Jig { }
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 500; i++) {
         const a = new A()
         await a.sync()
         if (i % 10 === 0) run.blockchain.block()
@@ -66,7 +66,7 @@ if (PERF) {
       class A extends Jig { }
       const a = new A()
       await a.sync()
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 500; i++) {
         run.cache = new LocalCache()
         await run.load(a.location)
         await run.load(a.location)
