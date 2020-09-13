@@ -122,12 +122,10 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('defineProperty on existing', () => {
+    it('defineProperty on existing throws', () => {
       const o = makeJig({})
       o.n = 1
-      Object.defineProperty(o, 'n', { value: 2 })
-      const desc = { value: 2, configurable: true, enumerable: true, writable: true }
-      expect(Object.getOwnPropertyDescriptor(o, 'n')).to.deep.equal(desc)
+      expect(() => Object.defineProperty(o, 'n', { value: 2 })).to.throw()
     })
 
     // ------------------------------------------------------------------------
@@ -135,7 +133,7 @@ describe('Membrane', () => {
     it('define __proto__ disabled', () => {
       const a = makeJig({ })
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
-      expect(() => Object.defineProperty(a, '__proto__', desc) ) .to.throw('define __proto__ disabled')
+      expect(() => Object.defineProperty(a, '__proto__', desc)).to.throw('define __proto__ disabled')
     })
 
     // ------------------------------------------------------------------------
@@ -162,6 +160,7 @@ describe('Membrane', () => {
     it('delete __proto__ throws', () => {
       class A { f () { } }
       const a = new Membrane(new A())
+      // eslint-disable-next-line
       expect(() => { delete a.__proto__ }).to.throw('delete __proto__ disabled')
     })
 
@@ -246,6 +245,7 @@ describe('Membrane', () => {
 
     it('get __proto__ returns prototype', () => {
       const a = new Membrane(class A { })
+      // eslint-disable-next-line
       expect(a.__proto__).to.equal(Object.getPrototypeOf(a))
     })
 
@@ -366,6 +366,7 @@ describe('Membrane', () => {
 
     it('set __proto__ disabled', () => {
       const a = new Membrane(class A { })
+      // eslint-disable-next-line
       expect(() => { a.__proto__ = {} }).to.throw('set __proto__ disabled')
     })
 
@@ -448,7 +449,7 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Admin', () => {
-    it.only('admin mode runs directly on target', () => {
+    it('admin mode runs directly on target', () => {
       class A { }
       const A2 = new Membrane(A, mangle({ _admin: true }))
       function f () { return f }
@@ -465,7 +466,8 @@ describe('Membrane', () => {
       expect(_sudo(() => 'n' in A2)).to.equal(true)
       expect(_sudo(() => Object.isExtensible(A2))).to.equal(Object.isExtensible(A))
       A._privacy = 1
-      expect(_sudo(() => Object.getOwnPropertyNames(A2))).to.deep.equal(Object.getOwnPropertyNames(A))
+      expect(_sudo(() => Object.getOwnPropertyNames(A2)))
+        .to.deep.equal(['length', 'prototype', 'name', 'n', '_privacy'])
       _sudo(() => Object.preventExtensions(A2))
       expect(Object.isExtensible(A)).to.equal(false)
       _sudo(() => { f2.n = 1 })
@@ -1471,6 +1473,7 @@ describe('Membrane', () => {
 
     it('get __proto__ allowed from outside', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
+      // eslint-disable-next-line
       expect(() => A.__proto__).not.to.throw()
     })
 
