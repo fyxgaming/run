@@ -4,11 +4,12 @@
  * Tests for lib/module/local-purse.js
  */
 
-const { PrivateKey } = require('bsv')
+const { PrivateKey, Transaction } = require('bsv')
 const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { payFor } = require('../env/misc')
 const { LocalPurse } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -172,16 +173,22 @@ describe('LocalPurse', () => {
     })
   })
 
-  /*
+  // --------------------------------------------------------------------------
+  // pay
+  // --------------------------------------------------------------------------
+
   describe('pay', () => {
-    it('should add inputs and outputs', async () => {
+    it('adds inputs and outputs', async () => {
       const address = new PrivateKey().toAddress()
       const tx = new Transaction().to(address, Transaction.DUST_AMOUNT)
+      const run = new Run()
       const tx2 = await payFor(tx, run)
       expect(tx2.inputs.length > 0).to.equal(true)
       expect(tx2.outputs.length > 1).to.equal(true)
     })
+  })
 
+  /*
     it('should throw if not enough funds', async () => {
       const address = new PrivateKey().toAddress()
       const tx = new Transaction().to(address, Number.MAX_SAFE_INTEGER)
