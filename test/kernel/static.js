@@ -92,6 +92,19 @@ describe('Static Code', () => {
       expect(typeof cf.auth).to.equal('function')
       expect(typeof cf.destroy).to.equal('function')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('can modify args', () => {
+      const run = new Run()
+      function f (a, b) { a.add(1); b.n = 2 }
+      const cf = run.deploy(f)
+      const set = new Set()
+      const obj = { }
+      cf(set, obj)
+      expect(set.has(1)).to.equal(true)
+      expect(obj.n).to.equal(2)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -176,6 +189,17 @@ describe('Static Code', () => {
       run.cache = new LocalCache()
       const CA3 = await run.load(A.location)
       test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can modify args', () => {
+      const run = new Run()
+      class A { static f (x) { x.push(1) } }
+      const CA = run.deploy(A)
+      const arr = []
+      CA.f(arr)
+      expect(arr.length).to.equal(1)
     })
   })
 })

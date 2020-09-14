@@ -711,7 +711,7 @@ describe('Call', () => {
     it('sorts keys deterministically from outside', async () => {
       const run = new Run()
       class A extends Jig {
-        init(obj) {
+        init (obj) {
           this.argKeys = Object.keys(obj)
         }
       }
@@ -744,7 +744,7 @@ describe('Call', () => {
         ]
       })
 
-      function test(a) { expect(a.argKeys).to.deep.equal(['a', 'b']) }
+      function test (a) { expect(a.argKeys).to.deep.equal(['a', 'b']) }
 
       const obj = { b: 1, a: 2 }
       expect(Object.keys(obj)).to.deep.equal(['b', 'a'])
@@ -758,6 +758,108 @@ describe('Call', () => {
       run.cache = new LocalCache()
       const a3 = await run.load(a.location)
       test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('sorts keys deterministically from another jig', async () => {
+      const run = new Run()
+
+      class A extends Jig {
+        init () {
+          this.b = new B({ a: { 2: 1, 1: 2 }, b: 3 })
+        }
+      }
+
+      class B extends Jig {
+        init (obj) {
+          this.objKeys = Object.keys(obj)
+          this.aKeys = Object.keys(obj.a)
+        }
+      }
+
+      A.deps = { B }
+
+      function test (a) {
+        expect(a.b.objKeys).to.deep.equal(['a', 'b'])
+        expect(a.b.aKeys).to.deep.equal(['1', '2'])
+      }
+
+      const a = new A()
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('does not sort keys from inside', async () => {
+      const run = new Run()
+
+      class A extends Jig {
+        init () {
+          this.f({ b: 1, a: 0 })
+        }
+
+        f (obj) {
+          this.objKeys = Object.keys(obj)
+        }
+      }
+
+      function test (a) {
+        expect(a.objKeys).to.deep.equal(['b', 'a'])
+      }
+
+      const a = new A()
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('arguments are copied from outside', () => {
+      const run = new Run()
+      class A extends Jig { static f (x) { x.push(1) } }
+      const CA = run.deploy(A)
+      const arr = []
+      CA.f(arr)
+      expect(arr.length).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('arguments are copied from another jig', () => {
+      const run = new Run()
+      class A extends Jig { static f (x) { x.push(1) } }
+      class B extends Jig { static g (a) { const arr = []; a.f(arr); return arr.length } }
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      expect(CB.g(CA)).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('arguments are passed through from inside', () => {
+      const run = new Run()
+      class A extends Jig {
+        static f (x) { x.push(1) }
+        static g () { const arr = []; this.f(arr); return arr.length }
+      }
+      const CA = run.deploy(A)
+      expect(CA.g()).to.equal(1)
     })
   })
 
