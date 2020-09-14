@@ -25,25 +25,25 @@ describe('REST', () => {
     it('returns json', async () => {
       const status = await REST._get('https://api.run.network/v1/test/status')
       expect(status.version > 0).to.equal(true)
-    })
+    }).timeout(10000)
 
     // ------------------------------------------------------------------------
 
     it('timeout', async () => {
       await expect(REST._get('https://www.google.com:81', 100)).to.be.rejectedWith(TimeoutError)
-    })
+    }).timeout(10000)
 
     // ------------------------------------------------------------------------
 
     it('client error', async () => {
       await expect(REST._get('123')).to.be.rejected
-    })
+    }).timeout(10000)
 
     // ------------------------------------------------------------------------
 
     it('server error', async () => {
       await expect(REST._get('https://api.run.network/badurl')).to.be.rejectedWith(RequestError)
-    })
+    }).timeout(10000)
   })
 
   // --------------------------------------------------------------------------
@@ -54,25 +54,25 @@ describe('REST', () => {
     it('posts json', async () => {
       const response = await REST._post('https://httpbin.org/post', 'hello')
       expect(response.data).to.equal('"hello"')
-    })
+    }).timeout(10000)
 
     // ------------------------------------------------------------------------
 
     it('timeout', async () => {
       await expect(REST._post('https://www.google.com:81', {}, 100)).to.be.rejectedWith(TimeoutError)
-    })
+    }).timeout(10000)
 
     // ------------------------------------------------------------------------
 
     it('client error', async () => {
       await expect(REST._post('abcdef', {})).to.be.rejected
-    })
+    }).timeout(10000)
 
     // ------------------------------------------------------------------------
 
     it('server error', async () => {
       await expect(REST._post('https://api.run.network/badurl')).to.be.rejectedWith(RequestError)
-    })
+    }).timeout(10000)
   })
 })
 
