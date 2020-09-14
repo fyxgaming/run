@@ -160,13 +160,19 @@ describe('LocalPurse', () => {
     })
   })
 
-  /*
+  // --------------------------------------------------------------------------
+  // feePerKb
+  // --------------------------------------------------------------------------
+
   describe('feePerKb', () => {
-    it('should throw if set invalid value', () => {
-      expect(() => { run.purse.feePerKb = -1 }).to.throw('feePerKb must be non-negative: -1')
+    it('throws if set invalid value', () => {
+      const blockchain = new Run().blockchain
+      const purse = new LocalPurse({ blockchain })
+      expect(() => { purse.feePerKb = -1 }).to.throw('feePerKb must be non-negative: -1')
     })
   })
 
+  /*
   describe('pay', () => {
     it('should add inputs and outputs', async () => {
       const address = new PrivateKey().toAddress()
