@@ -9,7 +9,6 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
 const unmangle = require('../env/unmangle')
-const { stub } = require('sinon')
 const Sandbox = unmangle(Run)._Sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
@@ -17,7 +16,7 @@ const {
   _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
   _anonymizeSourceCode, _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty,
   _setOwnProperty, _ownGetters, _ownMethods, _sameJig, _hasJig, _addJigs, _subtractJigs, _limit,
-  _Timeout, _deterministicJSONStringify
+  _Timeout, _deterministicJSONStringify, _deterministicCompareKeys
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -981,13 +980,22 @@ describe('Misc', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if key order mismatch', () => {
-      const handler = { ownKeys: target => Reflect.ownKeys(target) }
-      stub(handler, 'ownKeys').onFirstCall().returns(['a', 'b']).onSecondCall().returns(['b', 'a'])
-      const o = new Proxy({ }, handler)
-      _deterministicJSONStringify(o)
+    it('orders keys alphabetically', () => {
+      expect(_deterministicJSONStringify({ 3: 3, b: 2, 1: 1 })).to.equal('{"1":1,"3":3,"b":2}')
     })
   })
 
   // ----------------------------------------------------------------------------------------------
+  // _deterministicCompareKeys
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_deterministicCompareKeys', () => {
+    it('sorts strings before symbols', () => {
+      const x = [Symbol.iterator, 'b', 'a', 'a', '1', '0', Symbol.hasInstance]
+      const y = x.sort(_deterministicCompareKeys)
+      expect(y).to.deep.equal(['0', '1', 'a', 'a', 'b', Symbol.hasInstance, Symbol.iterator])
+    })
+  })
 })
+
+// ------------------------------------------------------------------------------------------------
