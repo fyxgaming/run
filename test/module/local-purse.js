@@ -148,13 +148,19 @@ describe('LocalPurse', () => {
     })
   })
 
-  /*
+  // --------------------------------------------------------------------------
+  // splits
+  // --------------------------------------------------------------------------
+
   describe('splits', () => {
-    it('should throw if set invalid value', () => {
-      expect(() => { run.purse.splits = -1 }).to.throw('splits must be at least 1: -1')
+    it('throws if set invalid value', () => {
+      const blockchain = new Run().blockchain
+      const purse = new LocalPurse({ blockchain })
+      expect(() => { purse.splits = -1 }).to.throw('splits must be at least 1: -1')
     })
   })
 
+  /*
   describe('feePerKb', () => {
     it('should throw if set invalid value', () => {
       expect(() => { run.purse.feePerKb = -1 }).to.throw('feePerKb must be non-negative: -1')
