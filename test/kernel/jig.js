@@ -1509,6 +1509,43 @@ describe('Jig', () => {
       run.cache = new LocalCache()
       await run.load(b.location)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('sorts props deterministically', async () => {
+      const run = new Run()
+
+      class A extends Jig {
+        init () {
+          this.b = 3
+          this.a = 2
+          this['3'] = 1
+          this.o = []
+          this.o.y = 1
+          this.o.x = 1
+          this.keys = Object.getOwnPropertyNames(this)
+          this.oKeys = Object.getOwnPropertyNames(this.o)
+        }
+      }
+
+      function test (a) {
+        expect(a.keys).to.deep.equal(['3', 'a', 'b', 'location', 'nonce', 'o', 'origin', 'owner', 'satoshis'])
+        expect(a.oKeys).to.deep.equal(['length', 'y', 'x']) // the order is reversed at creation because not wrapped
+        expect(Object.keys(a)).to.deep.equal(['3', 'a', 'b', 'keys', 'location', 'nonce', 'o', 'oKeys', 'origin', 'owner', 'satoshis'])
+        expect(Object.keys(a.o)).to.deep.equal(['x', 'y'])
+      }
+
+      const a = new A()
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
   })
 
   // --------------------------------------------------------------------------

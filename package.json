@@ -21,7 +21,7 @@
     "bump": "npm version patch && git push --follow-tags && npm publish"
   },
   "dependencies": {
-    "@runonbitcoin/sandbox": "^0.1.13",
+    "@runonbitcoin/sandbox": "^0.1.14",
     "bsv": "^1.5.4"
   },
   "mocha": {
