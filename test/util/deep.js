@@ -367,6 +367,18 @@ describe('_deepReplace', () => {
     expect(_deepReplace(Symbol.hasInstance, callback)).to.equal(Symbol.hasInstance)
     expect(callback.called).to.equal(false)
   })
+
+  // --------------------------------------------------------------------------
+
+  it('traverses deterministically', () => {
+    const callback = fake()
+    const x = { c: [], b: [], a: [] }
+    _deepReplace(x, callback)
+    expect(callback.getCall(0).args[0]).to.equal(x)
+    expect(callback.getCall(1).args[0]).to.equal(x.a)
+    expect(callback.getCall(2).args[0]).to.equal(x.b)
+    expect(callback.getCall(3).args[0]).to.equal(x.c)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
@@ -574,6 +586,18 @@ describe('_deepClone', () => {
     expect(_deepClone(new SI.Uint8Array()) instanceof Uint8Array).to.equal(true)
     expect(Object.getPrototypeOf(_deepClone(new SI.Array()))).to.equal(Array.prototype)
     expect(Object.getPrototypeOf(_deepClone(new SI.Object()))).to.equal(Object.prototype)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('traverses deterministically', () => {
+    const callback = fake()
+    const x = { c: [], b: [], a: [] }
+    _deepClone(x, undefined, callback)
+    expect(callback.getCall(0).args[0]).to.equal(x)
+    expect(callback.getCall(1).args[0]).to.equal(x.a)
+    expect(callback.getCall(2).args[0]).to.equal(x.b)
+    expect(callback.getCall(3).args[0]).to.equal(x.c)
   })
 })
 
