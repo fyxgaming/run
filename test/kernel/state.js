@@ -1,3 +1,4 @@
+// Test key order is deterministic
 
 /*
     it('should cache local updates', async () => {
