@@ -17,7 +17,7 @@ const {
   _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
   _anonymizeSourceCode, _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty,
   _setOwnProperty, _ownGetters, _ownMethods, _sameJig, _hasJig, _addJigs, _subtractJigs, _limit,
-  _Timeout, _safeJSONStringify
+  _Timeout, _deterministicJSONStringify
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -971,12 +971,12 @@ describe('Misc', () => {
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _safeJSONStringify
+  // _deterministicJSONStringify
   // ----------------------------------------------------------------------------------------------
 
-  describe('_safeJSONStringify', () => {
+  describe('_deterministicJSONStringify', () => {
     it('stringifies', () => {
-      expect(_safeJSONStringify({ a: [{ b: 2 }, '3'] })).to.equal('{"a":[{"b":2},"3"]}')
+      expect(_deterministicJSONStringify({ a: [{ b: 2 }, '3'] })).to.equal('{"a":[{"b":2},"3"]}')
     })
 
     // ------------------------------------------------------------------------
@@ -985,7 +985,7 @@ describe('Misc', () => {
       const handler = { ownKeys: target => Reflect.ownKeys(target) }
       stub(handler, 'ownKeys').onFirstCall().returns(['a', 'b']).onSecondCall().returns(['b', 'a'])
       const o = new Proxy({ }, handler)
-      _safeJSONStringify(o)
+      _deterministicJSONStringify(o)
     })
   })
 
