@@ -4,51 +4,60 @@
  * Tests for lib/module/local-purse.js
  */
 
-const { PrivateKey, Transaction } = require('bsv')
+const { PrivateKey } = require('bsv')
 const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
-const { Run, payFor } = require('../env/config')
+const Run = require('../env/run')
 const { LocalPurse } = Run
-const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
 // LocalPurse tests
 // ------------------------------------------------------------------------------------------------
 
 describe('LocalPurse', () => {
-  const run = new Run()
+  // --------------------------------------------------------------------------
+  // constructor
+  // --------------------------------------------------------------------------
 
   describe('constructor', () => {
     describe('key', () => {
-      it('should generate random purse if unspecified', () => {
-        const defaultPurse = Run.defaults.purse
-        try {
-          Run.defaults.purse = undefined
-          expect(run.purse.bsvPrivateKey.toString()).not.to.equal(new Run().purse.bsvPrivateKey.toString())
-          expect(run.purse.privkey).not.to.equal(new Run().purse.privkey)
-        } finally {
-          Run.defaults.purse = defaultPurse
-        }
+      it('generates random purse if unspecified', () => {
+        const blockchain = new Run().blockchain
+        const purse = new LocalPurse({ blockchain })
+        expect(purse.bsvPrivateKey.toString()).not.to.equal(new LocalPurse({ blockchain }).bsvPrivateKey.toString())
+        expect(purse.privkey).not.to.equal(new LocalPurse({ blockchain }).privkey)
       })
 
-      it('should calculate address correctly from private key', () => {
-        expect(run.purse.bsvPrivateKey.toAddress().toString()).to.equal(run.purse.address)
+      // ----------------------------------------------------------------------
+
+      it('calculates address correctly', () => {
+        const blockchain = new Run().blockchain
+        const purse = new LocalPurse({ blockchain })
+        expect(purse.bsvPrivateKey.toAddress().toString()).to.equal(purse.address)
       })
 
-      it('should support passing in private key', () => {
+      // ----------------------------------------------------------------------
+
+      it('pass in private key', () => {
+        const blockchain = new Run().blockchain
         const privkey = new PrivateKey()
-        const run = new Run({ purse: privkey })
-        expect(run.purse.privkey).to.equal(privkey.toString())
-        expect(run.purse.bsvPrivateKey).to.deep.equal(privkey)
+        const purse = new LocalPurse({ privkey, blockchain })
+        expect(purse.privkey).to.equal(privkey.toString())
+        expect(purse.bsvPrivateKey).to.deep.equal(privkey)
       })
+
+      // ----------------------------------------------------------------------
 
       it('should throw if private key is on wrong network', () => {
-        const purse = new PrivateKey('mainnet').toString()
-        expect(() => new Run({ purse, network: 'test' })).to.throw('Private key network mismatch')
+        const privkey = new PrivateKey('mainnet').toString()
+        const blockchain = new Run({ network: 'test' }).blockchain
+        expect(() => new LocalPurse({ privkey, blockchain })).to.throw('Private key network mismatch')
       })
     })
+  })
 
+  /*
     describe('splits', () => {
       it('should support passing in valid splits', () => {
         expect(new LocalPurse({ blockchain: run.blockchain, splits: 1 }).splits).to.equal(1)
@@ -263,6 +272,7 @@ describe('LocalPurse', () => {
       expect((await run2.purse.utxos()).length).to.equal(10)
     })
   })
+  */
 })
 
 // ------------------------------------------------------------------------------------------------

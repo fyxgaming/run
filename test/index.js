@@ -40,6 +40,7 @@ require('./kernel/verify')
 
 require('./module/inventory')
 require('./module/local-cache')
+require('./module/local-purse')
 require('./module/mockchain')
 require('./module/viewer')
 
