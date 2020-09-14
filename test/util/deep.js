@@ -162,6 +162,18 @@ describe('_deepVisit', () => {
     _deepVisit(o, callback)
     expect(callback.args).to.deep.equal([[o], [o.s], [a]])
   })
+
+  // --------------------------------------------------------------------------
+
+  it('traverses deterministically', () => {
+    const callback = fake()
+    const x = { c: [], b: [], a: [] }
+    _deepVisit(x, callback)
+    expect(callback.getCall(0).args[0]).to.equal(x)
+    expect(callback.getCall(1).args[0]).to.equal(x.a)
+    expect(callback.getCall(2).args[0]).to.equal(x.b)
+    expect(callback.getCall(3).args[0]).to.equal(x.c)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
