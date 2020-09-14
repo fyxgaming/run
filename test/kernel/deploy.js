@@ -1365,8 +1365,8 @@ describe('Deploy', () => {
               f.toString(),
               {
                 deps: {
-                  Jig: { $jig: 0 },
-                  Berry: { $jig: 1 }
+                  Berry: { $jig: 0 },
+                  Jig: { $jig: 1 }
                 }
               }
             ]

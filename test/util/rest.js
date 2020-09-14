@@ -65,7 +65,7 @@ describe('REST', () => {
     // ------------------------------------------------------------------------
 
     it('client error', async () => {
-      await expect(REST._post('file://home.txt', {})).to.be.rejected
+      await expect(REST._post('abcdef', {})).to.be.rejected
     })
 
     // ------------------------------------------------------------------------
