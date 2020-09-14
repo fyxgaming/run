@@ -1134,6 +1134,22 @@ describe('Deploy', () => {
       C.CA2 = CA2
       expect(() => run.deploy(C)).to.throw('Inconsistent worldview')
     })
+
+    // ------------------------------------------------------------------------
+
+    it.only('sorts props deterministically', async () => {
+      const run = new Run()
+      class A { }
+      A.b = 1
+      A.a = 2
+      A['0'] = 3
+      const CA = run.deploy(A)
+      await CA.sync()
+      const expected = ['0', 'a', 'b', 'location', 'nonce', 'origin', 'owner', 'satoshis']
+      expect(Object.keys(CA)).to.deep.equal(expected)
+    })
+
+    // TODO: Test with presets
   })
 
   // --------------------------------------------------------------------------
@@ -1552,6 +1568,16 @@ describe('Deploy', () => {
       class A { }
       A.deps = { Math, Date }
       run.deploy(A)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('sorts deps deterministically', () => {
+      const run = new Run()
+      class A { }
+      A.deps = { b: 1, a: 2 }
+      const CA = run.deploy(A)
+      expect(Object.keys(CA.deps)).to.deep.equal(['a', 'b'])
     })
   })
 
