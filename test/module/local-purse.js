@@ -126,19 +126,23 @@ describe('LocalPurse', () => {
     // --------------------------------------------------------------------------
 
     describe('blockchain', () => {
-      it('should support passing in valid blockchain', () => {
+      it('valid blockchain', () => {
         const mockchain = new Run.Mockchain()
         expect(new LocalPurse({ blockchain: mockchain }).blockchain).to.equal(mockchain)
         const remoteBlockchain = Run.RemoteBlockchain.create()
         expect(new LocalPurse({ blockchain: remoteBlockchain }).blockchain).to.equal(remoteBlockchain)
       })
 
-      it('should throw if pass in invalid blockchain', () => {
+      // ----------------------------------------------------------------------
+
+      it('throw if invalid blockchain', () => {
         expect(() => new LocalPurse({ blockchain: false })).to.throw('Invalid blockchain: false')
         expect(() => new LocalPurse({ blockchain: null })).to.throw('Invalid blockchain: null')
       })
 
-      it('should require passing in blockchain', () => {
+      // ----------------------------------------------------------------------
+
+      it('requires blockchain', () => {
         expect(() => new LocalPurse()).to.throw('blockchain is required')
       })
     })
