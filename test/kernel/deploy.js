@@ -1137,19 +1137,52 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('sorts props deterministically', async () => {
+    it('sorts props deterministically', async () => {
       const run = new Run()
       class A { }
       A.b = 1
       A.a = 2
       A['0'] = 3
+      A.o = { d: 5, c: 4 }
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              A.toString(),
+              {
+                0: 3,
+                a: 2,
+                b: 1,
+                o: { c: 4, d: 5 }
+              }
+            ]
+          }
+        ]
+      })
+
+      function test (CA) {
+        const expected = ['0', 'a', 'b', 'location', 'nonce', 'o', 'origin', 'owner', 'satoshis']
+        expect(Object.keys(CA)).to.deep.equal(expected)
+        expect(Object.keys(CA.o)).to.deep.equal(['c', 'd'])
+      }
+
       const CA = run.deploy(A)
       await CA.sync()
-      const expected = ['0', 'a', 'b', 'location', 'nonce', 'origin', 'owner', 'satoshis']
-      expect(Object.keys(CA)).to.deep.equal(expected)
-    })
 
-    // TODO: Test with presets
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -1836,6 +1869,54 @@ describe('Deploy', () => {
       expect(() => run.deploy(A)).to.throw()
       A.presets = { anotherNetwork: { d: Math.random } }
       expect(() => run.deploy(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('sorts presets deterministically', async () => {
+      const run = new Run()
+
+      class A { }
+      A.c = 3
+
+      const network = run.blockchain.network
+      A.presets = { [network]: { b: 2, a: 1 } }
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              A.toString(),
+              {
+                a: 1,
+                b: 2,
+                c: 3
+              }
+            ]
+          }
+        ]
+      })
+
+      function test (CA) {
+        const expected = ['a', 'b', 'c', 'location', 'nonce', 'origin', 'owner', 'satoshis']
+        expect(Object.keys(CA)).to.deep.equal(expected)
+      }
+
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
   })
 
