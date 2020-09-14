@@ -88,30 +88,36 @@ describe('LocalPurse', () => {
         expect(() => new LocalPurse({ blockchain, splits: null })).to.throw('Invalid splits: null')
       })
     })
-  })
+    // --------------------------------------------------------------------------
+    // feePerKb
+    // --------------------------------------------------------------------------
 
-  /*
     describe('feePerKb', () => {
       it('should support passing in valid feePerKb', () => {
-        expect(new LocalPurse({ blockchain: run.blockchain, feePerKb: 1.5 }).feePerKb).to.equal(1.5)
-        expect(new LocalPurse({ blockchain: run.blockchain, feePerKb: 1000 }).feePerKb).to.equal(1000)
-        expect(new LocalPurse({ blockchain: run.blockchain, feePerKb: Number.MAX_SAFE_INTEGER }).feePerKb).to.equal(Number.MAX_SAFE_INTEGER)
-        expect(new LocalPurse({ blockchain: run.blockchain, feePerKb: 0 }).feePerKb).to.equal(0)
+        const blockchain = new Run().blockchain
+        expect(new LocalPurse({ blockchain, feePerKb: 1.5 }).feePerKb).to.equal(1.5)
+        expect(new LocalPurse({ blockchain, feePerKb: 1000 }).feePerKb).to.equal(1000)
+        expect(new LocalPurse({ blockchain, feePerKb: Number.MAX_SAFE_INTEGER }).feePerKb).to.equal(Number.MAX_SAFE_INTEGER)
+        expect(new LocalPurse({ blockchain, feePerKb: 0 }).feePerKb).to.equal(0)
       })
 
       it('should throw if pass in invalid feePerKb', () => {
-        expect(() => new LocalPurse({ blockchain: run.blockchain, feePerKb: -1 })).to.throw('feePerKb must be non-negative: -1')
-        expect(() => new LocalPurse({ blockchain: run.blockchain, feePerKb: NaN })).to.throw('feePerKb must be finite: NaN')
-        expect(() => new LocalPurse({ blockchain: run.blockchain, feePerKb: Number.POSITIVE_INFINITY })).to.throw('feePerKb must be finite: Infinity')
-        expect(() => new LocalPurse({ blockchain: run.blockchain, feePerKb: false })).to.throw('Invalid feePerKb: false')
-        expect(() => new LocalPurse({ blockchain: run.blockchain, feePerKb: null })).to.throw('Invalid feePerKb: null')
+        const blockchain = new Run().blockchain
+        expect(() => new LocalPurse({ blockchain, feePerKb: -1 })).to.throw('feePerKb must be non-negative: -1')
+        expect(() => new LocalPurse({ blockchain, feePerKb: NaN })).to.throw('feePerKb must be finite: NaN')
+        expect(() => new LocalPurse({ blockchain, feePerKb: Number.POSITIVE_INFINITY })).to.throw('feePerKb must be finite: Infinity')
+        expect(() => new LocalPurse({ blockchain, feePerKb: false })).to.throw('Invalid feePerKb: false')
+        expect(() => new LocalPurse({ blockchain, feePerKb: null })).to.throw('Invalid feePerKb: null')
       })
 
       it('should default to 500 if not specified', () => {
-        expect(new LocalPurse({ blockchain: run.blockchain }).feePerKb).to.equal(500)
+        const blockchain = new Run().blockchain
+        expect(new LocalPurse({ blockchain }).feePerKb).to.equal(500)
       })
     })
+  })
 
+  /*
     describe('blockchain', () => {
       it('should support passing in valid blockchain', () => {
         const mockchain = new Run.Mockchain()
