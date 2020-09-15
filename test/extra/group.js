@@ -43,9 +43,29 @@ describe('Group', () => {
 
   // --------------------------------------------------------------------------
 
-  it('default m to all pubkeys length', () => {
+  it('default required to all pubkeys length', () => {
     const pubkeys = [new PrivateKey().publicKey.toString(), new PrivateKey().publicKey.toString()]
-    expect(new Group(pubkeys).m).to.equal(2)
+    expect(new Group(pubkeys).required).to.equal(2)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('add', async () => {
+    const pubkeys = [new PrivateKey().publicKey.toString()]
+    const group = new Group(pubkeys)
+    group.add(new PrivateKey().publicKey.toString())
+    expect(group.pubkeys.length).to.equal(2)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('does not add twice', async () => {
+    const pubkeys = [new PrivateKey().publicKey.toString()]
+    const group = new Group(pubkeys)
+    const pubkey = new PrivateKey().publicKey.toString()
+    group.add(pubkey)
+    group.add(pubkey)
+    expect(group.pubkeys.length).to.equal(2)
   })
 
   // --------------------------------------------------------------------------
