@@ -123,6 +123,16 @@ describe('Static Code', () => {
 
     // ------------------------------------------------------------------------
 
+    it.only('this returns self', async () => {
+      const run = new Run()
+      const A = run.deploy(class A { static f () { return this } })
+      await A.sync()
+      console.log(A)
+      expect(A.f()).to.equal(A)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('cannot delete properties', () => {
       const run = new Run()
       class A { static f () { delete A.n } }

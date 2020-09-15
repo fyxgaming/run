@@ -21,7 +21,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it.only('toBe', () => {
+  it('toBe', () => {
     new Run() // eslint-disable-line
     expect(() => Run.expect(1).toBe(1)).not.to.throw()
     expect(() => Run.expect('hello').toBe('hello')).not.to.throw()
