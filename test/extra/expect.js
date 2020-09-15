@@ -19,7 +19,7 @@ describe('expect', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  it('should support toBe', () => {
+  it('toBe', () => {
     new Run() // eslint-disable-line
     expect(() => Run.expect(1).toBe(1)).not.to.throw()
     expect(() => Run.expect('hello').toBe('hello')).not.to.throw()
@@ -36,7 +36,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toEqual', () => {
+  it('toEqual', () => {
     expect(() => Run.expect(1).toEqual(1)).not.to.throw()
     expect(() => Run.expect(true).toEqual(true)).not.to.throw()
     expect(() => Run.expect({}).toEqual({})).not.to.throw()
@@ -60,7 +60,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeInstanceOf', () => {
+  it('toBeInstanceOf', () => {
     class A {}
     class B extends A {}
     expect(() => Run.expect(new A()).toBeInstanceOf(A)).not.to.throw()
@@ -74,7 +74,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeDefined', () => {
+  it('toBeDefined', () => {
     expect(() => Run.expect(1).toBeDefined()).not.to.throw()
     expect(() => Run.expect(undefined).toBeDefined()).to.throw('expected value to be defined but was undefined')
     expect(() => Run.expect().not.toBeDefined()).not.to.throw()
@@ -84,7 +84,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeNull', () => {
+  it('toBeNull', () => {
     expect(() => Run.expect(null).toBeNull()).not.to.throw()
     expect(() => Run.expect(0).toBeNull()).to.throw('expected value to be null but was 0')
     expect(() => Run.expect(false).not.toBeNull()).not.to.throw()
@@ -93,7 +93,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeNumber', () => {
+  it('toBeNumber', () => {
     expect(() => Run.expect(0).toBeNumber()).not.to.throw()
     expect(() => Run.expect(5).toBeNumber()).not.to.throw()
     expect(() => Run.expect(1.1).toBeNumber()).not.to.throw()
@@ -107,7 +107,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeInteger', () => {
+  it('toBeInteger', () => {
     expect(() => Run.expect(0).toBeInteger()).not.to.throw()
     expect(() => Run.expect(1).toBeInteger()).not.to.throw()
     expect(() => Run.expect(1.1).toBeInteger()).to.throw('expected value to be an integer but was 1.1')
@@ -119,7 +119,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeLessThan', () => {
+  it('toBeLessThan', () => {
     expect(() => Run.expect(0).toBeLessThan(1)).not.to.throw()
     expect(() => Run.expect(-1.2).toBeLessThan(-1.1)).not.to.throw()
     expect(() => Run.expect(false).toBeLessThan(0)).to.throw('expected value to be less than 0 but was false')
@@ -129,7 +129,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeLessThanOrEqualTo', () => {
+  it('toBeLessThanOrEqualTo', () => {
     expect(() => Run.expect(1).toBeLessThanOrEqualTo(1)).not.to.throw()
     expect(() => Run.expect(-1.2).toBeLessThanOrEqualTo(-1.1)).not.to.throw()
     expect(() => Run.expect(false).toBeLessThanOrEqualTo(0)).to.throw('expected value to be less than or equal to 0 but was false')
@@ -139,7 +139,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeGreaterThan', () => {
+  it('toBeGreaterThan', () => {
     expect(() => Run.expect(1).toBeGreaterThan(0)).not.to.throw()
     expect(() => Run.expect(-1.1).toBeGreaterThan(-1.2)).not.to.throw()
     expect(() => Run.expect(false).toBeGreaterThan(0)).to.throw('expected value to be greater than 0 but was false')
@@ -149,7 +149,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeGreaterThanOrEqualTo', () => {
+  it('toBeGreaterThanOrEqualTo', () => {
     expect(() => Run.expect(1).toBeGreaterThanOrEqualTo(1)).not.to.throw()
     expect(() => Run.expect(-1.1).toBeGreaterThanOrEqualTo(-1.2)).not.to.throw()
     expect(() => Run.expect(false).toBeGreaterThanOrEqualTo(0)).to.throw('expected value to be greater than or equal to 0 but was false')
@@ -159,7 +159,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeBoolean', () => {
+  it('toBeBoolean', () => {
     expect(() => Run.expect(true).toBeBoolean()).not.to.throw()
     expect(() => Run.expect(1).toBeBoolean()).to.throw('expected value to be a boolean but was 1')
     expect(() => Run.expect('true').not.toBeBoolean()).not.to.throw()
@@ -168,7 +168,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeString', () => {
+  it('toBeString', () => {
     expect(() => Run.expect('hello').toBeString()).not.to.throw()
     expect(() => Run.expect(true).toBeString()).to.throw('expected value to be a string but was true')
     expect(() => Run.expect(1).not.toBeString()).not.to.throw()
@@ -177,7 +177,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeObject', () => {
+  it('toBeObject', () => {
     expect(() => Run.expect({}).toBeObject()).not.to.throw()
     expect(() => Run.expect([1, 2, 3]).toBeObject()).not.to.throw()
     expect(() => Run.expect(null).toBeObject()).to.throw('expected value to be an object but was null')
@@ -189,7 +189,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeArray', () => {
+  it('toBeArray', () => {
     expect(() => Run.expect([]).toBeArray()).not.to.throw()
     expect(() => Run.expect(new Array(1)).toBeArray()).not.to.throw()
     expect(() => Run.expect({}).toBeArray()).to.throw('expected value to be an array but was {}')
@@ -200,7 +200,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeClass', () => {
+  it('toBeClass', () => {
     expect(() => Run.expect(class A {}).toBeClass()).not.to.throw()
     expect(() => Run.expect(class {}).toBeClass()).not.to.throw()
     expect(() => Run.expect(function f () {}).toBeClass()).to.throw('expected value to be a class but was')
@@ -212,7 +212,7 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeFunction', () => {
+  it('toBeFunction', () => {
     expect(() => Run.expect(function f () {}).toBeFunction()).not.to.throw()
     expect(() => Run.expect(() => {}).toBeFunction()).not.to.throw()
     expect(() => Run.expect(class A {}).toBeFunction()).to.throw('expected value to be a function but was class A {}')
@@ -223,11 +223,27 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should support toBeJigClass', () => {
+  it('toBeJigClass', () => {
+    new Run() // eslint-disable-line
     class A extends Jig { }
     expect(() => Run.expect(A).toBeJigClass()).not.to.throw()
     expect(() => Run.expect(class B extends A {}).toBeJigClass()).not.to.throw()
     expect(() => Run.expect(class A {}).toBeJigClass()).to.throw('expected value to be a jig class but was class A {}')
+    expect(() => Run.expect(null).toBeJigClass()).to.throw()
+    expect(() => Run.expect(undefined).toBeJigClass()).to.throw()
+    expect(() => Run.expect(new A()).toBeJigClass()).to.throw()
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('toExtendFrom', () => {
+    class A extends Jig { }
+    expect(() => Run.expect(A).toExtendFrom(Jig)).not.to.throw()
+    expect(() => Run.expect(A).toExtendFrom(class B {})).to.throw('expected value to be an extension of B but was class A extends Jig { }')
+    expect(() => Run.expect(A).not.toExtendFrom(class B { })).not.to.throw()
+    expect(() => Run.expect(A).not.toExtendFrom(null)).not.to.throw()
+    expect(() => Run.expect().not.toExtendFrom(A)).not.to.throw()
+    expect(() => Run.expect(class B extends A { }).not.toExtendFrom(A)).to.throw('expected value not to be an extension of A but was class B extends A { }')
   })
 })
 
