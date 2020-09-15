@@ -19,7 +19,9 @@ describe('expect', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  it('toBe', () => {
+  // --------------------------------------------------------------------------
+
+  it.only('toBe', () => {
     new Run() // eslint-disable-line
     expect(() => Run.expect(1).toBe(1)).not.to.throw()
     expect(() => Run.expect('hello').toBe('hello')).not.to.throw()
