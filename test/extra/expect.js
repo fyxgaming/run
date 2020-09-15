@@ -207,6 +207,7 @@ describe('expect', () => {
     expect(() => Run.expect(() => {}).toBeClass()).to.throw('expected value to be a class but was')
     expect(() => Run.expect({}).not.toBeClass()).not.to.throw()
     expect(() => Run.expect(class A {}).not.toBeClass()).to.throw('expected value not to be a class but was')
+    expect(() => Run.expect(class A extends Jig {}).toBeClass()).not.to.throw()
   })
 
   // --------------------------------------------------------------------------
@@ -218,6 +219,15 @@ describe('expect', () => {
     expect(() => Run.expect(class {}).toBeFunction()).to.throw('expected value to be a function but was class {}')
     expect(() => Run.expect([]).not.toBeFunction()).not.to.throw()
     expect(() => Run.expect(() => {}).not.toBeFunction()).to.throw('expected value not to be a function but was () => {}')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('should support toBeJigClass', () => {
+    class A extends Jig { }
+    expect(() => Run.expect(A).toBeJigClass()).not.to.throw()
+    expect(() => Run.expect(class B extends A {}).toBeJigClass()).not.to.throw()
+    expect(() => Run.expect(class A {}).toBeJigClass()).to.throw('expected value to be a jig class but was class A {}')
   })
 })
 
