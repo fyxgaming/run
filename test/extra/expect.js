@@ -43,9 +43,10 @@ describe('expect', () => {
     expect(() => Run.expect({ a: [1] }).toEqual({ a: [1] })).not.to.throw()
     expect(() => Run.expect([1, '2', { n: 3 }]).toEqual([1, '2', { n: 3 }])).not.to.throw()
     expect(() => Run.expect([1]).toEqual([2])).to.throw('expected value to be equal to [2] but was [1]')
-    expect(() => Run.expect(new class A {}()).toEqual(new class B {}())).not.to.throw()
+    class A { }
+    expect(() => Run.expect(new A()).toEqual(new A())).not.to.throw()
+    expect(() => Run.expect(new A()).toEqual({ })).to.throw('expected value to be equal to {} but was {}')
     expect(() => Run.expect({ a: 1 }).not.toEqual({ a: 2 })).not.to.throw()
-    expect(() => Run.expect(new class A {}()).not.toEqual({ })).to.throw('expected value not to be equal to {} but was {}')
   })
 
   // --------------------------------------------------------------------------
