@@ -46,7 +46,16 @@ describe('expect', () => {
     class A { }
     expect(() => Run.expect(new A()).toEqual(new A())).not.to.throw()
     expect(() => Run.expect(new A()).toEqual({ })).to.throw('expected value to be equal to {} but was {}')
+    expect(() => Run.expect(new A()).not.toEqual(new (class A { })())).not.to.throw()
     expect(() => Run.expect({ a: 1 }).not.toEqual({ a: 2 })).not.to.throw()
+    expect(() => Run.expect(new Set([1, {}])).toEqual(new Set([1, {}]))).not.to.throw()
+    expect(() => Run.expect(new Map([['a', new Set()]])).toEqual(new Map([['a', new Set()]]))).not.to.throw()
+    const s1 = new Set()
+    s1.x = 1
+    const s2 = new Set()
+    s1.x = 2
+    expect(() => Run.expect(s1).not.toEqual(s2)).not.to.throw()
+    expect(() => Run.expect(new Uint8Array([1])).toEqual(new Uint8Array([1]))).not.to.throw()
   })
 
   // --------------------------------------------------------------------------
