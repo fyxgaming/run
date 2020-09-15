@@ -5,7 +5,7 @@
  */
 
 const { describe, it } = require('mocha')
-const { Run } = require('../../../test/env/config')
+const Run = require('../env/run')
 const { asm } = Run
 
 // ------------------------------------------------------------------------------------------------

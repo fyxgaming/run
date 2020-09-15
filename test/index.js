@@ -4,8 +4,10 @@
  * Master list of test modules
  */
 
+require('./extra/asm')
 require('./extra/expect')
 require('./extra/group-lock')
+require('./extra/hex')
 require('./extra/token')
 
 require('./kernel/api')

@@ -680,7 +680,7 @@ describe('Code', () => {
   // Preinstall
   // --------------------------------------------------------------------------
 
-  describe.only('preinstall', () => {
+  describe('preinstall', () => {
     it('creates code without bindings', () => {
       const C = Run.preinstall(class A { })
       expect(C instanceof Code).to.equal(true)
@@ -752,9 +752,18 @@ describe('Code', () => {
       expect(typeof CA.location).to.equal('string')
     })
 
-    // allows code to be used on any network
-    // once installed, only usable for the first network
-    // deactivate?
+    // ------------------------------------------------------------------------
+
+    it('locks onto network once used', async () => {
+      class A extends Jig { }
+      const CA = Run.preinstall(A)
+      const run = new Run()
+      run.deploy(CA)
+      await run.sync()
+      const location = CA.location
+      run.deactivate()
+      expect(CA.location).to.equal(location)
+    })
   })
 })
 
