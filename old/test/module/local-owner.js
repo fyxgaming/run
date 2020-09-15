@@ -9,7 +9,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { Run } = require('../env/config')
-const { LocalOwner, Mockchain, Jig, GroupLock, StandardLock } = Run
+const { LocalOwner, Mockchain, Jig, Group, StandardLock } = Run
 
 // ------------------------------------------------------------------------------------------------
 // LocalOwner
@@ -136,7 +136,7 @@ describe('LocalOwner', () => {
           init (owner) { this.owner = owner }
           set () { this.n = 1 }
         }
-        const a = new A(new GroupLock([run.owner.pubkey], 1))
+        const a = new A(new Group([run.owner.pubkey], 1))
         a.set()
         await a.sync()
       })
@@ -152,7 +152,7 @@ describe('LocalOwner', () => {
 
         // Create a jig with a 2-3 group owner
         run.activate()
-        const a = new A(new GroupLock([run.owner.pubkey, run2.owner.pubkey, run3.owner.pubkey], 2))
+        const a = new A(new Group([run.owner.pubkey, run2.owner.pubkey, run3.owner.pubkey], 2))
         await a.sync()
 
         // Sign with pubkey 1 and export tx
@@ -179,7 +179,7 @@ describe('LocalOwner', () => {
         }
 
         // Create a jig with a 2-3 group owner
-        const a = new A(new GroupLock([run.owner.pubkey], 1))
+        const a = new A(new Group([run.owner.pubkey], 1))
         await a.sync()
 
         // Sign with pubkey 1 and export tx
@@ -206,7 +206,7 @@ describe('LocalOwner', () => {
 
         // Create a jig with a 2-3 group owner
         run.activate()
-        const a = new A(new GroupLock([run2.owner.pubkey], 1))
+        const a = new A(new Group([run2.owner.pubkey], 1))
         await a.sync()
 
         // Try signing and then export tx

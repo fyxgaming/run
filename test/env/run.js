@@ -58,7 +58,7 @@ Run.configure({
 if (COVER) {
   Run.cover('asm')
   Run.cover('expect')
-  Run.cover('GroupLock')
+  Run.cover('Group')
   Run.cover('hex')
   Run.cover('Token')
 }

@@ -17,7 +17,7 @@ const { Code, Jig, Berry, LocalCache, _sudo } = unmangle(Run)
 // ------------------------------------------------------------------------------------------------
 
 // Methods available on all code instances
-const CODE_METHODS = ['upgrade', 'sync', 'destroy', 'auth']
+const CODE_METHODS = ['upgrade', 'sync', 'destroy', 'auth', Symbol.hasInstance]
 
 // ------------------------------------------------------------------------------------------------
 // Code

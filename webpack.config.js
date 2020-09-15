@@ -48,7 +48,7 @@ const reservedNames = [
   // Kernel classes
   'Jig', 'JigDeps', 'Berry', 'BerryDeps', 'Code', 'StandardLock', 'Unbound',
   // Extras
-  'asm', 'expect', 'GroupLock', 'hex', 'Token',
+  'asm', 'expect', 'Group', 'hex', 'Token',
   // Errors
   'ArgumentError', 'InternalError', 'RequestError', 'StateError', 'TimeoutError',
   'UnimplementedError'
