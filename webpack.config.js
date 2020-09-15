@@ -221,7 +221,7 @@ const browserTests = {
   node: { fs: 'empty' },
   externals: { mocha: 'mocha.Mocha', chai: 'chai', bsv: 'bsv', target: library },
   optimization: { minimize: false },
-  plugins: [new WaitForNameCachePlugin(), new webpack.EnvironmentPlugin(process.env)],
+  plugins: [new WaitForNameCachePlugin(), new webpack.EnvironmentPlugin(process.env), browserVariant],
   stats: 'errors-only'
 }
 
