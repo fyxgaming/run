@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const PrivateKey = require('bsv/lib/privatekey')
-const { Code, Jig, Berry, LocalCache } = unmangle(Run)
+const { Code, Jig, Berry, LocalCache, _sudo } = unmangle(Run)
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -674,6 +674,55 @@ describe('Code', () => {
       expect(A.owner).to.equal(owner)
       expect(A.satoshis).to.equal(satoshis)
     })
+  })
+
+  // --------------------------------------------------------------------------
+  // Preinstall
+  // --------------------------------------------------------------------------
+
+  describe('preinstall', () => {
+    it('creates code without bindings', () => {
+      const C = Run.preinstall(class A { })
+      expect(C instanceof Code).to.equal(true)
+      _sudo(() => {
+        expect(C.location).to.equal(undefined)
+        expect(C.origin).to.equal(undefined)
+        expect(C.nonce).to.equal(undefined)
+        expect(C.owner).to.equal(undefined)
+        expect(C.satoshis).to.equal(undefined)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if read bindings', () => {
+      const C = Run.preinstall(class A { })
+      expect(() => C.location).to.throw('Cannot read location')
+      expect(() => C.origin).to.throw('Cannot read origin')
+      expect(() => C.nonce).to.throw('Cannot read nonce')
+      expect(() => C.owner).to.throw('Cannot read owner')
+      expect(() => C.satoshis).to.throw('Cannot read satoshis')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('only preinstalls once', () => {
+      class A { }
+      const C1 = Run.preinstall(A)
+      const C2 = Run.preinstall(A)
+      expect(C1).to.equal(C2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('allows code to be used on any network', () => {
+      // const A = Run.preinstall(class A extends Jig { })
+      // console.log(A)
+    })
+
+    // allows code to be used on any network
+    // once installed, only usable on that network
+    // deactivate?
   })
 })
 
