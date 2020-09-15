@@ -200,6 +200,39 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
+  it('toBeSet', () => {
+    expect(() => Run.expect(new Set()).toBeSet()).not.to.throw()
+    expect(() => Run.expect(new Set([1])).toBeSet()).not.to.throw()
+    expect(() => Run.expect({}).toBeSet()).to.throw('expected value to be a set but was {}')
+    expect(() => Run.expect(1).not.toBeSet()).not.to.throw()
+    expect(() => Run.expect(null).not.toBeSet()).not.to.throw()
+    expect(() => Run.expect(new Set()).not.toBeSet()).to.throw('expected value not to be a set but was {}')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('toBeMap', () => {
+    expect(() => Run.expect(new Map()).toBeMap()).not.to.throw()
+    expect(() => Run.expect(new Map([[1, 2]])).toBeMap()).not.to.throw()
+    expect(() => Run.expect({}).toBeMap()).to.throw('expected value to be a map but was {}')
+    expect(() => Run.expect(1).not.toBeMap()).not.to.throw()
+    expect(() => Run.expect(null).not.toBeMap()).not.to.throw()
+    expect(() => Run.expect(new Map()).not.toBeMap()).to.throw('expected value not to be a map but was {}')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('toBeUint8Array', () => {
+    expect(() => Run.expect(new Uint8Array()).toBeUint8Array()).not.to.throw()
+    expect(() => Run.expect(new Uint8Array([1])).toBeUint8Array()).not.to.throw()
+    expect(() => Run.expect({}).toBeUint8Array()).to.throw('expected value to be a uint8array but was {}')
+    expect(() => Run.expect(1).not.toBeUint8Array()).not.to.throw()
+    expect(() => Run.expect(null).not.toBeUint8Array()).not.to.throw()
+    expect(() => Run.expect(new Uint8Array()).not.toBeUint8Array()).to.throw('expected value not to be a uint8array but was {}')
+  })
+
+  // --------------------------------------------------------------------------
+
   it('toBeClass', () => {
     expect(() => Run.expect(class A {}).toBeClass()).not.to.throw()
     expect(() => Run.expect(class {}).toBeClass()).not.to.throw()
