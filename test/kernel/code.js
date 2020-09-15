@@ -680,7 +680,7 @@ describe('Code', () => {
   // Preinstall
   // --------------------------------------------------------------------------
 
-  describe('preinstall', () => {
+  describe.only('preinstall', () => {
     it('creates code without bindings', () => {
       const C = Run.preinstall(class A { })
       expect(C instanceof Code).to.equal(true)
@@ -715,13 +715,45 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('allows code to be used on any network', () => {
-      // const A = Run.preinstall(class A extends Jig { })
-      // console.log(A)
+    it('create jigs using preinstalled code', async () => {
+      class A extends Jig { }
+      const CA = Run.preinstall(A)
+      new Run() // eslint-disable-line
+      const a = new CA()
+      await a.sync()
+      expect(typeof A.location).to.equal('string')
+      expect(typeof CA.location).to.equal('string')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('pass as args preinstalled code', async () => {
+      class A extends Jig { }
+      const CA = Run.preinstall(A)
+      new Run() // eslint-disable-line
+      class B extends Jig { init (A) { this.A = A } }
+      const b = new B(CA)
+      await b.sync()
+      expect(typeof A.location).to.equal('string')
+      expect(typeof CA.location).to.equal('string')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('use as code props preinstalled code', async () => {
+      class A extends Jig { }
+      const CA = Run.preinstall(A)
+      const run = new Run()
+      class B {}
+      B.A = CA
+      const CB = await run.deploy(B)
+      await CB.sync()
+      expect(typeof A.location).to.equal('string')
+      expect(typeof CA.location).to.equal('string')
     })
 
     // allows code to be used on any network
-    // once installed, only usable on that network
+    // once installed, only usable for the first network
     // deactivate?
   })
 })
