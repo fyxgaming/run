@@ -13,6 +13,12 @@ const unmangle = require('../env/unmangle')
 const REST = unmangle(unmangle(Run)._REST)
 
 // ------------------------------------------------------------------------------------------------
+// Globals
+// ------------------------------------------------------------------------------------------------
+
+const TIMEOUT = 10000
+
+// ------------------------------------------------------------------------------------------------
 // REST
 // ------------------------------------------------------------------------------------------------
 
@@ -23,27 +29,27 @@ describe('REST', () => {
 
   describe('_get', () => {
     it('returns json', async () => {
-      const status = await REST._get('https://api.run.network/v1/test/status')
+      const status = await REST._get('https://api.run.network/v1/test/status', TIMEOUT)
       expect(status.version > 0).to.equal(true)
-    }).timeout(10000)
+    }).timeout(TIMEOUT)
 
     // ------------------------------------------------------------------------
 
     it('timeout', async () => {
       await expect(REST._get('https://www.google.com:81', 100)).to.be.rejectedWith(TimeoutError)
-    }).timeout(10000)
+    }).timeout(TIMEOUT)
 
     // ------------------------------------------------------------------------
 
     it('client error', async () => {
-      await expect(REST._get('123')).to.be.rejected
-    }).timeout(10000)
+      await expect(REST._get('123', TIMEOUT)).to.be.rejected
+    }).timeout(TIMEOUT)
 
     // ------------------------------------------------------------------------
 
     it('server error', async () => {
-      await expect(REST._get('https://api.run.network/badurl')).to.be.rejectedWith(RequestError)
-    }).timeout(10000)
+      await expect(REST._get('https://api.run.network/badurl', TIMEOUT)).to.be.rejectedWith(RequestError)
+    }).timeout(TIMEOUT)
   })
 
   // --------------------------------------------------------------------------
@@ -52,27 +58,27 @@ describe('REST', () => {
 
   describe('_post', () => {
     it('posts json', async () => {
-      const response = await REST._post('https://httpbin.org/post', 'hello')
+      const response = await REST._post('https://httpbin.org/post', 'hello', TIMEOUT)
       expect(response.data).to.equal('"hello"')
-    }).timeout(10000)
+    }).timeout(TIMEOUT)
 
     // ------------------------------------------------------------------------
 
     it('timeout', async () => {
       await expect(REST._post('https://www.google.com:81', {}, 100)).to.be.rejectedWith(TimeoutError)
-    }).timeout(10000)
+    }).timeout(TIMEOUT)
 
     // ------------------------------------------------------------------------
 
     it('client error', async () => {
-      await expect(REST._post('abcdef', {})).to.be.rejected
-    }).timeout(10000)
+      await expect(REST._post('abcdef', {}, TIMEOUT)).to.be.rejected
+    }).timeout(TIMEOUT)
 
     // ------------------------------------------------------------------------
 
     it('server error', async () => {
-      await expect(REST._post('https://api.run.network/badurl')).to.be.rejectedWith(RequestError)
-    }).timeout(10000)
+      await expect(REST._post('https://api.run.network/badurl', TIMEOUT)).to.be.rejectedWith(RequestError)
+    }).timeout(TIMEOUT)
   })
 })
 
