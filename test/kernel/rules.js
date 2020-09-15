@@ -43,7 +43,8 @@ describe('Rules', () => {
 
   describe('static code', () => {
     it('creates rules', () => {
-      const rules = unmangle(Rules._staticCode())
+      const isClass = Math.random() < 0.5
+      const rules = unmangle(Rules._staticCode(isClass))
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
@@ -56,7 +57,7 @@ describe('Rules', () => {
       expect(rules._recordable).to.equal(true)
       expect(rules._callable).to.equal(false)
       expect(rules._owned).to.equal(false)
-      expect(rules._thisless).to.equal(true)
+      expect(rules._thisless).to.equal(!isClass)
       expect(rules._cow).to.equal(false)
       expect(rules._cowProps).to.equal(false)
       expect(rules._disabledMethods).to.deep.equal([])

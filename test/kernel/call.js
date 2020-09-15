@@ -155,13 +155,13 @@ describe('Call', () => {
   // --------------------------------------------------------------------------
 
   describe('Static Code', () => {
-    it('calls method with passthrough and without this on arbitrary code', async () => {
+    it('calls method with passthrough args on arbitrary code', async () => {
       const run = new Run()
 
       class A {
         static f (x) {
           if (x !== Symbol.hasInstance) throw new Error()
-          if (this) throw new Error()
+          if (this !== A) throw new Error()
           return Symbol.iterator
         }
       }

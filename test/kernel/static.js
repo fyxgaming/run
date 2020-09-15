@@ -123,11 +123,9 @@ describe('Static Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('this returns self', async () => {
+    it('this is self', () => {
       const run = new Run()
       const A = run.deploy(class A { static f () { return this } })
-      await A.sync()
-      console.log(A)
       expect(A.f()).to.equal(A)
     })
 

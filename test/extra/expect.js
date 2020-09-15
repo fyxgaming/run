@@ -8,6 +8,11 @@ const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
+const { COVER } = require('../env/config')
+const unmangle = require('../env/unmangle')
+const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
+const HI = unmangle(unmangle(Run)._Sandbox)._hostIntrinsics
+const TI = COVER ? HI : SI
 
 // ------------------------------------------------------------------------------------------------
 // expect
@@ -52,18 +57,18 @@ describe('expect', () => {
     expect(() => Run.expect(new A()).toEqual({ })).to.throw('expected value to be equal to {} but was {}')
     expect(() => Run.expect(new A()).not.toEqual(new (class A { })())).not.to.throw()
     expect(() => Run.expect({ a: 1 }).not.toEqual({ a: 2 })).not.to.throw()
-    expect(() => Run.expect(new Set([1, {}])).toEqual(new Set([1, {}]))).not.to.throw()
-    expect(() => Run.expect(new Set([1])).not.toEqual(new Set([1, 2]))).not.to.throw()
-    expect(() => Run.expect(new Set([1])).not.toEqual(new Set([2]))).not.to.throw()
-    expect(() => Run.expect(new Map([['a', new Set()]])).toEqual(new Map([['a', new Set()]]))).not.to.throw()
-    expect(() => Run.expect(new Map([['a', 'b']])).not.toEqual(new Map([['a', 'c']]))).not.to.throw()
-    expect(() => Run.expect(new Map([['a', 'b']])).not.toEqual(new Map([]))).not.to.throw()
-    const s1 = new Set()
+    expect(() => Run.expect(new TI.Set([1, {}])).toEqual(new TI.Set([1, {}]))).not.to.throw()
+    expect(() => Run.expect(new TI.Set([1])).not.toEqual(new TI.Set([1, 2]))).not.to.throw()
+    expect(() => Run.expect(new TI.Set([1])).not.toEqual(new TI.Set([2]))).not.to.throw()
+    expect(() => Run.expect(new TI.Map([['a', new TI.Set()]])).toEqual(new TI.Map([['a', new TI.Set()]]))).not.to.throw()
+    expect(() => Run.expect(new TI.Map([['a', 'b']])).not.toEqual(new TI.Map([['a', 'c']]))).not.to.throw()
+    expect(() => Run.expect(new TI.Map([['a', 'b']])).not.toEqual(new TI.Map([]))).not.to.throw()
+    const s1 = new TI.Set()
     s1.x = 1
-    const s2 = new Set()
+    const s2 = new TI.Set()
     s1.x = 2
     expect(() => Run.expect(s1).not.toEqual(s2)).not.to.throw()
-    expect(() => Run.expect(new Uint8Array([1])).toEqual(new Uint8Array([1]))).not.to.throw()
+    expect(() => Run.expect(new TI.Uint8Array([1])).toEqual(new TI.Uint8Array([1]))).not.to.throw()
   })
 
   // --------------------------------------------------------------------------
@@ -209,34 +214,34 @@ describe('expect', () => {
   // --------------------------------------------------------------------------
 
   it('toBeSet', () => {
-    expect(() => Run.expect(new Set()).toBeSet()).not.to.throw()
-    expect(() => Run.expect(new Set([1])).toBeSet()).not.to.throw()
+    expect(() => Run.expect(new TI.Set()).toBeSet()).not.to.throw()
+    expect(() => Run.expect(new TI.Set([1])).toBeSet()).not.to.throw()
     expect(() => Run.expect({}).toBeSet()).to.throw('expected value to be a set but was {}')
     expect(() => Run.expect(1).not.toBeSet()).not.to.throw()
     expect(() => Run.expect(null).not.toBeSet()).not.to.throw()
-    expect(() => Run.expect(new Set()).not.toBeSet()).to.throw('expected value not to be a set but was {}')
+    expect(() => Run.expect(new TI.Set()).not.toBeSet()).to.throw('expected value not to be a set but was {}')
   })
 
   // --------------------------------------------------------------------------
 
   it('toBeMap', () => {
-    expect(() => Run.expect(new Map()).toBeMap()).not.to.throw()
-    expect(() => Run.expect(new Map([[1, 2]])).toBeMap()).not.to.throw()
+    expect(() => Run.expect(new TI.Map()).toBeMap()).not.to.throw()
+    expect(() => Run.expect(new TI.Map([[1, 2]])).toBeMap()).not.to.throw()
     expect(() => Run.expect({}).toBeMap()).to.throw('expected value to be a map but was {}')
     expect(() => Run.expect(1).not.toBeMap()).not.to.throw()
     expect(() => Run.expect(null).not.toBeMap()).not.to.throw()
-    expect(() => Run.expect(new Map()).not.toBeMap()).to.throw('expected value not to be a map but was {}')
+    expect(() => Run.expect(new TI.Map()).not.toBeMap()).to.throw('expected value not to be a map but was {}')
   })
 
   // --------------------------------------------------------------------------
 
   it('toBeUint8Array', () => {
-    expect(() => Run.expect(new Uint8Array()).toBeUint8Array()).not.to.throw()
-    expect(() => Run.expect(new Uint8Array([1])).toBeUint8Array()).not.to.throw()
+    expect(() => Run.expect(new TI.Uint8Array()).toBeUint8Array()).not.to.throw()
+    expect(() => Run.expect(new TI.Uint8Array([1])).toBeUint8Array()).not.to.throw()
     expect(() => Run.expect({}).toBeUint8Array()).to.throw('expected value to be a uint8array but was {}')
     expect(() => Run.expect(1).not.toBeUint8Array()).not.to.throw()
     expect(() => Run.expect(null).not.toBeUint8Array()).not.to.throw()
-    expect(() => Run.expect(new Uint8Array()).not.toBeUint8Array()).to.throw('expected value not to be a uint8array but was {}')
+    expect(() => Run.expect(new TI.Uint8Array()).not.toBeUint8Array()).to.throw('expected value not to be a uint8array but was {}')
   })
 
   // --------------------------------------------------------------------------
