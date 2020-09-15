@@ -4,7 +4,8 @@
  * Tests for lib/module/local-purse.js
  */
 
-const { PrivateKey, Transaction } = require('bsv')
+const bsv = require('bsv')
+const { PrivateKey, Transaction, Script } = bsv
 const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
@@ -345,12 +346,36 @@ describe('LocalPurse', () => {
 
   describe('utxos', () => {
     it('returns non-jig utxos', async () => {
+      // Valid run transaction
       const run = new Run()
       const run2 = new Run({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain })
       class A extends Jig { init () { this.satoshis = 888 } }
       const a = new A()
       await a.sync()
       expect((await run2.purse.utxos()).length).to.equal(10)
+
+      // Non-run OP_RETURN prototocol
+      const Buffer = bsv.deps.Buffer
+      const slp = Buffer.from('slp', 'utf8')
+      const dat = Buffer.from('', 'utf8')
+      const slpscript = Script.buildSafeDataOut([slp, dat, dat, dat, dat])
+      const slpoutput = new Transaction.Output({ script: slpscript, satoshis: 0 })
+      const tx1 = new Transaction().addOutput(slpoutput).to(run2.purse.address, 1000)
+      const tx2 = await payFor(tx1, run)
+      await run2.blockchain.broadcast(tx2.toString('hex'))
+      expect((await run2.purse.utxos()).length).to.equal(11)
+
+      // Invalid run payload
+      const prefix = Buffer.from('run', 'utf8')
+      const protocol = Buffer.from([Run.protocol], 'hex')
+      const app = Buffer.from([])
+      const badPayload = Buffer.from([1, 2, 3])
+      const script = Script.buildSafeDataOut([prefix, protocol, app, badPayload])
+      const output = new Transaction.Output({ script, satoshis: 0 })
+      const tx3 = new Transaction().addOutput(output).to(run2.purse.address, 1000)
+      const tx4 = await payFor(tx3, run)
+      await run2.blockchain.broadcast(tx4.toString('hex'))
+      expect((await run2.purse.utxos()).length).to.equal(12)
     })
   })
 })
