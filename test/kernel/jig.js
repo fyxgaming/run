@@ -1836,7 +1836,7 @@ describe('Jig', () => {
       class A extends Jig { f (a) { this.x = a.owner }}
       const a = new A()
       const b = new A()
-      await a.sync()
+      await run.sync()
 
       function test (a, b) { expect(b.x).to.equal(a.owner) }
 
