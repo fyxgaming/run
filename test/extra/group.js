@@ -70,7 +70,7 @@ describe('Group', () => {
 
   // --------------------------------------------------------------------------
 
-  it('throw if pubkeys is not non-empty array', () => {
+  it('throws if pubkeys is not non-empty array', () => {
     expect(() => new Group(null, 1).script()).to.throw('pubkeys not an array')
     expect(() => new Group({}, 1).script()).to.throw('pubkeys not an array')
     expect(() => new Group([], 1).script()).to.throw('pubkeys must have at least one entry')
@@ -78,7 +78,7 @@ describe('Group', () => {
 
   // --------------------------------------------------------------------------
 
-  it('throw if more than 16 pubkeys', () => {
+  it('throws if more than 16 pubkeys', () => {
     const pubkeys = []
     for (let i = 0; i < 17; i++) {
       pubkeys.push(new PrivateKey().publicKey.toString())
@@ -88,7 +88,7 @@ describe('Group', () => {
 
   // --------------------------------------------------------------------------
 
-  it('throw if duplicate pubkeys', () => {
+  it('throws if duplicate pubkeys', () => {
     const pubkeys = [new PrivateKey().publicKey.toString()]
     pubkeys.push(pubkeys[0])
     expect(() => new Group(pubkeys, 1).script()).to.throw('pubkeys contains duplicates')
@@ -96,7 +96,7 @@ describe('Group', () => {
 
   // --------------------------------------------------------------------------
 
-  it('throw if pubkeys are not valid hex strings', () => {
+  it('throws if pubkeys are not valid hex strings', () => {
     expect(() => new Group(['a'], 1).script()).to.throw('Bad hex')
     expect(() => new Group(['**'], 1).script()).to.throw('Bad hex')
     expect(() => new Group([123], 1).script()).to.throw('Bad hex')
@@ -105,14 +105,14 @@ describe('Group', () => {
 
   // --------------------------------------------------------------------------
 
-  it('throw if m is out of range', () => {
+  it('throws if required is out of range', () => {
     const pubkeys = [new PrivateKey().publicKey.toString()]
-    expect(() => new Group(pubkeys, 0).script()).to.throw('m must be a non-negative integer')
-    expect(() => new Group(pubkeys, -1).script()).to.throw('m must be a non-negative integer')
-    expect(() => new Group(pubkeys, 1.5).script()).to.throw('m must be a non-negative integer')
-    expect(() => new Group(pubkeys, '1').script()).to.throw('m must be a non-negative integer')
-    expect(() => new Group(pubkeys, null).script()).to.throw('m must be a non-negative integer')
-    expect(() => new Group(pubkeys, 2).script()).to.throw('m must be <= the number of pubkeys')
+    expect(() => new Group(pubkeys, 0).script()).to.throw('required must be a non-negative integer')
+    expect(() => new Group(pubkeys, -1).script()).to.throw('required must be a non-negative integer')
+    expect(() => new Group(pubkeys, 1.5).script()).to.throw('required must be a non-negative integer')
+    expect(() => new Group(pubkeys, '1').script()).to.throw('required must be a non-negative integer')
+    expect(() => new Group(pubkeys, null).script()).to.throw('required must be a non-negative integer')
+    expect(() => new Group(pubkeys, 2).script()).to.throw('required must be <= the number of pubkeys')
   })
 
   // --------------------------------------------------------------------------

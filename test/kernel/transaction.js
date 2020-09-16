@@ -21,6 +21,27 @@ describe('Transaction', () => {
 
   // ------------------------------------------------------------------------
 
+  // TODO REMOVE
+  it.only('test', async () => {
+    const run = new Run()
+    class B { }
+    class X { }
+    B.X = X
+    class A extends Jig {
+      init (B) {
+        this.X = B.X
+      }
+    }
+    const B2 = run.deploy(B)
+    const A2 = run.deploy(A)
+    const transaction = new Run.Transaction()
+    transaction.update(() => {
+      new A2(B2) // eslint-disable-line
+    })
+    await transaction.export()
+    console.log(typeof run)
+  })
+
   it('basic', async () => {
     const run = new Run()
     class A extends Jig { }
@@ -78,6 +99,22 @@ describe('Transaction', () => {
     const rawtx = await tx.export()
     expect(typeof rawtx).to.equal('string')
     expect(rawtx.length > 0).to.equal(true)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('export with upstream commits', async () => {
+    new Run() // eslint-disable-line
+    class B extends Jig { }
+    class A extends Jig {
+      init (b) {
+        this.b = b
+      }
+    }
+    const transaction = new Run.Transaction()
+    const b = new B()
+    transaction.update(() => new A(b))
+    await transaction.export()
   })
 
   // --------------------------------------------------------------------------
