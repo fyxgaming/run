@@ -320,7 +320,7 @@ describe('Auth', () => {
     it('throws if undeployed', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { init () { this.auth() } }
-      expect(() => new A()).to.throw('Cannot auth undeployed')
+      expect(() => new A()).to.throw('auth unavailable')
     })
 
     // ------------------------------------------------------------------------

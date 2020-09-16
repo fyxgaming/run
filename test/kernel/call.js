@@ -205,7 +205,7 @@ describe('Call', () => {
   // --------------------------------------------------------------------------
 
   describe('Jig', () => {
-    it('basic jig', async () => {
+    it('update basic jig', async () => {
       const run = new Run()
       class Sword extends Jig {
         upgrade () { this.upgrades = (this.upgrades || 0) + 1 }
