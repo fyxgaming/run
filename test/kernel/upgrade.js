@@ -1213,25 +1213,6 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it('autounifies from upgrade', async () => {
-      const run = new Run()
-      class A extends Jig {
-        init (n) { this.n = 1 }
-        f () { return this.n }
-      }
-      const CA = run.deploy(A)
-      CA.auth()
-      await CA.sync()
-      const CO = await run.load(CA.origin)
-      expect(CA.location).not.to.equal(CO.location)
-      const a = new CA()
-      const b = new CO()
-      class C extends Jig { init (a, b) { this.n = a.f() + b.f() } }
-      new C(a, b) // eslint-disable-line
-    })
-
-    // ------------------------------------------------------------------------
-
     it('throws if inconsistent worldview from upgrade', async () => {
       const run = new Run()
       class A extends Jig {

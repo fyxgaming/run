@@ -1102,24 +1102,6 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it('autounifies', async () => {
-      const run = new Run()
-      class A { }
-      class B { }
-      const CA = run.deploy(A)
-      CA.upgrade(B)
-      await run.sync()
-      const CA2 = await run.load(CA.origin)
-      class C { }
-      C.CA1 = CA
-      C.CA2 = CA2
-      const C2 = run.deploy(C)
-      expect(C2.CA1).to.equal(C2.CA2)
-      expect(C2.CA1.location).not.to.equal(C2.CA2.origin)
-    })
-
-    // ------------------------------------------------------------------------
-
     it('throws if inconsistent worldview from upgrade', async () => {
       const run = new Run()
       class A { }
