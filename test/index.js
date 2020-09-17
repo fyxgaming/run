@@ -45,6 +45,7 @@ require('./module/inventory')
 require('./module/local-cache')
 require('./module/local-purse')
 require('./module/mockchain')
+require('./module/pay-server')
 require('./module/viewer')
 
 require('./util/admin')
