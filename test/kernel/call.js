@@ -868,7 +868,7 @@ describe('Call', () => {
   // --------------------------------------------------------------------------
 
   describe('Unify worldview', () => {
-    it('unifies jigs', async () => {
+    it.only('unifies jigs', async () => {
       const run = new Run()
       class A extends Jig { update () { this.n = 1 } }
       class B extends Jig {
