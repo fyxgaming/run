@@ -15,49 +15,155 @@ const { Jig, LocalCache } = Run
 // ------------------------------------------------------------------------------------------------
 
 describe('Unify', () => {
-  // ------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
+  // autounify
+  // --------------------------------------------------------------------------
 
-  it('autounifies', async () => {
-    const run = new Run()
-    class A extends Jig { set (x) { this.x = x } }
-    const a = new A()
-    await a.sync()
-    const a2 = await run.load(a.origin)
-    a2.set(1)
-    a2.constructor.auth()
-    await a2.sync()
-    const b = new A()
-    await b.sync()
+  describe('autounify', () => {
+    it('method args with each other', async () => {
+      const run = new Run()
+      class A extends Jig { set (x) { this.x = x } }
+      const a = new A()
+      await a.sync()
+      const a2 = await run.load(a.origin)
+      a2.set(1)
+      a2.constructor.auth()
+      await a2.sync()
+      const b = new A()
+      await b.sync()
 
-    expectTx({
-      nin: 1,
-      nref: 2,
-      nout: 1,
-      ndel: 0,
-      ncre: 0,
-      exec: [
-        {
-          op: 'CALL',
-          data: [{ $jig: 0 }, 'set', [{ $jig: 1 }, { $dup: ['2', '0'] }]]
-        }
-      ]
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'set', [{ $jig: 1 }, { $dup: ['2', '0'] }]]
+          }
+        ]
+      })
+
+      b.set(a, a2)
+
+      function test (b) {
+        expect(b.x[0]).to.equal(b.x[1])
+      }
+
+      await b.sync()
+      test(b)
+
+      const b2 = await run.load(b.location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(b.location)
+      test(b3)
     })
 
-    b.set(a, a2)
+    // ------------------------------------------------------------------------
 
-    function test (b) {
-      expect(b.x[0]).to.equal(b.x[1])
-    }
+    it('method args with target', async () => {
+      // TODO
+    })
 
-    await b.sync()
-    test(b)
+    // ------------------------------------------------------------------------
 
-    const b2 = await run.load(b.location)
-    test(b2)
+    it('method arg constructors', async () => {
+      const run = new Run()
 
-    run.cache = new LocalCache()
-    const b3 = await run.load(b.location)
-    test(b3)
+      class A extends Jig {
+        init (n) { this.n = 1 }
+        f () { return this.n }
+      }
+
+      const CA = run.deploy(A)
+      CA.auth()
+      await CA.sync()
+
+      const CO = await run.load(CA.origin)
+      expect(CA.location).not.to.equal(CO.location)
+
+      const a = new CA()
+      const b = new CO()
+
+      class C extends Jig { init (a, b) { this.n = a.f() + b.f() } }
+      new C(a, b) // eslint-disable-line
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('constructor args', () => {
+
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('deploy props', async () => {
+      const run = new Run()
+
+      class A { }
+      class B { }
+      const CA = run.deploy(A)
+      CA.upgrade(B)
+      await run.sync()
+
+      const CA2 = await run.load(CA.origin)
+      class C { }
+      C.CA1 = CA
+      C.CA2 = CA2
+
+      function test (C2) {
+        expect(C2.CA1).to.equal(C2.CA2)
+        expect(C2.CA1.location).not.to.equal(C2.CA2.origin)
+      }
+
+      const C2 = run.deploy(C)
+      test(C2)
+      await C2.sync()
+
+      const C3 = await run.load(C2.location)
+      test(C3)
+
+      run.cache = new LocalCache()
+      const C4 = await run.load(C2.location)
+      test(C4)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('upgrade props', async () => {
+      const run = new Run()
+
+      const X1 = run.deploy(class X extends Jig { })
+      await X1.sync()
+      const X2 = await run.load(X1.location)
+      X2.auth()
+
+      class A { }
+      class B { }
+      B.arr = [X1, X2]
+      const CA = run.deploy(A)
+      CA.upgrade(B)
+      await run.sync()
+
+      function test (C) {
+        expect(C.arr[0]).to.equal(C.arr[1])
+        expect(C.arr[0].location).not.to.equal(C.arr[1].origin)
+      }
+
+      test(CA)
+      await CA.sync()
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
   })
 })
 
@@ -171,40 +277,6 @@ describe('Unify worldview', () => {
     run.cache = new LocalCache()
     const a3 = await run.load(a.location)
     test(a3)
-  })
-
-  // ------------------------------------------------------------------------
-
-  it('autounifies', async () => {
-    const run = new Run()
-    class A { }
-    class B { }
-    const CA = run.deploy(A)
-    CA.upgrade(B)
-    await run.sync()
-    const CA2 = await run.load(CA.origin)
-    class C { }
-    C.CA1 = CA
-    C.CA2 = CA2
-    const C2 = run.deploy(C)
-    expect(C2.CA1).to.equal(C2.CA2)
-    expect(C2.CA1.location).not.to.equal(C2.CA2.origin)
-  })
-  it('autounifies from upgrade', async () => {
-    const run = new Run()
-    class A extends Jig {
-      init (n) { this.n = 1 }
-      f () { return this.n }
-    }
-    const CA = run.deploy(A)
-    CA.auth()
-    await CA.sync()
-    const CO = await run.load(CA.origin)
-    expect(CA.location).not.to.equal(CO.location)
-    const a = new CA()
-    const b = new CO()
-    class C extends Jig { init (a, b) { this.n = a.f() + b.f() } }
-      new C(a, b) // eslint-disable-line
   })
 })
 
