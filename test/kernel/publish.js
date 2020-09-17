@@ -148,8 +148,9 @@ describe('Publish', () => {
 
   // ------------------------------------------------------------------------
 
-  it.only('unifies inner jigs', async () => {
+  it('unifies unreferenced jigs', async () => {
     const run = new Run()
+
     class A extends Jig { }
     const A2 = run.deploy(A)
     A2.auth()
@@ -164,11 +165,12 @@ describe('Publish', () => {
     C.A = A2
     const C2 = run.deploy(C)
 
-    class D extends Jig { static assign (B, C) { this.B = B; this.C = C }}
+    class D extends Jig { static assign (B, C) { this.A = B.A }}
     const D2 = run.deploy(D)
+    await D2.sync()
 
     function test (D) {
-      expect(D.B.A).to.equal(D.C.A)
+      expect(D.A.location).to.equal(A2.location)
     }
 
     D2.assign(B2, C2)
