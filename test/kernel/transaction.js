@@ -48,9 +48,22 @@ describe('Transaction', () => {
     class A extends Jig { f () { this.n = 1 } }
     const tx = new Transaction()
     const a = tx.update(() => new A())
-    expect(() => a.f()).to.throw('Cannot link')
-    await tx.publish()
+    expect(() => a.f()).to.throw('Cannot link [jig A]: transaction open')
+    tx.publish()
     a.f()
+    await a.sync()
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('allowed to read outside before publish', async () => {
+    new Run() // eslint-disable-line
+    class A extends Jig { g () { return this.n } }
+    const tx = new Transaction()
+    const a = tx.update(() => new A())
+    a.g()
+    tx.publish()
+    a.g()
     await a.sync()
   })
 
