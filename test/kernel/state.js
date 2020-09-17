@@ -1,7 +1,7 @@
 // Test key order is deterministic
 
 /*
-    it('should cache local updates', async () => {
+    it('caches local updates', async () => {
       const run = createHookedRun()
       class A extends Jig {
         init () { this.undef = undefined }

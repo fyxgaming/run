@@ -17,7 +17,7 @@ describe('Recent', () => {
   // A destroyed jig does not fail recent
 
   /*
-    it('should throw if unknown whether read is stale', async () => {
+    it('throws if unknown whether read is stale', async () => {
       const run = createHookedRun()
       class A extends Jig { set (n) { this.n = n } }
       class B extends Jig { apply (a) { this.n = a.n } }
@@ -34,7 +34,7 @@ describe('Recent', () => {
       await expect(run.sync()).to.be.rejectedWith('Aborting broadcast. A referenced jig may not be the latest.')
     })
 
-    it('should throw if read is stale during load', async () => {
+    it('throws if read is stale during load', async () => {
       const run = createHookedRun()
       class A extends Jig { set (n) { this.n = n } }
       class B extends Jig { apply (a) { this.n = a.n } }

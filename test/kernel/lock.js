@@ -53,7 +53,7 @@ describe('Lock', () => {
     })
 
     /*
-    it('should load non-standard owner', async () => {
+    it('load non-standard owner', async () => {
       class CustomLock {
         script () { return new Uint8Array([1, 2, 3]) }
         domain () { return 1 }
@@ -71,7 +71,7 @@ describe('Lock', () => {
       await run2.load(a.location)
     })
 
-    it('should support copying non-standard owner to another jig', async () => {
+    it('copy non-standard owner to another jig', async () => {
       createHookedRun()
       class CustomLock {
         script () { return new Uint8Array([1, 2, 3]) }
@@ -83,7 +83,7 @@ describe('Lock', () => {
       expect(() => new B(new A())).not.to.throw()
     })
 
-    it('should return a copy of owners to outside', async () => {
+    it('return a copy of owners to outside', async () => {
       createHookedRun()
       class CustomLock {
         constructor (n) { this.n = n }
@@ -101,7 +101,7 @@ describe('Lock', () => {
       expect(b.owner.n).to.equal(2)
     })
 
-    it('should return the original owner inside', async () => {
+    it('return the original owner inside', async () => {
       createHookedRun()
       class A extends Jig {
         init (owner) { this.owner = owner }

@@ -38,7 +38,7 @@ describe('Loader', () => {
 // ------------------------------------------------------------------------------------------------
 /*
   describe('load', () => {
-    it('should load single jig', async () => {
+    it('load single jig', async () => {
       const run = createHookedRun()
       class A extends Jig { f (n) { this.n = n }}
       const a = new A()
@@ -54,7 +54,7 @@ describe('Loader', () => {
       expect(a2.n.n).to.equal(3)
     })
 
-    it('should load older state', async () => {
+    it('load older state', async () => {
       const run = createHookedRun()
       class A extends Jig { f (n) { this.n = n }}
       const a = new A()
@@ -70,7 +70,7 @@ describe('Loader', () => {
       expect(a2.n).to.equal(1)
     })
 
-    it('should throw if location is bad', async () => {
+    it('throws if location is bad', async () => {
       const run = createHookedRun()
       class A extends Jig { }
       const a = new A()
@@ -80,7 +80,7 @@ describe('Loader', () => {
       await expect(run.load(a.location.slice(0, 64) + '_o3')).to.be.rejected
     })
 
-    it('should support loading jig with multiple updates', async () => {
+    it('load jig with multiple updates', async () => {
       const run = createHookedRun()
       class A extends Jig { set (n) { this.n = n }}
       class B extends Jig {
@@ -100,7 +100,7 @@ describe('Loader', () => {
       expect(a2.n).to.equal(2)
     })
 
-    it('should support loading jigs that updated other jigs', async () => {
+    it('load jigs that updated other jigs', async () => {
       const run = createHookedRun()
       class A extends Jig { set (n) { this.n = n }}
       class B extends Jig { set (n, a) { a.set(n) } }
@@ -116,7 +116,7 @@ describe('Loader', () => {
       expect(a2.n).to.equal(2)
     })
 
-    it('should support arguments with different instances of the same jig location', async () => {
+    it('arguments with different instances of the same jig location', async () => {
       const run = createHookedRun()
       class Num extends Jig { init (n) { this.n = n }}
       const a = new Num(10)
@@ -131,7 +131,7 @@ describe('Loader', () => {
       expect(sum.n).to.equal(20)
     })
 
-    it('should throw if pass different locations of same jig as arguments', async () => {
+    it('throws if pass different locations of same jig as arguments', async () => {
       const run = createHookedRun()
       class A extends Jig { f (n) { this.n = n; return this }}
       const a = new A()
@@ -146,7 +146,7 @@ describe('Loader', () => {
       expect(() => new B(a, a2)).to.throw()
     })
 
-    it('should support loading instances of extended classes', async () => {
+    it('load instances of extended classes', async () => {
       createHookedRun()
       class A extends Jig { }
       class B extends A { }
@@ -157,7 +157,7 @@ describe('Loader', () => {
       await run2.load(b.location)
     })
 
-    it('should support reading jigs as arguments', async () => {
+    it('read jigs as arguments', async () => {
       const run = createHookedRun()
       class A extends Jig { init (n) { this.n = n } }
       class B extends Jig { init (a) { this.n = a.n } }
@@ -171,7 +171,7 @@ describe('Loader', () => {
       expect(b2.n).to.equal(1)
     })
 
-    it('should add inner jigs to reads', async () => {
+    it('add inner jigs to reads', async () => {
       const run = createHookedRun()
       class A extends Jig { set (n) { this.n = n } }
       class B extends Jig {

@@ -255,7 +255,7 @@ describe('Sync', () => {
 
     // --------------------------------------------------------------------------
 
-    it('should sync while replaying', async () => {
+    it('sync while replaying', async () => {
       const run = new Run()
       const A = run.deploy(class A extends Jig { })
       const a = new A()

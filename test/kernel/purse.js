@@ -3,7 +3,7 @@
 /*
     // ------------------------------------------------------------------------
 
-    it('should add to purse when satoshis decreased', async () => {
+    it('adds to purse when satoshis decreased', async () => {
         const run = createHookedRun()
         class A extends Jig { f (satoshis) { this.satoshis = satoshis; return this }}
         const a = new A()
@@ -19,7 +19,7 @@
       */
 
 /*
-    it('should support long mempool chain for purse', async () => {
+    it('long mempool chain for purse', async () => {
       const run = createHookedRun()
       class A extends Jig { }
       for (let i = 0; i < 100; i++) { new A() } // eslint-disable-line

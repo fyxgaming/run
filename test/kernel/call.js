@@ -281,7 +281,7 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should support passing null in args', async () => {
+    it('pass null in args', async () => {
       const run = new Run()
       class Dragon extends Jig {
         init (lair) {

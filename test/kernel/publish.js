@@ -69,7 +69,7 @@ describe('Publish', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should throw if already spent', async () => {
+  it('throws if already spent', async () => {
     const run = new Run()
     class Store extends Jig { set (x) { this.x = x } }
     const a = new Store()
@@ -82,7 +82,7 @@ describe('Publish', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should throw if owner signature is missing', async () => {
+  it('throws if owner signature is missing', async () => {
     const run = new Run()
     class A extends Jig {
       init () { this.n = 1 }

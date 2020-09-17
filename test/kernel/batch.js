@@ -1,7 +1,7 @@
 
 /*
   describe('batch', () => {
-    it('should support load of batch with multiple instantiations', async () => {
+    it('load of batch with multiple instantiations', async () => {
       const run = createHookedRun()
       class A extends Jig { }
       run.transaction.begin()
@@ -19,7 +19,7 @@
       expect(b.origin).to.equal(b2.origin)
     })
 
-    it('should support load of batch with multiple jig updates', async () => {
+    it('load of batch with multiple jig updates', async () => {
       const run = createHookedRun()
       class A extends Jig { f (n) { this.n = n }}
       const a = new A()
@@ -41,7 +41,7 @@
       expect(b2.n).to.equal(2)
     })
 
-    it('should support load of batch with self-references', async () => {
+    it('load of batch with self-references', async () => {
       const run = createHookedRun()
       class A extends Jig { f (a) { this.n = a } }
       run.transaction.begin()
@@ -59,7 +59,7 @@
       expect(a.owner).to.equal(a2.owner)
     })
 
-    it('should support load of batch with circularly referenced jigs', async () => {
+    it('load of batch with circularly referenced jigs', async () => {
       const run = createHookedRun()
       class S extends Jig { set (x) { this.x = x } }
       run.transaction.begin()

@@ -169,7 +169,7 @@ describe('Caller', () => {
 
   // --------------------------------------------------------------------------
 
-  it('should throw if set caller', () => {
+  it('throws if set caller', () => {
     new Run() // eslint-disable-line
     class A extends Jig { init () { caller = 1 } } // eslint-disable-line
     expect(() => new A()).to.throw('Cannot set caller')

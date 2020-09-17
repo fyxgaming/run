@@ -128,7 +128,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should throw if not extended', () => {
+    it('throws if not extended', () => {
       new Run() // eslint-disable-line
       expect(() => new Jig()).to.throw('Jig must be extended')
     })
@@ -147,7 +147,7 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('init', () => {
-    it('should throw if called by user', () => {
+    it('throws if called by user', () => {
       new Run() // eslint-disable-line
       class A extends Jig { init (n) { this.n = n } }
       const a = new A(5)
@@ -156,7 +156,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should throw if called by other jig code', () => {
+    it('throws if called by other jig code', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         init (n) { this.n = n }
@@ -168,7 +168,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should throw if init returns a value', async () => {
+    it('throws if init returns a value', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { init () { return {} }}
       expect(() => new A()).to.throw('init must not return a value')
@@ -1048,7 +1048,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('allowed to override user methods', () => {
+    it.only('allowed to override user methods', () => {
       // With class upgrades we can't stop it. So allow it by design.
       new Run() // eslint-disable-line
       class A extends Jig {
@@ -1066,7 +1066,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should throw if set properties on custom methods', () => {
+    it('throws if set properties on custom methods', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         f () { this.f.n = 1 }
@@ -1468,7 +1468,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should support has for undefined values', () => {
+    it('undefined values', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         init () { this.x = undefined }
@@ -2054,7 +2054,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should support reading presets', async () => {
+    it('read presets', async () => {
       const run = new Run()
       const network = run.blockchain.network
       class B extends Jig { init () { this.n = B.n } }
@@ -2170,7 +2170,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should detect uncaught errors', async () => {
+    it('detect uncaught errors', async () => {
       const run = new Run()
       class A extends Jig { f () { this.n = 1 } }
       const a = new A()
@@ -2198,7 +2198,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should support arbitrary objects', async () => {
+    it('arbitrary objects', async () => {
       const run = new Run()
       class Store extends Jig { set (x) { this.x = x } }
       const store = new Store()
@@ -2213,7 +2213,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should support circular objects', async () => {
+    it('circular objects', async () => {
       const run = new Run()
       class A extends Jig {
         init () {
