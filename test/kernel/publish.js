@@ -38,7 +38,7 @@ describe('Publish', () => {
     await CA2.sync()
     expect(CA.location).not.to.equal(CA2.location)
     const a2 = new CA2()
-    run.manual = true
+    run.autounify = false
     expect(() => a2.setOnInstance(a1)).to.throw('Inconsistent worldview')
   })
 
@@ -52,7 +52,7 @@ describe('Publish', () => {
     await a1.sync()
     const a2 = await run.load(a1.origin)
     const b = new A()
-    run.manual = true
+    run.autounify = false
     expect(() => b.set(a1, a2)).to.throw('Inconsistent worldview')
   })
 

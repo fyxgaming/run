@@ -1247,7 +1247,7 @@ describe('Upgrade', () => {
       const b = new CO()
       class C extends Jig { init (a, b) { this.n = a.f() + b.f() } }
       const C2 = run.deploy(C)
-      run.manual = true
+      run.autounify = false
       expect(() => new C2(a, b)).to.throw('Inconsistent worldview')
     })
   })

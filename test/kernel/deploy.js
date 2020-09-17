@@ -1109,7 +1109,7 @@ describe('Deploy', () => {
       const CA = run.deploy(A)
       CA.upgrade(B)
       await run.sync()
-      const CA2 = await run.load(CA.origin, { sync: false })
+      const CA2 = await run.load(CA.origin)
       class C { }
       C.CA1 = CA
       C.CA2 = CA2
@@ -1127,7 +1127,7 @@ describe('Deploy', () => {
       const CA = run.deploy(A)
       CA.upgrade(B)
       await run.sync()
-      run.manual = true
+      run.autounify = false
       const CA2 = await run.load(CA.origin)
       class C { }
       C.CA1 = CA

@@ -859,7 +859,7 @@ describe('Jig', () => {
         apply (a2) { this.n = this.a + a2.n }
       }
       const b = new B(a)
-      run.manual = true
+      run.autounify = false
       expect(() => b.apply(a2)).to.throw('Inconsistent worldview')
     })
 
@@ -875,7 +875,7 @@ describe('Jig', () => {
       const a2 = await run.load(a.location)
       a2.set(2)
       const b = new B()
-      run.manual = true
+      run.autounify = false
       expect(() => b.apply(a, a2)).to.throw('Inconsistent worldview')
     })
 
