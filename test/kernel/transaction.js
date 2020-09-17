@@ -22,7 +22,7 @@ describe('Transaction', () => {
   // ------------------------------------------------------------------------
 
   // TODO REMOVE
-  it('test', async () => {
+  it.only('test', async () => {
     const run = new Run()
     class B { }
     class X { }
