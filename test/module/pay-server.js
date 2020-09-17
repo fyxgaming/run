@@ -4,7 +4,7 @@
  * Tests for lib/module/pay-server.js
  */
 
-const { describe, it } = require('mocha')
+const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { HDPrivateKey, Transaction } = require('bsv')
@@ -27,6 +27,11 @@ const apiKeys = {
 // ------------------------------------------------------------------------------------------------
 
 describe('PayServer', () => {
+  // Wait for every test to finish. This makes debugging easier.
+  afterEach(() => Run.instance && Run.instance.sync())
+  // Deactivate the current run instance. This stops leaks across tests.
+  afterEach(() => Run.instance && Run.instance.deactivate())
+
   const apiKey = apiKeys[network]
   if (!apiKey) return
 
