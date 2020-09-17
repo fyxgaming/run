@@ -1048,7 +1048,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('allowed to override user methods', () => {
+    it('allowed to override user methods', () => {
       // With class upgrades we can't stop it. So allow it by design.
       new Run() // eslint-disable-line
       class A extends Jig {

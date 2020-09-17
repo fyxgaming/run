@@ -64,7 +64,7 @@ describe('Publish', () => {
     await run.sync()
     const run2 = new Run({ blockchain: new Mockchain() })
     a.f()
-    await expect(run2.sync()).to.be.rejectedWith('Missing inputs')
+    await expect(run2.sync()).to.be.rejected
   })
 
   // --------------------------------------------------------------------------
