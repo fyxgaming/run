@@ -7,9 +7,10 @@
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
-const Run = require('../env/run')
 const { stub } = require('sinon')
-const { Jig, Mockchain } = Run
+const { expectTx } = require('../env/misc')
+const Run = require('../env/run')
+const { Jig, Mockchain, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Publish
@@ -94,6 +95,92 @@ describe('Publish', () => {
     stub(run.owner, 'sign').callsFake(x => x)
     a.f()
     await expect(a.sync()).to.be.rejected
+  })
+
+  // ------------------------------------------------------------------------
+
+  it('assign without reference', async () => {
+    const run = new Run()
+
+    class X { }
+    class B { }
+    B.X = X
+
+    class A extends Jig {
+      init (B) {
+        this.X = B.X
+      }
+    }
+
+    const B2 = run.deploy(B)
+    const A2 = run.deploy(A)
+    await run.sync()
+
+    expectTx({
+      nin: 0,
+      nref: 2,
+      nout: 1,
+      ndel: 0,
+      ncre: 1,
+      exec: [
+        {
+          op: 'NEW',
+          data: [{ $jig: 0 }, [{ $jig: 1 }]]
+        }
+      ]
+    })
+
+    function test (a) {
+      expect(a.X.location).to.equal(X.location)
+    }
+
+    const a = new A2(B2)
+    await a.sync()
+    test(a)
+
+    const a2 = await run.load(a.location)
+    test(a2)
+
+    run.cache = new LocalCache()
+    const a3 = await run.load(a.location)
+    test(a3)
+  })
+
+  // ------------------------------------------------------------------------
+
+  it.only('unifies inner jigs', async () => {
+    const run = new Run()
+    class A extends Jig { }
+    const A2 = run.deploy(A)
+    A2.auth()
+    await A2.sync()
+    const A1 = await run.load(A.origin)
+
+    class B { }
+    B.A = A1
+    const B2 = run.deploy(B)
+
+    class C { }
+    C.A = A2
+    const C2 = run.deploy(C)
+
+    class D extends Jig { static assign (B, C) { this.B = B; this.C = C }}
+    const D2 = run.deploy(D)
+
+    function test (D) {
+      expect(D.B.A).to.equal(D.C.A)
+    }
+
+    D2.assign(B2, C2)
+    await run.sync()
+    test(D2)
+
+    const D3 = await run.load(D2.location)
+    test(D3)
+
+    run.cache = new LocalCache()
+    const D4 = await run.load(D2.location)
+    test(D4)
   })
 })
 

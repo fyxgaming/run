@@ -19,28 +19,7 @@ describe('Transaction', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  // ------------------------------------------------------------------------
-
-  // TODO REMOVE
-  it('test', async () => {
-    const run = new Run()
-    class B { }
-    class X { }
-    B.X = X
-    class A extends Jig {
-      init (B) {
-        this.X = B.X
-      }
-    }
-    const B2 = run.deploy(B)
-    const A2 = run.deploy(A)
-    const transaction = new Run.Transaction()
-    transaction.update(() => {
-      new A2(B2) // eslint-disable-line
-    })
-    await transaction.export()
-    console.log(typeof run)
-  })
+  // --------------------------------------------------------------------------
 
   it('basic', async () => {
     const run = new Run()
