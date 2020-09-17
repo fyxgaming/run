@@ -46,6 +46,7 @@ require('./module/local-cache')
 require('./module/local-owner')
 require('./module/local-purse')
 require('./module/mockchain')
+require('./module/remote-blockchain')
 require('./module/pay-server')
 require('./module/viewer')
 

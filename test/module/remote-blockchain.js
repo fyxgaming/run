@@ -4,25 +4,35 @@
  * Tests for lib/module/blockchain-server.js
  */
 
-const { PrivateKey, Script } = require('bsv')
 const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
-const { Run } = require('../env/config')
-const { unmangle } = require('../env/unmangle')
+const { PrivateKey, Script } = require('bsv')
+const Run = require('../env/run')
+const unmangle = require('../env/unmangle')
 const { RemoteBlockchain, BlockchainServer } = Run
 const { RequestError } = Run.errors
 
 // ------------------------------------------------------------------------------------------------
-// RemoteBlockchain tests
+// RemoteBlockchain
 // ------------------------------------------------------------------------------------------------
 
-describe('RemoteBlockchain', () => {
+describe.skip('RemoteBlockchain', () => {
+  // --------------------------------------------------------------------------
+  // constructor
+  // --------------------------------------------------------------------------
+
   describe('constructor', () => {
+    // ------------------------------------------------------------------------
+    // network
+    // ------------------------------------------------------------------------
+
     describe('network', () => {
       it('should default network to main', () => {
         expect(RemoteBlockchain.create().network).to.equal('main')
       })
+
+      // ----------------------------------------------------------------------
 
       it('should throw for bad network', () => {
         expect(() => RemoteBlockchain.create({ network: 'bad' })).to.throw('Unsupported network: bad')
@@ -32,10 +42,16 @@ describe('RemoteBlockchain', () => {
       })
     })
 
+    // ------------------------------------------------------------------------
+    // api
+    // ------------------------------------------------------------------------
+
     describe('api', () => {
       it('should default to run api', () => {
         expect(RemoteBlockchain.create() instanceof BlockchainServer).to.equal(true)
       })
+
+      // ----------------------------------------------------------------------
 
       it('should throw for bad api', () => {
         expect(() => RemoteBlockchain.create({ api: 'bad' })).to.throw('Invalid blockchain API: bad')
@@ -44,11 +60,17 @@ describe('RemoteBlockchain', () => {
       })
     })
 
+    // ------------------------------------------------------------------------
+    // lastBlockchain
+    // ------------------------------------------------------------------------
+
     describe('lastBlockchain', () => {
       it('should support passing different last blockchain', () => {
         const lastBlockchain = { cache: {} }
         expect(RemoteBlockchain.create({ lastBlockchain }).cache).not.to.equal(lastBlockchain.cache)
       })
+
+      // ----------------------------------------------------------------------
 
       it('should only copy cache if same network', async () => {
         const testnet1 = RemoteBlockchain.create({ network: 'test' })
@@ -61,6 +83,10 @@ describe('RemoteBlockchain', () => {
       })
     })
 
+    // ------------------------------------------------------------------------
+    // timeout
+    // ------------------------------------------------------------------------
+
     describe('timeout', () => {
       it('should time out', async () => {
         const blockchain = RemoteBlockchain.create({ timeout: 1 })
@@ -68,9 +94,13 @@ describe('RemoteBlockchain', () => {
         await expect(blockchain.fetch('31b982157ccd5d1a64bfd7c1415b5ed44fb38e153bdc6742c2261a147aeeb744')).to.be.rejectedWith('Request timed out')
       })
 
+      // ----------------------------------------------------------------------
+
       it('should default timeout to 10000', () => {
         expect(RemoteBlockchain.create().timeout).to.equal(10000)
       })
+
+      // ----------------------------------------------------------------------
 
       it('should throw for bad timeout', () => {
         expect(() => RemoteBlockchain.create({ timeout: 'bad' })).to.throw('Invalid timeout: bad')
@@ -81,6 +111,10 @@ describe('RemoteBlockchain', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // fetch
+  // --------------------------------------------------------------------------
+
   describe('fetch', () => {
     it('should throw RequestError', async () => {
       const blockchain = RemoteBlockchain.create({ network: 'main' })
@@ -88,6 +122,10 @@ describe('RemoteBlockchain', () => {
       await expect(blockchain.fetch(txid)).to.be.rejectedWith(RequestError)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // utxos
+  // --------------------------------------------------------------------------
 
   describe('utxos', () => {
     // SAVE AND RESTORE LOGGER
