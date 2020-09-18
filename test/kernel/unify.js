@@ -300,30 +300,46 @@ describe('Unify', () => {
   // --------------------------------------------------------------------------
 
   describe('autounify disabled', () => {
-    it('allows inconsistent sets', async () => {
+    it('throws if deploy with inconsistent props', () => {
+
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if upgrade with inconsistent props', () => {
+
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if call method with inconsitent arg and jig property', async () => {
       const run = new Run()
 
       class A extends Jig { }
       const a = new A()
       await a.sync()
+      const a2 = await run.load(a.location)
+      a2.destroy()
 
-      const A2 = await run.load(A.location)
-      A2.auth()
-      const b = new A2()
-      await b.sync()
+      class B extends Jig {
+        init (a) { this.a = a }
+        f (a2) { this.a2 = a2 }
+      }
 
-      expect(a.constructor.origin).to.equal(b.constructor.origin)
-      expect(a.constructor.location).not.to.equal(b.constructor.location)
-
-      class C extends Jig { set (a, b) { this.a = a; this.b = b } }
-      const c = new C()
+      const b = new B(a)
+      await b.sync({ inner: false })
       run.autounify = false
-      c.set(a, b)
+      b.f(a2)
+      await expect(b.sync()).to.be.rejectedWith('Inconsistent worldview')
+
+      run.autounify = true
+      b.f(a2)
+      await b.sync()
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if call method with two inconsistent classes', async () => {
+    it('throws if call method with two inconsistent class args', async () => {
       const run = new Run()
 
       class A extends Jig {
@@ -344,8 +360,12 @@ describe('Unify', () => {
 
       class C extends Jig { set (a, b) { this.an = a.getN(); this.bn = b.getN() } }
       const c = new C()
+
       run.autounify = false
       expect(() => c.set(a, b)).to.throw('Inconsistent worldview')
+
+      run.autounify = true
+      c.set(a, b)
     })
 
     // ------------------------------------------------------------------------
@@ -395,6 +415,36 @@ describe('Unify', () => {
       const transaction = new Run.Transaction()
       transaction.update(() => B2.set(A))
       await expect(transaction.export()).to.be.rejectedWith('Time travel for A')
+      transaction.rollback()
+
+      run.autounify = true
+      const transaction2 = new Run.Transaction()
+      transaction2.update(() => B2.set(A))
+      await transaction2.export()
+    })
+
+    // ------------------------------------------------------------------------
+
+    // This is allowed references alone are not reads
+    it('allows inconsistent sets of jigs', async () => {
+      const run = new Run()
+
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+
+      const A2 = await run.load(A.location)
+      A2.auth()
+      const b = new A2()
+      await b.sync()
+
+      expect(a.constructor.origin).to.equal(b.constructor.origin)
+      expect(a.constructor.location).not.to.equal(b.constructor.location)
+
+      class C extends Jig { set (a, b) { this.a = a; this.b = b } }
+      const c = new C()
+      run.autounify = false
+      c.set(a, b)
     })
   })
 })
