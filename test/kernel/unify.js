@@ -300,14 +300,48 @@ describe('Unify', () => {
   // --------------------------------------------------------------------------
 
   describe('autounify disabled', () => {
-    it('throws if deploy with inconsistent props', () => {
+    it('throws if deploy with inconsistent props', async () => {
+      const run = new Run()
 
+      const A2 = run.deploy(class A { })
+      A2.destroy()
+      await A2.sync()
+      const A1 = await run.load(A2.origin)
+
+      class B { }
+      B.A1 = A1
+      B.A2 = A2
+
+      run.autounify = false
+      expect(() => run.deploy(B)).to.throw('Inconsistent worldview')
+
+      run.uninstall(B)
+      run.autounify = true
+      const B2 = run.deploy(B)
+      await B2.sync()
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if upgrade with inconsistent props', () => {
+    it('throws if upgrade with inconsistent props', async () => {
+      const run = new Run()
 
+      class A extends Jig { update () { this.n = 1 } }
+      const a2 = new A()
+      a2.update()
+      await a2.sync()
+      const a1 = await run.load(a2.origin)
+
+      const B = run.deploy(class B { })
+
+      class C { }
+      C.set = new Set([a1, a2])
+      run.autounify = false
+      expect(() => B.upgrade(C)).to.throw('Inconsistent worldview')
+
+      run.autounify = true
+      B.upgrade(C)
+      await run.sync()
     })
 
     // ------------------------------------------------------------------------
