@@ -5,6 +5,7 @@
  */
 
 const { describe, it, afterEach } = require('mocha')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Transaction } = Run
@@ -69,6 +70,22 @@ describe('Transaction', () => {
 
   // --------------------------------------------------------------------------
 
+  it('allowed to read after export', async () => {
+    new Run() // eslint-disable-line
+    class A extends Jig { g () { return this.n } }
+    const tx = new Transaction()
+    const a = tx.update(() => new A())
+    a.g()
+    const promise = tx.export()
+    a.g()
+    await promise
+    a.g()
+    tx.publish()
+    await a.sync()
+  })
+
+  // --------------------------------------------------------------------------
+
   it('rollback', async () => {
     new Run() // eslint-disable-line
     class A extends Jig { f () { this.n = 1 } }
@@ -80,6 +97,18 @@ describe('Transaction', () => {
     tx.rollback()
     expect(typeof a.n).to.equal('undefined')
     expect(a.location).to.equal(a.origin)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('throws if use undeployed jig after rollback', async () => {
+    new Run() // eslint-disable-line
+    class A extends Jig { }
+    const tx = new Transaction()
+    const a = tx.update(() => new A())
+    tx.rollback()
+    await expect(a.sync()).to.be.rejectedWith('Cannot sync')
+    expect(() => a.location).to.throw('Cannot read location')
   })
 
   // --------------------------------------------------------------------------
