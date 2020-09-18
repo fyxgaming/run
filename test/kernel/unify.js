@@ -5,6 +5,7 @@
  */
 
 const { describe, it } = require('mocha')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
@@ -299,7 +300,87 @@ describe('Unify', () => {
   // --------------------------------------------------------------------------
 
   describe('autounify disabled', () => {
+    it('allows inconsistent sets', async () => {
+      const run = new Run()
 
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+
+      const A2 = await run.load(A.location)
+      A2.auth()
+      const b = new A2()
+      await b.sync()
+
+      expect(a.constructor.origin).to.equal(b.constructor.origin)
+      expect(a.constructor.location).not.to.equal(b.constructor.location)
+
+      class C extends Jig { set (a, b) { this.a = a; this.b = b } }
+      const c = new C()
+      run.autounify = false
+      c.set(a, b)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if call method with two inconsistent classes', async () => {
+      const run = new Run()
+
+      class A extends Jig {
+        init (n) { this.n = n }
+        getN () { return this.n }
+      }
+
+      const a = new A(1)
+      await a.sync()
+
+      const A2 = await run.load(A.location)
+      A2.auth()
+      const b = new A2(2)
+      await b.sync()
+
+      expect(a.constructor.origin).to.equal(b.constructor.origin)
+      expect(a.constructor.location).not.to.equal(b.constructor.location)
+
+      class C extends Jig { set (a, b) { this.an = a.getN(); this.bn = b.getN() } }
+      const c = new C()
+      run.autounify = false
+      expect(() => c.set(a, b)).to.throw('Inconsistent worldview')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if time travel during publish', async () => {
+      const run = new Run()
+
+      class A extends Jig {
+        init (n) { this.n = n }
+        getN () { return this.n }
+      }
+
+      const a = new A(1)
+      await a.sync()
+
+      const A2 = await run.load(A.location)
+      A2.auth()
+      const b = new A2(2)
+      await b.sync()
+
+      expect(a.constructor.origin).to.equal(b.constructor.origin)
+      expect(a.constructor.location).not.to.equal(b.constructor.location)
+
+      class C extends Jig { set (a, b) { this.an = a.getN(); this.bn = b.n } }
+      const c = new C()
+      run.autounify = false
+      c.set(a, b)
+      await expect(c.sync()).to.be.rejectedWith('Time travel for A')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if time travel during export', async () => {
+      // TODO
+    })
   })
 })
 
