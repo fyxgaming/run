@@ -170,7 +170,7 @@ describe('Inventory', () => {
 
     // ------------------------------------------------------------------------
 
-    it('non-jig utxo', async () => {
+    it('non-jig utxo does not throw', async () => {
       const run = new Run()
       const utxos = await run.blockchain.utxos(run.purse.address)
       const tx = await payFor(new Transaction().from(utxos).to(run.owner.address, 1000), run)
@@ -192,6 +192,30 @@ describe('Inventory', () => {
       const promise2 = run.inventory.sync()
       await expect(promise1).to.be.rejected
       await expect(promise2).to.be.rejected
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if timeout', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const run2 = new Run({ owner: run.owner })
+      run2.timeout = 0
+      await expect(run2.inventory.sync()).to.be.rejectedWith('inventory sync timeout')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if request error', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const run2 = new Run({ owner: run.owner })
+      stub(run2.blockchain, 'fetch').throws(new Run.errors.RequestError())
+      await expect(run2.inventory.sync()).to.be.rejectedWith(Run.errors.RequestError)
     })
   })
 
