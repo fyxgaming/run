@@ -141,7 +141,7 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
-    it('arg with inner property', async () => {
+    it('arg with inner upgraded code property', async () => {
       const run = new Run()
       function f () { return 1 }
       function g () { return 2 }
@@ -194,6 +194,37 @@ describe('Unify', () => {
 
       class C extends Jig { init (a, b) { this.n = a.f() + b.f() } }
       new C(a, b) // eslint-disable-line
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('jig class with upgraded arg', async () => {
+      const run = new Run()
+
+      const A = run.deploy(class A extends Jig { set (b) { this.b = b } })
+      const a = new A()
+      await A.sync()
+
+      const B = await run.load(A.location)
+      B.upgrade(class B extends Jig { set (b) { this.b = b } })
+      const b = new B()
+
+      expect(() => a.set(b)).to.throw('Cannot call set on [jig B]')
+
+      function test (a) {
+        expect(a.constructor).to.equal(a.b.constructor)
+      }
+
+      a.set(b)
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
     })
 
     // ------------------------------------------------------------------------
