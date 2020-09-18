@@ -379,7 +379,22 @@ describe('Unify', () => {
     // ------------------------------------------------------------------------
 
     it('throws if time travel during export', async () => {
-      // TODO
+      const run = new Run()
+
+      const A = run.deploy(class A extends Jig { })
+      await A.sync()
+      const A2 = await run.load(A.location)
+      A2.auth()
+
+      class B extends Jig { static set (A) { this.name = A.name } }
+      B.A = A2
+      const B2 = run.deploy(B)
+      await run.sync()
+
+      run.autounify = false
+      const transaction = new Run.Transaction()
+      transaction.update(() => B2.set(A))
+      await expect(transaction.export()).to.be.rejectedWith('Time travel for A')
     })
   })
 })
