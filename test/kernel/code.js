@@ -765,6 +765,61 @@ describe('Code', () => {
       expect(CA.location).to.equal(location)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // uninstall
+  // --------------------------------------------------------------------------
+
+  describe.only('uninstall', () => {
+    it('remove bindings and presets from local', async () => {
+      const run = new Run()
+      class A { }
+      const C = run.deploy(A)
+      await C.sync()
+      run.uninstall(A)
+      expect('presets' in A).to.equal(false)
+      expect('location' in A).to.equal(false)
+      expect('origin' in A).to.equal(false)
+      expect('nonce' in A).to.equal(false)
+      expect('owner' in A).to.equal(false)
+      expect('satoshis' in A).to.equal(false)
+      expect('location' in C).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can be deployed again', async () => {
+      const run = new Run()
+      class A { }
+      const C = run.deploy(A)
+      run.uninstall(C)
+      const D = run.deploy(A)
+      await run.sync()
+      expect(C.location).not.to.equal(D.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can use uninstalled code', async () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.n = 1 } }
+      const C = run.deploy(A)
+      run.uninstall(A)
+      C.auth()
+      C.f()
+      C.destroy()
+      new C() // eslint-disable-line
+      await run.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws for native code', () => {
+      const run = new Run()
+      expect(() => run.uninstall(Jig)).to.throw('Cannot uninstall native code')
+      expect(() => run.uninstall(Berry)).to.throw('Cannot uninstall native code')
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
