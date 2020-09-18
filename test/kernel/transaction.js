@@ -49,9 +49,24 @@ describe('Transaction', () => {
     class A extends Jig { f () { this.n = 1 } }
     const tx = new Transaction()
     const a = tx.update(() => new A())
-    expect(() => a.f()).to.throw('Cannot link [jig A]: transaction open')
+    expect(() => a.f()).to.throw('Cannot update [jig A]: open transaction')
     tx.publish()
     a.f()
+    await a.sync()
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('throws if auth outside before publish', async () => {
+    new Run() // eslint-disable-line
+    class A extends Jig { }
+    const tx = new Transaction()
+    const a = tx.update(() => new A())
+    expect(() => a.auth()).to.throw('Cannot auth [jig A]: open transaction')
+    await tx.export()
+    expect(() => a.auth()).to.throw('Cannot auth [jig A]: open transaction')
+    await tx.publish()
+    a.auth()
     await a.sync()
   })
 
