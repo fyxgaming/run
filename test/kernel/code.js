@@ -770,7 +770,7 @@ describe('Code', () => {
   // uninstall
   // --------------------------------------------------------------------------
 
-  describe.only('uninstall', () => {
+  describe('uninstall', () => {
     it('remove bindings and presets from local', async () => {
       const run = new Run()
       class A { }
