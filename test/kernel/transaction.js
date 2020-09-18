@@ -179,7 +179,7 @@ describe('Transaction', () => {
 
   it.skip('placeholder', () => {
     // TODO
-    // - Between begin and end, dont allow sync. nor load. nor import.
+    // - Between begin and end, dont allow sync. nor load. nor import. publish failure
   })
 })
 

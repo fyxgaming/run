@@ -481,6 +481,109 @@ describe('Unify', () => {
       c.set(a, b)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // inconsistent transaction
+  // --------------------------------------------------------------------------
+
+  describe('inconsistent transaction', () => {
+    it('throws if create inconsistent jig classes', async () => {
+      const run = new Run()
+
+      const A2 = run.deploy(class A extends Jig { })
+      A2.destroy()
+      await A2.sync()
+      const A1 = await run.load(A2.origin)
+
+      const transaction = new Run.Transaction()
+
+      expect(() => transaction.update(() => {
+        new A1() // eslint-disable-line
+        new A2() // eslint-disable-line
+      })).to.throw('Inconsistent worldview')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if create inconsistent base jig classes', async () => {
+      const run = new Run()
+
+      const A2 = run.deploy(class A extends Jig { })
+      A2.destroy()
+      await A2.sync()
+      const A1 = await run.load(A2.origin)
+
+      class B extends A1 { }
+      class C extends A2 { }
+
+      const transaction = new Run.Transaction()
+
+      expect(() => transaction.update(() => {
+        new B() // eslint-disable-line
+        new C() // eslint-disable-line
+      })).to.throw('Inconsistent worldview')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if deploy inconsistent props', async () => {
+      const run = new Run()
+
+      class A extends Jig { }
+      const a2 = new A()
+      a2.auth()
+      await a2.sync()
+      const a1 = await run.load(a2.origin)
+
+      class B { }
+      B.a = a1
+
+      class C { }
+      C.a = a2
+
+      const transaction = new Run.Transaction()
+
+      expect(() => transaction.update(() => {
+        run.deploy(B)
+        run.deploy(C)
+      })).to.throw('Inconsistent worldview')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if call methods with inconsistent args', async () => {
+      const run = new Run()
+
+      class A extends Jig { }
+      A.sealed = false
+      const A2 = run.deploy(A)
+      A2.destroy()
+      await A2.sync()
+      const A1 = await run.load(A2.origin)
+
+      class B extends A1 { }
+      class C extends Jig { }
+
+      const transaction = new Run.Transaction()
+
+      transaction.update(() => {
+        new B() // eslint-disable-line
+        new C(A2) // eslint-disable-line
+      })
+
+      await transaction.publish()
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // unify
+  // --------------------------------------------------------------------------
+
+  describe('unify', () => {
+    // unifies props
+    // unifies classes
+    // throws if unify inconsistent top-level jigs
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
