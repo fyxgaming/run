@@ -817,8 +817,12 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if rollback during export', () => {
-      // TODO
+    it('throws if rollback during export', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.export()
+      expect(() => tx.rollback()).to.throw('rollback disabled during export')
     })
 
     // ------------------------------------------------------------------------
