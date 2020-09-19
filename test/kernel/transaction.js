@@ -389,6 +389,22 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('multiple upgrades', async () => {
+      const run = new Run()
+      const A = run.deploy(class A { })
+      const tx = new Transaction()
+      tx.update(() => A.upgrade(class B { }))
+      tx.update(() => A.upgrade(class C { }))
+      tx.update(() => A.upgrade(class D { }))
+      await tx.publish()
+      expect(A.name).to.equal('D')
+      run.cache = new LocalCache()
+      const A2 = await run.load(A.location)
+      expect(A2.name).to.equal('D')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if update outside before publish', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { f () { this.n = 1 } }
@@ -403,7 +419,7 @@ describe('Transaction', () => {
     // ------------------------------------------------------------------------
 
     it('throws if auth outside before publish', async () => {
-    new Run() // eslint-disable-line
+      new Run() // eslint-disable-line
       class A extends Jig { }
       const tx = new Transaction()
       const a = tx.update(() => new A())
