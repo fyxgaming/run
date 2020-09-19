@@ -177,6 +177,20 @@ describe('Transaction', () => {
 
   // --------------------------------------------------------------------------
 
+  it('outputs and deletes', () => {
+    new Run() // eslint-disable-line
+    class A extends Jig { }
+    const a = new A()
+    const transaction = new Transaction()
+    transaction.update(() => a.auth())
+    const b = transaction.update(() => new A())
+    transaction.update(() => b.destroy())
+    console.log(transaction.outputs)
+    console.log(transaction.deletes)
+  })
+
+  // --------------------------------------------------------------------------
+
   it.skip('placeholder', () => {
     // TODO
     // - Between begin and end, dont allow sync. nor load. nor import. publish failure

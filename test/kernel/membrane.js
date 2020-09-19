@@ -2075,7 +2075,6 @@ describe('Membrane', () => {
           return o === this.o
         }
       }
-
       const options = { _recordable: true, _callable: true }
       const A2 = makeJig(A, options)
       testRecord(() => expect(A2.f()).to.equal(true))
@@ -2103,7 +2102,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('returns membraned object to external jig after internal create', () => {
+    it('returns membraned object to external jig after internal create and claim', () => {
       class A {
         static f () {
           const o = {}
@@ -2111,14 +2110,106 @@ describe('Membrane', () => {
           return o
         }
       }
-
       class B {
         static g (a) {
           const o = a.f()
           return o === a.o
         }
       }
+      const options = { _recordable: true, _callable: true }
+      const A2 = makeJig(A, options)
+      const B2 = makeJig(B, options)
+      testRecord(() => expect(B2.g(A2)).to.equal(true))
+    })
 
+    // ------------------------------------------------------------------------
+
+    it('returns naked object to external jig after internal create and no claim', () => {
+      class A {
+        static f () {
+          return {}
+        }
+      }
+      class B {
+        static g (a) {
+          const o = a.f()
+          o.n = 2
+        }
+      }
+      const options = { _recordable: true, _callable: true }
+      const A2 = makeJig(A, options)
+      const B2 = makeJig(B, options)
+      testRecord(() => B2.g(A2))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns naked circular object to external jig after internal create and no claim', () => {
+      class A {
+        static f () {
+          const o = {}
+          o.o = o
+          return o
+        }
+      }
+      class B {
+        static g (a) {
+          const o = a.f()
+          o.n = 2
+        }
+      }
+      const options = { _recordable: true, _callable: true }
+      const A2 = makeJig(A, options)
+      const B2 = makeJig(B, options)
+      testRecord(() => B2.g(A2))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns membrane object to external jig after internal create and claim inner', () => {
+      class A {
+        static f () {
+          const o = {}
+          const p = { o }
+          this.o = o
+          return p
+        }
+      }
+      class B {
+        static g (a) {
+          const p = a.f()
+          p.n = 2
+          return p.o === a.o
+        }
+      }
+      const options = { _recordable: true, _callable: true }
+      const A2 = makeJig(A, options)
+      const B2 = makeJig(B, options)
+      testRecord(() => expect(B2.g(A2)).to.equal(true))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns membrane object to external jig after internal create and claim in intrinsic', () => {
+      class A {
+        static f () {
+          const o = {}
+          const p = new Map()
+          const s = new Set()
+          p.set(1, o)
+          p.set(2, s)
+          this.o = o
+          this.s = s
+          return p
+        }
+      }
+      class B {
+        static g (a) {
+          const p = a.f()
+          p.n = 2
+          return p.get(1) === a.o && p.get(2) === a.s
+        }
+      }
       const options = { _recordable: true, _callable: true }
       const A2 = makeJig(A, options)
       const B2 = makeJig(B, options)
