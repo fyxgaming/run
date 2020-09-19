@@ -82,6 +82,27 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('create and call', async () => {
+
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('create and send', async () => {
+      const run = new Run()
+      class A extends Jig { send (to) { this.owner = to } }
+      const to = new PrivateKey().publicKey.toString()
+      const a = run.transaction(() => { const a = new A(); a.send(to); return a })
+      function test (a) { expect(a.owner).to.equal(to) }
+      await run.sync()
+      test(a)
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      test(a2)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('deploy and destroy', async () => {
       const run = new Run()
       class A { }
