@@ -691,7 +691,7 @@ describe('Transaction', () => {
   // --------------------------------------------------------------------------
 
   describe('export', () => {
-    it('export', async () => {
+    it('exports hex transaction', async () => {
       const run = new Run()
       class A extends Jig { }
       const tx = new Transaction()
@@ -703,8 +703,13 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('paid and signed', () => {
-      // TODO
+    it('paid and signed', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
+      await run.blockchain.broadcast(rawtx)
     })
 
     // ------------------------------------------------------------------------
