@@ -553,12 +553,6 @@ describe('Transaction', () => {
       expect(() => tx.update(null)).to.throw('Invalid callback')
       expect(() => tx.update({})).to.throw('Invalid callback')
     })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if no active run instance', () => {
-      // TODO
-    })
   })
 
   // --------------------------------------------------------------------------
@@ -631,26 +625,42 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if update after publish', () => {
-      // TODO
+    it('throws if update after publish', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await tx.publish()
+      expect(() => tx.update(() => run.deploy(class B { }))).to.throw('update disabled once published')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if update during publish', () => {
-      // TODO
+    it('throws if update during publish', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.publish()
+      expect(() => tx.update(() => run.deploy(class B { }))).to.throw('update disabled during publish')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if export during publish', () => {
-      // TODO
+    it('throws if export during publish', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.publish()
+      expect(() => tx.export()).to.throw('export disabled during publish')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if rollback during publish', () => {
-      // TODO
+    it('throws if rollback during publish', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.publish()
+      expect(() => tx.rollback()).to.throw('rollback disabled during publish')
     })
 
     // ------------------------------------------------------------------------
