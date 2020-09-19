@@ -266,15 +266,25 @@ describe('Transaction', () => {
   })
 
   // --------------------------------------------------------------------------
+  // publish
+  // --------------------------------------------------------------------------
 
-  it('manual publish', async () => {
-    new Run() // eslint-disable-line
-    class A extends Jig { }
-    const tx = new Transaction()
-    const a = tx.update(() => new A())
-    const b = tx.update(() => new A())
-    await tx.publish()
-    expect(a.location.slice(0, 64)).to.equal(b.location.slice(0, 64))
+  describe('publish', () => {
+    it('manual publish', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const tx = new Transaction()
+      const a = tx.update(() => new A())
+      const b = tx.update(() => new A())
+      await tx.publish()
+      expect(a.location.slice(0, 64)).to.equal(b.location.slice(0, 64))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('twice dedups', () => {
+    // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
