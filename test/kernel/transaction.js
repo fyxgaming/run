@@ -7,6 +7,7 @@
 const { PrivateKey } = require('bsv')
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
+const { stub } = require('sinon')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Transaction, LocalCache } = Run
@@ -665,8 +666,14 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('re-publish after fail', () => {
-      // TODO
+    it('re-publish after fail', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      const A = tx.update(() => run.deploy(class A { }))
+      stub(run.blockchain, 'broadcast').onFirstCall().throws()
+      await expect(tx.publish()).to.be.rejected
+      await tx.publish()
+      expect(A.location.endsWith('_o1')).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
