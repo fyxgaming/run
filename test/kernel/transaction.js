@@ -767,8 +767,20 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('update and re-export', () => {
-      // TODO
+    it('update and re-export', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      const C = run.deploy(A)
+      tx.update(() => C.auth())
+      const rawtx1 = await tx.export()
+      tx.update(() => C.destroy())
+      const rawtx2 = await tx.export()
+      tx.rollback()
+      expect(rawtx1).not.to.equal(rawtx2)
+      await run.blockchain.broadcast(rawtx2)
+      await C.sync()
+      expect(C.location.endsWith('_d0')).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
