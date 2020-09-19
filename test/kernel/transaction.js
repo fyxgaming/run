@@ -185,8 +185,6 @@ describe('Transaction', () => {
     transaction.update(() => a.auth())
     const b = transaction.update(() => new A())
     transaction.update(() => b.destroy())
-    console.log(transaction.outputs)
-    console.log(transaction.deletes)
   })
 
   // --------------------------------------------------------------------------
