@@ -125,6 +125,21 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('create and upgrade', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      class B extends Jig { }
+      const a = run.transaction(() => { const a = new A(); a.constructor.upgrade(B); return a })
+      function test (a) { expect(a.constructor.name).to.equal('B') }
+      test(a)
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      test(a2)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('call and call', async () => {
       const run = new Run()
       class A extends Jig { f () { this.n = 1 } }
@@ -172,12 +187,18 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('upgrade and call', () => {
+    it('upgrade and call', async () => {
       const run = new Run()
       class A extends Jig { static f () { return 1 }}
       class B extends Jig { static f () { return 2 }}
       const C = run.deploy(A)
       expect(run.transaction(() => { C.upgrade(B); return C.f() })).to.equal(2)
+      function test (C) { expect(C.name).to.equal('B') }
+      test(C)
+      await run.sync()
+      run.cache = new LocalCache()
+      const C2 = await run.load(C.location)
+      test(C2)
     })
 
     // ------------------------------------------------------------------------
