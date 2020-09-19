@@ -678,8 +678,11 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if empty', () => {
-      // TODO
+    it('throws if empty', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      tx.update(() => {})
+      expect(() => tx.publish()).to.throw('Nothing to publish')
     })
 
     // ------------------------------------------------------------------------
