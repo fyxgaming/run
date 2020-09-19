@@ -492,7 +492,7 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if modify return value values', async () => {
+    it('throws if modify claimed return values', async () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         f () {
@@ -509,6 +509,24 @@ describe('Call', () => {
       }
       const b = new B()
       expect(() => b.f(a)).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('allowed to modify claimed return values', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f () {
+          return { }
+        }
+      }
+      const a = new A()
+      expect(() => { a.f().n = 1 }).not.to.throw()
+      class B extends Jig {
+        f (a) { a.f().n = 1 }
+      }
+      const b = new B()
+      expect(() => b.f(a)).not.to.throw()
     })
   })
 
