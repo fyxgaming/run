@@ -868,8 +868,10 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if empty', () => {
-      // TODO
+    it('throws if empty', () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      expect(() => tx.export()).to.throw('Nothing to export')
     })
 
     // ------------------------------------------------------------------------
