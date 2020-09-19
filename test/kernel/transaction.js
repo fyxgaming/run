@@ -684,6 +684,30 @@ describe('Transaction', () => {
       tx.update(() => {})
       expect(() => tx.publish()).to.throw('Nothing to publish')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid pay option', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      expect(() => tx.publish({ pay: null })).to.throw('Invalid pay')
+      expect(() => tx.publish({ pay: 1 })).to.throw('Invalid pay')
+      expect(() => tx.publish({ pay: '' })).to.throw('Invalid pay')
+      expect(() => tx.publish({ pay: () => { } })).to.throw('Invalid pay')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid sign option', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      expect(() => tx.publish({ sign: null })).to.throw('Invalid sign')
+      expect(() => tx.publish({ sign: 1 })).to.throw('Invalid sign')
+      expect(() => tx.publish({ sign: '' })).to.throw('Invalid sign')
+      expect(() => tx.publish({ sign: () => { } })).to.throw('Invalid sign')
+    })
   })
 
   // --------------------------------------------------------------------------
