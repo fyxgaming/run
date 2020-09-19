@@ -282,8 +282,27 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('twice dedups', () => {
-    // TODO
+    it('dedups publish', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => new A())
+      const promise1 = tx.publish()
+      const promise2 = tx.publish()
+      expect(promise1).to.equal(promise2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('only publishes once', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const tx = new Transaction()
+      const a = tx.update(() => new A())
+      await tx.publish()
+      const alocation = a.location
+      await tx.publish()
+      expect(a.location).to.equal(alocation)
     })
   })
 
