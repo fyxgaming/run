@@ -827,8 +827,26 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid options', () => {
-      // TODO
+    it('throws if invalid pay option', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      expect(() => tx.export({ pay: null })).to.throw('Invalid pay')
+      expect(() => tx.export({ pay: 1 })).to.throw('Invalid pay')
+      expect(() => tx.export({ pay: '' })).to.throw('Invalid pay')
+      expect(() => tx.export({ pay: () => { } })).to.throw('Invalid pay')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid sign option', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      expect(() => tx.export({ sign: null })).to.throw('Invalid sign')
+      expect(() => tx.export({ sign: 1 })).to.throw('Invalid sign')
+      expect(() => tx.export({ sign: '' })).to.throw('Invalid sign')
+      expect(() => tx.export({ sign: () => { } })).to.throw('Invalid sign')
     })
 
     // ------------------------------------------------------------------------
