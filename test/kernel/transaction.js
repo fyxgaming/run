@@ -897,8 +897,17 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('published ', () => {
-      // TODO
+    it.only('published', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const txid = a.location.slice(0, 64)
+      const rawtx = await run.blockchain.fetch(txid)
+      const tx = await run.import(rawtx)
+      await tx.publish()
+      const rawtx2 = await tx.export()
+      expect(rawtx).to.equal(rawtx2)
     })
 
     // ------------------------------------------------------------------------
