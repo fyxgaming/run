@@ -851,8 +851,13 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('re-export after fail', () => {
-      // TODO
+    it('re-export after fail', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      stub(run.purse, 'pay').onFirstCall().throws()
+      await expect(tx.export()).to.be.rejected
+      await tx.export()
     })
 
     // ------------------------------------------------------------------------
