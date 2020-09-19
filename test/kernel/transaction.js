@@ -263,6 +263,20 @@ describe('Transaction', () => {
       const error = 'auth disabled: A has new owner'
       expect(() => run.transaction(() => { C.send(to); C.auth() })).to.throw(error)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if update different instances of same jig', async () => {
+      const run = new Run()
+      class A extends Jig { f () { this.n = 1 } }
+      const a1 = new A()
+      await a1.sync()
+      const a2 = await run.load(a1.location)
+      const error = 'Inconsistent worldview'
+      expect(() => run.transaction(() => { a1.f(); a2.f() })).to.throw(error)
+      expect(() => run.transaction(() => { a1.auth(); a2.auth() })).to.throw(error)
+      expect(() => run.transaction(() => { a1.destroy(); a2.destroy() })).to.throw(error)
+    })
   })
 
   // --------------------------------------------------------------------------
