@@ -420,6 +420,19 @@ describe('Transaction', () => {
       run.cache = new LocalCache()
       await run.load(B.location)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('sync unpublished ok', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      class A extends Jig { }
+      const a = tx.update(() => new A())
+      await run.sync()
+      expect(() => a.location).to.throw('Cannot read location')
+      await tx.publish()
+      expect(() => a.location).not.to.throw()
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -453,6 +466,23 @@ describe('Transaction', () => {
       run.cache = new LocalCache()
       const A2 = await run.load(A.location)
       expect(A2.name).to.equal('D')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('create and upgrade', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      const a = tx.update(() => new A())
+      class B extends Jig { }
+      tx.update(() => a.constructor.upgrade(B))
+      expect(a.constructor.name).to.equal('B')
+      await tx.publish()
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      expect(a2.constructor.name).to.equal('B')
     })
 
     // ------------------------------------------------------------------------
