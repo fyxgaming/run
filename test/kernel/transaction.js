@@ -111,6 +111,21 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('call and destroy', async () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.n = 1 } }
+      const C = run.deploy(A)
+      run.transaction(() => { C.f(); C.destroy() })
+      function test (C) { expect(C.location.endsWith('_d0')).to.equal(true) }
+      await run.sync()
+      test(C)
+      run.cache = new LocalCache()
+      const C2 = await run.load(C.location)
+      test(C2)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('deploy and call', async () => {
       const run = new Run()
       class A extends Jig { static f () { this.n = 1 } }
@@ -136,6 +151,26 @@ describe('Transaction', () => {
       class A extends Jig { }
       const error = 'auth unavailable on new jigs'
       expect(() => run.transaction(() => { const a = new A(); a.auth() })).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if destroy and auth jig', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      const error = 'Cannot auth destroyed jigs'
+      expect(() => run.transaction(() => { a.destroy(); a.auth() })).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if destroy and auth code', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const C = run.deploy(A)
+      const error = 'Cannot auth destroyed jigs'
+      expect(() => run.transaction(() => { C.destroy(); C.auth() })).to.throw(error)
     })
   })
 
