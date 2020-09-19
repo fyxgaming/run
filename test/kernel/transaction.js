@@ -277,6 +277,20 @@ describe('Transaction', () => {
       expect(() => run.transaction(() => { a1.auth(); a2.auth() })).to.throw(error)
       expect(() => run.transaction(() => { a1.destroy(); a2.destroy() })).to.throw(error)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if conflicting updates', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a1 = new A()
+      await a1.sync()
+      const a2 = await run.load(a1.location)
+      run.transaction(() => a1.auth())
+      run.transaction(() => a2.auth())
+      const error = '[jig A] was spent in another transaction'
+      await expect(run.sync()).to.be.rejectedWith(error)
+    })
   })
 
   // --------------------------------------------------------------------------
