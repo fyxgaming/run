@@ -68,41 +68,6 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('create and destroy', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const a = run.transaction(() => { const a = new A(); a.destroy(); return a })
-      await run.sync()
-      function test (a) { expect(a.location.endsWith('_d0')).to.equal(true) }
-      test(a)
-      run.cache = new LocalCache()
-      const a2 = await run.load(a.location)
-      test(a2)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('create and call', async () => {
-
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('create and send', async () => {
-      const run = new Run()
-      class A extends Jig { send (to) { this.owner = to } }
-      const to = new PrivateKey().publicKey.toString()
-      const a = run.transaction(() => { const a = new A(); a.send(to); return a })
-      function test (a) { expect(a.owner).to.equal(to) }
-      await run.sync()
-      test(a)
-      run.cache = new LocalCache()
-      const a2 = await run.load(a.location)
-      test(a2)
-    })
-
-    // ------------------------------------------------------------------------
-
     it('deploy and destroy', async () => {
       const run = new Run()
       class A { }
@@ -122,8 +87,40 @@ describe('Transaction', () => {
       class A extends Jig { f () { this.n = 1 } }
       const a = run.transaction(() => { const a = new A(); a.f(); return a })
       await run.sync()
+      function test (a) { expect(a.n).to.equal(1) }
+      test(a)
       run.cache = new LocalCache()
-      await run.load(a.location)
+      const a2 = await run.load(a.location)
+      test(a2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('create and destroy', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = run.transaction(() => { const a = new A(); a.destroy(); return a })
+      await run.sync()
+      function test (a) { expect(a.location.endsWith('_d0')).to.equal(true) }
+      test(a)
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      test(a2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('create and send', async () => {
+      const run = new Run()
+      class A extends Jig { send (to) { this.owner = to } }
+      const to = new PrivateKey().publicKey.toString()
+      const a = run.transaction(() => { const a = new A(); a.send(to); return a })
+      function test (a) { expect(a.owner).to.equal(to) }
+      await run.sync()
+      test(a)
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      test(a2)
     })
 
     // ------------------------------------------------------------------------
@@ -186,6 +183,18 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('destroy and destroy', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const C = run.deploy(A)
+      run.transaction(() => { C.destroy(); C.destroy() })
+      await run.sync()
+      run.cache = new LocalCache()
+      await run.load(C.location)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if deploy and auth', async () => {
       const run = new Run()
       class A { }
@@ -220,6 +229,39 @@ describe('Transaction', () => {
       const C = run.deploy(A)
       const error = 'Cannot auth destroyed jigs'
       expect(() => run.transaction(() => { C.destroy(); C.auth() })).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if send and call', async () => {
+      const run = new Run()
+      class A extends Jig { static send (to) { this.owner = to }; static f () { this.n = 1 } }
+      const to = new PrivateKey().toAddress().toString()
+      const C = run.deploy(A)
+      const error = 'update disabled: A has new owner'
+      expect(() => run.transaction(() => { C.send(to); C.f() })).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if send and destroy', async () => {
+      const run = new Run()
+      class A extends Jig { static send (to) { this.owner = to } }
+      const to = new PrivateKey().toAddress().toString()
+      const C = run.deploy(A)
+      const error = 'delete disabled: A has new owner'
+      expect(() => run.transaction(() => { C.send(to); C.destroy() })).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if send and auth', async () => {
+      const run = new Run()
+      class A extends Jig { static send (to) { this.owner = to } }
+      const to = new PrivateKey().toAddress().toString()
+      const C = run.deploy(A)
+      const error = 'auth disabled: A has new owner'
+      expect(() => run.transaction(() => { C.send(to); C.auth() })).to.throw(error)
     })
   })
 

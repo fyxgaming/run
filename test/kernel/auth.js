@@ -337,7 +337,7 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('destroy and auth in same method', async () => {
+    it('throws if destroy and auth in same method', async () => {
       // destroy is a request to happen after the method ends
       new Run() // eslint-disable-line
       class A extends Jig { f () { this.destroy(); this.auth() } }

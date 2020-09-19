@@ -48,7 +48,8 @@ describe('Bindings', () => {
       expect(_location('commit://abc_o1')).to.deep.equal({ commitid: 'commit://abc', vout: 1 })
       expect(_location('commit://abc_d2')).to.deep.equal({ commitid: 'commit://abc', vdel: 2 })
       // Record locations
-      expect(_location('record://abc_j1')).to.deep.equal({ recordid: 'record://abc', vjig: 1 })
+      expect(_location('record://abc_o1')).to.deep.equal({ recordid: 'record://abc', vout: 1 })
+      expect(_location('record://abc_d2')).to.deep.equal({ recordid: 'record://abc', vdel: 2 })
     })
 
     // ------------------------------------------------------------------------
