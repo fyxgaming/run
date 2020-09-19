@@ -8,7 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, Transaction } = Run
+const { Jig, Transaction, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Transaction
@@ -21,13 +21,122 @@ describe('Transaction', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   // --------------------------------------------------------------------------
+  // transaction
+  // --------------------------------------------------------------------------
 
-  it('basic', async () => {
-    const run = new Run()
-    class A extends Jig { }
-    const [a, b] = run.transaction(() => [new A(), new A()])
-    await run.sync()
-    expect(a.location.slice(0, 64)).to.equal(b.location.slice(0, 64))
+  describe('transaction', () => {
+    it('deploy and create', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const [a, b] = run.transaction(() => [new A(), new A()])
+      await run.sync()
+      function test (a, b) { expect(a.location.slice(0, 64)).to.equal(b.location.slice(0, 64)) }
+      test(a, b)
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      const b2 = await run.load(b.location)
+      test(a2, b2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('create and destroy', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = run.transaction(() => { const a = new A(); a.destroy(); return a })
+      await run.sync()
+      function test (a) { expect(a.location.endsWith('_d0')).to.equal(true) }
+      test(a)
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      test(a2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('deploy and destroy', async () => {
+      const run = new Run()
+      class A { }
+      const C = run.transaction(() => { const C = run.deploy(A); C.destroy(); return C })
+      await run.sync()
+      function test (C) { expect(C.location.endsWith('_d0')).to.equal(true) }
+      test(C)
+      run.cache = new LocalCache()
+      const C2 = await run.load(C.location)
+      test(C2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('create and call', async () => {
+      const run = new Run()
+      class A extends Jig { f () { this.n = 1 } }
+      const a = run.transaction(() => { const a = new A(); a.f(); return a })
+      await run.sync()
+      run.cache = new LocalCache()
+      await run.load(a.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('call and call', async () => {
+      const run = new Run()
+      class A extends Jig { f () { this.n = 1 } }
+      const a = new A()
+      const b = new A()
+      run.transaction(() => { a.f(); b.f() })
+      function test (a, b) { expect(a.n).to.equal(1); expect(b.n).to.equal(1) }
+      test(a, b)
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      const b2 = await run.load(b.location)
+      test(a2, b2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('call and auth', async () => {
+      const run = new Run()
+      class A extends Jig { f () { this.n = 1 } }
+      const a = new A()
+      run.transaction(() => { a.f(); a.auth() })
+      function test (a) { expect(a.nonce).to.equal(2) }
+      await run.sync()
+      test(a)
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      test(a2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('deploy and call', async () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.n = 1 } }
+      const C = run.transaction(() => { const C = run.deploy(A); C.f(); return C })
+      await run.sync()
+      run.cache = new LocalCache()
+      await run.load(C.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if deploy and auth', async () => {
+      const run = new Run()
+      class A { }
+      const error = 'auth unavailable on new jigs'
+      expect(() => run.transaction(() => { const C = run.deploy(A); C.auth() })).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if create and auth', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const error = 'auth unavailable on new jigs'
+      expect(() => run.transaction(() => { const a = new A(); a.auth() })).to.throw(error)
+    })
   })
 
   // --------------------------------------------------------------------------
