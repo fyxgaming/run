@@ -797,7 +797,7 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if publish during export', async () => {
+    it('throws if publish during export', () => {
       const run = new Run()
       const tx = new Transaction()
       tx.update(() => run.deploy(class A { }))
@@ -807,8 +807,12 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if update during export', () => {
-      // TODO
+    it('throws if update during export', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.export()
+      expect(() => tx.update(() => run.deploy(class B { }))).to.throw('update disabled during export')
     })
 
     // ------------------------------------------------------------------------
