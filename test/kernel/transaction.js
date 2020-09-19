@@ -897,7 +897,7 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('published', async () => {
+    it('published', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
