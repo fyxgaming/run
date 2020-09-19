@@ -519,6 +519,30 @@ describe('Transaction', () => {
       run.cache = new LocalCache()
       await run.load(B.location)
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if update after publish', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if update during publish', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if export during publish', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if rollback during publish', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -551,6 +575,42 @@ describe('Transaction', () => {
       transaction.update(() => new A(b))
       await transaction.export()
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('dedups exports', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('update and re-export', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('publish after export', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if update during export', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if publish during export', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if rollback during export', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -575,7 +635,7 @@ describe('Transaction', () => {
   // --------------------------------------------------------------------------
 
   describe('rollback', () => {
-    it('rollback', async () => {
+    it('rolls back jigs', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { f () { this.n = 1 } }
       const a = new A()
@@ -590,6 +650,36 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it.skip('rolls back deploys', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('rolls back updates', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('rolls back destroys', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('rolls back auths', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('rolls back upgrades', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if use undeployed jig after rollback', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
@@ -598,6 +688,42 @@ describe('Transaction', () => {
       tx.rollback()
       await expect(a.sync()).to.be.rejectedWith('Cannot sync')
       expect(() => a.location).to.throw('Cannot read location')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('rollback then re-update', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('rollback then re-upgrade', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('rollback then re-destroy', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('rollback twice ok', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('rollback after export ok', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('rollback after publish ok', () => {
+      // TODO
     })
   })
 
@@ -687,6 +813,12 @@ describe('Transaction', () => {
       a.g()
       tx.publish()
       await a.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('many open transactions ok', () => {
+      // TODO
     })
   })
 
