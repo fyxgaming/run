@@ -172,6 +172,16 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('upgrade and call', () => {
+      const run = new Run()
+      class A extends Jig { static f () { return 1 }}
+      class B extends Jig { static f () { return 2 }}
+      const C = run.deploy(A)
+      expect(run.transaction(() => { C.upgrade(B); return C.f() })).to.equal(2)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('deploy and call', async () => {
       const run = new Run()
       class A extends Jig { static f () { this.n = 1 } }
