@@ -420,19 +420,6 @@ describe('Transaction', () => {
       run.cache = new LocalCache()
       await run.load(B.location)
     })
-
-    // ------------------------------------------------------------------------
-
-    it('sync unpublished ok', async () => {
-      const run = new Run()
-      const tx = new Transaction()
-      class A extends Jig { }
-      const a = tx.update(() => new A())
-      await run.sync()
-      expect(() => a.location).to.throw('Cannot read location')
-      await tx.publish()
-      expect(() => a.location).not.to.throw()
-    })
   })
 
   // --------------------------------------------------------------------------
@@ -611,6 +598,45 @@ describe('Transaction', () => {
       tx.rollback()
       await expect(a.sync()).to.be.rejectedWith('Cannot sync')
       expect(() => a.location).to.throw('Cannot read location')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // sync
+  // --------------------------------------------------------------------------
+
+  describe('sync', () => {
+    it('sync unpublished ok', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      class A extends Jig { }
+      const a = tx.update(() => new A())
+      await run.sync()
+      expect(() => a.location).to.throw('Cannot read location')
+      await tx.publish()
+      expect(() => a.location).not.to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if sync transaction jig', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const tx = new Transaction()
+      const a = tx.update(() => new A())
+      const error = 'Cannot sync [jig A]: transaction in progress'
+      await expect(a.sync()).to.be.rejectedWith(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if sync transaction code', async () => {
+      const run = new Run()
+      class A { }
+      const tx = new Transaction()
+      const C = tx.update(() => run.deploy(A))
+      const error = 'Cannot sync A: transaction in progress'
+      await expect(C.sync()).to.be.rejectedWith(error)
     })
   })
 
