@@ -755,8 +755,14 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('dedups exports', () => {
-      // TODO
+    it('dedups exports', () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const promise1 = tx.export()
+      const promise2 = tx.export()
+      expect(promise1).to.equal(promise2)
     })
 
     // ------------------------------------------------------------------------
@@ -773,13 +779,13 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if update during export', () => {
+    it.skip('publish during export', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if publish during export', () => {
+    it.skip('throws if update during export', () => {
       // TODO
     })
 
