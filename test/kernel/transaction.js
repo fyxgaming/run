@@ -354,75 +354,6 @@ describe('Transaction', () => {
   })
 
   // --------------------------------------------------------------------------
-  // publish
-  // --------------------------------------------------------------------------
-
-  describe('publish', () => {
-    it('manual publish', async () => {
-      new Run() // eslint-disable-line
-      class A extends Jig { }
-      const tx = new Transaction()
-      const a = tx.update(() => new A())
-      const b = tx.update(() => new A())
-      await tx.publish()
-      expect(a.location.slice(0, 64)).to.equal(b.location.slice(0, 64))
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('dedups publish', () => {
-      new Run() // eslint-disable-line
-      class A extends Jig { }
-      const tx = new Transaction()
-      tx.update(() => new A())
-      const promise1 = tx.publish()
-      const promise2 = tx.publish()
-      expect(promise1).to.equal(promise2)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('only publishes once', async () => {
-      new Run() // eslint-disable-line
-      class A extends Jig { }
-      const tx = new Transaction()
-      const a = tx.update(() => new A())
-      await tx.publish()
-      const alocation = a.location
-      await tx.publish()
-      expect(a.location).to.equal(alocation)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('parallel transactions', async () => {
-      const run = new Run()
-      const tx1 = new Transaction()
-      const A = tx1.update(() => run.deploy(class A { }))
-      const tx2 = new Transaction()
-      const B = tx2.update(() => run.deploy(class B { }))
-      tx1.publish()
-      tx2.publish()
-      await run.sync()
-      run.cache = new LocalCache()
-      await run.load(A.location)
-      await run.load(B.location)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('waits for upstream commits', async () => {
-      const run = new Run()
-      class A { }
-      run.deploy(A)
-      const B = run.transaction(() => run.deploy(class B extends A {}))
-      await B.sync()
-      run.cache = new LocalCache()
-      await run.load(B.location)
-    })
-  })
-
-  // --------------------------------------------------------------------------
   // update
   // --------------------------------------------------------------------------
 
@@ -518,6 +449,75 @@ describe('Transaction', () => {
       const tx = new Run.Transaction()
       expect(() => tx.update(async () => {})).to.throw('async transactions not supported')
       expect(() => tx.update(() => Promise.resolve())).to.throw('async transactions not supported')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // publish
+  // --------------------------------------------------------------------------
+
+  describe('publish', () => {
+    it('manual publish', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const tx = new Transaction()
+      const a = tx.update(() => new A())
+      const b = tx.update(() => new A())
+      await tx.publish()
+      expect(a.location.slice(0, 64)).to.equal(b.location.slice(0, 64))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('dedups publish', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => new A())
+      const promise1 = tx.publish()
+      const promise2 = tx.publish()
+      expect(promise1).to.equal(promise2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('only publishes once', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const tx = new Transaction()
+      const a = tx.update(() => new A())
+      await tx.publish()
+      const alocation = a.location
+      await tx.publish()
+      expect(a.location).to.equal(alocation)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('parallel transactions', async () => {
+      const run = new Run()
+      const tx1 = new Transaction()
+      const A = tx1.update(() => run.deploy(class A { }))
+      const tx2 = new Transaction()
+      const B = tx2.update(() => run.deploy(class B { }))
+      tx1.publish()
+      tx2.publish()
+      await run.sync()
+      run.cache = new LocalCache()
+      await run.load(A.location)
+      await run.load(B.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('waits for upstream commits', async () => {
+      const run = new Run()
+      class A { }
+      run.deploy(A)
+      const B = run.transaction(() => run.deploy(class B extends A {}))
+      await B.sync()
+      run.cache = new LocalCache()
+      await run.load(B.location)
     })
   })
 
