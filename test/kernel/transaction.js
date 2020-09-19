@@ -4,6 +4,7 @@
  * Tests for lib/kernel/transaction.js
  */
 
+const { PrivateKey } = require('bsv')
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
@@ -36,6 +37,33 @@ describe('Transaction', () => {
       const a2 = await run.load(a.location)
       const b2 = await run.load(b.location)
       test(a2, b2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('deploy and deploy child', async () => {
+      const run = new Run()
+      class A { }
+      class B extends A { }
+      const C = run.transaction(() => { run.deploy(A); return run.deploy(B) })
+      await run.sync()
+      run.cache = new LocalCache()
+      await run.load(C.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('deploy and send', async () => {
+      const run = new Run()
+      class A extends Jig { static send (to) { this.owner = to } }
+      const to = new PrivateKey().publicKey.toString()
+      const C = run.transaction(() => { const C = run.deploy(A); C.send(to); return C })
+      function test (C) { expect(C.owner).to.equal(to) }
+      await run.sync()
+      test(C)
+      run.cache = new LocalCache()
+      const C2 = await run.load(C.location)
+      test(C2)
     })
 
     // ------------------------------------------------------------------------
