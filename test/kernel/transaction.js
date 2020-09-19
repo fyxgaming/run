@@ -351,6 +351,12 @@ describe('Transaction', () => {
       expect(() => run.transaction(async () => {})).to.throw('async transactions not supported')
       expect(() => run.transaction(() => Promise.resolve())).to.throw('async transactions not supported')
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid callback', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -450,6 +456,42 @@ describe('Transaction', () => {
       expect(() => tx.update(async () => {})).to.throw('async transactions not supported')
       expect(() => tx.update(() => Promise.resolve())).to.throw('async transactions not supported')
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if sync', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if load', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if activate', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if deactivate', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if import', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid callback', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -543,6 +585,12 @@ describe('Transaction', () => {
     it.skip('throws if rollback during publish', () => {
       // TODO
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('re-publish after fail', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -558,6 +606,24 @@ describe('Transaction', () => {
       const rawtx = await tx.export()
       expect(typeof rawtx).to.equal('string')
       expect(rawtx.length > 0).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('paid and signed', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('unpaid', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('unsigned', () => {
+      // TODO
     })
 
     // ------------------------------------------------------------------------
@@ -611,6 +677,18 @@ describe('Transaction', () => {
     it.skip('throws if rollback during export', () => {
       // TODO
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid options', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('re-export after fail', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -618,7 +696,7 @@ describe('Transaction', () => {
   // --------------------------------------------------------------------------
 
   describe('import', () => {
-    it('import', async () => {
+    it('unpublished', async () => {
       const run = new Run()
       class A extends Jig { }
       const tx = new Transaction()
@@ -627,6 +705,48 @@ describe('Transaction', () => {
       const tx2 = await run.import(rawtx)
       tx2.update(() => run.deploy(class B { }))
       await tx2.publish()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('published ', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('partially signed', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('unpaid', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('update after import', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if publish update of partially signed', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid transaction', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid payload', () => {
+      // TODO
     })
   })
 
@@ -820,13 +940,6 @@ describe('Transaction', () => {
     it.skip('many open transactions ok', () => {
       // TODO
     })
-  })
-
-  // --------------------------------------------------------------------------
-
-  it.skip('placeholder', () => {
-    // TODO
-    // - Between begin and end, dont allow sync. nor load. nor import. publish failure
   })
 })
 
