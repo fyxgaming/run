@@ -354,8 +354,11 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid callback', () => {
-      // TODO
+    it('throws if invalid callback', () => {
+      const run = new Run()
+      expect(() => run.transaction()).to.throw('Invalid callback')
+      expect(() => run.transaction(null)).to.throw('Invalid callback')
+      expect(() => run.transaction({})).to.throw('Invalid callback')
     })
   })
 
@@ -489,8 +492,12 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid callback', () => {
-      // TODO
+    it('throws if invalid callback', () => {
+      new Run() // eslint-disable-line
+      const tx = new Run.Transaction()
+      expect(() => tx.update()).to.throw('Invalid callback')
+      expect(() => tx.update(null)).to.throw('Invalid callback')
+      expect(() => tx.update({})).to.throw('Invalid callback')
     })
 
     // ------------------------------------------------------------------------
