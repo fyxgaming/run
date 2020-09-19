@@ -891,8 +891,8 @@ describe('Transaction', () => {
   // --------------------------------------------------------------------------
 
   describe('Getters', () => {
-    // TODO
-    it('outputs', () => {
+    it.skip('outputs', () => {
+      // TODO
       new Run() // eslint-disable-line
       class A extends Jig { }
       const a = new A()
@@ -900,6 +900,54 @@ describe('Transaction', () => {
       transaction.update(() => a.auth())
       const b = transaction.update(() => new A())
       transaction.update(() => b.destroy())
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('deletes', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('stores after states', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('correct after import', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('changes with updates', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('cannot be modified', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('clears after rollback', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('persists after publish', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('persists after export', () => {
+      // TODO
     })
   })
 
