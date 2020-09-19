@@ -785,14 +785,24 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('publish after export', () => {
-      // TODO
+    it('publish after export', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      const A = tx.update(() => run.deploy(class A { }))
+      await tx.export()
+      await tx.publish()
+      await A.sync()
+      expect(A.location.endsWith('_o1')).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('publish during export', () => {
-      // TODO
+    it('throws if publish during export', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.export()
+      expect(() => tx.publish()).to.throw('publish disabled during export')
     })
 
     // ------------------------------------------------------------------------
