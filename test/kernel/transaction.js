@@ -233,6 +233,27 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if destroy and upgrade', () => {
+      const run = new Run()
+      const A = run.deploy(class A { })
+      const error = 'Cannot upgrade destroyed jig'
+      expect(() => run.transaction(() => { A.destroy(); A.upgrade(class B { }) })).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if upgrade and create unupgraded', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      await A.sync()
+      const A2 = await run.load(A.location)
+      const error = 'Inconsistent worldview'
+      class B extends Jig { }
+      expect(() => run.transaction(() => { A.upgrade(B); return new A2() })).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if send and call', async () => {
       const run = new Run()
       class A extends Jig { static send (to) { this.owner = to }; static f () { this.n = 1 } }
