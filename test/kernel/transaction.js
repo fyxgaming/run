@@ -714,14 +714,27 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('unpaid', () => {
-      // TODO
+    it('unpaid', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export({ pay: false })
+      const error = 'tx has no inputs'
+      await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('unsigned', () => {
-      // TODO
+    it('unsigned', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      const tx = new Transaction()
+      tx.update(() => a.destroy())
+      const rawtx = await tx.export({ sign: false })
+      const error = 'mandatory-script-verify-flag-failed'
+      await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
