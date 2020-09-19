@@ -462,8 +462,21 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if sync', () => {
-      // TODO
+    it('throws if sync all', () => {
+      const run = new Run()
+      const tx = new Run.Transaction()
+      expect(() => tx.update(() => { run.sync() })).to.throw('sync all disabled during atomic transaction')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if sync', () => {
+      const run = new Run()
+      const tx = new Run.Transaction()
+      const A = run.deploy(class A extends Jig { })
+      const a = new A()
+      expect(() => tx.update(() => { A.sync() })).to.throw('sync disabled during atomic transaction')
+      expect(() => tx.update(() => { a.sync() })).to.throw('sync disabled during atomic transaction')
     })
 
     // ------------------------------------------------------------------------
