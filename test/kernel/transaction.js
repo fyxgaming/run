@@ -291,6 +291,14 @@ describe('Transaction', () => {
       const error = '[jig A] was spent in another transaction'
       await expect(run.sync()).to.be.rejectedWith(error)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if async', () => {
+      const run = new Run()
+      expect(() => run.transaction(async () => {})).to.throw('async transactions not supported')
+      expect(() => run.transaction(() => Promise.resolve())).to.throw('async transactions not supported')
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -332,151 +340,230 @@ describe('Transaction', () => {
       await tx.publish()
       expect(a.location).to.equal(alocation)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('parallel transactions', async () => {
+      const run = new Run()
+      const tx1 = new Transaction()
+      const A = tx1.update(() => run.deploy(class A { }))
+      const tx2 = new Transaction()
+      const B = tx2.update(() => run.deploy(class B { }))
+      tx1.publish()
+      tx2.publish()
+      await run.sync()
+      run.cache = new LocalCache()
+      await run.load(A.location)
+      await run.load(B.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('waits for upstream commits', async () => {
+      const run = new Run()
+      class A { }
+      run.deploy(A)
+      const B = run.transaction(() => run.deploy(class B extends A {}))
+      await B.sync()
+      run.cache = new LocalCache()
+      await run.load(B.location)
+    })
   })
 
   // --------------------------------------------------------------------------
+  // update
+  // --------------------------------------------------------------------------
 
-  it('throws if update outside before publish', async () => {
+  describe('update', () => {
+    it('multiple updates', async () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.n = 1 } }
+      const tx = new Transaction()
+      const C = tx.update(() => run.deploy(A))
+      tx.update(() => C.f())
+      tx.update(() => C.destroy())
+      await tx.publish()
+      run.cache = new LocalCache()
+      await run.load(C.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if update outside before publish', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { this.n = 1 } }
+      const tx = new Transaction()
+      const a = tx.update(() => new A())
+      expect(() => a.f()).to.throw('Cannot update [jig A]: open transaction')
+      tx.publish()
+      a.f()
+      await a.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if auth outside before publish', async () => {
     new Run() // eslint-disable-line
-    class A extends Jig { f () { this.n = 1 } }
-    const tx = new Transaction()
-    const a = tx.update(() => new A())
-    expect(() => a.f()).to.throw('Cannot update [jig A]: open transaction')
-    tx.publish()
-    a.f()
-    await a.sync()
+      class A extends Jig { }
+      const tx = new Transaction()
+      const a = tx.update(() => new A())
+      expect(() => a.auth()).to.throw('Cannot auth [jig A]: open transaction')
+      await tx.export()
+      expect(() => a.auth()).to.throw('Cannot auth [jig A]: open transaction')
+      await tx.publish()
+      a.auth()
+      await a.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if destroy jig open in another transaction', async () => {
+      const run = new Run()
+      const tx1 = new Transaction()
+      const A = tx1.update(() => run.deploy(class A { }))
+      const tx2 = new Transaction()
+      const error = 'Cannot delete A: open transaction'
+      expect(() => tx2.update(() => A.destroy())).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if async', () => {
+      new Run() // eslint-disable-line
+      const tx = new Run.Transaction()
+      expect(() => tx.update(async () => {})).to.throw('async transactions not supported')
+      expect(() => tx.update(() => Promise.resolve())).to.throw('async transactions not supported')
+    })
   })
 
   // --------------------------------------------------------------------------
-
-  it('throws if auth outside before publish', async () => {
-    new Run() // eslint-disable-line
-    class A extends Jig { }
-    const tx = new Transaction()
-    const a = tx.update(() => new A())
-    expect(() => a.auth()).to.throw('Cannot auth [jig A]: open transaction')
-    await tx.export()
-    expect(() => a.auth()).to.throw('Cannot auth [jig A]: open transaction')
-    await tx.publish()
-    a.auth()
-    await a.sync()
-  })
-
+  // export
   // --------------------------------------------------------------------------
 
-  it('allowed to read outside before publish', async () => {
-    new Run() // eslint-disable-line
-    class A extends Jig { g () { return this.n } }
-    const tx = new Transaction()
-    const a = tx.update(() => new A())
-    a.g()
-    tx.publish()
-    a.g()
-    await a.sync()
-  })
+  describe('export', () => {
+    it('export', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
+      expect(typeof rawtx).to.equal('string')
+      expect(rawtx.length > 0).to.equal(true)
+    })
 
-  // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
-  it('allowed to read after export', async () => {
-    new Run() // eslint-disable-line
-    class A extends Jig { g () { return this.n } }
-    const tx = new Transaction()
-    const a = tx.update(() => new A())
-    a.g()
-    const promise = tx.export()
-    a.g()
-    await promise
-    a.g()
-    tx.publish()
-    await a.sync()
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('rollback', async () => {
-    new Run() // eslint-disable-line
-    class A extends Jig { f () { this.n = 1 } }
-    const a = new A()
-    await a.sync()
-    const tx = new Transaction()
-    tx.update(() => a.f())
-    expect(a.n).to.equal(1)
-    tx.rollback()
-    expect(typeof a.n).to.equal('undefined')
-    expect(a.location).to.equal(a.origin)
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('throws if use undeployed jig after rollback', async () => {
-    new Run() // eslint-disable-line
-    class A extends Jig { }
-    const tx = new Transaction()
-    const a = tx.update(() => new A())
-    tx.rollback()
-    await expect(a.sync()).to.be.rejectedWith('Cannot sync')
-    expect(() => a.location).to.throw('Cannot read location')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('export', async () => {
-    const run = new Run()
-    class A extends Jig { }
-    const tx = new Transaction(() => run.deploy(A))
-    const rawtx = await tx.export()
-    expect(typeof rawtx).to.equal('string')
-    expect(rawtx.length > 0).to.equal(true)
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('export with upstream commits', async () => {
-    new Run() // eslint-disable-line
-    class B extends Jig { }
-    class A extends Jig {
-      init (b) {
-        this.b = b
+    it('waits for upstream commits', async () => {
+      new Run() // eslint-disable-line
+      class B extends Jig { }
+      class A extends Jig {
+        init (b) {
+          this.b = b
+        }
       }
-    }
-    const transaction = new Run.Transaction()
-    const b = new B()
-    transaction.update(() => new A(b))
-    await transaction.export()
+      const transaction = new Run.Transaction()
+      const b = new B()
+      transaction.update(() => new A(b))
+      await transaction.export()
+    })
   })
 
   // --------------------------------------------------------------------------
+  // import
+  // --------------------------------------------------------------------------
 
-  it('import', async () => {
-    const run = new Run()
-    class A extends Jig { }
-    const tx = new Transaction(() => run.deploy(A))
-    const rawtx = await tx.export()
-    const tx2 = await run.import(rawtx)
-    tx2.update(() => run.deploy(class B { }))
-    await tx2.publish()
+  describe('import', () => {
+    it('import', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
+      const tx2 = await run.import(rawtx)
+      tx2.update(() => run.deploy(class B { }))
+      await tx2.publish()
+    })
   })
 
   // --------------------------------------------------------------------------
+  // rollback
+  // --------------------------------------------------------------------------
 
-  it('upstream commits', async () => {
-    const run = new Run()
-    class A { }
-    run.deploy(A)
-    const B = run.transaction(() => run.deploy(class B extends A {}))
-    await B.sync()
+  describe('rollback', () => {
+    it('rollback', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { this.n = 1 } }
+      const a = new A()
+      await a.sync()
+      const tx = new Transaction()
+      tx.update(() => a.f())
+      expect(a.n).to.equal(1)
+      tx.rollback()
+      expect(typeof a.n).to.equal('undefined')
+      expect(a.location).to.equal(a.origin)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if use undeployed jig after rollback', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const tx = new Transaction()
+      const a = tx.update(() => new A())
+      tx.rollback()
+      await expect(a.sync()).to.be.rejectedWith('Cannot sync')
+      expect(() => a.location).to.throw('Cannot read location')
+    })
   })
 
   // --------------------------------------------------------------------------
+  // Getters
+  // --------------------------------------------------------------------------
 
-  it('outputs and deletes', () => {
-    new Run() // eslint-disable-line
-    class A extends Jig { }
-    const a = new A()
-    const transaction = new Transaction()
-    transaction.update(() => a.auth())
-    const b = transaction.update(() => new A())
-    transaction.update(() => b.destroy())
+  describe('Getters', () => {
+    // TODO
+    it('outputs', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      const transaction = new Transaction()
+      transaction.update(() => a.auth())
+      const b = transaction.update(() => new A())
+      transaction.update(() => b.destroy())
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Misc
+  // --------------------------------------------------------------------------
+
+  describe('Misc', () => {
+    it('allowed to read outside before publish', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { g () { return this.n } }
+      const tx = new Transaction()
+      const a = tx.update(() => new A())
+      a.g()
+      tx.publish()
+      a.g()
+      await a.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('allowed to read after export', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { g () { return this.n } }
+      const tx = new Transaction()
+      const a = tx.update(() => new A())
+      a.g()
+      const promise = tx.export()
+      a.g()
+      await promise
+      a.g()
+      tx.publish()
+      await a.sync()
+    })
   })
 
   // --------------------------------------------------------------------------
