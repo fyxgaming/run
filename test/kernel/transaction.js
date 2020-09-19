@@ -862,8 +862,12 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('sync during export ok', () => {
-      // TODO
+    it('sync during export ok', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.export()
+      await run.sync()
     })
 
     // ------------------------------------------------------------------------
@@ -872,18 +876,6 @@ describe('Transaction', () => {
       new Run() // eslint-disable-line
       const tx = new Transaction()
       expect(() => tx.export()).to.throw('Nothing to export')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('uses active run instance', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if no active run instance', () => {
-      // TODO
     })
   })
 
@@ -954,12 +946,6 @@ describe('Transaction', () => {
     // ------------------------------------------------------------------------
 
     it.skip('throws if invalid payload', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if no active run instance', () => {
       // TODO
     })
   })
@@ -1057,12 +1043,6 @@ describe('Transaction', () => {
     // ------------------------------------------------------------------------
 
     it.skip('rollback after publish ok', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if no active run instance', () => {
       // TODO
     })
   })
