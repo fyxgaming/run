@@ -4,7 +4,8 @@
  * Tests for lib/kernel/transaction.js
  */
 
-const { PrivateKey } = require('bsv')
+const bsv = require('bsv')
+const { PrivateKey } = bsv
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { stub, fake } = require('sinon')
@@ -1096,14 +1097,51 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid transaction', () => {
-      // TODO
+    it('throws if non-run transaction', async () => {
+      const run = new Run()
+      const Buffer = bsv.deps.Buffer
+      const slp = Buffer.from('slp', 'utf8')
+      const dat = Buffer.from('', 'utf8')
+      const slpscript = bsv.Script.buildSafeDataOut([slp, dat, dat, dat, dat])
+      const slpoutput = new bsv.Transaction.Output({ script: slpscript, satoshis: 0 })
+      const tx = new bsv.Transaction().addOutput(slpoutput).to(run.purse.address, 1000)
+      const rawtx = tx.toString('hex')
+      const error = 'Not a run transaction: invalid op_return protocol'
+      await expect(run.import(rawtx)).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid payload', () => {
-      // TODO
+    it('throws if unsupported version payload', async () => {
+      const run = new Run()
+      const Buffer = bsv.deps.Buffer
+      const slp = Buffer.from('run', 'utf8')
+      const ver = Buffer.from([0x03])
+      const app = Buffer.from('', 'utf8')
+      const json = Buffer.from('{}', 'utf8')
+      const runscript = bsv.Script.buildSafeDataOut([slp, ver, app, json])
+      const runoutput = new bsv.Transaction.Output({ script: runscript, satoshis: 0 })
+      const tx = new bsv.Transaction().addOutput(runoutput).to(run.purse.address, 1000)
+      const rawtx = tx.toString('hex')
+      const error = 'Not a run transaction: unsupported run version'
+      await expect(run.import(rawtx)).to.be.rejectedWith(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid payload', async () => {
+      const run = new Run()
+      const Buffer = bsv.deps.Buffer
+      const slp = Buffer.from('run', 'utf8')
+      const ver = Buffer.from([0x04])
+      const app = Buffer.from('', 'utf8')
+      const json = Buffer.from('{}', 'utf8')
+      const runscript = bsv.Script.buildSafeDataOut([slp, ver, app, json])
+      const runoutput = new bsv.Transaction.Output({ script: runscript, satoshis: 0 })
+      const tx = new bsv.Transaction().addOutput(runoutput).to(run.purse.address, 1000)
+      const rawtx = tx.toString('hex')
+      const error = 'Not a run transaction: invalid run payload'
+      await expect(run.import(rawtx)).to.be.rejectedWith(error)
     })
   })
 
