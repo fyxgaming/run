@@ -12,6 +12,7 @@ const { stub, fake } = require('sinon')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Transaction, LocalCache } = Run
+const { STRESS } = require('../env/config')
 
 // ------------------------------------------------------------------------------------------------
 // Transaction
@@ -1550,9 +1551,17 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('many open transactions ok', () => {
-      // TODO
-    })
+    if (STRESS) {
+      it('many open transactions', async () => {
+        const run = new Run()
+        for (let i = 0; i < 1000; i++) {
+          class A extends Jig { }
+          const tx = new Transaction()
+          tx.update(() => new A())
+        }
+        await run.sync()
+      })
+    }
   })
 })
 
