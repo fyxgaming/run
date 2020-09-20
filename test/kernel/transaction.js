@@ -687,6 +687,28 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if pay disabled on new transaction', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      const error = 'tx has no inputs'
+      await expect(tx.publish({ pay: false })).to.be.rejectedWith(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if sign disabled on new transaction', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      class A extends Jig { }
+      const a = new A()
+      tx.update(() => a.auth())
+      const error = 'mandatory-script-verify-flag-failed'
+      await expect(tx.publish({ sign: false })).to.be.rejectedWith(error)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if invalid pay option', () => {
       const run = new Run()
       const tx = new Transaction()
@@ -932,6 +954,18 @@ describe('Transaction', () => {
       await tx.publish()
       const rawtx2 = await tx.export()
       expect(rawtx).to.equal(rawtx2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('import and publish emits jig events', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('import and publish adds to cache', () => {
+      // TODO
     })
 
     // ------------------------------------------------------------------------
