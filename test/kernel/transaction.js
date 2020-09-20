@@ -1024,8 +1024,17 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('same transaction twice ok', () => {
-      // TODO
+    it('same transaction twice ok', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const txid = a.location.slice(0, 64)
+      const rawtx = await run.blockchain.fetch(txid)
+      run.cache = new LocalCache()
+      const tx1 = await run.import(rawtx)
+      const tx2 = await run.import(rawtx)
+      expect(tx1).not.to.equal(tx2)
     })
 
     // ------------------------------------------------------------------------
