@@ -1392,16 +1392,19 @@ describe('Transaction', () => {
   // Getters
   // --------------------------------------------------------------------------
 
-  describe('Getters', () => {
-    it.skip('outputs', () => {
-      // TODO
+  describe.only('Getters', () => {
+    it('outputs', () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
       const a = new A()
-      const transaction = new Transaction()
-      transaction.update(() => a.auth())
-      const b = transaction.update(() => new A())
-      transaction.update(() => b.destroy())
+      const tx = new Transaction()
+      tx.update(() => a.auth())
+      const b = tx.update(() => new A())
+      expect(tx.outputs.length).to.equal(2)
+      expect(tx.outputs[0]).to.equal(a)
+      expect(tx.outputs[1]).to.equal(b)
+      tx.update(() => b.destroy())
+      expect(tx.outputs).to.deep.equal([a])
     })
 
     // ------------------------------------------------------------------------
