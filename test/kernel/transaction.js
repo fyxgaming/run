@@ -703,7 +703,7 @@ describe('Transaction', () => {
       class A extends Jig { }
       const a = new A()
       tx.update(() => a.auth())
-      const error = 'mandatory-script-verify-flag-failed'
+      const error = 'Missing signature for [jig A]'
       await expect(tx.publish({ sign: false })).to.be.rejectedWith(error)
     })
 
@@ -1081,20 +1081,17 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('publish after import', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('update after import', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if publish update of partially signed', () => {
-      // TODO
+    it('throws if publish unsigned', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await run.sync()
+      const tx = new Transaction()
+      tx.update(() => a.auth())
+      const rawtx = await tx.export({ sign: false })
+      const tx2 = await run.import(rawtx)
+      const error = 'Missing signature for [jig A]'
+      await expect(tx2.publish({ sign: false })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
