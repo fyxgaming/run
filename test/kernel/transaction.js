@@ -1149,7 +1149,7 @@ describe('Transaction', () => {
   // rollback
   // --------------------------------------------------------------------------
 
-  describe.only('rollback', () => {
+  describe('rollback', () => {
     it('rolls back creates', async () => {
       const run = new Run()
       const tx = new Transaction()
