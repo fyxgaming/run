@@ -229,7 +229,7 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws when jig calling method with upgraded class arg without method', async () => {
+    it('throws when jig calling method with upgraded class arg and removed method', async () => {
       const run = new Run()
 
       const A = run.deploy(class A extends Jig { set (b) { this.b = b } })
@@ -246,6 +246,65 @@ describe('Unify', () => {
       }
 
       await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws when code calling method with upgraded parent and removed method', async () => {
+      const run = new Run()
+
+      class P extends Jig { static set (b) { this.b = b } }
+      class P2 extends Jig { }
+      class A extends P { static set (b) { super.set(b) } }
+
+      const CP = run.deploy(P)
+      const CA = run.deploy(A)
+      await run.sync()
+      const CA2 = await run.load(CA.location)
+
+      CP.upgrade(P2)
+      await run.sync()
+
+      CA2.set(1) // No error
+      await run.sync()
+
+      function test (CA) { expect(() => CA.set(CP)).to.throw() }
+      test(CA2)
+
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+
+      run.cache = new LocalCache()
+      const CA4 = await run.load(CA.location)
+      test(CA4)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws when jig instance calling method with upgraded parent class and removed method', async () => {
+      const run = new Run()
+
+      class P extends Jig { set (b) { this.b = b } }
+      class P2 extends Jig { }
+      class A extends P { set (b) { super.set(b) } }
+
+      const a = new A()
+      a.set(1) // No error
+
+      await run.sync()
+
+      const CP = await run.load(P.location)
+      CP.upgrade(P2)
+
+      function test (a) { expect(() => a.set({ CP })).to.throw() }
       test(a)
 
       const a2 = await run.load(a.location)
