@@ -1276,8 +1276,19 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('rollback then re-upgrade', () => {
-      // TODO
+    it('rollback then re-upgrade', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      class B extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => A.upgrade(B))
+      tx.rollback()
+      tx.update(() => A.upgrade(B))
+      await tx.publish()
+      expect(A.name).to.equal('B')
+      run.cache = new LocalCache()
+      await run.load(A.location)
+      expect(A.name).to.equal('B')
     })
 
     // ------------------------------------------------------------------------
