@@ -1442,8 +1442,16 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('clears after rollback', () => {
-      // TODO
+    it('empty after rollback', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      const tx = new Transaction()
+      tx.update(() => a.destroy())
+      tx.update(() => new A())
+      tx.rollback()
+      expect(tx.outputs.length).to.equal(0)
+      expect(tx.deletes.length).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
