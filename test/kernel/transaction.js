@@ -1392,7 +1392,7 @@ describe('Transaction', () => {
   // Getters
   // --------------------------------------------------------------------------
 
-  describe.only('Getters', () => {
+  describe('Getters', () => {
     it('outputs', () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
@@ -1446,8 +1446,16 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('correct after import', () => {
-      // TODO
+    it('correct after import', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      const a = tx.update(() => new A())
+      tx.update(() => a.destroy())
+      const rawtx = await tx.export()
+      const tx2 = await run.import(rawtx)
+      expect(tx2.outputs.length).to.equal(1)
+      expect(tx2.deletes.length).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
