@@ -528,6 +528,15 @@ describe('Call', () => {
       const b = new B()
       expect(() => b.f(a)).not.to.throw()
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if call class method on instance', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { static set () { this.n = 1 } }
+      const a = new A()
+      expect(() => a.constructor.set.apply(a)).to.throw('Cannot call set on [jig A]')
+    })
   })
 
   // --------------------------------------------------------------------------
