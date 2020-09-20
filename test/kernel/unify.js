@@ -199,7 +199,7 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
-    it('jig class with upgraded arg', async () => {
+    it('jig calling method with updated class arg with newer method', async () => {
       const run = new Run()
 
       const A = run.deploy(class A extends Jig { set (b) { this.b = b } })
@@ -207,16 +207,44 @@ describe('Unify', () => {
       await A.sync()
 
       const B = await run.load(A.location)
-      B.upgrade(class B extends Jig { set (b) { this.b = b } })
+      B.upgrade(class B extends Jig { set (b) { this.b = b; this.bset = true } })
       const b = new B()
-
-      expect(() => a.set(b)).to.throw('Cannot call set on [jig B]')
 
       function test (a) {
         expect(a.constructor).to.equal(a.b.constructor)
+        expect(a.bset).to.equal(true)
       }
 
       a.set(b)
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws when jig calling method with upgraded class arg without method', async () => {
+      const run = new Run()
+
+      const A = run.deploy(class A extends Jig { set (b) { this.b = b } })
+      const a = new A()
+      await A.sync()
+
+      const B = await run.load(A.location)
+      B.upgrade(class B extends Jig { set2 (b) { this.b = b } })
+      const b = new B()
+
+      function test (a) {
+        expect(() => a.set(b)).to.throw('Cannot call set on [jig B]')
+        expect(a.constructor).to.equal(b.constructor)
+      }
+
       await a.sync()
       test(a)
 
