@@ -1270,6 +1270,8 @@ describe('Transaction', () => {
       tx.update(() => A.f())
       await tx.publish()
       expect(A.n).to.equal(1)
+      await run.load(A.location)
+      expect(A.n).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
