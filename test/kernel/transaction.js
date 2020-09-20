@@ -1293,8 +1293,19 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('rollback then re-destroy', () => {
-      // TODO
+    it('rollback then re-destroy', async () => {
+      const run = new Run()
+      class A extends Jig { destroy () { super.destroy(); this.destroyed = true }}
+      const a = new A()
+      const tx = new Transaction()
+      tx.update(() => a.destroy())
+      expect(a.destroyed).to.equal(true)
+      tx.rollback()
+      expect(!!a.destroyed).to.equal(false)
+      tx.update(() => a.destroy())
+      await tx.publish()
+      const a2 = await run.load(a.location)
+      expect(a2.destroyed).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
