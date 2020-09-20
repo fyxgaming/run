@@ -1259,8 +1259,17 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('rollback then re-update', () => {
-      // TODO
+    it('rollback then re-update', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { static f () { this.n = 1 } })
+      const tx = new Transaction()
+      tx.update(() => A.f())
+      expect(A.n).to.equal(1)
+      tx.rollback()
+      expect(typeof A.n).to.equal('undefined')
+      tx.update(() => A.f())
+      await tx.publish()
+      expect(A.n).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
