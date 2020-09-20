@@ -1310,7 +1310,7 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('rollback twice ok', async () => {
+    it('rollback twice', async () => {
       const run = new Run()
       class A extends Jig { }
       const tx = new Transaction()
@@ -1324,14 +1324,28 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('rollback after export ok', () => {
-      // TODO
+    it('rollback after export', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => new A())
+      const rawtx = await tx.export()
+      tx.rollback()
+      const tx2 = await run.import(rawtx)
+      await tx2.publish()
+      expect(tx2.outputs.length).to.equal(2)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('rollback after publish ok', () => {
-      // TODO
+    it('throws if rollback after publish', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => new A())
+      await tx.publish()
+      const error = 'rollback disabled once published'
+      expect(() => tx.rollback()).to.throw(error)
     })
   })
 
