@@ -229,6 +229,32 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
+    it('code calling method with upgraded parent class in args', async () => {
+      const run = new Run()
+      class A extends Jig { f () { this.n = 1 } }
+      class A2 extends Jig { f () { this.n = 2 } }
+      const CA = run.deploy(A)
+      class B extends CA { }
+      run.deploy(B)
+      await run.sync()
+      const CA2 = await run.load(CA.location)
+      const b = new B()
+      CA2.upgrade(A2)
+      await run.sync()
+      expect(Object.getPrototypeOf(b.constructor).name).to.equal('A')
+      b.f(CA2)
+      expect(Object.getPrototypeOf(b.constructor).name).to.equal('A2')
+      expect(b.n).to.equal(2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('jig calling method with upgraded dep in args', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws when jig calling method with upgraded class arg and removed method', async () => {
       const run = new Run()
 
@@ -566,6 +592,18 @@ describe('Unify', () => {
       const c = new C()
       run.autounify = false
       c.set(a, b)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if method time travel', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if parent method time travel', () => {
+      // TODO
     })
   })
 
