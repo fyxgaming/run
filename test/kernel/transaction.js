@@ -7,7 +7,7 @@
 const { PrivateKey } = require('bsv')
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
-const { stub } = require('sinon')
+const { stub, fake } = require('sinon')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Transaction, LocalCache } = Run
@@ -958,14 +958,68 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('import and publish emits jig events', () => {
-      // TODO
+    it('import and publish emits jig events', async () => {
+      const callback = fake()
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const txid = a.location.slice(0, 64)
+      const rawtx = await run.blockchain.fetch(txid)
+      const tx = await run.import(rawtx)
+      run.on('publish', callback)
+      await tx.publish()
+      expect(callback.called).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('import and publish adds to cache', () => {
-      // TODO
+    it('import, update, and publish emits jig events', async () => {
+      const callback = fake()
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const txid = a.location.slice(0, 64)
+      const rawtx = await run.blockchain.fetch(txid)
+      const tx = await run.import(rawtx)
+      tx.update(() => run.deploy(class B { }))
+      run.on('publish', callback)
+      await tx.publish()
+      expect(callback.called).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('import and publish adds to cache', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const txid = a.location.slice(0, 64)
+      const rawtx = await run.blockchain.fetch(txid)
+      run.cache = new LocalCache()
+      const tx = await run.import(rawtx)
+      await tx.publish()
+      expect(!!(await run.cache.get('jig://' + a.location))).to.equal(true)
+      expect(!!(await run.cache.get('jig://' + A.location))).to.equal(true)
+    })
+    // ------------------------------------------------------------------------
+
+    it('import, update, and publish adds to cache', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const txid = a.location.slice(0, 64)
+      const rawtx = await run.blockchain.fetch(txid)
+      run.cache = new LocalCache()
+      const tx = await run.import(rawtx)
+      const B = tx.update(() => run.deploy(class B { }))
+      await tx.publish()
+      expect(!!(await run.cache.get('jig://' + a.location))).to.equal(true)
+      expect(!!(await run.cache.get('jig://' + A.location))).to.equal(true)
+      expect(!!(await run.cache.get('jig://' + B.location))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
