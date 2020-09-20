@@ -962,13 +962,12 @@ describe('Transaction', () => {
       const callback = fake()
       const run = new Run()
       class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      const txid = a.location.slice(0, 64)
-      const rawtx = await run.blockchain.fetch(txid)
-      const tx = await run.import(rawtx)
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
+      const tx2 = await run.import(rawtx)
       run.on('publish', callback)
-      await tx.publish()
+      await tx2.publish()
       expect(callback.called).to.equal(true)
     })
 
@@ -978,14 +977,13 @@ describe('Transaction', () => {
       const callback = fake()
       const run = new Run()
       class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      const txid = a.location.slice(0, 64)
-      const rawtx = await run.blockchain.fetch(txid)
-      const tx = await run.import(rawtx)
-      tx.update(() => run.deploy(class B { }))
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
+      const tx2 = await run.import(rawtx)
+      tx2.update(() => run.deploy(class B { }))
       run.on('publish', callback)
-      await tx.publish()
+      await tx2.publish()
       expect(callback.called).to.equal(true)
     })
 
@@ -994,32 +992,30 @@ describe('Transaction', () => {
     it('import and publish adds to cache', async () => {
       const run = new Run()
       class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      const txid = a.location.slice(0, 64)
-      const rawtx = await run.blockchain.fetch(txid)
+      const tx = new Transaction()
+      tx.update(() => new A())
+      const rawtx = await tx.export()
       run.cache = new LocalCache()
-      const tx = await run.import(rawtx)
-      await tx.publish()
-      expect(!!(await run.cache.get('jig://' + a.location))).to.equal(true)
-      expect(!!(await run.cache.get('jig://' + A.location))).to.equal(true)
+      const tx2 = await run.import(rawtx)
+      await tx2.publish()
+      expect(!!(await run.cache.get('jig://' + tx2.outputs[0].location))).to.equal(true)
+      expect(!!(await run.cache.get('jig://' + tx2.outputs[1].location))).to.equal(true)
     })
     // ------------------------------------------------------------------------
 
     it('import, update, and publish adds to cache', async () => {
       const run = new Run()
       class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      const txid = a.location.slice(0, 64)
-      const rawtx = await run.blockchain.fetch(txid)
+      const tx = new Transaction()
+      tx.update(() => new A())
+      const rawtx = await tx.export()
       run.cache = new LocalCache()
-      const tx = await run.import(rawtx)
-      const B = tx.update(() => run.deploy(class B { }))
-      await tx.publish()
-      expect(!!(await run.cache.get('jig://' + a.location))).to.equal(true)
-      expect(!!(await run.cache.get('jig://' + A.location))).to.equal(true)
-      expect(!!(await run.cache.get('jig://' + B.location))).to.equal(true)
+      const tx2 = await run.import(rawtx)
+      tx2.update(() => run.deploy(class B { }))
+      await tx2.publish()
+      expect(!!(await run.cache.get('jig://' + tx2.outputs[0].location))).to.equal(true)
+      expect(!!(await run.cache.get('jig://' + tx2.outputs[1].location))).to.equal(true)
+      expect(!!(await run.cache.get('jig://' + tx2.outputs[2].location))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -1027,11 +1023,9 @@ describe('Transaction', () => {
     it('same transaction twice ok', async () => {
       const run = new Run()
       class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      const txid = a.location.slice(0, 64)
-      const rawtx = await run.blockchain.fetch(txid)
-      run.cache = new LocalCache()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
       const tx1 = await run.import(rawtx)
       const tx2 = await run.import(rawtx)
       expect(tx1).not.to.equal(tx2)
@@ -1039,13 +1033,31 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('partially signed', () => {
-      // TODO
+    it('partially signed', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export({ signed: false })
+      const tx2 = await run.import(rawtx)
+      await tx2.publish({ pay: false })
     })
 
     // ------------------------------------------------------------------------
 
     it.skip('unpaid', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('paid twice', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('signed twice', () => {
       // TODO
     })
 
