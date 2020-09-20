@@ -1456,14 +1456,30 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('persists after publish', () => {
-      // TODO
+    it('persists after publish', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      const tx = new Transaction()
+      tx.update(() => a.destroy())
+      tx.update(() => new A())
+      await tx.publish()
+      expect(tx.outputs.length).to.equal(1)
+      expect(tx.deletes.length).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('persists after export', () => {
-      // TODO
+    it('persists after export', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      const tx = new Transaction()
+      tx.update(() => a.destroy())
+      tx.update(() => new A())
+      await tx.export()
+      expect(tx.outputs.length).to.equal(1)
+      expect(tx.deletes.length).to.equal(1)
     })
   })
 
