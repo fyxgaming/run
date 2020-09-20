@@ -1149,8 +1149,36 @@ describe('Transaction', () => {
   // rollback
   // --------------------------------------------------------------------------
 
-  describe('rollback', () => {
-    it('rolls back jigs', async () => {
+  describe.only('rollback', () => {
+    it('rolls back creates', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      class A extends Jig { }
+      const a = tx.update(() => new A())
+      tx.rollback()
+      await run.sync()
+      expect(() => a.location).to.throw('Cannot read location')
+      expect(() => a.origin).to.throw('Cannot read origin')
+      expect(() => a.nonce).to.throw('Cannot read nonce')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('rolls back deploys', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      const A = tx.update(() => run.deploy(class A { }))
+      tx.rollback()
+      await run.sync()
+      expect(() => A.location).to.throw('Cannot read location')
+      expect(() => A.origin).to.throw('Cannot read origin')
+      expect(() => A.nonce).to.throw('Cannot read nonce')
+      await A.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('rolls back updates', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { f () { this.n = 1 } }
       const a = new A()
@@ -1165,32 +1193,56 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('rolls back deploys', () => {
-      // TODO
+    it('rolls back destroys', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await run.sync()
+      const tx = new Transaction()
+      tx.update(() => a.destroy())
+      tx.rollback()
+      expect(a.location).to.equal(a.origin)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('rolls back updates', () => {
-      // TODO
+    it('rolls back auths', async () => {
+      const run = new Run()
+      const A = run.deploy(class A { })
+      await run.sync()
+      const tx = new Transaction()
+      tx.update(() => A.auth())
+      tx.rollback()
+      expect(A.location).to.equal(A.origin)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('rolls back destroys', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('rolls back auths', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('rolls back upgrades', () => {
-      // TODO
+    it('rolls back upgrades', async () => {
+      const run = new Run()
+      const A = run.deploy(class A {
+        f () { }
+        static g () { }
+      })
+      class B {
+        h () { }
+        static i () { }
+      }
+      await run.sync()
+      const tx = new Transaction()
+      tx.update(() => A.upgrade(B))
+      expect(A.name).to.equal('B')
+      expect(typeof A.prototype.f).to.equal('undefined')
+      expect(typeof A.prototype.h).to.equal('function')
+      expect(typeof A.g).to.equal('undefined')
+      expect(typeof A.i).to.equal('function')
+      tx.rollback()
+      expect(A.location).to.equal(A.origin)
+      expect(A.name).to.equal('A')
+      expect(typeof A.prototype.f).to.equal('function')
+      expect(typeof A.prototype.h).to.equal('undefined')
+      expect(typeof A.g).to.equal('function')
+      expect(typeof A.i).to.equal('undefined')
     })
 
     // ------------------------------------------------------------------------
