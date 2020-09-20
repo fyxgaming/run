@@ -1310,8 +1310,16 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('rollback twice ok', () => {
-      // TODO
+    it('rollback twice ok', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      tx.rollback()
+      tx.rollback()
+      await run.sync()
+      expect(typeof Object.getOwnPropertyDescriptor(A, 'location')).to.equal('undefined')
+      expect(typeof Object.getOwnPropertyDescriptor(A, 'presets')).to.equal('undefined')
     })
 
     // ------------------------------------------------------------------------
