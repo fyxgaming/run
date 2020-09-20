@@ -1427,14 +1427,17 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('changes with updates', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('cannot be modified', () => {
-      // TODO
+    it('cannot be modified', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      const tx = new Transaction()
+      tx.update(() => a.destroy())
+      tx.update(() => new A())
+      tx.outputs.shift()
+      expect(tx.outputs.length).to.equal(1)
+      tx.deletes.push(1)
+      expect(tx.deletes.length).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
