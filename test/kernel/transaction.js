@@ -1033,7 +1033,7 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('partially signed', async () => {
+    it('unsigned', async () => {
       const run = new Run()
       class A extends Jig { }
       const tx = new Transaction()
@@ -1045,20 +1045,38 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('unpaid', () => {
-      // TODO
+    it('unpaid', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export({ pay: false })
+      const tx2 = await run.import(rawtx)
+      await tx2.publish()
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('paid twice', () => {
-      // TODO
+    it('paid twice', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export({ sign: false })
+      const tx2 = await run.import(rawtx)
+      await tx2.publish()
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('signed twice', () => {
-      // TODO
+    it('signed twice', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export({ pay: false })
+      const tx2 = await run.import(rawtx)
+      await tx2.publish()
     })
 
     // ------------------------------------------------------------------------
