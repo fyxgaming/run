@@ -1409,19 +1409,44 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('deletes', () => {
-      // TODO
+    it('deletes', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      const tx = new Transaction()
+      tx.update(() => a.destroy())
+      expect(tx.deletes).to.deep.equal([a])
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('stores after states', () => {
-      // TODO
+    it('newly created deletes', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      class A { }
+      tx.update(() => { run.deploy(A).destroy() })
+      expect(tx.deletes.length).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('correct after import', () => {
+    it('stores states after', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        destroy () { super.destroy(); this.n = 1 }
+        static f () { this.m = 2 }
+      }
+      const tx = new Transaction()
+      const a = new A()
+      tx.update(() => a.destroy())
+      tx.update(() => a.constructor.f())
+      expect(tx.deletes[0].n).to.equal(1)
+      expect(tx.outputs[0].m).to.equal(2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('correct after import', () => {
       // TODO
     })
 
