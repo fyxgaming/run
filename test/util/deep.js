@@ -327,6 +327,12 @@ describe('_deepReplace', () => {
 
   // --------------------------------------------------------------------------
 
+  it.skip('code deps', () => {
+    // TODO
+  })
+
+  // --------------------------------------------------------------------------
+
   it('callback can return non-objects and non-functions', () => {
     const a = [{}, [], () => {}]
     const callback = stub()

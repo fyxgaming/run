@@ -294,6 +294,24 @@ describe('Sync', () => {
       await CA.sync()
       expect(CA.location.length).to.equal(67)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('syncs deps', async () => {
+      const run = new Run()
+      class A { static bnonce () { return B.nonce }}
+      class B { }
+      A.deps = { B }
+      const CB = run.deploy(B)
+      const CA = run.deploy(A)
+      await run.sync()
+      expect(CA.bnonce()).to.equal(1)
+      const CB2 = await run.load(CB.location)
+      CB2.destroy()
+      await CB2.sync()
+      await CA.sync()
+      expect(CA.bnonce()).to.equal(2)
+    })
   })
 
   // --------------------------------------------------------------------------

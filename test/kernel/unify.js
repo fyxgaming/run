@@ -142,6 +142,12 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
+    it.skip('deps with args', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it('arg with inner upgraded code property', async () => {
       const run = new Run()
       function f () { return 1 }
@@ -249,8 +255,25 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('jig calling method with upgraded dep in args', () => {
-      // TODO
+    it.only('jig calling method with upgraded dep in args', async () => {
+      const run = new Run()
+
+      class B { static f () { return 1 } }
+      class B2 { static f () { return 2 } }
+      const CB = run.deploy(B)
+      await run.sync()
+
+      const CB2 = await run.load(CB.location)
+      CB2.upgrade(B2)
+      await run.sync()
+
+      class A extends Jig { f () { return B.f() } }
+      A.deps = { B: CB }
+
+      const a = new A()
+      expect(a.f()).to.equal(1)
+      expect(a.f(CB2)).to.equal(2)
+      expect(a.f()).to.equal(2)
     })
 
     // ------------------------------------------------------------------------
