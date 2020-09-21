@@ -615,8 +615,20 @@ describe('Deps', () => {
   // --------------------------------------------------------------------------
 
   describe('Unify', () => {
-    it.skip('code deps with args', () => {
-      // TODO
+    it('code deps with args', async () => {
+      const run = new Run()
+      class A extends Jig { static g () { this.n = 1 } }
+      class B extends Jig { static f () { return A.n } } // eslint-disable-line
+      B.deps = { A }
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      expect(CB.f([CA])).to.equal(undefined)
+      await run.sync()
+      const CA2 = await run.load(CA.location)
+      CA2.g()
+      expect(CB.f([CA2])).to.equal(1)
+      await run.sync()
+      await run.load(CB.location)
     })
 
     // ------------------------------------------------------------------------
