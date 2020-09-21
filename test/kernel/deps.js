@@ -501,8 +501,11 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set prototype of deps object', () => {
-
+    it('throws if set prototype of deps object', () => {
+      const run = new Run()
+      class A extends Jig { static f () { Object.setPrototypeOf(A.deps, {}) } }
+      const CA = run.deploy(A)
+      expect(() => CA.f()).to.throw('setPrototypeOf disabled')
     })
 
     // ------------------------------------------------------------------------
