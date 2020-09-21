@@ -740,9 +740,32 @@ describe('Unify', () => {
   // --------------------------------------------------------------------------
 
   describe('unify', () => {
-    // unifies props
-    // unifies classes
-    // throws if unify inconsistent top-level jigs
+    it.skip('unifies props', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('unifies classes', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('unifies deps', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if unify inconsistent top-level jigs', async () => {
+      const run = new Run()
+      const A2 = run.deploy(class A { })
+      A2.destroy()
+      await A2.sync()
+      const A1 = await run.load(A2.origin)
+      expect(() => run.unify(A1, A2)).to.throw('Cannot unify inconsistent A')
+    })
   })
 })
 
