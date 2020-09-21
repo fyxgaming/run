@@ -24,7 +24,7 @@ describe('Deps', () => {
   // --------------------------------------------------------------------------
 
   describe('Code', () => {
-    it.only('set deps from inside', () => {
+    it('set deps from inside', () => {
       const run = new Run()
       class A extends Jig {
         static f () { return B } // eslint-disable-line
@@ -44,8 +44,12 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('set deps from outside', () => {
-      // TODO
+    it('set deps from outside', () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.deps = { B: 1 }
+      const CA = run.deploy(A)
+      expect(() => { CA.deps.B = 2 }).to.throw('Updates must be performed in the jig\'s methods')
     })
 
     // ------------------------------------------------------------------------
