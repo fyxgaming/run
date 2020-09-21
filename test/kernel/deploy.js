@@ -1635,6 +1635,14 @@ describe('Deploy', () => {
       const CA = run.deploy(A)
       expect(Object.keys(CA.deps)).to.deep.equal(['a', 'b'])
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if deps is getter', () => {
+      const run = new Run()
+      class A { get deps () { return { } } }
+      expect(() => run.deploy(A)).to.throw('Getters and setters not supported')
+    })
   })
 
   // --------------------------------------------------------------------------

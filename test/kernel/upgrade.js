@@ -997,6 +997,16 @@ describe('Upgrade', () => {
       g.deps = { g }
       expect(() => cf.upgrade(g)).to.throw('Illegal dependency')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if deps is getter', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B { get deps () { return { } } }
+      expect(() => CA.upgrade(B)).to.throw('Getters and setters not supported')
+    })
   })
 
   // --------------------------------------------------------------------------
