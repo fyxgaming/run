@@ -536,8 +536,11 @@ describe('Deps', () => {
   // --------------------------------------------------------------------------
 
   describe('Static code', () => {
-    it.skip('deps cannot be changed', () => {
-      // TODO
+    it('deps cannot be changed', () => {
+      const run = new Run()
+      class A { static f () { A.deps.n = 1 } }
+      const CA = run.deploy(A)
+      expect(() => CA.f()).to.throw('set disabled')
     })
   })
 
