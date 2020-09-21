@@ -7,7 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, LocalCache } = Run
+const { Jig, LocalCache, Transaction } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Deps
@@ -549,8 +549,23 @@ describe('Deps', () => {
   // --------------------------------------------------------------------------
 
   describe('Transaction', () => {
-    it.skip('multiple updates in transaction', () => {
-      // TODO
+    it('multiple updates in transaction', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () { this.deps.n = 1 }
+        static g() { A.deps.m = n + 2 } // eslint-disable-line
+        static h () { A.deps.o = A.deps.m + 3 }
+        static i () { return o } // eslint-disable-line
+      }
+      const tx = new Transaction()
+      const CA = tx.update(() => run.deploy(A))
+      tx.update(() => CA.f())
+      tx.update(() => CA.g())
+      tx.update(() => CA.h())
+      await tx.publish()
+      expect(CA.i()).to.equal(6)
+      const CA2 = await run.load(CA.location)
+      expect(CA2.deps.o).to.equal(6)
     })
   })
 
