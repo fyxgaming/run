@@ -246,8 +246,12 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if delete deps from outside', () => {
-      // TODO
+    it('throws if delete deps from outside', () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.deps = { B: { } }
+      const CA = run.deploy(A)
+      expect(() => { delete CA.deps.B }).to.throw('Updates must be performed in the jig\'s methods')
     })
 
     // ------------------------------------------------------------------------
