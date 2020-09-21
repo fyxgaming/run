@@ -198,7 +198,50 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('delete deps from inside', () => {
+    it('delete deps from inside', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static getB () { return typeof B !== 'undefined' ? B : undefined } // eslint-disable-line
+        static getC () { return typeof C !== 'undefined' ? C : undefined } // eslint-disable-line
+        static g () { delete A.deps.B } // eslint-disable-line
+        static h () { delete A.deps.C } // eslint-disable-line
+      }
+      A.deps = { B: 1, C: 2 }
+
+      const CA = run.deploy(A)
+      expect(CA.getB()).to.equal(1)
+      expect(CA.getC()).to.equal(2)
+      await CA.sync()
+      expect(CA.nonce).to.equal(1)
+
+      CA.g()
+      await CA.sync()
+      expect(CA.getB()).to.equal(undefined)
+      expect(CA.getC()).to.equal(2)
+      expect(typeof CA.deps.B).to.equal('undefined')
+      expect(CA.deps.C).to.equal(2)
+      expect(CA.nonce).to.equal(2)
+
+      CA.h()
+      expect(CA.getB()).to.equal(undefined)
+      expect(CA.getC()).to.equal(undefined)
+      expect(typeof CA.deps.B).to.equal('undefined')
+      expect(typeof CA.deps.C).to.equal('undefined')
+      await CA.sync()
+      expect(CA.nonce).to.equal(3)
+
+      const CA2 = await run.load(CA.location)
+      expect(CA2.getB()).to.equal(undefined)
+      expect(CA2.getC()).to.equal(undefined)
+      expect(typeof CA2.deps.B).to.equal('undefined')
+      expect(typeof CA2.deps.C).to.equal('undefined')
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      expect(CA3.getB()).to.equal(undefined)
+      expect(CA3.getC()).to.equal(undefined)
+      expect(typeof CA3.deps.B).to.equal('undefined')
+      expect(typeof CA3.deps.C).to.equal('undefined')
     })
 
     // ------------------------------------------------------------------------
