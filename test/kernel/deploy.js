@@ -1608,7 +1608,7 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if dep is class name', () => {
+    it('throws if dep is self class name', () => {
       const run = new Run()
       class A { }
       A.deps = { A }

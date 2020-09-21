@@ -989,7 +989,7 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if dep is function name', () => {
+    it('throws if dep is self function name', () => {
       const run = new Run()
       function f () { }
       const cf = run.deploy(f)
