@@ -713,7 +713,7 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if call methods with inconsistent args', async () => {
+    it('throws if call methods with inconsistent args', async () => {
       const run = new Run()
 
       class A extends Jig { }
@@ -728,12 +728,10 @@ describe('Unify', () => {
 
       const tx = new Run.Transaction()
 
-      tx.update(() => {
+      expect(() => tx.update(() => {
         new B() // eslint-disable-line
         new C(A2) // eslint-disable-line
-      })
-
-      await tx.publish()
+      })).to.throw('Inconsistent worldview')
     })
   })
 
