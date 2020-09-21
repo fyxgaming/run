@@ -9,7 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
-const { Jig, LocalCache } = Run
+const { Jig, LocalCache, Transaction } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Unify
@@ -595,13 +595,13 @@ describe('Unify', () => {
       await run.sync()
 
       run.autounify = false
-      const tx = new Run.Transaction()
+      const tx = new Transaction()
       tx.update(() => B2.set(A))
       await expect(tx.export()).to.be.rejectedWith('Time travel for A')
       tx.rollback()
 
       run.autounify = true
-      const tx2 = new Run.Transaction()
+      const tx2 = new Transaction()
       tx2.update(() => B2.set(A))
       await tx2.export()
     })
@@ -657,7 +657,7 @@ describe('Unify', () => {
       await A2.sync()
       const A1 = await run.load(A2.origin)
 
-      const tx = new Run.Transaction()
+      const tx = new Transaction()
 
       expect(() => tx.update(() => {
         new A1() // eslint-disable-line
@@ -678,7 +678,7 @@ describe('Unify', () => {
       class B extends A1 { }
       class C extends A2 { }
 
-      const tx = new Run.Transaction()
+      const tx = new Transaction()
 
       expect(() => tx.update(() => {
         new B() // eslint-disable-line
@@ -703,7 +703,7 @@ describe('Unify', () => {
       class C { }
       C.a = a2
 
-      const tx = new Run.Transaction()
+      const tx = new Transaction()
 
       expect(() => tx.update(() => {
         run.deploy(B)
@@ -726,7 +726,7 @@ describe('Unify', () => {
       class B extends A1 { }
       class C extends Jig { }
 
-      const tx = new Run.Transaction()
+      const tx = new Transaction()
 
       expect(() => tx.update(() => {
         new B() // eslint-disable-line
@@ -740,14 +740,36 @@ describe('Unify', () => {
   // --------------------------------------------------------------------------
 
   describe('unify', () => {
-    it.skip('unifies props', () => {
-      // TODO
+    it('unifies props', async () => {
+      const run = new Run()
+      const O2 = run.deploy(class O { })
+      O2.destroy()
+      await run.sync()
+      const O1 = await run.load(O2.origin)
+      class A extends Jig { static f () { this.name = this.O.name } }
+      A.O = O1
+      class B extends Jig { static f () { this.name = this.O.name } }
+      B.O = O2
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      expect(() => run.transaction(() => { CA.f(); CB.f() })).to.throw()
+      run.unify(CA, CB)
+      run.transaction(() => { CA.f(); CB.f() })
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('unifies classes', () => {
-      // TODO
+    it('unify class', async () => {
+      const run = new Run()
+      const A2 = run.deploy(class A extends Jig { f () { this.n = 1 } })
+      A2.destroy()
+      await A2.sync()
+      const A1 = await run.load(A2.origin)
+      const a1 = new A1()
+      const a2 = new A2()
+      expect(() => run.transaction(() => { a1.f(); a2.f() })).to.throw()
+      run.unify(a1, a2)
+      await run.transaction(() => { a1.f(); a2.f() })
     })
 
     // ------------------------------------------------------------------------
