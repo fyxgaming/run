@@ -364,7 +364,7 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('set caller dep', async () => {
+    it('set caller dep', async () => {
       const run = new Run()
       class A extends Jig {
         static f() { return caller } // eslint-disable-line

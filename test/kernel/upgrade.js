@@ -228,7 +228,7 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('change props before upgrade', async () => {
+    it('change props before upgrade', async () => {
       const run = new Run()
 
       class O extends Jig { }

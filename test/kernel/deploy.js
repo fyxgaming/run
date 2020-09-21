@@ -226,7 +226,7 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('change props before deploy', async () => {
+    it('change props before deploy', async () => {
       const run = new Run()
 
       class A extends Jig { static f () { this.n = 1; this.o.m = 2 } }
