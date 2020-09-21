@@ -353,8 +353,13 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if define inner deps from outside', () => {
-      // TODO
+    it('throws if define inner deps from outside', () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.deps = { B: { } }
+      const CA = run.deploy(A)
+      const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
+      expect(() => Object.defineProperty(CA.deps.B, 'n', desc)).to.throw('Updates must be performed in the jig\'s methods')
     })
 
     // ------------------------------------------------------------------------
