@@ -364,8 +364,38 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('set and delete caller dep', () => {
+    it.only('set caller dep', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f() { return caller } // eslint-disable-line
+        static g () { A.deps.caller = 1 }
+        static h () { caller = 2 } // eslint-disable-line
+      }
+      const CA = run.deploy(A)
 
+      expect(CA.f()).to.equal(null)
+      expect(typeof CA.deps.caller).to.equal('undefined')
+
+      CA.g()
+      expect(CA.f()).to.equal(1)
+      expect(CA.deps.caller).to.equal(1)
+      await run.sync()
+      expect(CA.nonce).to.equal(2)
+
+      CA.h()
+      expect(CA.f()).to.equal(2)
+      expect(CA.deps.caller).to.equal(2)
+      await run.sync()
+      expect(CA.nonce).to.equal(3)
+
+      const CA2 = await run.load(CA.location)
+      expect(CA2.f()).to.equal(2)
+      expect(CA2.deps.caller).to.equal(2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      expect(CA3.f()).to.equal(2)
+      expect(CA3.deps.caller).to.equal(2)
     })
 
     // ------------------------------------------------------------------------

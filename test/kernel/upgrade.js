@@ -228,6 +228,41 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
+    it.only('change props before upgrade', async () => {
+      const run = new Run()
+
+      class O extends Jig { }
+      O.o = { }
+      const CA = run.deploy(O)
+
+      class A extends Jig { static f () { this.n = 1; this.o.m = 2 } }
+      A.o = { }
+
+      CA.upgrade(A)
+      CA.f()
+      await run.sync()
+
+      const CA1 = await run.load(CA.origin)
+      expect(CA1.n).to.equal(undefined)
+      expect(CA1.o.m).to.equal(undefined)
+
+      const CA2 = await run.load(CA.location)
+      expect(CA2.n).to.equal(1)
+      expect(CA2.o.m).to.equal(2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.origin)
+      expect(CA3.n).to.equal(undefined)
+      expect(CA3.o.m).to.equal(undefined)
+
+      run.cache = new LocalCache()
+      const CA4 = await run.load(CA.location)
+      expect(CA4.n).to.equal(1)
+      expect(CA4.o.m).to.equal(2)
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('upgrades multiple in a batch', () => {
       // TODO
     })
