@@ -633,8 +633,27 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('static code deps with upgraded caller', () => {
-      // TODO
+    it('static code deps with upgraded caller', async () => {
+      const run = new Run()
+      class A { static f () { return B.n } } // eslint-disable-line
+      class B1 { }
+      B1.n = 1
+      class B2 { }
+      B2.n = 2
+      A.deps = { B: B1 }
+      const CA = run.deploy(A)
+      const CB1 = run.deploy(B1)
+      await run.sync()
+      const CB2 = await run.load(CB1.origin)
+      CB2.upgrade(B2)
+      await run.sync()
+      class D extends Jig { init () { this.n = A.f() } }
+      D.deps = { A: CA, B: CB2 }
+      const d = new D()
+      expect(d.n).to.equal(2)
+      await run.sync()
+      run.cache = new LocalCache()
+      await run.load(d.location)
     })
   })
 })
