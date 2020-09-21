@@ -533,7 +533,7 @@ describe('Call', () => {
 
     it.only('change deps', () => {
       const run = new Run()
-      class A {
+      class A extends Jig {
         static f () { return B } // eslint-disable-line
         static g () { B = 2 } // eslint-disable-line
         static h () { A.deps.B = 3 } // eslint-disable-line
@@ -548,6 +548,11 @@ describe('Call', () => {
       expect(CA.f()).to.equal(3)
       expect(CA.deps.B).to.equal(3)
     })
+
+    // TODO: Test changes produces transactions
+    // TODO: Static code cannot be changed
+    // TODO: Delete deps
+    // TODO: Add deps
 
     // ------------------------------------------------------------------------
 
