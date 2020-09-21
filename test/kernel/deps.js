@@ -574,14 +574,39 @@ describe('Deps', () => {
   // --------------------------------------------------------------------------
 
   describe('Sync', () => {
-    it.skip('code', () => {
-      // TODO
+    it('code', async () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.n = 1 } }
+      class B extends Jig { static g() { return A.n } } // eslint-disable-line
+      B.deps = { A }
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      expect(CB.g()).to.equal(undefined)
+      await run.sync()
+      const CA2 = await run.load(CA.location)
+      CA2.f()
+      await CA2.sync()
+      expect(CB.g()).to.equal(undefined)
+      await CB.sync()
+      expect(CB.g()).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('static code', () => {
-      // TODO
+    it('static code', async () => {
+      const run = new Run()
+      class A { static bnonce () { return B.nonce }}
+      class B { }
+      A.deps = { B }
+      const CB = run.deploy(B)
+      const CA = run.deploy(A)
+      await run.sync()
+      expect(CA.bnonce()).to.equal(1)
+      const CB2 = await run.load(CB.location)
+      CB2.destroy()
+      await CB2.sync()
+      await CA.sync()
+      expect(CA.bnonce()).to.equal(2)
     })
   })
 
