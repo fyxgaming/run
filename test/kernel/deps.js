@@ -428,14 +428,32 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('private deps available from inside', () => {
-
+    it('private deps available from inside', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f() { return _B } // eslint-disable-line
+        static g() { return this.deps._B } // eslint-disable-line
+        static h() { _B = 2 } // eslint-disable-line
+      }
+      A.deps = { _B: 1 }
+      const CA = run.deploy(A)
+      expect(CA.f()).to.equal(1)
+      expect(CA.g()).to.equal(1)
+      CA.h()
+      expect(CA.f()).to.equal(2)
+      await run.sync()
+      const CA2 = await run.load(CA.location)
+      expect(CA2.f()).to.equal(2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      expect(CA3.f()).to.equal(2)
     })
 
     // ------------------------------------------------------------------------
 
     it.skip('private deps unavailable from outside', () => {
-
+      // class B extends Jig { }
+      // CA.deps._B // eslint-disable-line
     })
 
     // ------------------------------------------------------------------------
