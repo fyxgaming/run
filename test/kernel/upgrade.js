@@ -399,7 +399,7 @@ describe('Upgrade', () => {
                 n: 1,
                 o: { o: { $dup: ['2', 'o'] } },
                 s: 'abc',
-                set: { $set: [{ $dup: ['0'] }], props: { A: { $dup: ['0'] } } },
+                set: { $set: [{ $dup: ['0'] }], props: { A: { $dup: ['0'] } } }
               }
             ]
           }
@@ -535,7 +535,7 @@ describe('Upgrade', () => {
               B.toString(),
               {
                 A: { $jig: 1 },
-                deps : { }
+                deps: { }
               }
             ]
           }
@@ -592,7 +592,7 @@ describe('Upgrade', () => {
               B.toString(),
               {
                 c: { $jig: 1 },
-                deps: { } 
+                deps: { }
               }
             ]
           }
