@@ -281,13 +281,43 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('define deps from inside', () => {
+    it('define deps from inside', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () { return B } // eslint-disable-line
+        static g () { Object.defineProperty(A.deps, 'B', { configurable: true, enumerable: true, writable: true, value: 2 }) }
+      }
+      A.deps = { B: 1 }
+
+      const CA = run.deploy(A)
+      expect(CA.f()).to.equal(1)
+      await CA.sync()
+      expect(CA.nonce).to.equal(1)
+
+      CA.g()
+      await CA.sync()
+      expect(CA.f()).to.equal(2)
+      expect(CA.deps.B).to.equal(2)
+      expect(CA.nonce).to.equal(2)
+
+      const CA2 = await run.load(CA.location)
+      expect(CA2.f()).to.equal(2)
+      expect(CA2.deps.B).to.equal(2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      expect(CA3.f()).to.equal(2)
+      expect(CA3.deps.B).to.equal(2)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if define deps from outside', () => {
-      // TODO
+    it('throws if define deps from outside', () => {
+      const run = new Run()
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
+      expect(() => Object.defineProperty(CA.deps, 'B', desc)).to.throw('Updates must be performed in the jig\'s methods')
     })
 
     // ------------------------------------------------------------------------
