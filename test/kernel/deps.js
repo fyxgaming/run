@@ -62,7 +62,7 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set deps from outside', () => {
+    it('throws if set deps from outside', () => {
       const run = new Run()
       class A extends Jig { }
       A.deps = { B: 1 }
@@ -110,7 +110,7 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set inner deps from outside', () => {
+    it('throws if set inner deps from outside', () => {
       const run = new Run()
       class A extends Jig { }
       A.deps = { B: [0] }
@@ -128,7 +128,6 @@ describe('Deps', () => {
       }
 
       const CA = run.deploy(A)
-      expect(CA.f()).to.equal(1)
       await CA.sync()
       expect(CA.nonce).to.equal(1)
 
@@ -150,7 +149,7 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('add deps from outside', () => {
+    it.skip('throws if add deps from outside', () => {
       // TODO
     })
 
@@ -162,7 +161,7 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('add inner deps from outside', () => {
+    it.skip('throws if add inner deps from outside', () => {
       // TODO
     })
 
@@ -173,7 +172,7 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('delete deps from outside', () => {
+    it.skip('throws if delete deps from outside', () => {
       // TODO
     })
 
@@ -185,7 +184,7 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('delete inner deps from outside', () => {
+    it.skip('throws if delete inner deps from outside', () => {
       // TODO
     })
 
@@ -196,7 +195,7 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('define deps from outside', () => {
+    it.skip('throws if define deps from outside', () => {
       // TODO
     })
 
@@ -208,8 +207,14 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('define inner deps from outside', () => {
+    it.skip('throws if define inner deps from outside', () => {
       // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('set and delete caller dep', () => {
+
     })
 
     // ------------------------------------------------------------------------
@@ -221,6 +226,42 @@ describe('Deps', () => {
     // ------------------------------------------------------------------------
 
     it.skip('private deps unavailable from outside', () => {
+
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if delete deps object', () => {
+
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set deps object', () => {
+
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if define deps object', () => {
+
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set prototype of deps object', () => {
+
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if define getter deps', () => {
+
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if define non-configurable deps', () => {
 
     })
   })
