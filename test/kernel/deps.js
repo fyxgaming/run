@@ -510,14 +510,24 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if define getter deps', () => {
-
+    it('throws if define getter deps', () => {
+      const run = new Run()
+      class A extends Jig {
+        static g () { Object.defineProperty(A.deps, 'B', { configurable: true, enumerable: true, get: () => 2 }) }
+      }
+      const CA = run.deploy(A)
+      expect(() => CA.g()).to.throw('Descriptor must have a value')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if define non-configurable deps', () => {
-
+    it('throws if define non-configurable deps', () => {
+      const run = new Run()
+      class A extends Jig {
+        static g () { Object.defineProperty(A.deps, 'B', { configurable: false, enumerable: true, writable: true, value: 2 }) }
+      }
+      const CA = run.deploy(A)
+      expect(() => CA.g()).to.throw('Descriptor must be configurable')
     })
   })
 
