@@ -29,7 +29,7 @@ describe('Deps', () => {
       class A extends Jig {
         static f () { return B } // eslint-disable-line
         static g () { B = 2 } // eslint-disable-line
-        static h () { A.deps.B = 3 } // eslint-disable-line
+        static h () { A.deps.B = 3 }
       }
       A.deps = { B: 1 }
 
@@ -77,7 +77,7 @@ describe('Deps', () => {
       class A extends Jig {
         static f () { return B.n } // eslint-disable-line
         static g () { B.n = 2 } // eslint-disable-line
-        static h () { A.deps.B.n = 3 } // eslint-disable-line
+        static h () { A.deps.B.n = 3 }
       }
       A.deps = { B: { n: 1 } }
 
@@ -120,8 +120,32 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('add deps from inside', () => {
-      // TODO
+    it('add deps from inside', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () { return B } // eslint-disable-line
+        static g () { A.deps.B = 1 }
+      }
+
+      const CA = run.deploy(A)
+      expect(CA.f()).to.equal(1)
+      await CA.sync()
+      expect(CA.nonce).to.equal(1)
+
+      CA.g()
+      await CA.sync()
+      expect(CA.f()).to.equal(1)
+      expect(CA.deps.B).to.equal(1)
+      expect(CA.nonce).to.equal(2)
+
+      const CA2 = await run.load(CA.location)
+      expect(CA2.f()).to.equal(1)
+      expect(CA2.deps.B).to.equal(1)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      expect(CA3.f()).to.equal(1)
+      expect(CA3.deps.B).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
