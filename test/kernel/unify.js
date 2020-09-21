@@ -595,15 +595,15 @@ describe('Unify', () => {
       await run.sync()
 
       run.autounify = false
-      const transaction = new Run.Transaction()
-      transaction.update(() => B2.set(A))
-      await expect(transaction.export()).to.be.rejectedWith('Time travel for A')
-      transaction.rollback()
+      const tx = new Run.Transaction()
+      tx.update(() => B2.set(A))
+      await expect(tx.export()).to.be.rejectedWith('Time travel for A')
+      tx.rollback()
 
       run.autounify = true
-      const transaction2 = new Run.Transaction()
-      transaction2.update(() => B2.set(A))
-      await transaction2.export()
+      const tx2 = new Run.Transaction()
+      tx2.update(() => B2.set(A))
+      await tx2.export()
     })
 
     // ------------------------------------------------------------------------
@@ -657,9 +657,9 @@ describe('Unify', () => {
       await A2.sync()
       const A1 = await run.load(A2.origin)
 
-      const transaction = new Run.Transaction()
+      const tx = new Run.Transaction()
 
-      expect(() => transaction.update(() => {
+      expect(() => tx.update(() => {
         new A1() // eslint-disable-line
         new A2() // eslint-disable-line
       })).to.throw('Inconsistent worldview')
@@ -678,9 +678,9 @@ describe('Unify', () => {
       class B extends A1 { }
       class C extends A2 { }
 
-      const transaction = new Run.Transaction()
+      const tx = new Run.Transaction()
 
-      expect(() => transaction.update(() => {
+      expect(() => tx.update(() => {
         new B() // eslint-disable-line
         new C() // eslint-disable-line
       })).to.throw('Inconsistent worldview')
@@ -703,9 +703,9 @@ describe('Unify', () => {
       class C { }
       C.a = a2
 
-      const transaction = new Run.Transaction()
+      const tx = new Run.Transaction()
 
-      expect(() => transaction.update(() => {
+      expect(() => tx.update(() => {
         run.deploy(B)
         run.deploy(C)
       })).to.throw('Inconsistent worldview')
@@ -726,14 +726,14 @@ describe('Unify', () => {
       class B extends A1 { }
       class C extends Jig { }
 
-      const transaction = new Run.Transaction()
+      const tx = new Run.Transaction()
 
-      transaction.update(() => {
+      tx.update(() => {
         new B() // eslint-disable-line
         new C(A2) // eslint-disable-line
       })
 
-      await transaction.publish()
+      await tx.publish()
     })
   })
 
