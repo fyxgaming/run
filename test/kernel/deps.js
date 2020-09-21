@@ -470,20 +470,33 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if delete deps object', () => {
-
+    it('throws if delete deps object', () => {
+      const run = new Run()
+      class A extends Jig { static f () { delete this.deps } }
+      const CA = run.deploy(A)
+      expect(() => CA.f()).to.throw('Cannot delete deps')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set deps object', () => {
-
+    it('throws if set deps object', () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.deps = {} } }
+      const CA = run.deploy(A)
+      expect(() => CA.f()).to.throw('Cannot set deps')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if define deps object', () => {
-
+    it('throws if define deps object', () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () {
+          Object.defineProperty(this, 'deps', { configurable: true, enumerable: true, writable: true, value: 2 })
+        }
+      }
+      const CA = run.deploy(A)
+      expect(() => CA.f()).to.throw('Cannot define deps')
     })
 
     // ------------------------------------------------------------------------
