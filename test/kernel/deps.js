@@ -372,7 +372,6 @@ describe('Deps', () => {
         static h () { caller = 2 } // eslint-disable-line
       }
       const CA = run.deploy(A)
-
       expect(CA.f()).to.equal(null)
       expect(typeof CA.deps.caller).to.equal('undefined')
 
@@ -396,6 +395,35 @@ describe('Deps', () => {
       const CA3 = await run.load(CA.location)
       expect(CA3.f()).to.equal(2)
       expect(CA3.deps.caller).to.equal(2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('delete caller dep', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f() { return caller } // eslint-disable-line
+        static g () { delete A.deps.caller }
+      }
+      A.deps = { caller: 1 }
+      const CA = run.deploy(A)
+      expect(CA.f()).to.equal(1)
+      expect(CA.deps.caller).to.equal(1)
+
+      CA.g()
+      expect(CA.f()).to.equal(null)
+      expect(typeof CA.deps.caller).to.equal('undefined')
+      await run.sync()
+      expect(CA.nonce).to.equal(2)
+
+      const CA2 = await run.load(CA.location)
+      expect(CA2.f()).to.equal(null)
+      expect(typeof CA2.deps.caller).to.equal('undefined')
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      expect(CA3.f()).to.equal(null)
+      expect(typeof CA3.deps.caller).to.equal('undefined')
     })
 
     // ------------------------------------------------------------------------
