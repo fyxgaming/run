@@ -531,31 +531,6 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('change deps', () => {
-      const run = new Run()
-      class A extends Jig {
-        static f () { return B } // eslint-disable-line
-        static g () { B = 2 } // eslint-disable-line
-        static h () { A.deps.B = 3 } // eslint-disable-line
-      }
-      A.deps = { B: 1 }
-      const CA = run.deploy(A)
-      expect(CA.f()).to.equal(1)
-      CA.g()
-      expect(CA.f()).to.equal(2)
-      expect(CA.deps.B).to.equal(2)
-      CA.h()
-      expect(CA.f()).to.equal(3)
-      expect(CA.deps.B).to.equal(3)
-    })
-
-    // TODO: Test changes produces transactions
-    // TODO: Static code cannot be changed
-    // TODO: Delete deps
-    // TODO: Add deps
-
-    // ------------------------------------------------------------------------
-
     it('throws if call class method on instance', () => {
       new Run() // eslint-disable-line
       class A extends Jig { static set () { this.n = 1 } }
