@@ -142,8 +142,21 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('deps with args', () => {
-      // TODO
+    it('deps with args', async () => {
+      const run = new Run()
+      class B extends Jig { static g () { this.n = 2 } }
+      B.n = 1
+      const CB = run.deploy(B)
+      class A extends Jig { static f () { this.n = B.n } }
+      A.deps = { B }
+      const CA = run.deploy(A)
+      await CB.sync()
+      const CB2 = await run.load(CB.location)
+      CA.f()
+      expect(CA.n).to.equal(1)
+      CB2.g()
+      CA.f(CB2)
+      expect(CA.n).to.equal(2)
     })
 
     // ------------------------------------------------------------------------
