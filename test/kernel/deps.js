@@ -110,6 +110,36 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
+    it('set inner intrinsic deps from inside', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () { return B.get(1) } // eslint-disable-line
+        static g () { A.deps.B.set(1, 2) }
+      }
+      A.deps = { B: new Map() }
+
+      const CA = run.deploy(A)
+      await CA.sync()
+      expect(CA.nonce).to.equal(1)
+
+      CA.g()
+      await CA.sync()
+      expect(CA.f()).to.equal(2)
+      expect(CA.deps.B.get(1)).to.equal(2)
+      expect(CA.nonce).to.equal(2)
+
+      const CA2 = await run.load(CA.location)
+      expect(CA2.f()).to.equal(2)
+      expect(CA2.deps.B.get(1)).to.equal(2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      expect(CA3.f()).to.equal(2)
+      expect(CA3.deps.B.get(1)).to.equal(2)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if set inner deps from outside', () => {
       const run = new Run()
       class A extends Jig { }
@@ -158,14 +188,12 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('add inner deps from inside', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if add inner deps from outside', () => {
-      // TODO
+    it('throws if add inner deps from outside', () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.deps = { B: { } }
+      const CA = run.deploy(A)
+      expect(() => { CA.deps.B.n = 1 }).to.throw('Updates must be performed in the jig\'s methods')
     })
 
     // ------------------------------------------------------------------------
