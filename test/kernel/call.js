@@ -600,7 +600,7 @@ describe('Call', () => {
 
     // ------------------------------------------------------------------------
 
-    it('depoys code in args', async () => {
+    it('deploys code in args', async () => {
       const run = new Run()
       class A extends Jig { }
       class B { }
@@ -627,7 +627,7 @@ describe('Call', () => {
             op: 'DEPLOY',
             data: [
               'class B { }',
-              {}
+              { deps: { } }
             ]
           },
           {

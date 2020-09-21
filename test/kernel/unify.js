@@ -255,7 +255,7 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('jig calling method with upgraded dep in args', async () => {
+    it('jig calling method with upgraded dep in args', async () => {
       const run = new Run()
 
       class B { static f () { return 1 } }

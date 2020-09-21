@@ -67,7 +67,7 @@ describe('Deploy', () => {
             op: 'DEPLOY',
             data: [
               'class A { }',
-              {}
+              { deps: { } }
             ]
           }
         ]
@@ -109,7 +109,7 @@ describe('Deploy', () => {
             op: 'DEPLOY',
             data: [
               f.toString(),
-              {}
+              { deps: { } }
             ]
           }
         ]
@@ -252,7 +252,7 @@ describe('Deploy', () => {
             op: 'DEPLOY',
             data: [
               'class A { }',
-              {},
+              { deps: { } },
               'class B extends A { }',
               {
                 deps: {
@@ -306,7 +306,7 @@ describe('Deploy', () => {
             op: 'DEPLOY',
             data: [
               'class A { }',
-              {},
+              { deps: { } },
               'class B extends A { }',
               {
                 deps: {
@@ -392,7 +392,8 @@ describe('Deploy', () => {
             data: [
               'class B { }',
               {
-                A: { $jig: 1 }
+                A: { $jig: 1 },
+                deps: { }
               },
               'class A extends B { }',
               {
@@ -448,6 +449,9 @@ describe('Deploy', () => {
 
       class A { }
       Object.assign(A, props)
+
+      props = Object.assign({ deps: { } }, props)
+      encodedProps = Object.assign({ deps: { } }, encodedProps)
 
       expectTx({
         nin: 0,
@@ -766,7 +770,8 @@ describe('Deploy', () => {
             data: [
               'class A { }',
               {
-                A: { $jig: 0 }
+                A: { $jig: 0 },
+                deps: { }
               }
             ]
           }
@@ -821,12 +826,13 @@ describe('Deploy', () => {
               'class A { }',
               {
                 B: { $jig: 1 },
+                deps: { },
                 f: { $jig: 2 }
               },
               B.toString(),
-              { },
+              { deps: { } },
               f.toString(),
-              { }
+              { deps: { } }
             ]
           }
         ]
@@ -869,7 +875,7 @@ describe('Deploy', () => {
             op: 'DEPLOY',
             data: [
               B.toString(),
-              { A: { $jig: 0 } }
+              { A: { $jig: 0 }, deps: { } }
             ]
           }
         ]
@@ -914,11 +920,13 @@ describe('Deploy', () => {
             data: [
               'class A { }',
               {
-                B: { $jig: 1 }
+                B: { $jig: 1 },
+                deps: { }
               },
               'class B { }',
               {
-                A: { $jig: 0 }
+                A: { $jig: 0 },
+                deps: { }
               }
             ]
           }
@@ -1025,6 +1033,7 @@ describe('Deploy', () => {
               'class A { }',
               {
                 Berry: { $jig: 0 },
+                deps: { },
                 Jig: { $jig: 1 }
               }
             ]
@@ -1142,6 +1151,7 @@ describe('Deploy', () => {
                 0: 3,
                 a: 2,
                 b: 1,
+                deps: { },
                 o: { c: 4, d: 5 }
               }
             ]
@@ -1150,7 +1160,7 @@ describe('Deploy', () => {
       })
 
       function test (CA) {
-        const expected = ['0', 'a', 'b', 'location', 'nonce', 'o', 'origin', 'owner', 'satoshis']
+        const expected = ['0', 'a', 'b', 'deps', 'location', 'nonce', 'o', 'origin', 'owner', 'satoshis']
         expect(Object.keys(CA)).to.deep.equal(expected)
         expect(Object.keys(CA.o)).to.deep.equal(['c', 'd'])
       }
@@ -1199,7 +1209,7 @@ describe('Deploy', () => {
                 deps: { A: { $jig: 1 } }
               },
               A.toString(),
-              {}
+              { deps: { } }
             ]
           }
         ]
@@ -1290,7 +1300,7 @@ describe('Deploy', () => {
             op: 'DEPLOY',
             data: [
               'class A { }',
-              {},
+              { deps: { } },
               'class B extends A { }',
               {
                 deps: { A: { $jig: 0 } }
@@ -1495,7 +1505,7 @@ describe('Deploy', () => {
                 deps: { h: { $jig: 1 } }
               },
               f.toString(),
-              {}
+              { deps: { } }
             ]
           }
         ]
@@ -1878,7 +1888,8 @@ describe('Deploy', () => {
               {
                 a: 1,
                 b: 2,
-                c: 3
+                c: 3,
+                deps: { }
               }
             ]
           }
@@ -1886,7 +1897,7 @@ describe('Deploy', () => {
       })
 
       function test (CA) {
-        const expected = ['a', 'b', 'c', 'location', 'nonce', 'origin', 'owner', 'satoshis']
+        const expected = ['a', 'b', 'c', 'deps', 'location', 'nonce', 'origin', 'owner', 'satoshis']
         expect(Object.keys(CA)).to.deep.equal(expected)
       }
 

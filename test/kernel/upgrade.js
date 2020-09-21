@@ -57,7 +57,7 @@ describe('Upgrade', () => {
             data: [
               { $jig: 0 },
               'class B { }',
-              {}
+              { deps: { } }
             ]
           }
         ]
@@ -111,7 +111,7 @@ describe('Upgrade', () => {
             data: [
               { $jig: 0 },
               B.toString(),
-              {}
+              { deps: { } }
             ]
           }
         ]
@@ -159,7 +159,7 @@ describe('Upgrade', () => {
             data: [
               { $jig: 0 },
               'class B { }',
-              { y: 2 }
+              { deps: { }, y: 2 }
             ]
           }
         ]
@@ -267,7 +267,7 @@ describe('Upgrade', () => {
             op: 'DEPLOY',
             data: [
               'class A { }',
-              {}
+              { deps: { } }
             ]
           },
           {
@@ -321,7 +321,7 @@ describe('Upgrade', () => {
             data: [
               { $jig: 0 },
               'class C { }',
-              {}
+              { deps: { } }
             ]
           }
         ]
@@ -393,12 +393,13 @@ describe('Upgrade', () => {
               { $jig: 0 },
               'class A { }',
               {
-                n: 1,
+                arr: [{ $dup: ['2', 'arr'] }],
                 b: false,
-                s: 'abc',
+                deps: { },
+                n: 1,
                 o: { o: { $dup: ['2', 'o'] } },
+                s: 'abc',
                 set: { $set: [{ $dup: ['0'] }], props: { A: { $dup: ['0'] } } },
-                arr: [{ $dup: ['2', 'arr'] }]
               }
             ]
           }
@@ -453,7 +454,7 @@ describe('Upgrade', () => {
             op: 'DEPLOY',
             data: [
               'class B { }',
-              {}
+              { deps: { } }
             ]
           },
           {
@@ -462,7 +463,8 @@ describe('Upgrade', () => {
               { $jig: 0 },
               'class A { }',
               {
-                B: { $jig: 1 }
+                B: { $jig: 1 },
+                deps: { }
               }
             ]
           }
@@ -532,7 +534,8 @@ describe('Upgrade', () => {
               { $jig: 0 },
               B.toString(),
               {
-                A: { $jig: 1 }
+                A: { $jig: 1 },
+                deps : { }
               }
             ]
           }
@@ -588,7 +591,8 @@ describe('Upgrade', () => {
               { $jig: 0 },
               B.toString(),
               {
-                c: { $jig: 1 }
+                c: { $jig: 1 },
+                deps: { } 
               }
             ]
           }
@@ -765,7 +769,7 @@ describe('Upgrade', () => {
             op: 'DEPLOY',
             data: [
               'class B { }',
-              {}
+              { deps: { } }
             ]
           },
           {
