@@ -140,6 +140,32 @@ describe('Jig', () => {
       class A extends Jig { constructor () { super(); this.n = 1 } }
       expect(() => new A()).to.throw('Jig must use init() instead of constructor()')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('pass jig with no init method', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+
+      expectTx({
+        nin: 0,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'NEW',
+            data: [{ $jig: 0 }, [{ $jig: 1 }]]
+          }
+        ]
+      })
+
+      const b = new A(a)
+      await b.sync()
+    })
   })
 
   // --------------------------------------------------------------------------
