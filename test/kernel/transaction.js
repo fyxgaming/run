@@ -674,6 +674,7 @@ describe('Transaction', () => {
       const A = tx.update(() => run.deploy(class A { }))
       stub(run.blockchain, 'broadcast').onFirstCall().throws()
       await expect(tx.publish()).to.be.rejected
+      run.blockchain.broadcast.callThrough()
       await tx.publish()
       expect(A.location.endsWith('_o1')).to.equal(true)
     })
