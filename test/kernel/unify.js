@@ -632,14 +632,15 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if method time travel', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if parent method time travel', () => {
-      // TODO
+    it('throws if method time travel', async () => {
+      const run = new Run()
+      class A extends Jig { f () { return 1 } }
+      class B extends Jig { f () { return 2 } }
+      const CB = run.deploy(A).upgrade(B)
+      await run.sync()
+      const CA = await run.load(CB.origin)
+      const a = new CA()
+      expect(() => CB.prototype.f.apply(a)).to.throw('Method time travel')
     })
   })
 
