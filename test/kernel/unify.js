@@ -774,8 +774,28 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('unifies deps', () => {
-      // TODO
+    it.skip('unifies deps', async () => {
+      const run = new Run()
+      const A2 = run.deploy(class A { })
+      A2.destroy()
+      await A2.sync()
+      const A1 = await run.load(A2.origin)
+
+      class B { static f () { return A.nonce } } // eslint-disable-line
+      B.deps = { A: A1 }
+      const CB = run.deploy(B)
+
+      class C { static f () { return A.nonce } } // eslint-disable-line
+      C.deps = { A: A2 }
+      const CC = run.deploy(C)
+
+      // TODO: should throw
+      class D extends Jig { init (n) { this.n = n }}
+      console.log(CB.f())
+      console.log(CC.f())
+      const CD = run.transaction(() => new D(CB.f() + CC.f()))
+      await CD.sync()
+      console.log(CD.n)
     })
 
     // ------------------------------------------------------------------------
