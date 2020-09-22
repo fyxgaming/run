@@ -64,8 +64,8 @@ describe('Jig', () => {
       await a.sync()
       test(a)
 
-      const a2 = await run.load(a.location)
-      test(a2)
+      // const a2 = await run.load(a.location)
+      // test(a2)
 
       run.cache = new LocalCache()
       const a3 = await run.load(a.location)
