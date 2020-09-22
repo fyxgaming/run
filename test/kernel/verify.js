@@ -22,7 +22,7 @@ describe('Verify', () => {
 
   // ------------------------------------------------------------------------
 
-  it.skip('prints debugging information for payload mismatch', async () => {
+  it.only('prints debugging information for payload mismatch', async () => {
     const run = new Run()
 
     class MalleatingMockchain extends Mockchain {
@@ -57,6 +57,8 @@ describe('Verify', () => {
     // TODO: Pre-verify using import
     // TODO: Even better payload mismatch errors in pre-verify
     // TODO: New test for pre-verify
+    // TODO: Document pre-verify is meant to catch run bugs, not consensus issues
+    // TODO: Make pre-verify optional
 
     run.blockchain = new MalleatingMockchain()
 
