@@ -933,7 +933,7 @@ describe('Transaction', () => {
   // --------------------------------------------------------------------------
 
   describe('import', () => {
-    it('unpublished', async () => {
+    it.only('unpublished', async () => {
       const run = new Run()
       class A extends Jig { }
       const tx = new Transaction()
@@ -976,7 +976,7 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('import, update, and publish emits jig events', async () => {
+    it.only('import, update, and publish emits jig events', async () => {
       const callback = fake()
       const run = new Run()
       class A extends Jig { }
@@ -1006,7 +1006,7 @@ describe('Transaction', () => {
     })
     // ------------------------------------------------------------------------
 
-    it('import, update, and publish adds to cache', async () => {
+    it.only('import, update, and publish adds to cache', async () => {
       const run = new Run()
       class A extends Jig { }
       const tx = new Transaction()

@@ -25,7 +25,7 @@ describe('Verify', () => {
 
   // ------------------------------------------------------------------------
 
-  it.only('prints debugging information for payload mismatch', async () => {
+  it('prints debugging information for payload mismatch', async () => {
     const run = new Run()
 
     class MalleatingMockchain extends Mockchain {
