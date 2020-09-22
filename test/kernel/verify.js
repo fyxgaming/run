@@ -5,6 +5,9 @@
  */
 
 const { describe, it, afterEach } = require('mocha')
+const { stub } = require('sinon')
+require('chai').use(require('chai-as-promised'))
+const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
 const { payFor } = require('../env/misc')
@@ -36,7 +39,7 @@ describe('Verify', () => {
         // Recreate a new payload
         const Buffer = bsv.deps.Buffer
         const prefix = Buffer.from('run', 'utf8')
-        const protocol = Buffer.from(Run.protocol, 'hex')
+        const protocol = Buffer.from([Run.protocol], 'hex')
         const app = Buffer.from('', 'utf8')
         const payload2 = Buffer.from(JSON.stringify(payloadJson), 'utf8')
         const script = bsv.Script.buildSafeDataOut([prefix, protocol, app, payload2])
@@ -52,23 +55,29 @@ describe('Verify', () => {
       }
     }
 
-    // TODO: Run.protocol
-    // TODO: Check logs for Payload mismatch
-    // TODO: Pre-verify using import
-    // TODO: Even better payload mismatch errors in pre-verify
-    // TODO: New test for pre-verify
-    // TODO: Document pre-verify is meant to catch run bugs, not consensus issues
-    // TODO: Make pre-verify optional
-
     run.blockchain = new MalleatingMockchain()
+    const logger = { error: () => { } }
+    stub(logger, 'error')
+    run.logger = logger
 
     class A extends Jig { }
     const a = new A()
     await run.sync()
 
     run.cache = new LocalCache()
-    await run.load(a.location)
+    await expect(run.load(a.location)).to.be.rejectedWith('Payload mismatch')
+
+    const hasErrorMessage = x => logger.error.args.some(args => args.join().indexOf('State mismatch') !== -1)
+    expect(hasErrorMessage('Expected payload')).to.equal(true)
+    expect(hasErrorMessage('Actual payload')).to.equal(true)
+    expect(hasErrorMessage('State mismatch')).to.equal(true)
   })
+
+  // TODO: Pre-verify using import
+  // TODO: Even better payload mismatch errors in pre-verify
+  // TODO: New test for pre-verify
+  // TODO: Document pre-verify is meant to catch run bugs, not consensus issues
+  // TODO: Make pre-verify optional
 
   // ------------------------------------------------------------------------
 
