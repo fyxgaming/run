@@ -185,7 +185,7 @@ describe('Private', () => {
 
       // ----------------------------------------------------------------------
 
-      it.only('throws from another jig of parent class', async () => {
+      it('throws from another jig of parent class', async () => {
         const run = new Run()
         class B extends Jig { get (a) { return a._x }}
         class A extends B { init () { this._x = 1 } }
@@ -193,7 +193,7 @@ describe('Private', () => {
         const a = new A()
         const b = new B()
         test(a, b)
-        await a.sync()
+        await run.sync()
         const a2 = await run.load(a.location)
         const b2 = await run.load(b.location)
         test(a2, b2)
