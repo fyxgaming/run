@@ -21,7 +21,7 @@ describe('Token', () => {
   // Don't deactivate the current run instance between tests. Token needs to stay deployed.
   afterEach(() => Run.instance && Run.instance.sync())
 
-  Run.cover('TestToken')
+  if (COVER) Run.cover('TestToken')
 
   // --------------------------------------------------------------------------
   // mint
@@ -78,6 +78,20 @@ describe('Token', () => {
       expect(() => TestToken.mint(Infinity)).to.throw('amount must be an integer')
       expect(() => TestToken.mint(NaN)).to.throw('amount must be an integer')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if try to fake class', async () => {
+      const run = new Run()
+      class TestToken extends Token { }
+      run.deploy(TestToken)
+      await run.sync()
+
+      const run2 = new Run()
+      class HackToken extends TestToken { }
+      run2.deploy(HackToken)
+      await expect(run2.sync()).to.be.rejectedWith('mandatory-script-verify-flag-failed')
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -90,6 +104,7 @@ describe('Token', () => {
       class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
+      await token.sync()
       const sent = token.send(address)
       await sent.sync()
       expect(sent.owner).to.equal(address)
@@ -105,6 +120,7 @@ describe('Token', () => {
       class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
+      await token.sync()
       const sent = token.send(address, 30)
       await run.sync()
       expect(token.owner).to.equal(run.owner.address)
@@ -143,10 +159,11 @@ describe('Token', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if send to bad owner', () => {
+    it('throws if send to bad owner', async () => {
       new Run() // eslint-disable-line
       class TestToken extends Token { }
       const token = TestToken.mint(100)
+      await token.sync()
       expect(() => token.send(10)).to.throw('Invalid owner: 10')
       expect(() => token.send('abc', 10)).to.throw('Invalid owner: "abc"')
     })
@@ -216,6 +233,7 @@ describe('Token', () => {
       const a = TestToken.mint(1)
       const b = TestToken.mint(2)
       const address = new PrivateKey().toAddress().toString()
+      await b.sync()
       b.send(address)
       await expect(new TestToken(a, b).sync()).to.be.rejected
     })
@@ -278,6 +296,14 @@ describe('Token', () => {
       const token = TestToken.mint(1)
       expect(() => new TestToken(token, token)).to.throw('Cannot combine duplicate tokens')
     })
+  })
+
+  // ------------------------------------------------------------------------
+
+  it.skip('deploy', async () => {
+    // run.deploy(Run.Token)
+    // await run.sync()
+    // console.log(Run.Token)
   })
 })
 
