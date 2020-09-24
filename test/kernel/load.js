@@ -14,7 +14,7 @@ const { Jig, LocalCache } = Run
 // Load
 // ------------------------------------------------------------------------------------------------
 
-describe('Loader', () => {
+describe('Load', () => {
   it('mixture of cached and replay with parent property', async () => {
     // A very particular test for a particular key ordering bug
 
@@ -38,6 +38,8 @@ describe('Loader', () => {
   })
 })
 
+// ------------------------------------------------------------------------------------------------
+// Client mode
 // ------------------------------------------------------------------------------------------------
 
 describe('Client mode', () => {
