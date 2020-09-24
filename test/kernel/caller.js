@@ -21,6 +21,92 @@ describe('Caller', () => {
 
   // ------------------------------------------------------------------------
 
+  it('subjig test', async () => {
+    const run = new Run()
+
+    class Child extends Jig {
+      static createSubChild(SubChild) { this.SubSub = SubChild }
+    }
+
+    class SubChild { }
+
+    const Child2 = run.deploy(Child)
+
+    class Parent extends Jig { }
+    Parent.Child = Child2
+
+    const Parent2 = run.deploy(Parent)
+
+    await run.sync()
+
+    Child2.createSubChild(Parent)
+
+    await run.sync()
+
+
+
+    const Parent3 = await run.load(Parent2.location)
+    const Child3 = await run.load(Child2.location)
+
+    await Parent3.sync()
+    await Child3.sync()
+
+    run.cache = new LocalCache()
+    const Parent4 = await run.load(Parent2.location)
+    const Child4 = await run.load(Child2.location)
+
+    await Parent4.sync()
+    await Child4.sync()
+  })
+
+  it('subjig test 2', async () => {
+    const run = new Run({ network: 'test', trust: [] })
+
+
+    const loc = '9e67c9645024b3f3ebbc8afe41fe0d89fe44d0a3b51ba1cc352306dd82450365_o1'
+
+    const txid = '9e67c9645024b3f3ebbc8afe41fe0d89fe44d0a3b51ba1cc352306dd824503651'
+    const txid2 = '9c96c00386eb22547539c92b33fe30e3d69e3268ae820e877af5dce94e1b901f'
+    const txid3 = 'f5100ad6091ae7e4459179376da4046905762bea25e2bad056cecd76bf5291a6'
+
+    // const trust = [
+      // txid, txid2, txid
+    // ]
+
+    console.log(JSON.stringify(run.payload(await run.blockchain.fetch(txid)), 0, 3))
+    console.log(JSON.stringify(run.payload(await run.blockchain.fetch(txid2)), 0, 3))
+    console.log(JSON.stringify(run.payload(await run.blockchain.fetch(txid3)), 0, 3))
+
+    // run.trust(txid)
+    // run.trust(txid2)
+    run.trust(txid3)
+
+    // await run.load(txid3 + '_o1')
+
+    const X = await run.load(loc)
+
+
+    await X.sync()
+  })
+
+  // ------------------------------------------------------------------------
+
+  it.only('subjig test 3', async () => {
+    const run = new Run({ network: 'test' })
+
+    const location = '7dca6829e7ffd1d5cd3db43955ab2c3b6f58900db03c4cd4e2d14e703dea5a18_o1'
+
+    const X = await run.load(location)
+
+    console.log(X)
+    console.log(X.toString())
+
+    await X.sync()
+
+  })
+
+  // ------------------------------------------------------------------------
+
   it('null externally', async () => {
     const run = new Run()
     class A extends Jig {
