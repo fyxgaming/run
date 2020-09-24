@@ -300,6 +300,50 @@ describe('Token', () => {
 
   // ------------------------------------------------------------------------
 
+  it('usage example', async () => {
+    const a = new Run()
+    a.timeout = 500000
+    const b = new Run()
+    b.timeout = 500000
+    class TestToken extends Token { }
+    const TT = await b.deploy(TestToken)
+
+    // B mints tokens
+    for (let i = 0; i < 20; i++) {
+      console.log('mint', i)
+      const token = TT.mint(10)
+      await token.sync()
+
+      Run.instance.blockchain.block()
+    }
+
+    // B sends to A and back again in a loop
+    for (let i = 0; i < 20; i++) {
+      console.log('b', i)
+      b.activate()
+      await b.inventory.sync()
+      b.inventory.jigs.forEach(jig => jig.send(a.owner.pubkey))
+      await b.sync()
+
+      console.log('a', i)
+      a.activate()
+      await a.inventory.sync()
+      a.inventory.jigs.forEach(jig => jig.send(b.owner.pubkey))
+      await a.sync()
+
+      Run.instance.blockchain.block()
+    }
+
+    // Loading from scratch
+    console.log('load inventory')
+    b.activate()
+    b.cache = new LocalCache()
+    await b.inventory.sync()
+    console.log(b.inventory.jigs.length)
+  })
+
+  // ------------------------------------------------------------------------
+
   it.skip('deploy', async () => {
     // run.deploy(Run.Token)
     // await run.sync()

@@ -1,14 +1,17 @@
 /**
- * loader.js
+ * load.js
  *
- * Tests for lib/kernel/loader
+ * Tests for load functionality.
  */
 
 const { describe, it } = require('mocha')
+require('chai').use(require('chai-as-promised'))
+const { expect } = require('chai')
 const Run = require('../env/run')
+const { Jig, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
-// Loader
+// Load
 // ------------------------------------------------------------------------------------------------
 
 describe('Loader', () => {
@@ -32,6 +35,53 @@ describe('Loader', () => {
     run = new Run({ blockchain: run.blockchain })
     const B2 = await run.load(middleLocation)
     await B2.sync()
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+
+describe.only('Client mode', () => {
+  it('loads from state cache', async () => {
+    const run = new Run()
+    run.client = false
+    class A extends Jig { }
+    class B extends A { }
+    class C { }
+    const b = new B(C)
+    await run.sync()
+    run.client = true
+    await run.load(b.location)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('throws if not in state cache', async () => {
+    const run = new Run()
+    run.client = false
+    class A extends Jig { }
+    class B extends A { }
+    class C { }
+    const b = new B(C)
+    await run.sync()
+    run.client = true
+    run.cache = new LocalCache()
+    await expect(run.load(b.location)).to.be.rejectedWith('Jigs must be cached in client mode')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('manual import is ok', async () => {
+    const run = new Run()
+    run.client = false
+    class A extends Jig { }
+    class B extends A { }
+    class C { }
+    const b = new B(C)
+    await run.sync()
+    run.client = true
+    run.cache = new LocalCache()
+    const rawtx = await run.blockchain.fetch(b.location.slice(0, 64))
+    await run.import(rawtx)
   })
 })
 
