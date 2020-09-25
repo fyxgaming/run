@@ -92,6 +92,22 @@ describe('Token', () => {
       run2.deploy(HackToken)
       await expect(run2.sync()).to.be.rejectedWith('mandatory-script-verify-flag-failed')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('sender is null', async () => {
+      const run = new Run()
+      class TestToken extends Token { }
+      const token = TestToken.mint(1)
+      await run.sync()
+      expect(token.sender).to.equal(null)
+      if (COVER) return
+      const token2 = await run.load(token.location)
+      expect(token2.sender).to.equal(null)
+      run.cache = new LocalCache()
+      const token3 = await run.load(token.location)
+      expect(token3.sender).to.equal(null)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -167,6 +183,44 @@ describe('Token', () => {
       expect(() => token.send(10)).to.throw('Invalid owner: 10')
       expect(() => token.send('abc', 10)).to.throw('Invalid owner: "abc"')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('sender on sent token is sending owner', async () => {
+      const run = new Run()
+      class TestToken extends Token { }
+      const sender = TestToken.mint(2)
+      await sender.sync()
+      const sent = sender.send(run.purse.address, 1)
+      expect(sent.sender).to.equal(sender.owner)
+      await sent.sync()
+      if (COVER) return
+      const sent2 = await run.load(sent.location)
+      expect(sent2.sender).to.equal(sender.owner)
+      run.cache = new LocalCache()
+      const sent3 = await run.load(sent.location)
+      expect(sent3.sender).to.equal(sender.owner)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('sender on sending token is null', async () => {
+      const run = new Run()
+      class TestToken extends Token { }
+      const orig = TestToken.mint(2)
+      await orig.sync()
+      const sender = orig.send(run.owner.address, 1)
+      await sender.sync()
+      sender.send(run.purse.address, 1)
+      expect(sender.sender).to.equal(null)
+      await sender.sync()
+      if (COVER) return
+      const sender2 = await run.load(sender.location)
+      expect(sender2.sender).to.equal(null)
+      run.cache = new LocalCache()
+      const sender3 = await run.load(sender.location)
+      expect(sender3.sender).to.equal(null)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -211,19 +265,18 @@ describe('Token', () => {
     // ------------------------------------------------------------------------
 
     // load() does not work in cover mode for preinstalls
-    if (!COVER) {
-      it('load after combine', async () => {
-        const run = new Run()
-        class TestToken extends Token { }
-        const a = TestToken.mint(30)
-        const b = TestToken.mint(70)
-        const c = new TestToken(a, b)
-        await run.sync()
-        run.cache = new LocalCache()
-        const c2 = await run.load(c.location)
-        expect(c2.amount).to.equal(c.amount)
-      })
-    }
+    it('load after combine', async () => {
+      const run = new Run()
+      class TestToken extends Token { }
+      const a = TestToken.mint(30)
+      const b = TestToken.mint(70)
+      const c = new TestToken(a, b)
+      await run.sync()
+      if (COVER) return
+      run.cache = new LocalCache()
+      const c2 = await run.load(c.location)
+      expect(c2.amount).to.equal(c.amount)
+    })
 
     // ------------------------------------------------------------------------
 
@@ -296,6 +349,90 @@ describe('Token', () => {
       const token = TestToken.mint(1)
       expect(() => new TestToken(token, token)).to.throw('Cannot combine duplicate tokens')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('sender on combined token is null', async () => {
+      const run = new Run()
+      class TestToken extends Token { }
+      const a = TestToken.mint(2)
+      const b = TestToken.mint(2)
+      await run.sync()
+      const c = b.send(run.owner.address, 1)
+      const combined = new TestToken(a, b, c)
+      await combined.sync()
+      expect(combined.sender).to.equal(null)
+      if (COVER) return
+      const combined2 = await run.load(combined.location)
+      expect(combined2.sender).to.equal(null)
+      run.cache = new LocalCache()
+      const combined3 = await run.load(combined.location)
+      expect(combined3.sender).to.equal(null)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // destroy
+  // --------------------------------------------------------------------------
+
+  describe('destroy', () => {
+    it('amount is 0', async () => {
+      const run = new Run()
+      class TestToken extends Token { }
+      const token = TestToken.mint(2)
+      expect(token.amount).to.equal(2)
+      token.destroy()
+      expect(token.amount).to.equal(0)
+      await run.sync()
+      if (COVER) return
+      run.cache = new LocalCache()
+      const token2 = await run.load(token.location)
+      expect(token2.amount).to.equal(0)
+      const token3 = await run.load(token.location)
+      expect(token3.amount).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('sender is null', async () => {
+      const run = new Run()
+      class TestToken extends Token { }
+      const orig = TestToken.mint(2)
+      await orig.sync()
+      const token = orig.send(run.owner.address, 1)
+      expect(token.sender).to.equal(orig.owner)
+      token.destroy()
+      expect(token.sender).to.equal(null)
+      await run.sync()
+      if (COVER) return
+      run.cache = new LocalCache()
+      const token2 = await run.load(token.location)
+      expect(token2.sender).to.equal(null)
+      const token3 = await run.load(token.location)
+      expect(token3.sender).to.equal(null)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot be combined', async () => {
+      new Run() // eslint-disable-line
+      class TestToken extends Token { }
+      const a = TestToken.mint(2)
+      a.destroy()
+      const b = TestToken.mint(2)
+      const c = new TestToken(a, b)
+      await expect(c.sync()).to.be.rejected
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot be sent', () => {
+      const run = new Run()
+      class TestToken extends Token { }
+      const a = TestToken.mint(2)
+      a.destroy()
+      expect(() => a.send(run.owner.address)).to.throw()
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -346,6 +483,10 @@ describe('Token', () => {
   // ------------------------------------------------------------------------
 
   it.skip('deploy', async () => {
+    // const purse = '<purse>'
+    // const owner = '<owner>'
+    // const run = new Run({ network: '<network>', purse, owner })
+
     // run.deploy(Run.Token)
     // await run.sync()
     // console.log(Run.Token)
