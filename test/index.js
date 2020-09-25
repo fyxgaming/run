@@ -4,6 +4,9 @@
  * Master list of test modules
  */
 
+require('./protocol')
+require('./run')
+
 require('./extra/asm')
 require('./extra/expect')
 require('./extra/group')
