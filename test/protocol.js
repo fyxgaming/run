@@ -158,6 +158,8 @@ async function captureRelayTxids () {
       })
   })
 
+  console.log('Num transactions:', txids.length)
+
   const fs = require('fs-extra')
   fs.writeFileSync('./test/data/relay-txids.json', JSON.stringify(txids))
 }
