@@ -23,6 +23,26 @@ describe('LocalPurse', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
+    it.only('help', async () => {
+      const run = new Run({ api: 'mattercloud', network: 'main' })
+      run.timeout = 30000
+      const C = await run.load('e6f7e6ef9befa50279bbe42b47e439961f5f04b1b0cd02271d2e991e9d89a018_o1')
+      console.log(C.name)
+      /*
+      console.log(C.mint)
+      console.log(C.location)
+      await C.sync()
+      console.log(C.mint)
+      console.log(C.location)
+      const D = await run.load('e6f7e6ef9befa50279bbe42b47e439961f5f04b1b0cd02271d2e991e9d89a018_o1')
+      console.log(D.mint)
+      console.log(D.location)
+      await D.sync()
+      console.log(D.mint)
+      console.log(D.location)
+      */
+    }).timeout(30000)
+
     describe('key', () => {
       it('generates random purse if unspecified', () => {
         const blockchain = new Run().blockchain
