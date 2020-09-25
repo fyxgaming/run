@@ -9,7 +9,7 @@
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const Run = require('./env/run')
-const { COVER } = require('./env/misc')
+const { COVER } = require('./env/config')
 const unmangle = require('./env/unmangle')
 
 // ------------------------------------------------------------------------------------------------
@@ -73,7 +73,7 @@ describe('Protocol', () => {
 
   // --------------------------------------------------------------------------
 
-  it.only('RelayX', async () => {
+  it('RelayX', async () => {
     const run = new Run({ network: 'main' })
 
     const txids = require('./data/relay-txids.json')
