@@ -24,7 +24,7 @@ describe('Deps', () => {
   // --------------------------------------------------------------------------
 
   describe('Code', () => {
-    it('set deps from inside', async () => {
+    it.only('set deps from inside', async () => {
       const run = new Run()
       class A extends Jig {
         static f () { return B } // eslint-disable-line
@@ -364,7 +364,7 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set caller dep', async () => {
+    it.only('set caller dep', async () => {
       const run = new Run()
       class A extends Jig {
         static f() { return caller } // eslint-disable-line
@@ -428,7 +428,7 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it('private deps available from inside', async () => {
+    it.only('private deps available from inside', async () => {
       const run = new Run()
       class A extends Jig {
         static f() { return _B } // eslint-disable-line
@@ -633,7 +633,7 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it('static code deps with upgraded caller', async () => {
+    it.only('static code deps with upgraded caller', async () => {
       const run = new Run()
       class A { static f () { return B.n } } // eslint-disable-line
       class B1 { }

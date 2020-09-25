@@ -36,7 +36,7 @@ async function buildTests () {
 // ------------------------------------------------------------------------------------------------
 
 async function runTests () {
-  const timeout = process.env.TIMEOUT || 5 * 60 * 1000
+  const timeout = process.env.TIMEOUT || 10 * 60 * 1000
   const browser = process.env.BROWSER || 'chrome'
 
   // Headless mode is required in Linux VMs on Github Actions
