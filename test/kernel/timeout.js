@@ -71,8 +71,9 @@ describe('Timeout', () => {
     const sleep = ms => new Promise((resolve, reject) => setTimeout(resolve, ms))
     stub(run.purse, 'pay').callsFake(x => sleep(1000))
     run.timeout = 10
-    const C = run.deploy(A)
-    await expect(C.sync()).to.be.rejectedWith('publish timeout')
+    const tx = new Run.Transaction()
+    tx.update(() => run.deploy(A))
+    await expect(tx.publish()).to.be.rejectedWith('publish timeout')
   })
 
   // ------------------------------------------------------------------------
