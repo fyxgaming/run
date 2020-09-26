@@ -55,6 +55,7 @@ require('./module/remote-blockchain')
 require('./module/pay-server')
 require('./module/viewer')
 
+require('./sandbox/realm')
 require('./sandbox/sandbox')
 
 require('./util/admin')

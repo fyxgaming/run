@@ -13,7 +13,7 @@
     "lint": "standard --fix",
     "build": "webpack",
     "test": "env LIB=lib mocha",
-    "test:cover": "env LIB=lib env COVER=1 nyc -r=text -r=lcovonly -x=test/** mocha",
+    "test:cover": "env LIB=lib env COVER=1 nyc -r=text -r=lcovonly -x=test/** -x=**/determinism.js -x=**/stringify.js mocha",
     "test:node": "webpack && env LIB=dist/run.node.min.js env MANGLED=1 mocha",
     "test:browser": "node test/env/browser",
     "deploy": "deploy -mt lib/extra/*.js",
@@ -21,7 +21,6 @@
     "bump": "npm version patch && git push --follow-tags && npm publish"
   },
   "dependencies": {
-    "@runonbitcoin/sandbox": "^0.1.15",
     "bsv": "^1.5.4"
   },
   "mocha": {
@@ -42,6 +41,7 @@
     "dotenv": "^8.2.0",
     "fs-extra": "^9.0.1",
     "glob": "^7.1.6",
+    "jsdom": "^16.4.0",
     "mocha": "^8.1.3",
     "node-fetch": "^2.6.1",
     "nyc": "^15.1.0",

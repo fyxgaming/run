@@ -314,7 +314,7 @@ describe('Sync', () => {
     })
 
     // TODO: Understand, reproduce, fix, remove
-    it.only('zhell infinite loop', async () => {
+    it.skip('zhell infinite loop', async () => {
       const run = new Run({ network: 'test' })
       const location = '7dca6829e7ffd1d5cd3db43955ab2c3b6f58900db03c4cd4e2d14e703dea5a18_o1'
       const X = await run.load(location)
