@@ -66,10 +66,6 @@ describe('Run', () => {
     // but CB will refer back to CAO again
     await CAO.sync()
 
-    console.log(CAO.location)
-    console.log(CAO.origin)
-    console.log(CAO.x)
-
     expect(CAO.location).to.equal(CAO.x.x.location)
     expect(CAO.x.location).to.equal(CAO.x.x.x.location)
   })
