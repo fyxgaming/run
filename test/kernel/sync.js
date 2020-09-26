@@ -312,14 +312,6 @@ describe('Sync', () => {
       expect(CAO.location).to.equal(CAO.x.x.location)
       expect(CAO.x.location).to.equal(CAO.x.x.x.location)
     })
-
-    // TODO: Understand, reproduce, fix, remove
-    it.skip('zhell infinite loop', async () => {
-      const run = new Run({ network: 'test' })
-      const location = '7dca6829e7ffd1d5cd3db43955ab2c3b6f58900db03c4cd4e2d14e703dea5a18_o1'
-      const X = await run.load(location)
-      await X.sync()
-    })
   })
 
   // --------------------------------------------------------------------------

@@ -11,6 +11,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const DeterministicRealm = unmangle(Run)._DeterministicRealm
+const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
 // DeterministicRealm
@@ -353,6 +354,19 @@ describe('DeterministicRealm', () => {
       expect(c.evaluate('JSON.stringify.toString()')).to.equal('function stringify() { [native code ] }')
       expect(c.evaluate('Function.prototype.toString.toString()')).to.equal('function toString() { [native code ] }')
       expect(c.evaluate('Function.prototype.toString.toString.toString()')).to.equal('function toString() { [native code ] }')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Misc
+  // --------------------------------------------------------------------------
+
+  describe('Misc', () => {
+    it('should log in admin mode', () => {
+      const run = new Run()
+      run.preverify = false
+      class A extends Jig { init () { console.log(this) } }
+      new A() // eslint-disable-line
     })
   })
 
