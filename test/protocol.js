@@ -59,7 +59,7 @@ describe('Protocol', () => {
       try {
         run.payload(rawtx)
         nrun++
-        console.log(nrun + ' of ' + (i + 1))
+        console.log(nrun + ' of ' + (i + 1) + ' of ' + txns.length)
         await run.import(rawtx)
       } catch (e) {
         if (e.message.startsWith('Not a run transaction')) {
