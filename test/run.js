@@ -21,15 +21,17 @@ describe('Run', () => {
     expect(typeof run.payload(tx)).to.equal('object')
   })
 
-  it('zhell infinite loop', async () => {
+  it.only('zhell infinite loop', async () => {
     const run = new Run({ network: 'test' })
     const location = '7dca6829e7ffd1d5cd3db43955ab2c3b6f58900db03c4cd4e2d14e703dea5a18_o1'
     const X = await run.load(location)
+    console.log('--')
     await X.sync()
   })
 
-  it.only('infinite loop during inner sync', async () => {
+  it('no infinite loops during forward sync inner jigs', async () => {
     const run = new Run()
+
     class A extends Jig { set (x) { this.x = x } }
     const a = new A()
     const b = new A()
@@ -38,7 +40,37 @@ describe('Run', () => {
     const ao = await run.load(a.origin)
     b.set(ao)
     await b.sync()
-    await run.sync()
+
+    // ao will be synced to a newer state where it has CB set
+    // but b will refer back to ao again
     await ao.sync()
+
+    expect(ao.location).to.equal(ao.x.x.location)
+    expect(ao.x.location).to.equal(ao.x.x.x.location)
+  })
+
+  it('no infinite loops during forward sync inner code', async () => {
+    const run = new Run()
+
+    class A extends Jig { static set (x) { this.x = x } }
+    class B extends Jig { static set (x) { this.x = x } }
+    const CA = await run.deploy(A)
+    const CB = await run.deploy(B)
+    CA.set(CB)
+    await CA.sync()
+    const CAO = await run.load(CA.origin)
+    CB.set(CAO)
+    await CB.sync()
+
+    // CAO will be synced to a newer state where it has CB set
+    // but CB will refer back to CAO again
+    await CAO.sync()
+
+    console.log(CAO.location)
+    console.log(CAO.origin)
+    console.log(CAO.x)
+
+    expect(CAO.location).to.equal(CAO.x.x.location)
+    expect(CAO.x.location).to.equal(CAO.x.x.x.location)
   })
 })
