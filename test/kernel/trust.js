@@ -144,7 +144,7 @@ describe('Trust', () => {
 
     // ------------------------------------------------------------------------
 
-    it('trusts dependencies if trusted', async () => {
+    it('trusts inputs if trusted', async () => {
       const run = new Run()
       const A = run.deploy(class A extends Jig { })
       const B = run.deploy(class B extends A { })
@@ -154,6 +154,41 @@ describe('Trust', () => {
       run2.cache = new LocalCache()
       await run2.load(B.location)
       await run2.load(A.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('trusts references if trusted', async () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      B.A = A
+      run.deploy(A)
+      run.deploy(B)
+      await run.sync()
+      const run2 = new Run({ trust: [] })
+      run2.trust(B.location.slice(0, 64))
+      run2.cache = new LocalCache()
+      await run2.load(B.location)
+      await run2.load(A.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('trusts updated references if trusted', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      CA.auth()
+      class B { }
+      B.A = CA
+      const CB = run.deploy(B)
+      await run.sync()
+      const run2 = new Run({ trust: [] })
+      run2.trust(CB.location.slice(0, 64))
+      run2.cache = new LocalCache()
+      await run2.load(CB.location)
+      await run2.load(CA.location)
     })
   })
 
