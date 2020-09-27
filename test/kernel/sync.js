@@ -312,6 +312,32 @@ describe('Sync', () => {
       expect(CAO.location).to.equal(CAO.x.x.location)
       expect(CAO.x.location).to.equal(CAO.x.x.x.location)
     })
+
+    // --------------------------------------------------------------------------
+
+    it('sync during publish does not inner sync by default', async () => {
+      const run = new Run()
+      const A2 = run.deploy(class A extends Jig { })
+      A2.auth()
+      await A2.sync()
+      const A1 = await run.load(A2.origin)
+      const a = new A1()
+      await a.sync()
+      expect(a.constructor.location).to.equal(A1.origin)
+    })
+
+    // --------------------------------------------------------------------------
+
+    it('sync during publish with inner true syncs inner', async () => {
+      const run = new Run()
+      const A2 = run.deploy(class A extends Jig { })
+      A2.auth()
+      await A2.sync()
+      const A1 = await run.load(A2.origin)
+      const a = new A1()
+      await a.sync({ inner: true })
+      expect(a.constructor.location).to.equal(A2.location)
+    })
   })
 
   // --------------------------------------------------------------------------

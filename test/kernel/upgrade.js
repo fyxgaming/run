@@ -1236,7 +1236,7 @@ describe('Upgrade', () => {
       const a = new CO()
       const b = new C()
       expect(a.constructor.location).not.to.equal(b.constructor.location)
-      await a.sync()
+      await a.sync({ inner: true })
       expect(a.constructor.location).to.equal(b.constructor.location)
     })
 
@@ -1255,7 +1255,7 @@ describe('Upgrade', () => {
       expect(a.n).to.equal(1)
       a.f(2)
       expect(a.n).to.equal(2)
-      await a.sync()
+      await a.sync({ inner: true })
       a.f(3)
       expect(a.n).to.equal('error')
     })
