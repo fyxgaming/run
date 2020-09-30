@@ -109,7 +109,7 @@ describe('Sync', () => {
       await run.sync()
       run.blockchain.spends = () => b.location.slice(0, 64)
       try {
-        await expect(a.sync()).to.be.rejectedWith('Jig not spent in the transaction')
+        await expect(a.sync()).to.be.rejectedWith('[jig A] not found in the transaction')
       } finally {
         run.deactivate()
       }
