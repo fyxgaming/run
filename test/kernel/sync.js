@@ -219,6 +219,21 @@ describe('Sync', () => {
 
     // ------------------------------------------------------------------------
 
+    it('sync destroyed inner jig', async () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      B.A = A
+      const CB = run.deploy(B)
+      CB.A.destroy()
+      await run.sync()
+      const location = CB.location
+      await CB.sync()
+      expect(CB.location).to.equal(location)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('disable inner sync', async () => {
       const run = new Run()
       class A extends Jig { set (n) { this.n = n } }
