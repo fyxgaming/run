@@ -819,6 +819,27 @@ describe('Code', () => {
       expect(() => run.uninstall(Jig)).to.throw('Cannot uninstall native code')
       expect(() => run.uninstall(Berry)).to.throw('Cannot uninstall native code')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('reinstall with presets', async () => {
+      const run = new Run()
+      class A { }
+      const A2 = run.deploy(A)
+      await run.sync()
+      const location = A.location
+
+      const presets = A.presets
+      run.uninstall(A)
+      expect(A.location).to.equal(undefined)
+      A.presets = presets
+      const A3 = run.deploy(A)
+      await run.sync()
+
+      expect(A2).not.to.equal(A3)
+      expect(A.location).to.equal(location)
+      expect(A3.location).to.equal(location)
+    })
   })
 })
 
