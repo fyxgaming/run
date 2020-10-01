@@ -445,42 +445,45 @@ describe('Token', () => {
 
   if (STRESS) {
     describe('Stress', () => {
-      it('many sends', async () => {
-        const a = new Run()
-        a.timeout = 500000
-        const b = new Run()
-        b.timeout = 500000
-        class TestToken extends Token { }
-        const TT = await b.deploy(TestToken)
-
-        // B mints tokens
-        for (let i = 0; i < 20; i++) {
-          const token = TT.mint(10)
-          await token.sync()
-
-          Run.instance.blockchain.block()
-        }
-
-        // B sends to A and back again in a loop
-        for (let i = 0; i < 20; i++) {
-          b.activate()
-          await b.inventory.sync()
-          b.inventory.jigs.forEach(jig => jig.send(a.owner.pubkey))
+      if (!COVER) {
+        it('many sends', async () => {
+          const a = new Run()
+          a.timeout = 500000
+          const b = new Run()
+          b.timeout = 500000
+          class TestToken extends Token { }
+          const TT = b.deploy(TestToken)
           await b.sync()
 
-          a.activate()
-          await a.inventory.sync()
-          a.inventory.jigs.forEach(jig => jig.send(b.owner.pubkey))
-          await a.sync()
+          // B mints tokens
+          for (let i = 0; i < 20; i++) {
+            const token = TT.mint(10)
+            await token.sync()
 
-          Run.instance.blockchain.block()
-        }
+            Run.instance.blockchain.block()
+          }
 
-        // Loading from scratch
-        b.activate()
-        b.cache = new LocalCache()
-        await b.inventory.sync()
-      })
+          // B sends to A and back again in a loop
+          for (let i = 0; i < 20; i++) {
+            b.activate()
+            await b.inventory.sync()
+            b.inventory.jigs.forEach(jig => jig.send(a.owner.pubkey))
+            await b.sync()
+
+            a.activate()
+            await a.inventory.sync()
+            a.inventory.jigs.forEach(jig => jig.send(b.owner.pubkey))
+            await a.sync()
+
+            Run.instance.blockchain.block()
+          }
+
+          // Loading from scratch
+          b.activate()
+          b.cache = new LocalCache()
+          await b.inventory.sync()
+        })
+      }
     })
   }
 
