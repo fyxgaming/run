@@ -181,23 +181,18 @@ describe('Upgradable', () => {
   // --------------------------------------------------------------------------
 
   describe('Method', () => {
-    it.skip('set upgradable in method', async () => {
+    it('set upgradable in method', async () => {
       const run = new Run()
-      class A extends Jig { static seal () { this.sealed = true } }
+      class A extends Jig { static f () { this.upgradable = true } }
       const CA = run.deploy(A)
       await run.deploy(class B extends A { }).sync()
-      CA.seal()
-      const error = 'Cannot deploy: A is sealed'
+      CA.f()
+      expect(CA.upgradable).to.equal(true)
+      CA.upgrade(class B extends Jig { })
       await run.sync()
-      function test (CA) {
-        expect(() => run.deploy(class C extends A { }).sync()).to.throw(error)
-      }
-      test(CA)
-      const CA2 = await run.load(CA.location)
-      test(CA2)
+      await run.load(CA.location)
       run.cache = new LocalCache()
-      const CA3 = await run.load(CA.location)
-      test(CA3)
+      await run.load(CA.location)
     })
 
     // ------------------------------------------------------------------------
