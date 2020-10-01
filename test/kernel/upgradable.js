@@ -222,27 +222,31 @@ describe('Upgradable', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set upgradable to invalid value', async () => {
+    it('throws if set upgradable to invalid value', async () => {
       const run = new Run()
 
       class A extends Jig {
         static f (x) {
-          this.sealed = x
+          this.upgradable = x
         }
 
         static g (x) {
           const desc = { configurable: true, enumerable: true, writable: true, value: x }
-          Object.defineProperty(this, 'sealed', desc)
+          Object.defineProperty(this, 'upgradable', desc)
         }
       }
 
       function testInvalid (CA, value) {
-        expect(() => CA.f(value)).to.throw('Invalid sealed option')
-        expect(() => CA.g(value)).to.throw('Invalid sealed option')
+        expect(() => CA.f(value)).to.throw('Invalid upgradable option')
+        expect(() => CA.g(value)).to.throw('Invalid upgradable option')
       }
 
       function test (CA) {
         testInvalid(CA, 123)
+        testInvalid(CA, null)
+        testInvalid(CA, undefined)
+        testInvalid(CA, 'true')
+        testInvalid(CA, [true])
       }
 
       const CA = run.deploy(A)

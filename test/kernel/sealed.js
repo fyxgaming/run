@@ -569,6 +569,11 @@ describe('Sealed', () => {
 
       function test (CA) {
         testInvalid(CA, 123)
+        testInvalid(CA, null)
+        testInvalid(CA, undefined)
+        testInvalid(CA, 'true')
+        testInvalid(CA, 'owner2')
+        testInvalid(CA, '')
       }
 
       const CA = run.deploy(A)
