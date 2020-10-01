@@ -6,6 +6,7 @@
 
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
+const { stub } = require('sinon')
 const Run = require('../env/run')
 const { Jig, LocalCache, Transaction } = Run
 
@@ -528,6 +529,29 @@ describe('Deps', () => {
       }
       const CA = run.deploy(A)
       expect(() => CA.g()).to.throw('Descriptor must be configurable')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set deps after rollback', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () { return B } // eslint-disable-line
+        static inc () { B += 1 } // eslint-disable-line
+      }
+      A.deps = { B: 1 }
+      const CA = run.deploy(A)
+      await CA.sync()
+      stub(run.blockchain, 'broadcast').throwsException()
+      CA.inc()
+      await expect(CA.sync()).to.be.rejected
+      expect(CA.nonce).to.equal(1)
+      expect(CA.f()).to.equal(1)
+      run.blockchain.broadcast.reset()
+      run.blockchain.broadcast.callThrough()
+      CA.inc()
+      await CA.sync()
+      expect(CA.f()).to.equal(2)
     })
   })
 
