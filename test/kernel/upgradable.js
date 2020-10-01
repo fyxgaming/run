@@ -156,15 +156,23 @@ describe('Upgradable', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if upgrade to invalid upgradable value', () => {
+    it('throws if upgrade to invalid upgradable value', () => {
       const run = new Run()
-      class O { }
-      const CO = run.deploy(O)
       class A { }
-      A.sealed = null
-      expect(() => CO.upgrade(A)).to.throw('Invalid sealed option: null')
-      A.sealed = 1
-      expect(() => CO.upgrade(A)).to.throw('Invalid sealed option: 1')
+      const CA = run.deploy(A)
+      class B { }
+      B.upgradable = null
+      expect(() => CA.upgrade(B)).to.throw('Invalid upgradable option')
+      A.upgradable = 1
+      expect(() => CA.upgrade(B)).to.throw('Invalid upgradable option')
+      A.upgradable = 0
+      expect(() => CA.upgrade(B)).to.throw('Invalid upgradable option')
+      A.upgradable = undefined
+      expect(() => CA.upgrade(B)).to.throw('Invalid upgradable option')
+      A.upgradable = {}
+      expect(() => CA.upgrade(B)).to.throw('Invalid upgradable option')
+      A.upgradable = 'true'
+      expect(() => CA.upgrade(B)).to.throw('Invalid upgradable option')
     })
   })
 
