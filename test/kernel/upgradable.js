@@ -26,63 +26,75 @@ describe('Upgradable', () => {
   // --------------------------------------------------------------------------
 
   describe('deploy', () => {
-    it.skip('upgradable by default', async () => {
+    it('upgradable', async () => {
       const run = new Run()
 
       class A { }
+      A.upgradable = true
       const CA = run.deploy(A)
       await CA.sync()
 
-      expectTx({
-        nin: 1,
-        nref: 0,
-        nout: 2,
-        ndel: 0,
-        ncre: 1,
-        exec: [
-          {
-            op: 'DEPLOY',
-            data: [
-              'class B extends A { }',
-              {
-                deps: { A: { $jig: 0 } }
-              }
-            ]
-          }
-        ]
-      })
+      class B { }
+      CA.upgrade(B)
+      await CA.sync()
 
-      class B extends A { }
-      const CB = run.deploy(B)
-      await CB.sync()
-
-      await run.load(CB.location)
+      await run.load(CA.location)
 
       run.cache = new LocalCache()
-      await run.load(CB.location)
+      await run.load(CA.location)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('non-upgradable', async () => {
+    it('upgradable by default', async () => {
       const run = new Run()
+
       class A { }
-      A.sealed = true
       const CA = run.deploy(A)
       await CA.sync()
-      class B extends A {}
-      expect(() => run.deploy(B)).to.throw('Cannot deploy: A is sealed')
+
+      class B { }
+      CA.upgrade(B)
+      await CA.sync()
+
+      await run.load(CA.location)
+
+      run.cache = new LocalCache()
+      await run.load(CA.location)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if upgradable is invalid', () => {
+    it('non-upgradable', async () => {
       const run = new Run()
       class A { }
-      A.sealed = null
-      expect(() => run.deploy(A)).to.throw('Invalid sealed option: null')
-      A.sealed = 1
-      expect(() => run.deploy(A)).to.throw('Invalid sealed option: 1')
+      A.upgradable = false
+      const CA = run.deploy(A)
+      await CA.sync()
+      function test (CA) {
+        expect(() => CA.upgrade(class B { })).to.throw('A is non-upgradable')
+      }
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if upgradable is invalid', () => {
+      const run = new Run()
+      class A { }
+      A.upgradable = null
+      expect(() => run.deploy(A)).to.throw('Invalid upgradable option')
+      A.upgradable = 1
+      expect(() => run.deploy(A)).to.throw('Invalid upgradable option')
+      A.upgradable = undefined
+      expect(() => run.deploy(A)).to.throw('Invalid upgradable option')
+      A.upgradable = function upgradable () { }
+      expect(() => run.deploy(A)).to.throw('Invalid upgradable option')
     })
   })
 

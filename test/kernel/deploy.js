@@ -27,7 +27,8 @@ const randomOwner = () => new PrivateKey().toAddress().toString()
 const CODE_METHODS = ['upgrade', 'sync', 'destroy', 'auth']
 
 // Reserved words not allowed on code
-const FUTURE_PROPS = ['encryption', 'blockhash', 'blockheight', 'blocktime', 'upgradable']
+const FUTURE_PROPS = ['encryption', 'blockhash', 'blockheight', 'blocktime',
+  'recent', 'latest', 'mustBeLatest', 'mustBeRecent']
 const RESERVED_WORDS = [...CODE_METHODS, 'toString', ...FUTURE_PROPS]
 
 // ------------------------------------------------------------------------------------------------
