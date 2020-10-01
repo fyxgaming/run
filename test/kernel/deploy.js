@@ -1950,6 +1950,29 @@ describe('Deploy', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it.only('must have parent presets', async () => {
+      const run = new Run()
+      class A { }
+      class B extends A { }
+      run.deploy(A)
+      run.deploy(B)
+      await run.sync()
+
+      const presetsB = B.presets
+
+      run.uninstall(A)
+      run.uninstall(B)
+
+      B.presets = presetsB
+
+      run.deploy(B)
+      class C extends B { }
+      run.deploy(C)
+      await run.sync()
+    })
   })
 
   // --------------------------------------------------------------------------

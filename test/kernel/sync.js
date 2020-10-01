@@ -206,24 +206,6 @@ describe('Sync', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('sync destroyed jig', async () => {
-      const run = new Run()
-      class A { }
-      const A2 = run.deploy(A)
-      await run.sync()
-      console.log(A.location)
-      const presets = A.presets
-      run.uninstall(A)
-      A.presets = presets
-      const A3 = run.deploy(A)
-      console.log(A2 === A3)
-      await run.sync()
-      console.log(A.location)
-      console.log(A3.location)
-    })
-
-    // ------------------------------------------------------------------------
-
     it('sync destroyed jig', async () => {
       const run = new Run()
       class A { }
