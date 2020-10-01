@@ -103,45 +103,17 @@ describe('Upgradable', () => {
   // --------------------------------------------------------------------------
 
   describe('upgrade', () => {
-    it.skip('upgradable', async () => {
+    it('upgradable', async () => {
       const run = new Run()
-
-      class O { }
-      const CO = run.deploy(O)
-      await CO.sync()
-
       class A { }
+      A.upgradable = true
       const CA = run.deploy(A)
+      CA.upgrade(class B { })
+      CA.upgrade(class C { })
       await CA.sync()
-
-      expectTx({
-        nin: 2,
-        nref: 0,
-        nout: 2,
-        ndel: 0,
-        ncre: 0,
-        exec: [
-          {
-            op: 'UPGRADE',
-            data: [
-              { $jig: 0 },
-              'class B extends A { }',
-              {
-                deps: { A: { $jig: 1 } }
-              }
-            ]
-          }
-        ]
-      })
-
-      class B extends CA { }
-      CO.upgrade(B)
-      await CO.sync()
-
-      await run.load(CO.location)
-
+      await run.load(CA.location)
       run.cache = new LocalCache()
-      await run.load(CO.location)
+      await run.load(CA.location)
     })
 
     // ------------------------------------------------------------------------
