@@ -548,16 +548,39 @@ describe('Sealed', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('throws if set sealed to invalid value', () => {
+    it.only('throws if set sealed to invalid value', async () => {
       const run = new Run()
-      class A extends Jig { static f (x) { this.sealed = x } }
-      const CA = run.deploy(A)
-      function testInvalid (CA, value) { expect(() => CA.f(value)).to.throw('Invalid sealed option') }
+
+      class A extends Jig {
+        static f (x) {
+          this.sealed = x
+        }
+
+        static g (x) {
+          const desc = { configurable: true, enumerable: true, writable: true, value: x }
+          Object.defineProperty(this, 'sealed', desc)
+        }
+      }
+
+      function testInvalid (CA, value) {
+        expect(() => CA.f(value)).to.throw('Invalid sealed option')
+        expect(() => CA.g(value)).to.throw('Invalid sealed option')
+      }
+
       function test (CA) {
         testInvalid(CA, 123)
       }
+
+      const CA = run.deploy(A)
       test(CA)
-      console.log(CA.sealed)
+      await run.sync()
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
   })
 })
