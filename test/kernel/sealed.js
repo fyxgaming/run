@@ -548,7 +548,7 @@ describe('Sealed', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('throws if set sealed to invalid value', async () => {
+    it('throws if set sealed to invalid value', async () => {
       const run = new Run()
 
       class A extends Jig {
