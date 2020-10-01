@@ -516,8 +516,8 @@ describe('Sealed', () => {
       const run = new Run()
       class A extends Jig { static unseal () { this.sealed = false } }
       A.sealed = true
-      const error = 'Cannot deploy: A is sealed'
       const CA = run.deploy(A)
+      const error = 'Cannot deploy: A is sealed'
       expect(() => run.deploy(class B extends A { }).sync()).to.throw(error)
       CA.unseal()
       const CC = run.deploy(class C extends A { })
@@ -529,14 +529,35 @@ describe('Sealed', () => {
 
     // ------------------------------------------------------------------------
 
-    it('owner-seal in method', () => {
-      // TODO
+    it('owner-seal in method', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () { this.sealed = 'owner' }
+        static g () { delete this.sealed }
+      }
+      A.sealed = true
+      const CA = run.deploy(A)
+      const error = 'Cannot deploy: A is sealed'
+      expect(() => run.deploy(class B extends A { }).sync()).to.throw(error)
+      CA.f()
+      run.deploy(class C extends A { })
+      CA.g()
+      run.deploy(class D extends A { })
+      await run.sync()
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if set sealed to invalid value', () => {
-      // TODO
+      const run = new Run()
+      class A extends Jig { static f (x) { this.sealed = x } }
+      const CA = run.deploy(A)
+      function testInvalid (CA, value) { expect(() => CA.f(value)).to.throw('Invalid sealed option') }
+      function test (CA) {
+        testInvalid(CA, 123)
+      }
+      test(CA)
+      console.log(CA.sealed)
     })
   })
 })
