@@ -1688,32 +1688,27 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it('deploys code presets', async () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      function f () { }
-      A.presets = { [network]: { f } }
-      const CA = run.deploy(A)
-      await CA.sync()
-      expect(CA.f instanceof Code).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
     it('copies jig presets', async () => {
       const run = new Run()
       const network = run.blockchain.network
-      class J extends Jig { }
-      const j = new J()
-      class C {}
-      class A { }
-      A.presets = { [network]: { j, C } }
-      const CA = run.deploy(A)
-      expect(CA.j).to.equal(j)
-      expect(CA.C).not.to.equal(C)
-      expect(CA.C.toString()).to.equal(C.toString())
-      expect(CA.C).to.equal(run.deploy(C))
+      class A extends Jig { }
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      run.deploy(A)
+      await run.sync()
+      class B { }
+      B.presets = { [network]: { A } }
+      const CB = run.deploy(B)
+      expect(CB.A).not.to.equal(A)
+      expect(CB.A.toString()).to.equal(A.toString())
+      expect(CB.A).to.equal(run.install(A))
     })
 
     // ------------------------------------------------------------------------
@@ -1953,7 +1948,7 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('must have parent presets', async () => {
+    it('must have parent presets', async () => {
       const run = new Run()
       class A { }
       class B extends A { }
@@ -1962,16 +1957,11 @@ describe('Deploy', () => {
       await run.sync()
 
       const presetsB = B.presets
-
       run.uninstall(A)
       run.uninstall(B)
-
       B.presets = presetsB
 
-      run.deploy(B)
-      class C extends B { }
-      run.deploy(C)
-      await run.sync()
+      expect(() => run.deploy(B)).to.throw('A must have presets')
     })
   })
 

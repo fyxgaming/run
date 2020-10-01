@@ -8,7 +8,7 @@
 
 const { describe, it, beforeEach, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
-const fs = require('fs-extra')
+const fs = typeof VARIANT !== 'undefined' && VARIANT === 'node' && require('fs-extra')
 const Run = require('./env/run')
 const { COVER } = require('./env/config')
 const bsv = require('bsv')
@@ -40,9 +40,8 @@ class TestBlockchain {
 // runProtocolTest
 // ------------------------------------------------------------------------------------------------
 
-function runProtocolTest (name, file) {
+function runProtocolTest (name, data) {
   it(name, async () => {
-    const data = require(file)
     const blockchain = new TestBlockchain(data)
     const run = new Run({ blockchain })
 
@@ -73,8 +72,8 @@ describe('Protocol', () => {
 
   // --------------------------------------------------------------------------
 
-  runProtocolTest('Unit Tests', './data/unit.json')
-  runProtocolTest('Relay', './data/relay.json')
+  runProtocolTest('Unit Tests', require('./data/unit.json'))
+  runProtocolTest('Relay', require('./data/relay.json'))
 })
 
 // ------------------------------------------------------------------------------------------------
