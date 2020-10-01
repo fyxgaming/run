@@ -206,6 +206,23 @@ describe('Sync', () => {
 
     // ------------------------------------------------------------------------
 
+    it.skip('sync destroyed jig', async () => {
+      const run = new Run()
+      class A { }
+      run.deploy(A)
+      class B extends A { }
+      // const CB = run.deploy(B)
+      class C extends B { }
+      class D extends B { }
+      C.B = B
+      C.D = D
+      await run.sync()
+      const CC = run.deploy(C)
+      await CC.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
     it('sync destroyed jig', async () => {
       const run = new Run()
       class A { }

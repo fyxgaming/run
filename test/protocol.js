@@ -8,18 +8,52 @@
 
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
+const fs = require('fs-extra')
 const Run = require('./env/run')
 const { COVER } = require('./env/config')
-const unmangle = require('./env/unmangle')
+const bsv = require('bsv')
 
 // ------------------------------------------------------------------------------------------------
 // Globals
 // ------------------------------------------------------------------------------------------------
 
-const CAPTURE_MOCKCHAIN = false // Where to capture all test transactions in a txns.json file
-const CAPTURE_RELAY = false // Where to capture relay transactions ids
+const CAPTURE_MOCKCHAIN = false // Whether to capture all test transactions in a txns.json file
+const CAPTURE_RELAY = false // Whether to capture relay transactions
 
 if (CAPTURE_MOCKCHAIN) enableCaptureMode()
+
+// ------------------------------------------------------------------------------------------------
+// TestBlockchain
+// ------------------------------------------------------------------------------------------------
+
+class TestBlockchain {
+  constructor (data) { this.data = data }
+  get network () { return this.data.network }
+  async broadcast (rawtx) { throw new Error('broadcast disabled') }
+  async fetch (txid) { return this.data.txns[txid] }
+  async utxos (script) { throw new Error('utxos disabled') }
+  async spends (txid, vout) { throw new Error('spends disabled') }
+  async time (txid) { throw new Error('time disabled') }
+}
+
+// ------------------------------------------------------------------------------------------------
+// runProtocolTest
+// ------------------------------------------------------------------------------------------------
+
+function runProtocolTest (name, file) {
+  it(name, async () => {
+    const data = require(file)
+    const blockchain = new TestBlockchain(data)
+    const run = new Run({ blockchain })
+
+    for (let i = 0; i < data.tests.length; i++) {
+      console.log(`${i + 1} of ${data.tests.length}`)
+      const txid = data.tests[i]
+      const rawtx = data.txns[txid]
+      await run.import(rawtx)
+    }
+  }).timeout(300000)
+}
 
 // ------------------------------------------------------------------------------------------------
 // Protocol
@@ -35,57 +69,12 @@ describe('Protocol', () => {
   if (COVER) return
 
   // If capturing relay transactions, just run a single test with that
-  if (CAPTURE_RELAY) it.only('Capture Relay Txids', () => captureRelayTxids())
+  if (CAPTURE_RELAY) it.only('Capture Relay transactions', () => captureRelayTxns()).timeout(300000)
 
   // --------------------------------------------------------------------------
 
-  it('v5 reference transactions', async () => {
-    const run = new Run()
-    unmangle(run.blockchain)._allowFundingBroadcasts = true
-
-    const txns = require('./data/v5-txns.json')
-    const len = txns.length
-
-    for (let i = 0; i < len; i++) {
-      console.log(i + ' of ' + txns.length)
-      const rawtx = txns[i]
-      await run.blockchain.broadcast(rawtx)
-    }
-
-    let nrun = 0
-    for (let i = 0; i < len; i++) {
-      const rawtx = txns[i]
-
-      try {
-        run.payload(rawtx)
-        nrun++
-        console.log(nrun + ' of ' + (i + 1) + ' of ' + txns.length)
-        await run.import(rawtx)
-      } catch (e) {
-        if (e.message.startsWith('Not a run transaction')) {
-          continue
-        } else {
-          throw e
-        }
-      }
-    }
-  }).timeout(60000)
-
-  // --------------------------------------------------------------------------
-
-  it('RelayX', async () => {
-    const run = new Run({ network: 'main' })
-
-    const txids = require('./data/relay-txids.json')
-
-    for (let i = 0; i < txids.length; i++) {
-      console.log(`${i + 1} of ${txids.length}`)
-      const txid = txids[i]
-      const rawtx = await run.blockchain.fetch(txid)
-      // console.log(JSON.stringify(run.payload(rawtx)))
-      await run.import(rawtx)
-    }
-  }).timeout(300000)
+  runProtocolTest('Unit Tests', './data/unit.json')
+  runProtocolTest('Relay', './data/relay.json')
 })
 
 // ------------------------------------------------------------------------------------------------
@@ -96,20 +85,35 @@ function enableCaptureMode () {
   // Browsers cannot save to disk
   if (typeof VARIANT !== 'undefined' && VARIANT === 'browser') throw new Error('Not supported')
 
-  const txns = []
+  const txns = {}
+  const txids = []
 
   class CaptureMockchain extends Run.Mockchain {
     async broadcast (rawtx) {
       const txid = await super.broadcast(rawtx)
-      txns.push(rawtx)
+      rawtx = new bsv.Transaction(rawtx).toString('hex')
+      txns[txid] = rawtx
+      txids.push(txid)
       return txid
     }
   }
 
-  process.on('exit', () => {
-    const txns = Array.from(unmangle(Run.defaults.blockchain)._transactions.values())
+  process.on('exit', async () => {
+    const tests = []
+    const run = new Run({ network: 'mock' })
+    for (let i = 0; i < txids.length; i++) {
+      const txid = txids[i]
+      const rawtx = txns[txid]
+      try {
+        await run.import(rawtx)
+        tests.push(txid)
+      } catch (e) { }
+    }
+
     const fs = require('fs-extra')
-    fs.writeFileSync('./txns.json', JSON.stringify(txns))
+    const data = { tests, txns, network: 'mock' }
+    const path = require.resolve('./data/unit.json')
+    fs.writeFileSync(path, JSON.stringify(data, 0, 3))
   })
 
   Run.defaults.blockchain = new CaptureMockchain()
@@ -117,7 +121,7 @@ function enableCaptureMode () {
 
 // ------------------------------------------------------------------------------------------------
 
-async function captureRelayTxids () {
+async function captureRelayTxns () {
   const APP = 'relayx.io'
   const START_HEIGHT = 650000
   const LIMIT = 10000
@@ -158,10 +162,26 @@ async function captureRelayTxids () {
       })
   })
 
-  console.log('Num transactions:', txids.length)
+  const run = new Run({ network: 'main' })
+  const data = require('./data/relay.json')
 
-  const fs = require('fs-extra')
-  fs.writeFileSync('./test/data/relay-txids.json', JSON.stringify(txids))
+  const oldFetch = run.blockchain.fetch
+  run.blockchain.fetch = async (txid) => {
+    const rawtx = await oldFetch.call(run.blockchain, txid)
+    data.txns[txid] = rawtx
+    return rawtx
+  }
+
+  for (let i = 0; i < txids.length; i++) {
+    console.log(`${i + 1} of ${txids.length}`)
+    const txid = txids[i]
+    if (data.tests.includes(txid)) continue
+    const rawtx = await run.blockchain.fetch(txid)
+    await run.import(rawtx)
+  }
+
+  const path = require.resolve('./data/relay.json')
+  fs.writeFileSync(path, JSON.stringify(data, 0, 3))
 }
 
 // ------------------------------------------------------------------------------------------------
