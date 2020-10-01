@@ -44,6 +44,7 @@ require('./kernel/trust')
 require('./kernel/unify')
 require('./kernel/universal')
 require('./kernel/upgrade')
+require('./kernel/upgradable')
 require('./kernel/verify')
 
 require('./module/inventory')
