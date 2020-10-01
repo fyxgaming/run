@@ -490,7 +490,7 @@ describe('Sealed', () => {
   // Method
   // --------------------------------------------------------------------------
 
-  describe.only('Method', () => {
+  describe('Method', () => {
     it('seal in method', async () => {
       const run = new Run()
       class A extends Jig { static seal () { this.sealed = true } }
@@ -548,7 +548,7 @@ describe('Sealed', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if set sealed to invalid value', () => {
+    it.only('throws if set sealed to invalid value', () => {
       const run = new Run()
       class A extends Jig { static f (x) { this.sealed = x } }
       const CA = run.deploy(A)
