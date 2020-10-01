@@ -6,7 +6,7 @@
 
 /* global VARIANT */
 
-const { describe, it, afterEach } = require('mocha')
+const { describe, it, beforeEach, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const fs = require('fs-extra')
 const Run = require('./env/run')
@@ -116,7 +116,7 @@ function enableCaptureMode () {
     fs.writeFileSync(path, JSON.stringify(data, 0, 3))
   })
 
-  Run.defaults.blockchain = new CaptureMockchain()
+  beforeEach(() => { Run.defaults.blockchain = new CaptureMockchain() })
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -4,7 +4,7 @@
  * Tests for lib/extra/token.js
  */
 
-const { describe, it, afterEach } = require('mocha')
+const { describe, it, beforeEach, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
@@ -18,8 +18,12 @@ const { LocalCache, Token } = Run
 
 describe('Token', () => {
   // Wait for every test to finish. This makes debugging easier.
-  // Don't deactivate the current run instance between tests. Token needs to stay deployed.
+  // Don't deactivate the blockchain between tests. The token needs to stay deployed
   afterEach(() => Run.instance && Run.instance.sync())
+
+  // Reapply the default blockchain if there is one. This is used for capturing protocol txns.
+  let blockchain = null
+  beforeEach(() => { blockchain = Run.defaults.blockchain = blockchain || Run.defaults.blockchain })
 
   if (COVER) Run.cover('TestToken')
 
