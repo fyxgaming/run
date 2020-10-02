@@ -95,6 +95,29 @@ describe('Upgradable', () => {
       A.upgradable = function upgradable () { }
       expect(() => run.deploy(A)).to.throw('Invalid upgradable option')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('non-upgradable with preset', async () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { upgradable: false } }
+      const CA = run.deploy(A)
+      expect(CA.upgradable).to.equal(false)
+      await CA.sync()
+      expect(() => CA.upgrade(class B { })).to.throw('A is non-upgradable')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid upgradable preset', async () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { upgradable: null } }
+      expect(() => run.deploy(A)).to.throw('Invalid upgradable option')
+    })
   })
 
   // --------------------------------------------------------------------------

@@ -236,6 +236,30 @@ describe('Sealed', () => {
       run.cache = new LocalCache()
       await run.load(CB.location)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('sealed with preset', async () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { sealed: true } }
+      const CA = run.deploy(A)
+      expect(CA.sealed).to.equal(true)
+      await CA.sync()
+      class B extends A {}
+      expect(() => run.deploy(B)).to.throw('Cannot deploy: A is sealed')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid sealed preset', async () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { sealed: undefined } }
+      expect(() => run.deploy(A)).to.throw('Invalid sealed option')
+    })
   })
 
   // --------------------------------------------------------------------------
