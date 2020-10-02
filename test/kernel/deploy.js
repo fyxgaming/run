@@ -157,6 +157,32 @@ describe('Deploy', () => {
       const CA2 = run.deploy(CA1)
       expect(CA1).to.equal(CA2)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('more than 10 classes', async () => {
+      const run = new Run()
+      class A { }
+      A.arr = []
+      for (let i = 0; i < 10; i++) {
+        class B { }
+        B.n = i
+        A.arr.push(B)
+      }
+      function test (CA) {
+        for (let i = 0; i < 10; i++) {
+          expect(CA.arr[i].n).to.equal(i)
+        }
+      }
+      const CA = run.deploy(A)
+      await CA.sync()
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
   })
 
   // --------------------------------------------------------------------------

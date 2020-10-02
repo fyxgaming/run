@@ -265,16 +265,17 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    it('maintains key order', () => {
+    it('sorts keys', () => {
       const o = {}
       o.x = 'x'
       o[3] = 3
       o[2] = 2
+      o[10] = 1
       o.n = 3
       const encoded = unmangle(new Codec())._encode(o)
       const json = JSON.parse(JSON.stringify(encoded))
       const o2 = unmangle(new Codec())._decode(json)
-      expect(Object.keys(o)).to.deep.equal(Object.keys(o2))
+      expect(Object.keys(o2)).to.deep.equal(['2', '3', '10', 'n', 'x'])
     })
 
     // ------------------------------------------------------------------------

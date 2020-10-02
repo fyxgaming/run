@@ -690,11 +690,21 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_hasOwnProperty', () => {
-    it('returns property exists', () => {
+    it('returns string property exists', () => {
       class A { }
       A.n = 1
       expect(_hasOwnProperty(A, 'n')).to.equal(true)
       expect(_hasOwnProperty({ n: 1 }, 'n')).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns symbol property exists', () => {
+      class A { }
+      A[Symbol.species] = 1
+      expect(_hasOwnProperty(A, Symbol.species)).to.equal(true)
+      expect(_hasOwnProperty(A, Symbol.iterator)).to.equal(false)
+      expect(_hasOwnProperty(A, Symbol.hasInstance)).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -994,6 +1004,14 @@ describe('Misc', () => {
       const x = [Symbol.iterator, 'b', 'a', 'a', '1', '0', Symbol.hasInstance]
       const y = x.sort(_deterministicCompareKeys)
       expect(y).to.deep.equal(['0', '1', 'a', 'a', 'b', Symbol.hasInstance, Symbol.iterator])
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('sorts integer keys before string keys', () => {
+      const x = ['b', 'a', '0', '01', '10', '11', '1', '2', '011']
+      const y = x.sort(_deterministicCompareKeys)
+      expect(y).to.deep.equal(['0', '1', '2', '10', '11', '01', '011', 'a', 'b'])
     })
   })
 })
