@@ -399,6 +399,7 @@ describe('Codec', () => {
       decodeFail({ $dup: {} })
       decodeFail({ $dup: [null] })
       decodeFail({ $dup: [0] })
+      decodeFail({ a: { $dup: ['b'] }, b: [] })
     })
 
     // ------------------------------------------------------------------------
