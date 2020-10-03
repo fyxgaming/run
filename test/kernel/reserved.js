@@ -28,30 +28,6 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('Deploy', () => {
-    it.skip('may override auth method on code', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('may override auth property on code', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('may override destroy method on code', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('may override destroy property on code', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
     it.skip('may override bindings on non-jig', () => {
       // TODO
     })
@@ -160,6 +136,40 @@ describe('Reserved', () => {
       const run = new Run()
       class A { }
       A.sync = undefined
+      expect(() => run.deploy(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has auth method', () => {
+      const run = new Run()
+      class A { static auth () { } }
+      expect(() => run.deploy(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has auth property', () => {
+      const run = new Run()
+      class A { }
+      A.auth = 1
+      expect(() => run.deploy(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has destroy method', () => {
+      const run = new Run()
+      class A { static destroy () { } }
+      expect(() => run.deploy(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has destroy property', () => {
+      const run = new Run()
+      class A { }
+      A.destroy = 1
       expect(() => run.deploy(A)).to.throw()
     })
 
@@ -302,30 +312,6 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('Upgrade', () => {
-    it.skip('may override auth method on code', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('may override auth property on code', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('may override destroy method on code', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('may override destroy property on code', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
     it.skip('may override auth method on jig', () => {
       // TODO
     })
@@ -411,6 +397,44 @@ describe('Reserved', () => {
       const O = run.deploy(class O { })
       class A { }
       A.sync = undefined
+      expect(() => O.upgrade(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has auth method', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      class A { static auth () { } }
+      expect(() => O.upgrade(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has auth property', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      class A { }
+      A.auth = []
+      expect(() => O.upgrade(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has destroy method', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      class A { static destroy () { } }
+      expect(() => O.upgrade(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has destroy property', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      class A { }
+      A.destroy = 'false'
       expect(() => O.upgrade(A)).to.throw()
     })
 
@@ -599,14 +623,26 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set reserved props on jig', () => {
-      // TODO
+    it('throws if set reserved props on code', () => {
+      const run = new Run()
+      class A extends Jig { static f (x) { this[x] = 1 } }
+      const C = run.deploy(A)
+      expect(() => C.f('encryption')).to.throw()
+      expect(() => C.f('latest')).to.throw()
+      expect(() => C.f('load')).to.throw()
+      expect(() => C.f('blocktime')).to.throw()
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set reserved props on code', () => {
-      // TODO
+    it('throws if set reserved props on jig', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f (x) { this[x] = 1 } }
+      const a = new A()
+      expect(() => a.f('encryption')).to.throw()
+      expect(() => a.f('latest')).to.throw()
+      expect(() => a.f('load')).to.throw()
+      expect(() => a.f('blocktime')).to.throw()
     })
   })
 })
