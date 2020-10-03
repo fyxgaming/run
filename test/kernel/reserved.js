@@ -53,20 +53,6 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may override auth property on jig', async () => {
-      const run = new Run()
-      class A extends Jig { f () { this.auth = 1 } }
-      const a = new A()
-      a.f()
-      expect(a.auth).to.equal(1)
-      await run.sync()
-      run.cache = new LocalCache()
-      const a2 = await run.load(a.location)
-      expect(a2.auth).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
     it('may override destroy method on jig', async () => {
       const run = new Run()
       class A extends Jig { destroy () { this.destroyed = true; super.destroy() } }
@@ -79,20 +65,6 @@ describe('Reserved', () => {
       const a2 = await run.load(a.location)
       expect(a2.destroyed).to.equal(true)
       expect(a2.location.endsWith('_d0')).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('may override destroy property on jig', async () => {
-      const run = new Run()
-      class A extends Jig { f () { this.destroy = undefined } }
-      const a = new A()
-      a.f()
-      expect(a.destroy).to.equal(undefined)
-      await run.sync()
-      run.cache = new LocalCache()
-      const a2 = await run.load(a.location)
-      expect(a2.destroy).to.equal(undefined)
     })
 
     // ------------------------------------------------------------------------
@@ -595,14 +567,32 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('may set auth on jig', () => {
-      // TODO
+    it('may set auth property on jig', async () => {
+      const run = new Run()
+      class A extends Jig { f () { this.auth = 1 } }
+      const a = new A()
+      a.f()
+      expect(a.auth).to.equal(1)
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      expect(a2.auth).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may set destroy on jig', () => {
-      // TODO
+    it('may set destroy property on jig', async () => {
+      const run = new Run()
+      function destroy () { }
+      class A extends Jig { f () { this.destroy = destroy } }
+      A.deps = { destroy }
+      const a = new A()
+      a.f()
+      expect(typeof a.destroy === 'function').to.equal(true)
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      expect(typeof a2.destroy === 'function').to.equal(true)
     })
 
     // ------------------------------------------------------------------------
