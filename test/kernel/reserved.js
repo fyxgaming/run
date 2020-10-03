@@ -647,8 +647,11 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set init on jig', () => {
-      // TODO
+    it('throws if set init on jig', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { this.init = 1 } }
+      const a = new A()
+      expect(() => a.f()).to.throw('Cannot set init')
     })
 
     // ------------------------------------------------------------------------
