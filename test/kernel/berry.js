@@ -108,6 +108,52 @@ describe('Berry', () => {
     it.skip('throws if create more than one', () => {
       // TODO
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if not async', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('caches future plucks', () => {
+      // TODO
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // init
+  // --------------------------------------------------------------------------
+
+  describe('fetch', () => {
+    it.skip('fetches raw transaction', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('sandboxed', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may fetch multiple transactions', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if not a transaction', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if blockchain timeout', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -152,6 +198,18 @@ describe('Berry', () => {
     // ------------------------------------------------------------------------
 
     it.skip('throws if set prototype', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if create outside pluck', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if create in a different plucker', () => {
       // TODO
     })
   })
@@ -286,6 +344,12 @@ describe('Berry', () => {
     it.skip('berry class instanceof code', () => {
       // TODO
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('cannot fake with setPrototypeOf', () => {
+
+    })
   })
 
   // Tests
@@ -294,9 +358,6 @@ describe('Berry', () => {
   // - if dependencies are upgraded, when berry is loaded, it uses original
   // - instanceof authd, destroyd
   // - sync destroyed/authd berry in jig
-
-  // caches
-  // fetch tests, multiple
 })
 
 // ------------------------------------------------------------------------------------------------
