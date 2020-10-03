@@ -1831,14 +1831,6 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if owner method', () => {
-      new Run() // eslint-disable-line
-      class A extends Jig { owner () {} }
-      expect(() => new A()).to.throw('Cannot override Jig methods or properties')
-    })
-
-    // ------------------------------------------------------------------------
-
     it('reads jig', async () => {
       const run = new Run()
       class A extends Jig { f (a) { this.x = a.owner }}
@@ -1949,14 +1941,6 @@ describe('Jig', () => {
       new Run() // eslint-disable-line
       class A extends Jig { init () { this.satoshisAtInit = this.satoshis }}
       expect(() => new A()).to.throw('Cannot read satoshis')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if satoshis method exists', () => {
-      new Run() // eslint-disable-line
-      class A extends Jig { satoshis () {} }
-      expect(() => new A()).to.throw()
     })
 
     // ------------------------------------------------------------------------
@@ -2321,14 +2305,6 @@ describe('Jig', () => {
       expect(() => Object.defineProperty(a, 'origin', desc)).to.throw('Cannot set origin')
       expect(() => a.f()).to.throw('Cannot set origin')
     })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if method exists', () => {
-      new Run() // eslint-disable-line
-      class A extends Jig { origin () {} }
-      expect(() => new A()).to.throw('Cannot override Jig methods or properties')
-    })
   })
 
   // --------------------------------------------------------------------------
@@ -2396,14 +2372,6 @@ describe('Jig', () => {
       expect(() => Object.defineProperty(a, 'location', desc)).to.throw('Cannot set location')
       expect(() => a.f()).to.throw('Cannot set location')
     })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if method exists', () => {
-      new Run() // eslint-disable-line
-      class A extends Jig { location () {} }
-      expect(() => new A()).to.throw('Cannot override Jig methods or properties')
-    })
   })
 
   // --------------------------------------------------------------------------
@@ -2433,6 +2401,8 @@ describe('Jig', () => {
       await a.sync()
       expect(a.nonce).to.equal(4)
     })
+
+    // ------------------------------------------------------------------------
 
     it('throws if read before sync', async () => {
       new Run() // eslint-disable-line
@@ -2492,14 +2462,6 @@ describe('Jig', () => {
       const desc = { value: '123', configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(a, 'nonce', desc)).to.throw('Cannot set nonce')
       expect(() => a.f()).to.throw('Cannot set nonce')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if method exists', () => {
-      new Run() // eslint-disable-line
-      class A extends Jig { nonce () {} }
-      expect(() => new A()).to.throw('Cannot override Jig methods or properties')
     })
   })
 
