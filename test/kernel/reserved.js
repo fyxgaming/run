@@ -109,7 +109,12 @@ describe('Reserved', () => {
       expect(() => run.deploy(class A extends Jig { satoshis () { } })).to.throw()
     })
 
-    // throws if jig has sync method
+    // ------------------------------------------------------------------------
+
+    it('throws if jig has sync method', () => {
+      const run = new Run()
+      expect(() => run.deploy(class A extends Jig { sync () { } })).to.throw()
+    })
 
     // throws if reserved prop as method on code
     // throws if reserved prop as method on jig
