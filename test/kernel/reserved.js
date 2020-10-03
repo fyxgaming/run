@@ -28,8 +28,13 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('Deploy', () => {
-    it.skip('may override bindings on non-jig', () => {
-      // TODO
+    it('may override bindings on non-jig', () => {
+      const run = new Run()
+      run.deploy(class A { location () { }})
+      run.deploy(class A { origin () { }})
+      run.deploy(class A { nonce () { }})
+      run.deploy(class A { owner () { }})
+      run.deploy(class A { satoshis () { }})
     })
 
     // ------------------------------------------------------------------------
