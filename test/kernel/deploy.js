@@ -23,14 +23,6 @@ const _sudo = unmangle(Run)._sudo
 const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
 const randomOwner = () => new PrivateKey().toAddress().toString()
 
-// Methods available on all code instances
-const CODE_METHODS = ['upgrade', 'sync', 'destroy', 'auth']
-
-// Reserved words not allowed on code
-const FUTURE_PROPS = ['encryption', 'blockhash', 'blockheight', 'blocktime',
-  'recent', 'latest', 'mustBeLatest', 'mustBeRecent']
-const RESERVED_WORDS = [...CODE_METHODS, 'toString', ...FUTURE_PROPS]
-
 // ------------------------------------------------------------------------------------------------
 // Code
 // ------------------------------------------------------------------------------------------------
@@ -1896,20 +1888,6 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if presets contains reserved properties', () => {
-      const run = new Run()
-      const network = run.blockchain.network
-      class A { }
-      A.presets = { [network]: { deps: {} } }
-      expect(() => run.deploy(A)).to.throw()
-      A.presets = { [network]: { presets: {} } }
-      expect(() => run.deploy(A)).to.throw()
-      A.presets = { [network]: { upgrade: () => {} } }
-      expect(() => run.deploy(A)).to.throw()
-    })
-
-    // ------------------------------------------------------------------------
-
     it('throws if presets contain unsupported values', () => {
       const run = new Run()
       const network = run.blockchain.network
@@ -2067,29 +2045,6 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if contains reserved words', () => {
-      const run = new Run()
-      const error = 'Must not have any reserved words'
-
-      RESERVED_WORDS.forEach(word => {
-        class A { }
-        A[word] = 1
-        expect(() => run.deploy(A)).to.throw(error)
-
-        class B { }
-        B[word] = class Z { }
-        expect(() => run.deploy(B)).to.throw(error)
-      })
-
-      class C { static sync () { }}
-      expect(() => run.deploy(C)).to.throw(error)
-
-      class D { static get destroy () { } }
-      expect(() => run.deploy(D)).to.throw(error)
-    })
-
-    // ------------------------------------------------------------------------
-
     it('throws if contains bindings', () => {
       const run = new Run()
       class A { }
@@ -2148,20 +2103,6 @@ describe('Deploy', () => {
       expect(() => run.deploy(B)).to.throw(error)
       expect(() => run.deploy(C)).to.throw(error)
       expect(() => run.deploy(D)).to.throw(error)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if override jig methods', () => {
-      const run = new Run()
-      const error = 'Cannot override Jig methods or properties'
-      expect(() => run.deploy(class A extends Jig { static [Symbol.hasInstance] () { } })).to.throw(error)
-      expect(() => run.deploy(class A extends Jig { sync () { } })).to.throw(error)
-      expect(() => run.deploy(class A extends Jig { origin () { } })).to.throw(error)
-      expect(() => run.deploy(class A extends Jig { location () { } })).to.throw(error)
-      expect(() => run.deploy(class A extends Jig { nonce () { } })).to.throw(error)
-      expect(() => run.deploy(class A extends Jig { owner () { } })).to.throw(error)
-      expect(() => run.deploy(class A extends Jig { satoshis () { } })).to.throw(error)
     })
   })
 })

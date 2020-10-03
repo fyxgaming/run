@@ -1060,20 +1060,6 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if override jig methods', () => {
-      new Run() // eslint-disable-line
-      class A extends Jig {
-        h () { this.sync = [] }
-
-        i () { this.init = 'hello' }
-      }
-      const a = new A()
-      expect(() => a.h()).to.throw('Cannot set sync')
-      expect(() => a.i()).to.throw('Cannot set init')
-    })
-
-    // ------------------------------------------------------------------------
-
     it('allowed to override user methods', () => {
       // With class upgrades we can't stop it. So allow it by design.
       new Run() // eslint-disable-line
@@ -1081,10 +1067,6 @@ describe('Jig', () => {
         f () { }
 
         g () { this.f = 1 }
-
-        h () { this.sync = [] }
-
-        i () { this.init = 'hello' }
       }
       const a = new A()
       expect(() => a.g()).not.to.throw()

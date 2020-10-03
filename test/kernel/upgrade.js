@@ -687,18 +687,6 @@ describe('Upgrade', () => {
       const error = 'Anonymous types not supported'
       expect(() => CA.upgrade(B)).to.throw(error)
     })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if reserved', () => {
-      const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      class B { }
-      B.toString = 'hello'
-      const error = 'Must not have any reserved words'
-      expect(() => CA.upgrade(B)).to.throw(error)
-    })
   })
 
   // --------------------------------------------------------------------------
@@ -1162,22 +1150,6 @@ describe('Upgrade', () => {
       expect(() => CO.upgrade(B)).to.throw(error)
       expect(() => CO.upgrade(C)).to.throw(error)
       expect(() => CO.upgrade(D)).to.throw(error)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if override jig methods', () => {
-      const run = new Run()
-      function O () { }
-      const CO = run.deploy(O)
-      const error = 'Cannot override Jig methods or properties'
-      expect(() => CO.upgrade(class A extends Jig { static [Symbol.hasInstance] () { } })).to.throw(error)
-      expect(() => CO.upgrade(class A extends Jig { sync () { } })).to.throw(error)
-      expect(() => CO.upgrade(class A extends Jig { origin () { } })).to.throw(error)
-      expect(() => CO.upgrade(class A extends Jig { location () { } })).to.throw(error)
-      expect(() => CO.upgrade(class A extends Jig { nonce () { } })).to.throw(error)
-      expect(() => CO.upgrade(class A extends Jig { owner () { } })).to.throw(error)
-      expect(() => CO.upgrade(class A extends Jig { satoshis () { } })).to.throw(error)
     })
 
     // ------------------------------------------------------------------------

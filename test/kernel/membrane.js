@@ -17,7 +17,7 @@ const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const Unbound = unmangle(Run)._Unbound
 const _sudo = unmangle(Run)._sudo
 const JIGS = unmangle(unmangle(Run)._Universal)._JIGS
-const _RESERVED_PROPS = unmangle(Run)._RESERVED_PROPS
+const { _RESERVED_PROPS, _RESERVED_CODE_METHODS, _RESERVED_JIG_METHODS } = unmangle(Run)
 const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
 
 // ------------------------------------------------------------------------------------------------
@@ -2231,7 +2231,7 @@ describe('Membrane', () => {
   // Reserved
   // --------------------------------------------------------------------------
 
-  describe.only('Reserved', () => {
+  describe('Reserved', () => {
     it('cannot set reserved properties', () => {
       const a = new Membrane({}, mangle({ _reserved: true }))
       _RESERVED_PROPS.forEach(prop => {
@@ -2262,25 +2262,37 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('can set jig methods on non-jig', () => {
-      // TODO
+      expect(_RESERVED_JIG_METHODS.includes('sync') && !_RESERVED_PROPS.includes('sync')).to.equal(true)
+      const a = new Membrane({}, mangle({ _reserved: true }))
+      a.sync = 1
     })
 
     // ------------------------------------------------------------------------
 
     it('can set code methods on non-code', () => {
-      // TODO
+      expect(_RESERVED_CODE_METHODS.includes('toString') && !_RESERVED_PROPS.includes('toString')).to.equal(true)
+      expect(_RESERVED_CODE_METHODS.includes('upgrade') && !_RESERVED_PROPS.includes('upgrade')).to.equal(true)
+      expect(_RESERVED_CODE_METHODS.includes('sync') && !_RESERVED_PROPS.includes('sync')).to.equal(true)
+      const a = new Membrane({}, mangle({ _reserved: true }))
+      a.toString = 1
+      a.upgrade = 1
+      a.sync = 1
     })
 
     // ------------------------------------------------------------------------
 
     it('cannot set reserved jig methods on jig', () => {
-      // TODO
+      const a = new Membrane({}, mangle({ _reserved: true, _jigMethods: true }))
+      expect(() => { a.sync = 1 }).to.throw('Cannot set sync')
     })
 
     // ------------------------------------------------------------------------
 
     it('cannot define reserved jig methods on code', () => {
-      // TODO
+      const a = new Membrane({}, mangle({ _reserved: true, _codeMethods: true }))
+      expect(() => { a.toString = 1 }).to.throw('Cannot set toString')
+      expect(() => { a.upgrade = 1 }).to.throw('Cannot set upgrade')
+      expect(() => { a.sync = 1 }).to.throw('Cannot set sync')
     })
   })
 
