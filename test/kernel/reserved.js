@@ -38,6 +38,14 @@ describe('Reserved', () => {
     // may override destroy method on jig
     // may override destroy property on jig
 
+    it('throws if code has deps method', () => {
+      const run = new Run()
+      class A { static deps () { } }
+      expect(() => run.deploy(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if code has toString method', () => {
       const run = new Run()
       class A { static toString () { } }
@@ -137,15 +145,51 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if presets contains reserved properties', () => {
+    it('throws if presets has deps property', () => {
       const run = new Run()
       const network = run.blockchain.network
       class A { }
       A.presets = { [network]: { deps: {} } }
       expect(() => run.deploy(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if presets has presets property', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
       A.presets = { [network]: { presets: {} } }
       expect(() => run.deploy(A)).to.throw()
-      A.presets = { [network]: { upgrade: () => {} } }
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if presets has toString property', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { toString: function toString () { } } }
+      expect(() => run.deploy(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if presets has upgrade property', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { upgrade: undefined } }
+      expect(() => run.deploy(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if presets has sync property', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { sync: 1 } }
       expect(() => run.deploy(A)).to.throw()
     })
   })
@@ -235,6 +279,7 @@ describe('Reserved', () => {
     // may set auth on jig
     // may set destroy on jig
 
+    // throws if set deps on code
     // Throws if set toString on code
     // Throws if define toString on code
     // Throws if set upgrade on code
