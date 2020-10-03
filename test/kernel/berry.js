@@ -1,3 +1,4 @@
+const { expect } = require('chai')
 /**
  * berry.js
  *
@@ -17,18 +18,41 @@ describe('Berry', () => {
   afterEach(() => Run.instance && Run.instance.sync())
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
+  
+  // --------------------------------------------------------------------------
 
   it('basic berry', async () => {
     const run = new Run()
-    class B extends Berry { static pluck () { return new B() } }
+    class B extends Berry { static async pluck () { return new B() } }
     const CB = run.deploy(B)
     await run.sync()
     const b = await run.load('abc', { berry: CB })
-    console.log(b)
+    expect(b instanceof B).to.equal(true)
+    expect(b.location).to.equal(CB.location + '_abc')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('deploying berry', async () => {
+    const run = new Run()
+    class B extends Berry { static async pluck () { return new B() } }
+    const CB = run.deploy(B)
+    const b = await run.load('abc', { berry: CB })
+    expect(b instanceof B).to.equal(true)
+    expect(() => b.location).to.throw()
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('undeployed berry', async () => {
+    const run = new Run()
+    class B extends Berry { static async pluck () { return new B() } }
+    const b = await run.load('abc', { berry: B })
+    expect(b instanceof B).to.equal(true)
+    expect(() => b.location).to.throw()
   })
 
   // Tests
-  // - load with undeployed berry class
   // - load with invalid string throws
   // - load with non-berry class throws
   // - immutable externally
