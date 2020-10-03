@@ -567,20 +567,30 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('Method', () => {
-    it.skip('may set auth on code', () => {
-      // TODO
+    it('throws if set auth on code', () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.auth = 1 } }
+      const C = run.deploy(A)
+      expect(() => C.f()).to.throw('Cannot set auth')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may set destroy on code', () => {
-      // TODO
+    it('throws if set destroy on code', () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.destroy = undefined } }
+      const C = run.deploy(A)
+      expect(() => C.f()).to.throw('Cannot set destroy')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may set presets on code', () => {
-      // TODO
+    it('may set presets on code', () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.presets = 'abc' } }
+      const C = run.deploy(A)
+      C.f()
+      expect(C.presets).to.equal('abc')
     })
 
     // ------------------------------------------------------------------------
