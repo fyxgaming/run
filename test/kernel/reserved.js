@@ -251,46 +251,151 @@ describe('Reserved', () => {
     // may override destroy method on jig
     // may override destroy property on jig
 
-    // throws if code has toString method
-    // throws if code has toString property
-    // throws if code has upgrade method
-    // throws if code has upgrade property
-    // throws if code has sync method
-    // throws if code has sync property
-    // throws if code has bindings
-
-    // throws if jig has sync method
-    // throws if jig has bindings
-
-    // throws if reserved prop as method on code
-    // throws if reserved prop as method on jig
-    // throws if reserved prop as prop on code
-    // throws if reserved prop as prop on jig
-
-    it('throws if reserved', () => {
+    it('throws if code has deps method', () => {
       const run = new Run()
-      class A { }
-      const CA = run.deploy(A)
-      class B { }
-      B.toString = 'hello'
-      const error = 'Must not have any reserved words'
-      expect(() => CA.upgrade(B)).to.throw(error)
+      const O = run.deploy(class O { })
+      class A { static deps () { } }
+      expect(() => O.upgrade(A)).to.throw()
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if override jig methods', () => {
+    it('throws if code has toString method', () => {
       const run = new Run()
-      function O () { }
-      const CO = run.deploy(O)
-      const error = 'Cannot override Jig methods or properties'
-      expect(() => CO.upgrade(class A extends Jig { static [Symbol.hasInstance] () { } })).to.throw(error)
-      expect(() => CO.upgrade(class A extends Jig { sync () { } })).to.throw(error)
-      expect(() => CO.upgrade(class A extends Jig { origin () { } })).to.throw(error)
-      expect(() => CO.upgrade(class A extends Jig { location () { } })).to.throw(error)
-      expect(() => CO.upgrade(class A extends Jig { nonce () { } })).to.throw(error)
-      expect(() => CO.upgrade(class A extends Jig { owner () { } })).to.throw(error)
-      expect(() => CO.upgrade(class A extends Jig { satoshis () { } })).to.throw(error)
+      const O = run.deploy(class O { })
+      class A { static toString () { } }
+      expect(() => O.upgrade(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has toString property', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      class A { }
+      A.toString = 1
+      expect(() => O.upgrade(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has upgrade method', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      class A { static upgrade () { } }
+      expect(() => O.upgrade(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has upgrade property', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      class A { }
+      A.upgrade = function upgrade () { }
+      expect(() => O.upgrade(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has sync method', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      class A { static sync () { } }
+      expect(() => O.upgrade(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has sync property', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      class A { }
+      A.sync = undefined
+      expect(() => O.upgrade(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has bindings methods', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      expect(() => O.upgrade(class A extends Jig { static origin () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { static location () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { static nonce () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { static owner () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { static satoshis () { } })).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if jig has bindings methods', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      expect(() => O.upgrade(class A extends Jig { origin () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { location () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { nonce () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { owner () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { satoshis () { } })).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if jig has sync method', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      expect(() => O.upgrade(class A extends Jig { sync () { } })).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if reserved prop as method on code', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      expect(() => O.upgrade(class A extends Jig { static latest () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { static recent () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { static mustBeLatest () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { static mustBeRecent () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { static encryption () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { static blockhash () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { static blocktime () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { static blockheight () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { static load () { } })).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if reserved prop as method on jig', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      expect(() => O.upgrade(class A extends Jig { latest () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { recent () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { mustBeLatest () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { mustBeRecent () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { encryption () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { blockhash () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { blocktime () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { blockheight () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { load () { } })).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if reserved prop as prop on code', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      class A { }
+      A.latest = 1
+      expect(() => O.upgrade(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if override hasInstance on code', () => {
+      const run = new Run()
+      const O = run.deploy(class O { })
+      expect(() => O.upgrade(class A { static [Symbol.hasInstance] () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { static [Symbol.hasInstance] () { } })).to.throw()
     })
   })
 
