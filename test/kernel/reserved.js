@@ -597,31 +597,39 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set deps on code', () => {
-      // TODO
+    it('throws if set deps on code', () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.deps = 123 } }
+      const C = run.deploy(A)
+      expect(() => C.f()).to.throw('Cannot set deps')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set toString on code', () => {
-      // TODO
+    it('throws if set toString on code', () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.toString = false } }
+      const C = run.deploy(A)
+      expect(() => C.f()).to.throw('Cannot set toString')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if define toString on code', () => {
-      // TODO
+    it('throws if define toString on code', () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () {
+          const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
+          Object.defineProperty(this, 'toString', desc)
+        }
+      }
+      const C = run.deploy(A)
+      expect(() => C.f()).to.throw('Cannot define toString')
     })
 
     // ------------------------------------------------------------------------
 
     it.skip('throws if set upgrade on code', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if define upgrade on code', () => {
       // TODO
     })
 
@@ -633,31 +641,13 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if define sync on code', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
     it.skip('throws if set init on jig', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if define init on jig', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
     it.skip('throws if set sync on jig', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if define sync on jig', () => {
       // TODO
     })
 
