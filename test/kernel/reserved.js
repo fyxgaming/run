@@ -358,26 +358,20 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('Upgrade', () => {
-    it.skip('may override auth method on jig', () => {
-      // TODO
+    it('may override auth method on jig', () => {
+      const run = new Run()
+      const O = run.deploy(class O extends Jig { })
+      class A extends Jig { auth () { } }
+      O.upgrade(A)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may override auth property on jig', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('may override destroy method on jig', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('may override destroy property on jig', () => {
-      // TODO
+    it('may override destroy method on jig', () => {
+      const run = new Run()
+      const O = run.deploy(class O extends Jig { })
+      class A extends Jig { destroy () { } }
+      O.upgrade(A)
     })
 
     // ------------------------------------------------------------------------
