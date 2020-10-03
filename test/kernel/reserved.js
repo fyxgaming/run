@@ -640,7 +640,7 @@ describe('Reserved', () => {
 
     it('throws if set sync on code', () => {
       const run = new Run()
-      class A extends Jig { static f () { this.sync = A.prototype.sync } }
+      class A extends Jig { static f () { this.sync = A.sync } }
       const C = run.deploy(A)
       expect(() => C.f()).to.throw('Cannot set sync')
     })
@@ -656,8 +656,13 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set sync on jig', () => {
-      // TODO
+    it('throws if set sync on jig', () => {
+      new Run() // eslint-disable-line
+      function sync () { }
+      class A extends Jig { f () { this.sync = sync } }
+      A.deps = { sync }
+      const a = new A()
+      expect(() => a.f()).to.throw('Cannot set sync')
     })
 
     // ------------------------------------------------------------------------
