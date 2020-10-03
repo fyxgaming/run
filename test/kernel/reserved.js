@@ -7,7 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig } = Run
+const { Jig, Berry } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -33,10 +33,17 @@ describe('Reserved', () => {
     // may override destroy method on code
     // may override destroy property on code
 
+    // may override bindings on non-jig
+
     // may override auth method on jig
     // may override auth property on jig
     // may override destroy method on jig
     // may override destroy property on jig
+
+    // may override non-location bindings on berry
+    // may override sync method on berry
+    // may override auth method on berry
+    // may override destroy method on berry
 
     it('throws if code has deps method', () => {
       const run = new Run()
@@ -124,23 +131,58 @@ describe('Reserved', () => {
       expect(() => run.deploy(class A extends Jig { sync () { } })).to.throw()
     })
 
-    // throws if reserved prop as method on code
-    // throws if reserved prop as method on jig
-    // throws if reserved prop as prop on code
-    // throws if reserved prop as prop on jig
+    // ------------------------------------------------------------------------
+
+    it('throws if reserved prop as method on code', () => {
+      const run = new Run()
+      expect(() => run.deploy(class A extends Jig { static latest () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { static recent () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { static mustBeLatest () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { static mustBeRecent () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { static encryption () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { static blockhash () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { static blocktime () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { static blockheight () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { static load () { } })).to.throw()
+    })
 
     // ------------------------------------------------------------------------
 
-    it('throws if override jig methods', () => {
+    it('throws if reserved prop as method on jig', () => {
       const run = new Run()
-      const error = 'Cannot override Jig methods or properties'
-      expect(() => run.deploy(class A extends Jig { static [Symbol.hasInstance] () { } })).to.throw(error)
-      expect(() => run.deploy(class A extends Jig { sync () { } })).to.throw(error)
-      expect(() => run.deploy(class A extends Jig { origin () { } })).to.throw(error)
-      expect(() => run.deploy(class A extends Jig { location () { } })).to.throw(error)
-      expect(() => run.deploy(class A extends Jig { nonce () { } })).to.throw(error)
-      expect(() => run.deploy(class A extends Jig { owner () { } })).to.throw(error)
-      expect(() => run.deploy(class A extends Jig { satoshis () { } })).to.throw(error)
+      expect(() => run.deploy(class A extends Jig { latest () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { recent () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { mustBeLatest () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { mustBeRecent () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { encryption () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { blockhash () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { blocktime () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { blockheight () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { load () { } })).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if reserved prop as prop on code', () => {
+      const run = new Run()
+      class A { }
+      A.latest = 1
+      expect(() => run.deploy(A)).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if override hasInstance on code', () => {
+      const run = new Run()
+      expect(() => run.deploy(class A { static [Symbol.hasInstance] () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { static [Symbol.hasInstance] () { } })).to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if override location on berry', () => {
+      const run = new Run()
+      expect(() => run.deploy(class A extends Berry { location () { } })).to.throw()
     })
 
     // ------------------------------------------------------------------------
@@ -275,6 +317,7 @@ describe('Reserved', () => {
 
     // may set auth on code
     // may set destroy on code
+    // may set presets on code
 
     // may set auth on jig
     // may set destroy on jig
