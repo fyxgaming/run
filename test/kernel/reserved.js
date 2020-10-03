@@ -107,20 +107,23 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('may override sync method on berry', () => {
-      // TODO
+    it('may override sync method on berry', () => {
+      const run = new Run()
+      run.deploy(class B extends Berry { sync () { } })
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may override auth method on berry', () => {
-      // TODO
+    it('may override auth method on berry', () => {
+      const run = new Run()
+      run.deploy(class B extends Berry { auth () { } })
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may override destroy method on berry', () => {
-      // tODO
+    it('may override destroy method on berry', () => {
+      const run = new Run()
+      run.deploy(class B extends Berry { destroy () { } })
     })
 
     // ------------------------------------------------------------------------
