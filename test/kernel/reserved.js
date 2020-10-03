@@ -629,14 +629,20 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set upgrade on code', () => {
-      // TODO
+    it('throws if set upgrade on code', () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.upgrade = {} } }
+      const C = run.deploy(A)
+      expect(() => C.f()).to.throw('Cannot set upgrade')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set sync on code', () => {
-      // TODO
+    it('throws if set sync on code', () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.sync = A.prototype.sync } }
+      const C = run.deploy(A)
+      expect(() => C.f()).to.throw('Cannot set sync')
     })
 
     // ------------------------------------------------------------------------
