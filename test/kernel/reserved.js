@@ -588,11 +588,11 @@ describe('Reserved', () => {
       A.deps = { destroy }
       const a = new A()
       a.f()
-      expect(typeof a.destroy === 'function').to.equal(true)
+      expect(a.destroy instanceof Run.Code).to.equal(true)
       await run.sync()
       run.cache = new LocalCache()
       const a2 = await run.load(a.location)
-      expect(typeof a2.destroy === 'function').to.equal(true)
+      expect(a2.destroy instanceof Run.Code).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
