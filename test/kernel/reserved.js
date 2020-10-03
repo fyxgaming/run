@@ -7,7 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, Berry } = Run
+const { Jig, Berry, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -39,8 +39,16 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('may override auth method on jig', () => {
-      // TODO
+    it('may override auth method on jig', async () => {
+      const run = new Run()
+      class A extends Jig { auth () { this.n = 1 } }
+      const a = new A()
+      a.auth()
+      expect(a.n).to.equal(1)
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      expect(a2.n).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
