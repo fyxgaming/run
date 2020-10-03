@@ -53,8 +53,16 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('may override auth property on jig', () => {
-      // TODO
+    it('may override auth property on jig', async () => {
+      const run = new Run()
+      class A extends Jig { f () { this.auth = 1 } }
+      const a = new A()
+      a.f()
+      expect(a.auth).to.equal(1)
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      expect(a2.auth).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
