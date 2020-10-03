@@ -23,7 +23,7 @@ describe('Berry', () => {
     class B extends Berry { static pluck () { return new B() } }
     const CB = run.deploy(B)
     await run.sync()
-    const b = await run.load('abc', CB)
+    const b = await run.load('abc', { berry: CB })
     console.log(b)
   })
 
