@@ -59,8 +59,18 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('may override destroy method on jig', () => {
-      // TODO
+    it('may override destroy method on jig', async () => {
+      const run = new Run()
+      class A extends Jig { destroy () { this.destroyed = true; super.destroy() } }
+      const a = new A()
+      a.destroy()
+      expect(a.destroyed).to.equal(true)
+      await run.sync()
+      expect(a.location.endsWith('_d0')).to.equal(true)
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      expect(a2.destroyed).to.equal(true)
+      expect(a2.location.endsWith('_d0')).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
