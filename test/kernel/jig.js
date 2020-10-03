@@ -135,14 +135,6 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if constructor exists', () => {
-      new Run() // eslint-disable-line
-      class A extends Jig { constructor () { super(); this.n = 1 } }
-      expect(() => new A()).to.throw('Jig must use init() instead of constructor()')
-    })
-
-    // ------------------------------------------------------------------------
-
     it('pass jig with no init method', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { }

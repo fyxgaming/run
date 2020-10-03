@@ -391,8 +391,14 @@ describe('Destroy', () => {
   // --------------------------------------------------------------------------
 
   describe('Berry', () => {
+    it.skip('can destroy berry class', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('throws if destroy undeployed berry class', () => {
-    // TODO
+      // TODO
     })
   })
 })

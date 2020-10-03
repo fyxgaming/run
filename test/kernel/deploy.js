@@ -2105,6 +2105,34 @@ describe('Deploy', () => {
       expect(() => run.deploy(D)).to.throw(error)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Jig
+  // --------------------------------------------------------------------------
+
+  describe('Jig', () => {
+    it('throws if constructor exists', () => {
+      const run = new Run()
+      class A extends Jig { constructor () { super(); this.n = 1 } }
+      const error = 'Jig must use init() instead of constructor()'
+      expect(() => run.deploy(A)).to.throw(error)
+      expect(() => new A()).to.throw(error)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Berry
+  // --------------------------------------------------------------------------
+
+  describe('Berry', () => {
+    it('throws if constructor exists', async () => {
+      const run = new Run()
+      class B extends Berry { constructor () { super(); this.n = 1 } }
+      const error = 'Berry must use init() instead of constructor()'
+      expect(() => run.deploy(B)).to.throw(error)
+      await expect(run.load('abc', { berry: B })).to.be.rejectedWith(error)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
