@@ -83,8 +83,16 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('may override destroy property on jig', () => {
-      // TODO
+    it('may override destroy property on jig', async () => {
+      const run = new Run()
+      class A extends Jig { f () { this.destroy = undefined } }
+      const a = new A()
+      a.f()
+      expect(a.destroy).to.equal(undefined)
+      await run.sync()
+      run.cache = new LocalCache()
+      const a2 = await run.load(a.location)
+      expect(a2.destroy).to.equal(undefined)
     })
 
     // ------------------------------------------------------------------------
