@@ -97,8 +97,12 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('may override non-location bindings on berry', () => {
-      // TODO
+    it('may override non-location bindings on berry', () => {
+      const run = new Run()
+      run.deploy(class B extends Berry { origin () { } })
+      run.deploy(class B extends Berry { nonce () { } })
+      run.deploy(class B extends Berry { owner () { } })
+      run.deploy(class B extends Berry { satoshis () { } })
     })
 
     // ------------------------------------------------------------------------
