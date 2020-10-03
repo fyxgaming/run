@@ -303,7 +303,45 @@ describe('Berry', () => {
   // --------------------------------------------------------------------------
 
   describe('Sync', () => {
-    // TODO
+    it.skip('no sync method', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may sync destroyed berry class', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may sync authed berry class', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('inner syncs berry classes', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('updates berry class when used in a transaction', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('berry location does not change with sync', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if inconsistent worldview', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -348,16 +386,21 @@ describe('Berry', () => {
     // ------------------------------------------------------------------------
 
     it.skip('cannot fake with setPrototypeOf', () => {
+      // TODO
+    })
 
+    // ------------------------------------------------------------------------
+
+    it.skip('returns true for destroyed class', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('returns true for authed class', () => {
+      // TODO
     })
   })
-
-  // Tests
-  // - not a jig - no auth, destroy, sync, etc.
-  // - cannot be upgraded
-  // - if dependencies are upgraded, when berry is loaded, it uses original
-  // - instanceof authd, destroyd
-  // - sync destroyed/authd berry in jig
 })
 
 // ------------------------------------------------------------------------------------------------
