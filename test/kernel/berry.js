@@ -35,6 +35,11 @@ describe('Berry', () => {
   // - immutable internally
   // - can call functions
   // - not a jig - no auth, destroy, sync, etc.
+  // - cannot be upgraded
+  // - if dependencies are upgraded, when berry is loaded, it uses original
+  // - instanceof code
+  // - instanceof local
+  // - instanceof authd, destroyd
 })
 
 // ------------------------------------------------------------------------------------------------
