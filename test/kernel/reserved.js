@@ -28,22 +28,83 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('Deploy', () => {
-    // may override auth method on code
-    // may override auth property on code
-    // may override destroy method on code
-    // may override destroy property on code
+    it.skip('may override auth method on code', () => {
+      // TODO
+    })
 
-    // may override bindings on non-jig
+    // ------------------------------------------------------------------------
 
-    // may override auth method on jig
-    // may override auth property on jig
-    // may override destroy method on jig
-    // may override destroy property on jig
+    it.skip('may override auth property on code', () => {
+      // TODO
+    })
 
-    // may override non-location bindings on berry
-    // may override sync method on berry
-    // may override auth method on berry
-    // may override destroy method on berry
+    // ------------------------------------------------------------------------
+
+    it.skip('may override destroy method on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override destroy property on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override bindings on non-jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override auth method on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override auth property on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override destroy method on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override destroy property on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override non-location bindings on berry', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override sync method on berry', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override auth method on berry', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override destroy method on berry', () => {
+      // tODO
+    })
+
+    // ------------------------------------------------------------------------
 
     it('throws if code has deps method', () => {
       const run = new Run()
