@@ -9,7 +9,7 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { Run, payFor } = require('../env/config')
-const { Berry, Jig } = Run
+const { Berry } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Berry
@@ -29,28 +29,6 @@ describe('Berry', () => {
       }
       const b = await run.load(berryTx.hash, B)
       expect(!!b.data).to.equal(true)
-    })
-
-    it('must only return berries from pluck', async () => {
-      const run = new Run()
-      class B { static async pluck (location, fetch, pluck) { return new B() } }
-      await expect(run.load('123', B)).to.be.rejectedWith('Plucker must return an instance of Berry')
-    })
-  })
-
-  describe('jig', () => {
-    it('should support passing berries into jigs', async () => {
-      const run = new Run()
-      class B extends Berry { static async pluck (location, fetch, pluck) { return new B() } }
-      await run.deploy(B)
-      const b = await run.load('123', B)
-      class A extends Jig { init (b) { this.b = b } }
-      const a = new A(b)
-      await a.sync()
-      run.deactivate()
-      const run2 = new Run({ blockchain: run.blockchain })
-      await run2.load(a.location)
-      // TODO: Add some checks
     })
   })
 

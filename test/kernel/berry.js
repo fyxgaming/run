@@ -66,6 +66,48 @@ describe('Berry', () => {
     it.skip('berry with deps', () => {
     // TODO
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('return immutable', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws for invalid path', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if return different class', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if return child class', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if return non-object', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if pluck Berry', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if create more than one', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -98,6 +140,12 @@ describe('Berry', () => {
     // ------------------------------------------------------------------------
 
     it.skip('throws if set location', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if define location', () => {
       // TODO
     })
 
@@ -154,6 +202,18 @@ describe('Berry', () => {
 
   describe('Jig', () => {
     it.skip('assigns to jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('pass into jig method', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if use undeployed berry', () => {
 
     })
   })
@@ -164,6 +224,18 @@ describe('Berry', () => {
 
   describe('Code', () => {
     it.skip('assigns to code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('pass into code method', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if use undeployed berry', () => {
 
     })
   })
@@ -217,15 +289,14 @@ describe('Berry', () => {
   })
 
   // Tests
-  // - load with invalid string throws
-  // - load with non-berry class throws
-  // - immutable externally
-  // - immutable internally
   // - not a jig - no auth, destroy, sync, etc.
   // - cannot be upgraded
   // - if dependencies are upgraded, when berry is loaded, it uses original
   // - instanceof authd, destroyd
   // - sync destroyed/authd berry in jig
+
+  // caches
+  // fetch tests, multiple
 })
 
 // ------------------------------------------------------------------------------------------------
