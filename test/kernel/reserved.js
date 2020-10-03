@@ -503,44 +503,111 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('Method', () => {
-    // TODO
+    it.skip('may set auth on code', () => {
+      // TODO
+    })
 
     // ------------------------------------------------------------------------
 
-    it('throws if override jig methods', () => {
-      new Run() // eslint-disable-line
-      class A extends Jig {
-        h () { this.sync = [] }
-
-        i () { this.init = 'hello' }
-      }
-      const a = new A()
-      expect(() => a.h()).to.throw('Cannot set sync')
-      expect(() => a.i()).to.throw('Cannot set init')
+    it.skip('may set destroy on code', () => {
+      // TODO
     })
 
-    // may set auth on code
-    // may set destroy on code
-    // may set presets on code
+    // ------------------------------------------------------------------------
 
-    // may set auth on jig
-    // may set destroy on jig
+    it.skip('may set presets on code', () => {
+      // TODO
+    })
 
-    // throws if set deps on code
-    // Throws if set toString on code
-    // Throws if define toString on code
-    // Throws if set upgrade on code
-    // Throws if define upgrade on code
-    // Throws if set sync on code
-    // Throws if define sync on code
+    // ------------------------------------------------------------------------
 
-    // Throws if set init on jig
-    // Throws if define init on jig
-    // Throws if set sync on jig
-    // Throws if define sync on jig
+    it.skip('may set auth on jig', () => {
+      // TODO
+    })
 
-    // throws if set reserved props on jig
-    // throws if set reserved props on code
+    // ------------------------------------------------------------------------
+
+    it.skip('may set destroy on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set deps on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set toString on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if define toString on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set upgrade on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if define upgrade on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set sync on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if define sync on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set init on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if define init on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set sync on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if define sync on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set reserved props on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set reserved props on code', () => {
+      // TODO
+    })
   })
 })
 
