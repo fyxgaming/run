@@ -121,29 +121,6 @@ describe('Reserved', () => {
     // throws if reserved prop as prop on code
     // throws if reserved prop as prop on jig
 
-    it('throws if contains reserved words', () => {
-      const run = new Run()
-      const error = 'Must not have any reserved words'
-
-      /*
-      RESERVED_WORDS.forEach(word => {
-        class A { }
-        A[word] = 1
-        expect(() => run.deploy(A)).to.throw(error)
-
-        class B { }
-        B[word] = class Z { }
-        expect(() => run.deploy(B)).to.throw(error)
-      })
-      */
-
-      class C { static sync () { }}
-      expect(() => run.deploy(C)).to.throw(error)
-
-      class D { static get destroy () { } }
-      expect(() => run.deploy(D)).to.throw(error)
-    })
-
     // ------------------------------------------------------------------------
 
     it('throws if override jig methods', () => {
