@@ -302,15 +302,53 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('Upgrade', () => {
-    // may override auth method on code
-    // may override auth property on code
-    // may override destroy method on code
-    // may override destroy property on code
+    it.skip('may override auth method on code', () => {
+      // TODO
+    })
 
-    // may override auth method on jig
-    // may override auth property on jig
-    // may override destroy method on jig
-    // may override destroy property on jig
+    // ------------------------------------------------------------------------
+
+    it.skip('may override auth property on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override destroy method on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override destroy property on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override auth method on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override auth property on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override destroy method on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may override destroy property on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
 
     it('throws if code has deps method', () => {
       const run = new Run()
