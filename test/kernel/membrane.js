@@ -2231,7 +2231,7 @@ describe('Membrane', () => {
   // Reserved
   // --------------------------------------------------------------------------
 
-  describe('Reserved', () => {
+  describe.only('Reserved', () => {
     it('cannot set reserved properties', () => {
       const a = new Membrane({}, mangle({ _reserved: true }))
       _RESERVED_PROPS.forEach(prop => {
@@ -2257,6 +2257,30 @@ describe('Membrane', () => {
       const a = new Membrane({}, mangle({ _reserved: true }))
       a.o = {}
       a.o[_RESERVED_PROPS[0]] = 1
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can set jig methods on non-jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can set code methods on non-code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot set reserved jig methods on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot define reserved jig methods on code', () => {
+      // TODO
     })
   })
 
