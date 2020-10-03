@@ -40,6 +40,7 @@ describe('Berry', () => {
   // - instanceof code
   // - instanceof local
   // - instanceof authd, destroyd
+  // - sync destroyed/authd berry in jig
 })
 
 // ------------------------------------------------------------------------------------------------
