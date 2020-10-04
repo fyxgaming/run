@@ -537,6 +537,21 @@ describe('Call', () => {
       const a = new A()
       expect(() => a.constructor.set.apply(a)).to.throw('Cannot call set on [jig A]')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if call inner method on jig', async () => {
+      new Run() // eslint-disable-line
+      class B { f (a) { return this.n } }
+      class A extends Jig {
+        init () { this.b = [] }
+        f () { return this.b.filter.apply(this) }
+      }
+      A.deps = { B }
+      const a = new A()
+      await a.sync()
+      expect(() => a.f()).to.throw()
+    })
   })
 
   // --------------------------------------------------------------------------

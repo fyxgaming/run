@@ -1289,12 +1289,12 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     // This test takes several seconds on WebKit but milliseconds on other browsers
-    it('recordability depends on thisArg', () => {
+    it('pass through depends on whether thisArg is recordable target', () => {
       // Returning a WeakMap will fail when callable due to unserializability
-      const options = mangle({ _recordableTarget: true, _recordCalls: false, _smartAPI: true })
+      const options = mangle({ _recordCalls: true })
       const f = new Membrane(function f () { return new WeakMap() }, options)
-      const a = makeJig({ f }, { _recordableTarget: true, _recordCalls: false })
-      const b = makeJig({ f }, { _recordableTarget: true, _recordCalls: true })
+      const a = makeJig({ f }, { _recordableTarget: false })
+      const b = makeJig({ f }, { _recordableTarget: true })
       expect(() => a.f()).not.to.throw()
       testRecord(() => expect(() => b.f()).to.throw())
     }).timeout(10000)
