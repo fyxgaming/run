@@ -741,7 +741,37 @@ describe('Private', () => {
   // --------------------------------------------------------------------------
 
   describe('Berry', () => {
-    it.skip('placeholder', () => {
+    it.skip('can set private variable in init', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('can read private variable in method', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('can read private variable in berry of same class', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('can read class private variables from instance', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if read private variable from another jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if read private variable from another berry', () => {
       // TODO
     })
   })
