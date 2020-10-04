@@ -551,7 +551,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot swallow inner errors', () => {
-      const options = { _recordable: true, _recordCalls: true, _bindings: true }
+      const options = { _recordableTarget: true, _recordCalls: true, _bindings: true }
       class A {
         static f () {
           try { this.location = '123' } catch (e) { }
@@ -972,12 +972,12 @@ describe('Membrane', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Recordable
+  // Record reads
   // --------------------------------------------------------------------------
 
-  describe('Recordable', () => {
+  describe('Record reads', () => {
     it('construct', () => {
-      const A = makeJig(class A { }, { _recordable: true })
+      const A = makeJig(class A { }, { _recordReads: true })
       testRecord(record => {
         simulateAction(() => {
         new A() // eslint-disable-line
@@ -990,8 +990,8 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('construct chain', () => {
-      const A = makeJig(class A { }, { _recordable: true })
-      const B = makeJig(class B extends A { }, { _recordable: true })
+      const A = makeJig(class A { }, { _recordReads: true })
+      const B = makeJig(class B extends A { }, { _recordReads: true })
       testRecord(record => {
         simulateAction(() => {
         new B() // eslint-disable-line
@@ -1005,9 +1005,215 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('get', () => {
+      const o = makeJig({}, { _recordReads: true })
+      testRecord(record => {
+        simulateAction(() => {
+          o.n // eslint-disable-line
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(o)).to.equal(true)
+          expect(record._snapshots.has(o)).to.equal(true)
+        })
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get method', () => {
+      const A = makeJig(class A { f () { } }, { _recordReads: true })
+      const a = makeJig(new A(), { _recordReads: true })
+      testRecord(record => {
+        simulateAction(() => {
+        a.f // eslint-disable-line
+          expect(record._reads.length).to.equal(2)
+          expect(record._reads.includes(A)).to.equal(true)
+          expect(record._reads.includes(a)).to.equal(true)
+          expect(record._snapshots.has(A)).to.equal(true)
+          expect(record._snapshots.has(a)).to.equal(true)
+        })
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get parent method', () => {
+      const A = makeJig(class A { f () { } }, { _recordReads: true })
+      const B = makeJig(class B extends A { }, { _recordReads: true })
+      const b = makeJig(new B(), { _recordReads: true })
+      testRecord(record => {
+        simulateAction(() => {
+        b.f // eslint-disable-line
+          expect(record._reads.length).to.equal(3)
+          expect(record._reads.includes(A)).to.equal(true)
+          expect(record._reads.includes(B)).to.equal(true)
+          expect(record._reads.includes(b)).to.equal(true)
+          expect(record._snapshots.has(A)).to.equal(true)
+          expect(record._snapshots.has(B)).to.equal(true)
+          expect(record._snapshots.has(b)).to.equal(true)
+        })
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('getOwnPropertyDescriptor', () => {
+      const o = makeJig({}, { _recordReads: true })
+      testRecord(record => {
+        simulateAction(() => {
+          Object.getOwnPropertyDescriptor(o, 'n')
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(o)).to.equal(true)
+          expect(record._snapshots.has(o)).to.equal(true)
+        })
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('getPrototypeOf', () => {
+      const A = makeJig(class A { f () { } }, { _recordReads: true })
+      const a = makeJig(new A(), { _recordReads: true })
+      testRecord(record => {
+        simulateAction(() => {
+          Object.getPrototypeOf(a)
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(a)).to.equal(true)
+          expect(record._snapshots.has(a)).to.equal(true)
+        })
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('has', () => {
+      const o = makeJig({}, { _recordReads: true })
+      testRecord(record => {
+        simulateAction(() => {
+        'n' in o // eslint-disable-line
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(o)).to.equal(true)
+          expect(record._snapshots.has(o)).to.equal(true)
+        })
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('ownKeys', () => {
+      const o = makeJig({}, { _recordReads: true })
+      testRecord(record => {
+        simulateAction(() => {
+          Object.keys(o)
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(o)).to.equal(true)
+          expect(record._snapshots.has(o)).to.equal(true)
+        })
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicGetMethod', () => {
+      const s = makeJig(new Set(), { _recordReads: true })
+      testRecord(record => {
+        simulateAction(() => {
+        s.add // eslint-disable-line
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(s)).to.equal(true)
+          expect(record._snapshots.has(s)).to.equal(true)
+        })
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicRead', () => {
+      const m = makeJig(new Map(), { _recordReads: true })
+      testRecord(record => {
+        simulateAction(() => {
+          m.has(1)
+          expect(record._reads.length).to.equal(1)
+          expect(record._reads.includes(m)).to.equal(true)
+          expect(record._snapshots.has(m)).to.equal(true)
+        })
+      })
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Record updates
+  // --------------------------------------------------------------------------
+
+  describe('Record updates', () => {
+    it('define', () => {
+      const o = makeJig({}, { _recordUpdates: true })
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      testRecord(record => {
+        simulateAction(() => {
+          Object.defineProperty(o, 'n', desc)
+          expect(record._snapshots.has(o)).to.equal(true)
+          expect(record._updates.length).to.equal(1)
+          expect(record._updates.includes(o)).to.equal(true)
+        })
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('delete', () => {
+      const o = makeJig({}, { _recordUpdates: true })
+      testRecord(record => {
+        simulateAction(() => {
+          delete o.n
+          expect(record._snapshots.has(o)).to.equal(true)
+          expect(record._updates.length).to.equal(1)
+          expect(record._updates.includes(o)).to.equal(true)
+        })
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set', () => {
+      const o = makeJig({}, { _recordUpdates: true })
+      testRecord(record => {
+        simulateAction(() => {
+          o.n = 1
+          expect(record._snapshots.has(o)).to.equal(true)
+          expect(record._updates.length).to.equal(1)
+          expect(record._updates.includes(o)).to.equal(true)
+        })
+      })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicUpdate', () => {
+      const m = makeJig(new Map(), { _recordUpdates: true })
+      testRecord(record => {
+        simulateAction(() => {
+          m.set(1, 2)
+          expect(record._snapshots.has(m)).to.equal(true)
+          expect(record._updates.length).to.equal(1)
+          expect(record._updates.includes(m)).to.equal(true)
+        })
+      })
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Record calls
+  // --------------------------------------------------------------------------
+
+  describe('Record calls', () => {
     it('apply static method to code', () => {
       class A { static f () { this._n = 1 }}
-      const A2 = makeJig(A, { _recordable: true, _recordCalls: true })
+      const A2 = makeJig(A, {
+        _recordReads: true,
+        _recordUpdates: true,
+        _recordableTarget: true,
+        _recordCalls: true
+      })
       testRecord(record => {
         A2.f()
         expect(record._reads.length).to.equal(1)
@@ -1026,9 +1232,19 @@ describe('Membrane', () => {
 
     it('apply method to instance', () => {
       class A { f () { this._n = 1 }}
-      const A2 = makeJig(A, { _recordable: true, _recordCalls: true })
+      const A2 = makeJig(A, {
+        _recordReads: true,
+        _recordUpdates: true,
+        _recordableTarget: true,
+        _recordCalls: true
+      })
       const a = new A2()
-      const a2 = makeJig(a, { _recordable: true, _recordCalls: true })
+      const a2 = makeJig(a, {
+        _recordReads: true,
+        _recordUpdates: true,
+        _recordableTarget: true,
+        _recordCalls: true
+      })
       testRecord(record => {
         a2.f()
         expect(record._reads.includes(A2)).to.equal(true)
@@ -1045,205 +1261,52 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('define', () => {
-      const o = makeJig({}, { _recordable: true })
-      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+    it('args passed through if not recordable', () => {
+      class A { static f (x) { return typeof x === 'symbol' } }
+      const A2 = makeJig(A, { _recordableTarget: true, _recordCalls: false })
+      expect(A2.f(Symbol.hasInstance)).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('return values passed through if recordable', () => {
+      class A { static f () { return Symbol.hasInstance } }
+      const A2 = makeJig(A, { _recordableTarget: true, _recordCalls: false })
+      expect(A2.f()).to.equal(Symbol.hasInstance)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('no action if not recordable', () => {
+      class A { static f () { } }
+      const A2 = makeJig(A, { _recordableTarget: true, _recordCalls: false })
       testRecord(record => {
-        simulateAction(() => {
-          Object.defineProperty(o, 'n', desc)
-          expect(record._snapshots.has(o)).to.equal(true)
-          expect(record._updates.length).to.equal(1)
-          expect(record._updates.includes(o)).to.equal(true)
-        })
+        A2.f()
+        expect(record._actions.length).to.equal(0)
       })
     })
 
     // ------------------------------------------------------------------------
 
-    it('delete', () => {
-      const o = makeJig({}, { _recordable: true })
-      testRecord(record => {
-        simulateAction(() => {
-          delete o.n
-          expect(record._snapshots.has(o)).to.equal(true)
-          expect(record._updates.length).to.equal(1)
-          expect(record._updates.includes(o)).to.equal(true)
-        })
-      })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('get', () => {
-      const o = makeJig({}, { _recordable: true })
-      testRecord(record => {
-        simulateAction(() => {
-          o.n // eslint-disable-line
-          expect(record._reads.length).to.equal(1)
-          expect(record._reads.includes(o)).to.equal(true)
-          expect(record._snapshots.has(o)).to.equal(true)
-        })
-      })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('get method', () => {
-      const A = makeJig(class A { f () { } }, { _recordable: true })
-      const a = makeJig(new A(), { _recordable: true })
-      testRecord(record => {
-        simulateAction(() => {
-        a.f // eslint-disable-line
-          expect(record._reads.length).to.equal(2)
-          expect(record._reads.includes(A)).to.equal(true)
-          expect(record._reads.includes(a)).to.equal(true)
-          expect(record._snapshots.has(A)).to.equal(true)
-          expect(record._snapshots.has(a)).to.equal(true)
-        })
-      })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('get parent method', () => {
-      const A = makeJig(class A { f () { } }, { _recordable: true })
-      const B = makeJig(class B extends A { }, { _recordable: true })
-      const b = makeJig(new B(), { _recordable: true })
-      testRecord(record => {
-        simulateAction(() => {
-        b.f // eslint-disable-line
-          expect(record._reads.length).to.equal(3)
-          expect(record._reads.includes(A)).to.equal(true)
-          expect(record._reads.includes(B)).to.equal(true)
-          expect(record._reads.includes(b)).to.equal(true)
-          expect(record._snapshots.has(A)).to.equal(true)
-          expect(record._snapshots.has(B)).to.equal(true)
-          expect(record._snapshots.has(b)).to.equal(true)
-        })
-      })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('getOwnPropertyDescriptor', () => {
-      const o = makeJig({}, { _recordable: true })
-      testRecord(record => {
-        simulateAction(() => {
-          Object.getOwnPropertyDescriptor(o, 'n')
-          expect(record._reads.length).to.equal(1)
-          expect(record._reads.includes(o)).to.equal(true)
-          expect(record._snapshots.has(o)).to.equal(true)
-        })
-      })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('getPrototypeOf', () => {
-      const A = makeJig(class A { f () { } }, { _recordable: true })
-      const a = makeJig(new A(), { _recordable: true })
-      testRecord(record => {
-        simulateAction(() => {
-          Object.getPrototypeOf(a)
-          expect(record._reads.length).to.equal(1)
-          expect(record._reads.includes(a)).to.equal(true)
-          expect(record._snapshots.has(a)).to.equal(true)
-        })
-      })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('has', () => {
-      const o = makeJig({}, { _recordable: true })
-      testRecord(record => {
-        simulateAction(() => {
-        'n' in o // eslint-disable-line
-          expect(record._reads.length).to.equal(1)
-          expect(record._reads.includes(o)).to.equal(true)
-          expect(record._snapshots.has(o)).to.equal(true)
-        })
-      })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('ownKeys', () => {
-      const o = makeJig({}, { _recordable: true })
-      testRecord(record => {
-        simulateAction(() => {
-          Object.keys(o)
-          expect(record._reads.length).to.equal(1)
-          expect(record._reads.includes(o)).to.equal(true)
-          expect(record._snapshots.has(o)).to.equal(true)
-        })
-      })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('set', () => {
-      const o = makeJig({}, { _recordable: true })
-      testRecord(record => {
-        simulateAction(() => {
-          o.n = 1
-          expect(record._snapshots.has(o)).to.equal(true)
-          expect(record._updates.length).to.equal(1)
-          expect(record._updates.includes(o)).to.equal(true)
-        })
-      })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('intrinsicGetMethod', () => {
-      const s = makeJig(new Set(), { _recordable: true })
-      testRecord(record => {
-        simulateAction(() => {
-        s.add // eslint-disable-line
-          expect(record._reads.length).to.equal(1)
-          expect(record._reads.includes(s)).to.equal(true)
-          expect(record._snapshots.has(s)).to.equal(true)
-        })
-      })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('intrinsicRead', () => {
-      const m = makeJig(new Map(), { _recordable: true })
-      testRecord(record => {
-        simulateAction(() => {
-          m.has(1)
-          expect(record._reads.length).to.equal(1)
-          expect(record._reads.includes(m)).to.equal(true)
-          expect(record._snapshots.has(m)).to.equal(true)
-        })
-      })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('intrinsicUpdate', () => {
-      const m = makeJig(new Map(), { _recordable: true })
-      testRecord(record => {
-        simulateAction(() => {
-          m.set(1, 2)
-          expect(record._snapshots.has(m)).to.equal(true)
-          expect(record._updates.length).to.equal(1)
-          expect(record._updates.includes(m)).to.equal(true)
-        })
-      })
-    })
+    // This test takes several seconds on WebKit but milliseconds on other browsers
+    it('recordability depends on thisArg', () => {
+      // Returning a WeakMap will fail when callable due to unserializability
+      const options = mangle({ _recordableTarget: true, _recordCalls: false, _smartAPI: true })
+      const f = new Membrane(function f () { return new WeakMap() }, options)
+      const a = makeJig({ f }, { _recordableTarget: true, _recordCalls: false })
+      const b = makeJig({ f }, { _recordableTarget: true, _recordCalls: true })
+      expect(() => a.f()).not.to.throw()
+      testRecord(() => expect(() => b.f()).to.throw())
+    }).timeout(10000)
   })
 
   // --------------------------------------------------------------------------
-  // Callable
+  // Smart API
   // --------------------------------------------------------------------------
 
-  describe('Callable', () => {
+  describe('Smart API', () => {
     it('delete throws if outside method', () => {
-      const a = makeJig({}, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const a = makeJig({}, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       expect(() => { delete a.n }).to.throw(error)
     })
@@ -1252,7 +1315,7 @@ describe('Membrane', () => {
 
     it('delete allowed in jig methods', () => {
       class A { static f () { delete this.n } }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const a = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       testRecord(record => a.f())
     })
 
@@ -1260,8 +1323,8 @@ describe('Membrane', () => {
 
     it('delete throws from another jigs method', () => {
       class A { static f (b) { delete b.n } }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
-      const b = makeJig({}, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const a = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      const b = makeJig({}, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
@@ -1269,7 +1332,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('defineProperty throws if outside method', () => {
-      const a = makeJig({}, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const a = makeJig({}, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(a, 'n', desc)).to.throw(error)
@@ -1284,7 +1347,7 @@ describe('Membrane', () => {
           Object.defineProperty(this, 'n', desc)
         }
       }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const a = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       testRecord(record => a.f())
     })
 
@@ -1297,8 +1360,8 @@ describe('Membrane', () => {
           Object.defineProperty(b, 'n', desc)
         }
       }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
-      const b = makeJig({}, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const a = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      const b = makeJig({}, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
@@ -1306,7 +1369,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('set throws if outside method', () => {
-      const a = makeJig({}, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const a = makeJig({}, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       expect(() => { a.n = 1 }).to.throw(error)
     })
@@ -1315,7 +1378,7 @@ describe('Membrane', () => {
 
     it('set allowed in jig methods', () => {
       class A { static f () { this.n = 1 } }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const a = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       testRecord(record => a.f())
     })
 
@@ -1323,8 +1386,8 @@ describe('Membrane', () => {
 
     it('set throws from another jigs method', () => {
       class A { static f (b) { b.n = 1 } }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
-      const b = makeJig({}, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const a = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      const b = makeJig({}, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
@@ -1332,7 +1395,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('intrinsicUpdate throws if outside method', () => {
-      const s = makeJig(new Set(), { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const s = makeJig(new Set(), { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       expect(() => s.add(1)).to.throw(error)
     })
@@ -1342,7 +1405,7 @@ describe('Membrane', () => {
     it('intrinsicUpdate allowed in jig methods', () => {
       class A { static f () { this.set.add(1) } }
       A.set = new Set()
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const a = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       testRecord(record => a.f())
     })
 
@@ -1350,51 +1413,11 @@ describe('Membrane', () => {
 
     it('intrinsicUpdate throws from another jigs method', () => {
       class A { static f (b) { b.add(1) } }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const a = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const b = makeJig(new Set(), { _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
-
-    // ------------------------------------------------------------------------
-
-    it('args passed through if not callable', () => {
-      class A { static f (x) { return typeof x === 'symbol' } }
-      const A2 = makeJig(A, { _recordable: true, _recordCalls: false, _smartAPI: true })
-      expect(A2.f(Symbol.hasInstance)).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('return values passed through if not callable', () => {
-      class A { static f () { return Symbol.hasInstance } }
-      const A2 = makeJig(A, { _recordable: true, _recordCalls: false, _smartAPI: true })
-      expect(A2.f()).to.equal(Symbol.hasInstance)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('no action if not callable', () => {
-      class A { static f () { } }
-      const A2 = makeJig(A, { _recordable: true, _recordCalls: false, _smartAPI: true })
-      testRecord(record => {
-        A2.f()
-        expect(record._actions.length).to.equal(0)
-      })
-    })
-
-    // ------------------------------------------------------------------------
-
-    // This test takes several seconds on WebKit but milliseconds on other browsers
-    it('callable method depends on thisArg', () => {
-      // Returning a WeakMap will fail when callable due to unserializability
-      const options = mangle({ _recordable: true, _recordCalls: false, _smartAPI: true })
-      const f = new Membrane(function f () { return new WeakMap() }, options)
-      const a = makeJig({ f }, { _recordable: true, _recordCalls: false })
-      const b = makeJig({ f }, { _recordable: true, _recordCalls: true })
-      expect(() => a.f()).not.to.throw()
-      testRecord(() => expect(() => b.f()).to.throw())
-    }).timeout(10000)
   })
 
   // --------------------------------------------------------------------------
@@ -1411,7 +1434,7 @@ describe('Membrane', () => {
 
     it('delete allowed in jig methods', () => {
       class A { static f () { delete this._n } }
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       testRecord(() => a.f())
     })
@@ -1420,7 +1443,7 @@ describe('Membrane', () => {
 
     it('delete throws from another jigs method', () => {
       class A { static f (b) { delete b._n } }
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       const error = 'Cannot delete private property _n'
@@ -1444,7 +1467,7 @@ describe('Membrane', () => {
           Object.defineProperty(this, '_n', desc)
         }
       }
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       testRecord(() => a.f())
     })
@@ -1458,7 +1481,7 @@ describe('Membrane', () => {
           Object.defineProperty(b, '_n', desc)
         }
       }
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       const error = 'Cannot define private property _n'
@@ -1486,7 +1509,7 @@ describe('Membrane', () => {
     it('get allowed in jig methods', () => {
       class A { static f () { return this._n } }
       A._n = 1
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       testRecord(() => a.f())
     })
@@ -1495,7 +1518,7 @@ describe('Membrane', () => {
 
     it('get throws from another jigs method', () => {
       class A { static f (b) { return b._n } }
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       const error = 'Cannot access private property _n'
@@ -1513,7 +1536,7 @@ describe('Membrane', () => {
 
     it('getOwnPropertyDescriptor allowed in jig methods', () => {
       class A { static f () { return Object.getOwnPropertyDescriptor(this, '_n') } }
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       testRecord(() => a.f())
     })
@@ -1522,7 +1545,7 @@ describe('Membrane', () => {
 
     it('getOwnPropertyDescriptor throws from another jigs method', () => {
       class A { static f (b) { return Object.getOwnPropertyDescriptor(b, '_n') } }
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       const error = 'Cannot access private property _n'
@@ -1540,7 +1563,7 @@ describe('Membrane', () => {
 
     it('has allowed in jig methods', () => {
       class A { static f () { return '_n' in this } }
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       testRecord(() => a.f())
     })
@@ -1549,7 +1572,7 @@ describe('Membrane', () => {
 
     it('has throws from another jigs method', () => {
       class A { static f (b) { return '_n' in b } }
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       const error = 'Cannot access private property _n'
@@ -1569,7 +1592,7 @@ describe('Membrane', () => {
     it('ownKeys returns private properties in jig methods', () => {
       class A { static f () { return Object.getOwnPropertyNames(this).includes('_n') } }
       A._n = 1
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       expect(testRecord(() => a.f())).to.equal(true)
     })
@@ -1579,7 +1602,7 @@ describe('Membrane', () => {
     it('ownKeys filters private properties from another jigs method', () => {
       class A { static f (b) { return Object.getOwnPropertyNames(b).includes('_n') } }
       A._n = 1
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       expect(testRecord(() => a.f(b))).to.equal(false)
@@ -1596,7 +1619,7 @@ describe('Membrane', () => {
 
     it('set allowed in jig methods', () => {
       class A { static f () { this._n = 1 } }
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       testRecord(() => a.f())
     })
@@ -1605,7 +1628,7 @@ describe('Membrane', () => {
 
     it('set throws from another jigs method', () => {
       class A { static f (b) { b._n = 1 } }
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeJig(A, options)
       const b = makeJig({}, options)
       const error = 'Cannot set private property _n'
@@ -1619,7 +1642,7 @@ describe('Membrane', () => {
         g () { return this._f() }
         _f (b) { return 1 }
       }
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const A2 = makeJig(A, options)
       const b = makeJig(new A2(), options)
       expect(testRecord(() => b.g())).to.equal(1)
@@ -1632,7 +1655,7 @@ describe('Membrane', () => {
         constructor () { this._n = 1 }
         f (b) { return b._n }
       }
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const A2 = makeJig(A, options)
       const a = makeJig(new A2(), options)
       const b = makeJig(new A2(1), options)
@@ -1642,7 +1665,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('accessible from inner object of same jig', () => {
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       class A { static f (b) { return b._n } }
       const a = makeJig(A, options)
       const b = makeJig({ _n: 1 }, Object.assign({ _parentJig: a }, options))
@@ -1652,7 +1675,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws when access parent class property', () => {
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       class A { static testGet () { return this._n } }
       const A2 = makeJig(A, options)
       class B extends A2 { }
@@ -1664,7 +1687,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('accessible if access child class property with parent method', () => {
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       class A { static testGet () { return this._n } }
       const A2 = makeJig(A, options)
       class B extends A2 { }
@@ -1677,7 +1700,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot access on instance with different class chain', () => {
-      const options = { _privacy: true, _recordable: true, _recordCalls: true }
+      const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       class A { f (z) { return z._n } }
       const A2 = makeJig(A, options)
       class B extends A2 { }
@@ -1937,7 +1960,7 @@ describe('Membrane', () => {
         }
       }
       A.a = []
-      const A2 = makeJig(A, { _recordable: true, _recordCalls: true, _cowProps: true })
+      const A2 = makeJig(A, { _recordableTarget: true, _recordCalls: true, _cowProps: true })
       testRecord(() => {
         A2.f()
         expect(A2.a[0]).to.equal(1)
@@ -2055,7 +2078,7 @@ describe('Membrane', () => {
           return this.x === o
         }
       }
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A2 = makeJig(A, options)
       const a = makeJig(new A2(), options)
       testRecord(() => expect(a.f()).to.equal(true))
@@ -2075,7 +2098,7 @@ describe('Membrane', () => {
           return o === this.o
         }
       }
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A2 = makeJig(A, options)
       testRecord(() => expect(A2.f()).to.equal(true))
     })
@@ -2095,7 +2118,7 @@ describe('Membrane', () => {
           return this.m.get(1) === o
         }
       }
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A2 = makeJig(A, options)
       testRecord(() => expect(A2.f()).to.equal(true))
     })
@@ -2116,7 +2139,7 @@ describe('Membrane', () => {
           return o === a.o
         }
       }
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A2 = makeJig(A, options)
       const B2 = makeJig(B, options)
       testRecord(() => expect(B2.g(A2)).to.equal(true))
@@ -2136,7 +2159,7 @@ describe('Membrane', () => {
           o.n = 2
         }
       }
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A2 = makeJig(A, options)
       const B2 = makeJig(B, options)
       testRecord(() => B2.g(A2))
@@ -2158,7 +2181,7 @@ describe('Membrane', () => {
           o.n = 2
         }
       }
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A2 = makeJig(A, options)
       const B2 = makeJig(B, options)
       testRecord(() => B2.g(A2))
@@ -2182,7 +2205,7 @@ describe('Membrane', () => {
           return p.o === a.o
         }
       }
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A2 = makeJig(A, options)
       const B2 = makeJig(B, options)
       testRecord(() => expect(B2.g(A2)).to.equal(true))
@@ -2210,7 +2233,7 @@ describe('Membrane', () => {
           return p.get(1) === a.o && p.get(2) === a.s
         }
       }
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A2 = makeJig(A, options)
       const B2 = makeJig(B, options)
       testRecord(() => expect(B2.g(A2)).to.equal(true))
@@ -2303,7 +2326,7 @@ describe('Membrane', () => {
   describe('Methods', () => {
     it('apply args are cow from outside', () => {
       class A { static f (o) { o.n = 2 } }
-      const A2 = makeJig(A, { _recordCalls: true, _recordable: true })
+      const A2 = makeJig(A, { _recordCalls: true, _recordableTarget: true })
       const o = { n: 1 }
       testRecord(() => A2.f(o))
       expect(o.n).to.equal(1)
@@ -2312,7 +2335,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('apply args are cow from another jig', () => {
-      const options = { _recordable: true, _recordCalls: true, _smartAPI: true }
+      const options = { _recordableTarget: true, _recordCalls: true, _smartAPI: true }
       class B { static g (a) { this.o = { n: 1 }; a.f(this.o) } }
       class A { static f (o) { o.n = 2 } }
       const A2 = makeJig(A, options)
@@ -2326,7 +2349,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('universals are intact from outside', () => {
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       class A { }
       const A2 = makeJig(A, options)
       class B { static f (A2) { return A2 === B.A2 } }
@@ -2338,7 +2361,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('unifies worldview with args', () => {
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const a1 = makeJig({}, options)
       const a2 = makeJig({}, options)
       _sudo(() => Object.assign(a2, a1))
@@ -2351,7 +2374,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('async methods not supported', () => {
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A = makeJig(class A { static async f () { } }, options)
       expect(() => testRecord(() => A.f())).to.throw('Async methods not supported')
     })
@@ -2359,7 +2382,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('deploys new code as args from outside', () => {
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A = makeJig(class A { static f () { this.n = 1 } }, options)
       testRecord(record => {
         A.f(function f () { })
@@ -2372,7 +2395,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if pass new code as args from inside', () => {
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       class A {
         static f () { this.g(class B { }) }
         static g () { this.n = 1 }
@@ -2384,7 +2407,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if call jig method on another jig', () => {
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A = makeJig(class A { static f () { } }, options)
       const B = makeJig(class B { }, options)
       const error = 'Cannot call f'
@@ -2394,7 +2417,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if call jig method on another jig from inside', () => {
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A = makeJig(class A { static f () { } }, options)
       const B = makeJig(class B { static f () { return Reflect.apply(A.f, B, []) } }, options)
       const C = makeJig(class C { static f () { return B.f.apply(this, []) } }, options)
@@ -2405,7 +2428,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if call overridden method from outside', () => {
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A = makeJig(class A { static f () { } }, options)
       const B = makeJig(class B extends A { static f () { } }, options)
       const error = 'Cannot call f'
@@ -2415,7 +2438,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('may call overridden method from inside', () => {
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A = makeJig(class A { static f () { return 1 } }, options)
       const B = makeJig(class B extends A { static f () { return Reflect.apply(A.f, this, []) + 1 } }, options)
       const C = makeJig(class C extends B { static f () { return Reflect.apply(B.f, this, []) + 2 } }, options)
@@ -2425,7 +2448,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('clones args with sandbox intrinsics', () => {
-      const options = { _recordable: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true }
       const A = makeJig(class A { static f (x) { return x } }, options)
       const set = testRecord(() => A.f(new Set()))
       expect(set instanceof SI.Set)

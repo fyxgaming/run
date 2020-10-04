@@ -29,8 +29,10 @@ describe('Rules', () => {
       expect(rules._jigMethods).to.equal(false)
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(false)
-      expect(rules._recordable).to.equal(true)
+      expect(rules._recordReads).to.equal(true)
+      expect(rules._recordUpdates).to.equal(true)
       expect(rules._recordCalls).to.equal(true)
+      expect(rules._recordableTarget).to.equal(true)
       expect(rules._smartAPI).to.equal(true)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
@@ -54,8 +56,10 @@ describe('Rules', () => {
       expect(rules._jigMethods).to.equal(false)
       expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(true)
-      expect(rules._recordable).to.equal(true)
+      expect(rules._recordReads).to.equal(true)
+      expect(rules._recordUpdates).to.equal(false)
       expect(rules._recordCalls).to.equal(false)
+      expect(rules._recordableTarget).to.equal(true)
       expect(rules._smartAPI).to.equal(false)
       expect(rules._thisless).to.equal(!isClass)
       expect(rules._cow).to.equal(false)
@@ -78,8 +82,10 @@ describe('Rules', () => {
       expect(rules._jigMethods).to.equal(false)
       expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(true)
-      expect(rules._recordable).to.equal(false)
+      expect(rules._recordReads).to.equal(false)
+      expect(rules._recordUpdates).to.equal(false)
       expect(rules._recordCalls).to.equal(false)
+      expect(rules._recordableTarget).to.equal(false)
       expect(rules._smartAPI).to.equal(true)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
@@ -102,8 +108,10 @@ describe('Rules', () => {
       expect(rules._jigMethods).to.equal(true)
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(false)
-      expect(rules._recordable).to.equal(true)
+      expect(rules._recordReads).to.equal(true)
+      expect(rules._recordUpdates).to.equal(true)
       expect(rules._recordCalls).to.equal(true)
+      expect(rules._recordableTarget).to.equal(true)
       expect(rules._smartAPI).to.equal(true)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
@@ -126,8 +134,10 @@ describe('Rules', () => {
       expect(rules._jigMethods).to.equal(false)
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(true)
-      expect(rules._recordable).to.equal(true)
+      expect(rules._recordReads).to.equal(true)
+      expect(rules._recordUpdates).to.equal(true)
       expect(rules._recordCalls).to.equal(true)
+      expect(rules._recordableTarget).to.equal(true)
       expect(rules._smartAPI).to.equal(true)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
@@ -150,8 +160,10 @@ describe('Rules', () => {
       expect(rules._jigMethods).to.equal(false)
       expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(false)
-      expect(rules._recordable).to.equal(false)
+      expect(rules._recordReads).to.equal(false)
+      expect(rules._recordUpdates).to.equal(false)
       expect(rules._recordCalls).to.equal(false)
+      expect(rules._recordableTarget).to.equal(false)
       expect(rules._smartAPI).to.equal(false)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(true)
@@ -173,8 +185,10 @@ describe('Rules', () => {
         _jigMethods: Math.random() < 0.5,
         _privacy: Math.random() < 0.5,
         _immutable: Math.random() < 0.5,
-        _recordable: Math.random() < 0.5,
+        _recordReads: Math.random() < 0.5,
+        _recordUpdates: Math.random() < 0.5,
         _recordCalls: Math.random() < 0.5,
+        _recordableTarget: Math.random() < 0.5,
         _smartAPI: Math.random() < 0.5,
         _cowProps: Math.random() < 0.5
       }
@@ -190,8 +204,10 @@ describe('Rules', () => {
       expect(rules._jigMethods).to.equal(false)
       expect(rules._privacy).to.equal(parentRules._privacy)
       expect(rules._immutable).to.equal(parentRules._immutable)
-      expect(rules._recordable).to.equal(parentRules._recordable)
+      expect(rules._recordReads).to.equal(parentRules._recordReads)
+      expect(rules._recordUpdates).to.equal(parentRules._recordUpdates)
       expect(rules._recordCalls).to.equal(false)
+      expect(rules._recordableTarget).to.equal(parentRules._recordableTarget)
       expect(rules._smartAPI).to.equal(parentRules._smartAPI)
       expect(rules._thisless).to.equal(parentRules._thisless && owned)
       expect(rules._cow).to.equal(parentRules._cow)
