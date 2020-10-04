@@ -64,6 +64,18 @@ describe('Berry', () => {
       const c = await run.load('', { berry: C })
       expect(c instanceof C).to.equal(true)
     })
+    // ------------------------------------------------------------------------
+
+    it('may inherit parent pluck method', async () => {
+      const run = new Run()
+      class B extends Berry { static async pluck () { return new this() } }
+      class C extends B { }
+      class D extends B { }
+      const c = await run.load('', { berry: C })
+      const d = await run.load('', { berry: D })
+      expect(c instanceof C).to.equal(true)
+      expect(d instanceof D).to.equal(true)
+    })
 
     // ------------------------------------------------------------------------
 
