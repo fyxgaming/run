@@ -12,6 +12,8 @@ require('./extra/expect')
 require('./extra/group')
 require('./extra/hex')
 require('./extra/token')
+require('./extra/tx')
+require('./extra/txo')
 
 require('./kernel/api')
 require('./kernel/auth')
