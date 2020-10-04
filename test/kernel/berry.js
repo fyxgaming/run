@@ -103,7 +103,7 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('berry with deps', async () => {
+    it('berry with deps', async () => {
       const run = new Run()
       function f () { return 1 }
       class B extends Berry {
@@ -272,6 +272,12 @@ describe('Berry', () => {
     // ------------------------------------------------------------------------
 
     it.skip('throws if set init', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set load', () => {
       // TODO
     })
 
