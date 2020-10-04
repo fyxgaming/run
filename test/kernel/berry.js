@@ -103,7 +103,7 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('berry with deps', async () => {
+    it.only('berry with deps', async () => {
       const run = new Run()
       function f () { return 1 }
       class B extends Berry {
@@ -266,6 +266,12 @@ describe('Berry', () => {
     // ------------------------------------------------------------------------
 
     it.skip('throws if set location', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set init', () => {
       // TODO
     })
 

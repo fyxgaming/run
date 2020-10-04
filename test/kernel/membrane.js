@@ -566,7 +566,7 @@ describe('Membrane', () => {
   // Code methods
   // --------------------------------------------------------------------------
 
-  describe('Code Methods', () => {
+  describe('Code methods', () => {
     it('has', () => {
       const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
       expect('sync' in f).to.equal(true)
@@ -631,7 +631,7 @@ describe('Membrane', () => {
   // Jig methods
   // --------------------------------------------------------------------------
 
-  describe('Jig Methods', () => {
+  describe('Jig methods', () => {
     it('has', () => {
       const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
@@ -689,6 +689,59 @@ describe('Membrane', () => {
       const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect(() => { delete a.sync }).to.throw('Cannot delete sync')
+      expect(() => { delete a.init }).to.throw('Cannot delete init')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Berry methods
+  // --------------------------------------------------------------------------
+
+  describe('Berry methods', () => {
+    it('has', () => {
+      const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      expect('init' in a).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get', () => {
+      const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      expect(typeof a.init).to.equal('function')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('getOwnPropertyDescriptor undefined', () => {
+      const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      expect(Object.getOwnPropertyDescriptor(a, 'init')).to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot set', () => {
+      const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      expect(() => { a.init = 1 }).to.throw('Cannot set init')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot define', () => {
+      const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      expect(() => Object.defineProperty(a, 'init', desc)).to.throw('Cannot define init')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot delete', () => {
+      const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect(() => { delete a.init }).to.throw('Cannot delete init')
     })
   })

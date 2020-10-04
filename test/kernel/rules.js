@@ -27,6 +27,7 @@ describe('Rules', () => {
       expect(rules._reserved).to.equal(true)
       expect(rules._codeMethods).to.equal(true)
       expect(rules._jigMethods).to.equal(false)
+      expect(rules._berryMethods).to.equal(false)
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(false)
       expect(rules._recordReads).to.equal(true)
@@ -54,6 +55,7 @@ describe('Rules', () => {
       expect(rules._reserved).to.equal(true)
       expect(rules._codeMethods).to.equal(true)
       expect(rules._jigMethods).to.equal(false)
+      expect(rules._berryMethods).to.equal(false)
       expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(true)
       expect(rules._recordReads).to.equal(true)
@@ -80,6 +82,7 @@ describe('Rules', () => {
       expect(rules._reserved).to.equal(false)
       expect(rules._codeMethods).to.equal(true)
       expect(rules._jigMethods).to.equal(false)
+      expect(rules._berryMethods).to.equal(false)
       expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(true)
       expect(rules._recordReads).to.equal(false)
@@ -106,6 +109,7 @@ describe('Rules', () => {
       expect(rules._reserved).to.equal(true)
       expect(rules._codeMethods).to.equal(false)
       expect(rules._jigMethods).to.equal(true)
+      expect(rules._berryMethods).to.equal(false)
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(false)
       expect(rules._recordReads).to.equal(true)
@@ -132,6 +136,7 @@ describe('Rules', () => {
       expect(rules._reserved).to.equal(true)
       expect(rules._codeMethods).to.equal(false)
       expect(rules._jigMethods).to.equal(false)
+      expect(rules._berryMethods).to.equal(true)
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(true)
       expect(rules._recordReads).to.equal(true)
@@ -158,6 +163,7 @@ describe('Rules', () => {
       expect(rules._reserved).to.equal(false)
       expect(rules._codeMethods).to.equal(false)
       expect(rules._jigMethods).to.equal(false)
+      expect(rules._berryMethods).to.equal(false)
       expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(false)
       expect(rules._recordReads).to.equal(false)
@@ -183,6 +189,7 @@ describe('Rules', () => {
         _reserved: Math.random() < 0.5,
         _codeMethods: Math.random() < 0.5,
         _jigMethods: Math.random() < 0.5,
+        _berryMethods: Math.random() < 0.5,
         _privacy: Math.random() < 0.5,
         _immutable: Math.random() < 0.5,
         _recordReads: Math.random() < 0.5,
@@ -202,6 +209,7 @@ describe('Rules', () => {
       expect(rules._reserved).to.equal(false)
       expect(rules._codeMethods).to.equal(false)
       expect(rules._jigMethods).to.equal(false)
+      expect(rules._berryMethods).to.equal(false)
       expect(rules._privacy).to.equal(parentRules._privacy)
       expect(rules._immutable).to.equal(parentRules._immutable)
       expect(rules._recordReads).to.equal(parentRules._recordReads)
