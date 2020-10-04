@@ -1208,7 +1208,7 @@ describe('Jig', () => {
       new Run() // eslint-disable-line
       class A extends Jig { init () { this.n = 1 }}
       const a = new A()
-      expect(() => { delete a.n }).to.throw('Updates must be performed in the jig\'s methods')
+      expect(() => { delete a.n }).to.throw('Updates must be performed in a method')
     })
 
     // ------------------------------------------------------------------------
@@ -1343,7 +1343,7 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
-      const error = 'Updates must be performed in the jig\'s methods'
+      const error = 'Updates must be performed in a method'
       expect(() => Object.defineProperty(a, 'n', desc)).to.throw(error)
     })
 
@@ -1634,7 +1634,7 @@ describe('Jig', () => {
       class B extends Jig { init () { new A().a.push(1) } }
       B.deps = { A }
       const a = new A()
-      const error = "Updates must be performed in the jig's methods"
+      const error = 'Updates must be performed in a method'
       const expectArrayError = (method, ...args) => {
         expect(() => a.a[method](...args)).to.throw(error)
       }
@@ -1816,7 +1816,7 @@ describe('Jig', () => {
       new Run () // eslint-disable-line
       class A extends Jig { }
       const a = new A()
-      const error = 'Updates must be performed in the jig\'s methods'
+      const error = 'Updates must be performed in a method'
       const addr = new PrivateKey().publicKey.toAddress().toString()
       expect(() => { a.owner = addr }).to.throw(error)
     })
@@ -1951,7 +1951,7 @@ describe('Jig', () => {
       new Run () // eslint-disable-line
       class A extends Jig { }
       const a = new A()
-      const error = 'Updates must be performed in the jig\'s methods'
+      const error = 'Updates must be performed in a method'
       expect(() => { a.satoshis = 1 }).to.throw(error)
     })
   })
@@ -2511,8 +2511,8 @@ describe('Jig', () => {
         }
       }
       const a = new A()
-      expect(() => a.arr.push(1)).to.throw('Updates must be performed in the jig\'s methods')
-      expect(() => a.buf.sort()).to.throw('Updates must be performed in the jig\'s methods')
+      expect(() => a.arr.push(1)).to.throw('Updates must be performed in a method')
+      expect(() => a.buf.sort()).to.throw('Updates must be performed in a method')
     })
 
     // ------------------------------------------------------------------------
@@ -2532,8 +2532,8 @@ describe('Jig', () => {
       }
       const a = new A()
       const b = new B()
-      expect(() => b.f(a)).to.throw("Updates must be performed in the jig's methods")
-      expect(() => b.g(a)).to.throw("Updates must be performed in the jig's methods")
+      expect(() => b.f(a)).to.throw('Updates must be performed in a method')
+      expect(() => b.g(a)).to.throw('Updates must be performed in a method')
     })
 
     // ------------------------------------------------------------------------

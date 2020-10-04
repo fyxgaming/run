@@ -223,7 +223,7 @@ describe('Code', () => {
       class A extends Jig { }
       A.n = 1
       const CA = run.deploy(A)
-      expect(() => { delete CA.n }).to.throw('Updates must be performed in the jig\'s methods')
+      expect(() => { delete CA.n }).to.throw('Updates must be performed in a method')
     })
 
     // ------------------------------------------------------------------------
@@ -273,7 +273,7 @@ describe('Code', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
-      expect(() => { CA.n = 1 }).to.throw("Updates must be performed in the jig's methods")
+      expect(() => { CA.n = 1 }).to.throw('Updates must be performed in a method')
     })
 
     // ------------------------------------------------------------------------
@@ -330,7 +330,7 @@ describe('Code', () => {
       class A extends Jig { }
       const CA = run.deploy(A)
       const desc = { value: true, configurable: true, enumerable: true, writable: true }
-      const error = "Updates must be performed in the jig's methods"
+      const error = 'Updates must be performed in a method'
       expect(() => Object.defineProperty(CA, 'n', desc)).to.throw(error)
     })
 

@@ -474,7 +474,7 @@ describe('Call', () => {
       const b = new B()
       a.setB(b)
       b.setA(a)
-      expect(() => b.f()).to.throw('Updates must be performed in the jig\'s methods')
+      expect(() => b.f()).to.throw('Updates must be performed in a method')
     })
 
     // ------------------------------------------------------------------------
@@ -502,7 +502,7 @@ describe('Call', () => {
         }
       }
       const a = new A()
-      const error = 'Updates must be performed in the jig\'s methods'
+      const error = 'Updates must be performed in a method'
       expect(() => { a.f().n = 1 }).to.throw(error)
       class B extends Jig {
         f (a) { a.f().n = 1 }
