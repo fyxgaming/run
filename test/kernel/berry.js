@@ -45,22 +45,24 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it('deploying berry', async () => {
+    it('undeployed berry', async () => {
       const run = new Run()
       class B extends Berry { static async pluck () { return new B() } }
-      const CB = run.deploy(B)
-      const b = await run.load('abc', { berry: CB })
+      const b = await run.load('abc', { berry: B })
       expect(b instanceof B).to.equal(true)
       expect(() => b.location).to.throw()
     })
 
     // ------------------------------------------------------------------------
 
-    it('undeployed berry', async () => {
+    it('deploying berry remains undeployed', async () => {
       const run = new Run()
       class B extends Berry { static async pluck () { return new B() } }
-      const b = await run.load('abc', { berry: B })
+      const CB = run.deploy(B)
+      const b = await run.load('abc', { berry: CB })
       expect(b instanceof B).to.equal(true)
+      expect(() => b.location).to.throw()
+      await run.sync()
       expect(() => b.location).to.throw()
     })
 
@@ -80,10 +82,23 @@ describe('Berry', () => {
       class B extends Berry { static async pluck () { return new this() } }
       class C extends B { }
       class D extends B { }
+      run.deploy(C)
+      run.deploy(D)
+      await run.sync()
       const c = await run.load('', { berry: C })
       const d = await run.load('', { berry: D })
-      expect(c instanceof C).to.equal(true)
-      expect(d instanceof D).to.equal(true)
+      function test (c, d) {
+        expect(c instanceof C).to.equal(true)
+        expect(d instanceof D).to.equal(true)
+      }
+      test(c, d)
+      const c2 = await run.load(C.location + '_')
+      const d2 = await run.load(D.location + '_')
+      test(c2, d2)
+      run.cache = new LocalCache()
+      const c3 = await run.load(C.location + '_')
+      const d3 = await run.load(D.location + '_')
+      test(c3, d3)
     })
 
     // ------------------------------------------------------------------------
