@@ -7,7 +7,8 @@
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { LocalCache } = Run
+const { expectTx } = require('../env/misc')
+const { Jig, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Static Code
@@ -208,6 +209,86 @@ describe('Static Code', () => {
       const arr = []
       CA.f(arr)
       expect(arr.length).to.equal(1)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Arbitrary objects
+  // --------------------------------------------------------------------------
+
+  describe('Arbitrary objects', () => {
+    it('create in jig does not spend', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () { return new B() }
+      }
+      class B { }
+      A.deps = { B }
+      const CA = run.deploy(A)
+      await run.sync()
+      CA.f()
+      expect(CA.nonce).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('create and assign in jig reads class', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () { this.b = new B() }
+      }
+      class B { }
+      A.deps = { B }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'f', []]
+          }
+        ]
+      })
+
+      CA.f()
+      await CA.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('create and assign in jig reads parent classes', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () { this.b = new B() }
+      }
+      class C { }
+      class B extends C { }
+      A.deps = { B }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'f', []]
+          }
+        ]
+      })
+
+      CA.f()
+      await CA.sync()
     })
   })
 })
