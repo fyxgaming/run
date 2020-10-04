@@ -103,7 +103,7 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it('berry with deps', async () => {
+    it.only('berry with deps', async () => {
       const run = new Run()
       function f () { return 1 }
       class B extends Berry {
@@ -113,15 +113,19 @@ describe('Berry', () => {
       B.deps = { f }
       run.deploy(B)
       await run.sync()
+      console.log('-1')
       const b = await run.load('123', { berry: B })
+      console.log('0')
       const location = b.constructor.location + '_123'
       function test (b) {
         expect(b.location).to.equal(location)
         expect(b.n).to.equal(1)
       }
       test(b)
+      console.log('1')
       const b2 = await run.load(location)
       test(b2)
+      console.log('2')
       run.cache = new LocalCache()
       const b3 = await run.load(location)
       test(b3)
@@ -556,6 +560,12 @@ describe('Berry', () => {
     // ------------------------------------------------------------------------
 
     it.skip('returns true for authed class', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('returns true in init', () => {
       // TODO
     })
   })

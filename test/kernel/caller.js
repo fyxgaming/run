@@ -174,6 +174,36 @@ describe('Caller', () => {
     class A extends Jig { init () { caller = 1 } } // eslint-disable-line
     expect(() => new A()).to.throw('Cannot set caller')
   })
+
+  // ------------------------------------------------------------------------
+
+  it.skip('berry caller is null in pluck', () => {
+    // TODO
+  })
+
+  // ------------------------------------------------------------------------
+
+  it.skip('berry caller is null in load', () => {
+    // TODO
+  })
+
+  // ------------------------------------------------------------------------
+
+  it.skip('berry caller is calling jig from a jig', () => {
+    // TODO
+  })
+
+  // ------------------------------------------------------------------------
+
+  it.skip('berry caller is null from external', () => {
+    // TODO
+  })
+
+  // ------------------------------------------------------------------------
+
+  it.skip('berry caller is null from static code', () => {
+    // TODO
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
