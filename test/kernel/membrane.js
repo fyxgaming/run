@@ -1243,7 +1243,7 @@ describe('Membrane', () => {
 
   describe('Callable', () => {
     it('delete throws if outside method', () => {
-      const a = makeJig({}, { _recordable: true, _recordCalls: true, _owned: true })
+      const a = makeJig({}, { _recordable: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       expect(() => { delete a.n }).to.throw(error)
     })
@@ -1252,7 +1252,7 @@ describe('Membrane', () => {
 
     it('delete allowed in jig methods', () => {
       class A { static f () { delete this.n } }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _owned: true })
+      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
       testRecord(record => a.f())
     })
 
@@ -1260,8 +1260,8 @@ describe('Membrane', () => {
 
     it('delete throws from another jigs method', () => {
       class A { static f (b) { delete b.n } }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _owned: true })
-      const b = makeJig({}, { _recordable: true, _recordCalls: true, _owned: true })
+      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const b = makeJig({}, { _recordable: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
@@ -1269,7 +1269,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('defineProperty throws if outside method', () => {
-      const a = makeJig({}, { _recordable: true, _recordCalls: true, _owned: true })
+      const a = makeJig({}, { _recordable: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(a, 'n', desc)).to.throw(error)
@@ -1284,7 +1284,7 @@ describe('Membrane', () => {
           Object.defineProperty(this, 'n', desc)
         }
       }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _owned: true })
+      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
       testRecord(record => a.f())
     })
 
@@ -1297,8 +1297,8 @@ describe('Membrane', () => {
           Object.defineProperty(b, 'n', desc)
         }
       }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _owned: true })
-      const b = makeJig({}, { _recordable: true, _recordCalls: true, _owned: true })
+      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const b = makeJig({}, { _recordable: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
@@ -1306,7 +1306,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('set throws if outside method', () => {
-      const a = makeJig({}, { _recordable: true, _recordCalls: true, _owned: true })
+      const a = makeJig({}, { _recordable: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       expect(() => { a.n = 1 }).to.throw(error)
     })
@@ -1315,7 +1315,7 @@ describe('Membrane', () => {
 
     it('set allowed in jig methods', () => {
       class A { static f () { this.n = 1 } }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _owned: true })
+      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
       testRecord(record => a.f())
     })
 
@@ -1323,8 +1323,8 @@ describe('Membrane', () => {
 
     it('set throws from another jigs method', () => {
       class A { static f (b) { b.n = 1 } }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _owned: true })
-      const b = makeJig({}, { _recordable: true, _recordCalls: true, _owned: true })
+      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const b = makeJig({}, { _recordable: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
@@ -1332,7 +1332,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('intrinsicUpdate throws if outside method', () => {
-      const s = makeJig(new Set(), { _recordable: true, _recordCalls: true, _owned: true })
+      const s = makeJig(new Set(), { _recordable: true, _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       expect(() => s.add(1)).to.throw(error)
     })
@@ -1342,7 +1342,7 @@ describe('Membrane', () => {
     it('intrinsicUpdate allowed in jig methods', () => {
       class A { static f () { this.set.add(1) } }
       A.set = new Set()
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _owned: true })
+      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
       testRecord(record => a.f())
     })
 
@@ -1350,8 +1350,8 @@ describe('Membrane', () => {
 
     it('intrinsicUpdate throws from another jigs method', () => {
       class A { static f (b) { b.add(1) } }
-      const a = makeJig(A, { _recordable: true, _recordCalls: true, _owned: true })
-      const b = makeJig(new Set(), { _recordCalls: true, _owned: true })
+      const a = makeJig(A, { _recordable: true, _recordCalls: true, _smartAPI: true })
+      const b = makeJig(new Set(), { _recordCalls: true, _smartAPI: true })
       const error = 'Updates must be performed in a method'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
@@ -1360,7 +1360,7 @@ describe('Membrane', () => {
 
     it('args passed through if not callable', () => {
       class A { static f (x) { return typeof x === 'symbol' } }
-      const A2 = makeJig(A, { _recordable: true, _recordCalls: false, _owned: true })
+      const A2 = makeJig(A, { _recordable: true, _recordCalls: false, _smartAPI: true })
       expect(A2.f(Symbol.hasInstance)).to.equal(true)
     })
 
@@ -1368,7 +1368,7 @@ describe('Membrane', () => {
 
     it('return values passed through if not callable', () => {
       class A { static f () { return Symbol.hasInstance } }
-      const A2 = makeJig(A, { _recordable: true, _recordCalls: false, _owned: true })
+      const A2 = makeJig(A, { _recordable: true, _recordCalls: false, _smartAPI: true })
       expect(A2.f()).to.equal(Symbol.hasInstance)
     })
 
@@ -1376,7 +1376,7 @@ describe('Membrane', () => {
 
     it('no action if not callable', () => {
       class A { static f () { } }
-      const A2 = makeJig(A, { _recordable: true, _recordCalls: false, _owned: true })
+      const A2 = makeJig(A, { _recordable: true, _recordCalls: false, _smartAPI: true })
       testRecord(record => {
         A2.f()
         expect(record._actions.length).to.equal(0)
@@ -1388,7 +1388,7 @@ describe('Membrane', () => {
     // This test takes several seconds on WebKit but milliseconds on other browsers
     it('callable method depends on thisArg', () => {
       // Returning a WeakMap will fail when callable due to unserializability
-      const options = mangle({ _recordable: true, _recordCalls: false, _owned: true })
+      const options = mangle({ _recordable: true, _recordCalls: false, _smartAPI: true })
       const f = new Membrane(function f () { return new WeakMap() }, options)
       const a = makeJig({ f }, { _recordable: true, _recordCalls: false })
       const b = makeJig({ f }, { _recordable: true, _recordCalls: true })
@@ -2312,7 +2312,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('apply args are cow from another jig', () => {
-      const options = { _recordable: true, _recordCalls: true, _owned: true }
+      const options = { _recordable: true, _recordCalls: true, _smartAPI: true }
       class B { static g (a) { this.o = { n: 1 }; a.f(this.o) } }
       class A { static f (o) { o.n = 2 } }
       const A2 = makeJig(A, options)
