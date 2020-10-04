@@ -57,8 +57,12 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('berry with parent', () => {
-    // TODO
+    it('berry with parent', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      class C extends B { static async pluck () { return new C() } }
+      const c = await run.load('', { berry: C })
+      expect(c instanceof C).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -106,7 +110,13 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if return different class', () => {
+    it.skip('throws if return unrelated class', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if return parent class', () => {
       // TODO
     })
 
