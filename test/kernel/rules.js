@@ -30,7 +30,7 @@ describe('Rules', () => {
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(false)
       expect(rules._recordable).to.equal(true)
-      expect(rules._callable).to.equal(true)
+      expect(rules._recordCalls).to.equal(true)
       expect(rules._owned).to.equal(true)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
@@ -55,7 +55,7 @@ describe('Rules', () => {
       expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(true)
       expect(rules._recordable).to.equal(true)
-      expect(rules._callable).to.equal(false)
+      expect(rules._recordCalls).to.equal(false)
       expect(rules._owned).to.equal(false)
       expect(rules._thisless).to.equal(!isClass)
       expect(rules._cow).to.equal(false)
@@ -79,7 +79,7 @@ describe('Rules', () => {
       expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(true)
       expect(rules._recordable).to.equal(false)
-      expect(rules._callable).to.equal(false)
+      expect(rules._recordCalls).to.equal(false)
       expect(rules._owned).to.equal(true)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
@@ -103,7 +103,7 @@ describe('Rules', () => {
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(false)
       expect(rules._recordable).to.equal(true)
-      expect(rules._callable).to.equal(true)
+      expect(rules._recordCalls).to.equal(true)
       expect(rules._owned).to.equal(true)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
@@ -127,7 +127,7 @@ describe('Rules', () => {
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(true)
       expect(rules._recordable).to.equal(true)
-      expect(rules._callable).to.equal(true)
+      expect(rules._recordCalls).to.equal(true)
       expect(rules._owned).to.equal(true)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
@@ -151,7 +151,7 @@ describe('Rules', () => {
       expect(rules._privacy).to.equal(false)
       expect(rules._immutable).to.equal(false)
       expect(rules._recordable).to.equal(false)
-      expect(rules._callable).to.equal(false)
+      expect(rules._recordCalls).to.equal(false)
       expect(rules._owned).to.equal(false)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(true)
@@ -174,7 +174,7 @@ describe('Rules', () => {
         _privacy: Math.random() < 0.5,
         _immutable: Math.random() < 0.5,
         _recordable: Math.random() < 0.5,
-        _callable: Math.random() < 0.5,
+        _recordCalls: Math.random() < 0.5,
         _owned: Math.random() < 0.5,
         _cowProps: Math.random() < 0.5
       }
@@ -191,7 +191,7 @@ describe('Rules', () => {
       expect(rules._privacy).to.equal(parentRules._privacy)
       expect(rules._immutable).to.equal(parentRules._immutable)
       expect(rules._recordable).to.equal(parentRules._recordable)
-      expect(rules._callable).to.equal(false)
+      expect(rules._recordCalls).to.equal(false)
       expect(rules._owned).to.equal(parentRules._owned)
       expect(rules._thisless).to.equal(parentRules._thisless && owned)
       expect(rules._cow).to.equal(parentRules._cow)
