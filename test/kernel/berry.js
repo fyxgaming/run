@@ -380,8 +380,14 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('upgraded dep loads with original', () => {
+    it.skip('loads upgraded code dep with original', () => {
+      // TODO
+    })
 
+    // ------------------------------------------------------------------------
+
+    it.skip('loads updated jig dep with original', () => {
+      // TODO
     })
   })
 
