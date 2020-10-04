@@ -7,7 +7,7 @@ const { expect } = require('chai')
 
 const { describe, it, afterEach } = require('mocha')
 const Run = require('../env/run')
-const { Berry } = Run
+const { Berry, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Berry
@@ -30,8 +30,17 @@ describe('Berry', () => {
       const CB = run.deploy(B)
       await run.sync()
       const b = await run.load('abc', { berry: CB })
-      expect(b instanceof B).to.equal(true)
-      expect(b.location).to.equal(CB.location + '_abc')
+      const location = CB.location + '_abc'
+      function test (b) {
+        expect(b instanceof B).to.equal(true)
+        expect(b.location).to.equal(location)
+      }
+      test(b)
+      const b2 = await run.load(location)
+      test(b2)
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
@@ -79,8 +88,28 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('berry with deps', () => {
-    // TODO
+    it('berry with deps', async () => {
+      const run = new Run()
+      function f () { return 1 }
+      class B extends Berry {
+        init (n) { this.n = n }
+        static async pluck () { return new B(f()) }
+      }
+      B.deps = { f }
+      run.deploy(B)
+      await run.sync()
+      const b = await run.load('123', { berry: B })
+      const location = b.constructor.location + '_123'
+      function test (b) {
+        expect(b.location).to.equal(location)
+        expect(b.n).to.equal(1)
+      }
+      test(b)
+      const b2 = await run.load(location)
+      test(b2)
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
