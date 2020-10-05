@@ -735,8 +735,20 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if create outside pluck', () => {
-      // TODO
+    it('throws if created by user', () => {
+      new Run() // eslint-disable-line
+      class B extends Berry { }
+      const error = 'Must only create berry from its berry class'
+      expect(() => new B()).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if created by non-pluck static method', () => {
+      new Run() // eslint-disable-line
+      class B extends Berry { static f () { return new B() } }
+      const error = 'Must only create berry from its berry class'
+      expect(() => B.f()).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
