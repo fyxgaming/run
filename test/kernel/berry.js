@@ -685,15 +685,11 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('runs in sandbox', () => {
-      // TODO
-      // Check with undeployed class
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if set location', () => {
-      // TODO
+    it('throws if set location', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this.location = '123' } }
+      const error = 'Cannot set location'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
@@ -754,6 +750,13 @@ Line 3`
 
     it.skip('throws if async', () => {
       // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('runs in sandbox', () => {
+      // TODO
+      // Check with undeployed class
     })
   })
 
