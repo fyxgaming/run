@@ -1012,8 +1012,26 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('getOwnPropertyDescriptor', () => {
-      // TODO
+    it('getOwnPropertyDescriptor', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init () { this.o = [] }
+        f () { return Object.getOwnPropertyDescriptor(this, 'o') }
+      }
+      run.deploy(B)
+      await run.sync()
+      const location = B.location + '_'
+      function test (b) {
+        const desc = { configurable: true, enumerable: true, writable: true, value: b.o }
+        expect(b.f()).to.deep.equal(desc)
+      }
+      const b = await run.load('', { berry: B })
+      test(b)
+      const b2 = await run.load(location)
+      test(b2)
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
