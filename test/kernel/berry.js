@@ -449,8 +449,40 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('define properties', () => {
-      // TODO
+    it('define properties', async () => {
+      const run = new Run()
+
+      class B extends Berry {
+        init () {
+          const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
+          Object.defineProperty(this, 'n', desc)
+
+          const desc2 = { configurable: true, enumerable: true, writable: true, value: 2 }
+          this.arr = []
+          Object.defineProperty(this.arr, '1', desc2)
+        }
+
+        static async pluck () { return new B() }
+      }
+
+      run.deploy(B)
+      await run.sync()
+
+      function test (b) {
+        expect(b.n).to.equal(1)
+        expect(b.arr[1]).to.equal(2)
+      }
+
+      const b = await run.load('123', { berry: B })
+      const location = b.constructor.location + '_123'
+      test(b)
+
+      const b2 = await run.load(location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
