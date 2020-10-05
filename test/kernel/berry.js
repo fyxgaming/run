@@ -784,8 +784,25 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('cannot swallow errors', () => {
-      // TODO
+    it('cannot swallow errors', async () => {
+      const run = new Run()
+
+      class B extends Berry {
+        init () {
+          try { this.location = '123' } catch (e) { }
+        }
+      }
+      const error = 'Cannot set location'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+
+      class C extends Berry {
+        init () {
+          try { this.f() } catch (e) { }
+        }
+
+        f () { throw new Error('abc') }
+      }
+      await expect(run.load('', { berry: C })).to.be.rejectedWith('abc')
     })
 
     // ------------------------------------------------------------------------
