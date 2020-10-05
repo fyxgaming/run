@@ -24,20 +24,24 @@ describe('Berry', () => {
   // --------------------------------------------------------------------------
 
   describe('pluck', () => {
-    it('basic berry', async () => {
+    it.only('basic berry', async () => {
       const run = new Run()
       class B extends Berry { static async pluck () { return new B() } }
       const CB = run.deploy(B)
       await run.sync()
-      const b = await run.load('abc', { berry: CB })
-      const location = CB.location + '_abc'
+
       function test (b) {
         expect(b instanceof B).to.equal(true)
         expect(b.location).to.equal(location)
       }
+
+      const b = await run.load('abc', { berry: CB })
+      const location = CB.location + '_abc'
       test(b)
+
       const b2 = await run.load(location)
       test(b2)
+
       run.cache = new LocalCache()
       const b3 = await run.load(location)
       test(b3)
@@ -85,16 +89,20 @@ describe('Berry', () => {
       run.deploy(C)
       run.deploy(D)
       await run.sync()
-      const c = await run.load('', { berry: C })
-      const d = await run.load('', { berry: D })
+
       function test (c, d) {
         expect(c instanceof C).to.equal(true)
         expect(d instanceof D).to.equal(true)
       }
+
+      const c = await run.load('', { berry: C })
+      const d = await run.load('', { berry: D })
       test(c, d)
+
       const c2 = await run.load(C.location + '_')
       const d2 = await run.load(D.location + '_')
       test(c2, d2)
+
       run.cache = new LocalCache()
       const c3 = await run.load(C.location + '_')
       const d3 = await run.load(D.location + '_')
