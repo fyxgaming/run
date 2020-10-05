@@ -642,13 +642,50 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('calls method that deletes properties', () => {
-      // TODO
+    it('calls method that deletes properties', async () => {
+      const run = new Run()
+
+      class B extends Berry {
+        init () {
+          this.m = 1
+          this.f()
+        }
+
+        f () {
+          delete this.m
+        }
+
+        static async pluck () { return new B() }
+      }
+
+      run.deploy(B)
+      await run.sync()
+
+      function test (b) {
+        expect(typeof b.m).to.equal('undefined')
+      }
+
+      const b = await run.load('123', { berry: B })
+      const location = b.constructor.location + '_123'
+      test(b)
+
+      const b2 = await run.load(location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
 
     it.skip('throws if sets unserializable properties', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if delete init', () => {
       // TODO
     })
 
