@@ -170,6 +170,43 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
+    it('immutable internally', async () => {
+      const run = new Run()
+
+      class B extends Berry {
+        init () {
+          this.n = 1
+          this.o = {}
+        }
+
+        f () { delete this.n }
+        g () { this.o.n = 1 }
+
+        static async pluck () { return new B() }
+      }
+
+      run.deploy(B)
+      await run.sync()
+
+      function test (b) {
+        expect(() => b.f()).to.throw('delete disabled')
+        expect(() => b.g()).to.throw('set disabled')
+      }
+
+      const b = await run.load('123', { berry: B })
+      const location = b.constructor.location + '_123'
+      test(b)
+
+      const b2 = await run.load(location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('plucks from cache if possible', () => {
       // TODO
     })
