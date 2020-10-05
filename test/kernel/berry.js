@@ -454,11 +454,10 @@ Line 3`
 
       class B extends Berry {
         init () {
-          const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
-          Object.defineProperty(this, 'n', desc)
-
-          const desc2 = { configurable: true, enumerable: true, writable: true, value: 2 }
           this.arr = []
+          const desc1 = { configurable: true, enumerable: true, writable: true, value: 1 }
+          const desc2 = { configurable: true, enumerable: true, writable: true, value: 2 }
+          Object.defineProperty(this, 'n', desc1)
           Object.defineProperty(this.arr, '1', desc2)
         }
 
@@ -487,8 +486,39 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('delete properties', () => {
-      // TODO
+    it('delete properties', async () => {
+      const run = new Run()
+
+      class B extends Berry {
+        init () {
+          this.n = 1
+          delete this.n
+          this.o = {}
+          this.o.m = 2
+          delete this.o.m
+        }
+
+        static async pluck () { return new B() }
+      }
+
+      run.deploy(B)
+      await run.sync()
+
+      function test (b) {
+        expect(typeof b.n).to.equal('undefined')
+        expect(typeof b.o.m).to.equal('undefined')
+      }
+
+      const b = await run.load('123', { berry: B })
+      const location = b.constructor.location + '_123'
+      test(b)
+
+      const b2 = await run.load(location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
