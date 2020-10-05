@@ -829,8 +829,21 @@ Line 3`
   // --------------------------------------------------------------------------
 
   describe('fetch', () => {
-    it.skip('fetches raw transaction', () => {
-      // TODO
+    it.only('fetches raw transaction', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init (rawtx) { this.rawtx = rawtx }
+        static async pluck (path, fetch) {
+          const rawtx = await fetch(path)
+          return new B(rawtx)
+        }
+      }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const txid = CB.location.slice(0, 64)
+      const rawtx = await run.blockchain.fetch(txid)
+      const b = await run.load(txid, { berry: CB })
+      expect(b.rawtx).to.equal(rawtx)
     })
 
     // ------------------------------------------------------------------------
