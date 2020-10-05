@@ -829,7 +829,7 @@ Line 3`
   // --------------------------------------------------------------------------
 
   describe('fetch', () => {
-    it.only('fetches raw transaction', async () => {
+    it.skip('fetches raw transaction', async () => {
       const run = new Run()
       class B extends Berry {
         init (rawtx) { this.rawtx = rawtx }
