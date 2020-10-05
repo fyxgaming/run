@@ -8,7 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Berry, LocalCache } = Run
+const { Berry, Jig, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Berry
@@ -344,8 +344,19 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if pluck Berry', () => {
-      // TODO
+    it('throws if pluck Berry', async () => {
+      const run = new Run()
+      const error = 'Berry class must extend from Berry'
+      await expect(run.load('', { berry: Berry })).to.be.rejectedWith(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if pluck non-berry', async () => {
+      const run = new Run()
+      const error = 'Berry class must extend from Berry'
+      await expect(run.load('', { berry: class B { } })).to.be.rejectedWith(error)
+      await expect(run.load('', { berry: class C extends Jig { } })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
