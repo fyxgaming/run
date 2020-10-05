@@ -24,7 +24,7 @@ describe('Berry', () => {
   // --------------------------------------------------------------------------
 
   describe('pluck', () => {
-    it.only('basic berry', async () => {
+    it('basic berry', async () => {
       const run = new Run()
       class B extends Berry { static async pluck () { return new B() } }
       const CB = run.deploy(B)
