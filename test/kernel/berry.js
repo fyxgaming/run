@@ -679,9 +679,22 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if sets unserializable properties', () => {
-      // TODO
+    it('throws if set unserializable properties', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init () { this.x = new WeakMap() }
+        static async pluck () { return new B() }
+      }
+      class C extends Berry {
+        init () { this.x = function f () { } }
+        static async pluck () { return new C() }
+      }
+      const error = 'Not serializable'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      await expect(run.load('', { berry: C })).to.be.rejectedWith(error)
     })
+
+    // TODO: Pluck not required
 
     // ------------------------------------------------------------------------
 
