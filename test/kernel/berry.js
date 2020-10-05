@@ -726,8 +726,11 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set prototype', () => {
-      // TODO
+    it('throws if set prototype', async () => {
+      const run = new Run()
+      class B extends Berry { init () { Object.setPrototypeOf(this, {}) } }
+      const error = 'setPrototypeOf disabled'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
@@ -751,6 +754,12 @@ Line 3`
     // ------------------------------------------------------------------------
 
     it.skip('throws if async', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('cannot swallow errors', () => {
       // TODO
     })
 
@@ -809,7 +818,7 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('cannot catch fetch errors', () => {
+    it.skip('cannot swallow fetch errors', () => {
       // TODO
     })
   })
@@ -1127,7 +1136,7 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('cannot catch load errors', () => {
+    it.skip('cannot swallow load errors', () => {
       // TODO
     })
 
