@@ -1,4 +1,3 @@
-const { expect } = require('chai')
 /**
  * berry.js
  *
@@ -6,6 +5,8 @@ const { expect } = require('chai')
  */
 
 const { describe, it, afterEach } = require('mocha')
+require('chai').use(require('chai-as-promised'))
+const { expect } = require('chai')
 const Run = require('../env/run')
 const { Berry, LocalCache } = Run
 
@@ -251,21 +252,46 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('unicode paths', () => {
-      // TODO
-      // 😀
+    it('unicode paths', async () => {
+      const run = new Run()
+
+      class B extends Berry {
+        init (s) { this.s = s }
+        static async pluck (path) { return new B(path) }
+      }
+
+      run.deploy(B)
+      await run.sync()
+
+      const text = '😀'
+
+      const location = B.location + '_' + text
+
+      function test (b) {
+        expect(b.s).to.equal(text)
+        expect(b.location).to.equal(location)
+      }
+
+      const b = await run.load(text, { berry: B })
+      test(b)
+
+      const b2 = await run.load(location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('spaces in paths', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws for invalid path', () => {
-      // TODO
+    it('throws for invalid path', async () => {
+      const run = new Run()
+      class B extends Berry { static async pluck () { return new B() } }
+      const error = 'Berry path must be a string'
+      await expect(run.load(null, { berry: B })).to.be.rejectedWith(error)
+      await expect(run.load(undefined, { berry: B })).to.be.rejectedWith(error)
+      await expect(run.load({}, { berry: B })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
