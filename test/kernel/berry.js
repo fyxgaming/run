@@ -848,8 +848,14 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('immutable', () => {
-      // TODO
+    it('immutable', async () => {
+      const run = new Run()
+      class B extends Berry {
+        static async pluck (path, fetch) {
+          fetch.n = 1
+        }
+      }
+      await expect(run.load('', { berry: B })).to.be.rejected
     })
 
     // ------------------------------------------------------------------------
