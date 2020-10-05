@@ -597,13 +597,58 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('calls method that defines properties', () => {
-      // TODO
+    it('calls method that defines properties', async () => {
+      const run = new Run()
+
+      class B extends Berry {
+        init () {
+          this.f()
+        }
+
+        f () {
+          const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
+          Reflect.defineProperty(this, 'n', desc)
+          this.o = this.g({})
+        }
+
+        g (o) {
+          const desc = { configurable: true, enumerable: true, writable: true, value: 2 }
+          Reflect.defineProperty(o, 'm', desc)
+          return o
+        }
+
+        static async pluck () { return new B() }
+      }
+
+      run.deploy(B)
+      await run.sync()
+
+      function test (b) {
+        expect(b.n).to.equal(1)
+        expect(b.o.m).to.equal(2)
+      }
+
+      const b = await run.load('123', { berry: B })
+      const location = b.constructor.location + '_123'
+      test(b)
+
+      const b2 = await run.load(location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
 
     it.skip('calls method that deletes properties', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if sets unserializable properties', () => {
       // TODO
     })
 
