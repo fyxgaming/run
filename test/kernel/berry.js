@@ -361,8 +361,16 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if create more than one', () => {
-      // TODO
+    it('throws if pluck more than one', async () => {
+      const run = new Run()
+      class B extends Berry {
+        static async pluck () {
+          new B() // eslint-disable-line
+          return new B()
+        }
+      }
+      const error = 'Must only pluck one berry at a time'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
