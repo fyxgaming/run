@@ -973,8 +973,16 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('cannot swallow fetch errors', () => {
-      // TODO
+    it('cannot swallow fetch errors', async () => {
+      const run = new Run()
+      class B extends Berry {
+        static async pluck (path, fetch) {
+          try { await fetch('123') } catch (e) { }
+          return new B()
+        }
+      }
+      const error = 'No such mempool or blockchain transaction: 123'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
     })
   })
 
