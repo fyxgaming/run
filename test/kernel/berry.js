@@ -712,14 +712,16 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set load', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if define location', () => {
-      // TODO
+    it('throws if define location', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init () {
+          const desc = { configurable: true, enumerable: true, writable: true, value: 'abc' }
+          Object.defineProperty(this, 'location', desc)
+        }
+      }
+      const error = 'Cannot set location'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
