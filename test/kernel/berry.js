@@ -698,8 +698,11 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set init', () => {
-      // TODO
+    it('throws if set init', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this.init = 1 } }
+      const error = 'Cannot set init'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
