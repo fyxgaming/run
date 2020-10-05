@@ -388,14 +388,10 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('caches future plucks', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if init throws', () => {
-      // TODO
+    it('throws if init throws', async () => {
+      const run = new Run()
+      class B extends Berry { static pluck () { throw new Error('abc') } }
+      await expect(run.load('', { berry: B })).to.be.rejectedWith('abc')
     })
 
     // ------------------------------------------------------------------------
