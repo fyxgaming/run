@@ -305,8 +305,16 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if return unrelated berry', () => {
-      // TODO
+    it('throws if return unrelated berry', async () => {
+      const run = new Run()
+      class B extends Berry { static async pluck () { return new B() } }
+      run.deploy(B)
+      await run.sync()
+      const b = await run.load('', { berry: B })
+      class C extends Berry { static async pluck () { return C.b } }
+      C.b = b
+      const error = 'Berry must be an instance of C'
+      await expect(run.load('', { berry: C })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
