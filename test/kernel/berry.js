@@ -1036,14 +1036,44 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set', () => {
-      // TODO
+    it('throws if set', async () => {
+      const run = new Run()
+      class B extends Berry { f () { this.n = 1 } }
+      run.deploy(B)
+      await run.sync()
+      const location = B.location + '_'
+      function test (b) { expect(() => b.f()).to.throw('set disabled') }
+      const b = await run.load('', { berry: B })
+      test(b)
+      const b2 = await run.load(location)
+      test(b2)
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if define', () => {
-      // TODO
+    it('throws if define', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init () { this.a = [] }
+        f () {
+          const desc = { configurable: true, enumerable: true, writable: true, value: new Map() }
+          Object.defineProperty(this.a, '0', desc)
+        }
+      }
+      run.deploy(B)
+      await run.sync()
+      const location = B.location + '_'
+      function test (b) { expect(() => b.f()).to.throw('defineProperty disabled') }
+      const b = await run.load('', { berry: B })
+      test(b)
+      const b2 = await run.load(location)
+      test(b2)
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
