@@ -753,8 +753,13 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if create in a different plucker', () => {
-      // TODO
+    it('throws if create in a different plucker', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      class C extends Berry { static async pluck () { return new B() } }
+      C.deps = { B }
+      const error = 'Must only create berry from its berry class'
+      await expect(run.load('', { berry: C })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
