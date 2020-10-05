@@ -1078,14 +1078,41 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if delete', () => {
-      // TODO
+    it('throws if delete', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init () { this.a = [1, 2, 3] }
+        f () { delete this.a[0] }
+      }
+      run.deploy(B)
+      await run.sync()
+      const location = B.location + '_'
+      function test (b) { expect(() => b.f()).to.throw('delete disabled') }
+      const b = await run.load('', { berry: B })
+      test(b)
+      const b2 = await run.load(location)
+      test(b2)
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set prototype', () => {
-      // TODO
+    it('throws if set prototype', async () => {
+      const run = new Run()
+      class B extends Berry { f () { Object.setPrototypeOf(this, B) } }
+      run.deploy(B)
+      await run.sync()
+      const location = B.location + '_'
+      function test (b) { expect(() => b.f()).to.throw('setPrototypeOf disabled') }
+      const b = await run.load('', { berry: B })
+      test(b)
+      const b2 = await run.load(location)
+      test(b2)
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
