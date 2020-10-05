@@ -403,6 +403,19 @@ Line 3`
       const error = 'Must only create berry from its berry class'
       await expect(CB.pluck()).to.be.rejectedWith(error)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('pluck method not required', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await run.sync()
+      const b = await run.load('abc', { berry: B })
+      const c = await run.load('123', { berry: B })
+      expect(b.location).to.equal(CB.location + '_abc')
+      expect(c.location).to.equal(CB.location + '_123')
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -693,8 +706,6 @@ Line 3`
       await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
       await expect(run.load('', { berry: C })).to.be.rejectedWith(error)
     })
-
-    // TODO: Pluck not required
 
     // ------------------------------------------------------------------------
 
