@@ -558,8 +558,41 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('calls method that sets properties', () => {
-      // TODO
+    it('calls method that sets properties', async () => {
+      const run = new Run()
+
+      class B extends Berry {
+        init () {
+          this.m = new Map()
+          this.f()
+        }
+
+        f () {
+          this.n = 1
+          this.m.set(2, 3)
+        }
+
+        static async pluck () { return new B() }
+      }
+
+      run.deploy(B)
+      await run.sync()
+
+      function test (b) {
+        expect(b.n).to.equal(1)
+        expect(b.m.get(2)).to.equal(3)
+      }
+
+      const b = await run.load('123', { berry: B })
+      const location = b.constructor.location + '_123'
+      test(b)
+
+      const b2 = await run.load(location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
