@@ -466,6 +466,24 @@ describe('Berry', () => {
     it.skip('throws if create jig in berry method', () => {
       // TODO
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if update jig in berry method', () => {
+      // TODO - init, inner init, other method
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if auth jig in berry method', () => {
+      // TODO - init, inner init, other method
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if destroy jig in berry method', () => {
+      // TODO - init, inner init, other method
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -487,6 +505,24 @@ describe('Berry', () => {
 
     it.skip('throws if use undeployed berry', () => {
       // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if update code in berry method', () => {
+      // TODO - init, inner init, other method
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if auth code in berry method', () => {
+      // TODO - init, inner init, other method
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if destroy code in berry method', () => {
+      // TODO - init, inner init, other method
     })
   })
 
