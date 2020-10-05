@@ -764,14 +764,22 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if return value', () => {
-      // TODO
+    it('throws if return value', async () => {
+      const run = new Run()
+      class B extends Berry { init () { return 1 } }
+      class C extends Berry { init () { return this } }
+      const error = 'init must not return a value'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      await expect(run.load('', { berry: C })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if async', () => {
-      // TODO
+    it('throws if async', async () => {
+      const run = new Run()
+      class B extends Berry { async init () { } }
+      const error = 'init must not return a value'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
