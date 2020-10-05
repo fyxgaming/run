@@ -523,8 +523,37 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('get own properties', () => {
-      // TODO
+    it('get own properties in deterministic order', async () => {
+      const run = new Run()
+
+      class B extends Berry {
+        init () {
+          this.n = 1
+          this.m = new Map()
+          this.p = Object.getOwnPropertyNames(this)
+        }
+
+        static async pluck () { return new B() }
+      }
+
+      run.deploy(B)
+      await run.sync()
+
+      function test (b) {
+        expect(Object.getOwnPropertyNames(b)).to.deep.equal(['location', 'm', 'n', 'p'])
+        expect(b.p).to.deep.equal(['location', 'm', 'n'])
+      }
+
+      const b = await run.load('123', { berry: B })
+      const location = b.constructor.location + '_123'
+      test(b)
+
+      const b2 = await run.load(location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
