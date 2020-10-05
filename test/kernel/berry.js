@@ -105,12 +105,15 @@ describe('Berry', () => {
 
     it('berry with deps', async () => {
       const run = new Run()
+
       function f () { return 1 }
+
       class B extends Berry {
         init (n) { this.n = n }
         static async pluck () { return new B(f()) }
       }
       B.deps = { f }
+
       run.deploy(B)
       await run.sync()
 
@@ -133,9 +136,36 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('return immutable', () => {
-      // TODO
-      // Check inner
+    it('immutable externally', async () => {
+      const run = new Run()
+
+      class B extends Berry {
+        init () {
+          this.n = 1
+          this.a = []
+        }
+
+        static async pluck () { return new B() }
+      }
+
+      run.deploy(B)
+      await run.sync()
+
+      function test (b) {
+        expect(() => { b.n = 1 }).to.throw('set disabled')
+        expect(() => { b.a.push(1) }).to.throw('set disabled')
+      }
+
+      const b = await run.load('123', { berry: B })
+      const location = b.constructor.location + '_123'
+      test(b)
+
+      const b2 = await run.load(location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
