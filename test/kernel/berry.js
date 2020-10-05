@@ -807,9 +807,20 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('runs in sandbox', () => {
-      // TODO
-      // Check with undeployed class
+    it('runs in sandbox', async () => {
+      const run = new Run()
+      const n = 1
+      class B extends Berry {
+        init () {
+          this.a = typeof global
+          this.b = typeof window
+          this.c = typeof n
+        }
+      }
+      const b = await run.load('', { berry: B })
+      expect(b.a).to.equal('undefined')
+      expect(b.b).to.equal('undefined')
+      expect(b.c).to.equal('undefined')
     })
   })
 
