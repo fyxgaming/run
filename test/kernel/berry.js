@@ -52,7 +52,7 @@ describe('Berry', () => {
 
     it('undeployed berry', async () => {
       const run = new Run()
-      class B extends Berry { static async pluck () { return new B() } }
+      class B extends Berry { }
       const b = await run.load('abc', { berry: B })
       expect(b instanceof B).to.equal(true)
       expect(() => b.location).to.throw()
@@ -62,7 +62,7 @@ describe('Berry', () => {
 
     it('deploying berry remains undeployed', async () => {
       const run = new Run()
-      class B extends Berry { static async pluck () { return new B() } }
+      class B extends Berry { }
       const CB = run.deploy(B)
       const b = await run.load('abc', { berry: CB })
       expect(b instanceof B).to.equal(true)
@@ -76,7 +76,7 @@ describe('Berry', () => {
     it('berry with parent', async () => {
       const run = new Run()
       class B extends Berry { }
-      class C extends B { static async pluck () { return new C() } }
+      class C extends B { }
       const c = await run.load('', { berry: C })
       expect(c instanceof C).to.equal(true)
     })
@@ -84,7 +84,7 @@ describe('Berry', () => {
 
     it('may inherit parent pluck method', async () => {
       const run = new Run()
-      class B extends Berry { static async pluck () { return new this() } }
+      class B extends Berry { }
       class C extends B { }
       class D extends B { }
       run.deploy(C)
@@ -153,8 +153,6 @@ describe('Berry', () => {
           this.n = 1
           this.a = []
         }
-
-        static async pluck () { return new B() }
       }
 
       run.deploy(B)
@@ -190,8 +188,6 @@ describe('Berry', () => {
 
         f () { delete this.n }
         g () { this.o.n = 1 }
-
-        static async pluck () { return new B() }
       }
 
       run.deploy(B)
@@ -433,8 +429,6 @@ Line 3`
           this.o.m = 2
           this.s = new Set([this])
         }
-
-        static async pluck () { return new B() }
       }
 
       run.deploy(B)
@@ -473,8 +467,6 @@ Line 3`
           Object.defineProperty(this, 'n', desc1)
           Object.defineProperty(this.arr, '1', desc2)
         }
-
-        static async pluck () { return new B() }
       }
 
       run.deploy(B)
@@ -510,8 +502,6 @@ Line 3`
           this.o.m = 2
           delete this.o.m
         }
-
-        static async pluck () { return new B() }
       }
 
       run.deploy(B)
@@ -545,8 +535,6 @@ Line 3`
           this.m = new Map()
           this.p = Object.getOwnPropertyNames(this)
         }
-
-        static async pluck () { return new B() }
       }
 
       run.deploy(B)
@@ -584,8 +572,6 @@ Line 3`
           this.n = 1
           this.m.set(2, 3)
         }
-
-        static async pluck () { return new B() }
       }
 
       run.deploy(B)
@@ -629,8 +615,6 @@ Line 3`
           Reflect.defineProperty(o, 'm', desc)
           return o
         }
-
-        static async pluck () { return new B() }
       }
 
       run.deploy(B)
@@ -667,8 +651,6 @@ Line 3`
         f () {
           delete this.m
         }
-
-        static async pluck () { return new B() }
       }
 
       run.deploy(B)
@@ -694,23 +676,11 @@ Line 3`
 
     it('throws if set unserializable properties', async () => {
       const run = new Run()
-      class B extends Berry {
-        init () { this.x = new WeakMap() }
-        static async pluck () { return new B() }
-      }
-      class C extends Berry {
-        init () { this.x = function f () { } }
-        static async pluck () { return new C() }
-      }
+      class B extends Berry { init () { this.x = new WeakMap() } }
+      class C extends Berry { init () { this.x = function f () { } } }
       const error = 'Not serializable'
       await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
       await expect(run.load('', { berry: C })).to.be.rejectedWith(error)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if delete init', () => {
-      // TODO
     })
 
     // ------------------------------------------------------------------------
@@ -730,6 +700,15 @@ Line 3`
 
     it.skip('throws if set init', () => {
       // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if delete init', async () => {
+      const run = new Run()
+      class B extends Berry { init () { delete this.init } }
+      const error = 'Cannot delete init'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
