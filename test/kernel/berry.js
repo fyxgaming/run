@@ -874,8 +874,25 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('may fetch multiple transactions', () => {
-      // TODO
+    it('fetch multiple', async () => {
+      const run = new Run()
+      const txidA = (await run.deploy(class A { }).sync()).location.slice(0, 64)
+      const txidB = (await run.deploy(class B { }).sync()).location.slice(0, 64)
+      class B extends Berry {
+        init (a, b) { this.a = a; this.b = b }
+        static async pluck (path, fetch) {
+          const a = await fetch(path.split(',')[0])
+          const b = await fetch(path.split(',')[1])
+          return new B(a, b)
+        }
+      }
+      await run.deploy(B).sync()
+      const b = await run.load(txidA + ',' + txidB, { berry: B })
+      const txA = await run.blockchain.fetch(txidA)
+      const txB = await run.blockchain.fetch(txidB)
+      expect(b.a).to.equal(txA)
+      expect(b.b).to.equal(txB)
+      expect(b.a).not.to.equal(b.b)
     })
 
     // ------------------------------------------------------------------------
