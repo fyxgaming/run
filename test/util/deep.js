@@ -605,6 +605,16 @@ describe('_deepClone', () => {
     expect(callback.getCall(2).args[0]).to.equal(x.b)
     expect(callback.getCall(3).args[0]).to.equal(x.c)
   })
+
+  // --------------------------------------------------------------------------
+
+  it('replacer', () => {
+    const x = { n: [] }
+    const m = new Set()
+    const replacer = a => a === x.n && m
+    const y = _deepClone(x, undefined, replacer)
+    expect(y.n).to.equal(m)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
@@ -653,6 +663,7 @@ describe('_deepEqual', () => {
     expect(_deepEqual([[], []], [[], [], []])).to.equal(false)
     expect(_deepEqual([[1]], [[1]])).to.equal(true)
     expect(_deepEqual([[1]], [[2]])).to.equal(false)
+    expect(_deepEqual([[1]], [[2]], { _ordering: true })).to.equal(false)
   })
 
   // --------------------------------------------------------------------------
@@ -719,7 +730,8 @@ describe('_deepEqual', () => {
     const b = { m: 2 }
     b.n = 1
     a.m = 2
-    expect(_deepEqual(a, b)).to.equal(false)
+    expect(_deepEqual(a, b)).to.equal(true)
+    expect(_deepEqual(a, b, { _ordering: true })).to.equal(false)
   })
 
   // --------------------------------------------------------------------------
