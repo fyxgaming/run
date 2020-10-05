@@ -247,7 +247,6 @@ describe('Reserved', () => {
       expect(() => run.deploy(class A extends Jig { blockhash () { } })).to.throw()
       expect(() => run.deploy(class A extends Jig { blocktime () { } })).to.throw()
       expect(() => run.deploy(class A extends Jig { blockheight () { } })).to.throw()
-      expect(() => run.deploy(class A extends Jig { load () { } })).to.throw()
     })
 
     // ------------------------------------------------------------------------
@@ -647,6 +646,15 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if set load on code', () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.load = 1 } }
+      const C = run.deploy(A)
+      expect(() => C.f()).to.throw('Cannot set load')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if set init on jig', () => {
       new Run() // eslint-disable-line
       class A extends Jig { f () { this.init = 1 } }
@@ -673,7 +681,6 @@ describe('Reserved', () => {
       const C = run.deploy(A)
       expect(() => C.f('encryption')).to.throw()
       expect(() => C.f('latest')).to.throw()
-      expect(() => C.f('load')).to.throw()
       expect(() => C.f('blocktime')).to.throw()
     })
 
@@ -685,7 +692,6 @@ describe('Reserved', () => {
       const a = new A()
       expect(() => a.f('encryption')).to.throw()
       expect(() => a.f('latest')).to.throw()
-      expect(() => a.f('load')).to.throw()
       expect(() => a.f('blocktime')).to.throw()
     })
   })

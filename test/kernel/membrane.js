@@ -2311,7 +2311,7 @@ describe('Membrane', () => {
     it('cannot set reserved properties', () => {
       const a = new Membrane({}, mangle({ _reserved: true }))
       _RESERVED_PROPS.forEach(prop => {
-        const error = `${prop} is reserved`
+        const error = `Cannot set ${prop}: reserved`
         expect(() => { a[prop] = 1 }).to.throw(error)
       })
     })
@@ -2321,7 +2321,7 @@ describe('Membrane', () => {
     it('cannot define reserve properties', () => {
       const a = new Membrane({}, mangle({ _reserved: true }))
       _RESERVED_PROPS.forEach(prop => {
-        const error = `${prop} is reserved`
+        const error = `Cannot define ${prop}: reserved`
         const desc = { value: 1, configurable: true, enumerable: true, writable: true }
         expect(() => Object.defineProperty(a, prop, desc)).to.throw(error)
       })
