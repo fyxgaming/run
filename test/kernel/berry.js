@@ -215,14 +215,45 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('multi-line paths', () => {
-      // TODO
+    it('multi-line paths', async () => {
+      const run = new Run()
+
+      class B extends Berry {
+        init (s) { this.s = s }
+        static async pluck (path) { return new B(path) }
+      }
+
+      run.deploy(B)
+      await run.sync()
+
+      const text = `Hello
+      Line 2
+      
+Line 3`
+
+      const location = B.location + '_' + text
+
+      function test (b) {
+        expect(b.s).to.equal(text)
+        expect(b.location).to.equal(location)
+      }
+
+      const b = await run.load(text, { berry: B })
+      test(b)
+
+      const b2 = await run.load(location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
 
     it.skip('unicode paths', () => {
       // TODO
+      // 😀
     })
 
     // ------------------------------------------------------------------------

@@ -35,6 +35,8 @@ describe('Bindings', () => {
       expect(_location('abc_o0_def')).to.deep.equal({ txid: 'abc', vout: 0, berry: 'def' })
       expect(_location('abc_o0_def_o2')).to.deep.equal({ txid: 'abc', vout: 0, berry: 'def_o2' })
       expect(_location('abc_d0_def')).to.deep.equal({ txid: 'abc', vdel: 0, berry: 'def' })
+      expect(_location('abc_d0_line1\nline2')).to.deep.equal({ txid: 'abc', vdel: 0, berry: 'line1\nline2' })
+      expect(_location('abc_d0_😀')).to.deep.equal({ txid: 'abc', vdel: 0, berry: '😀' })
       // Partial berries
       expect(_location('_o0_def')).to.deep.equal({ vout: 0, berry: 'def' })
       expect(_location('_d0_def_o2')).to.deep.equal({ vdel: 0, berry: 'def_o2' })
