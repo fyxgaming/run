@@ -860,8 +860,16 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('sandboxed', () => {
-      // TODO
+    it('sandboxed', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init (b) { this.b = b }
+        static async pluck (path, fetch) {
+          return new B(fetch instanceof Function)
+        }
+      }
+      const b = await run.load('', { berry: B })
+      expect(b.b).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
