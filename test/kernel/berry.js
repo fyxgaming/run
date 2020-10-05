@@ -7,6 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
+const { stub } = require('sinon')
 const Run = require('../env/run')
 const { Berry, Jig, LocalCache } = Run
 
@@ -943,14 +944,31 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if not a transaction', () => {
-      // TODO
+    it('throws if not a transaction', async () => {
+      const run = new Run()
+      class B extends Berry {
+        static async pluck (path, fetch) {
+          await fetch('123')
+          return new B()
+        }
+      }
+      const error = 'No such mempool or blockchain transaction: 123'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if blockchain timeout', () => {
-      // TODO
+    it('throws if blockchain timeout', async () => {
+      const run = new Run()
+      stub(run.blockchain, 'fetch').throws(new Run.errors.TimeoutError())
+      class B extends Berry {
+        init (rawtx) { this.rawtx = rawtx }
+        static async pluck (path, fetch) {
+          const rawtx = await fetch(path)
+          return new B(rawtx)
+        }
+      }
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(Run.errors.TimeoutError)
     })
 
     // ------------------------------------------------------------------------
