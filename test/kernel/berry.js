@@ -207,7 +207,13 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('plucks from cache if possible', () => {
+    it.skip('plucks from cache', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('plucks from cache with circular dependency', () => {
       // TODO
     })
 
