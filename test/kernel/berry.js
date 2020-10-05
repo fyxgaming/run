@@ -991,8 +991,23 @@ Line 3`
   // --------------------------------------------------------------------------
 
   describe('Method', () => {
-    it.skip('get', () => {
-      // TODO
+    it('get', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init () { this.n = 1 }
+        f () { return this.n }
+      }
+      run.deploy(B)
+      await run.sync()
+      const location = B.location + '_'
+      function test (b) { expect(b.f()).to.equal(1) }
+      const b = await run.load('', { berry: B })
+      test(b)
+      const b2 = await run.load(location)
+      test(b2)
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
