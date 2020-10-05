@@ -207,13 +207,19 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('plucks from cache', () => {
+    it.skip('caches', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('plucks from cache with circular dependency', () => {
+    it.skip('caches with circular dependency', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('does not cache if undeployed', () => {
       // TODO
     })
 

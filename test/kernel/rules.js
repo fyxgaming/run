@@ -140,7 +140,7 @@ describe('Rules', () => {
       expect(rules._privacy).to.equal(true)
       expect(rules._immutable).to.equal(true)
       expect(rules._recordReads).to.equal(true)
-      expect(rules._recordUpdates).to.equal(true)
+      expect(rules._recordUpdates).to.equal(false)
       expect(rules._recordCalls).to.equal(true)
       expect(rules._recordableTarget).to.equal(true)
       expect(rules._smartAPI).to.equal(true)
