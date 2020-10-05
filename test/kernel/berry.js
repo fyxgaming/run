@@ -897,8 +897,25 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('call from internal helper', () => {
-      // TODO
+    it('call from internal helper', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init (rawtx) { this.rawtx = rawtx }
+        static async pluck (path, fetch) {
+          const rawtx = await this.f(path, fetch)
+          return new B(rawtx)
+        }
+
+        static f (path, fetch) {
+          return fetch(path)
+        }
+      }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const txid = CB.location.slice(0, 64)
+      const rawtx = await run.blockchain.fetch(txid)
+      const b = await run.load(txid, { berry: CB })
+      expect(b.rawtx).to.equal(rawtx)
     })
 
     // ------------------------------------------------------------------------
