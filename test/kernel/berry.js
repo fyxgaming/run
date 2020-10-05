@@ -375,8 +375,15 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if not async', () => {
-      // TODO
+    it('throws if not async', async () => {
+      const run = new Run()
+      class B extends Berry {
+        static pluck () {
+          return new B()
+        }
+      }
+      const error = 'pluck method must be async'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
