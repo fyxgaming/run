@@ -390,14 +390,18 @@ Line 3`
 
     it('throws if init throws', async () => {
       const run = new Run()
-      class B extends Berry { static pluck () { throw new Error('abc') } }
+      class B extends Berry { static async pluck () { throw new Error('abc') } }
       await expect(run.load('', { berry: B })).to.be.rejectedWith('abc')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if called by user', () => {
-      // TODO
+    it('throws if called by user', async () => {
+      const run = new Run()
+      class B extends Berry { static async pluck () { return new B() } }
+      const CB = run.deploy(B)
+      const error = 'Must only create berry from its berry class'
+      await expect(CB.pluck()).to.be.rejectedWith(error)
     })
   })
 
