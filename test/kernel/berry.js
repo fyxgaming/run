@@ -301,8 +301,41 @@ describe('Berry', () => {
   // --------------------------------------------------------------------------
 
   describe('init', () => {
-    it.skip('set properties', () => {
-      // TODO
+    it('set properties', async () => {
+      const run = new Run()
+
+      class B extends Berry {
+        init () {
+          this.n = 1
+          this.o = {}
+          this.o.m = 2
+          this.s = new Set([this])
+        }
+
+        static async pluck () { return new B() }
+      }
+
+      run.deploy(B)
+      await run.sync()
+
+      function test (b) {
+        expect(b.n).to.equal(1)
+        expect(typeof b.o).to.equal('object')
+        expect(b.o.m).to.equal(2)
+        expect(b.s.constructor.name).to.equal('Set')
+        expect(Array.from(b.s)[0]).to.equal(b)
+      }
+
+      const b = await run.load('123', { berry: B })
+      const location = b.constructor.location + '_123'
+      test(b)
+
+      const b2 = await run.load(location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------
@@ -320,6 +353,24 @@ describe('Berry', () => {
     // ------------------------------------------------------------------------
 
     it.skip('get own properties', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('calls method that sets properties', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('calls method that defines properties', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('calls method that deletes properties', () => {
       // TODO
     })
 
