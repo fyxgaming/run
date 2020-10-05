@@ -323,8 +323,13 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if return non-object', () => {
-      // TODO
+    it('throws if return non-object', async () => {
+      const run = new Run()
+      class B extends Berry { static async pluck () { return null } }
+      class C extends Berry { static async pluck () { return 'hello' } }
+      const error = name => 'Berry must be an instance of ' + name
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error('B'))
+      await expect(run.load('', { berry: C })).to.be.rejectedWith(error('C'))
     })
 
     // ------------------------------------------------------------------------
