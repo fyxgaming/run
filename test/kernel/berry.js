@@ -687,7 +687,7 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.only('set non-location bindings', async () => {
+    it('set non-location bindings', async () => {
       const run = new Run()
       class B extends Berry {
         init () {
@@ -1047,8 +1047,29 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('get non-location bindings', () => {
-      // TODO
+    it('get non-location bindings', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init () {
+          this.origin = 1
+          this.nonce = 2
+          this.owner = 3
+          this.satoshis = 4
+        }
+
+        f () { return [this.origin, this.nonce, this.owner, this.satoshis] }
+      }
+      run.deploy(B)
+      await run.sync()
+      const location = B.location + '_'
+      function test (b) { expect(b.f()).to.deep.equal([1, 2, 3, 4]) }
+      const b = await run.load('', { berry: B })
+      test(b)
+      const b2 = await run.load(location)
+      test(b2)
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
     })
 
     // ------------------------------------------------------------------------

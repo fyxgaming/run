@@ -744,6 +744,43 @@ describe('Membrane', () => {
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect(() => { delete a.init }).to.throw('Cannot delete init')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if set location binding', () => {
+      const a = new Membrane({}, mangle({ _berryMethods: true, _bindings: true }))
+      expect(() => { a.location = 1 }).to.throw('Cannot set location')
+    })
+
+    // ------------------------------------------------------------------------
+    it('can set non-location bindings', () => {
+      const a = new Membrane({}, mangle({ _berryMethods: true, _bindings: true }))
+      a.origin = 1
+      a.nonce = 1
+      a.owner = 1
+      a.satoshis = 1
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can define non-location bindings', () => {
+      const a = new Membrane({}, mangle({ _berryMethods: true, _bindings: true }))
+      const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
+      Object.defineProperty(a, 'origin', desc)
+      Object.defineProperty(a, 'nonce', desc)
+      Object.defineProperty(a, 'owner', desc)
+      Object.defineProperty(a, 'satoshis', desc)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can delete non-location bindings', () => {
+      const a = new Membrane({}, mangle({ _berryMethods: true, _bindings: true }))
+      delete a.origin
+      delete a.nonce
+      delete a.owner
+      delete a.satoshis
+    })
   })
 
   // --------------------------------------------------------------------------
