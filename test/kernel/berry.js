@@ -1310,8 +1310,13 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if create jig in init', () => {
-      // TODO
+    it('throws if create jig in init', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      class B extends Berry { init () { this.b = new A() } }
+      B.deps = { A }
+      const error = 'Cannot create A during pluck'
+      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
