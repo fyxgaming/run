@@ -9,6 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { stub } = require('sinon')
 const Run = require('../env/run')
+const { expectTx } = require('../env/misc')
 const { Berry, Jig, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -686,6 +687,40 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
+    it.only('set non-location bindings', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init () {
+          this.origin = '123'
+          this.satoshis = -1
+          this.owner = {}
+          this.nonce = this
+        }
+      }
+      run.deploy(B)
+      await run.sync()
+      const location = B.location + '_abc'
+
+      function test (b) {
+        expect(b.origin).to.equal('123')
+        expect(b.satoshis).to.equal(-1)
+        expect(b.owner).to.deep.equal({})
+        expect(b.nonce).to.equal(b)
+      }
+
+      const b = await run.load('abc', { berry: B })
+      test(b)
+
+      const b2 = await run.load(location)
+      test(b2)
+
+      run.cache = new LocalCache()
+      const b3 = await run.load(location)
+      test(b3)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if set location', async () => {
       const run = new Run()
       class B extends Berry { init () { this.location = '123' } }
@@ -1012,6 +1047,12 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
+    it.skip('get non-location bindings', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it('getOwnPropertyDescriptor', async () => {
       const run = new Run()
       class B extends Berry {
@@ -1139,8 +1180,51 @@ Line 3`
   // --------------------------------------------------------------------------
 
   describe('Jig', () => {
-    it.skip('assigns to jig', () => {
-      // TODO
+    it('assigns to jig', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this.n = 1 } }
+      run.deploy(B)
+      await run.sync()
+      const b = await run.load('abc', { berry: B })
+
+      function test (CA) {
+        expect(CA.b instanceof B).to.equal(true)
+        expect(CA.b.n).to.equal(1)
+      }
+
+      class A { }
+      A.b = b
+
+      expectTx({
+        nin: 0,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              A.toString(),
+              {
+                deps: { },
+                b: { $jig: 0 }
+              }
+            ]
+          }
+        ]
+      })
+
+      const CA = run.deploy(A)
+      await CA.sync()
+      test(CA)
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     // ------------------------------------------------------------------------
