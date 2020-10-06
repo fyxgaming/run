@@ -1298,8 +1298,14 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if use undeployed berry', () => {
-      // TODO
+    it('throws if store undeployed berry', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const b = await run.load('', { berry: B })
+      class A { }
+      A.b = b
+      const CA = run.deploy(A)
+      await expect(CA.sync()).to.be.rejectedWith('Bad location')
     })
 
     // ------------------------------------------------------------------------
