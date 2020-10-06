@@ -1250,8 +1250,50 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('pass into jig method', () => {
-      // TODO
+    it('pass into jig method', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this.n = 1 } }
+      run.deploy(B)
+      await run.sync()
+      const b = await run.load('abc', { berry: B })
+
+      function test (a) {
+        expect(a.b instanceof B).to.equal(true)
+        expect(a.b.n).to.equal(1)
+      }
+
+      class A extends Jig { f (b) { this.b = b } }
+      const a = new A()
+      await a.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [
+              { $jig: 0 },
+              'f',
+              [{ $jig: 1 }]
+            ]
+          }
+        ]
+      })
+
+      a.f(b)
+      await a.sync()
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
     })
 
     // ------------------------------------------------------------------------
