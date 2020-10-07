@@ -1486,20 +1486,53 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('may sync destroyed berry class', () => {
-      // TODO
+    it('may sync destroyed berry class', async () => {
+      const run = new Run()
+      class B extends Berry { f (CA) { CA.auth() } }
+      const CB = run.deploy(B)
+      await CB.sync()
+      CB.destroy()
+      await CB.sync()
+      await CB.sync()
+      const b = await run.load('abc', { berry: CB })
+      expect(b.location).to.equal(CB.location + '_abc')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may sync authed berry class', () => {
-      // TODO
+    it('may sync authed berry class', async () => {
+      const run = new Run()
+      class B extends Berry { f (CA) { CA.auth() } }
+      const CB = run.deploy(B)
+      await CB.sync()
+      CB.auth()
+      await CB.sync()
+      await CB.sync()
+      const b = await run.load('abc', { berry: CB })
+      expect(b.location).to.equal(CB.location + '_abc')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('inner syncs berry classes', () => {
-      // TODO
+    it('inner syncs berry classes in jigs', async () => {
+      const run = new Run()
+      class B extends Berry { f (CA) { CA.auth() } }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: CB })
+      expect(b.location).to.equal(CB.location + '_abc')
+
+      class A extends Jig { init (b) { this.b = b } }
+      const a = new A(b)
+      await a.sync()
+
+      CB.destroy()
+      await CB.sync()
+
+      const a2 = await run.load(a.location)
+      expect(a2.b.constructor.location).to.equal(CB.origin)
+      await a2.sync()
+      expect(a2.b.constructor.location).to.equal(CB.location)
     })
 
     // ------------------------------------------------------------------------
@@ -1603,13 +1636,13 @@ Line 3`
 
   describe('load', () => {
     it.skip('loads same berry class', () => {
-
+      // TODO
     })
 
     // ------------------------------------------------------------------------
 
     it.skip('loads different berry class', () => {
-
+      // TODO
     })
 
     // ------------------------------------------------------------------------
