@@ -486,8 +486,8 @@ describe('Call', () => {
         g () { return new Promise((resolve, reject) => { }) }
       }
       const a = new A()
-      expect(() => a.f()).to.throw('Async methods not supported')
-      expect(() => a.g()).to.throw('Async methods not supported')
+      expect(() => a.f()).to.throw('async methods not supported')
+      expect(() => a.g()).to.throw('async methods not supported')
     })
 
     // ------------------------------------------------------------------------

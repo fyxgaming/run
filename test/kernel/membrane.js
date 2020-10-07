@@ -2466,7 +2466,7 @@ describe('Membrane', () => {
     it('async methods not supported', () => {
       const options = { _recordableTarget: true, _recordCalls: true }
       const A = makeJig(class A { static async f () { } }, options)
-      expect(() => testRecord(() => A.f())).to.throw('Async methods not supported')
+      expect(() => testRecord(() => A.f())).to.throw('async methods not supported')
     })
 
     // ------------------------------------------------------------------------

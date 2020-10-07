@@ -1315,7 +1315,7 @@ Line 3`
       class A extends Jig { }
       class B extends Berry { init () { this.b = new A() } }
       B.deps = { A }
-      const error = 'Cannot create A during pluck'
+      const error = 'Cannot create A in berry'
       await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
     })
 
@@ -1329,32 +1329,54 @@ Line 3`
         f () { this.b = new A() }
       }
       B.deps = { A }
-      const error = 'Cannot create A during pluck'
+      const error = 'Cannot create A in berry'
       await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if create jig in berry method', () => {
-      // TODO
+    it('may create jig in berry method', async () => {
+      // Berries are static code
+      const run = new Run()
+      class A extends Jig { }
+      class B extends Berry { f () { return new A() } }
+      B.deps = { A }
+      const b = await run.load('', { berry: B })
+      expect(b.f() instanceof A).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if update jig in berry method', () => {
-      // TODO - init, inner init, other method
-    })
+    it('may update jig in berry method', async () => {
+      // Berries are static code
+      const run = new Run()
+      class A extends Jig { g () { this.n = 1 } }
+      class B extends Berry { f (a) { a.g() } }
+      const a = new A()
+      await a.sync()
+      const b = await run.load('', { berry: B })
 
-    // ------------------------------------------------------------------------
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [
+              { $jig: 0 },
+              'g',
+              []
+            ]
+          }
+        ]
+      })
 
-    it.skip('throws if auth jig in berry method', () => {
-      // TODO - init, inner init, other method
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if destroy jig in berry method', () => {
-      // TODO - init, inner init, other method
+      b.f(a)
+      expect(a.n).to.equal(1)
+      await a.sync()
     })
   })
 

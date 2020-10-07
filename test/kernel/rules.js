@@ -17,9 +17,9 @@ const { mangle } = unmangle
 // ------------------------------------------------------------------------------------------------
 
 describe('Rules', () => {
-  describe('code', () => {
+  describe('jig code', () => {
     it('creates rules', () => {
-      const rules = unmangle(Rules._code())
+      const rules = unmangle(Rules._jigCode())
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
