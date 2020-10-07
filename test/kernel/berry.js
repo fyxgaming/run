@@ -1477,8 +1477,11 @@ Line 3`
   // --------------------------------------------------------------------------
 
   describe('Sync', () => {
-    it.skip('no sync method', () => {
-      // TODO
+    it('no sync method', async () => {
+      const run = new Run()
+      class B extends Berry { f (CA) { CA.auth() } }
+      const b = await run.load('abc', { berry: B })
+      expect(typeof b.sync).to.equal('undefined')
     })
 
     // ------------------------------------------------------------------------
