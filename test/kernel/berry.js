@@ -1201,55 +1201,6 @@ Line 3`
   // --------------------------------------------------------------------------
 
   describe('Jig', () => {
-    it('assigns to jig', async () => {
-      const run = new Run()
-      class B extends Berry { init () { this.n = 1 } }
-      run.deploy(B)
-      await run.sync()
-      const b = await run.load('abc', { berry: B })
-
-      function test (CA) {
-        expect(CA.b instanceof B).to.equal(true)
-        expect(CA.b.n).to.equal(1)
-      }
-
-      class A { }
-      A.b = b
-
-      expectTx({
-        nin: 0,
-        nref: 1,
-        nout: 1,
-        ndel: 0,
-        ncre: 1,
-        exec: [
-          {
-            op: 'DEPLOY',
-            data: [
-              A.toString(),
-              {
-                deps: { },
-                b: { $jig: 0 }
-              }
-            ]
-          }
-        ]
-      })
-
-      const CA = run.deploy(A)
-      await CA.sync()
-      test(CA)
-
-      const CA2 = await run.load(CA.location)
-      test(CA2)
-
-      run.cache = new LocalCache()
-      const CA3 = await run.load(CA.location)
-      test(CA3)
-    })
-
-    // ------------------------------------------------------------------------
-
     it('pass into jig method', async () => {
       const run = new Run()
       class B extends Berry { init () { this.n = 1 } }
@@ -1298,14 +1249,13 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('throws if store undeployed berry', async () => {
+    it('throws if pass undeployed berry', async () => {
       const run = new Run()
       class B extends Berry { }
       const b = await run.load('', { berry: B })
-      class A { }
-      A.b = b
-      const CA = run.deploy(A)
-      await expect(CA.sync()).to.be.rejectedWith('Bad location')
+      class A extends Jig { init (b) { this.b = b } }
+      const a = new A(b)
+      await expect(a.sync()).to.be.rejectedWith('Bad location')
     })
 
     // ------------------------------------------------------------------------
@@ -1385,38 +1335,140 @@ Line 3`
   // --------------------------------------------------------------------------
 
   describe('Code', () => {
-    it.skip('assigns to code', () => {
-      // TODO
+    it('assigns to code', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this.n = 1 } }
+      run.deploy(B)
+      await run.sync()
+      const b = await run.load('abc', { berry: B })
+
+      function test (CA) {
+        expect(CA.b instanceof B).to.equal(true)
+        expect(CA.b.n).to.equal(1)
+      }
+
+      class A { }
+      A.b = b
+
+      expectTx({
+        nin: 0,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              A.toString(),
+              {
+                deps: { },
+                b: { $jig: 0 }
+              }
+            ]
+          }
+        ]
+      })
+
+      const CA = run.deploy(A)
+      await CA.sync()
+      test(CA)
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('pass into code method', () => {
-      // TODO
+    it('pass into code method', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this.n = 1 } }
+      run.deploy(B)
+      await run.sync()
+      const b = await run.load('abc', { berry: B })
+
+      function test (CA) {
+        expect(CA.b instanceof B).to.equal(true)
+        expect(CA.b.n).to.equal(1)
+      }
+
+      class A extends Jig { static f (b) { this.b = b } }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [
+              { $jig: 0 },
+              'f',
+              [{ $jig: 1 }]
+            ]
+          }
+        ]
+      })
+
+      CA.f(b)
+      await CA.sync()
+      test(CA)
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if use undeployed berry', () => {
-      // TODO
+    it('throws if use undeployed berry', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const b = await run.load('', { berry: B })
+      class A { }
+      A.b = b
+      const CA = run.deploy(A)
+      await expect(CA.sync()).to.be.rejectedWith('Bad location')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if update code in berry method', () => {
-      // TODO - init, inner init, other method
-    })
+    it('may auth code in berry method', async () => {
+      const run = new Run()
+      class B extends Berry { f (CA) { CA.auth() } }
+      run.deploy(B)
+      await run.sync()
+      const b = await run.load('abc', { berry: B })
+      const CA = run.deploy(class A { })
+      await CA.sync()
 
-    // ------------------------------------------------------------------------
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'AUTH',
+            data: { $jig: 0 }
+          }
+        ]
+      })
 
-    it.skip('throws if auth code in berry method', () => {
-      // TODO - init, inner init, other method
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if destroy code in berry method', () => {
-      // TODO - init, inner init, other method
+      b.f(CA)
+      await CA.sync()
     })
   })
 
