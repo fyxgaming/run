@@ -1479,7 +1479,7 @@ Line 3`
   describe('Sync', () => {
     it('no sync method', async () => {
       const run = new Run()
-      class B extends Berry { f (CA) { CA.auth() } }
+      class B extends Berry { }
       const b = await run.load('abc', { berry: B })
       expect(typeof b.sync).to.equal('undefined')
     })
@@ -1488,7 +1488,7 @@ Line 3`
 
     it('may sync destroyed berry class', async () => {
       const run = new Run()
-      class B extends Berry { f (CA) { CA.auth() } }
+      class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
       CB.destroy()
@@ -1502,7 +1502,7 @@ Line 3`
 
     it('may sync authed berry class', async () => {
       const run = new Run()
-      class B extends Berry { f (CA) { CA.auth() } }
+      class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
       CB.auth()
@@ -1516,11 +1516,10 @@ Line 3`
 
     it('inner syncs berry classes in jigs', async () => {
       const run = new Run()
-      class B extends Berry { f (CA) { CA.auth() } }
+      class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
       const b = await run.load('abc', { berry: CB })
-      expect(b.location).to.equal(CB.location + '_abc')
 
       class A extends Jig { init (b) { this.b = b } }
       const a = new A(b)
@@ -1537,8 +1536,37 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('updates berry class when used in a transaction', () => {
-      // TODO
+    it.only('updates berry class when used in a transaction', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: CB })
+
+      class A extends Jig {
+        init (b) { this.b = b }
+        f () { this.Blocation = this.b.constructor.location }
+      }
+      const a = new A(b)
+      await a.sync()
+
+      CB.destroy()
+      await CB.sync()
+
+      const a2 = await run.load(a.location)
+      await a2.sync()
+      expect(a2.b.constructor.location).to.equal(CB.location)
+      a2.f()
+      await a2.sync()
+
+      const a3 = await run.load(a2.location)
+      expect(a3.Blocation).to.equal(CB.location)
+      expect(a3.b.constructor.location).to.equal(CB.location)
+
+      run.cache = new LocalCache()
+      const a4 = await run.load(a2.location)
+      expect(a4.Blocation).to.equal(CB.location)
+      expect(a4.b.constructor.location).to.equal(CB.location)
     })
 
     // ------------------------------------------------------------------------
