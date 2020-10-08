@@ -809,6 +809,175 @@ describe('Unify', () => {
       expect(() => run.unify(A1, A2)).to.throw('Cannot unify inconsistent A')
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Indirect references
+  //
+  // Direct refs are jigs directly referenced by another jig. They are in the
+  // state. Indirect refs are 2nd-degree jig references, or refs of refs.
+  // Unlike direct refs, they do not need to follow social syncronization
+  // rules with respect to the original jig. If its important for 2nd-degree
+  // jig references to follow social synchronization rules, they should be
+  // saved as direct references.
+  //
+  // To make indirect refs follow social synchronization rules, a jig would
+  // need to store not just its own refs but also its indirect refs, perhaps
+  // in a special refs array. Calculating this looks complex and slow It would
+  // require additional deep traversals. Alternatively, we store state in a
+  // flattened data structure that would include all indirect refs, but this
+  // would be a much larger and less efficient. Overall, the trade-offs of
+  // making indirect refs following social synchronization rules seems not to
+  // be worth it at this time.
+  //
+  // Finally, social synchronization is not applied to every jig anyway, even
+  // if we made indirect refs follow. Jigs temporarily used but not stored
+  // should follow social sync if we wanted to be 100% consistent, but this
+  // would involve every jig tracking every jig they interacted with. It's
+  // too much. We are making a practical trade-off here that only direct
+  // refs follow social synchronization rules, and if other jigs need to, they
+  // should be turned into direct refs. Hopefully this will remain rare because
+  // obviously this is complex to explain.
+  // --------------------------------------------------------------------------
+
+  describe('Indirect references', () => {
+    it('different indirect refs may be loaded', async () => {
+      const run = new Run()
+
+      class A extends Jig { static f (C) { this.n = 1 } }
+      class B { }
+      class C { }
+      A.B = B
+      B.C = C
+
+      const CA = run.deploy(A)
+      run.deploy(B)
+      const CC = run.deploy(C)
+      await run.sync()
+
+      const CC2 = await run.load(CC.location)
+      CC2.auth()
+      CA.f(CC2)
+      await run.sync()
+
+      run.cache = new LocalCache()
+      const CA2 = await run.load(CA.location)
+      expect(CA2.B.C.location).to.equal(CC2.location)
+
+      const CA3 = await run.load(CA.location)
+      expect(CA3.B.C.location).to.equal(CC2.origin)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('calculation from indirect refs may be different', async () => {
+      const run = new Run()
+
+      class A extends Jig {
+        static f (C) { this.n = 1 }
+        static g () { return this.B.g() }
+      }
+      class B { static g () { return this.C.g() } }
+      class C1 { static g () { return 1 } }
+      class C2 { static g () { return 2 } }
+      A.B = B
+      B.C = C1
+
+      const CA = run.deploy(A)
+      run.deploy(B)
+      const CC1 = run.deploy(C1)
+      await run.sync()
+
+      const CC2 = await run.load(CC1.location)
+      CC2.upgrade(C2)
+      CA.f(C2)
+      await run.sync()
+
+      run.cache = new LocalCache()
+      const CA2 = await run.load(CA.location)
+      expect(CA2.g()).to.equal(2)
+
+      const CA3 = await run.load(CA.location)
+      expect(CA3.g()).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('no non-determinism from indirect refs', async () => {
+      const run = new Run()
+
+      // ABC used to reproduce different inner ref states
+      class A extends Jig { static f (C) { this.n = 1 } }
+      class B { }
+      class C { }
+      A.B = B
+      B.C = C
+      const CA = run.deploy(A)
+      await run.sync()
+
+      // D will have a direct reference to that inner ref that is different
+      class D extends Jig { static f (A) { this.n = 1 } }
+      D.C = C
+      const CD = run.deploy(D)
+      await run.sync()
+
+      // Destroy C, giving it two locations
+      const C2 = await run.load(C.location)
+      C2.destroy()
+      await run.sync()
+
+      // Now we have a way of getting to different inner ref states for CA
+      // From cache, CA.B.C = C1 (origin)
+      // From import, CA.B.C = C2 (deleted)
+      CA.f(C2)
+      await run.sync()
+
+      // Use this difference to update D. D afterward will have an updated state.
+      CD.f(CA)
+      await run.sync()
+
+      // Load with and without the cache. The payload should be the same.
+      await run.load(CD.location)
+      run.cache = new LocalCache()
+      await run.load(CD.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('no time travel from indirect refs', async () => {
+      const run = new Run()
+
+      // ABC used to reproduce different inner ref states
+      class A extends Jig { static f (C) { this.n = (this.n || 0) + 1 } }
+      class B { }
+      class C { }
+      A.B = B
+      B.C = C
+      const C1 = run.deploy(C)
+      const CA = run.deploy(A)
+      await run.sync()
+
+      // Destroy C, giving it two locations
+      const C2 = await run.load(C.location)
+      C2.destroy()
+      await run.sync()
+
+      // Now we have a way of getting to different inner ref states for CA
+      // From cache, CA.B.C = C1 (origin)
+      // From import, CA.B.C = C2 (deleted)
+      CA.f(C2)
+      await run.sync()
+
+      // Now load CA from cache and use it in a transaction where C1 is referenced
+      const CA2 = await run.load(CA.location)
+      CA2.f(C1)
+      await CA2.sync()
+
+      // Replay without cache. Make sure there is no time travel, that the
+      // indirect newer ref is not counted as a reference that affects time.
+      run.cache = new LocalCache()
+      await run.load(CA2.location)
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

@@ -1536,7 +1536,7 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.only('updates berry class when used in a transaction', async () => {
+    it('updates berry class when used in a transaction', async () => {
       const run = new Run()
       class B extends Berry { }
       const CB = run.deploy(B)
@@ -1559,9 +1559,19 @@ Line 3`
       a2.f()
       await a2.sync()
 
+      // It's not ideal that when loading from cache, the berry origin
+      // here is different from when we load without cache below. But see
+      // the comment in unify.js about indirect references - making this
+      // consistent does not look worth the trade-offs. The jigs still load
+      // deterministically. The state cache is still the final authority on
+      // jig state. But indirect references may be ahead when replaying a
+      // transaction. We could also fix this by having the jig unwind its
+      // indirect references after an update, but that looks expensive,
+      // or by returning the jig from its cached state, but that also looks
+      // expensive. Having load maybe return a newer state is a trade-off.
       const a3 = await run.load(a2.location)
       expect(a3.Blocation).to.equal(CB.location)
-      expect(a3.b.constructor.location).to.equal(CB.location)
+      expect(a3.b.constructor.location).to.equal(CB.origin)
 
       run.cache = new LocalCache()
       const a4 = await run.load(a2.location)
