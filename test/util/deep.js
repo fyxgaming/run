@@ -10,6 +10,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
+const { mangle } = unmangle
 const { _deepVisit, _deepReplace, _deepClone, _deepEqual } = unmangle(unmangle(Run)._deep)
 
 // ------------------------------------------------------------------------------------------------
@@ -731,7 +732,7 @@ describe('_deepEqual', () => {
     b.n = 1
     a.m = 2
     expect(_deepEqual(a, b)).to.equal(true)
-    expect(_deepEqual(a, b, { _ordering: true })).to.equal(false)
+    expect(_deepEqual(a, b, mangle({ _ordering: true }))).to.equal(false)
   })
 
   // --------------------------------------------------------------------------
