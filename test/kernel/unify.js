@@ -943,11 +943,14 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
-    it('no time travel from indirect refs', async () => {
+    it.only('no time travel from indirect refs', async () => {
       const run = new Run()
 
       // ABC used to reproduce different inner ref states
-      class A extends Jig { static f (C) { this.n = (this.n || 0) + 1 } }
+      class A extends Jig {
+        static f (C) { this.n = 1 }
+        static g (C) { this.n = 2 }
+      }
       class B { }
       class C { }
       A.B = B
@@ -969,7 +972,7 @@ describe('Unify', () => {
 
       // Now load CA from cache and use it in a transaction where C1 is referenced
       const CA2 = await run.load(CA.location)
-      CA2.f(C1)
+      CA2.g(C1)
       await CA2.sync()
 
       // Replay without cache. Make sure there is no time travel, that the
