@@ -1161,23 +1161,6 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if inconsistent worldview from upgrade', async () => {
-      const run = new Run()
-      class A { }
-      class B { }
-      const CA = run.deploy(A)
-      CA.upgrade(B)
-      await run.sync()
-      run.autounify = false
-      const CA2 = await run.load(CA.origin)
-      class C { }
-      C.CA1 = CA
-      C.CA2 = CA2
-      expect(() => run.deploy(C)).to.throw('Inconsistent worldview')
-    })
-
-    // ------------------------------------------------------------------------
-
     it('sorts props deterministically', async () => {
       const run = new Run()
       class A { }

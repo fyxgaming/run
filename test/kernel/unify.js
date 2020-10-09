@@ -981,6 +981,115 @@ describe('Unify', () => {
       await run.load(CA2.location)
     })
   })
+
+  // TODO: REMOVE. AUTOUNIFY EVERYTHING.
+  describe('Inconsistent worldview', () => {
+    it('throws if inconsistent jig classes', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static setOnClass (s) { this.s = s }
+        setOnInstance (t) { this.t = t.toString() }
+      }
+      const CA = run.deploy(A)
+      await CA.sync()
+      const a1 = new CA()
+      const CA2 = await run.load(CA.location)
+      CA2.setOnClass(1)
+      await CA2.sync()
+      expect(CA.location).not.to.equal(CA2.location)
+      const a2 = new CA2()
+      run.autounify = false
+      expect(() => a2.setOnInstance(a1)).to.throw('Inconsistent worldview')
+    })
+
+    // --------------------------------------------------------------------------
+
+    it('throws if inconsistent jig instances', async () => {
+      const run = new Run()
+      class A extends Jig { set (x) { this.x = x } }
+      const a1 = new A()
+      a1.set(1)
+      await a1.sync()
+      const a2 = await run.load(a1.origin)
+      const b = new A()
+      run.autounify = false
+      expect(() => b.set(a1, a2)).to.throw('Inconsistent worldview')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if different read instances', async () => {
+      const run = new Run()
+      class A extends Jig { set (n) { this.n = n } }
+      const a = new A()
+      a.set(1)
+      await a.sync()
+      const a2 = await run.load(a.location)
+      a2.set(2)
+      class B extends Jig {
+        init (a) { this.a = a }
+
+        apply (a2) { this.n = this.a + a2.n }
+      }
+      const b = new B(a)
+      run.autounify = false
+      expect(() => b.apply(a2)).to.throw('Inconsistent worldview')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if read different instance than written', async () => {
+      const run = new Run()
+      class A extends Jig { set (n) { this.n = n } }
+      class B extends Jig { apply (a, a2) { this.n = a.n; a2.set(3) } }
+      const a = new A()
+      a.set(1)
+      await run.sync()
+      const a2 = await run.load(a.location)
+      a2.set(2)
+      const b = new B()
+      run.autounify = false
+      expect(() => b.apply(a, a2)).to.throw('Inconsistent worldview')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if inconsistent worldview from upgrade', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init (n) { this.n = 1 }
+        f () { return this.n }
+      }
+      const CA = run.deploy(A)
+      CA.auth()
+      await CA.sync()
+      const CO = await run.load(CA.origin)
+      expect(CA.location).not.to.equal(CO.location)
+      const a = new CA()
+      const b = new CO()
+      class C extends Jig { init (a, b) { this.n = a.f() + b.f() } }
+      const C2 = run.deploy(C)
+      run.autounify = false
+      expect(() => new C2(a, b)).to.throw('Inconsistent worldview')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if inconsistent worldview from upgrade', async () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      const CA = run.deploy(A)
+      CA.upgrade(B)
+      await run.sync()
+      run.autounify = false
+      const CA2 = await run.load(CA.origin)
+      class C { }
+      C.CA1 = CA
+      C.CA2 = CA2
+      expect(() => run.deploy(C)).to.throw('Inconsistent worldview')
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

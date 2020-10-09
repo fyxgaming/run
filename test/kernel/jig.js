@@ -863,42 +863,6 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if different read instances', async () => {
-      const run = new Run()
-      class A extends Jig { set (n) { this.n = n } }
-      const a = new A()
-      a.set(1)
-      await a.sync()
-      const a2 = await run.load(a.location)
-      a2.set(2)
-      class B extends Jig {
-        init (a) { this.a = a }
-
-        apply (a2) { this.n = this.a + a2.n }
-      }
-      const b = new B(a)
-      run.autounify = false
-      expect(() => b.apply(a2)).to.throw('Inconsistent worldview')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if read different instance than written', async () => {
-      const run = new Run()
-      class A extends Jig { set (n) { this.n = n } }
-      class B extends Jig { apply (a, a2) { this.n = a.n; a2.set(3) } }
-      const a = new A()
-      a.set(1)
-      await run.sync()
-      const a2 = await run.load(a.location)
-      a2.set(2)
-      const b = new B()
-      run.autounify = false
-      expect(() => b.apply(a, a2)).to.throw('Inconsistent worldview')
-    })
-
-    // ------------------------------------------------------------------------
-
     it.skip('throws if read different instances of a jig across a batch', async () => {
       const run = new Run()
       class A extends Jig { set (n) { this.n = n } }
