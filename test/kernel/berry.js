@@ -1179,20 +1179,112 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('method calls read berry class', () => {
-      // TODO
+    it('method call reads berry class', async () => {
+      const run = new Run()
+      class B extends Berry { f () { return 1 } }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: B })
+      class A extends Jig { f (b) { this.n = b.f() } }
+      const a = new A()
+      await run.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 3,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [
+              { $jig: 0 },
+              'f',
+              [{ $jig: 1 }]
+            ]
+          }
+        ]
+      })
+
+      a.f(b)
+      expect(a.n).to.equal(1)
+      await a.sync()
+
+      const a2 = await run.load(a.location)
+      expect(a2.n).to.equal(1)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      expect(a3.n).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('method calls that read dep reads dep', () => {
-      // TODO
+    it('method calls that read dep reads dep', async () => {
+      const run = new Run()
+      function g () { return 1 }
+      const cg = run.deploy(g)
+      class B extends Berry { f () { return g() } }
+      B.deps = { g: cg }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: B })
+      class A extends Jig { f (b) { this.n = b.f() } }
+      const a = new A()
+      await run.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 4,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [
+              { $jig: 0 },
+              'f',
+              [{ $jig: 1 }]
+            ]
+          }
+        ]
+      })
+
+      a.f(b)
+      await a.sync()
+      expect(a.n).to.equal(1)
+
+      const a2 = await run.load(a.location)
+      expect(a2.n).to.equal(1)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      expect(a3.n).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('unify with args', () => {
-      // TODO
+    it('unify with args', async () => {
+      const run = new Run()
+      class B extends Berry { f () { return B.nonce } }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: CB })
+      expect(b.f()).to.equal(1)
+      const CB2 = await run.load(CB.location)
+      CB2.auth()
+      await CB2.sync()
+      class A extends Jig { init (b, CB2) { this.n = b.f() } }
+      const a = new A(b, CB2)
+      expect(a.n).to.equal(2)
+      await a.sync()
+      const a2 = await run.load(a.location)
+      expect(a2.n).to.equal(2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      expect(a3.n).to.equal(2)
     })
   })
 
