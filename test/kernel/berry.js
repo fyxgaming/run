@@ -1571,8 +1571,18 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('berry location does not change with sync', () => {
-      // TODO
+    it('berry location does not change with sync', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: CB })
+      const bLocation = b.location
+      CB.destroy()
+      await CB.sync()
+      await b.constructor.sync()
+      expect(b.constructor.nonce).to.equal(2)
+      expect(b.location).to.equal(bLocation)
     })
 
     // ------------------------------------------------------------------------
