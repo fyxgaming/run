@@ -7,7 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, LocalCache } = Run
+const { Jig, Berry, LocalCache } = Run
 const { expectTx } = require('../env/misc')
 
 // ------------------------------------------------------------------------------------------------
@@ -609,8 +609,13 @@ describe('Call', () => {
     it('undeployed static class', () => testArgumentPass(run => [class A {}], false))
     it('undeployed static function', () => testArgumentPass(run => [function f () { }], false))
 
-    it.skip('berry', () => {
-      // tODO
+    it('berry', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: CB })
+      testArgumentPass(b)
     })
 
     // ------------------------------------------------------------------------
