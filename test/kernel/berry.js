@@ -1619,14 +1619,23 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('returns false for another class', () => {
-      // TODO
+    it('returns false for another class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      class C extends B { }
+      const b = await run.load('abc', { berry: B })
+      expect(b instanceof C).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('returns true for local class', () => {
-      // TODO
+    it('returns true for local class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: CB })
+      expect(b instanceof B).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
