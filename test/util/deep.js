@@ -510,11 +510,11 @@ describe('_deepClone', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('berry', async () => {
+  it('berry', async () => {
     const run = new Run()
-    class A extends Berry { static pluck () { return new A() } }
-    const berry = await run.load('123', A)
-    expect(_deepClone(berry)).to.equal(berry)
+    class B extends Berry { }
+    const b = await run.load('123', { berry: B })
+    expect(_deepClone(b)).to.equal(b)
   })
 
   // --------------------------------------------------------------------------
