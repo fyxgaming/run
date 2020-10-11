@@ -1640,8 +1640,12 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('berry class instanceof code', () => {
-      // TODO
+    it('berry class instanceof code', () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      expect(B instanceof Run.Code).to.equal(false)
+      expect(CB instanceof Run.Code).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
