@@ -12,6 +12,7 @@ const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const { mangle } = unmangle
 const { _deepVisit, _deepReplace, _deepClone, _deepEqual } = unmangle(unmangle(Run)._deep)
+const _sudo = unmangle(Run)._sudo
 
 // ------------------------------------------------------------------------------------------------
 // _deepVisit
@@ -328,8 +329,16 @@ describe('_deepReplace', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('code deps', () => {
-    // TODO
+  it('code deps', () => {
+    const run = new Run()
+    const B = run.deploy(class B { })
+    class C { }
+    class A { static f () { return B.name } }
+    A.deps = { B }
+    const CA = run.deploy(A)
+    const callback = x => x === B && C
+    _sudo(() => _deepReplace(CA, callback))
+    expect(CA.f()).to.equal('C')
   })
 
   // --------------------------------------------------------------------------
