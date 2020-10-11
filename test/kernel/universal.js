@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const { expect } = require('chai')
-const { Jig } = Run
+const { Jig, Berry } = Run
 const Universal = unmangle(Run)._Universal
 
 // ------------------------------------------------------------------------------------------------
@@ -53,8 +53,11 @@ describe('Universal', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('berry', () => {
-      // TODO
+    it('berry', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const b = await run.load('abc', { berry: B })
+      expect(b instanceof Universal).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
