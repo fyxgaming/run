@@ -1650,20 +1650,37 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('cannot fake with setPrototypeOf', () => {
-      // TODO
+    it('cannot fake with setPrototypeOf', () => {
+      new Run() // eslint-disable-line
+      const b = { }
+      class B extends Berry { }
+      Object.setPrototypeOf(b, B.prototype)
+      expect(b instanceof Berry).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('returns true for destroyed class', () => {
-      // TODO
+    it('returns true for destroyed class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: B })
+      CB.destroy()
+      expect(b instanceof CB).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('returns true for authed class', () => {
-      // TODO
+    it('returns true for authed class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: B })
+      CB.auth()
+      await CB.sync()
+      expect(b instanceof CB).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
