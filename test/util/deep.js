@@ -386,6 +386,18 @@ describe('_deepReplace', () => {
     expect(callback.getCall(2).args[0]).to.equal(x.b)
     expect(callback.getCall(3).args[0]).to.equal(x.c)
   })
+
+  // --------------------------------------------------------------------------
+
+  it('no recurse', () => {
+    const x = { y: { z: { } } }
+    const values = []
+    _deepReplace(x, (value, recurse) => {
+      values.push(value)
+      if (value === x.y) recurse(false)
+    })
+    expect(values).to.deep.equal([x, x.y])
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
