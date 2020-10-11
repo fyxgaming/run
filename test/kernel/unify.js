@@ -591,7 +591,7 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('unifies deps', async () => {
+    it('unifies deps', async () => {
       const run = new Run()
       const A2 = run.deploy(class A { })
       A2.destroy()
@@ -605,14 +605,13 @@ describe('Unify', () => {
       class C { static f () { return A.nonce } } // eslint-disable-line
       C.deps = { A: A2 }
       const CC = run.deploy(C)
+      await run.sync()
 
-      // TODO: should throw
-      class D extends Jig { init (n) { this.n = n }}
-      console.log(CB.f())
-      console.log(CC.f())
-      const CD = run.transaction(() => new D(CB.f() + CC.f()))
-      await CD.sync()
-      console.log(CD.n)
+      class D extends Jig { init (n) { this.n = n } }
+      run.unify(CB, CC)
+      const d = run.transaction(() => new D(CB.f() + CC.f()))
+      await d.sync()
+      expect(d.n).to.equal(4)
     })
 
     // ------------------------------------------------------------------------
@@ -629,35 +628,10 @@ describe('Unify', () => {
 
   // --------------------------------------------------------------------------
   // Indirect references
-  //
-  // Direct refs are jigs directly referenced by another jig. They are in the
-  // state. Indirect refs are 2nd-degree jig references, or refs of refs.
-  // Unlike direct refs, they do not need to follow social syncronization
-  // rules with respect to the original jig. If its important for 2nd-degree
-  // jig references to follow social synchronization rules, they should be
-  // saved as direct references.
-  //
-  // To make indirect refs follow social synchronization rules, a jig would
-  // need to store not just its own refs but also its indirect refs, perhaps
-  // in a special refs array. Calculating this looks complex and slow It would
-  // require additional deep traversals. Alternatively, we store state in a
-  // flattened data structure that would include all indirect refs, but this
-  // would be a much larger and less efficient. Overall, the trade-offs of
-  // making indirect refs following social synchronization rules seems not to
-  // be worth it at this time.
-  //
-  // Finally, social synchronization is not applied to every jig anyway, even
-  // if we made indirect refs follow. Jigs temporarily used but not stored
-  // should follow social sync if we wanted to be 100% consistent, but this
-  // would involve every jig tracking every jig they interacted with. It's
-  // too much. We are making a practical trade-off here that only direct
-  // refs follow social synchronization rules, and if other jigs need to, they
-  // should be turned into direct refs. Hopefully this will remain rare because
-  // obviously this is complex to explain.
   // --------------------------------------------------------------------------
 
   describe('Indirect references', () => {
-    it('indirect refs may be loaded the same', async () => {
+    it('indirect refs must be loaded the same', async () => {
       const run = new Run()
 
       class A extends Jig { static f (C) { this.n = 1 } }
@@ -798,300 +772,6 @@ describe('Unify', () => {
       await run.load(CA2.location)
     })
   })
-
-  // TODO: REMOVE. AUTOUNIFY EVERYTHING.
-  /*
-  describe('Inconsistent worldview', () => {
-    it('throws if deploy with inconsistent props', async () => {
-      const run = new Run()
-
-      const A2 = run.deploy(class A { })
-      A2.destroy()
-      await A2.sync()
-      const A1 = await run.load(A2.origin)
-
-      class B { }
-      B.A1 = A1
-      B.A2 = A2
-
-      run.autounify = false
-      expect(() => run.deploy(B)).to.throw('Inconsistent worldview')
-
-      run.uninstall(B)
-      run.autounify = true
-      const B2 = run.deploy(B)
-      await B2.sync()
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if upgrade with inconsistent props', async () => {
-      const run = new Run()
-
-      class A extends Jig { update () { this.n = 1 } }
-      const a2 = new A()
-      a2.update()
-      await a2.sync()
-      const a1 = await run.load(a2.origin)
-
-      const B = run.deploy(class B { })
-
-      class C { }
-      C.set = new Set([a1, a2])
-      run.autounify = false
-      expect(() => B.upgrade(C)).to.throw('Inconsistent worldview')
-
-      run.autounify = true
-      B.upgrade(C)
-      await run.sync()
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if call method with inconsitent arg and jig property', async () => {
-      const run = new Run()
-
-      class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      const a2 = await run.load(a.location)
-      a2.destroy()
-
-      class B extends Jig {
-        init (a) { this.a = a }
-        f (a2) { this.a2 = a2 }
-      }
-
-      const b = new B(a)
-      await b.sync({ inner: false })
-      run.autounify = false
-      b.f(a2)
-      await expect(b.sync()).to.be.rejectedWith('Inconsistent worldview')
-
-      run.autounify = true
-      b.f(a2)
-      await b.sync()
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if call method with two inconsistent class args', async () => {
-      const run = new Run()
-
-      class A extends Jig {
-        init (n) { this.n = n }
-        getN () { return this.n }
-      }
-
-      const a = new A(1)
-      await a.sync()
-
-      const A2 = await run.load(A.location)
-      A2.auth()
-      const b = new A2(2)
-      await b.sync()
-
-      expect(a.constructor.origin).to.equal(b.constructor.origin)
-      expect(a.constructor.location).not.to.equal(b.constructor.location)
-
-      class C extends Jig { set (a, b) { this.an = a.getN(); this.bn = b.getN() } }
-      const c = new C()
-
-      run.autounify = false
-      expect(() => c.set(a, b)).to.throw('Inconsistent worldview')
-
-      run.autounify = true
-      c.set(a, b)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if time travel during publish', async () => {
-      const run = new Run()
-
-      class A extends Jig {
-        init (n) { this.n = n }
-        getN () { return this.n }
-      }
-
-      const a = new A(1)
-      await a.sync()
-
-      const A2 = await run.load(A.location)
-      A2.auth()
-      const b = new A2(2)
-      await b.sync()
-
-      expect(a.constructor.origin).to.equal(b.constructor.origin)
-      expect(a.constructor.location).not.to.equal(b.constructor.location)
-
-      class C extends Jig { set (a, b) { this.an = a.getN(); this.bn = b.n } }
-      const c = new C()
-      run.autounify = false
-      c.set(a, b)
-      await expect(c.sync()).to.be.rejectedWith('Time travel for A')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if time travel during export', async () => {
-      const run = new Run()
-
-      const A = run.deploy(class A extends Jig { })
-      await A.sync()
-      const A2 = await run.load(A.location)
-      A2.auth()
-
-      class B extends Jig { static set (A) { this.name = A.name } }
-      B.A = A2
-      const B2 = run.deploy(B)
-      await run.sync()
-
-      run.autounify = false
-      const tx = new Transaction()
-      tx.update(() => B2.set(A))
-      await expect(tx.export()).to.be.rejectedWith('Time travel for A')
-      tx.rollback()
-
-      run.autounify = true
-      const tx2 = new Transaction()
-      tx2.update(() => B2.set(A))
-      await tx2.export()
-    })
-
-    // ------------------------------------------------------------------------
-
-    // This is allowed references alone are not reads
-    it('allows inconsistent sets of jigs', async () => {
-      const run = new Run()
-
-      class A extends Jig { }
-      const a = new A()
-      await a.sync()
-
-      const A2 = await run.load(A.location)
-      A2.auth()
-      const b = new A2()
-      await b.sync()
-
-      expect(a.constructor.origin).to.equal(b.constructor.origin)
-      expect(a.constructor.location).not.to.equal(b.constructor.location)
-
-      class C extends Jig { set (a, b) { this.a = a; this.b = b } }
-      const c = new C()
-      run.autounify = false
-      c.set(a, b)
-    })
-
-    // --------------------------------------------------------------------------
-
-    it('throws if inconsistent jig classes', async () => {
-      const run = new Run()
-      class A extends Jig {
-        static setOnClass (s) { this.s = s }
-        setOnInstance (t) { this.t = t.toString() }
-      }
-      const CA = run.deploy(A)
-      await CA.sync()
-      const a1 = new CA()
-      const CA2 = await run.load(CA.location)
-      CA2.setOnClass(1)
-      await CA2.sync()
-      expect(CA.location).not.to.equal(CA2.location)
-      const a2 = new CA2()
-      run.autounify = false
-      expect(() => a2.setOnInstance(a1)).to.throw('Inconsistent worldview')
-    })
-
-    // --------------------------------------------------------------------------
-
-    it('throws if inconsistent jig instances', async () => {
-      const run = new Run()
-      class A extends Jig { set (x) { this.x = x } }
-      const a1 = new A()
-      a1.set(1)
-      await a1.sync()
-      const a2 = await run.load(a1.origin)
-      const b = new A()
-      run.autounify = false
-      expect(() => b.set(a1, a2)).to.throw('Inconsistent worldview')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if different read instances', async () => {
-      const run = new Run()
-      class A extends Jig { set (n) { this.n = n } }
-      const a = new A()
-      a.set(1)
-      await a.sync()
-      const a2 = await run.load(a.location)
-      a2.set(2)
-      class B extends Jig {
-        init (a) { this.a = a }
-
-        apply (a2) { this.n = this.a + a2.n }
-      }
-      const b = new B(a)
-      run.autounify = false
-      expect(() => b.apply(a2)).to.throw('Inconsistent worldview')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if read different instance than written', async () => {
-      const run = new Run()
-      class A extends Jig { set (n) { this.n = n } }
-      class B extends Jig { apply (a, a2) { this.n = a.n; a2.set(3) } }
-      const a = new A()
-      a.set(1)
-      await run.sync()
-      const a2 = await run.load(a.location)
-      a2.set(2)
-      const b = new B()
-      run.autounify = false
-      expect(() => b.apply(a, a2)).to.throw('Inconsistent worldview')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if inconsistent worldview from upgrade', async () => {
-      const run = new Run()
-      class A extends Jig {
-        init (n) { this.n = 1 }
-        f () { return this.n }
-      }
-      const CA = run.deploy(A)
-      CA.auth()
-      await CA.sync()
-      const CO = await run.load(CA.origin)
-      expect(CA.location).not.to.equal(CO.location)
-      const a = new CA()
-      const b = new CO()
-      class C extends Jig { init (a, b) { this.n = a.f() + b.f() } }
-      const C2 = run.deploy(C)
-      run.autounify = false
-      expect(() => new C2(a, b)).to.throw('Inconsistent worldview')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if inconsistent worldview from upgrade', async () => {
-      const run = new Run()
-      class A { }
-      class B { }
-      const CA = run.deploy(A)
-      CA.upgrade(B)
-      await run.sync()
-      run.autounify = false
-      const CA2 = await run.load(CA.origin)
-      class C { }
-      C.CA1 = CA
-      C.CA2 = CA2
-      expect(() => run.deploy(C)).to.throw('Inconsistent worldview')
-    })
-  })
-  */
 })
 
 // ------------------------------------------------------------------------------------------------
