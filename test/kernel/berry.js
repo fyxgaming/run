@@ -1576,7 +1576,7 @@ Line 3`
       run.cache = new LocalCache()
       const a4 = await run.load(a2.location)
       expect(a4.Blocation).to.equal(CB.location)
-      expect(a4.b.constructor.location).to.equal(CB.location)
+      expect(a4.b.constructor.location).to.equal(CB.origin)
     })
 
     // ------------------------------------------------------------------------

@@ -230,7 +230,7 @@ describe('Unify', () => {
       const b = new B()
 
       function test (a) {
-        expect(a.constructor).to.equal(a.b.constructor)
+        expect(a.constructor.location).to.equal(a.b.constructor.location)
         expect(a.bset).to.equal(true)
       }
 
@@ -657,7 +657,7 @@ describe('Unify', () => {
   // --------------------------------------------------------------------------
 
   describe('Indirect references', () => {
-    it('different indirect refs may be loaded', async () => {
+    it('indirect refs may be loaded the same', async () => {
       const run = new Run()
 
       class A extends Jig { static f (C) { this.n = 1 } }
@@ -678,7 +678,7 @@ describe('Unify', () => {
 
       run.cache = new LocalCache()
       const CA2 = await run.load(CA.location)
-      expect(CA2.B.C.location).to.equal(CC2.location)
+      expect(CA2.B.C.location).to.equal(CC2.origin)
 
       const CA3 = await run.load(CA.location)
       expect(CA3.B.C.location).to.equal(CC2.origin)
@@ -686,7 +686,7 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
-    it('calculation from indirect refs may be different', async () => {
+    it('calculation from indirect refs must be the same', async () => {
       const run = new Run()
 
       class A extends Jig {
@@ -711,7 +711,7 @@ describe('Unify', () => {
 
       run.cache = new LocalCache()
       const CA2 = await run.load(CA.location)
-      expect(CA2.g()).to.equal(2)
+      expect(CA2.g()).to.equal(1)
 
       const CA3 = await run.load(CA.location)
       expect(CA3.g()).to.equal(1)
@@ -760,7 +760,7 @@ describe('Unify', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('no time travel from indirect refs', async () => {
+    it('no time travel from indirect refs', async () => {
       const run = new Run()
 
       // ABC used to reproduce different inner ref states
