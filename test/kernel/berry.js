@@ -1584,24 +1584,6 @@ Line 3`
       expect(b.constructor.nonce).to.equal(2)
       expect(b.location).to.equal(bLocation)
     })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if inconsistent worldview', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('loads upgraded code dep with original', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('loads updated jig dep with original', () => {
-      // TODO
-    })
   })
 
   // --------------------------------------------------------------------------
