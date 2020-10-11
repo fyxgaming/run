@@ -1590,21 +1590,31 @@ Line 3`
   // Instanceof
   // --------------------------------------------------------------------------
 
-  describe('instanceof', () => {
-    it.skip('returns true for Berry', () => {
-      // TODO
+  describe.only('instanceof', () => {
+    it('returns true for Berry', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const b = await run.load('abc', { berry: B })
+      expect(b instanceof Berry).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('returns true for berry class', () => {
-      // TODO
+    it('returns true for berry class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const b = await run.load('abc', { berry: B })
+      expect(b instanceof B).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('returns true for parent class', () => {
-      // TODO
+    it('returns true for parent class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      class C extends B { }
+      const b = await run.load('abc', { berry: C })
+      expect(b instanceof C).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
