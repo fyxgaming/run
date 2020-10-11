@@ -1590,7 +1590,7 @@ Line 3`
   // Instanceof
   // --------------------------------------------------------------------------
 
-  describe.only('instanceof', () => {
+  describe('instanceof', () => {
     it('returns true for Berry', async () => {
       const run = new Run()
       class B extends Berry { }
@@ -1685,8 +1685,28 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('returns true in init', () => {
-      // TODO
+    it('returns true in pluck', async () => {
+      const run = new Run()
+      class B extends Berry {
+        static async pluck () {
+          const b = new B()
+          if (!(b instanceof Berry)) throw new Error()
+          return b
+        }
+      }
+      await run.load('abc', { berry: B })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns true in init', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init () {
+          if (!(this instanceof Berry)) throw new Error()
+        }
+      }
+      await run.load('abc', { berry: B })
     })
   })
 
