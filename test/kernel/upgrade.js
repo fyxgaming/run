@@ -1221,8 +1221,48 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('rolls back in batch', () => {
-      // TODO
+    it('rolls back in batch', async () => {
+      const run = new Run()
+
+      class A { }
+      class B extends Berry { }
+      class C extends Jig { }
+      C.n = 1
+      function f () { }
+
+      const [CA, CB, CC, cf] = run.transaction(() => {
+        const CA = run.deploy(A)
+        const CB = run.deploy(B)
+        const CC = run.deploy(C)
+        const cf = run.deploy(f)
+        return [CA, CB, CC, cf]
+      })
+      await run.sync()
+
+      const b = await run.load('abc', { berry: B })
+      class A2 { }
+      A2.b = b
+      class C2 extends Jig { }
+      function f2 () { }
+
+      run.transaction(() => {
+        CA.upgrade(A2)
+        CB.destroy()
+        CC.upgrade(C2)
+        cf.upgrade(f2)
+      })
+      stub(run.purse, 'pay').callsFake(x => x)
+      await expect(CA.sync()).to.be.rejected
+
+      expect(CA.name).to.equal('A')
+      expect(CC.name).to.equal('C')
+      expect(cf.name).to.equal('f')
+      expect(CA.nonce).to.equal(1)
+      expect(CB.nonce).to.equal(1)
+      expect(CC.nonce).to.equal(1)
+      expect(cf.nonce).to.equal(1)
+      expect(typeof CA.b).to.equal('undefined')
+      expect(CC.n).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
