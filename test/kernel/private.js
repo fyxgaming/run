@@ -813,71 +813,21 @@ describe('Private', () => {
   // --------------------------------------------------------------------------
 
   describe('Berry', () => {
-    it('can set private variable in init', async () => {
-      const run = new Run()
-      class B extends Berry { init () { this._n = 1 } }
-      await run.load('abc', { berry: B })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('can read private variable externally', async () => {
-      const run = new Run()
-      class B extends Berry { init () { this._n = 1 } }
-      const b = await run.load('abc', { berry: B })
-      expect(b._n).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('can read private variable in berry method', async () => {
+    it('no private properties', async () => {
       const run = new Run()
       class B extends Berry {
         init () { this._n = 1 }
-        f () { return this._n }
+        _g () { return 2 }
       }
-      const b = await run.load('abc', { berry: B })
-      expect(b.f()).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('can read private variable in berry of same class', async () => {
-      const run = new Run()
-      class B extends Berry {
-        init () { this._n = 1 }
-        f (b2) { return b2._n }
+      class A extends Jig {
+        f (b) { return b._n }
+        g (b) { return b._g() }
       }
+      const a = new A()
       const b = await run.load('abc', { berry: B })
-      const b2 = await run.load('def', { berry: B })
-      expect(b.f(b2)).to.equal(1)
+      expect(a.f(b)).to.equal(1)
+      expect(a.g(b)).to.equal(2)
     })
-
-    // ------------------------------------------------------------------------
-
-    it('can read class private variables from instance', async () => {
-      const run = new Run()
-      class B extends Berry {
-        f () { return B._n }
-      }
-      B._n = 1
-      const b = await run.load('abc', { berry: B })
-      expect(b.f()).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if read private variable from another jig', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if read private variable from another berry', () => {
-      // TODO
-    })
-
-    // Throws if call private method from another jig
   })
 })
 
