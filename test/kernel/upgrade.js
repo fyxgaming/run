@@ -1476,8 +1476,14 @@ describe('Upgrade', () => {
   // --------------------------------------------------------------------------
 
   describe('Berry', () => {
-    it.skip('cannot upgrade berry class', () => {
-      // TODO
+    it('cannot upgrade berry class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      class C extends Berry { }
+      const CB = run.deploy(B)
+      expect(() => CB.upgrade(C)).to.throw('Cannot upgrade berry classes')
+      await CB.sync()
+      expect(() => CB.upgrade(C)).to.throw('Cannot upgrade berry classes')
     })
 
     // ------------------------------------------------------------------------
