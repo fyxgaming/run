@@ -434,6 +434,19 @@ describe('Auth', () => {
       await a.sync()
       expect(() => a.f()).not.to.throw()
     })
+
+    // ------------------------------------------------------------------------
+
+    it('auth twice in same transaction', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      run.transaction(() => {
+        CA.auth()
+        CA.auth()
+      })
+      await run.sync()
+    })
   })
 
   // --------------------------------------------------------------------------

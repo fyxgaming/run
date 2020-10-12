@@ -273,12 +273,6 @@ describe('Destroy', () => {
         a.destroy()
       })).to.throw('delete disabled: [jig A] has an unbound new owner or satoshis value')
     })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if destroy then destroy in batch', () => {
-      // TODO
-    })
   })
 
   // --------------------------------------------------------------------------
@@ -440,6 +434,20 @@ describe('Destroy', () => {
       const a = new A()
       await a.sync()
       expect(() => a.f()).not.to.throw()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('destroy twice in a batch', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      await CA.sync()
+      run.transaction(() => {
+        CA.destroy()
+        CA.destroy()
+      })
+      await run.sync()
     })
   })
 
