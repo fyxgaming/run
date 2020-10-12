@@ -440,7 +440,7 @@ describe('Auth', () => {
   // Berry
   // --------------------------------------------------------------------------
 
-  describe.only('Berry', () => {
+  describe('Berry', () => {
     it('can auth berry class', async () => {
       const run = new Run()
       class B extends Berry { }
@@ -471,14 +471,40 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('can auth berry class in jig method', () => {
-      // TODO
+    it('can auth berry class in jig method', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      class A extends Jig { static f (B) { B.auth() } }
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      await run.sync()
+      expectTx({
+        nin: 2,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 1 }, 'f', [{ $jig: 0 }]]
+          }
+        ]
+      })
+      CA.f(CB)
+      await CA.sync()
+      run.cache = new LocalCache()
+      await run.load(CA.location)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if auth undeployed berry class', () => {
-      // TODO
+    it('throws if auth undeployed berry class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const b = await run.load('abc', { berry: B })
+      b.constructor.auth()
+      await expect(run.sync()).to.be.rejectedWith('Bad location')
     })
   })
 })

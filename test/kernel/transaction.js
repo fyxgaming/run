@@ -293,7 +293,7 @@ describe('Transaction', () => {
       class A extends Jig { static send (to) { this.owner = to }; static f () { this.n = 1 } }
       const to = new PrivateKey().toAddress().toString()
       const C = run.deploy(A)
-      const error = 'update disabled: A has new owner'
+      const error = 'update disabled: A has an unbound new owner or satoshis value'
       expect(() => run.transaction(() => { C.send(to); C.f() })).to.throw(error)
     })
 
@@ -304,7 +304,7 @@ describe('Transaction', () => {
       class A extends Jig { static send (to) { this.owner = to } }
       const to = new PrivateKey().toAddress().toString()
       const C = run.deploy(A)
-      const error = 'delete disabled: A has new owner'
+      const error = 'delete disabled: A has an unbound new owner or satoshis value'
       expect(() => run.transaction(() => { C.send(to); C.destroy() })).to.throw(error)
     })
 
@@ -315,7 +315,7 @@ describe('Transaction', () => {
       class A extends Jig { static send (to) { this.owner = to } }
       const to = new PrivateKey().toAddress().toString()
       const C = run.deploy(A)
-      const error = 'auth disabled: A has new owner'
+      const error = 'auth disabled: A has an unbound new owner or satoshis value'
       expect(() => run.transaction(() => { C.send(to); C.auth() })).to.throw(error)
     })
 
