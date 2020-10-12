@@ -1077,8 +1077,57 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('berry reference', () => {
-      // TODO
+    it('berry reference', async () => {
+      const run = new Run()
+
+      function f () { return b.n } // eslint-disable-line
+      const cf = run.deploy(f)
+      await cf.sync()
+      expect(() => cf()).to.throw()
+
+      class B extends Berry { init () { this.n = 1 } }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: B })
+
+      function test (cf) {
+        expect(cf()).to.equal(1)
+        expect(cf.deps.b instanceof Berry).to.equal(true)
+      }
+
+      function g () { return b.n }
+      g.deps = { b }
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              g.toString(),
+              {
+                deps: { b: { $jig: 1 } }
+              }
+            ]
+          }
+        ]
+      })
+
+      cf.upgrade(g)
+      test(cf)
+      await cf.sync()
+
+      const cf2 = await run.load(cf.location)
+      test(cf2)
+
+      run.cache = new LocalCache()
+      const cf3 = await run.load(cf.location)
+      test(cf3)
     })
 
     // ------------------------------------------------------------------------
