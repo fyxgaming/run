@@ -7,7 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, LocalCache } = Run
+const { Jig, LocalCache, Berry } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Caller
@@ -177,8 +177,16 @@ describe('Caller', () => {
 
   // ------------------------------------------------------------------------
 
-  it.skip('berry caller is null in pluck', () => {
-    // TODO
+  it('berry caller is null in pluck', async () => {
+    const run = new Run()
+    class B extends Berry {
+      static async pluck () { return new B(caller) }
+      init (c) { this.c = c }
+    }
+    const CB = run.deploy(B)
+    await CB.sync()
+    const b = await run.load('abc', { berry: CB })
+    expect(b.c).to.equal(null)
   })
 
   // ------------------------------------------------------------------------
