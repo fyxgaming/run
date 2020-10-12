@@ -184,20 +184,37 @@ describe('Caller', () => {
   // --------------------------------------------------------------------------
 
   describe('Static code', () => {
-    it.skip('returns null externally', () => {
-      // TODO
+    it('returns null externally', () => {
+      const run = new Run()
+      function f() { return caller } // eslint-disable-line
+      const cf = run.deploy(f)
+      expect(cf()).to.equal(null)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('returns null for single calling jig', () => {
-      // TODO
+    it('returns null for single calling jig', () => {
+      const run = new Run()
+      function f() { return caller } // eslint-disable-line
+      class A extends Jig { static g () { return f() }}
+      A.deps = { f }
+      const CA = run.deploy(A)
+      expect(CA.g()).to.equal(null)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('returns calling jig when called from jig', () => {
-      // TODO
+    it('returns calling jig when called from jig', () => {
+      it('returns null for single calling jig', () => {
+        const run = new Run()
+        function f() { return caller } // eslint-disable-line
+        class A extends Jig { static g () { return f() }}
+        A.deps = { f }
+        class B extends Jig { static h () { return A.g() } }
+        B.deps = { A }
+        const CB = run.deploy(B)
+        expect(CB.h()).to.equal(null)
+      })
     })
   })
 
