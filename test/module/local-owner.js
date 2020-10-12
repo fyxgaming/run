@@ -85,7 +85,7 @@ describe('LocalOwner', () => {
   // --------------------------------------------------------------------------
 
   describe('nextOwner', () => {
-    it('should always return the address', async () => {
+    it('returns the address', async () => {
       const privateKey = new PrivateKey()
       const owner = new LocalOwner(privateKey)
       expect(await owner.nextOwner()).to.equal(owner.address)
@@ -97,7 +97,7 @@ describe('LocalOwner', () => {
   // --------------------------------------------------------------------------
 
   describe('sign', () => {
-    it('should sign with standard lock', async () => {
+    it('signs with standard lock', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { set () { this.n = 1 }}
       const a = new A()
@@ -108,7 +108,7 @@ describe('LocalOwner', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('should not sign standard lock if different address', async () => {
+    it.only('does not for different address', async () => {
       const run = new Run()
       const run2 = new Run()
       class A extends Jig {
@@ -122,18 +122,20 @@ describe('LocalOwner', () => {
       await a.sync()
 
       // Try signing and then export tx
-      const transaction = new Run.Transaction()
-      transaction.update(() => a.set())
-      const rawtx = await transaction.export()
-      transaction.rollback()
+      const tx = new Run.Transaction()
+      tx.update(() => a.set())
+      const rawtx = await tx.export()
+      tx.rollback()
 
       // Make sure our transaction is not fully signed
+      const bsvtx = new Transaction(rawtx)
+      expect(bsvtx.inputs[0].script.toBuffer().length).to.equal(0)
       await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith('mandatory-script-verify-flag-failed')
 
       // Sign with pubkey 2 and broadcast
       run2.activate()
-      const transaction2 = await run2.import(rawtx)
-      await transaction2.publish()
+      const tx2 = await run2.import(rawtx)
+      await tx2.publish()
     })
 
     // ------------------------------------------------------------------------
