@@ -5,6 +5,7 @@
  */
 
 const { describe, it, afterEach } = require('mocha')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Berry, LocalCache } = Run
@@ -701,38 +702,55 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('Pluck', () => {
-    it.skip('may set sync in pluck', () => {
-      // TODO
+    it('may set sync in pluck', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this.sync = 1 } }
+      const b = await run.load('abc', { berry: B })
+      expect(b.sync).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may set auth in pluck', () => {
-      // TODO
+    it('may set auth in pluck', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this.auth = [] } }
+      const b = await run.load('abc', { berry: B })
+      expect(b.auth).to.deep.equal([])
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may set destroy in pluck', () => {
-      // TODO
+    it('may set destroy in pluck', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this.destroy = null } }
+      const b = await run.load('abc', { berry: B })
+      expect(b.destroy).to.deep.equal(null)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may set non-location bindings in pluck', () => {
-      // TODO
+    it('may set non-location bindings in pluck', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this.owner = true; this.satoshis = false } }
+      const b = await run.load('abc', { berry: B })
+      expect(b.owner).to.deep.equal(true)
+      expect(b.satoshis).to.deep.equal(false)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set location in pluck', () => {
-      // TODO
+    it('throws if set location in pluck', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this.location = 'abc' } }
+      await expect(run.load('abc', { berry: B })).to.be.rejectedWith('Cannot set location')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set reserved props in pluck', () => {
-      // TODO
+    it('throws if set reserved props in pluck', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this.mustBeRecent = true } }
+      await expect(run.load('abc', { berry: B })).to.be.rejectedWith('Cannot set mustBeRecent')
     })
   })
 })
