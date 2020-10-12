@@ -440,8 +440,38 @@ describe('Auth', () => {
   // Berry
   // --------------------------------------------------------------------------
 
-  describe('Berry', () => {
-    it.skip('can auth berry class', () => {
+  describe.only('Berry', () => {
+    it('can auth berry class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'AUTH',
+            data: { $jig: 0 }
+          }
+        ]
+      })
+      CB.auth()
+      await CB.sync()
+      expect(CB.nonce).to.equal(2)
+      const CB2 = await run.load(CB.location)
+      expect(CB2.nonce).to.equal(2)
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      expect(CB3.nonce).to.equal(2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('can auth berry class in jig method', () => {
       // TODO
     })
 
