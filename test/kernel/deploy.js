@@ -1410,8 +1410,32 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('berry deps', () => {
-      // TODO
+    it('berry deps', async () => {
+      const run = new Run()
+
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: CB })
+
+      class A { static f () { return b } }
+      A.deps = { b }
+
+      function test (CA) {
+        expect(A.f()).to.equal(A.deps.b)
+        expect(A.f().location).to.equal(b.location)
+      }
+
+      const CA = run.deploy(A)
+      test(CA)
+      await CA.sync()
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     // ------------------------------------------------------------------------

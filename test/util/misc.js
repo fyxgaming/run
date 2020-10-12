@@ -7,7 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig } = Run
+const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const Sandbox = unmangle(Run)._Sandbox
 const {
@@ -486,8 +486,11 @@ describe('Misc', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('berries', () => {
-      // TODO
+    it('berries', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const b = await run.load('abc', { berry: B })
+      expect(_isArbitraryObject(b)).to.equal(false)
     })
   })
 
@@ -835,6 +838,52 @@ describe('Misc', () => {
       const B = run.deploy(class B { })
       expect(_sameJig(A, B)).to.equal(false)
       expect(_sameJig(B, A)).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns true for same berries', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: CB })
+      const b2 = await run.load('abc', { berry: CB })
+      expect(_sameJig(b, b2)).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('return false for different berries', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+
+      const b = await run.load('abc', { berry: CB })
+      const b2 = await run.load('def', { berry: CB })
+      expect(_sameJig(b, b2)).to.equal(false)
+
+      class C extends Berry { }
+      const CC = run.deploy(C)
+      await CC.sync()
+
+      const c = await run.load('abc', { berry: C })
+      expect(_sameJig(b, c)).to.equal(false)
+
+      const b3 = { location: `${CB.location}_abc` }
+      Object.setPrototypeOf(b3, CB.prototype)
+      expect(_sameJig(b, b3)).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns false for undeployed berries', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const b = await run.load('abc', { berry: B })
+      const b2 = await run.load('abc', { berry: B })
+      expect(_sameJig(b, b2)).to.equal(false)
     })
   })
 
