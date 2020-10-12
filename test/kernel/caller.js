@@ -191,6 +191,17 @@ describe('Caller', () => {
 
   // ------------------------------------------------------------------------
 
+  it('berry caller is null in init', async () => {
+    const run = new Run()
+    class B extends Berry { init (c) { this.c = caller } }
+    const CB = run.deploy(B)
+    await CB.sync()
+    const b = await run.load('abc', { berry: CB })
+    expect(b.c).to.equal(null)
+  })
+
+  // ------------------------------------------------------------------------
+
   it.skip('berry caller is null in load', () => {
     // TODO
   })
