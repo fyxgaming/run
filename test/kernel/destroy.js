@@ -201,19 +201,62 @@ describe('Destroy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('create and destroy in same transaction in batch', () => {
-      // TODO
+    it('create and destroy in same transaction in batch', async () => {
+      const run = new Run()
+      function f () { }
+      const cf = run.transaction(() => {
+        const cf = run.deploy(f)
+        cf.destroy()
+        return cf
+      })
+      await run.sync()
+      function test (cf) {
+        expect(cf.nonce).to.equal(1)
+        expect(cf.location.endsWith('_d0')).to.equal(true)
+      }
+      test(cf)
+      const cf2 = await run.load(cf.location)
+      test(cf2)
+      run.cache = new LocalCache()
+      const cf3 = await run.load(cf.location)
+      test(cf3)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('destroy multiple in a batch', () => {
-      // TODO
+    it('destroy multiple in a batch', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      run.transaction(() => {
+        a.destroy()
+        a.constructor.destroy()
+      })
+      await run.sync()
+      function test (a) {
+        expect(a.nonce).to.equal(2)
+        expect(a.constructor.nonce).to.equal(2)
+        expect(a.location.endsWith('_d0')).to.equal(true)
+        expect(a.constructor.location.endsWith('_d1')).to.equal(true)
+      }
+      test(a)
+      const a2 = await run.load(a.location)
+      test(a2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
     })
 
     // ------------------------------------------------------------------------
 
     it.skip('throws if send then destroy in batch', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if back then destroy in batch', () => {
       // TODO
     })
 
