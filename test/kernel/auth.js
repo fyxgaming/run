@@ -9,7 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
-const { Jig } = Run
+const { Jig, Berry } = Run
 const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
 const { stub } = require('sinon')
@@ -204,8 +204,60 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('auth multiple in a batch', () => {
-
+    it.only('auth multiple in a batch', async () => {
+      const run = new Run()
+      class A { }
+      class B extends Berry { }
+      class C extends Jig { }
+      function f () { }
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      const CC = run.deploy(C)
+      const cf = run.deploy(f)
+      const c = new C()
+      await run.sync()
+      expectTx({
+        nin: 5,
+        nref: 0,
+        nout: 5,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          { op: 'AUTH', data: { $jig: 0 } },
+          { op: 'AUTH', data: { $jig: 1 } },
+          { op: 'AUTH', data: { $jig: 2 } },
+          { op: 'AUTH', data: { $jig: 3 } },
+          { op: 'AUTH', data: { $jig: 4 } }
+        ]
+      })
+      run.transaction(() => {
+        CA.auth()
+        CB.auth()
+        CC.auth()
+        cf.auth()
+        c.auth()
+      })
+      await run.sync()
+      function test (CA, CB, CC, cf, a) {
+        expect(CA.nonce).to.equal(2)
+        expect(CB.nonce).to.equal(2)
+        expect(CC.nonce).to.equal(2)
+        expect(cf.nonce).to.equal(2)
+        expect(c.nonce).to.equal(2)
+      }
+      test(CA, CB, CC, cf, c)
+      const CA2 = await run.load(CA.location)
+      const CB2 = await run.load(CB.location)
+      const CC2 = await run.load(CC.location)
+      const cf2 = await run.load(cf.location)
+      const c2 = await run.load(c.location)
+      test(CA2, CB2, CC2, cf2, c2)
+      const CA3 = await run.load(CA.location)
+      const CB3 = await run.load(CB.location)
+      const CC3 = await run.load(CC.location)
+      const cf3 = await run.load(cf.location)
+      const c3 = await run.load(c.location)
+      test(CA3, CB3, CC3, cf3, c3)
     })
 
     // ------------------------------------------------------------------------
