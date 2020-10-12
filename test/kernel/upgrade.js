@@ -263,8 +263,52 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('upgrades multiple in a batch', () => {
-      // TODO
+    it('upgrades multiple in a batch', async () => {
+      const run = new Run()
+
+      function f () { }
+      class A { }
+      class B extends Jig { }
+
+      const cf = run.deploy(f)
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+
+      await run.sync()
+
+      function f2 () { }
+      class A2 { }
+      class B2 extends Jig { }
+
+      run.transaction(() => {
+        cf.upgrade(f2)
+        CA.upgrade(A2)
+        CB.upgrade(B2)
+      })
+
+      await run.sync()
+
+      function test (cf, CA, CB) {
+        expect(cf.name).to.equal('f2')
+        expect(CA.name).to.equal('A2')
+        expect(CB.name).to.equal('B2')
+        expect(cf.nonce).to.equal(2)
+        expect(CA.nonce).to.equal(2)
+        expect(CB.nonce).to.equal(2)
+      }
+
+      test(cf, CA, CB)
+
+      const cf2 = await run.load(cf.location)
+      const CA2 = await run.load(CA.location)
+      const CB2 = await run.load(CB.location)
+      test(cf2, CA2, CB2)
+
+      run.cache = new LocalCache()
+      const cf3 = await run.load(cf.location)
+      const CA3 = await run.load(CA.location)
+      const CB3 = await run.load(CB.location)
+      test(cf3, CA3, CB3)
     })
 
     // ------------------------------------------------------------------------
