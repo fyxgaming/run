@@ -1475,15 +1475,15 @@ describe('Upgrade', () => {
   // Berry
   // --------------------------------------------------------------------------
 
-  describe('Berry', () => {
-    it('cannot upgrade berry class', async () => {
+  describe.only('Berry', () => {
+    it('cannot upgrade from berry class', async () => {
       const run = new Run()
       class B extends Berry { }
       class C extends Berry { }
       const CB = run.deploy(B)
-      expect(() => CB.upgrade(C)).to.throw('Cannot upgrade berry classes')
+      expect(() => CB.upgrade(C)).to.throw('Cannot upgrade from berry class: B')
       await CB.sync()
-      expect(() => CB.upgrade(C)).to.throw('Cannot upgrade berry classes')
+      expect(() => CB.upgrade(C)).to.throw('Cannot upgrade from berry class: B')
     })
 
     // ------------------------------------------------------------------------
