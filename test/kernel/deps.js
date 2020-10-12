@@ -452,21 +452,33 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it('private deps unavailable from outside', async () => {
+    it('private deps available from outside', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.deps = { _B: 1 }
+      const CA = run.deploy(A)
+      expect(CA.deps._B).to.equal(1)
+      await run.sync()
+      run.cache = new LocalCache()
+      const CA2 = await run.load(CA.location)
+      expect(CA2.deps._B).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('private deps unavailable from another jig', async () => {
       const run = new Run()
       class A extends Jig { }
       A.deps = { _B: 1 }
       class B extends A { static f (A) { return A.deps._B } }
       const CA = run.deploy(A)
       const CB = run.deploy(B)
-      expect(() => CA.deps._B).to.throw('Cannot access private property _B')
       expect(() => CB.f(CA)).to.throw('Cannot access private property _B')
       await run.sync()
       run.cache = new LocalCache()
       const CA2 = await run.load(CA.location)
       const CB2 = await run.load(CB.location)
-      expect(() => CA2.deps._B).to.throw('Cannot access private property _B')
-      expect(() => CB2.f(CA)).to.throw('Cannot access private property _B')
+      expect(() => CB2.f(CA2)).to.throw('Cannot access private property _B')
     })
 
     // ------------------------------------------------------------------------

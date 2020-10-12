@@ -1515,20 +1515,29 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Private', () => {
-    it.skip('apply throws if outside', () => {
-      // TODO
+    it('apply throws if outside', () => {
+      class A { static _f () { return 1 } }
+      const options = { _recordableTarget: true, _recordCalls: true, _privacy: true }
+      const A2 = makeJig(A, options)
+      expect(() => testRecord(() => A2._f())).to.throw('Cannot call private method _f')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('apply allowed in jig methods', () => {
-      // TODO
+    it('apply allowed in jig methods', () => {
+      class A {
+        static _f () { return 1 }
+        static g () { return this._f() }
+      }
+      const options = { _recordableTarget: true, _recordCalls: true, _privacy: true }
+      const A2 = makeJig(A, options)
+      expect(testRecord(() => A2.g())).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
     it('delete allowed if outside', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
+      const A = new Membrane(class A { }, mangle({ _privacy: true }))
       delete A._n
     })
 
