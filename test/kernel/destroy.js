@@ -462,6 +462,12 @@ describe('Destroy', () => {
 
     // ------------------------------------------------------------------------
 
+    it.skip('can destroy berry class in jig method', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('throws if destroy undeployed berry class', () => {
       // TODO
     })
