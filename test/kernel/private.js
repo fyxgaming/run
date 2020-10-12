@@ -7,7 +7,7 @@
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, LocalCache } = Run
+const { Jig, LocalCache, Berry } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Private
@@ -740,14 +740,22 @@ describe('Private', () => {
   // Berry
   // --------------------------------------------------------------------------
 
-  describe('Berry', () => {
-    it.skip('can set private variable in init', () => {
+  describe.only('Berry', () => {
+    it('can set private variable in init', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this._n = 1 } }
+      await run.load('abc', { berry: B })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('can read private variable externally', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('can read private variable in method', () => {
+    it.skip('can read private variable in berry method', () => {
       // TODO
     })
 
