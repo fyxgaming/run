@@ -1393,8 +1393,16 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('cannot upgrade undeployed berry class', () => {
-      // TODO
+    it('cannot upgrade with undeployed berry', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const b = await run.load('abc', { berry: B })
+      class A { }
+      class A2 { }
+      A2.b = b
+      const CA = run.deploy(A)
+      CA.upgrade(A2)
+      await expect(run.sync()).to.be.rejectedWith('Bad location')
     })
   })
 
