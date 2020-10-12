@@ -48,10 +48,10 @@ describe('Private', () => {
 
       // ----------------------------------------------------------------------
 
-      it('throws externally', async () => {
+      it('can read externally', async () => {
         const run = new Run()
         class A extends Jig { init () { this._x = 1 } }
-        function test (a) { expect(() => ('_x' in a)).to.throw('Cannot access private property _x') }
+        function test (a) { expect('_x' in a).to.equal(true) }
         const a = new A()
         test(a)
         await a.sync()
@@ -149,10 +149,10 @@ describe('Private', () => {
 
       // ----------------------------------------------------------------------
 
-      it('throws externally', async () => {
+      it('available externally', async () => {
         const run = new Run()
         class A extends Jig { init () { this._x = 1 } }
-        function test (a) { expect(() => a._x).to.throw('Cannot access private property _x') }
+        function test (a) { expect(a._x).to.equal(1) }
         const a = new A()
         test(a)
         await a.sync()
@@ -250,12 +250,11 @@ describe('Private', () => {
 
       // ----------------------------------------------------------------------
 
-      it('throws externally', async () => {
+      it('available externally', async () => {
         const run = new Run()
         class A extends Jig { init () { this._x = 1 } }
         function test (a) {
-          expect(() => Object.getOwnPropertyDescriptor(a, '_x').value)
-            .to.throw('Cannot access private property _x')
+          expect(Object.getOwnPropertyDescriptor(a, '_x').value).to.equal(1)
         }
         const a = new A()
         test(a)
@@ -315,7 +314,7 @@ describe('Private', () => {
     // ------------------------------------------------------------------------
 
     describe('ownKeys', () => {
-      it('includes internally', async () => {
+      it('includes all internally', async () => {
         const run = new Run()
         class A extends Jig {
           init () { this._x = 1 }
@@ -334,10 +333,10 @@ describe('Private', () => {
 
       // ----------------------------------------------------------------------
 
-      it('filters externally', async () => {
+      it('includes all externally', async () => {
         const run = new Run()
         class A extends Jig { init () { this._x = 1 } }
-        function test (a) { expect(Reflect.ownKeys(a).includes('_x')).to.equal(false) }
+        function test (a) { expect(Reflect.ownKeys(a).includes('_x')).to.equal(true) }
         const a = new A()
         test(a)
         await a.sync()
@@ -415,10 +414,13 @@ describe('Private', () => {
 
       // ----------------------------------------------------------------------
 
-      it('throws externally', async () => {
+      it('throws if call externally', async () => {
         const run = new Run()
         class A extends Jig { _f () { return 1 } }
-        function test (a) { expect(() => a._f()).to.throw('Cannot access private property _f') }
+        function test (a) {
+          expect(typeof a._f).to.equal('function')
+          expect(() => a._f()).to.throw('Cannot call private method _f')
+        }
         const a = new A()
         test(a)
         await a.sync()
@@ -478,12 +480,45 @@ describe('Private', () => {
   // --------------------------------------------------------------------------
 
   describe('Code', () => {
-    it('accessible from same class', async () => {
+    it('available from same class', async () => {
       const run = new Run()
       class A extends Jig { static f () { return this._n } }
       A._n = 1
       const CA = run.deploy(A)
       function test (CA) { expect(CA.f()).to.equal(1) }
+      test(CA)
+      await CA.sync()
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('properties available externally', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      A._n = 1
+      const CA = run.deploy(A)
+      function test (CA) { expect(CA._n).to.equal(1) }
+      test(CA)
+      await CA.sync()
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('methods uncallable externally', async () => {
+      const run = new Run()
+      class A extends Jig { static _f () { return 1 } }
+      const CA = run.deploy(A)
+      function test (CA) { expect(() => CA._f()).to.throw('Cannot call private method _f') }
       test(CA)
       await CA.sync()
       const CA2 = await run.load(CA.location)
@@ -516,23 +551,7 @@ describe('Private', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws from outside', async () => {
-      const run = new Run()
-      class A extends Jig { static _f () { return 1 } }
-      const CA = run.deploy(A)
-      function test (CA) { expect(() => CA._f()).to.throw('Cannot access private property _f') }
-      test(CA)
-      await CA.sync()
-      const CA2 = await run.load(CA.location)
-      test(CA2)
-      run.cache = new LocalCache()
-      const CA3 = await run.load(CA.location)
-      test(CA3)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('accessible from instance', async () => {
+    it('available from instance', async () => {
       const run = new Run()
       class A extends Jig {
         static _g () { return 1 }
@@ -602,7 +621,7 @@ describe('Private', () => {
   // --------------------------------------------------------------------------
 
   describe('Static Code', () => {
-    it('accessible from outside', async () => {
+    it('available from outside', async () => {
       const run = new Run()
       class A { }
       A._n = 1
@@ -619,7 +638,7 @@ describe('Private', () => {
 
     // ------------------------------------------------------------------------
 
-    it('accessible from another jig', async () => {
+    it('available from another jig', async () => {
       const run = new Run()
       class A { }
       A._n = 1
@@ -645,7 +664,7 @@ describe('Private', () => {
   // --------------------------------------------------------------------------
 
   describe('Inner objects', () => {
-    it('get throws', async () => {
+    it('available externally', async () => {
       const run = new Run()
       class A extends Jig { }
       A.a = []
@@ -655,9 +674,9 @@ describe('Private', () => {
       A.m.set(10, { _c: 1 })
       const CA = run.deploy(A)
       function test (CA) {
-        expect(() => CA.a._a).to.throw('Cannot access private property _a')
-        expect(() => CA.m._b).to.throw('Cannot access private property _b')
-        expect(() => CA.m.get(10)._c).to.throw('Cannot access private property _c')
+        expect(CA.a._a).to.equal(1)
+        expect(CA.m._b).to.equal(1)
+        expect(CA.m.get(10)._c).to.equal(1)
       }
       await CA.sync()
       test(CA)
@@ -670,7 +689,39 @@ describe('Private', () => {
 
     // ------------------------------------------------------------------------
 
-    it('ownKeys filters', async () => {
+    it('throws from another jig', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.a = []
+      A.a._a = 1
+      A.m = new Map()
+      A.m._b = 1
+      A.m.set(10, { _c: 1 })
+      const CA = run.deploy(A)
+      class B extends Jig {
+        static f () { return A.a._a }
+        static g () { return A.a._b }
+        static h () { return A.m.get(10)._c }
+      }
+      B.deps = { A: CA }
+      const CB = run.deploy(B)
+      function test (CB) {
+        expect(() => CB.f()).to.throw('Cannot access private property _a')
+        expect(() => CB.g()).to.throw('Cannot access private property _b')
+        expect(() => CB.h()).to.throw('Cannot access private property _c')
+      }
+      await CB.sync()
+      test(CB)
+      const CB2 = await run.load(B.location)
+      test(CB2)
+      run.cache = new LocalCache()
+      const CB3 = await run.load(B.location)
+      test(CB3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('ownKeys includes all externally and internally', async () => {
       const run = new Run()
       class A extends Jig {
         init () { this.o = { _n: 1 } }
@@ -679,7 +730,7 @@ describe('Private', () => {
       const a = new A()
       await a.sync()
       function test (a) {
-        expect(Reflect.ownKeys(a.o).includes('_n')).to.equal(false)
+        expect(Reflect.ownKeys(a.o).includes('_n')).to.equal(true)
         expect(a.keys().includes('_n')).to.equal(true)
       }
       test(a)
@@ -688,6 +739,31 @@ describe('Private', () => {
       run.cache = new LocalCache()
       const a3 = await run.load(a.location)
       test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('ownKeys filters from another jig', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init () { this.o = { _n: 1 } }
+        keys () { return Reflect.ownKeys(this.o) }
+      }
+      const a = new A()
+      class B extends Jig { static f (a) { return Reflect.ownKeys(a.o) } }
+      const CB = run.deploy(B)
+      await run.sync()
+      function test (CB, a) {
+        expect(CB.f(a).includes('_n')).to.equal(false)
+      }
+      test(CB, a)
+      const CB2 = await run.load(CB.location)
+      const a2 = await run.load(a.location)
+      test(CB2, a2)
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      const a3 = await run.load(a.location)
+      test(CB3, a3)
     })
 
     // ------------------------------------------------------------------------
@@ -740,7 +816,7 @@ describe('Private', () => {
   // Berry
   // --------------------------------------------------------------------------
 
-  describe.only('Berry', () => {
+  describe('Berry', () => {
     it('can set private variable in init', async () => {
       const run = new Run()
       class B extends Berry { init () { this._n = 1 } }
@@ -749,8 +825,11 @@ describe('Private', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('can read private variable externally', () => {
-      // TODO
+    it('can read private variable externally', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this._n = 1 } }
+      const b = await run.load('abc', { berry: B })
+      expect(b._n).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
@@ -782,6 +861,8 @@ describe('Private', () => {
     it.skip('throws if read private variable from another berry', () => {
       // TODO
     })
+
+    // Throws if call private method from another jig
   })
 })
 

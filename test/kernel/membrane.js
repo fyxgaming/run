@@ -1515,9 +1515,21 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Private', () => {
-    it('delete throws if outside', () => {
+    it.skip('apply throws if outside', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('apply allowed in jig methods', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('delete allowed if outside', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
-      expect(() => { delete A._n }).to.throw('Cannot delete private property _n')
+      delete A._n
     })
 
     // ------------------------------------------------------------------------
@@ -1542,10 +1554,10 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('define throws if outside', () => {
+    it('define allowed if outside', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
-      expect(() => Object.defineProperty(A, '_n', desc)).to.throw('Cannot define private property _n')
+      Object.defineProperty(A, '_n', desc)
     })
 
     // ------------------------------------------------------------------------
@@ -1580,10 +1592,10 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get throws if outside', () => {
+    it('get allowed if outside', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
       _sudo(() => { A._n = 1 })
-      expect(() => A._n).to.throw('Cannot access private property _n')
+      expect(A._n).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
@@ -1617,9 +1629,9 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('getOwnPropertyDescriptor throws if outside', () => {
+    it('getOwnPropertyDescriptor allowed if outside', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
-      expect(() => Object.getOwnPropertyDescriptor(A, '_n')).to.throw('Cannot access private property _n')
+      Object.getOwnPropertyDescriptor(A, '_n')
     })
 
     // ------------------------------------------------------------------------
@@ -1644,9 +1656,9 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('has throws if outside', () => {
+    it('has allowed if outside', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
-      expect(() => '_n' in A).to.throw('Cannot access private property _n')
+      expect('_n' in A).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -1671,10 +1683,10 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('ownKeys filters private properties if outside', () => {
+    it('ownKeys includes all properties if outside', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
       _sudo(() => { A._n = 1 })
-      expect(Object.getOwnPropertyNames(A).includes('_n')).to.equal(false)
+      expect(Object.getOwnPropertyNames(A).includes('_n')).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -1700,9 +1712,9 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set throws if outside', () => {
+    it('set allowed if outside', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
-      expect(() => { A._n = 1 }).to.throw('Cannot set private property _n')
+      A._n = 1
     })
 
     // ------------------------------------------------------------------------
