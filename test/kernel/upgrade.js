@@ -9,7 +9,7 @@ const { stub } = require('sinon')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig } = Run
+const { Jig, Berry } = Run
 const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
 const { Code, LocalCache } = unmangle(Run)
@@ -741,8 +741,57 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('berry reference', () => {
+    it('berry reference', async () => {
+      const run = new Run()
 
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      await CA.sync()
+
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: B })
+
+      class A2 extends Jig { }
+      A2.b = b
+
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              A2.toString(),
+              {
+                b: { $jig: 1 },
+                deps: { Jig: { $jig: 2 } }
+              }
+            ]
+          }
+        ]
+      })
+
+      function test (CA) {
+        expect(CA.b instanceof Berry).to.equal(true)
+        expect(CA.b.location).to.equal(b.location)
+      }
+
+      CA.upgrade(A2)
+      await CA.sync()
+      test(CA)
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     // ------------------------------------------------------------------------
