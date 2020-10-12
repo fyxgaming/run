@@ -1052,8 +1052,57 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('berries', () => {
-      // TODO
+    it('berries', async () => {
+      const run = new Run()
+
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: B })
+
+      class A extends Jig { }
+      A.B = B
+      A.b = b
+
+      function test (CA) {
+        expect(CA.B instanceof Code).to.equal(true)
+        expect(CA.B.location).to.equal(CB.location)
+        expect(CA.b instanceof Berry).to.equal(true)
+        expect(CA.b.location).to.equal(b.location)
+      }
+
+      expectTx({
+        nin: 0,
+        nref: 3,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              A.toString(),
+              {
+                B: { $jig: 0 },
+                b: { $jig: 1 },
+                deps: { Jig: { $jig: 2 } }
+              }
+            ]
+          }
+        ]
+      })
+
+      const CA = run.deploy(A)
+      await CA.sync()
+      test(CA)
+
+      await run.sync()
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     // ------------------------------------------------------------------------
@@ -1739,8 +1788,30 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('copies berry presets', async () => {
-      // TODO
+    it('copies berry presets', async () => {
+      const run = new Run()
+
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await run.load('abc', { berry: B })
+
+      const network = run.blockchain.network
+      class A extends Jig { }
+      A.presets = {
+        [network]: {
+          location: randomLocation(),
+          origin: randomLocation(),
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0,
+          b
+        }
+      }
+      const CA = run.deploy(A)
+
+      expect(CA.b instanceof Berry).to.equal(true)
+      expect(CA.b.location).to.equal(b.location)
     })
 
     // ------------------------------------------------------------------------
