@@ -204,7 +204,7 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('auth multiple in a batch', async () => {
+    it('auth multiple in a batch', async () => {
       const run = new Run()
       class A { }
       class B extends Berry { }
@@ -262,14 +262,41 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if send then auth in batch', () => {
-      // TODO
+    it('throws if send then auth in batch', async () => {
+      const run = new Run()
+      class A extends Jig { send (owner) { this.owner = owner } }
+      const a = new A()
+      await a.sync()
+      expect(() => run.transaction(() => {
+        a.send(run.purse.address)
+        a.auth()
+      })).to.throw('auth disabled: [jig A] has an unbound new owner or satoshis value')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if destroy then auth in batch', () => {
-      // TODO
+    it('throws if back then auth in batch', async () => {
+      const run = new Run()
+      class A extends Jig { back () { this.satoshis = 1000 } }
+      const a = new A()
+      await a.sync()
+      expect(() => run.transaction(() => {
+        a.back()
+        a.auth()
+      })).to.throw('auth disabled: [jig A] has an unbound new owner or satoshis value')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if destroy then auth in batch', async () => {
+      const run = new Run()
+      class A extends Jig { static send (owner) { this.owner = owner } }
+      const CA = run.deploy(A)
+      await CA.sync()
+      expect(() => run.transaction(() => {
+        CA.destroy()
+        CA.auth()
+      })).to.throw('Cannot auth destroyed jigs')
     })
   })
 
