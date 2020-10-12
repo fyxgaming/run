@@ -1475,27 +1475,42 @@ describe('Upgrade', () => {
   // Berry
   // --------------------------------------------------------------------------
 
-  describe.only('Berry', () => {
+  describe('Berry', () => {
     it('cannot upgrade from berry class', async () => {
       const run = new Run()
       class B extends Berry { }
       class C extends Berry { }
       const CB = run.deploy(B)
-      expect(() => CB.upgrade(C)).to.throw('Cannot upgrade from berry class: B')
+      const error = 'Cannot upgrade from berry class: B'
+      expect(() => CB.upgrade(C)).to.throw(error)
       await CB.sync()
-      expect(() => CB.upgrade(C)).to.throw('Cannot upgrade from berry class: B')
+      expect(() => CB.upgrade(C)).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('cannot upgrade code to berry class', () => {
-      // TODO
+    it('cannot upgrade static code to berry class', async () => {
+      const run = new Run()
+      class A { }
+      class B extends Berry { }
+      const CA = run.deploy(A)
+      const error = 'Cannot upgrade to berry class: B'
+      expect(() => CA.upgrade(B)).to.throw(error)
+      await CA.sync()
+      expect(() => CA.upgrade(B)).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('cannot upgrade jig class to berry class', () => {
-      // TODO
+    it('cannot upgrade jig class to berry class', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      class B extends Berry { }
+      const CA = run.deploy(A)
+      const error = 'Cannot change staticness of code in upgrade'
+      expect(() => CA.upgrade(B)).to.throw(error)
+      await CA.sync()
+      expect(() => CA.upgrade(B)).to.throw(error)
     })
   })
 })
