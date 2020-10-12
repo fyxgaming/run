@@ -313,8 +313,56 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('upgrades in same transaction as create', () => {
-      // TODO
+    it('deploy and upgrade in same transaction', async () => {
+      const run = new Run()
+      class A { }
+      class B { }
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              A.toString(),
+              { deps: { } }
+            ]
+          },
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              B.toString(),
+              { deps: { } }
+            ]
+          }
+        ]
+      })
+
+      const C = run.transaction(() => {
+        const C = run.deploy(A)
+        C.upgrade(B)
+        return C
+      })
+
+      function test (C) {
+        expect(C.name).to.equal('B')
+        expect(C.nonce).to.equal(1)
+      }
+
+      await C.sync()
+      test(C)
+
+      const C2 = await run.load(C.location)
+      test(C2)
+
+      run.cache = new LocalCache()
+      const C3 = await run.load(C.location)
+      test(C3)
     })
   })
 
