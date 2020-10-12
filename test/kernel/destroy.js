@@ -9,7 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
-const { Jig } = Run
+const { Jig, Berry } = Run
 const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
 const { stub } = require('sinon')
@@ -456,20 +456,98 @@ describe('Destroy', () => {
   // --------------------------------------------------------------------------
 
   describe('Berry', () => {
-    it.skip('can destroy berry class', () => {
-      // TODO
+    it('can destroy berry class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 0,
+        nout: 0,
+        ndel: 1,
+        ncre: 0,
+        exec: [
+          {
+            op: 'DESTROY',
+            data: { $jig: 0 }
+          }
+        ]
+      })
+
+      async function test (CB) {
+        expect(CB.location.endsWith('_d0')).to.equal(true)
+        expect(CB.nonce).to.equal(2)
+        await run.load('abc', { berry: CB })
+      }
+
+      CB.destroy()
+      await CB.sync()
+      await test(CB)
+
+      const CB2 = await run.load(CB.location)
+      await test(CB2)
+
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      await test(CB3)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('can destroy berry class in jig method', async () => {
-      // TODO
+    it('can destroy berry class in jig method', async () => {
+      const run = new Run()
+
+      class A extends Jig { f (b) { b.constructor.destroy() } }
+      const a = new A()
+      await a.sync()
+
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+
+      expectTx({
+        nin: 2,
+        nref: 2,
+        nout: 1,
+        ndel: 1,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'f', [{ $jig: 2 }]]
+          }
+        ]
+      })
+
+      async function test (CB) {
+        expect(CB.location.endsWith('_d0')).to.equal(true)
+        expect(CB.nonce).to.equal(2)
+        await run.load('abc', { berry: CB })
+      }
+
+      const b = await run.load('abc', { berry: CB })
+      a.f(b)
+      await a.sync()
+      await test(CB)
+
+      const CB2 = await run.load(CB.location)
+      await test(CB2)
+
+      run.cache = new LocalCache()
+      const CB3 = await run.load(CB.location)
+      await test(CB3)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if destroy undeployed berry class', () => {
-      // TODO
+    it('throws if destroy undeployed berry class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const b = await run.load('abc', { berry: B })
+      b.constructor.destroy()
+      await expect(run.sync()).to.be.rejectedWith('Bad location')
     })
   })
 })

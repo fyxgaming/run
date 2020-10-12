@@ -414,6 +414,18 @@ Line 3`
       expect(b.location).to.equal(CB.location + '_abc')
       expect(c.location).to.equal(CB.location + '_123')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('may pluck with destroyed berry class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      CB.destroy()
+      await CB.sync()
+      const b = await run.load('abc', { berry: CB })
+      expect(b.location).to.equal(CB.location + '_' + 'abc')
+    })
   })
 
   // --------------------------------------------------------------------------
