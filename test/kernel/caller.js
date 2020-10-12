@@ -205,16 +205,14 @@ describe('Caller', () => {
     // ------------------------------------------------------------------------
 
     it('returns calling jig when called from jig', () => {
-      it('returns null for single calling jig', () => {
-        const run = new Run()
-        function f() { return caller } // eslint-disable-line
-        class A extends Jig { static g () { return f() }}
-        A.deps = { f }
-        class B extends Jig { static h () { return A.g() } }
-        B.deps = { A }
-        const CB = run.deploy(B)
-        expect(CB.h()).to.equal(null)
-      })
+      const run = new Run()
+      function f() { return caller } // eslint-disable-line
+      class A extends Jig { static g () { return f() }}
+      A.deps = { f }
+      class B extends Jig { static h () { return A.g() } }
+      B.deps = { A }
+      const CB = run.deploy(B)
+      expect(CB.h()).to.equal(CB)
     })
   })
 
@@ -248,8 +246,22 @@ describe('Caller', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('berry caller is same as static code', () => {
-    // TODO
+    it('berry caller is same as static code', async () => {
+      const run = new Run()
+      class B extends Berry { f() { return caller } } // eslint-disable-line
+      run.deploy(B)
+      await run.sync()
+      const b = await run.load('abc', { berry: B })
+
+      class A extends Jig { static g () { return b.f() }}
+      A.deps = { b }
+      const CA = run.deploy(A)
+      expect(CA.g()).to.equal(null)
+
+      class C extends Jig { static h () { return A.g() } }
+      C.deps = { A }
+      const CC = run.deploy(C)
+      expect(CC.h()).to.equal(CC)
     })
   })
 })
