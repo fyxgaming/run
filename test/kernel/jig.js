@@ -863,7 +863,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if read different instances of a jig across a batch', async () => {
+    it('throws if read different instances of a jig across a batch', async () => {
       const run = new Run()
       class A extends Jig { set (n) { this.n = n } }
       class B extends Jig { apply (a) { this.n = a.n } }
@@ -872,18 +872,17 @@ describe('Jig', () => {
       await run.sync()
       const a2 = await run.load(a.location)
       a2.set(2)
-      run.transaction.begin()
-      const b = new B()
-      const b2 = new B()
-      b.apply(a)
-      b2.apply(a2)
-      run.transaction.end()
-      await expect(run.sync()).to.be.rejectedWith(`read different locations of same jig ${a.origin}`)
+      expect(() => run.transaction(() => {
+        const b = new B()
+        const b2 = new B()
+        b.apply(a)
+        b2.apply(a2)
+      })).to.throw('Inconsistent worldview')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if write difference locations of the same jig', async () => {
+    it('throws if write difference locations of the same jig', async () => {
       const run = new Run()
       class Store extends Jig { set (x) { this.x = x } }
       class Setter extends Jig { set (a, x) { a.set(x) } }
@@ -894,15 +893,15 @@ describe('Jig', () => {
       const a2 = await run.load(a.location)
       a2.set(2)
       await a2.sync()
-      run.transaction.begin()
-      b.set(a, 3)
-      expect(() => b.set(a2, 3)).to.throw('Different location for [jig Store] found in set()')
-      run.transaction.rollback()
+      expect(() => run.transaction(() => {
+        b.set(a, 3)
+        b.set(a2, 3)
+      })).to.throw('Inconsistent worldview')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if write difference instances but same location of the same jig', async () => {
+    it('throws if write difference instances but same location of the same jig', async () => {
       const run = new Run()
       class Store extends Jig { set (x) { this.x = x } }
       class Setter extends Jig { set (a, x) { a.set(x) } }
@@ -911,10 +910,10 @@ describe('Jig', () => {
       a.set(1)
       await a.sync()
       const a2 = await run.load(a.location)
-      run.transaction.begin()
-      b.set(a, 2)
-      expect(() => b.set(a2, 3)).to.throw('Different location for [jig Store] found in set()')
-      run.transaction.rollback()
+      expect(() => run.transaction(() => {
+        b.set(a, 2)
+        b.set(a2, 3)
+      })).to.throw('Inconsistent worldview')
     })
   })
 
