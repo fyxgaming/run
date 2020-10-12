@@ -28,7 +28,7 @@ describe('LocalOwner', () => {
   describe('constructor', () => {
     it('create and set properties', () => {
       const privateKey = new PrivateKey('testnet')
-      const owner = new LocalOwner({ privkey: privateKey })
+      const owner = new LocalOwner(privateKey)
 
       expect(owner.privkey).to.equal(privateKey.toString())
       expect(owner.bsvPrivateKey).to.equal(privateKey)
@@ -47,7 +47,7 @@ describe('LocalOwner', () => {
 
     it('private key strings', () => {
       const privateKey = new PrivateKey('mainnet')
-      const owner = new LocalOwner({ privkey: privateKey.toString() })
+      const owner = new LocalOwner(privateKey.toString())
       expect(owner.privkey).to.equal(privateKey.toString())
       expect(owner.pubkey).to.equal(privateKey.publicKey.toString())
       expect(owner.address).to.equal(privateKey.toAddress().toString())
@@ -66,8 +66,8 @@ describe('LocalOwner', () => {
     // ------------------------------------------------------------------------
 
     it('throws if bad owner', () => {
-      expect(() => new LocalOwner({ privkey: '123' })).to.throw('Invalid private key: "123"')
-      expect(() => new LocalOwner({ privkey: new PrivateKey().publicKey })).to.throw('Invalid private key')
+      expect(() => new LocalOwner('123')).to.throw('Invalid private key: "123"')
+      expect(() => new LocalOwner(new PrivateKey().publicKey)).to.throw('Invalid private key')
     })
 
     // ------------------------------------------------------------------------
@@ -75,8 +75,8 @@ describe('LocalOwner', () => {
     it('throws if wrong network', () => {
       const privateKey = new PrivateKey('mainnet')
       const blockchain = new Mockchain()
-      expect(() => new LocalOwner({ privkey: privateKey, blockchain })).to.throw('Private key network mismatch')
-      expect(() => new LocalOwner({ privkey: privateKey.toString(), blockchain })).to.throw('Private key network mismatch')
+      expect(() => new LocalOwner(privateKey, blockchain.network)).to.throw('Private key network mismatch')
+      expect(() => new LocalOwner(privateKey.toString(), blockchain.network)).to.throw('Private key network mismatch')
     })
   })
 
@@ -87,7 +87,7 @@ describe('LocalOwner', () => {
   describe('nextOwner', () => {
     it('should always return the address', async () => {
       const privateKey = new PrivateKey()
-      const owner = new LocalOwner({ privkey: privateKey })
+      const owner = new LocalOwner(privateKey)
       expect(await owner.nextOwner()).to.equal(owner.address)
     })
   })
