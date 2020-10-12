@@ -250,14 +250,28 @@ describe('Destroy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if send then destroy in batch', () => {
-      // TODO
+    it('throws if send then destroy in batch', async () => {
+      const run = new Run()
+      class A extends Jig { send (owner) { this.owner = owner } }
+      const a = new A()
+      await a.sync()
+      expect(() => run.transaction(() => {
+        a.send(run.owner.address)
+        a.destroy()
+      })).to.throw('delete disabled: [jig A] has an unbound new owner or satoshis value')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if back then destroy in batch', () => {
-      // TODO
+    it('throws if back then destroy in batch', async () => {
+      const run = new Run()
+      class A extends Jig { back () { this.satoshis = 0 } }
+      const a = new A()
+      await a.sync()
+      expect(() => run.transaction(() => {
+        a.back()
+        a.destroy()
+      })).to.throw('delete disabled: [jig A] has an unbound new owner or satoshis value')
     })
 
     // ------------------------------------------------------------------------
