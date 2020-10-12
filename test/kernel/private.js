@@ -657,6 +657,25 @@ describe('Private', () => {
       const CB3 = await run.load(CB.location)
       test(CA3, CB3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('access through static helper', async () => {
+      const run = new Run()
+      function read (A) { return A._n }
+      class A extends Jig { static f () { return read(this) } }
+      A.deps = { read }
+      A._n = 1
+      const CA = run.deploy(A)
+      await CA.sync()
+      function test (A) { expect(A.f()).to.equal(1) }
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -790,29 +809,6 @@ describe('Private', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Misc
-  // --------------------------------------------------------------------------
-
-  describe('Misc', () => {
-    it('access through static helper', async () => {
-      const run = new Run()
-      function read (A) { return A._n }
-      class A extends Jig { static f () { return read(this) } }
-      A.deps = { read }
-      A._n = 1
-      const CA = run.deploy(A)
-      await CA.sync()
-      function test (A) { expect(A.f()).to.equal(1) }
-      test(CA)
-      const CA2 = await run.load(CA.location)
-      test(CA2)
-      run.cache = new LocalCache()
-      const CA3 = await run.load(CA.location)
-      test(CA3)
-    })
-  })
-
-  // --------------------------------------------------------------------------
   // Berry
   // --------------------------------------------------------------------------
 
@@ -834,20 +830,39 @@ describe('Private', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('can read private variable in berry method', () => {
-      // TODO
+    it('can read private variable in berry method', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init () { this._n = 1 }
+        f () { return this._n }
+      }
+      const b = await run.load('abc', { berry: B })
+      expect(b.f()).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('can read private variable in berry of same class', () => {
-      // TODO
+    it('can read private variable in berry of same class', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init () { this._n = 1 }
+        f (b2) { return b2._n }
+      }
+      const b = await run.load('abc', { berry: B })
+      const b2 = await run.load('def', { berry: B })
+      expect(b.f(b2)).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('can read class private variables from instance', () => {
-      // TODO
+    it('can read class private variables from instance', async () => {
+      const run = new Run()
+      class B extends Berry {
+        f () { return B._n }
+      }
+      B._n = 1
+      const b = await run.load('abc', { berry: B })
+      expect(b.f()).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
