@@ -175,7 +175,7 @@ describe('LocalOwner', () => {
 
     // ----------------------------------------------------------------------
 
-    it.skip('should sign 2-3 group lock', async () => {
+    it.only('should sign 2-3 group lock', async () => {
       const run = new Run()
       await run.deploy(Group).sync()
       const run2 = new Run()
@@ -191,19 +191,15 @@ describe('LocalOwner', () => {
       await a.sync()
 
       // Sign with pubkey 1 and export tx
-      run.transaction.begin()
-      a.set()
-      await run.transaction.pay()
-      await run.transaction.sign()
-      const tx = run.transaction.export()
-      run.transaction.rollback()
+      const tx = new Run.Transaction()
+      tx.update(() => a.set())
+      const rawtx = await tx.export()
+      tx.rollback()
 
       // Sign with pubkey 2 and broadcast
       run2.activate()
-      await run2.transaction.import(tx)
-      await run2.transaction.sign()
-      run2.transaction.end()
-      await run2.sync()
+      const tx2 = await run2.import(rawtx)
+      await tx2.publish()
     })
 
     // ----------------------------------------------------------------------
