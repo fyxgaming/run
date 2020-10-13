@@ -1,7 +1,7 @@
 /**
- * universal.js
+ * creation.js
  *
- * Tests for lib/kernel/universal.js
+ * Tests for lib/kernel/creation.js
  */
 
 const { describe, it } = require('mocha')
@@ -9,19 +9,19 @@ const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const { expect } = require('chai')
 const { Jig, Berry } = Run
-const Universal = unmangle(Run)._Universal
+const Creation = unmangle(Run)._Creation
 
 // ------------------------------------------------------------------------------------------------
-// Universal
+// Creation
 // ------------------------------------------------------------------------------------------------
 
-describe('Universal', () => {
+describe('Creation', () => {
   describe('hasInstance', () => {
     it('jig', () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
       const a = new A()
-      expect(a instanceof Universal).to.equal(true)
+      expect(a instanceof Creation).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -30,7 +30,7 @@ describe('Universal', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
-      expect(CA instanceof Universal).to.equal(true)
+      expect(CA instanceof Creation).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -39,7 +39,7 @@ describe('Universal', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
-      expect(CA instanceof Universal).to.equal(true)
+      expect(CA instanceof Creation).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -48,7 +48,7 @@ describe('Universal', () => {
       const run = new Run()
       function f () { }
       const cf = run.deploy(f)
-      expect(cf instanceof Universal).to.equal(true)
+      expect(cf instanceof Creation).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -57,7 +57,7 @@ describe('Universal', () => {
       const run = new Run()
       class B extends Berry { }
       const b = await run.load('abc', { berry: B })
-      expect(b instanceof Universal).to.equal(true)
+      expect(b instanceof Creation).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -65,17 +65,17 @@ describe('Universal', () => {
     it('undeployed code', () => {
       class A { }
       class B extends Jig { }
-      expect(A instanceof Universal).to.equal(false)
-      expect(B instanceof Universal).to.equal(false)
+      expect(A instanceof Creation).to.equal(false)
+      expect(B instanceof Creation).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
 
     it('non-jigs', () => {
-      expect(1 instanceof Universal).to.equal(false)
-      expect(undefined instanceof Universal).to.equal(false)
-      expect(null instanceof Universal).to.equal(false)
-      expect({} instanceof Universal).to.equal(false)
+      expect(1 instanceof Creation).to.equal(false)
+      expect(undefined instanceof Creation).to.equal(false)
+      expect(null instanceof Creation).to.equal(false)
+      expect({} instanceof Creation).to.equal(false)
     })
   })
 })

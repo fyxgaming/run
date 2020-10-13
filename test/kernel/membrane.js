@@ -16,7 +16,7 @@ const Rules = unmangle(Run)._Rules
 const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const Unbound = unmangle(Run)._Unbound
 const _sudo = unmangle(Run)._sudo
-const JIGS = unmangle(unmangle(Run)._Universal)._JIGS
+const JIG_OBJECTS = unmangle(unmangle(Run)._Creation)._JIG_OBJECTS
 const { _RESERVED_PROPS, _RESERVED_CODE_METHODS, _RESERVED_JIG_METHODS } = unmangle(Run)
 const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
 
@@ -51,7 +51,7 @@ function makeJig (x, options = {}) {
     jig.owner = null
     jig.satoshis = null
   })
-  JIGS.add(jig)
+  JIG_OBJECTS.add(jig)
   if (typeof x === 'function') {
     const desc = { value: jig, configurable: true, enumerable: true, writable: true }
     Object.defineProperty(x.prototype, 'constructor', desc)
@@ -194,7 +194,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get returns universals directly', () => {
+    it('get returns creations directly', () => {
       const jig = makeJig({})
       class A { }
       A.jig = jig
@@ -261,7 +261,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('getOwnPropertyDescriptor returns universals directly', () => {
+    it('getOwnPropertyDescriptor returns creations directly', () => {
       const jig = makeJig({})
       class A { }
       A.jig = jig
@@ -405,7 +405,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('intrinsicIn keeps membrane for universals', () => {
+    it('intrinsicIn keeps membrane for creations', () => {
       const jig = makeJig({})
       const s = new Set()
       const s2 = new Membrane(s)
@@ -424,7 +424,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('intrinsicOut keeps membrane for universals', () => {
+    it('intrinsicOut keeps membrane for creations', () => {
       const jig = makeJig({})
       const m2 = new Membrane(new Map())
       m2.set(1, jig)
@@ -2023,7 +2023,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get universals are not cows', () => {
+    it('get creations are not cows', () => {
       const a = makeJig({})
       const b = makeJig({ a }, { _cowProps: true })
       expect(b.a).to.equal(a)
@@ -2459,7 +2459,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('universals are intact from outside', () => {
+    it('creations are intact from outside', () => {
       const options = { _recordableTarget: true, _recordCalls: true }
       class A { }
       const A2 = makeJig(A, options)

@@ -151,11 +151,11 @@ describe('Call', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Static Code
+  // Sidekick Code
   // --------------------------------------------------------------------------
 
-  describe('Static Code', () => {
-    it('calls method with passthrough args on arbitrary code', async () => {
+  describe('Sidekick Code', () => {
+    it('calls method with passthrough args', async () => {
       const run = new Run()
 
       class A {

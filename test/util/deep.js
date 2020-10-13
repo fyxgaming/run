@@ -479,7 +479,7 @@ describe('_deepClone', () => {
 
   // --------------------------------------------------------------------------
 
-  it('jig', () => {
+  it('jig object', () => {
     new Run() // eslint-disable-line
     class A extends Jig { }
     const a = new A()
@@ -488,7 +488,7 @@ describe('_deepClone', () => {
 
   // --------------------------------------------------------------------------
 
-  it('code', () => {
+  it('jig code', () => {
     const run = new Run()
     class A extends Jig { }
     const CA = run.deploy(A)
@@ -496,7 +496,7 @@ describe('_deepClone', () => {
   })
   // --------------------------------------------------------------------------
 
-  it('static code', () => {
+  it('sidekick code', () => {
     const run = new Run()
     function f () { }
     const cf = run.deploy(f)

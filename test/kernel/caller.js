@@ -180,10 +180,10 @@ describe('Caller', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Static code
+  // Sidekick code
   // --------------------------------------------------------------------------
 
-  describe('Static code', () => {
+  describe('Sidekick code', () => {
     it('returns null externally', () => {
       const run = new Run()
       function f() { return caller } // eslint-disable-line
@@ -246,7 +246,7 @@ describe('Caller', () => {
 
     // ------------------------------------------------------------------------
 
-    it('berry caller is same as static code', async () => {
+    it('berry caller is same as sidekick code', async () => {
       const run = new Run()
       class B extends Berry { f() { return caller } } // eslint-disable-line
       run.deploy(B)

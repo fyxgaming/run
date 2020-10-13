@@ -1296,7 +1296,7 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if upgrade normal jig class to static code', () => {
+    it('throws if upgrade jig class to sidekick code', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
@@ -1306,7 +1306,7 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if upgrade static code to normal jig class', () => {
+    it('throws if upgrade sidekick code to jig class', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -1489,7 +1489,7 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it('cannot upgrade static code to berry class', async () => {
+    it('cannot upgrade sidekick class to berry class', async () => {
       const run = new Run()
       class A { }
       class B extends Berry { }

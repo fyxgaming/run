@@ -2588,7 +2588,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('may be called from static code', () => {
+    it.skip('may be called from sidekick code', () => {
       // TODO
     })
 

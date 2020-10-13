@@ -44,10 +44,10 @@ describe('Rules', () => {
 
   // --------------------------------------------------------------------------
 
-  describe('static code', () => {
+  describe('sidekick code', () => {
     it('creates rules', () => {
       const isClass = Math.random() < 0.5
-      const rules = unmangle(Rules._staticCode(isClass))
+      const rules = unmangle(Rules._sidekickCode(isClass))
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
@@ -99,9 +99,9 @@ describe('Rules', () => {
 
   // --------------------------------------------------------------------------
 
-  describe('jig instance', () => {
+  describe('jig object', () => {
     it('creates rules', () => {
-      const rules = unmangle(Rules._jigInstance())
+      const rules = unmangle(Rules._jigObject())
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
@@ -126,9 +126,9 @@ describe('Rules', () => {
 
   // --------------------------------------------------------------------------
 
-  describe('berry instance', () => {
+  describe('berry object', () => {
     it('creates rules', () => {
-      const rules = unmangle(Rules._berryInstance())
+      const rules = unmangle(Rules._berryObject())
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)

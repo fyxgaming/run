@@ -568,10 +568,10 @@ describe('Deps', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Static code
+  // Sidekick code
   // --------------------------------------------------------------------------
 
-  describe('Static code', () => {
+  describe('Sidekick code', () => {
     it('deps cannot be changed', () => {
       const run = new Run()
       class A { static f () { A.deps.n = 1 } }
@@ -610,7 +610,7 @@ describe('Deps', () => {
   // --------------------------------------------------------------------------
 
   describe('Sync', () => {
-    it('code', async () => {
+    it('jig code', async () => {
       const run = new Run()
       class A extends Jig { static f () { this.n = 1 } }
       class B extends Jig { static g() { return A.n } } // eslint-disable-line
@@ -629,7 +629,7 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it('static code', async () => {
+    it('sidekick code', async () => {
       const run = new Run()
       class A { static bnonce () { return B.nonce }}
       class B { }
@@ -651,7 +651,7 @@ describe('Deps', () => {
   // --------------------------------------------------------------------------
 
   describe('Unify', () => {
-    it('code deps with args', async () => {
+    it('jig code deps with args', async () => {
       const run = new Run()
       class A extends Jig { static g () { this.n = 1 } }
       class B extends Jig { static f () { return A.n } } // eslint-disable-line
@@ -669,7 +669,7 @@ describe('Deps', () => {
 
     // ------------------------------------------------------------------------
 
-    it('static code deps with upgraded caller', async () => {
+    it('sidekick code deps with upgraded caller', async () => {
       const run = new Run()
       class A { static f () { return B.n } } // eslint-disable-line
       class B1 { }

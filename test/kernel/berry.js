@@ -1390,7 +1390,7 @@ Line 3`
     // ------------------------------------------------------------------------
 
     it('may create jig in berry method', async () => {
-      // Berries are static code
+      // Berries are sidekick code
       const run = new Run()
       class A extends Jig { }
       class B extends Berry { f () { return new A() } }
@@ -1402,7 +1402,7 @@ Line 3`
     // ------------------------------------------------------------------------
 
     it('may update jig in berry method', async () => {
-      // Berries are static code
+      // Berries are sidekick code
       const run = new Run()
       class A extends Jig { g () { this.n = 1 } }
       class B extends Berry { f (a) { a.g() } }
@@ -1873,7 +1873,7 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('may call from static code', () => {
+    it.skip('may call from sidekick code', () => {
       // TODO
     })
   })

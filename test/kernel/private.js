@@ -617,10 +617,10 @@ describe('Private', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Static Code
+  // Sidekick Code
   // --------------------------------------------------------------------------
 
-  describe('Static Code', () => {
+  describe('Sidekick Code', () => {
     it('available from outside', async () => {
       const run = new Run()
       class A { }

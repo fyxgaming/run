@@ -1,7 +1,7 @@
 /**
- * static.js
+ * sidekick.js
  *
- * Tests for static code
+ * Tests for sidekicks
  */
 
 const { describe, it, afterEach } = require('mocha')
@@ -14,7 +14,7 @@ const { Jig, LocalCache } = Run
 // Static Code
 // ------------------------------------------------------------------------------------------------
 
-describe('Static Code', () => {
+describe('Static code', () => {
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
   // Deactivate the current run instance. This stops leaks across tests.
