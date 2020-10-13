@@ -18,6 +18,8 @@ const { LocalOwner, Mockchain, Jig, Group, StandardLock } = Run
 describe('LocalOwner', () => {
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
+  // Uninstall the group each time. We need a fresh install.
+  afterEach(() => Run.instance && Run.instance.uninstall(Group))
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
@@ -175,7 +177,7 @@ describe('LocalOwner', () => {
 
     // ----------------------------------------------------------------------
 
-    it.only('should sign 2-3 group lock', async () => {
+    it('should sign 2-3 group lock', async () => {
       const run = new Run()
       await run.deploy(Group).sync()
       const run2 = new Run()

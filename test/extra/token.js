@@ -20,7 +20,6 @@ describe('Token', () => {
   // Wait for every test to finish. This makes debugging easier.
   // Don't deactivate the blockchain between tests. The token needs to stay deployed
   afterEach(() => Run.instance && Run.instance.sync())
-
   // Reapply the default blockchain if there is one. This is used for capturing protocol txns.
   let blockchain = null
   beforeEach(() => { blockchain = Run.defaults.blockchain = blockchain || Run.defaults.blockchain })
@@ -94,7 +93,7 @@ describe('Token', () => {
       const run2 = new Run()
       class HackToken extends TestToken { }
       run2.deploy(HackToken)
-      await expect(run2.sync()).to.be.rejectedWith('mandatory-script-verify-flag-failed')
+      await expect(run2.sync()).to.be.rejectedWith('Missing signature for TestToken')
     })
 
     // ------------------------------------------------------------------------

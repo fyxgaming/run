@@ -685,7 +685,7 @@ describe('Transaction', () => {
       new Run() // eslint-disable-line
       const tx = new Transaction()
       tx.update(() => {})
-      expect(() => tx.publish()).to.throw('Nothing to publish')
+      expect(() => tx.publish()).to.throw('Nothing to commit')
     })
 
     // ------------------------------------------------------------------------
@@ -924,7 +924,7 @@ describe('Transaction', () => {
     it('throws if empty', () => {
       new Run() // eslint-disable-line
       const tx = new Transaction()
-      expect(() => tx.export()).to.throw('Nothing to export')
+      expect(() => tx.export()).to.throw('Nothing to commit')
     })
   })
 
