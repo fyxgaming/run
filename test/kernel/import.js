@@ -1,5 +1,5 @@
 /**
- * verify.js
+ * import.js
  *
  * Tests for the verification aspect of transaction importing
  */
@@ -14,10 +14,10 @@ const { payFor } = require('../env/misc')
 const { Jig, Mockchain, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
-// Verify
+// Import
 // ------------------------------------------------------------------------------------------------
 
-describe('Verify', () => {
+describe('Import', () => {
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
   // Deactivate the current run instance. This stops leaks across tests.
