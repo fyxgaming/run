@@ -62,7 +62,7 @@ if (COVER) {
   Run.cover('hex')
   Run.cover('Token')
 
-  // Imports do not work in cover mode so we disable preverification
+  // Replays do not work in cover mode so we disable preverification
   Run.defaults.preverify = false
 }
 

@@ -1,7 +1,7 @@
 /**
- * import.js
+ * replay.js
  *
- * Tests for the verification aspect of transaction importing
+ * Tests for replaying and verifying transactions
  */
 
 const { describe, it, afterEach } = require('mocha')
@@ -14,10 +14,10 @@ const { payFor } = require('../env/misc')
 const { Jig, Mockchain, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
-// Import
+// Replay
 // ------------------------------------------------------------------------------------------------
 
-describe('Import', () => {
+describe('Replay', () => {
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
   // Deactivate the current run instance. This stops leaks across tests.
@@ -73,7 +73,7 @@ describe('Import', () => {
     expect(hasErrorMessage('State mismatch')).to.equal(true)
   })
 
-  // TODO: Pre-verify using import
+  // TODO: Pre-verify using replay
   // TODO: Even better payload mismatch errors in pre-verify
   // TODO: New test for pre-verify
   // TODO: Document pre-verify is meant to catch run bugs, not consensus issues

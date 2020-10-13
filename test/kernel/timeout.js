@@ -50,7 +50,7 @@ describe('Timeout', () => {
 
   // ------------------------------------------------------------------------
 
-  it('import', async () => {
+  it('replay', async () => {
     const run = new Run()
     class A extends Jig { inc () { this.n = (this.n || 0) + 1 } }
     const a = new A()
@@ -60,7 +60,7 @@ describe('Timeout', () => {
     run.timeout = 10
     const txid = a.location.slice(0, 64)
     const rawtx = await run.blockchain.fetch(txid)
-    await expect(run.import(rawtx)).to.be.rejectedWith('import timeout')
+    await expect(run.import(rawtx)).to.be.rejectedWith('replay timeout')
   })
 
   // ------------------------------------------------------------------------

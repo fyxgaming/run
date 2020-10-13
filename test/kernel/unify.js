@@ -718,7 +718,7 @@ describe('Unify', () => {
 
       // Now we have a way of getting to different inner ref states for CA
       // From cache, CA.B.C = C1 (origin)
-      // From import, CA.B.C = C2 (deleted)
+      // From replay, CA.B.C = C2 (deleted)
       CA.f(C2)
       await run.sync()
 
@@ -757,7 +757,7 @@ describe('Unify', () => {
 
       // Now we have a way of getting to different inner ref states for CA
       // From cache, CA.B.C = C1 (origin)
-      // From import, CA.B.C = C2 (deleted)
+      // From replay, CA.B.C = C2 (deleted)
       CA.f(C2)
       await run.sync()
 

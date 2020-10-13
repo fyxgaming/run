@@ -277,7 +277,7 @@ describe('Sync', () => {
       await a.sync()
       run.cache = new LocalCache()
       let syncPromise = null
-      // Stub the cache set so that we know we're somewhere in the middle of importing
+      // Stub the cache set so that we know we're somewhere in the middle of replaying
       stub(run.cache, 'set').callsFake(async () => { syncPromise = run.sync() })
       await run.load(a.location)
       await syncPromise
