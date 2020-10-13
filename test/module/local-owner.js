@@ -108,7 +108,7 @@ describe('LocalOwner', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('does not for different address', async () => {
+    it('does not for different address', async () => {
       const run = new Run()
       const run2 = new Run()
       class A extends Jig {
