@@ -119,9 +119,9 @@ describe('Group', () => {
 
   it('assign as jig owner', async () => {
     const run = new Run()
+    await run.deploy(Group)
     class A extends Jig { init (owner) { this.owner = owner } }
     const group = new Group([run.owner.pubkey])
-    await run.deploy(Group) // TODO: Remove once deployed
     const a = new A(group)
     await a.sync()
     function test (a) { expect(a.owner instanceof Group).to.equal(true) }
