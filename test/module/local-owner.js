@@ -140,18 +140,19 @@ describe('LocalOwner', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('should sign without locks', async () => {
+    it('should sign P2PKH without locks', async () => {
       const run = new Run()
       class A extends Jig { set () { this.n = 1 }}
       const a = new A()
       await a.sync()
-      run.transaction.begin()
-      a.set()
-      const tx = run.transaction.export()
-      const prevtx = await run.blockchain.fetch(a.origin.slice(0, 64))
-      const signed = await run.owner.sign(tx.toString('hex'), [prevtx.outputs[2]], [])
+      const tx = new Run.Transaction()
+      tx.update(() => a.set())
+      const rawtx = await tx.export()
+      const prevrawtx = await run.blockchain.fetch(a.origin.slice(0, 64))
+      const prevtx = new Transaction(prevrawtx)
+      const signed = await run.owner.sign(rawtx, [prevtx.outputs[2]], [])
       expect(new Transaction(signed).inputs[0].script.toBuffer().length > 0).to.equal(true)
-      run.transaction.rollback()
+      tx.rollback()
     })
   })
 
