@@ -160,9 +160,10 @@ describe('LocalOwner', () => {
   // Group lock
   // --------------------------------------------------------------------------
 
-  describe.skip('Group', () => {
+  describe('Group', () => {
     it('should sign 1-1 group lock', async () => {
       const run = new Run()
+      await run.deploy(Group).sync()
       class A extends Jig {
         init (owner) { this.owner = owner }
         set () { this.n = 1 }
@@ -174,8 +175,9 @@ describe('LocalOwner', () => {
 
     // ----------------------------------------------------------------------
 
-    it('should sign 2-3 group lock', async () => {
+    it.skip('should sign 2-3 group lock', async () => {
       const run = new Run()
+      await run.deploy(Group).sync()
       const run2 = new Run()
       const run3 = new Run()
       class A extends Jig {
@@ -206,8 +208,9 @@ describe('LocalOwner', () => {
 
     // ----------------------------------------------------------------------
 
-    it('should not sign group lock if already signed', async () => {
+    it.skip('should not sign group lock if already signed', async () => {
       const run = new Run()
+      await run.deploy(Group).sync()
       class A extends Jig {
         init (owner) { this.owner = owner }
         set () { this.n = 1 }
@@ -233,8 +236,9 @@ describe('LocalOwner', () => {
 
     // ----------------------------------------------------------------------
 
-    it('should not sign group lock if not our pubkey', async () => {
+    it.skip('should not sign group lock if not our pubkey', async () => {
       const run = new Run()
+      await run.deploy(Group).sync()
       const run2 = new Run()
       class A extends Jig {
         init (owner) { this.owner = owner }
