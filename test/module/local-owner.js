@@ -175,7 +175,7 @@ describe('LocalOwner', () => {
 
     // ----------------------------------------------------------------------
 
-    it('should sign 2-3 group lock', async () => {
+    it('should sign 2-3 group lock using export and import', async () => {
       const run = new Run({ blockchain: await Run.getExtrasBlockchain() })
       const run2 = new Run({ blockchain: await Run.getExtrasBlockchain() })
       const run3 = new Run({ blockchain: await Run.getExtrasBlockchain() })
@@ -200,6 +200,32 @@ describe('LocalOwner', () => {
       run2.activate()
       const tx2 = await run2.import(rawtx)
       await tx2.publish()
+    })
+
+    // ----------------------------------------------------------------------
+
+    it('should sign 2-3 group lock by changing owners', async () => {
+      const run = new Run({ blockchain: await Run.getExtrasBlockchain() })
+      const run2 = new Run({ blockchain: await Run.getExtrasBlockchain() })
+      const run3 = new Run({ blockchain: await Run.getExtrasBlockchain() })
+      class A extends Jig {
+        init (owner) { this.owner = owner }
+        set () { this.n = 1 }
+      }
+
+      // Create a jig with a 2-3 group owner
+      run.activate()
+      const a = new A(new Group([run.owner.pubkey, run2.owner.pubkey, run3.owner.pubkey], 2))
+      await a.sync()
+
+      // Sign with pubkey 1 and export tx
+      const tx = new Run.Transaction()
+      tx.update(() => a.set())
+      await tx.pay()
+      await tx.sign()
+      run.owner = run2.owner
+      await tx.sign()
+      await tx.publish()
     })
 
     // ----------------------------------------------------------------------
