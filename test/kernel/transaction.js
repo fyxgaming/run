@@ -1769,18 +1769,23 @@ describe('Transaction', () => {
   // --------------------------------------------------------------------------
 
   describe('Getters', () => {
-    it('outputs', () => {
+    it('outputs', async () => {
       new Run() // eslint-disable-line
-      class A extends Jig { }
+      class A extends Jig { set (n) { this.n = n } }
+
       const a = new A()
+      const b = new A()
+
       const tx = new Transaction()
+      const c = tx.update(() => new A())
+      tx.update(() => c.set(2))
       tx.update(() => a.auth())
-      const b = tx.update(() => new A())
+      tx.update(() => b.set(1))
+      tx.update(() => b.destroy(1))
+
       expect(tx.outputs.length).to.equal(2)
       expect(tx.outputs[0]).to.equal(a)
-      expect(tx.outputs[1]).to.equal(b)
-      tx.update(() => b.destroy())
-      expect(tx.outputs).to.deep.equal([a])
+      expect(tx.outputs[1]).to.equal(c)
     })
 
     // ------------------------------------------------------------------------
@@ -1889,6 +1894,12 @@ describe('Transaction', () => {
       await tx.export()
       expect(tx.outputs.length).to.equal(1)
       expect(tx.deletes.length).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('dynamically updates', () => {
+      // TODO
     })
   })
 
