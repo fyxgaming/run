@@ -8,6 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { Address, PrivateKey, PublicKey, Transaction } = require('bsv')
+const { COVER } = require('../env/config')
 const Run = require('../env/run')
 const { LocalOwner, Mockchain, Jig, Group, StandardLock } = Run
 
@@ -18,8 +19,6 @@ const { LocalOwner, Mockchain, Jig, Group, StandardLock } = Run
 describe('LocalOwner', () => {
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
-  // Uninstall the group each time. We need a fresh install.
-  afterEach(() => Run.instance && Run.instance.uninstall(Group))
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
@@ -164,8 +163,7 @@ describe('LocalOwner', () => {
 
   describe('Group', () => {
     it('should sign 1-1 group lock', async () => {
-      const run = new Run()
-      await run.deploy(Group).sync()
+      const run = new Run({ blockchain: await Run.getExtrasBlockchain() })
       class A extends Jig {
         init (owner) { this.owner = owner }
         set () { this.n = 1 }
@@ -178,10 +176,9 @@ describe('LocalOwner', () => {
     // ----------------------------------------------------------------------
 
     it('should sign 2-3 group lock', async () => {
-      const run = new Run()
-      await run.deploy(Group).sync()
-      const run2 = new Run()
-      const run3 = new Run()
+      const run = new Run({ blockchain: await Run.getExtrasBlockchain() })
+      const run2 = new Run({ blockchain: await Run.getExtrasBlockchain() })
+      const run3 = new Run({ blockchain: await Run.getExtrasBlockchain() })
       class A extends Jig {
         init (owner) { this.owner = owner }
         set () { this.n = 1 }
@@ -199,6 +196,7 @@ describe('LocalOwner', () => {
       tx.rollback()
 
       // Sign with pubkey 2 and broadcast
+      if (COVER) return
       run2.activate()
       const tx2 = await run2.import(rawtx)
       await tx2.publish()
@@ -206,9 +204,9 @@ describe('LocalOwner', () => {
 
     // ----------------------------------------------------------------------
 
-    it.skip('should not sign group lock if already signed', async () => {
-      const run = new Run()
-      await run.deploy(Group).sync()
+    it.only('should not sign group lock if already signed', async () => {
+      const run = new Run({ blockchain: await Run.getExtrasBlockchain() })
+
       class A extends Jig {
         init (owner) { this.owner = owner }
         set () { this.n = 1 }
@@ -219,25 +217,24 @@ describe('LocalOwner', () => {
       await a.sync()
 
       // Sign with pubkey 1 and export tx
-      run.transaction.begin()
-      a.set()
-      await run.transaction.pay()
+      const tx = new Run.Transaction()
+      tx.update(() => a.set())
+      await tx.pay()
 
       // Sign more than once
-      await run.transaction.sign()
-      await run.transaction.sign()
-      await run.transaction.sign()
+      await tx.sign()
+      await tx.sign()
+      await tx.sign()
 
-      run.transaction.end()
-      await run.sync()
+      await tx.publish()
     })
 
     // ----------------------------------------------------------------------
 
     it.skip('should not sign group lock if not our pubkey', async () => {
-      const run = new Run()
-      await run.deploy(Group).sync()
-      const run2 = new Run()
+      const run = new Run({ blockchain: await Run.getExtrasBlockchain() })
+      const run2 = new Run({ blockchain: await Run.getExtrasBlockchain() })
+
       class A extends Jig {
         init (owner) { this.owner = owner }
         set () { this.n = 1 }
@@ -249,21 +246,20 @@ describe('LocalOwner', () => {
       await a.sync()
 
       // Try signing and then export tx
-      run.transaction.begin()
-      a.set()
-      await run.transaction.pay()
-      await run.transaction.sign()
-      const tx = run.transaction.export()
-      run.transaction.rollback()
+      const tx = new Run.Transaction()
+      tx.update(() => a.set())
+      await tx.pay()
+      await tx.sign()
+      const rawtx = await tx.export()
+      tx.rollback()
 
       // Make sure our transaction is not fully signed
-      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith('mandatory-script-verify-flag-failed')
+      await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith('mandatory-script-verify-flag-failed')
 
       // Sign with pubkey 2 and broadcast
       run2.activate()
-      await run2.transaction.import(tx)
-      run2.transaction.end()
-      await run2.sync()
+      const tx2 = await run2.transaction.import(rawtx)
+      await tx2.publish()
     })
   })
 })

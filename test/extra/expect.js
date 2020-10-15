@@ -26,8 +26,8 @@ describe('expect', () => {
 
   // --------------------------------------------------------------------------
 
-  it('toBe', () => {
-    new Run() // eslint-disable-line
+  it('toBe', async () => {
+    new Run({ blockchain: await Run.getExtrasBlockchain() }) // eslint-disable-line
     expect(() => Run.expect(1).toBe(1)).not.to.throw()
     expect(() => Run.expect('hello').toBe('hello')).not.to.throw()
     expect(() => Run.expect(null).toBe(null)).not.to.throw()

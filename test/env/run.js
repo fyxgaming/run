@@ -66,6 +66,25 @@ if (COVER) {
   Run.defaults.preverify = false
 }
 
+// If on mock, pre-deploy the built-in classes to a common mockchain and make
+// that mockchain available for those tests that need it.
+Run.getExtrasBlockchain = async function () {
+  if (Run.defaults.network !== 'mock') return undefined
+  if (Run.EXTRAS_MOCKCHAIN) return Run.EXTRAS_MOCKCHAIN
+  const run = new Run({ network: 'mock' })
+  run.transaction(() => {
+    run.deploy(Run.asm)
+    run.deploy(Run.expect)
+    run.deploy(Run.Group)
+    run.deploy(Run.hex)
+    run.deploy(Run.Token)
+  })
+  await run.sync()
+  run.deactivate()
+  Run.EXTRAS_MOCKCHAIN = run.blockchain
+  return Run.EXTRAS_MOCKCHAIN
+}
+
 // ------------------------------------------------------------------------------------------------
 
 module.exports = Run

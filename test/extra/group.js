@@ -118,8 +118,7 @@ describe('Group', () => {
   // --------------------------------------------------------------------------
 
   it('assign as jig owner', async () => {
-    const run = new Run()
-    await run.deploy(Group)
+    const run = new Run({ blockchain: await Run.getExtrasBlockchain() })
     class A extends Jig { init (owner) { this.owner = owner } }
     const group = new Group([run.owner.pubkey])
     const a = new A(group)
