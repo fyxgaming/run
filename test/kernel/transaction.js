@@ -468,7 +468,7 @@ describe('Transaction', () => {
     it('throws if sync all', () => {
       const run = new Run()
       const tx = new Run.Transaction()
-      expect(() => tx.update(() => { run.sync() })).to.throw('sync all disabled during atomic transaction')
+      expect(() => tx.update(() => { run.sync() })).to.throw('sync all disabled during atomic update')
     })
 
     // ------------------------------------------------------------------------
@@ -478,8 +478,8 @@ describe('Transaction', () => {
       const tx = new Run.Transaction()
       const A = run.deploy(class A extends Jig { })
       const a = new A()
-      expect(() => tx.update(() => { A.sync() })).to.throw('sync disabled during atomic transaction')
-      expect(() => tx.update(() => { a.sync() })).to.throw('sync disabled during atomic transaction')
+      expect(() => tx.update(() => { A.sync() })).to.throw('sync disabled during atomic update')
+      expect(() => tx.update(() => { a.sync() })).to.throw('sync disabled during atomic update')
     })
 
     // ------------------------------------------------------------------------
@@ -487,7 +487,7 @@ describe('Transaction', () => {
     it('throws if load', () => {
       const run = new Run()
       const tx = new Run.Transaction()
-      expect(() => tx.update(() => { run.load('abc') })).to.throw('load disabled during atomic transaction')
+      expect(() => tx.update(() => { run.load('abc') })).to.throw('load disabled during atomic update')
     })
 
     // ------------------------------------------------------------------------
@@ -496,8 +496,8 @@ describe('Transaction', () => {
       const run2 = new Run()
       new Run() // eslint-disable-line
       const tx = new Run.Transaction()
-      expect(() => tx.update(() => { return new Run() })).to.throw('activate disabled during atomic transaction')
-      expect(() => tx.update(() => { run2.activate() })).to.throw('activate disabled during atomic transaction')
+      expect(() => tx.update(() => { return new Run() })).to.throw('activate disabled during atomic update')
+      expect(() => tx.update(() => { run2.activate() })).to.throw('activate disabled during atomic update')
     })
 
     // ------------------------------------------------------------------------
@@ -505,7 +505,7 @@ describe('Transaction', () => {
     it('throws if deactivate', () => {
       const run = new Run()
       const tx = new Run.Transaction()
-      expect(() => tx.update(() => { run.deactivate() })).to.throw('deactivate disabled during atomic transaction')
+      expect(() => tx.update(() => { run.deactivate() })).to.throw('deactivate disabled during atomic update')
     })
 
     // ------------------------------------------------------------------------
@@ -513,7 +513,7 @@ describe('Transaction', () => {
     it('throws if import', () => {
       const run = new Run()
       const tx = new Run.Transaction()
-      expect(() => tx.update(() => { run.import() })).to.throw('import disabled during atomic transaction')
+      expect(() => tx.update(() => { run.import() })).to.throw('import disabled during atomic update')
     })
 
     // ------------------------------------------------------------------------
@@ -521,7 +521,23 @@ describe('Transaction', () => {
     it('throws if update', () => {
       new Run() // eslint-disable-line
       const tx = new Run.Transaction()
-      expect(() => tx.update(() => { tx.update(() => { }) })).to.throw('update disabled during atomic transaction')
+      expect(() => tx.update(() => { tx.update(() => { }) })).to.throw('update disabled during atomic update')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if pay', () => {
+      new Run() // eslint-disable-line
+      const tx = new Run.Transaction()
+      expect(() => tx.update(() => { tx.pay() })).to.throw('pay disabled during atomic update')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if sign', () => {
+      new Run() // eslint-disable-line
+      const tx = new Run.Transaction()
+      expect(() => tx.update(() => { tx.sign() })).to.throw('sign disabled during atomic update')
     })
 
     // ------------------------------------------------------------------------
@@ -529,14 +545,15 @@ describe('Transaction', () => {
     it('throws if publish', () => {
       new Run() // eslint-disable-line
       const tx = new Run.Transaction()
-      expect(() => tx.update(() => { tx.publish() })).to.throw('publish disabled during atomic transaction')
+      expect(() => tx.update(() => { tx.publish() })).to.throw('publish disabled during atomic update')
     })
+
     // ------------------------------------------------------------------------
 
     it('throws if export', () => {
       new Run() // eslint-disable-line
       const tx = new Run.Transaction()
-      expect(() => tx.update(() => { tx.export() })).to.throw('export disabled during atomic transaction')
+      expect(() => tx.update(() => { tx.export() })).to.throw('export disabled during atomic update')
     })
 
     // ------------------------------------------------------------------------
@@ -544,7 +561,7 @@ describe('Transaction', () => {
     it('throws if rollback', () => {
       new Run() // eslint-disable-line
       const tx = new Run.Transaction()
-      expect(() => tx.update(() => { tx.rollback() })).to.throw('rollback disabled during atomic transaction')
+      expect(() => tx.update(() => { tx.rollback() })).to.throw('rollback disabled during atomic update')
     })
 
     // ------------------------------------------------------------------------
