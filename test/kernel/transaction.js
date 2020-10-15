@@ -573,6 +573,36 @@ describe('Transaction', () => {
       expect(() => tx.update(null)).to.throw('Invalid callback')
       expect(() => tx.update({})).to.throw('Invalid callback')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws after publish', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await tx.publish()
+      expect(() => tx.update(() => run.deploy(class B { }))).to.throw('update disabled once published')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws during publish', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.publish()
+      expect(() => tx.update(() => run.deploy(class B { }))).to.throw('update disabled during publish')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws during export', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.export()
+      expect(() => tx.update(() => run.deploy(class B { }))).to.throw('update disabled during export')
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -645,46 +675,6 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if update after publish', async () => {
-      const run = new Run()
-      const tx = new Transaction()
-      tx.update(() => run.deploy(class A { }))
-      await tx.publish()
-      expect(() => tx.update(() => run.deploy(class B { }))).to.throw('update disabled once published')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if update during publish', () => {
-      const run = new Run()
-      const tx = new Transaction()
-      tx.update(() => run.deploy(class A { }))
-      tx.publish()
-      expect(() => tx.update(() => run.deploy(class B { }))).to.throw('update disabled during publish')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if export during publish', () => {
-      const run = new Run()
-      const tx = new Transaction()
-      tx.update(() => run.deploy(class A { }))
-      tx.publish()
-      expect(() => tx.export()).to.throw('export disabled during publish')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if rollback during publish', () => {
-      const run = new Run()
-      const tx = new Transaction()
-      tx.update(() => run.deploy(class A { }))
-      tx.publish()
-      expect(() => tx.rollback()).to.throw('rollback disabled during publish')
-    })
-
-    // ------------------------------------------------------------------------
-
     it('re-publish after fail', async () => {
       const run = new Run()
       const tx = new Transaction()
@@ -749,6 +739,16 @@ describe('Transaction', () => {
       expect(() => tx.publish({ sign: 1 })).to.throw('Invalid sign')
       expect(() => tx.publish({ sign: '' })).to.throw('Invalid sign')
       expect(() => tx.publish({ sign: () => { } })).to.throw('Invalid sign')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws during export', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.export()
+      expect(() => tx.publish()).to.throw('publish disabled during export')
     })
   })
 
@@ -863,36 +863,6 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if publish during export', () => {
-      const run = new Run()
-      const tx = new Transaction()
-      tx.update(() => run.deploy(class A { }))
-      tx.export()
-      expect(() => tx.publish()).to.throw('publish disabled during export')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if update during export', () => {
-      const run = new Run()
-      const tx = new Transaction()
-      tx.update(() => run.deploy(class A { }))
-      tx.export()
-      expect(() => tx.update(() => run.deploy(class B { }))).to.throw('update disabled during export')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if rollback during export', () => {
-      const run = new Run()
-      const tx = new Transaction()
-      tx.update(() => run.deploy(class A { }))
-      tx.export()
-      expect(() => tx.rollback()).to.throw('rollback disabled during export')
-    })
-
-    // ------------------------------------------------------------------------
-
     it('throws if invalid pay option', () => {
       const run = new Run()
       const tx = new Transaction()
@@ -942,6 +912,16 @@ describe('Transaction', () => {
       new Run() // eslint-disable-line
       const tx = new Transaction()
       expect(() => tx.export()).to.throw('Nothing to commit')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws during publish', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.publish()
+      expect(() => tx.export()).to.throw('export disabled during publish')
     })
   })
 
@@ -1357,7 +1337,17 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if rollback after publish', async () => {
+    it('throws during publish', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.publish()
+      expect(() => tx.rollback()).to.throw('rollback disabled during publish')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws after publish', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
       const tx = new Transaction()
@@ -1365,6 +1355,16 @@ describe('Transaction', () => {
       await tx.publish()
       const error = 'rollback disabled once published'
       expect(() => tx.rollback()).to.throw(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws during export', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.export()
+      expect(() => tx.rollback()).to.throw('rollback disabled during export')
     })
   })
 
