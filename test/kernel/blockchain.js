@@ -16,6 +16,10 @@ const { PrivateKey, Script, Transaction } = bsv
 // ------------------------------------------------------------------------------------------------
 
 describe('Blockchain', () => {
+  // --------------------------------------------------------------------------
+  // broadcast
+  // --------------------------------------------------------------------------
+
   describe('broadcast', () => {
     it('simple transaction', async () => {
       const run = new Run()
@@ -25,6 +29,8 @@ describe('Blockchain', () => {
       await run.blockchain.broadcast(rawtx)
     })
 
+    // ------------------------------------------------------------------------
+
     it('same transaction twice', async () => {
       const run = new Run()
       const tx = randomTx()
@@ -33,6 +39,8 @@ describe('Blockchain', () => {
       await run.blockchain.broadcast(rawtx)
       await run.blockchain.broadcast(rawtx)
     })
+
+    // ------------------------------------------------------------------------
 
     it('throws if input never existed', async () => {
       const run = new Run()
@@ -45,6 +53,8 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(badraw)).to.be.rejectedWith(ERR_MISSING_INPUTS)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if input is already spent and confirmed', async () => {
       const run = new Run()
       const cid = await spentAndConfirmed(run.blockchain)
@@ -56,6 +66,8 @@ describe('Blockchain', () => {
       const rawtx = tx.toString('hex')
       await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_MISSING_INPUTS)
     })
+
+    // ------------------------------------------------------------------------
 
     it('throws if input is already spent and not confirmed', async () => {
       const run = new Run()
@@ -73,6 +85,8 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(btx)).to.be.rejectedWith(ERR_MEMPOOL_CONFLICT)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if no inputs', async () => {
       const run = new Run()
       const dummyaddr = new PrivateKey().toAddress().toString()
@@ -80,12 +94,16 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NO_INPUTS)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if no outputs', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
       const tx = new Transaction().from(utxos).sign(run.purse.bsvPrivateKey)
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NO_OUTPUTS)
     })
+
+    // ------------------------------------------------------------------------
 
     it('throws if fee too low', async () => {
       const run = new Run()
@@ -98,6 +116,8 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_FEE_TOO_LOW)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if not signed', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
@@ -105,12 +125,16 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NOT_SIGNED)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if duplicate input', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
       const tx = new Transaction().from(utxos).from(utxos).addData('').sign(run.purse.bsvPrivateKey)
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_DUP_INPUT)
     })
+
+    // ------------------------------------------------------------------------
 
     it('throws if bad signature', async () => {
       const run = new Run()
@@ -120,6 +144,10 @@ describe('Blockchain', () => {
       await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_BAD_SIGNATURE)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // fetch
+  // --------------------------------------------------------------------------
 
   describe('fetch', () => {
     it('raw transaction', async () => {
@@ -131,11 +159,15 @@ describe('Blockchain', () => {
       expect(tx.hash).to.equal(cid)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if nonexistant', async () => {
       const run = new Run()
       const badid = '0000000000000000000000000000000000000000000000000000000000000001'
       await expect(run.blockchain.fetch(badid)).to.be.rejectedWith(ERR_TX_NOT_FOUND)
     })
+
+    // ------------------------------------------------------------------------
 
     it('caches repeated requests', async () => {
       const run = new Run()
@@ -154,6 +186,10 @@ describe('Blockchain', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // utxos
+  // --------------------------------------------------------------------------
+
   describe('utxos', () => {
     it('return utxos', async () => {
       const run = new Run()
@@ -167,6 +203,8 @@ describe('Blockchain', () => {
       })
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns empty list if no utxos', async () => {
       const run = new Run()
       const address = new PrivateKey().toAddress()
@@ -174,6 +212,8 @@ describe('Blockchain', () => {
       const utxos = await run.blockchain.utxos(script)
       expect(utxos.length).to.equal(0)
     })
+
+    // ------------------------------------------------------------------------
 
     it('no spent outputs', async () => {
       const run = new Run()
@@ -188,6 +228,8 @@ describe('Blockchain', () => {
       expect(utxos.some(utxo => utxo.txid === paidtx.hash && utxo.vout === 1)).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('caches repeated requests', async () => {
       const run = new Run()
       const requests = []
@@ -197,6 +239,8 @@ describe('Blockchain', () => {
       await Promise.all(requests)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws for invalid queries', async () => {
       const run = new Run()
       const cases = ['z', '%', [], 123, null, undefined]
@@ -204,6 +248,8 @@ describe('Blockchain', () => {
         await expect(run.blockchain.utxos(x)).to.be.rejected
       }
     })
+
+    // ------------------------------------------------------------------------
 
     it('large number of UTXOS', async () => {
       const run = new Run()
@@ -213,6 +259,10 @@ describe('Blockchain', () => {
       expect(utxos.length > 1220).to.equal(true)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // spends
+  // --------------------------------------------------------------------------
 
   describe('spends', () => {
     it('returns spending txid or null', async () => {
@@ -232,12 +282,18 @@ describe('Blockchain', () => {
       expect(await run.blockchain.spends(prevtxid, prevvout)).to.equal(paidtx.hash)
     })
 
+    // ------------------------------------------------------------------------
+
     it('throws if location not found', async () => {
       const run = new Run()
       const badid = '0000000000000000000000000000000000000000000000000000000000000000'
       await expect(run.blockchain.spends(badid, 0)).to.be.rejected
     })
   })
+
+  // --------------------------------------------------------------------------
+  // time
+  // --------------------------------------------------------------------------
 
   describe('time', () => {
     it('returns transaction time', async () => {
@@ -252,6 +308,8 @@ describe('Blockchain', () => {
       expect(time > new Date('January 3, 2009')).to.equal(true)
       expect(time <= Date.now()).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
 
     it('throws if txid not found', async () => {
       const run = new Run()
