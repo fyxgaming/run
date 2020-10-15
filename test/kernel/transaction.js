@@ -603,6 +603,26 @@ describe('Transaction', () => {
       tx.export()
       expect(() => tx.update(() => run.deploy(class B { }))).to.throw('update disabled during export')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws during sign', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.sign()
+      expect(() => tx.update(() => run.deploy(class B { }))).to.throw('update disabled during sign')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws during pay', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.pay()
+      expect(() => tx.update(() => run.deploy(class B { }))).to.throw('update disabled during pay')
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -749,6 +769,26 @@ describe('Transaction', () => {
       tx.update(() => run.deploy(class A { }))
       tx.export()
       expect(() => tx.publish()).to.throw('publish disabled during export')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws during pay', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.pay()
+      expect(() => tx.publish()).to.throw('publish disabled during pay')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws during sign', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.sign()
+      expect(() => tx.publish()).to.throw('publish disabled during sign')
     })
   })
 
@@ -922,6 +962,26 @@ describe('Transaction', () => {
       tx.update(() => run.deploy(class A { }))
       tx.publish()
       expect(() => tx.export()).to.throw('export disabled during publish')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws during pay', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.pay()
+      expect(() => tx.export()).to.throw('export disabled during pay')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws during sign', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.sign()
+      expect(() => tx.export()).to.throw('export disabled during sign')
     })
   })
 
@@ -1146,6 +1206,26 @@ describe('Transaction', () => {
       tx.update(() => run.deploy(class A { }))
       tx.export()
       expect(() => tx.rollback()).to.throw('rollback disabled during export')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws during pay', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.pay()
+      expect(() => tx.rollback()).to.throw('rollback disabled during pay')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws during sign', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.sign()
+      expect(() => tx.rollback()).to.throw('rollback disabled during sign')
     })
   })
 
