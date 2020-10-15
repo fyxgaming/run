@@ -11,7 +11,7 @@ require('chai').use(require('chai-as-promised'))
 const { stub, fake } = require('sinon')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, Transaction, LocalCache, LocalPurse } = Run
+const { Jig, Transaction, LocalCache, LocalPurse, LocalOwner } = Run
 const { STRESS } = require('../env/config')
 
 // ------------------------------------------------------------------------------------------------
@@ -1300,14 +1300,16 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('pay with no updates', () => {
+    it.skip('dedups pay', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('dedups pay', () => {
-      // TODO
+    it('throws if pay with no updates', () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      expect(() => tx.pay()).to.throw('Nothing to commit')
     })
 
     // ------------------------------------------------------------------------
@@ -1363,8 +1365,22 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('multiple signs different owners', () => {
-      // TODO
+    it('multiple signs different owners', async () => {
+      const run = new Run()
+      const owner1 = run.owner
+      const owner2 = new LocalOwner()
+      stub(owner1, 'sign').callThrough()
+      stub(owner2, 'sign').callThrough()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await tx.pay()
+      run.owner = owner1
+      await tx.sign()
+      run.owner = owner2
+      await tx.sign()
+      await tx.publish({ sign: false })
+      expect(owner1.sign.calledOnce).to.equal(true)
+      expect(owner2.sign.calledOnce).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -1395,14 +1411,16 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('sign with no updates', () => {
+    it.skip('dedups sign', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('dedups sign', () => {
-      // TODO
+    it('throws if sign with no updates', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      expect(() => tx.sign()).to.throw('Nothing to commit')
     })
 
     // ------------------------------------------------------------------------
