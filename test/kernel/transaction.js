@@ -1300,8 +1300,12 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('dedups pay', () => {
-      // TODO
+    it('dedups pay', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      const promise = tx.pay()
+      expect(tx.pay()).to.equal(promise)
     })
 
     // ------------------------------------------------------------------------
@@ -1419,8 +1423,12 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('dedups sign', () => {
-      // TODO
+    it('dedups sign', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      const promise = tx.sign()
+      expect(tx.sign()).to.equal(promise)
     })
 
     // ------------------------------------------------------------------------
