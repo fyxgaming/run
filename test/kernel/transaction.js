@@ -1433,14 +1433,22 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws during publish', () => {
-      // TODO
+    it('throws during publish', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.publish()
+      expect(() => tx.sign()).to.throw('sign disabled during publish')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws during export', () => {
-      // TODO
+    it('throws during export', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.export()
+      expect(() => tx.sign()).to.throw('sign disabled during export')
     })
 
     // ------------------------------------------------------------------------
