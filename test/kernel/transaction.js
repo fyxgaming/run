@@ -11,7 +11,7 @@ require('chai').use(require('chai-as-promised'))
 const { stub, fake } = require('sinon')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, Transaction, LocalCache } = Run
+const { Jig, Transaction, LocalCache, LocalPurse } = Run
 const { STRESS } = require('../env/config')
 
 // ------------------------------------------------------------------------------------------------
@@ -1246,7 +1246,7 @@ describe('Transaction', () => {
 
     it('multiple pays same purse', async () => {
       const run = new Run()
-      stub(run.purse, 'pay')
+      stub(run.purse, 'pay').callThrough()
       const tx = new Transaction()
       tx.update(() => run.deploy(class A { }))
       await tx.pay()
@@ -1257,8 +1257,24 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('multiple pays different purses', () => {
-      // TODO
+    // TODO: Publish with manual pay/sign
+    // TODO: Export with manual pay/sign
+
+    it('multiple pays different purses', async () => {
+      const run = new Run()
+      const purse1 = run.purse
+      const purse2 = new LocalPurse({ blockchain: run.blockchain })
+      stub(purse1, 'pay').callThrough()
+      stub(purse2, 'pay').callThrough()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      run.purse = purse1
+      await tx.pay()
+      run.purse = purse2
+      await tx.pay()
+      await tx.publish({ pay: false })
+      expect(purse1.pay.calledOnce).to.equal(true)
+      expect(purse2.pay.calledOnce).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -1326,7 +1342,7 @@ describe('Transaction', () => {
 
     it('multiple signs same owner', async () => {
       const run = new Run()
-      stub(run.owner, 'sign')
+      stub(run.owner, 'sign').callThrough()
       const tx = new Transaction()
       tx.update(() => run.deploy(class A { }))
       await tx.pay()
