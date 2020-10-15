@@ -708,6 +708,19 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('manual pay and sign', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      const tx = new Transaction()
+      tx.update(() => a.auth())
+      await tx.pay()
+      await tx.sign()
+      await tx.publish({ pay: false, sign: false })
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if empty', async () => {
       new Run() // eslint-disable-line
       const tx = new Transaction()
@@ -899,6 +912,19 @@ describe('Transaction', () => {
       await tx.publish()
       await A.sync()
       expect(A.location.endsWith('_o1')).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('manual pay and sign', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      const tx = new Transaction()
+      tx.update(() => a.auth())
+      await tx.pay()
+      await tx.sign()
+      await tx.export({ pay: false, sign: false })
     })
 
     // ------------------------------------------------------------------------
