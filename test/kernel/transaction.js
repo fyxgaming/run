@@ -1299,8 +1299,12 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws during sign', () => {
-      // TODO
+    it('throws during sign', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.sign()
+      expect(() => tx.pay()).to.throw('pay disabled during sign')
     })
   })
 
@@ -1376,8 +1380,12 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws during pay', () => {
-      // TODO
+    it('throws during pay', () => {
+      const run = new Run()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      tx.pay()
+      expect(() => tx.sign()).to.throw('sign disabled during pay')
     })
 
     // ------------------------------------------------------------------------
