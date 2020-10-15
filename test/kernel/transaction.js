@@ -926,225 +926,6 @@ describe('Transaction', () => {
   })
 
   // --------------------------------------------------------------------------
-  // import
-  // --------------------------------------------------------------------------
-
-  describe('import', () => {
-    it('unpublished', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const tx = new Transaction()
-      tx.update(() => run.deploy(A))
-      const rawtx = await tx.export()
-      const tx2 = await run.import(rawtx)
-      tx2.update(() => run.deploy(class B { }))
-      await tx2.publish()
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('published', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      const txid = a.location.slice(0, 64)
-      const rawtx = await run.blockchain.fetch(txid)
-      const tx = await run.import(rawtx)
-      await tx.publish()
-      const rawtx2 = await tx.export()
-      expect(rawtx).to.equal(rawtx2)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('import and publish emits jig events', async () => {
-      const callback = fake()
-      const run = new Run()
-      class A extends Jig { }
-      const tx = new Transaction()
-      tx.update(() => run.deploy(A))
-      const rawtx = await tx.export()
-      const tx2 = await run.import(rawtx)
-      run.on('publish', callback)
-      await tx2.publish()
-      expect(callback.called).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('import, update, and publish emits jig events', async () => {
-      const callback = fake()
-      const run = new Run()
-      class A extends Jig { }
-      const tx = new Transaction()
-      tx.update(() => run.deploy(A))
-      const rawtx = await tx.export()
-      const tx2 = await run.import(rawtx)
-      tx2.update(() => run.deploy(class B { }))
-      run.on('publish', callback)
-      await tx2.publish()
-      expect(callback.called).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('import and publish adds to cache', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const tx = new Transaction()
-      tx.update(() => new A())
-      const rawtx = await tx.export()
-      run.cache = new LocalCache()
-      const tx2 = await run.import(rawtx)
-      await tx2.publish()
-      expect(!!(await run.cache.get('jig://' + tx2.outputs[0].location))).to.equal(true)
-      expect(!!(await run.cache.get('jig://' + tx2.outputs[1].location))).to.equal(true)
-    })
-    // ------------------------------------------------------------------------
-
-    it('import, update, and publish adds to cache', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const tx = new Transaction()
-      tx.update(() => new A())
-      const rawtx = await tx.export()
-      run.cache = new LocalCache()
-      const tx2 = await run.import(rawtx)
-      tx2.update(() => run.deploy(class B { }))
-      await tx2.publish()
-      expect(!!(await run.cache.get('jig://' + tx2.outputs[0].location))).to.equal(true)
-      expect(!!(await run.cache.get('jig://' + tx2.outputs[1].location))).to.equal(true)
-      expect(!!(await run.cache.get('jig://' + tx2.outputs[2].location))).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('same transaction twice ok', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const tx = new Transaction()
-      tx.update(() => run.deploy(A))
-      const rawtx = await tx.export()
-      const tx1 = await run.import(rawtx)
-      const tx2 = await run.import(rawtx)
-      expect(tx1).not.to.equal(tx2)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('unsigned', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const tx = new Transaction()
-      tx.update(() => run.deploy(A))
-      const rawtx = await tx.export({ signed: false })
-      const tx2 = await run.import(rawtx)
-      await tx2.publish({ pay: false })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('unpaid', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const tx = new Transaction()
-      tx.update(() => run.deploy(A))
-      const rawtx = await tx.export({ pay: false })
-      const tx2 = await run.import(rawtx)
-      await tx2.publish()
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('paid twice', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const tx = new Transaction()
-      tx.update(() => run.deploy(A))
-      const rawtx = await tx.export({ sign: false })
-      const tx2 = await run.import(rawtx)
-      await tx2.publish()
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('signed twice', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const tx = new Transaction()
-      tx.update(() => run.deploy(A))
-      const rawtx = await tx.export({ pay: false })
-      const tx2 = await run.import(rawtx)
-      await tx2.publish()
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if publish unsigned', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const a = new A()
-      await run.sync()
-      const tx = new Transaction()
-      tx.update(() => a.auth())
-      const rawtx = await tx.export({ sign: false })
-      const tx2 = await run.import(rawtx)
-      const error = 'Missing signature for [jig A]'
-      await expect(tx2.publish({ sign: false })).to.be.rejectedWith(error)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if non-run transaction', async () => {
-      const run = new Run()
-      const Buffer = bsv.deps.Buffer
-      const slp = Buffer.from('slp', 'utf8')
-      const dat = Buffer.from('', 'utf8')
-      const slpscript = bsv.Script.buildSafeDataOut([slp, dat, dat, dat, dat])
-      const slpoutput = new bsv.Transaction.Output({ script: slpscript, satoshis: 0 })
-      const tx = new bsv.Transaction().addOutput(slpoutput).to(run.purse.address, 1000)
-      const rawtx = tx.toString('hex')
-      const error = 'Not a run transaction: invalid op_return protocol'
-      await expect(run.import(rawtx)).to.be.rejectedWith(error)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if unsupported version payload', async () => {
-      const run = new Run()
-      const Buffer = bsv.deps.Buffer
-      const slp = Buffer.from('run', 'utf8')
-      const ver = Buffer.from([0x04])
-      const app = Buffer.from('', 'utf8')
-      const json = Buffer.from('{}', 'utf8')
-      const runscript = bsv.Script.buildSafeDataOut([slp, ver, app, json])
-      const runoutput = new bsv.Transaction.Output({ script: runscript, satoshis: 0 })
-      const tx = new bsv.Transaction().addOutput(runoutput).to(run.purse.address, 1000)
-      const rawtx = tx.toString('hex')
-      const error = 'Not a run transaction: unsupported run version'
-      await expect(run.import(rawtx)).to.be.rejectedWith(error)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if invalid payload', async () => {
-      const run = new Run()
-      const Buffer = bsv.deps.Buffer
-      const slp = Buffer.from('run', 'utf8')
-      const ver = Buffer.from([0x05])
-      const app = Buffer.from('', 'utf8')
-      const json = Buffer.from('{}', 'utf8')
-      const runscript = bsv.Script.buildSafeDataOut([slp, ver, app, json])
-      const runoutput = new bsv.Transaction.Output({ script: runscript, satoshis: 0 })
-      const tx = new bsv.Transaction().addOutput(runoutput).to(run.purse.address, 1000)
-      const rawtx = tx.toString('hex')
-      const error = 'Not a run transaction: invalid run payload'
-      await expect(run.import(rawtx)).to.be.rejectedWith(error)
-    })
-  })
-
-  // --------------------------------------------------------------------------
   // rollback
   // --------------------------------------------------------------------------
 
@@ -1365,6 +1146,225 @@ describe('Transaction', () => {
       tx.update(() => run.deploy(class A { }))
       tx.export()
       expect(() => tx.rollback()).to.throw('rollback disabled during export')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // import
+  // --------------------------------------------------------------------------
+
+  describe('import', () => {
+    it('unpublished', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
+      const tx2 = await run.import(rawtx)
+      tx2.update(() => run.deploy(class B { }))
+      await tx2.publish()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('published', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const txid = a.location.slice(0, 64)
+      const rawtx = await run.blockchain.fetch(txid)
+      const tx = await run.import(rawtx)
+      await tx.publish()
+      const rawtx2 = await tx.export()
+      expect(rawtx).to.equal(rawtx2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('import and publish emits jig events', async () => {
+      const callback = fake()
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
+      const tx2 = await run.import(rawtx)
+      run.on('publish', callback)
+      await tx2.publish()
+      expect(callback.called).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('import, update, and publish emits jig events', async () => {
+      const callback = fake()
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
+      const tx2 = await run.import(rawtx)
+      tx2.update(() => run.deploy(class B { }))
+      run.on('publish', callback)
+      await tx2.publish()
+      expect(callback.called).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('import and publish adds to cache', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => new A())
+      const rawtx = await tx.export()
+      run.cache = new LocalCache()
+      const tx2 = await run.import(rawtx)
+      await tx2.publish()
+      expect(!!(await run.cache.get('jig://' + tx2.outputs[0].location))).to.equal(true)
+      expect(!!(await run.cache.get('jig://' + tx2.outputs[1].location))).to.equal(true)
+    })
+    // ------------------------------------------------------------------------
+
+    it('import, update, and publish adds to cache', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => new A())
+      const rawtx = await tx.export()
+      run.cache = new LocalCache()
+      const tx2 = await run.import(rawtx)
+      tx2.update(() => run.deploy(class B { }))
+      await tx2.publish()
+      expect(!!(await run.cache.get('jig://' + tx2.outputs[0].location))).to.equal(true)
+      expect(!!(await run.cache.get('jig://' + tx2.outputs[1].location))).to.equal(true)
+      expect(!!(await run.cache.get('jig://' + tx2.outputs[2].location))).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('same transaction twice ok', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
+      const tx1 = await run.import(rawtx)
+      const tx2 = await run.import(rawtx)
+      expect(tx1).not.to.equal(tx2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('unsigned', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export({ signed: false })
+      const tx2 = await run.import(rawtx)
+      await tx2.publish({ pay: false })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('unpaid', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export({ pay: false })
+      const tx2 = await run.import(rawtx)
+      await tx2.publish()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('paid twice', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export({ sign: false })
+      const tx2 = await run.import(rawtx)
+      await tx2.publish()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('signed twice', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export({ pay: false })
+      const tx2 = await run.import(rawtx)
+      await tx2.publish()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if publish unsigned', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await run.sync()
+      const tx = new Transaction()
+      tx.update(() => a.auth())
+      const rawtx = await tx.export({ sign: false })
+      const tx2 = await run.import(rawtx)
+      const error = 'Missing signature for [jig A]'
+      await expect(tx2.publish({ sign: false })).to.be.rejectedWith(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if non-run transaction', async () => {
+      const run = new Run()
+      const Buffer = bsv.deps.Buffer
+      const slp = Buffer.from('slp', 'utf8')
+      const dat = Buffer.from('', 'utf8')
+      const slpscript = bsv.Script.buildSafeDataOut([slp, dat, dat, dat, dat])
+      const slpoutput = new bsv.Transaction.Output({ script: slpscript, satoshis: 0 })
+      const tx = new bsv.Transaction().addOutput(slpoutput).to(run.purse.address, 1000)
+      const rawtx = tx.toString('hex')
+      const error = 'Not a run transaction: invalid op_return protocol'
+      await expect(run.import(rawtx)).to.be.rejectedWith(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if unsupported version payload', async () => {
+      const run = new Run()
+      const Buffer = bsv.deps.Buffer
+      const slp = Buffer.from('run', 'utf8')
+      const ver = Buffer.from([0x04])
+      const app = Buffer.from('', 'utf8')
+      const json = Buffer.from('{}', 'utf8')
+      const runscript = bsv.Script.buildSafeDataOut([slp, ver, app, json])
+      const runoutput = new bsv.Transaction.Output({ script: runscript, satoshis: 0 })
+      const tx = new bsv.Transaction().addOutput(runoutput).to(run.purse.address, 1000)
+      const rawtx = tx.toString('hex')
+      const error = 'Not a run transaction: unsupported run version'
+      await expect(run.import(rawtx)).to.be.rejectedWith(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid payload', async () => {
+      const run = new Run()
+      const Buffer = bsv.deps.Buffer
+      const slp = Buffer.from('run', 'utf8')
+      const ver = Buffer.from([0x05])
+      const app = Buffer.from('', 'utf8')
+      const json = Buffer.from('{}', 'utf8')
+      const runscript = bsv.Script.buildSafeDataOut([slp, ver, app, json])
+      const runoutput = new bsv.Transaction.Output({ script: runscript, satoshis: 0 })
+      const tx = new bsv.Transaction().addOutput(runoutput).to(run.purse.address, 1000)
+      const rawtx = tx.toString('hex')
+      const error = 'Not a run transaction: invalid run payload'
+      await expect(run.import(rawtx)).to.be.rejectedWith(error)
     })
   })
 
