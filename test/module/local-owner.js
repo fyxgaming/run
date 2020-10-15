@@ -204,7 +204,7 @@ describe('LocalOwner', () => {
 
     // ----------------------------------------------------------------------
 
-    it.only('should not sign group lock if already signed', async () => {
+    it('should not sign group lock if already signed', async () => {
       const run = new Run({ blockchain: await Run.getExtrasBlockchain() })
 
       class A extends Jig {
@@ -231,7 +231,7 @@ describe('LocalOwner', () => {
 
     // ----------------------------------------------------------------------
 
-    it.skip('should not sign group lock if not our pubkey', async () => {
+    it('should not sign group lock if not our pubkey', async () => {
       const run = new Run({ blockchain: await Run.getExtrasBlockchain() })
       const run2 = new Run({ blockchain: await Run.getExtrasBlockchain() })
 
@@ -257,8 +257,9 @@ describe('LocalOwner', () => {
       await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith('mandatory-script-verify-flag-failed')
 
       // Sign with pubkey 2 and broadcast
+      if (COVER) return
       run2.activate()
-      const tx2 = await run2.transaction.import(rawtx)
+      const tx2 = await run2.import(rawtx)
       await tx2.publish()
     })
   })
