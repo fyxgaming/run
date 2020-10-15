@@ -1244,8 +1244,15 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('multiple pays same purse', () => {
-      // TODO
+    it('multiple pays same purse', async () => {
+      const run = new Run()
+      stub(run.purse, 'pay')
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await tx.pay()
+      await tx.pay()
+      await tx.pay()
+      expect(run.purse.pay.getCalls().length).to.equal(3)
     })
 
     // ------------------------------------------------------------------------
@@ -1313,8 +1320,16 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('multiple signs same owner', () => {
-      // TODO
+    it('multiple signs same owner', async () => {
+      const run = new Run()
+      stub(run.owner, 'sign')
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await tx.pay()
+      await tx.sign()
+      await tx.sign()
+      await tx.sign()
+      expect(run.owner.sign.getCalls().length).to.equal(3)
     })
 
     // ------------------------------------------------------------------------
