@@ -1257,9 +1257,6 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    // TODO: Publish with manual pay/sign
-    // TODO: Export with manual pay/sign
-
     it('multiple pays different purses', async () => {
       const run = new Run()
       const purse1 = run.purse
@@ -1279,14 +1276,26 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('pay again during publish', () => {
-      // TODO
+    it('pay again during publish', async () => {
+      const run = new Run()
+      stub(run.purse, 'pay').callThrough()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await tx.pay()
+      await tx.publish()
+      expect(run.purse.pay.calledTwice).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('pay again during export', () => {
-      // TODO
+    it('pay again during export', async () => {
+      const run = new Run()
+      stub(run.purse, 'pay').callThrough()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await tx.pay()
+      await tx.export()
+      expect(run.purse.pay.calledTwice).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -1360,14 +1369,28 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('sign again during publish', () => {
-      // TODO
+    it('sign again during publish', async () => {
+      const run = new Run()
+      stub(run.owner, 'sign').callThrough()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await tx.pay()
+      await tx.sign()
+      await tx.publish()
+      expect(run.owner.sign.calledTwice).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('sign again during export', () => {
-      // TODO
+    it('sign again during export', async () => {
+      const run = new Run()
+      stub(run.owner, 'sign').callThrough()
+      const tx = new Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await tx.pay()
+      await tx.sign()
+      await tx.export()
+      expect(run.owner.sign.calledTwice).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
