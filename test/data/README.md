@@ -6,8 +6,8 @@ A test data file has the following form:
 
 ```javascript
 {
-    tests: [<txid>],            // Run transactions to import
-    txns: {<txid>: <rawtx>},    // Test txns and the supporting txns needed to load them
-    network: <network-string>   // Run network to use
+    "tests": [<txid>],            // Run transactions to import
+    "txns": {<txid>: <rawtx>},    // Test txns and the supporting txns needed to load them
+    "network": <network-string>   // Run network to use
 }
 ```

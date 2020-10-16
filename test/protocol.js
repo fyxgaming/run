@@ -8,7 +8,7 @@
 
 const { describe, it, beforeEach, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
-const fs = typeof VARIANT !== 'undefined' && VARIANT === 'node' && require('fs-extra')
+const fs = (typeof VARIANT === 'undefined' || VARIANT === 'node') && require('fs-extra')
 const Run = require('./env/run')
 const { COVER } = require('./env/config')
 const bsv = require('bsv')
@@ -18,41 +18,8 @@ const bsv = require('bsv')
 // ------------------------------------------------------------------------------------------------
 
 const CAPTURE_MOCKCHAIN = false // Whether to capture all test transactions in a txns.json file
-const CAPTURE_RELAY = false // Whether to capture relay transactions
 
 if (CAPTURE_MOCKCHAIN) enableCaptureMode()
-
-// ------------------------------------------------------------------------------------------------
-// TestBlockchain
-// ------------------------------------------------------------------------------------------------
-
-class TestBlockchain {
-  constructor (data) { this.data = data }
-  get network () { return this.data.network }
-  async broadcast (rawtx) { throw new Error('broadcast disabled') }
-  async fetch (txid) { return this.data.txns[txid] }
-  async utxos (script) { throw new Error('utxos disabled') }
-  async spends (txid, vout) { throw new Error('spends disabled') }
-  async time (txid) { throw new Error('time disabled') }
-}
-
-// ------------------------------------------------------------------------------------------------
-// runProtocolTest
-// ------------------------------------------------------------------------------------------------
-
-function runProtocolTest (name, data) {
-  it(name, async () => {
-    const blockchain = new TestBlockchain(data)
-    const run = new Run({ blockchain })
-
-    for (let i = 0; i < data.tests.length; i++) {
-      console.log(`${i + 1} of ${data.tests.length}`)
-      const txid = data.tests[i]
-      const rawtx = data.txns[txid]
-      await run.import(rawtx)
-    }
-  }).timeout(300000)
-}
 
 // ------------------------------------------------------------------------------------------------
 // Protocol
@@ -67,14 +34,45 @@ describe('Protocol', () => {
   // Coverage does not support all transactions. We'll get cover from our other tests.
   if (COVER) return
 
-  // If capturing relay transactions, just run a single test with that
-  if (CAPTURE_RELAY) it.only('Capture Relay transactions', () => captureRelayTxns()).timeout(300000)
-
   // --------------------------------------------------------------------------
 
-  runProtocolTest('Unit Tests', require('./data/unit.json'))
-  runProtocolTest('Relay', require('./data/relay.json'))
+  it.skip('Capture Relay', () => captureAppTxns('relayx.io', './data/relay.json')).timeout(1000000)
+  it.skip('Capture Zhell', () => captureAppTxns('b1b605103e', './data/zhell.json')).timeout(1000000)
+
+  it('Unit', () => runProtocolTest(require('./data/unit.json'))).timeout(1000000)
+  it('Relay', () => runProtocolTest(require('./data/relay.json'))).timeout(1000000)
+  it('Zhell', () => runProtocolTest(require('./data/zhell.json'))).timeout(1000000)
 })
+
+// ------------------------------------------------------------------------------------------------
+// runProtocolTest
+// ------------------------------------------------------------------------------------------------
+
+async function runProtocolTest (data) {
+  const blockchain = new TestBlockchain(data)
+  const run = new Run({ blockchain })
+
+  for (let i = 0; i < data.tests.length; i++) {
+    console.log(`${i + 1} of ${data.tests.length}`)
+    const txid = data.tests[i]
+    const rawtx = data.txns[txid]
+    await run.import(rawtx)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+// TestBlockchain
+// ------------------------------------------------------------------------------------------------
+
+class TestBlockchain {
+  constructor (data) { this.data = data }
+  get network () { return this.data.network }
+  async broadcast (rawtx) { throw new Error('broadcast disabled') }
+  async fetch (txid) { return this.data.txns[txid] }
+  async utxos (script) { throw new Error('utxos disabled') }
+  async spends (txid, vout) { throw new Error('spends disabled') }
+  async time (txid) { throw new Error('time disabled') }
+}
 
 // ------------------------------------------------------------------------------------------------
 // Capture
@@ -120,15 +118,14 @@ function enableCaptureMode () {
 
 // ------------------------------------------------------------------------------------------------
 
-async function captureRelayTxns () {
-  const APP = 'relayx.io'
+async function captureAppTxns (app, path) {
   const START_HEIGHT = 650000
   const LIMIT = 10000
   const PLANARIA_TOKEN = 'eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiIxSDRzUWtROWg4aGsxTks2S2diZnRKZ1hra3VrRmdwRGdZIiwiaXNzdWVyIjoiZ2VuZXJpYy1iaXRhdXRoIn0.SHo5Ry9kWFFrU0tiYTBjV0F2WmRuNFRYK3NUdXFRVWtXWVNsNkVEYWdZZEJPaTJNQUVrRDI1NThCRzFNdVZzdUc3MUxmYUVQeUdTODFOeVdxb1ZLVXBNPQ'
 
   const query = {
     q: {
-      find: { 'out.s2': 'run', 'out.h3': '05', 'out.s4': APP, 'blk.i': { $gt: START_HEIGHT } },
+      find: { 'out.s2': 'run', 'out.h3': '05', 'out.s4': app, 'blk.i': { $gt: START_HEIGHT } },
       sort: { 'blk.i': 1 },
       project: { },
       limit: LIMIT
@@ -161,8 +158,9 @@ async function captureRelayTxns () {
       })
   })
 
-  const run = new Run({ network: 'main' })
-  const data = require('./data/relay.json')
+  const run = new Run({ network: 'main', networkTimeout: 30000 })
+  const data = require(path)
+  const fullPath = require.resolve(path)
 
   const oldFetch = run.blockchain.fetch
   run.blockchain.fetch = async (txid) => {
@@ -177,10 +175,9 @@ async function captureRelayTxns () {
     if (data.tests.includes(txid)) continue
     const rawtx = await run.blockchain.fetch(txid)
     await run.import(rawtx)
+    data.tests.push(txid)
+    fs.writeFileSync(fullPath, JSON.stringify(data, 0, 3))
   }
-
-  const path = require.resolve('./data/relay.json')
-  fs.writeFileSync(path, JSON.stringify(data, 0, 3))
 }
 
 // ------------------------------------------------------------------------------------------------
