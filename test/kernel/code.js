@@ -740,7 +740,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('use as code props preinstalled code', async () => {
+    it('use preinstalled code as code props', async () => {
       class A extends Jig { }
       const CA = Run.preinstall(A)
       const run = new Run()
