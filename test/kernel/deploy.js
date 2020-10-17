@@ -2040,8 +2040,8 @@ describe('Deploy', () => {
       await run.sync()
 
       const presetsB = B.presets
-      run.uninstall(A)
-      run.uninstall(B)
+      Run.uninstall(A)
+      Run.uninstall(B)
       B.presets = presetsB
 
       expect(() => run.deploy(B)).to.throw('A must have presets')

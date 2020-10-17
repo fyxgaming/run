@@ -776,7 +776,7 @@ describe('Code', () => {
       class A { }
       const C = run.deploy(A)
       await C.sync()
-      run.uninstall(A)
+      Run.uninstall(A)
       expect('presets' in A).to.equal(false)
       expect('location' in A).to.equal(false)
       expect('origin' in A).to.equal(false)
@@ -792,7 +792,7 @@ describe('Code', () => {
       const run = new Run()
       class A { }
       const C = run.deploy(A)
-      run.uninstall(C)
+      Run.uninstall(C)
       const D = run.deploy(A)
       await run.sync()
       expect(C.location).not.to.equal(D.location)
@@ -804,7 +804,7 @@ describe('Code', () => {
       const run = new Run()
       class A extends Jig { static f () { this.n = 1 } }
       const C = run.deploy(A)
-      run.uninstall(A)
+      Run.uninstall(A)
       C.auth()
       C.f()
       C.destroy()
@@ -815,9 +815,8 @@ describe('Code', () => {
     // ------------------------------------------------------------------------
 
     it('throws for native code', () => {
-      const run = new Run()
-      expect(() => run.uninstall(Jig)).to.throw('Cannot uninstall native code')
-      expect(() => run.uninstall(Berry)).to.throw('Cannot uninstall native code')
+      expect(() => Run.uninstall(Jig)).to.throw('Cannot uninstall native code')
+      expect(() => Run.uninstall(Berry)).to.throw('Cannot uninstall native code')
     })
 
     // ------------------------------------------------------------------------
@@ -830,7 +829,7 @@ describe('Code', () => {
       const location = A.location
 
       const presets = A.presets
-      run.uninstall(A)
+      Run.uninstall(A)
       expect(A.location).to.equal(undefined)
       A.presets = presets
       const A3 = run.deploy(A)
