@@ -32,11 +32,10 @@ describe('Snapshot', () => {
     })
 
     it('should snapshot code', () => {
-      const run = new Run()
       class A { }
       A.n = null
       A.m = undefined
-      const CA = run.install(A)
+      const CA = Run.install(A)
       const snapshot = new Snapshot(CA)
       expect(unmangle(snapshot)._kind).to.equal('code')
       expect(unmangle(snapshot)._props.n).to.equal(null)

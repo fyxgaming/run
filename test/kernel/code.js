@@ -680,9 +680,9 @@ describe('Code', () => {
   // Preinstall
   // --------------------------------------------------------------------------
 
-  describe('preinstall', () => {
+  describe('Preinstall', () => {
     it('creates code without bindings', () => {
-      const C = Run.preinstall(class A { })
+      const C = Run.install(class A { })
       expect(C instanceof Code).to.equal(true)
       _sudo(() => {
         expect(C.location).to.equal(undefined)
@@ -696,7 +696,7 @@ describe('Code', () => {
     // ------------------------------------------------------------------------
 
     it('throws if read bindings', () => {
-      const C = Run.preinstall(class A { })
+      const C = Run.install(class A { })
       expect(() => C.location).to.throw('Cannot read location')
       expect(() => C.origin).to.throw('Cannot read origin')
       expect(() => C.nonce).to.throw('Cannot read nonce')
@@ -708,8 +708,8 @@ describe('Code', () => {
 
     it('only preinstalls once', () => {
       class A { }
-      const C1 = Run.preinstall(A)
-      const C2 = Run.preinstall(A)
+      const C1 = Run.install(A)
+      const C2 = Run.install(A)
       expect(C1).to.equal(C2)
     })
 
@@ -717,7 +717,7 @@ describe('Code', () => {
 
     it('create jigs using preinstalled code', async () => {
       class A extends Jig { }
-      const CA = Run.preinstall(A)
+      const CA = Run.install(A)
       new Run() // eslint-disable-line
       const a = new CA()
       await a.sync()
@@ -729,7 +729,7 @@ describe('Code', () => {
 
     it('pass as args preinstalled code', async () => {
       class A extends Jig { }
-      const CA = Run.preinstall(A)
+      const CA = Run.install(A)
       new Run() // eslint-disable-line
       class B extends Jig { init (A) { this.A = A } }
       const b = new B(CA)
@@ -742,7 +742,7 @@ describe('Code', () => {
 
     it('use preinstalled code as code props', async () => {
       class A extends Jig { }
-      const CA = Run.preinstall(A)
+      const CA = Run.install(A)
       const run = new Run()
       class B {}
       B.A = CA
@@ -756,7 +756,7 @@ describe('Code', () => {
 
     it('locks onto network once used', async () => {
       class A extends Jig { }
-      const CA = Run.preinstall(A)
+      const CA = Run.install(A)
       const run = new Run()
       run.deploy(CA)
       await run.sync()

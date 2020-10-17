@@ -1783,7 +1783,7 @@ describe('Deploy', () => {
       const CB = run.deploy(B)
       expect(CB.A).not.to.equal(A)
       expect(CB.A.toString()).to.equal(A.toString())
-      expect(CB.A).to.equal(run.install(A))
+      expect(CB.A).to.equal(Run.install(A))
     })
 
     // ------------------------------------------------------------------------
