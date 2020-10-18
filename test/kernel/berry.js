@@ -1900,8 +1900,15 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if load times out', () => {
-      // TODO
+    it('throws if load times out', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const sleep = ms => new Promise((resolve, reject) => setTimeout(resolve, ms))
+      stub(run.cache, 'get').callsFake(() => sleep(10))
+      run.timeout = 1
+      await expect(CB.load('abc')).to.be.rejectedWith('load timeout')
     })
 
     // ------------------------------------------------------------------------
