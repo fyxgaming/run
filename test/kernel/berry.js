@@ -1819,13 +1819,26 @@ Line 3`
   // --------------------------------------------------------------------------
 
   describe.only('load', () => {
-    it.skip('load general berry', () => {
-      // TODO
+    it('load general berry', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await Berry.load(`${CB.location}_abc`)
+      expect(b.location).to.equal(`${CB.location}_abc`)
+      expect(b instanceof CB).to.equal(true)
     })
+
     // ------------------------------------------------------------------------
 
-    it.skip('loads specific berry with location', () => {
-      // TODO
+    it('loads specific berry with location', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await CB.load(`${CB.location}_abc`)
+      expect(b.location).to.equal(`${CB.location}_abc`)
+      expect(b instanceof B).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -1867,6 +1880,12 @@ Line 3`
     // ------------------------------------------------------------------------
 
     it.skip('throws if load different berry class', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if load non-berry jig', () => {
       // TODO
     })
 
