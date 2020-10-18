@@ -1939,20 +1939,35 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if call from jig', () => {
-      // TODO
+    it('throws if call from jig', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      class A extends Jig {
+        f () { B.load('abc') }
+      }
+      A.deps = { B }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const a = new A()
+      const error = 'load cannot be called internally'
+      expect(() => a.f()).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if call from code', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('may call from sidekick code', () => {
-      // TODO
+    it('throws if call from code', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      class A extends Jig {
+        static f () { B.load('abc') }
+      }
+      A.deps = { B }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const CA = run.deploy(A)
+      await CA.sync()
+      const error = 'load cannot be called internally'
+      expect(() => CA.f()).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
