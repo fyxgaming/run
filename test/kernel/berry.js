@@ -1926,8 +1926,15 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if call from inside berry', () => {
-      // TODO
+    it('throws if call from inside berry init', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init () { B.load('abc') }
+      }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const error = 'load cannot be called internally'
+      await expect(CB.load('abc')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
