@@ -1972,8 +1972,13 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if called on non-berry class', () => {
-      // TODO
+    it('throws if called on non-berry class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      class A { }
+      expect(() => CB.load.apply(A)).to.throw('load unavailable')
     })
   })
 
