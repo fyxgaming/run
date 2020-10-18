@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const { stub } = require('sinon')
 const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
-const { Jig, LocalCache } = Run
+const { Jig, Berry, LocalCache } = Run
 const unmangle = require('../env/unmangle')
 const PrivateKey = require('bsv/lib/privatekey')
 const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
@@ -2576,38 +2576,122 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('load', () => {
-    it.skip('loads jig', () => {
-
+    it('loads general jig', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      const a = new A()
+      await a.sync()
+      const a2 = await Jig.load(a.location)
+      expect(a2.location).to.equal(a.location)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if load location with a different jig', () => {
-      // TODO
+    it('loads specific jig', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      const a = new A()
+      await a.sync()
+      const a2 = await A.load(a.location)
+      expect(a2.location).to.equal(a.location)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may be called from sidekick code', () => {
-      // TODO
+    it('loads specific jig from local', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const a2 = await A.load(a.location)
+      expect(a2.location).to.equal(a.location)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if bad location', () => {
-      // TODO
+    it('may be called from sidekick code', async () => {
+      const run = new Run()
+      const load = run.deploy(function load (location, J) { return J.load(location) })
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const a2 = await load(a.location, A)
+      expect(a2 instanceof A).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if called internally', () => {
-      // TODO
+    it('throws if load location with a different jig', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      class B extends Jig { }
+      const a = new A()
+      await a.sync()
+      const error = `Cannot load ${a.location}\n\n[jig A] not an instance of B`
+      await expect(B.load(a.location)).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if called from other code', () => {
-      // TODO
+    it('throws if load location with a berry', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      class B extends Berry { }
+      run.deploy(B)
+      await run.sync()
+      const error = '[berry B] not an instance of A'
+      await expect(A.load(`${B.location}_abc`)).to.be.rejectedWith(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if load location with sidekick code', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      class B { }
+      run.deploy(B)
+      await run.sync()
+      const error = 'B not an instance of A'
+      await expect(A.load(B.location)).to.be.rejectedWith(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if bad location', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      await expect(A.load('123')).to.be.rejectedWith('Bad location: "123"')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if called internally', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f (location) { A.load(location) }
+      }
+      const a = new A()
+      await a.sync()
+      expect(() => a.f(a.location)).to.throw('load cannot be called internally')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if called from other code', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      class B extends Jig {
+        f (location, A) { A.load(location) }
+      }
+      const b = new B()
+      await b.sync()
+      expect(() => b.f(b.location, A)).to.throw('load cannot be called internally')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if called on non-jig', () => {
+      expect(() => Jig.load.apply({})).to.throw('load unavailable')
     })
   })
 })
