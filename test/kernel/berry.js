@@ -1818,15 +1818,26 @@ Line 3`
   // Load
   // --------------------------------------------------------------------------
 
-  describe('load', () => {
+  describe.only('load', () => {
     it.skip('load general berry', () => {
+      // TODO
+    })
+    // ------------------------------------------------------------------------
+
+    it.skip('loads specific berry with location', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('loads specific berry', () => {
-      // TODO
+    it('loads specific berry with path', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await CB.load('abc')
+      expect(b.location).to.equal(`${CB.location}_abc`)
+      expect(b instanceof B).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -1850,6 +1861,12 @@ Line 3`
     // ------------------------------------------------------------------------
 
     it.skip('loads from cache if possible', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if load different berry class', () => {
       // TODO
     })
 
