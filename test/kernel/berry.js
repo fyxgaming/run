@@ -1913,8 +1913,15 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('cannot swallow load errors', () => {
-      // TODO
+    it('cannot swallow load errors', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init () { try { this.f() } catch (e) { } }
+        f () { throw new Error() }
+      }
+      const CB = run.deploy(B)
+      await CB.sync()
+      await expect(CB.load('abc')).to.be.rejected
     })
 
     // ------------------------------------------------------------------------
