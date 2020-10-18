@@ -1855,14 +1855,17 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('loads child berry class', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('may be loaded from sidekick code', () => {
-      // TODO
+    it('may be loaded from sidekick code', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      class A { static f (path) { return B.load(path) } }
+      A.deps = { B }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const CA = Run.install(A)
+      const b = await CA.f('abc')
+      expect(b.location).to.equal(`${CB.location}_abc`)
+      expect(b instanceof B).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
