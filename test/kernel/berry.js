@@ -1870,14 +1870,12 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('loads from cache if possible', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if load non-berry jig', () => {
-      // TODO
+    it('throws if load non-berry jig', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      await expect(Berry.load(a.location)).to.be.rejectedWith('[jig A] not an instance of Berry')
     })
 
     // ------------------------------------------------------------------------
