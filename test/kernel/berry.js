@@ -1843,8 +1843,14 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('loads specific berry from local', () => {
-      // TODO
+    it('loads specific berry from local', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await B.load('abc')
+      expect(b.location).to.equal(`${CB.location}_abc`)
+      expect(b instanceof B).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
