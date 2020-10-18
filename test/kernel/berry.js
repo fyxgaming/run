@@ -1880,8 +1880,22 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid location', () => {
-      // TODO
+    it('throws if invalid location', async () => {
+      new Run() // eslint-disable-line
+      await expect(Berry.load(false)).to.be.rejectedWith('Location is not a string')
+      await expect(Berry.load('abc_')).to.be.rejectedWith('Bad location')
+      await expect(Berry.load()).to.be.rejectedWith('Location is not a string')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid path', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      await expect(CB.load(false)).to.be.rejectedWith('Berry path must be a string')
+      await expect(CB.load()).to.be.rejectedWith('Berry path must be a string')
     })
 
     // ------------------------------------------------------------------------
