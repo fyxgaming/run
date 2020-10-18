@@ -492,6 +492,17 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if jig load', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      expect(() => tx.update(() => { A.load('abc') })).to.throw('load disabled during atomic update')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if activate', () => {
       const run2 = new Run()
       new Run() // eslint-disable-line
