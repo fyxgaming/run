@@ -2683,7 +2683,9 @@ describe('Jig', () => {
       class A extends Jig { }
       const a = new A()
       await a.sync()
-      run.timeout = 0
+      run.timeout = 1
+      const sleep = ms => new Promise((resolve, reject) => setTimeout(resolve, ms))
+      stub(run.cache, 'get').callsFake(() => sleep(10))
       await expect(A.load(a.location)).to.be.rejectedWith('load timeout')
     })
 

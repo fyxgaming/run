@@ -1818,7 +1818,7 @@ Line 3`
   // Load
   // --------------------------------------------------------------------------
 
-  describe.only('load', () => {
+  describe('load', () => {
     it('load general berry', async () => {
       const run = new Run()
       class B extends Berry { }
@@ -1827,18 +1827,6 @@ Line 3`
       const b = await Berry.load(`${CB.location}_abc`)
       expect(b.location).to.equal(`${CB.location}_abc`)
       expect(b instanceof CB).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('loads specific berry with location', async () => {
-      const run = new Run()
-      class B extends Berry { }
-      const CB = run.deploy(B)
-      await CB.sync()
-      const b = await CB.load(`${CB.location}_abc`)
-      expect(b.location).to.equal(`${CB.location}_abc`)
-      expect(b instanceof B).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -1874,12 +1862,6 @@ Line 3`
     // ------------------------------------------------------------------------
 
     it.skip('loads from cache if possible', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if load different berry class', () => {
       // TODO
     })
 
