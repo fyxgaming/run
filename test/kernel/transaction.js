@@ -11,7 +11,7 @@ require('chai').use(require('chai-as-promised'))
 const { stub, fake } = require('sinon')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, Transaction, LocalCache, LocalPurse, LocalOwner } = Run
+const { Jig, Berry, Transaction, LocalCache, LocalPurse, LocalOwner } = Run
 const { STRESS } = require('../env/config')
 
 // ------------------------------------------------------------------------------------------------
@@ -499,6 +499,17 @@ describe('Transaction', () => {
       const a = new A()
       await a.sync()
       expect(() => tx.update(() => { A.load('abc') })).to.throw('load disabled during atomic update')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if berry load', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      expect(() => tx.update(() => { CB.load('abc') })).to.throw('load disabled during atomic update')
     })
 
     // ------------------------------------------------------------------------

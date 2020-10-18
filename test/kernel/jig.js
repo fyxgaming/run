@@ -2609,6 +2609,19 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
+    it('loads child jig', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      class B extends A { }
+      const b = new B()
+      await b.sync()
+      const b2 = await A.load(b.location)
+      expect(b2.location).to.equal(b.location)
+      expect(b2 instanceof B).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('may be called from sidekick code', async () => {
       const run = new Run()
       const load = run.deploy(function load (location, J) { return J.load(location) })
@@ -2661,6 +2674,17 @@ describe('Jig', () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
       await expect(A.load('123')).to.be.rejectedWith('Bad location: "123"')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if load times out', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      run.timeout = 0
+      await expect(A.load(a.location)).to.be.rejectedWith('load timeout')
     })
 
     // ------------------------------------------------------------------------
