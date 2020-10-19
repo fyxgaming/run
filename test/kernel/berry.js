@@ -1918,8 +1918,24 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('recursively load jigs in pluck', () => {
-      // TODO
+    it('recursively load jigs in pluck', async () => {
+      new Run() // eslint-disable-line
+      class B extends Berry {
+        static async pluck (path) {
+          const n = parseInt(path)
+          const b = n ? await B.load((n - 1).toString()) : null
+          return new B(b, n)
+        }
+
+        init (b, n) { this.b = b; this.n = n }
+      }
+      const b = await B.load('2')
+      expect(b.n).to.equal(2)
+      expect(b.b.n).to.equal(1)
+      expect(b.b.b.n).to.equal(0)
+      expect(b instanceof B).to.equal(true)
+      expect(b.b instanceof B).to.equal(true)
+      expect(b.b.b instanceof B).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
