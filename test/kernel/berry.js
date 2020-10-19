@@ -1855,6 +1855,87 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
+    it('can load with undeployed berry class', async () => {
+      new Run() // eslint-disable-line
+      class B extends Berry { }
+      const b = await B.load('abc')
+      expect(b instanceof B).to.equal(true)
+      expect(() => b.location).to.throw('Cannot read location')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can load with local berry class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      run.deploy(B)
+      await run.sync()
+      const b = await B.load('abc')
+      expect(b instanceof B).to.equal(true)
+      expect(b.location).to.equal(`${B.location}_abc`)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('load same berry class in pluck', async () => {
+      const run = new Run()
+      class B extends Berry {
+        static async pluck (path) {
+          const c = path.length ? await B.load('') : null
+          return new B(c)
+        }
+
+        init (c) { this.c = c }
+      }
+      const CB = run.deploy(B)
+      await run.sync()
+      const b = await B.load('abc')
+
+      expect(b instanceof B).to.equal(true)
+      expect(b.c instanceof B).to.equal(true)
+      expect(b.c.c).to.equal(null)
+      expect(b.location).to.equal(`${CB.location}_abc`)
+      expect(b.c.location).to.equal(`${CB.location}_`)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('load different berry class in pluck', async () => {
+      const run = new Run()
+      class A extends Berry { }
+      run.deploy(A)
+      class B extends Berry {
+        static async pluck () { return new B(await A.load('a')) }
+        init (a) { this.a = a }
+      }
+      B.deps = { A }
+      run.deploy(B)
+      await run.sync()
+      const b = await B.load('abc')
+      expect(b instanceof B).to.equal(true)
+      expect(b.a instanceof A).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('recursively load jigs in pluck', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('caches jigs as they load', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('cannot swallow load failures', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it('may be loaded from sidekick code', async () => {
       const run = new Run()
       class B extends Berry { }
