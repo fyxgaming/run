@@ -2352,12 +2352,13 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set assigns ownership', () => {
+    it('set claims ownership', () => {
       const a = makeJig({})
       const b = makeJig({})
       const c = new Membrane({})
       a.n = c
       expect(() => { b.n = c }).to.throw()
+      expect(unmangle(Proxy2._getHandler(c))._jig).to.equal(a)
     })
   })
 
