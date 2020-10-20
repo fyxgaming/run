@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { StandardLock } = Run
 const unmangle = require('../env/unmangle')
-const { _location, _nonce, _satoshis, _owner, _init } = unmangle(unmangle(Run)._bindings)
+const { _location, _nonce, _satoshis, _owner, _markUndeployed } = unmangle(unmangle(Run)._bindings)
 
 // ------------------------------------------------------------------------------------------------
 // Bindings
@@ -184,13 +184,13 @@ describe('Bindings', () => {
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _init
+  // _markUndeployed
   // ----------------------------------------------------------------------------------------------
 
-  describe('_init', () => {
+  describe('_markUndeployed', () => {
     it('initializess undeployed bindings', () => {
       const o = {}
-      _init(o)
+      _markUndeployed(o)
       expect(o.origin).to.equal('error://Undeployed')
       expect(o.location).to.equal('error://Undeployed')
       expect(o.nonce).to.equal(0)
