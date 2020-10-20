@@ -555,8 +555,10 @@ Line 3`
       await run.sync()
 
       function test (b) {
-        expect(Object.getOwnPropertyNames(b)).to.deep.equal(['location', 'm', 'n', 'p'])
-        expect(b.p).to.deep.equal(['location', 'm', 'n'])
+        const props1 = ['location', 'm', 'n', 'nonce', 'origin', 'p']
+        const props2 = ['location', 'm', 'n', 'nonce', 'origin']
+        expect(Object.getOwnPropertyNames(b)).to.deep.equal(props1)
+        expect(b.p).to.deep.equal(props2)
       }
 
       const b = await run.load('123', { berry: B })
