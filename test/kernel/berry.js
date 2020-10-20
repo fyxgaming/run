@@ -1918,6 +1918,29 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
+    it('load jig in pluck', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      class B extends Berry {
+        static async pluck (location) {
+          const a = await A.load(location)
+          return new B(a)
+        }
+
+        init (a) { this.a = a }
+      }
+      B.deps = { A }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await CB.load(a.location)
+      expect(b.a instanceof A).to.equal(true)
+      expect(b.a.location).to.equal(a.location)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('recursively load jigs in pluck', async () => {
       new Run() // eslint-disable-line
       class B extends Berry {
