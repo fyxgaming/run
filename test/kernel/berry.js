@@ -832,7 +832,7 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('cannot swallow errors', async () => {
+    it('cannot swallow init errors', async () => {
       const run = new Run()
 
       class B extends Berry {
@@ -1940,14 +1940,36 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('caches jigs as they load', () => {
-      // TODO
+    it('cannot swallow berry load failures', async () => {
+      new Run() // eslint-disable-line
+      class B extends Berry {
+        static async pluck (path) {
+          try {
+            if (path === 'outer') await B.load('inner')
+          } catch (e) { /* illegal swallow */ }
+          if (path === 'inner') throw new Error('inner error')
+          return new B()
+        }
+      }
+      await expect(B.load('outer')).to.be.rejectedWith('inner error')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('cannot swallow load failures', () => {
-      // TODO
+    it('cannot swallow jig load failures', async () => {
+      const run = new Run()
+      const A = run.deploy(class A extends Jig { })
+      await run.sync()
+      class B extends Berry {
+        static async pluck (path) {
+          try {
+            await A.load('abc')
+          } catch (e) { /* illegal swallow */ }
+          return new B()
+        }
+      }
+      B.deps = { A }
+      await expect(B.load('')).to.be.rejectedWith('Bad location')
     })
 
     // ------------------------------------------------------------------------
