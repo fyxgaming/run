@@ -23,7 +23,8 @@ describe('Rules', () => {
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
-      expect(rules._bindings).to.equal(true)
+      expect(rules._creationBindings).to.equal(true)
+      expect(rules._utxoBindings).to.equal(true)
       expect(rules._reserved).to.equal(true)
       expect(rules._codeMethods).to.equal(true)
       expect(rules._jigMethods).to.equal(false)
@@ -51,7 +52,8 @@ describe('Rules', () => {
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
-      expect(rules._bindings).to.equal(true)
+      expect(rules._creationBindings).to.equal(true)
+      expect(rules._utxoBindings).to.equal(true)
       expect(rules._reserved).to.equal(true)
       expect(rules._codeMethods).to.equal(true)
       expect(rules._jigMethods).to.equal(false)
@@ -78,7 +80,8 @@ describe('Rules', () => {
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
-      expect(rules._bindings).to.equal(true)
+      expect(rules._creationBindings).to.equal(true)
+      expect(rules._utxoBindings).to.equal(true)
       expect(rules._reserved).to.equal(false)
       expect(rules._codeMethods).to.equal(true)
       expect(rules._jigMethods).to.equal(false)
@@ -105,7 +108,8 @@ describe('Rules', () => {
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
-      expect(rules._bindings).to.equal(true)
+      expect(rules._creationBindings).to.equal(true)
+      expect(rules._utxoBindings).to.equal(true)
       expect(rules._reserved).to.equal(true)
       expect(rules._codeMethods).to.equal(false)
       expect(rules._jigMethods).to.equal(true)
@@ -132,7 +136,8 @@ describe('Rules', () => {
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
-      expect(rules._bindings).to.equal(true)
+      expect(rules._creationBindings).to.equal(true)
+      expect(rules._utxoBindings).to.equal(false)
       expect(rules._reserved).to.equal(true)
       expect(rules._codeMethods).to.equal(false)
       expect(rules._jigMethods).to.equal(false)
@@ -159,7 +164,8 @@ describe('Rules', () => {
       expect(rules._parentJig).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
-      expect(rules._bindings).to.equal(false)
+      expect(rules._creationBindings).to.equal(false)
+      expect(rules._utxoBindings).to.equal(false)
       expect(rules._reserved).to.equal(false)
       expect(rules._codeMethods).to.equal(false)
       expect(rules._jigMethods).to.equal(false)
@@ -185,7 +191,8 @@ describe('Rules', () => {
       const parentRules = {
         _admin: Math.random() < 0.5,
         _errors: Math.random() < 0.5,
-        _bindings: Math.random() < 0.5,
+        _creationBindings: Math.random() < 0.5,
+        _utxoBindings: Math.random() < 0.5,
         _reserved: Math.random() < 0.5,
         _codeMethods: Math.random() < 0.5,
         _jigMethods: Math.random() < 0.5,
@@ -205,7 +212,8 @@ describe('Rules', () => {
       expect(rules._parentJig).to.equal(parentJig)
       expect(rules._admin).to.equal(parentRules._admin)
       expect(rules._errors).to.equal(parentRules._errors)
-      expect(rules._bindings).to.equal(false)
+      expect(rules._creationBindings).to.equal(false)
+      expect(rules._utxoBindings).to.equal(false)
       expect(rules._reserved).to.equal(false)
       expect(rules._codeMethods).to.equal(false)
       expect(rules._jigMethods).to.equal(false)

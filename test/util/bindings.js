@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { StandardLock } = Run
 const unmangle = require('../env/unmangle')
-const { _location, _nonce, _satoshis, _owner, _markUndeployed } = unmangle(unmangle(Run)._bindings)
+const { _location, _nonce, _satoshis, _owner, _markUndeployed } = unmangle(unmangle(Run)._Bindings)
 
 // ------------------------------------------------------------------------------------------------
 // Bindings

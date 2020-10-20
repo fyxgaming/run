@@ -551,7 +551,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot swallow inner errors', () => {
-      const options = { _recordableTarget: true, _recordCalls: true, _bindings: true }
+      const options = { _recordableTarget: true, _recordCalls: true, _creationBindings: true }
       class A {
         static f () {
           try { this.location = '123' } catch (e) { }
@@ -744,68 +744,27 @@ describe('Membrane', () => {
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect(() => { delete a.init }).to.throw('Cannot delete init')
     })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if set location binding', () => {
-      const a = new Membrane({}, mangle({ _berryMethods: true, _bindings: true }))
-      expect(() => { a.location = 1 }).to.throw('Cannot set location')
-    })
-
-    // ------------------------------------------------------------------------
-    it('can set non-location bindings', () => {
-      const a = new Membrane({}, mangle({ _berryMethods: true, _bindings: true }))
-      a.origin = 1
-      a.nonce = 1
-      a.owner = 1
-      a.satoshis = 1
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('can define non-location bindings', () => {
-      const a = new Membrane({}, mangle({ _berryMethods: true, _bindings: true }))
-      const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
-      Object.defineProperty(a, 'origin', desc)
-      Object.defineProperty(a, 'nonce', desc)
-      Object.defineProperty(a, 'owner', desc)
-      Object.defineProperty(a, 'satoshis', desc)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('can delete non-location bindings', () => {
-      const a = new Membrane({}, mangle({ _berryMethods: true, _bindings: true }))
-      delete a.origin
-      delete a.nonce
-      delete a.owner
-      delete a.satoshis
-    })
   })
 
   // --------------------------------------------------------------------------
-  // Bindings
+  // Creation bindings
   // --------------------------------------------------------------------------
 
-  describe('Bindings', () => {
-    it('read bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
+  describe('Creation bindings', () => {
+    it('read creation bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
       _sudo(() => { A.location = 'abc_o1' })
       _sudo(() => { A.origin = 'def_o2' })
       _sudo(() => { A.nonce = 1 })
-      _sudo(() => { A.owner = DUMMY_OWNER })
-      _sudo(() => { A.satoshis = 0 })
       expect(A.location).to.equal('abc_o1')
       expect(A.origin).to.equal('def_o2')
       expect(A.nonce).to.equal(1)
-      expect(A.owner).to.equal(DUMMY_OWNER)
-      expect(A.satoshis).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
 
     it('read native bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
+      const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
       _sudo(() => { A.location = 'native://A' })
       _sudo(() => { A.origin = 'native://A' })
       expect(A.location).to.equal('native://A')
@@ -814,23 +773,116 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('read undetermined bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
+    it('throws if read undetermined creation bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
       _sudo(() => { A.location = '_o1' })
       _sudo(() => { A.origin = 'commit://def_d2' })
-      _sudo(() => { A.owner = new Unbound() })
-      _sudo(() => { A.satoshis = new Unbound() })
       expect(() => A.location).to.throw('Cannot read location')
       expect(() => A.origin).to.throw('Cannot read origin')
       expect(() => A.nonce).to.throw('Cannot read nonce')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set inner object creation binding properties', () => {
+      const jig = new Membrane(class A { }, mangle({ _creationBindings: true }))
+      const o = new Membrane({}, mangle({ _parentJig: jig }))
+      o.location = 'abc_o1'
+      o.nonce = 'bad nonce'
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if set creation bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _creationBindings: true }))
+      expect(() => { A.location = 'abc_o1' }).to.throw('Cannot set location')
+      expect(() => { A.origin = 'def_d2' }).to.throw('Cannot set origin')
+      expect(() => { A.nonce = 1 }).to.throw('Cannot set nonce')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot delete creation bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _creationBindings: true }))
+      expect(() => { delete A.location }).to.throw('Cannot delete location')
+      expect(() => { delete A.origin }).to.throw('Cannot delete origin')
+      expect(() => { delete A.nonce }).to.throw('Cannot delete nonce')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can delete inner object creation bindings', () => {
+      const jig = new Membrane(class A { }, mangle({ _creationBindings: true }))
+      const o = new Membrane({}, mangle({ _parentJig: jig }))
+      delete o.location
+      delete o.origin
+      delete o.nonce
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get descriptor for creation bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
+      _sudo(() => { A.location = 'abc_o1' })
+      _sudo(() => { A.origin = 'def_o2' })
+      _sudo(() => { A.nonce = 1 })
+      expect(Object.getOwnPropertyDescriptor(A, 'location').value).to.equal('abc_o1')
+      expect(Object.getOwnPropertyDescriptor(A, 'origin').value).to.equal('def_o2')
+      expect(Object.getOwnPropertyDescriptor(A, 'nonce').value).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get descriptor for creation bindings on inner objects', () => {
+      const jig = new Membrane(class A { }, mangle({ _creationBindings: true }))
+      const o = new Membrane({}, mangle({ _admin: true, _parentJig: jig }))
+      _sudo(() => { o.location = [] })
+      _sudo(() => { o.origin = null })
+      _sudo(() => { o.nonce = new Set() })
+      expect(Object.getOwnPropertyDescriptor(o, 'location').value).to.deep.equal([])
+      expect(Object.getOwnPropertyDescriptor(o, 'origin').value).to.equal(null)
+      expect(Object.getOwnPropertyDescriptor(o, 'nonce').value).to.deep.equal(new Set())
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if get descriptor of undetermined creation bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
+      _sudo(() => { A.location = '_o1' })
+      _sudo(() => { A.origin = 'commit://def_d2' })
+      expect(() => Object.getOwnPropertyDescriptor(A, 'location').value).to.throw('Cannot read location')
+      expect(() => Object.getOwnPropertyDescriptor(A, 'origin').value).to.throw('Cannot read origin')
+      expect(() => Object.getOwnPropertyDescriptor(A, 'nonce').value).to.throw('Cannot read nonce')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Utxo bindings
+  // --------------------------------------------------------------------------
+
+  describe('Utxo bindings', () => {
+    it('read utxo bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
+      _sudo(() => { A.owner = DUMMY_OWNER })
+      _sudo(() => { A.satoshis = 0 })
+      expect(A.owner).to.equal(DUMMY_OWNER)
+      expect(A.satoshis).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if read undetermined utxo bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
+      _sudo(() => { A.owner = new Unbound() })
+      _sudo(() => { A.satoshis = new Unbound() })
       expect(() => A.owner).to.throw('Cannot read owner')
       expect(() => A.satoshis).to.throw('Cannot read satoshis')
     })
 
     // ------------------------------------------------------------------------
 
-    it('read unbound bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
+    it('read unbound utxo bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
       _sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
       _sudo(() => { A.satoshis = new Unbound(1) })
       expect(A.owner).to.equal(DUMMY_OWNER)
@@ -839,8 +891,8 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set bindings makes them unbound', () => {
-      const A2 = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
+    it('set utxo bindings makes them unbound', () => {
+      const A2 = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
       A2.owner = DUMMY_OWNER
       A2.satoshis = 1
       expect(_sudo(() => A2.owner) instanceof Unbound).to.equal(true)
@@ -849,8 +901,8 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('define bindings makes them unbound', () => {
-      const A2 = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
+    it('define utxo bindings makes them unbound', () => {
+      const A2 = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
       Object.defineProperty(A2, 'owner', { value: DUMMY_OWNER, configurable: true, enumerable: true, writable: true })
       Object.defineProperty(A2, 'satoshis', { value: 1, configurable: true, enumerable: true, writable: true })
       expect(_sudo(() => A2.owner) instanceof Unbound).to.equal(true)
@@ -860,7 +912,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('set owner when undetermined', () => {
-      const A2 = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
+      const A2 = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
       _sudo(() => { A2.owner = new Unbound(undefined) })
       A2.owner = DUMMY_OWNER
       expect(A2.owner).to.equal(DUMMY_OWNER)
@@ -869,7 +921,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('set satoshis when undetermined', () => {
-      const A2 = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
+      const A2 = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
       _sudo(() => { A2.satoshis = new Unbound(undefined) })
       A2.satoshis = 1
       expect(A2.satoshis).to.equal(1)
@@ -877,34 +929,25 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set inner object binding properties', () => {
-      const jig = new Membrane(class A { }, mangle({ _bindings: true }))
+    it('set inner object creation utxo properties', () => {
+      const jig = new Membrane(class A { }, mangle({ _utxoBindings: true }))
       const o = new Membrane({}, mangle({ _parentJig: jig }))
-      o.location = 'abc_o1'
       o.owner = DUMMY_OWNER
+      o.satoshis = 123
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if set invalid bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _bindings: true }))
+    it('throws if set invalid utxo bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _utxoBindings: true }))
       expect(() => { A.owner = [] }).to.throw('Invalid owner')
       expect(() => { A.satoshis = null }).to.throw('satoshis must be a number')
     })
 
     // ------------------------------------------------------------------------
 
-    it('cannot set location, origin, or nonce', () => {
-      const A = new Membrane(class A { }, mangle({ _bindings: true }))
-      expect(() => { A.location = 'abc_o1' }).to.throw('Cannot set location')
-      expect(() => { A.origin = 'def_d2' }).to.throw('Cannot set origin')
-      expect(() => { A.nonce = 1 }).to.throw('Cannot set nonce')
-    })
-
-    // ------------------------------------------------------------------------
-
     it('cannot change owner once unbound', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
+      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
       _sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
       expect(() => { A.owner = DUMMY_OWNER }).to.throw('Cannot set owner')
     })
@@ -912,86 +955,63 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot change satoshis once unbound', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
+      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
       _sudo(() => { A.satoshis = new Unbound(1) })
       expect(() => { A.satoshis = 1 }).to.throw('Cannot set satoshis')
     })
 
     // ------------------------------------------------------------------------
 
-    it('cannot delete jig bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _bindings: true }))
-      expect(() => { delete A.location }).to.throw('Cannot delete location')
-      expect(() => { delete A.origin }).to.throw('Cannot delete origin')
-      expect(() => { delete A.nonce }).to.throw('Cannot delete nonce')
+    it('cannot delete utxo bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _utxoBindings: true }))
       expect(() => { delete A.owner }).to.throw('Cannot delete owner')
       expect(() => { delete A.satoshis }).to.throw('Cannot delete satoshis')
     })
 
     // ------------------------------------------------------------------------
 
-    it('can delete inner object bindings', () => {
-      const jig = new Membrane(class A { }, mangle({ _bindings: true }))
+    it('can delete inner object utxo bindings', () => {
+      const jig = new Membrane(class A { }, mangle({ _utxoBindings: true }))
       const o = new Membrane({}, mangle({ _parentJig: jig }))
-      delete o.location
-      delete o.origin
-      delete o.nonce
       delete o.owner
       delete o.satoshis
     })
 
     // ------------------------------------------------------------------------
 
-    it('read bindings on jigs', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
-      _sudo(() => { A.location = 'abc_o1' })
-      _sudo(() => { A.origin = 'def_o2' })
-      _sudo(() => { A.nonce = 1 })
+    it('get descriptor for utxo bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
       _sudo(() => { A.owner = DUMMY_OWNER })
       _sudo(() => { A.satoshis = 0 })
-      expect(Object.getOwnPropertyDescriptor(A, 'location').value).to.equal('abc_o1')
-      expect(Object.getOwnPropertyDescriptor(A, 'origin').value).to.equal('def_o2')
-      expect(Object.getOwnPropertyDescriptor(A, 'nonce').value).to.equal(1)
       expect(Object.getOwnPropertyDescriptor(A, 'owner').value).to.equal(DUMMY_OWNER)
       expect(Object.getOwnPropertyDescriptor(A, 'satoshis').value).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
 
-    it('read bindings on inner objects', () => {
-      const jig = new Membrane(class A { }, mangle({ _bindings: true }))
+    it('get descriptor for utxo bindings on inner objects', () => {
+      const jig = new Membrane(class A { }, mangle({ _utxoBindings: true }))
       const o = new Membrane({}, mangle({ _admin: true, _parentJig: jig }))
-      _sudo(() => { o.location = [] })
-      _sudo(() => { o.origin = null })
-      _sudo(() => { o.nonce = new Set() })
       _sudo(() => { o.owner = false })
       _sudo(() => { o.satoshis = -1000 })
-      expect(Object.getOwnPropertyDescriptor(o, 'location').value).to.deep.equal([])
-      expect(Object.getOwnPropertyDescriptor(o, 'origin').value).to.equal(null)
-      expect(Object.getOwnPropertyDescriptor(o, 'nonce').value).to.deep.equal(new Set())
       expect(Object.getOwnPropertyDescriptor(o, 'owner').value).to.equal(false)
       expect(Object.getOwnPropertyDescriptor(o, 'satoshis').value).to.equal(-1000)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if get descriptor of undetermined bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
-      _sudo(() => { A.location = '_o1' })
-      _sudo(() => { A.origin = 'commit://def_d2' })
+    it('throws if get descriptor of undetermined utxo bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
       _sudo(() => { A.owner = new Unbound() })
       _sudo(() => { A.satoshis = new Unbound() })
-      expect(() => Object.getOwnPropertyDescriptor(A, 'location').value).to.throw('Cannot read location')
-      expect(() => Object.getOwnPropertyDescriptor(A, 'origin').value).to.throw('Cannot read origin')
-      expect(() => Object.getOwnPropertyDescriptor(A, 'nonce').value).to.throw('Cannot read nonce')
       expect(() => Object.getOwnPropertyDescriptor(A, 'owner').value).to.throw('Cannot read owner')
       expect(() => Object.getOwnPropertyDescriptor(A, 'satoshis').value).to.throw('Cannot read satoshis')
     })
 
     // ------------------------------------------------------------------------
 
-    it('can get descriptor of unbound bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _bindings: true }))
+    it('can get descriptor of unbound utxo bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
       _sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
       _sudo(() => { A.satoshis = new Unbound(1) })
       expect(Object.getOwnPropertyDescriptor(A, 'owner').value).to.equal(DUMMY_OWNER)
