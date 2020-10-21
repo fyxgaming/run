@@ -16,7 +16,7 @@ const {
   _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
   _anonymizeSourceCode, _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty,
   _setOwnProperty, _ownGetters, _ownMethods, _sameJig, _hasJig, _addJigs, _subtractJigs, _limit,
-  _Timeout, _deterministicJSONStringify, _deterministicCompareKeys
+  _Timeout, _deterministicJSONStringify, _deterministicCompareKeys, _isNegativeZero
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -520,6 +520,22 @@ describe('Misc', () => {
       expect(_isBoolean('true')).to.equal(false)
       expect(_isBoolean(null)).to.equal(false)
       expect(_isBoolean(0)).to.equal(false)
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _isNegativeZero
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_isNegativeZero', () => {
+    it('returns whether negative zero', () => {
+      expect(_isNegativeZero(-0)).to.equal(true)
+      expect(_isNegativeZero(1 / -Infinity)).to.equal(true)
+      expect(_isNegativeZero(0)).to.equal(false)
+      expect(_isNegativeZero(1)).to.equal(false)
+      expect(_isNegativeZero(-1)).to.equal(false)
+      expect(_isNegativeZero(-Infinity)).to.equal(false)
+      expect(_isNegativeZero(NaN)).to.equal(false)
     })
   })
 

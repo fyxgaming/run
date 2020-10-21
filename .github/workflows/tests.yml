@@ -35,7 +35,7 @@ jobs:
   linux_tests:
     name: Linux Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
     - name: Setup Node 10
       uses: actions/setup-node@v1
