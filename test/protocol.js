@@ -39,7 +39,7 @@ describe('Protocol', () => {
   it.skip('Capture Relay', () => captureAppTxns('relayx.io', './data/relay.json')).timeout(1000000)
   it.skip('Capture Zhell', () => captureAppTxns('b1b605103e', './data/zhell.json')).timeout(1000000)
 
-  it('Unit', () => runProtocolTest(require('./data/unit.json'))).timeout(1000000)
+  it.skip('Unit', () => runProtocolTest(require('./data/unit.json'))).timeout(1000000)
   it('Relay', () => runProtocolTest(require('./data/relay.json'))).timeout(1000000)
   it('Zhell', () => runProtocolTest(require('./data/zhell.json'))).timeout(1000000)
   it('Kronoverse', () => runProtocolTest(require('./data/kronoverse.json'))).timeout(1000000)
