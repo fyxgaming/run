@@ -8,7 +8,7 @@ const { PrivateKey, Transaction } = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { StandardLock } = Run
+const { CommonLock } = Run
 const unmangle = require('../env/unmangle')
 const { _location, _nonce, _satoshis, _owner, _markUndeployed } = unmangle(unmangle(Run)._Bindings)
 
@@ -131,10 +131,10 @@ describe('Bindings', () => {
         const privkey = new PrivateKey(bsvNetwork)
         const pubkey = privkey.publicKey.toString()
         const addr = privkey.toAddress().toString()
-        const bytes = new StandardLock(addr).script()
+        const bytes = new CommonLock(addr).script()
         expect(_owner(pubkey).script()).to.deep.equal(bytes)
         expect(_owner(addr).script()).to.deep.equal(bytes)
-        expect(_owner(new StandardLock(addr)).script()).to.deep.equal(bytes)
+        expect(_owner(new CommonLock(addr)).script()).to.deep.equal(bytes)
       }
     })
 

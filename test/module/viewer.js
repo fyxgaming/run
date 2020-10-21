@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { PrivateKey, PublicKey, Transaction } = require('bsv')
 const Run = require('../env/run')
-const { StandardLock } = Run
+const { CommonLock } = Run
 const { Viewer } = Run.module
 
 // ------------------------------------------------------------------------------------------------
@@ -24,7 +24,7 @@ describe('Viewer', () => {
     it('address owners', () => {
       const address = new PrivateKey().toAddress().toString()
       const viewer = new Viewer(address)
-      expect(viewer.lock instanceof StandardLock).to.equal(true)
+      expect(viewer.lock instanceof CommonLock).to.equal(true)
       expect(viewer.lock.address).to.equal(address)
     })
 
@@ -34,7 +34,7 @@ describe('Viewer', () => {
       const pubkey = new PrivateKey().publicKey.toString()
       const address = new PublicKey(pubkey).toAddress().toString()
       const viewer = new Viewer(pubkey)
-      expect(viewer.lock instanceof StandardLock).to.equal(true)
+      expect(viewer.lock instanceof CommonLock).to.equal(true)
       expect(viewer.lock.address).to.equal(address)
     })
 

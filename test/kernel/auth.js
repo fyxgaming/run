@@ -12,7 +12,6 @@ const Run = require('../env/run')
 const { Jig, Berry, Code } = Run
 const { LocalCache } = Run.module
 const { expectTx } = require('../env/misc')
-const unmangle = require('../env/unmangle')
 const { stub } = require('sinon')
 
 // ------------------------------------------------------------------------------------------------

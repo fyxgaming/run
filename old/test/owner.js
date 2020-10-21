@@ -181,11 +181,11 @@ describe('Owner', () => {
     it('should throw if partially signed', () => {
     })
 
-    it('should pass StandardLock for address resource owner', () => {
+    it('should pass CommonLock for address resource owner', () => {
       // Jig / Code
     })
 
-    it('should pass StandardLock for pubkey resource owner', () => {
+    it('should pass CommonLock for pubkey resource owner', () => {
       // Jig / Code
     })
 
@@ -288,14 +288,14 @@ describe('Owner', () => {
   describe('ours', () => {
     it('should return true for same address lock', () => {
       const privateKey = new PrivateKey('testnet')
-      const sameLock = new StandardLock(privateKey.toAddress().toString())
+      const sameLock = new CommonLock(privateKey.toAddress().toString())
       const owner = new LocalOwner({ privkey: privateKey })
       expect(owner.ours(sameLock)).to.equal(true)
     })
 
     it('should return false for different addresses', () => {
       const privateKey = new PrivateKey('testnet')
-      const differentLock = new StandardLock(privateKey.toAddress().toString())
+      const differentLock = new CommonLock(privateKey.toAddress().toString())
       const owner = new LocalOwner()
       expect(owner.ours(differentLock)).to.equal(false)
     })
@@ -328,14 +328,14 @@ describe('Owner', () => {
   describe('ours', () => {
     it('should return true for same locking scripts', () => {
       const address = new PrivateKey('testnet').toAddress().toString()
-      const sameLock = new StandardLock(address)
+      const sameLock = new CommonLock(address)
       const viewer = new Viewer(address)
       expect(viewer.ours(sameLock)).to.equal(true)
     })
 
     it('should return false for different addresses', () => {
       const address = new PrivateKey('testnet').toAddress().toString()
-      const differentLock = new StandardLock(new PrivateKey().toAddress().toString())
+      const differentLock = new CommonLock(new PrivateKey().toAddress().toString())
       const viewer = new Viewer(address)
       expect(viewer.ours(differentLock)).to.equal(false)
     })

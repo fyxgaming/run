@@ -11,7 +11,7 @@ const { Address, PrivateKey, PublicKey, Transaction } = require('bsv')
 const { COVER } = require('../env/config')
 const { getExtrasBlockchain } = require('../env/misc')
 const Run = require('../env/run')
-const { Jig, StandardLock } = Run
+const { Jig, CommonLock } = Run
 const { Group } = Run.extra
 const { LocalOwner, Mockchain } = Run.module
 
@@ -101,13 +101,13 @@ describe('LocalOwner', () => {
   // --------------------------------------------------------------------------
 
   describe('sign', () => {
-    it('signs with standard lock', async () => {
+    it('signs with common lock', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { set () { this.n = 1 }}
       const a = new A()
       a.set()
       await a.sync()
-      expect(a.owner instanceof StandardLock)
+      expect(a.owner instanceof CommonLock)
     })
 
     // ------------------------------------------------------------------------
