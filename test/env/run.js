@@ -59,7 +59,7 @@ if (COVER) {
   Run.cover('asm')
   Run.cover('expect')
   Run.cover('Group')
-  Run.cover('hex')
+  Run.cover('Hex')
   Run.cover('Token')
 
   // Replays do not work in cover mode so we disable preverification
@@ -76,7 +76,7 @@ Run.getExtrasBlockchain = async function () {
     run.deploy(Run.asm)
     run.deploy(Run.expect)
     run.deploy(Run.Group)
-    run.deploy(Run.hex)
+    run.deploy(Run.Hex)
     run.deploy(Run.Token)
   })
   await run.sync()
