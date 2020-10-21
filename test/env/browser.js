@@ -62,7 +62,7 @@ async function runTests () {
     let done = false
 
     try {
-      done = await driver.executeScript('return { done }')
+      done = await driver.executeScript('return { done }').done
     } catch (e) {
       console.warn('Error polling done:', e)
     }
