@@ -11,6 +11,12 @@ const { _payload } = unmangle(Run)
 const { expect } = require('chai')
 
 // ------------------------------------------------------------------------------------------------
+// Globals
+// ------------------------------------------------------------------------------------------------
+
+let EXTRAS_MOCKCHAIN = null
+
+// ------------------------------------------------------------------------------------------------
 // payFor
 // ------------------------------------------------------------------------------------------------
 
@@ -118,5 +124,33 @@ function testRecord (f) {
 }
 
 // ------------------------------------------------------------------------------------------------
+// getExtrasBlockchain
+// ------------------------------------------------------------------------------------------------
 
-module.exports = { populatePreviousOutputs, payFor, expectTx, testRecord }
+// If on mock, pre-deploy the built-in classes to a common mockchain and make
+// that mockchain available for those tests that need it.
+async function getExtrasBlockchain () {
+  if (Run.defaults.network !== 'mock') return undefined
+
+  if (EXTRAS_MOCKCHAIN) return EXTRAS_MOCKCHAIN
+
+  const { CAPTURE_UNITS, CaptureMockchain } = require('../data/capture')
+  EXTRAS_MOCKCHAIN = CAPTURE_UNITS ? new CaptureMockchain() : new Run.Mockchain()
+
+  const run = new Run({ blockchain: EXTRAS_MOCKCHAIN })
+  run.transaction(() => {
+    run.deploy(Run.asm)
+    run.deploy(Run.expect)
+    run.deploy(Run.Group)
+    run.deploy(Run.Hex)
+    run.deploy(Run.Token)
+  })
+  await run.sync()
+  run.deactivate()
+
+  return EXTRAS_MOCKCHAIN
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { populatePreviousOutputs, payFor, expectTx, testRecord, getExtrasBlockchain }

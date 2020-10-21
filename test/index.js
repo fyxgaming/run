@@ -7,6 +7,8 @@
 require('./protocol')
 require('./run')
 
+require('./data/capture')
+
 require('./extra/asm')
 require('./extra/expect')
 require('./extra/group')

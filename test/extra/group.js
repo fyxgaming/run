@@ -11,6 +11,7 @@ const bsv = require('bsv')
 const { PrivateKey, Script } = bsv
 const Run = require('../env/run')
 const { COVER } = require('../env/config')
+const { getExtrasBlockchain } = require('../env/misc')
 const { Group, Jig, LocalCache } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -118,7 +119,7 @@ describe('Group', () => {
   // --------------------------------------------------------------------------
 
   it('assign as jig owner', async () => {
-    const run = new Run({ blockchain: await Run.getExtrasBlockchain() })
+    const run = new Run({ blockchain: await getExtrasBlockchain() })
     class A extends Jig { init (owner) { this.owner = owner } }
     const group = new Group([run.owner.pubkey])
     const a = new A(group)
