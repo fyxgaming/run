@@ -30,7 +30,7 @@ describe('Group', () => {
     for (let i = 0; i < n; i++) pubkeys.push(new PrivateKey().publicKey.toString())
     const lock = new Group(pubkeys, m)
     const script = lock.script()
-    const asm = new Script(bsv.deps.Buffer.from(script)).toASM()
+    const asm = Script.fromHex(script).toASM()
     expect(lock.domain()).to.equal(1 + 74 * m)
     expect(asm).to.equal(`OP_${m} ${pubkeys.join(' ')} OP_${n} OP_CHECKMULTISIG`)
   }

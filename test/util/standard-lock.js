@@ -30,12 +30,12 @@ describe('StandardLock', () => {
       expect(() => new StandardLock('3P14').script()).to.throw('Address too short: 3P14')
     })
 
-    it('returns P2PKH buffer', () => {
+    it('returns P2PKH script', () => {
       const addr = '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
       const script = bsv.Script.fromAddress(addr)
-      const buffer1 = new Uint8Array(script.toBuffer())
-      const buffer2 = new StandardLock(addr).script()
-      expect(buffer1).to.deep.equal(buffer2)
+      const hex1 = script.toHex()
+      const hex2 = new StandardLock(addr).script()
+      expect(hex1).to.deep.equal(hex2)
     })
   })
 

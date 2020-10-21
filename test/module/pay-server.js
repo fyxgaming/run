@@ -73,7 +73,7 @@ describe('PayServer', () => {
 
     it('pay for non-standard inputs', async () => {
       class CustomLock {
-        script () { return new Uint8Array([0x01]) }
+        script () { return '01' }
         domain () { return 1 }
       }
 

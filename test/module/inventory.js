@@ -53,7 +53,7 @@ describe('Inventory', () => {
       const run = new Run()
       class A extends Jig { init (owner) { this.owner = owner } }
       class CustomLock {
-        script () { return new Uint8Array() }
+        script () { return '' }
         domain () { return 0 }
       }
       await run.deploy(CustomLock).sync()

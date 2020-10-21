@@ -8,7 +8,6 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const unmangle = require('../env/unmangle')
 const { UnimplementedError } = Run.errors
 const { Blockchain, Purse, Logger, Cache, Lock, Owner } = Run.api
 
@@ -23,11 +22,15 @@ describe('Blockchain API', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+
   describe('fetch', () => {
     it('throws UnimplementedError by default', async () => {
       await expect(new Blockchain().fetch()).to.be.rejectedWith(UnimplementedError)
     })
   })
+
+  // --------------------------------------------------------------------------
 
   describe('utxos', () => {
     it('throws UnimplementedError by default', async () => {
@@ -35,11 +38,15 @@ describe('Blockchain API', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+
   describe('time', () => {
     it('throws UnimplementedError by default', async () => {
       await expect(new Blockchain().time()).to.be.rejectedWith(UnimplementedError)
     })
   })
+
+  // --------------------------------------------------------------------------
 
   describe('spends', () => {
     it('throws UnimplementedError by default', async () => {
@@ -47,11 +54,15 @@ describe('Blockchain API', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+
   describe('network', () => {
     it('throws UnimplementedError by default', async () => {
       expect(() => new Blockchain().network).to.throw(UnimplementedError)
     })
   })
+
+  // --------------------------------------------------------------------------
 
   describe('instanceof', () => {
     it('returns true if all required properties are present', () => {
@@ -66,6 +77,8 @@ describe('Blockchain API', () => {
       expect(blockchain instanceof Blockchain).to.equal(true)
       expect(Object.assign(() => {}, blockchain) instanceof Blockchain).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
 
     it('returns false if required property is missing', () => {
       const blockchain = {
@@ -84,6 +97,8 @@ describe('Blockchain API', () => {
       expect(Object.assign({}, blockchain, { network: undefined }) instanceof Blockchain).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false if required properties have wrong types', () => {
       const blockchain = { broadcast: () => {}, fetch: () => {}, utxos: () => {}, network: 'test' }
       expect(Object.assign({}, blockchain, { broadcast: 'method' }) instanceof Blockchain).to.equal(false)
@@ -93,6 +108,8 @@ describe('Blockchain API', () => {
       expect(Object.assign({}, blockchain, { spends: 'abc' }) instanceof Blockchain).to.equal(false)
       expect(Object.assign({}, blockchain, { network: () => {} }) instanceof Blockchain).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
 
     it('returns false for non-objects', () => {
       expect(0 instanceof Blockchain).to.equal(false)
@@ -116,11 +133,15 @@ describe('Purse API ', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+
   describe('broadcast', () => {
     it('throws UnimplementedError by default', async () => {
       await expect(new Purse().broadcast()).to.be.rejectedWith(UnimplementedError)
     })
   })
+
+  // --------------------------------------------------------------------------
 
   describe('instanceof', () => {
     it('returns true if pay method is present', () => {
@@ -129,12 +150,16 @@ describe('Purse API ', () => {
       expect(Object.assign(function () {}, purse) instanceof Purse).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false if pay method is missing or invalid', () => {
       expect(({}) instanceof Purse).to.equal(false)
       expect((() => {}) instanceof Purse).to.equal(false)
       expect(({ pay: null }) instanceof Purse).to.equal(false)
       expect(({ pay: {} }) instanceof Purse).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
 
     it('returns false for non-objects', () => {
       expect(0 instanceof Purse).to.equal(false)
@@ -158,11 +183,15 @@ describe('Owner API', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+
   describe('nextOwner', () => {
     it('throws UnimplementedError by default', async () => {
       await expect(new Owner().nextOwner()).to.be.rejectedWith(UnimplementedError)
     })
   })
+
+  // --------------------------------------------------------------------------
 
   describe('instanceof', () => {
     it('returns true if nextOwner and sign are present', () => {
@@ -170,17 +199,23 @@ describe('Owner API', () => {
       expect(Object.assign(() => {}, { nextOwner: () => [''], sign: () => {} }) instanceof Owner).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false if sign is not a function', () => {
       expect(({ nextOwner: () => '' }) instanceof Owner).to.equal(false)
       expect(({ nextOwner: () => '', sign: 123 }) instanceof Owner).to.equal(false)
       expect(({ nextOwner: () => '', get sign () { } }) instanceof Owner).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false if nextOwner is not a function', () => {
       expect(({ sign: () => '' }) instanceof Owner).to.equal(false)
       expect(({ sign: () => '', nextOwner: 123 }) instanceof Owner).to.equal(false)
       expect(({ sign: () => '', get nextOwner () { } }) instanceof Owner).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
 
     it('returns false for non-objects', () => {
       expect(0 instanceof Owner).to.equal(false)
@@ -204,11 +239,15 @@ describe('Logger API', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+
   describe('warn', () => {
     it('does not throw by default', () => {
       expect(() => new Logger().warn()).not.to.throw()
     })
   })
+
+  // --------------------------------------------------------------------------
 
   describe('debug', () => {
     it('does not throw by default', () => {
@@ -216,11 +255,15 @@ describe('Logger API', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+
   describe('error', () => {
     it('does not throw by default', () => {
       expect(() => new Logger().error()).not.to.throw()
     })
   })
+
+  // --------------------------------------------------------------------------
 
   describe('instanceof', () => {
     it('returns true for any object for function', () => {
@@ -233,6 +276,8 @@ describe('Logger API', () => {
       const f = () => {}
       expect(({ error: f, info: f, warn: f, debug: f }) instanceof Logger).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
 
     it('returns false for non-objects', () => {
       expect(0 instanceof Logger).to.equal(false)
@@ -256,11 +301,15 @@ describe('Cache API', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+
   describe('set', () => {
     it('does not throw by default', async () => {
       await expect(new Cache().set()).to.be.rejectedWith(UnimplementedError)
     })
   })
+
+  // --------------------------------------------------------------------------
 
   describe('instanceof', () => {
     it('returns true if set and get functions are present', () => {
@@ -268,12 +317,16 @@ describe('Cache API', () => {
       expect(Object.assign(() => {}, { set: () => {}, get: () => {} }) instanceof Cache).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false if set and get are not functions', () => {
       expect(({ set: false, get: () => {} }) instanceof Cache).to.equal(false)
       expect(({ set: () => {}, get: null }) instanceof Cache).to.equal(false)
       expect(({ set: () => {} }) instanceof Cache).to.equal(false)
       expect(({ get: () => {} }) instanceof Cache).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
 
     it('returns false for non-objects', () => {
       expect(0 instanceof Cache).to.equal(false)
@@ -297,74 +350,91 @@ describe('Lock API', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+
   describe('domain', () => {
     it('throws UnimplementedError by default', () => {
       expect(() => new Lock().domain()).to.throw(UnimplementedError)
     })
   })
 
+  // --------------------------------------------------------------------------
+
   describe('instanceof', () => {
     it('returns true if script is a function on class', () => {
       class CustomLock {
-        script () { return new Uint8Array() }
+        script () { return '' }
         domain () { return 1 }
       }
       expect(new CustomLock() instanceof Lock).to.equal(true)
     })
 
-    it('returns true if script returns a sandbox Uint8Array', () => {
-      const SandboxUint8Array = unmangle(unmangle(Run)._Sandbox)._intrinsics.Uint8Array
+    // ------------------------------------------------------------------------
+
+    it('returns true if script returns a hex string', () => {
       class CustomLock {
-        script () { return new SandboxUint8Array() }
+        script () { return '01aac8ff' }
         domain () { return 1 }
       }
       expect(new CustomLock() instanceof Lock).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
 
     it('returns false if script is a getter', () => {
       class CustomLock {
-        get script () { return new Uint8Array() }
+        get script () { return '' }
         domain () { return 1 }
       }
       expect(new CustomLock() instanceof Lock).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false if script is a property', () => {
       class CustomLock {
-        constructor () { this.script = new Uint8Array() }
+        constructor () { this.script = '' }
         domain () { return 1 }
       }
       expect(new CustomLock() instanceof Lock).to.equal(false)
       expect(({ script: null, domain: 1 }) instanceof Lock).to.equal(false)
-      expect(({ script: new Uint8Array(), domain: 1 }) instanceof Lock).to.equal(false)
+      expect(({ script: '', domain: 1 }) instanceof Lock).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
 
     it('returns false if script is a getter on object', () => {
       expect(({
-        script () { return new Uint8Array() },
+        script () { return '' },
         domain () { return 1 }
       }) instanceof Lock).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns true if domain is a function on class', () => {
       class CustomLock {
-        script () { return new Uint8Array() }
+        script () { return '' }
         domain () { return 1 }
       }
       expect(new CustomLock() instanceof Lock).to.equal(true)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false if domain is a getter', () => {
       class CustomLock {
-        script () { return new Uint8Array() }
+        script () { return '' }
         get domain () { return 1 }
       }
       expect(new CustomLock() instanceof Lock).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false if domain is a property', () => {
       class CustomLock {
-        script () { return new Uint8Array() }
+        script () { return '' }
         domain () { return 123 }
       }
       const lock = new CustomLock()
@@ -372,41 +442,53 @@ describe('Lock API', () => {
       expect(lock instanceof Lock).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false if domain returns a non-number', () => {
       class CustomLock {
-        script () { return new Uint8Array() }
+        script () { return '' }
         domain () { return null }
       }
       expect(new CustomLock() instanceof Lock).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false if domain returns a non-integer', () => {
       class CustomLock {
-        script () { return new Uint8Array() }
+        script () { return '' }
         domain () { return 1.5 }
       }
       expect(new CustomLock() instanceof Lock).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false if domain returns negative', () => {
       class CustomLock {
-        script () { return new Uint8Array() }
+        script () { return '' }
         domain () { return -1 }
       }
       expect(new CustomLock() instanceof Lock).to.equal(false)
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns false if object overrides script getter', () => {
-      class CustomLock { script () { return new Uint8Array() } }
-      const o = { script: new Uint8Array() }
+      class CustomLock { script () { return '' } }
+      const o = { script: '' }
       Object.setPrototypeOf(o, CustomLock.prototype)
       expect(o instanceof Lock).to.equal(false)
     })
 
-    it('returns false if script is not a Uint8Array', () => {
+    // ------------------------------------------------------------------------
+
+    it('returns false if script is not a hex string', () => {
       class CustomLock { script () { return [1, 2, 3] } }
       expect(new CustomLock() instanceof Lock).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
 
     it('returns false for non-objects', () => {
       expect(0 instanceof Lock).to.equal(false)

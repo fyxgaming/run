@@ -28,7 +28,7 @@ describe('Lock', () => {
       const run = new Run()
 
       class L {
-        script () { return new Uint8Array() }
+        script () { return '' }
         domain () { return 0 }
       }
       run.deploy()

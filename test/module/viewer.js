@@ -41,7 +41,7 @@ describe('Viewer', () => {
 
     it('lock object owners', () => {
       class CustomLock {
-        script () { return new Uint8Array([0, 1, 2]) }
+        script () { return '010203' }
         domain () { return 1 }
       }
       const lock = new CustomLock()
@@ -65,7 +65,7 @@ describe('Viewer', () => {
   describe('nextOwner', () => {
     it('always returns the lock', () => {
       class CustomLock {
-        script () { return new Uint8Array([0, 1, 2]) }
+        script () { return '010203' }
         domain () { return 1 }
       }
       const lock = new CustomLock()
