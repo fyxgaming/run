@@ -12,7 +12,9 @@ const { PrivateKey, Script } = bsv
 const Run = require('../env/run')
 const { COVER } = require('../env/config')
 const { getExtrasBlockchain } = require('../env/misc')
-const { Group, Jig, LocalCache } = Run
+const { Jig } = Run
+const { Group } = Run.extra
+const { LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Group

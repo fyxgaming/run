@@ -7,7 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Hex } = Run
+const { Hex } = Run.extra
 
 // ------------------------------------------------------------------------------------------------
 // Hex

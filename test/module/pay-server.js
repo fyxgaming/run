@@ -11,7 +11,8 @@ const { HDPrivateKey, Transaction } = require('bsv')
 const Run = require('../env/run')
 const { STRESS } = require('../env/config')
 const { network } = Run.defaults
-const { Jig, PayServer } = Run
+const { Jig } = Run
+const { PayServer } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Keys

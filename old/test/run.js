@@ -8,7 +8,8 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { Run } = require('../../test/env/config')
-const { Jig, LocalOwner, LocalPurse } = Run
+const { Jig } = Run
+const { LocalOwner, LocalPurse, LocalCache, Mockchain, RemoteBlockchain } = Run.module
 const bsv = require('bsv')
 const { PrivateKey } = bsv
 const packageInfo = require('../../package.json')
@@ -56,20 +57,20 @@ describe('Run', () => {
     describe('blockchain', () => {
       it('should create default blockchain', () => {
         const run = new Run({ network: 'main' })
-        expect(run.blockchain instanceof Run.RemoteBlockchain).to.equal(true)
+        expect(run.blockchain instanceof RemoteBlockchain).to.equal(true)
         expect(run.blockchain.network).to.equal('main')
         expect(run.blockchain.api).to.equal('run')
       })
 
       it('should support creating mockchain', () => {
         const run = new Run({ network: 'mock' })
-        expect(run.blockchain instanceof Run.Mockchain).to.equal(true)
+        expect(run.blockchain instanceof Mockchain).to.equal(true)
         expect(run.blockchain.network).to.equal('mock')
       })
 
       it('should support setting blockchain api', () => {
         const run = new Run({ api: 'whatsonchain', network: 'test' })
-        expect(run.blockchain instanceof Run.RemoteBlockchain).to.equal(true)
+        expect(run.blockchain instanceof RemoteBlockchain).to.equal(true)
         expect(run.blockchain.api).to.equal('whatsonchain')
         expect(run.blockchain.network).to.equal('test')
       })
@@ -138,11 +139,11 @@ describe('Run', () => {
 
     describe('cache', () => {
       it('should default to local cache', () => {
-        expect(new Run().cache instanceof Run.LocalCache).to.equal(true)
+        expect(new Run().cache instanceof LocalCache).to.equal(true)
       })
 
       it('should support custom cache', () => {
-        const cache = new Run.LocalCache()
+        const cache = new LocalCache()
         expect(new Run({ cache }).cache).to.deep.equal(cache)
       })
 

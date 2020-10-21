@@ -10,7 +10,8 @@ const { expect } = require('chai')
 const { stub } = require('sinon')
 const { Transaction } = require('bsv')
 const Run = require('../env/run')
-const { Jig, LocalCache } = Run
+const { Jig } = Run
+const { LocalCache } = Run.module
 const { payFor, populatePreviousOutputs } = require('../env/misc')
 
 // ------------------------------------------------------------------------------------------------

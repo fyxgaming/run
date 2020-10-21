@@ -9,7 +9,8 @@ require('chai').use(require('chai-as-promised'))
 const { stub } = require('sinon')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, LocalCache } = Run
+const { Jig } = Run
+const { LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Timeout

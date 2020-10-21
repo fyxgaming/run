@@ -9,7 +9,8 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
-const { Jig, LocalCache, Transaction } = Run
+const { Jig, Transaction } = Run
+const { LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Unify

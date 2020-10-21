@@ -8,7 +8,8 @@ const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
-const { Jig, LocalCache } = Run
+const { Jig } = Run
+const { LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Static Code

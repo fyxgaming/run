@@ -20,7 +20,7 @@
       b.set(1)
       await a.sync()
 
-      const run2 = new Run({ cache: new Run.LocalCache() })
+      const run2 = new Run({ cache: new LocalCache() })
       const t0 = Date.now()
       await run2.load(a.location)
       const t1 = Date.now()

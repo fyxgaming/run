@@ -6,7 +6,8 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { STRESS } = require('../env/config')
-const { Jig, LocalCache } = Run
+const { Jig } = Run
+const { LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Stress

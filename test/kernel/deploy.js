@@ -12,7 +12,8 @@ const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const { expectTx } = require('../env/misc')
-const { Code, Jig, Berry, LocalCache } = Run
+const { Code, Jig, Berry } = Run
+const { LocalCache } = Run.module
 const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
 const _sudo = unmangle(Run)._sudo
 

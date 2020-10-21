@@ -61,6 +61,7 @@ if (COVER) {
   Run.cover('Group')
   Run.cover('Hex')
   Run.cover('Token')
+  Run.cover('Tx')
 
   // Replays do not work in cover mode so we disable preverification
   Run.defaults.preverify = false

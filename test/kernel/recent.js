@@ -47,7 +47,7 @@ describe('Recent', () => {
       a2.set(2)
       await run.sync()
       // create a new run to not use the cache
-      const run2 = new Run({ cache: new Run.LocalCache() })
+      const run2 = new Run({ cache: new LocalCache() })
       const oldFetch = run.blockchain.fetch
       try {
         run2.blockchain.time = async txid => {

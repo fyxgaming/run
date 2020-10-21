@@ -8,7 +8,8 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { PrivateKey, PublicKey, Transaction } = require('bsv')
 const Run = require('../env/run')
-const { Viewer, StandardLock } = Run
+const { StandardLock } = Run
+const { Viewer } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Viewer

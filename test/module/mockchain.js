@@ -10,7 +10,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { STRESS } = require('../env/config')
-const { Mockchain } = Run
+const { Mockchain } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Mockchain Functional Tests

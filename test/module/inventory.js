@@ -11,7 +11,8 @@ const { expect } = require('chai')
 const { stub } = require('sinon')
 const { PrivateKey, Transaction } = require('bsv')
 const Run = require('../env/run')
-const { Jig, LocalCache } = Run
+const { Jig } = Run
+const { LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Inventory

@@ -9,6 +9,7 @@ const Run = require('./run')
 const unmangle = require('./unmangle')
 const { _payload } = unmangle(Run)
 const { expect } = require('chai')
+const { Mockchain } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -135,15 +136,16 @@ async function getExtrasBlockchain () {
   if (EXTRAS_MOCKCHAIN) return EXTRAS_MOCKCHAIN
 
   const { CAPTURE_UNITS, CaptureMockchain } = require('../data/capture')
-  EXTRAS_MOCKCHAIN = CAPTURE_UNITS ? new CaptureMockchain() : new Run.Mockchain()
+  EXTRAS_MOCKCHAIN = CAPTURE_UNITS ? new CaptureMockchain() : new Mockchain()
 
   const run = new Run({ blockchain: EXTRAS_MOCKCHAIN })
   run.transaction(() => {
-    run.deploy(Run.asm)
-    run.deploy(Run.expect)
-    run.deploy(Run.Group)
-    run.deploy(Run.Hex)
-    run.deploy(Run.Token)
+    run.deploy(Run.extra.asm)
+    run.deploy(Run.extra.expect)
+    run.deploy(Run.extra.Group)
+    run.deploy(Run.extra.Hex)
+    run.deploy(Run.extra.Token)
+    run.deploy(Run.extra.Tx)
   })
   await run.sync()
   run.deactivate()

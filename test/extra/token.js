@@ -11,7 +11,8 @@ const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { COVER, STRESS } = require('../env/config')
 const { getExtrasBlockchain } = require('../env/misc')
-const { LocalCache, Token } = Run
+const { Token } = Run.extra
+const { LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Token
@@ -492,9 +493,9 @@ describe('Token', () => {
     // const owner = '<owner>'
     // const run = new Run({ network: '<network>', purse, owner })
 
-    // run.deploy(Run.Token)
+    // run.deploy(Run.extra.Token)
     // await run.sync()
-    // console.log(Run.Token)
+    // console.log(Run.extra.Token)
   })
 })
 

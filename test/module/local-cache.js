@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { LocalCache } = Run
+const { LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // LocalCache

@@ -10,7 +10,8 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { Run } = require('../env/config')
-const { Jig, asm } = Run
+const { Jig } = Run
+const { asm } = Run.extra
 
 // ------------------------------------------------------------------------------------------------
 // Owner tests

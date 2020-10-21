@@ -10,7 +10,9 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const PrivateKey = require('bsv/lib/privatekey')
-const { Code, Jig, Berry, LocalCache, _sudo } = unmangle(Run)
+const { Code, Jig, Berry } = Run
+const { LocalCache } = Run.module
+const { _sudo } = unmangle(Run)
 
 // ------------------------------------------------------------------------------------------------
 // Globals

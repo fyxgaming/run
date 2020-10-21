@@ -9,11 +9,11 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
-const { Jig, Berry } = Run
+const { Jig, Berry, Code } = Run
+const { LocalCache } = Run.module
 const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
 const { stub } = require('sinon')
-const { Code, LocalCache } = unmangle(Run)
 
 // ------------------------------------------------------------------------------------------------
 // Auth

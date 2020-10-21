@@ -11,7 +11,9 @@ const { Address, PrivateKey, PublicKey, Transaction } = require('bsv')
 const { COVER } = require('../env/config')
 const { getExtrasBlockchain } = require('../env/misc')
 const Run = require('../env/run')
-const { LocalOwner, Mockchain, Jig, Group, StandardLock } = Run
+const { Jig, StandardLock } = Run
+const { Group } = Run.extra
+const { LocalOwner, Mockchain } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // LocalOwner

@@ -8,7 +8,8 @@ const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const { stub } = require('sinon')
 const Run = require('../env/run')
-const { Jig, LocalCache, Transaction } = Run
+const { Jig, Transaction } = Run
+const { LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Deps

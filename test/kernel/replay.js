@@ -11,7 +11,8 @@ const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
 const { payFor } = require('../env/misc')
-const { Jig, Mockchain, LocalCache } = Run
+const { Jig } = Run
+const { Mockchain, LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Replay

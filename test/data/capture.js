@@ -11,6 +11,7 @@ require('chai').use(require('chai-as-promised'))
 const fs = (typeof VARIANT === 'undefined' || VARIANT === 'node') && require('fs-extra')
 const bsv = require('bsv')
 const Run = require('../env/run')
+const { Mockchain } = Run.module
 const { COVER } = require('../env/config')
 
 // ------------------------------------------------------------------------------------------------
@@ -79,7 +80,7 @@ function enableUnitCaptureMode () {
 // CaptureMockchain
 // ------------------------------------------------------------------------------------------------
 
-class CaptureMockchain extends Run.Mockchain {
+class CaptureMockchain extends Mockchain {
   async broadcast (rawtx) {
     const txid = await super.broadcast(rawtx)
     rawtx = new bsv.Transaction(rawtx).toString('hex')

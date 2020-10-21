@@ -10,7 +10,8 @@ const { expect } = require('chai')
 const { stub } = require('sinon')
 const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
-const { Berry, Jig, LocalCache } = Run
+const { Berry, Jig } = Run
+const { LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Berry

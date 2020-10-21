@@ -9,10 +9,10 @@ const { stub } = require('sinon')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, Berry } = Run
+const { Jig, Berry, Code } = Run
+const { LocalCache } = Run.module
 const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
-const { Code, LocalCache } = unmangle(Run)
 const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
 
 // ------------------------------------------------------------------------------------------------
