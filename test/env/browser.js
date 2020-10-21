@@ -52,15 +52,26 @@ async function runTests () {
     .forBrowser(browser)
     .build()
 
+  // Bump up the script timeout to reduce warnings in executeScript below
+  const timeouts = await driver.manage().getTimeouts()
+  timeouts.script = 90 * 1000
+  await driver.manage().setTimeouts(timeouts)
+
   // Poll function to read logs
   async function poll () {
-    const { done } = await driver.executeScript('return { done }')
+    let done = false
+
+    try {
+      done = await driver.executeScript('return { done }')
+    } catch (e) {
+      console.warn('Error polling done:', e)
+    }
 
     try {
       const logs = await driver.executeScript('return pollLogs()')
       for (const log of logs) console.log(...log)
     } catch (e) {
-      console.error('Error reading logs:', e)
+      console.warn('Error reading logs:', e)
     }
 
     return !done
