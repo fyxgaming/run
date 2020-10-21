@@ -701,14 +701,12 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('set non-location bindings', async () => {
+    it('set utxo bindings', async () => {
       const run = new Run()
       class B extends Berry {
         init () {
-          this.origin = '123'
-          this.satoshis = -1
-          this.owner = {}
-          this.nonce = this
+          this.owner = { n: 1 }
+          this.satoshis = this
         }
       }
       run.deploy(B)
@@ -716,10 +714,8 @@ Line 3`
       const location = B.location + '_abc'
 
       function test (b) {
-        expect(b.origin).to.equal('123')
-        expect(b.satoshis).to.equal(-1)
-        expect(b.owner).to.deep.equal({})
-        expect(b.nonce).to.equal(b)
+        expect(b.owner).to.deep.equal({ n: 1 })
+        expect(b.satoshis).to.equal(b)
       }
 
       const b = await run.load('abc', { berry: B })
@@ -735,11 +731,14 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('throws if set location', async () => {
+    it('throws if set creation bindings', async () => {
       const run = new Run()
       class B extends Berry { init () { this.location = '123' } }
-      const error = 'Cannot set location'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      class C extends Berry { init () { this.origin = '123' } }
+      class D extends Berry { init () { this.nonce = '123' } }
+      await expect(run.load('', { berry: B })).to.be.rejectedWith('Cannot set location')
+      await expect(run.load('', { berry: C })).to.be.rejectedWith('Cannot set origin')
+      await expect(run.load('', { berry: D })).to.be.rejectedWith('Cannot set nonce')
     })
 
     // ------------------------------------------------------------------------
@@ -762,7 +761,7 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('throws if define location', async () => {
+    it('throws if define creation bindings', async () => {
       const run = new Run()
       class B extends Berry {
         init () {
@@ -1061,22 +1060,26 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('get non-location bindings', async () => {
+    it('get utxo bindings', async () => {
       const run = new Run()
       class B extends Berry {
         init () {
-          this.origin = 1
-          this.nonce = 2
-          this.owner = 3
-          this.satoshis = 4
+          this.owner = 1
+          this.satoshis = 2
         }
 
-        f () { return [this.origin, this.nonce, this.owner, this.satoshis] }
+        getOwner () { return this.owner }
+        getSatoshis () { return this.satoshis }
       }
       run.deploy(B)
       await run.sync()
       const location = B.location + '_'
-      function test (b) { expect(b.f()).to.deep.equal([1, 2, 3, 4]) }
+
+      function test (b) {
+        expect(b.getOwner()).to.equal(1)
+        expect(b.getSatoshis()).to.equal(2)
+      }
+
       const b = await run.load('', { berry: B })
       test(b)
       const b2 = await run.load(location)

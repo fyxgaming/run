@@ -29,7 +29,7 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('Deploy', () => {
-    it('may override bindings on non-jig', () => {
+    it('may override prototype bindings on sidekick', () => {
       const run = new Run()
       run.deploy(class A { location () { }})
       run.deploy(class A { origin () { }})
@@ -70,10 +70,8 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may override non-location bindings on berry', () => {
+    it('may override utxo bindings on berry', () => {
       const run = new Run()
-      run.deploy(class B extends Berry { origin () { } })
-      run.deploy(class B extends Berry { nonce () { } })
       run.deploy(class B extends Berry { owner () { } })
       run.deploy(class B extends Berry { satoshis () { } })
     })
@@ -269,9 +267,11 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if override location on berry', () => {
+    it('throws if override creation bindings on berry', () => {
       const run = new Run()
       expect(() => run.deploy(class A extends Berry { location () { } })).to.throw()
+      expect(() => run.deploy(class A extends Berry { origin () { } })).to.throw()
+      expect(() => run.deploy(class A extends Berry { nonce () { } })).to.throw()
     })
 
     // ------------------------------------------------------------------------
@@ -729,7 +729,7 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may set non-location bindings in pluck', async () => {
+    it('may set utxo bindings in pluck', async () => {
       const run = new Run()
       class B extends Berry { init () { this.owner = true; this.satoshis = false } }
       const b = await run.load('abc', { berry: B })
@@ -739,10 +739,14 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if set location in pluck', async () => {
+    it('throws if set creation bindings in pluck', async () => {
       const run = new Run()
       class B extends Berry { init () { this.location = 'abc' } }
       await expect(run.load('abc', { berry: B })).to.be.rejectedWith('Cannot set location')
+      class C extends Berry { init () { this.origin = 'abc' } }
+      await expect(run.load('abc', { berry: C })).to.be.rejectedWith('Cannot set origin')
+      class D extends Berry { init () { this.nonce = 0 } }
+      await expect(run.load('abc', { berry: D })).to.be.rejectedWith('Cannot set nonce')
     })
 
     // ------------------------------------------------------------------------
