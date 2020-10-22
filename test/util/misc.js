@@ -13,10 +13,10 @@ const Sandbox = unmangle(Run)._Sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
   _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
-  _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _checkArgument, _checkState,
-  _anonymizeSourceCode, _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty,
-  _setOwnProperty, _ownGetters, _ownMethods, _sameJig, _hasJig, _addJigs, _subtractJigs, _limit,
-  _Timeout, _deterministicJSONStringify, _deterministicCompareKeys, _isNegativeZero
+  _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _anonymizeSourceCode,
+  _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty, _setOwnProperty,
+  _ownGetters, _ownMethods, _sameJig, _hasJig, _addJigs, _subtractJigs, _limit, _Timeout,
+  _deterministicJSONStringify, _deterministicCompareKeys, _isNegativeZero
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -53,42 +53,6 @@ describe('Misc', () => {
 
     it('fail', () => {
       expect(() => _assert(false)).to.throw()
-    })
-  })
-
-  // ----------------------------------------------------------------------------------------------
-  // _checkArgument
-  // ----------------------------------------------------------------------------------------------
-
-  describe('_checkArgument', () => {
-    it('pass', () => {
-      _checkArgument(true)
-      _checkArgument(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('fail', () => {
-      expect(() => _checkArgument(false)).to.throw(Run.errors.ArgumentError)
-      expect(() => _checkArgument(false, 'hello')).to.throw('hello')
-    })
-  })
-
-  // ----------------------------------------------------------------------------------------------
-  // _checkState
-  // ----------------------------------------------------------------------------------------------
-
-  describe('_checkState', () => {
-    it('pass', () => {
-      _checkState(true)
-      _checkState(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('fail', () => {
-      expect(() => _checkState(false)).to.throw(Run.errors.StateError)
-      expect(() => _checkState(false, 'world')).to.throw('world')
     })
   })
 
