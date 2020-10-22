@@ -83,7 +83,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it('returnsj same method for different code', () => {
+    it('returns same method for different code', () => {
       const run = new Run()
       class A { }
       function f () { }

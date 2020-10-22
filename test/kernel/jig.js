@@ -31,7 +31,7 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it.only('basic jig', async () => {
+    it('basic jig', async () => {
       const run = new Run()
       class A extends Jig { }
 
@@ -65,8 +65,8 @@ describe('Jig', () => {
       await a.sync()
       test(a)
 
-      // const a2 = await run.load(a.location)
-      // test(a2)
+      const a2 = await run.load(a.location)
+      test(a2)
 
       run.cache = new LocalCache()
       const a3 = await run.load(a.location)

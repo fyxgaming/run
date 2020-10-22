@@ -109,6 +109,21 @@ describe('Dynamic', () => {
       expect(() => { Dynamic._setInnerType(D, B) }).to.throw(error)
     })
 
+    it('can change symbol methods', () => {
+      const D = new Dynamic()
+      class A { [Symbol.hasInstance] () { } }
+      Dynamic._setInnerType(D, A)
+      const d = new D()
+      expect(d.hasInstance).to.equal(A.prototype.hasInstance)
+    })
+
+    it('can change static symbol methods', () => {
+      const D = new Dynamic()
+      class A { static [Symbol.hasInstance] () { } }
+      Dynamic._setInnerType(D, A)
+      expect(D.hasInstance).to.equal(A.hasInstance)
+    })
+
     it('supports types from sandbox', () => {
       const f = unmangle(unmangle(Run)._Sandbox)._evaluate('function f() { }')[0]
       const D = new Dynamic()
