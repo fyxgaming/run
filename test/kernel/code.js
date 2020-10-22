@@ -848,6 +848,27 @@ describe('Code', () => {
       const CA = run.deploy(A)
       expect(() => CA.upgrade2()).to.throw('upgrade unavailable')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('code methods are the same', () => {
+      const run = new Run()
+
+      expect(Code.auth).to.equal(Code.prototype.auth)
+
+      function f () { return f.upgrade === Code.upgrade }
+      f.deps = { Code }
+      const cf = run.deploy(f)
+      expect(cf()).to.equal(true)
+
+      function g () { return g.upgrade === Code.prototype.upgrade }
+      g.deps = { Code }
+      const cg = run.deploy(g)
+      expect(cg()).to.equal(true)
+
+      expect(cf.upgrade).to.equal(Code.upgrade)
+      expect(cf.upgrade).to.equal(Code.prototype.upgrade)
+    })
   })
 })
 
