@@ -25,6 +25,11 @@ describe('Native', () => {
     NATIVE.forEach(N => expect(N instanceof Code).to.equal(true))
   })
 
+  it('returns native code if deploy', () => {
+    const run = new Run()
+    NATIVE.forEach(N => expect(run.deploy(N)).to.equal(N))
+  })
+
   it('throws if define property', () => {
     NATIVE.forEach(N => expect(() => Object.defineProperty(N, 'x', { value: 1 })).to.throw())
   })
@@ -43,12 +48,6 @@ describe('Native', () => {
 
   it('throws if set prototype', () => {
     NATIVE.forEach(N => expect(() => Object.setPrototypeOf(N, {})).to.throw())
-  })
-
-  it('throws if deploy', () => {
-    const run = new Run()
-    const error = 'Cannot deploy native code'
-    NATIVE.forEach(N => expect(() => run.deploy(N)).to.throw(error))
   })
 
   it('has native bindings', () => {

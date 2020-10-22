@@ -642,6 +642,13 @@ describe('Code', () => {
   // --------------------------------------------------------------------------
 
   describe('Standalone', () => {
+    it('code is code', () => {
+      new Run() // eslint-disable-line
+      expect(Code instanceof Code).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('can reference Code inside Jig', async () => {
       const run = new Run()
       class A extends Jig { static f () { return this instanceof Code } }
@@ -688,7 +695,7 @@ describe('Code', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('can store Code on jig', async () => {
+    it('can store Code on jig', async () => {
       const run = new Run()
       class A extends Jig { f (x) { this.x = x } }
       const a = new A()
