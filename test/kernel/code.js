@@ -8,6 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { expectTx } = require('../env/misc')
 const PrivateKey = require('bsv/lib/privatekey')
 const { Code, Jig, Berry } = Run
 const { LocalCache } = Run.module
@@ -633,6 +634,212 @@ describe('Code', () => {
       run.cache = new LocalCache()
       const CA3 = await run.load(CA.location)
       test(CA3)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Standalone
+  // --------------------------------------------------------------------------
+
+  describe('Standalone', () => {
+    it('can reference Code inside Jig', async () => {
+      const run = new Run()
+      class A extends Jig { static f () { return this instanceof Code } }
+      A.deps = { Code }
+
+      expectTx({
+        nin: 0,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 1,
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [
+              A.toString(),
+              {
+                deps: {
+                  Code: { $jig: 0 },
+                  Jig: { $jig: 1 }
+                }
+              }
+            ]
+          }
+        ]
+      })
+
+      function test (CA) {
+        expect(CA.f()).to.equal(true)
+        expect(CA.deps.Code).to.equal(Code)
+      }
+
+      const CA = run.deploy(A)
+      await CA.sync()
+      test(CA)
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('can store Code on jig', async () => {
+      const run = new Run()
+      class A extends Jig { f (x) { this.x = x } }
+      const a = new A()
+      await a.sync()
+
+      expectTx({
+        nin: 1,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [
+              { $jig: 0 },
+              'f',
+              [{ $jig: 1 }]
+            ]
+          }
+        ]
+      })
+
+      a.f(Code)
+      await a.sync()
+
+      const state = await run.cache.get('jig://' + a.location)
+      expect(state.props.x).to.deep.equal({ $jig: 'native://Code' })
+
+      function test (a) { expect(a.x).to.equal(Code) }
+      test(a)
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('can store Code as class property', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.C = Code
+      run.deploy(A)
+      await run.sync()
+      expect(A.C).to.equal(Code)
+      const state = await run.cache.get('jig://' + A.location)
+      expect(state.props.C).to.deep.equal({ $jig: 'native://Code' })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('instanceof matches code parameters', () => {
+      const run = new Run()
+      function f (x) { return x instanceof C } // eslint-disable-line
+      f.deps = { C: Code }
+      const cf = run.deploy(f)
+      expect(cf(run.deploy(class A { }))).to.equal(true)
+      expect(cf(cf)).to.equal(true)
+      expect(cf(class A { })).to.equal(false)
+      expect(cf()).to.equal(false)
+      expect(cf(null)).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if instantiate', () => {
+      const run = new Run()
+      function f () { return new Code() }
+      f.deps = { Code }
+      class A extends Jig { f () { return new Code() } }
+      A.deps = { Code }
+      const cf = run.deploy(f)
+      const a = new A()
+      expect(() => cf()).to.throw('Cannot instantiate Code')
+      expect(() => a.f()).to.throw('Cannot instantiate Code')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot fake instance using setPrototypeOf', () => {
+      const run = new Run()
+      function f () {
+        const o = { }
+        Object.setPrototypeOf(o, Code.prototype)
+        return o instanceof Code
+      }
+      f.deps = { Code }
+      const cf = run.deploy(f)
+      expect(cf()).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('arbitrary object using code is ok', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init () {
+          this.o = { }
+          Object.setPrototypeOf(this.o, Code.prototype)
+        }
+      }
+      A.deps = { Code }
+      const a = new A()
+      await run.sync()
+      const state = await run.cache.get('jig://' + a.location)
+      expect(state.props.o.$arb).to.deep.equal({})
+      expect(state.props.o.T).to.deep.equal({ $jig: 'native://Code' })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('apply allowed code methods directly', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static auth2 () { return Code.prototype.auth.apply(this) }
+        static destroy2 () { return Code.prototype.destroy.apply(this) }
+      }
+      A.deps = { Code }
+      const CA = run.deploy(A)
+      CA.auth2()
+      CA.destroy2()
+      await CA.sync()
+
+      function test (CA) {
+        expect(CA.nonce).to.equal(3)
+        expect(CA.location.endsWith('_d0')).to.equal(true)
+      }
+      test(CA)
+
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if apply illegal code methods directly', () => {
+      const run = new Run()
+      class A extends Jig {
+        static upgrade2 () { Code.prototype.upgrade.apply(this, [class B { }]) }
+      }
+      A.deps = { Code }
+      const CA = run.deploy(A)
+      expect(() => CA.upgrade2()).to.throw('upgrade unavailable')
     })
   })
 })
