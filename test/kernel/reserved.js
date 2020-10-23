@@ -599,20 +599,57 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('delete', () => {
-    it.skip('throws if delete reserved on code', () => {
-      // TODO
+    it('throws if delete reserved on code', () => {
+      const run = new Run()
+      class A extends Jig {
+        static f (prop) { delete this[prop] }
+      }
+      const CA = run.deploy(A)
+      expect(() => CA.f('sync')).to.throw('Cannot delete sync')
+      expect(() => CA.f('load')).to.throw('Cannot delete load')
+      expect(() => CA.f('blockhash')).to.throw('Cannot delete blockhash')
+      expect(() => CA.f('consume')).to.throw('Cannot delete consume')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if delete reserved on jig', () => {
-      // TODO
+    it('throws if delete reserved on jig', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f (prop) { delete this[prop] }
+      }
+      const a = new A()
+      expect(() => a.f('sync')).to.throw('Cannot delete sync')
+      expect(() => a.f('blockheight')).to.throw('Cannot delete blockheight')
+      expect(() => a.f('restricts')).to.throw('Cannot delete restricts')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if delete reserved on berry', () => {
-      // TODO
+    it('throws if delete reserved on berry', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init (prop) { delete this[prop] }
+        static async pluck (prop) { return new B(prop) }
+      }
+      await expect(run.load('encryption', { berry: B })).to.be.rejectedWith('Cannot delete encryption')
+      await expect(run.load('makeBackup', { berry: B })).to.be.rejectedWith('Cannot delete makeBackup')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('may delete reserved on inner object', () => {
+      const run = new Run()
+      class A extends Jig {
+        static f (prop) {
+          delete this.s[prop]
+        }
+      }
+      A.s = new Set()
+      const CA = run.deploy(A)
+      CA.f('sync')
+      CA.f('load')
+      CA.f('encryption')
     })
   })
 
@@ -882,7 +919,7 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('Pluck', () => {
-    it('may set sync in pluck', async () => {
+    it('may set sync during pluck', async () => {
       const run = new Run()
       class B extends Berry { init () { this.sync = 1 } }
       const b = await run.load('abc', { berry: B })
@@ -891,7 +928,7 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may set auth in pluck', async () => {
+    it('may set auth during pluck', async () => {
       const run = new Run()
       class B extends Berry { init () { this.auth = [] } }
       const b = await run.load('abc', { berry: B })
@@ -900,7 +937,7 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may set destroy in pluck', async () => {
+    it('may set destroy during pluck', async () => {
       const run = new Run()
       class B extends Berry { init () { this.destroy = null } }
       const b = await run.load('abc', { berry: B })
@@ -909,7 +946,7 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may set utxo bindings in pluck', async () => {
+    it('may set utxo bindings during pluck', async () => {
       const run = new Run()
       class B extends Berry { init () { this.owner = true; this.satoshis = false } }
       const b = await run.load('abc', { berry: B })
@@ -919,7 +956,7 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if set creation bindings in pluck', async () => {
+    it('throws if set creation bindings during pluck', async () => {
       const run = new Run()
       class B extends Berry { init () { this.location = 'abc' } }
       await expect(run.load('abc', { berry: B })).to.be.rejectedWith('Cannot set location')
