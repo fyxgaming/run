@@ -12,10 +12,6 @@ const { Jig, Berry } = Run
 const { LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
-// Globals
-// ------------------------------------------------------------------------------------------------
-
-// ------------------------------------------------------------------------------------------------
 // Reserved
 // ------------------------------------------------------------------------------------------------
 
@@ -543,38 +539,190 @@ describe('Reserved', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Method
+  // defineProperty
   // --------------------------------------------------------------------------
 
-  describe('Method', () => {
-    it('throws if set auth on code', () => {
+  describe('defineProperty', () => {
+    it('throws if define reserved on code', () => {
       const run = new Run()
-      class A extends Jig { static f () { this.auth = 1 } }
+      class A extends Jig {
+        static f (name) {
+          const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
+          Object.defineProperty(this, name, desc)
+        }
+      }
       const C = run.deploy(A)
-      expect(() => C.f()).to.throw('Cannot set auth')
+      expect(() => C.f('toString')).to.throw('Cannot define toString')
+      expect(() => C.f('load')).to.throw('Cannot define load')
+      expect(() => C.f('auth')).to.throw('Cannot define auth')
+      expect(() => C.f('destroy')).to.throw('Cannot define destroy')
+      expect(() => C.f('makeBackup')).to.throw('Cannot define makeBackup')
+      expect(() => C.f('delegate')).to.throw('Cannot define delegate')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if set destroy on code', () => {
-      const run = new Run()
-      class A extends Jig { static f () { this.destroy = undefined } }
-      const C = run.deploy(A)
-      expect(() => C.f()).to.throw('Cannot set destroy')
+    it('throws if define reserved on jig', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f (prop) {
+          const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
+          Object.defineProperty(this, prop, desc)
+        }
+      }
+      const a = new A()
+      expect(() => a.f('sync')).to.throw('Cannot define sync')
+      expect(() => a.f('blocktime')).to.throw('Cannot define blocktime')
+      expect(() => a.f('recover')).to.throw('Cannot define recover')
     })
 
     // ------------------------------------------------------------------------
 
-    it('may set presets on code', () => {
-      const run = new Run()
-      class A extends Jig { static f () { this.presets = 'abc' } }
-      const C = run.deploy(A)
-      C.f()
-      expect(C.presets).to.equal('abc')
+    it('throws if define reserved on berry', async () => {
+      new Run() // eslint-disable-line
+      class B extends Berry {
+        init (prop) {
+          const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
+          Object.defineProperty(this, prop, desc)
+        }
+
+        static async pluck (prop) { return new B(prop) }
+      }
+      await expect(B.load('encryption')).to.be.rejectedWith('Cannot define encryption')
+      await expect(B.load('mustBeRecent')).to.be.rejectedWith('Cannot define mustBeRecent')
+      await expect(B.load('eject')).to.be.rejectedWith('Cannot define eject')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // delete
+  // --------------------------------------------------------------------------
+
+  describe('delete', () => {
+    it.skip('throws if delete reserved on code', () => {
+      // TODO
     })
 
     // ------------------------------------------------------------------------
 
+    it.skip('throws if delete reserved on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if delete reserved on berry', () => {
+      // TODO
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // get
+  // --------------------------------------------------------------------------
+
+  describe('get', () => {
+    it.skip('throws if get reserved on jig externally', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if get reserved on jig internally', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if get reserved on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if get reserved on berry', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may get reserved on inner object', () => {
+      // TODO
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // getOwnPropertyDescriptor
+  // --------------------------------------------------------------------------
+
+  describe('getOwnPropertyDescriptor', () => {
+    it.skip('throws if get descriptor for reserved on jig externally', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if get descriptor for reserved on jig internally', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if get descriptor for reserved on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if get descriptor for reserved on berry', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may get descriptor for reserved on inner object', () => {
+      // TODO
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // has
+  // --------------------------------------------------------------------------
+
+  describe('has', () => {
+    it.skip('throws if check reserved on jig externally', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if check reserved on jig internally', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if check reserved on code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if check reserved on berry', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may get reserved on inner object', () => {
+      // TODO
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // set
+  // --------------------------------------------------------------------------
+
+  describe('set', () => {
     it('may set auth property on jig', async () => {
       const run = new Run()
       class A extends Jig { f () { this.auth = 1 } }
@@ -605,34 +753,36 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if set deps on code', () => {
+    it('may set presets on code', () => {
       const run = new Run()
-      class A extends Jig { static f () { this.deps = 123 } }
+      class A extends Jig { static f () { this.presets = 'abc' } }
       const C = run.deploy(A)
-      expect(() => C.f()).to.throw('Cannot set deps')
+      C.f()
+      expect(C.presets).to.equal('abc')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if set toString on code', () => {
+    it('throws if set reserved props on code', () => {
       const run = new Run()
-      class A extends Jig { static f () { this.toString = false } }
+      class A extends Jig { static f (x) { this[x] = 1 } }
       const C = run.deploy(A)
-      expect(() => C.f()).to.throw('Cannot set toString')
+      expect(() => C.f('encryption')).to.throw()
+      expect(() => C.f('latest')).to.throw()
+      expect(() => C.f('blocktime')).to.throw()
+      expect(() => C.f('restricts')).to.throw()
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if define toString on code', () => {
-      const run = new Run()
-      class A extends Jig {
-        static f () {
-          const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
-          Object.defineProperty(this, 'toString', desc)
-        }
-      }
-      const C = run.deploy(A)
-      expect(() => C.f()).to.throw('Cannot define toString')
+    it('throws if set reserved props on jig', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f (x) { this[x] = 1 } }
+      const a = new A()
+      expect(() => a.f('encryption')).to.throw()
+      expect(() => a.f('latest')).to.throw()
+      expect(() => a.f('blocktime')).to.throw()
+      expect(() => a.f('replicate')).to.throw()
     })
 
     // ------------------------------------------------------------------------
@@ -684,26 +834,46 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if set reserved props on code', () => {
+    it('throws if set auth on code', () => {
       const run = new Run()
-      class A extends Jig { static f (x) { this[x] = 1 } }
+      class A extends Jig { static f () { this.auth = 1 } }
       const C = run.deploy(A)
-      expect(() => C.f('encryption')).to.throw()
-      expect(() => C.f('latest')).to.throw()
-      expect(() => C.f('blocktime')).to.throw()
-      expect(() => C.f('restricts')).to.throw()
+      expect(() => C.f()).to.throw('Cannot set auth')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if set reserved props on jig', () => {
-      new Run() // eslint-disable-line
-      class A extends Jig { f (x) { this[x] = 1 } }
-      const a = new A()
-      expect(() => a.f('encryption')).to.throw()
-      expect(() => a.f('latest')).to.throw()
-      expect(() => a.f('blocktime')).to.throw()
-      expect(() => a.f('replicate')).to.throw()
+    it('throws if set destroy on code', () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.destroy = undefined } }
+      const C = run.deploy(A)
+      expect(() => C.f()).to.throw('Cannot set destroy')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if set deps on code', () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.deps = 123 } }
+      const C = run.deploy(A)
+      expect(() => C.f()).to.throw('Cannot set deps')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if set toString on code', () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.toString = false } }
+      const C = run.deploy(A)
+      expect(() => C.f()).to.throw('Cannot set toString')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if set reserved on berry', async () => {
+      const run = new Run()
+      class B extends Berry { init () { this.mustBeRecent = true } }
+      await expect(run.load('abc', { berry: B })).to.be.rejectedWith('Cannot set mustBeRecent')
     })
   })
 
@@ -757,14 +927,6 @@ describe('Reserved', () => {
       await expect(run.load('abc', { berry: C })).to.be.rejectedWith('Cannot set origin')
       class D extends Berry { init () { this.nonce = 0 } }
       await expect(run.load('abc', { berry: D })).to.be.rejectedWith('Cannot set nonce')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if set reserved props in pluck', async () => {
-      const run = new Run()
-      class B extends Berry { init () { this.mustBeRecent = true } }
-      await expect(run.load('abc', { berry: B })).to.be.rejectedWith('Cannot set mustBeRecent')
     })
   })
 })
