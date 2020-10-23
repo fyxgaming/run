@@ -829,32 +829,57 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('has', () => {
-    it.skip('throws if check reserved prop on jig externally', () => {
-      // TODO
+    it('throws if check reserved prop on jig externally', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      expect(() => 'encryption' in a).to.throw('Cannot check encryption')
+      expect(() => 'recover' in a).to.throw('Cannot check recover')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if check reserved prop on jig internally', () => {
-      // TODO
+    it('throws if check reserved prop on jig internally', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f (prop) { return prop in this } }
+      const a = new A()
+      expect(() => a.f('recent')).to.throw('Cannot check recent')
+      expect(() => a.f('mustBeRecent')).to.throw('Cannot check mustBeRecent')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if check reserved prop on code', () => {
-      // TODO
+    it('throws if check reserved prop on code', () => {
+      const run = new Run()
+      class A extends Jig {
+        static f (prop) { return prop in this }
+      }
+      const CA = run.deploy(A)
+      expect(() => CA.f('recent')).to.throw('Cannot check recent')
+      expect(() => CA.f('consume')).to.throw('Cannot check consume')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if check reserved prop on berry', () => {
-      // TODO
+    it('throws if check reserved prop on berry', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await run.sync()
+      const b = await CB.load('123')
+      expect(() => 'replicate' in b).to.throw('Cannot check replicate')
+      expect(() => 'delegate' in b).to.throw('Cannot check delegate')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may get reserved prop on inner object', () => {
-      // TODO
+    it('may get reserved prop on inner object', () => {
+      const run = new Run()
+      function f () { }
+      const cf = run.deploy(f)
+      expect(() => 'mustBeLatest' in cf.deps).not.to.throw()
+      expect(() => 'latest' in cf.deps).not.to.throw()
     })
   })
 

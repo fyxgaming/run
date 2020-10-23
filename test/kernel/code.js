@@ -411,7 +411,7 @@ describe('Code', () => {
   // --------------------------------------------------------------------------
 
   describe('getOwnPropertyDescriptor', () => {
-    it('returned undefined for code methods', () => {
+    it('returns undefined for code methods', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
