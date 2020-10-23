@@ -26,7 +26,7 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('Deploy', () => {
-    it('may override prototype bindings on sidekick', () => {
+    it('may override instance bindings on sidekick', () => {
       const run = new Run()
       run.deploy(class A { location () { }})
       run.deploy(class A { origin () { }})
@@ -324,6 +324,16 @@ describe('Reserved', () => {
       A.presets = { [network]: { sync: 1 } }
       expect(() => run.deploy(A)).to.throw()
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if presets has reserved props', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      A.presets = { [network]: { encryption: 1 } }
+      expect(() => run.deploy(A)).to.throw()
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -543,7 +553,7 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('defineProperty', () => {
-    it('throws if define reserved on code', () => {
+    it('throws if define reserved code method on code', () => {
       const run = new Run()
       class A extends Jig {
         static f (name) {
@@ -556,13 +566,26 @@ describe('Reserved', () => {
       expect(() => C.f('load')).to.throw('Cannot define load')
       expect(() => C.f('auth')).to.throw('Cannot define auth')
       expect(() => C.f('destroy')).to.throw('Cannot define destroy')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if define reserved prop on code', () => {
+      const run = new Run()
+      class A extends Jig {
+        static f (name) {
+          const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
+          Object.defineProperty(this, name, desc)
+        }
+      }
+      const C = run.deploy(A)
       expect(() => C.f('makeBackup')).to.throw('Cannot define makeBackup')
       expect(() => C.f('delegate')).to.throw('Cannot define delegate')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if define reserved on jig', () => {
+    it('throws if define reserved jig method on jig', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         f (prop) {
@@ -572,13 +595,26 @@ describe('Reserved', () => {
       }
       const a = new A()
       expect(() => a.f('sync')).to.throw('Cannot define sync')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if define reserved prop on jig', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f (prop) {
+          const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
+          Object.defineProperty(this, prop, desc)
+        }
+      }
+      const a = new A()
       expect(() => a.f('blocktime')).to.throw('Cannot define blocktime')
       expect(() => a.f('recover')).to.throw('Cannot define recover')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if define reserved on berry', async () => {
+    it('throws if define reserved prop on berry', async () => {
       new Run() // eslint-disable-line
       class B extends Berry {
         init (prop) {
@@ -599,7 +635,7 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('delete', () => {
-    it('throws if delete reserved on code', () => {
+    it('throws if delete reserved code method on code', () => {
       const run = new Run()
       class A extends Jig {
         static f (prop) { delete this[prop] }
@@ -607,26 +643,46 @@ describe('Reserved', () => {
       const CA = run.deploy(A)
       expect(() => CA.f('sync')).to.throw('Cannot delete sync')
       expect(() => CA.f('load')).to.throw('Cannot delete load')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if delete reserved prop on code', () => {
+      const run = new Run()
+      class A extends Jig {
+        static f (prop) { delete this[prop] }
+      }
+      const CA = run.deploy(A)
       expect(() => CA.f('blockhash')).to.throw('Cannot delete blockhash')
       expect(() => CA.f('consume')).to.throw('Cannot delete consume')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if delete reserved on jig', () => {
+    it('throws if delete reserved jig method on jig', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         f (prop) { delete this[prop] }
       }
       const a = new A()
       expect(() => a.f('sync')).to.throw('Cannot delete sync')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if delete reserved prop on jig', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f (prop) { delete this[prop] }
+      }
+      const a = new A()
       expect(() => a.f('blockheight')).to.throw('Cannot delete blockheight')
       expect(() => a.f('restricts')).to.throw('Cannot delete restricts')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if delete reserved on berry', async () => {
+    it('throws if delete reserved prop on berry', async () => {
       const run = new Run()
       class B extends Berry {
         init (prop) { delete this[prop] }
@@ -638,7 +694,7 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may delete reserved on inner object', () => {
+    it('may delete reserved prop on inner object', () => {
       const run = new Run()
       class A extends Jig {
         static f (prop) {
@@ -648,8 +704,8 @@ describe('Reserved', () => {
       A.s = new Set()
       const CA = run.deploy(A)
       CA.f('sync')
-      CA.f('load')
       CA.f('encryption')
+      CA.f('recover')
     })
   })
 
@@ -718,32 +774,53 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('getOwnPropertyDescriptor', () => {
-    it.skip('throws if get descriptor for reserved on jig externally', () => {
-      // TODO
+    it('throws if get descriptor for reserved prop on jig', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      expect(() => Object.getOwnPropertyDescriptor(a, 'blockheight')).to.throw('Cannot get descriptor for blockheight')
+      expect(() => Object.getOwnPropertyDescriptor(a, 'consume')).to.throw('Cannot get descriptor for consume')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if get descriptor for reserved on jig internally', () => {
-      // TODO
+    it('throws if get descriptor for reserved prop on code externally', () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      expect(() => Object.getOwnPropertyDescriptor(CA, 'blockhash')).to.throw('Cannot get descriptor for blockhash')
+      expect(() => Object.getOwnPropertyDescriptor(CA, 'eject')).to.throw('Cannot get descriptor for eject')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if get descriptor for reserved on code', () => {
-      // TODO
+    it('throws if get descriptor for reserved prop on code internally', () => {
+      const run = new Run()
+      class A extends Jig { static f (prop) { return Object.getOwnPropertyDescriptor(this, prop) } }
+      const CA = run.deploy(A)
+      expect(() => CA.f('blocktime')).to.throw('Cannot get descriptor for blocktime')
+      expect(() => CA.f('replicate')).to.throw('Cannot get descriptor for replicate')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if get descriptor for reserved on berry', () => {
-      // TODO
+    it('throws if get descriptor for reserved prop on berry', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const b = await run.load('abc', { berry: B })
+      expect(() => Object.getOwnPropertyDescriptor(b, 'mustBeLatest')).to.throw('Cannot get descriptor for mustBeLatest')
+      expect(() => Object.getOwnPropertyDescriptor(b, 'makeBackup')).to.throw('Cannot get descriptor for makeBackup')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may get descriptor for reserved on inner object', () => {
-      // TODO
+    it('may get descriptor for reserved prop on inner object', () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.b = new Uint8Array()
+      const CA = run.deploy(A)
+      expect(() => CA.b.encryption).not.to.throw()
+      expect(() => CA.b.restricts).not.to.throw()
     })
   })
 
@@ -752,31 +829,31 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('has', () => {
-    it.skip('throws if check reserved on jig externally', () => {
+    it.skip('throws if check reserved prop on jig externally', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if check reserved on jig internally', () => {
+    it.skip('throws if check reserved prop on jig internally', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if check reserved on code', () => {
+    it.skip('throws if check reserved prop on code', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if check reserved on berry', () => {
+    it.skip('throws if check reserved prop on berry', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may get reserved on inner object', () => {
+    it.skip('may get reserved prop on inner object', () => {
       // TODO
     })
   })
@@ -933,7 +1010,7 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if set reserved on berry', async () => {
+    it('throws if set reserved prop on berry', async () => {
       const run = new Run()
       class B extends Berry { init () { this.mustBeRecent = true } }
       await expect(run.load('abc', { berry: B })).to.be.rejectedWith('Cannot set mustBeRecent')
