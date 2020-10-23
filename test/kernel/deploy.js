@@ -1250,6 +1250,7 @@ describe('Deploy', () => {
 
       const CA = run.deploy(A)
       await CA.sync()
+      test(CA)
 
       const CA2 = await run.load(CA.location)
       test(CA2)
