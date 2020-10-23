@@ -658,7 +658,7 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('get', () => {
-    it('throws if get reserved on jig externally', () => {
+    it('throws if get reserved prop on jig externally', () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
       const a = new A()
@@ -669,26 +669,47 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if get reserved on jig internally', () => {
-      // TODO
+    it('throws if get reserved prop on jig internally', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f (prop) { this[prop] } } // eslint-disable-line
+      const a = new A()
+      expect(() => a.f('blocktime')).to.throw('Cannot get blocktime')
+      expect(() => a.f('mustBeRecent')).to.throw('Cannot get mustBeRecent')
+      expect(() => a.f('delegate')).to.throw('Cannot get delegate')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if get reserved on code', () => {
-      // TODO
+    it('throws if get reserved prop on code', () => {
+      const run = new Run()
+      class A { static f (prop) { return this[prop] } }
+      const CA = run.deploy(A)
+      expect(() => CA.f('blockhash')).to.throw('Cannot get blockhash')
+      expect(() => CA.f('recent')).to.throw('Cannot get recent')
+      expect(() => CA.f('consume')).to.throw('Cannot get consume')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if get reserved on berry', () => {
-      // TODO
+    it('throws if get reserved prop on berry', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const b = await run.load('abc', { berry: B })
+      expect(() => b.encryption).to.throw('Cannot get encryption')
+      expect(() => b.recent).to.throw('Cannot get recent')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may get reserved on inner object', () => {
-      // TODO
+    it('may get reserved prop on inner object', () => {
+      new Run() //eslint-disable-line
+      class A extends Jig {
+        init () { this.o = { } }
+        f (prop) { return this.o[prop] }
+      }
+      const a = new A()
+      a.f('latest')
+      a.f('recover')
     })
   })
 
