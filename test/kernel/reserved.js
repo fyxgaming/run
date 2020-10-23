@@ -658,8 +658,13 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('get', () => {
-    it.skip('throws if get reserved on jig externally', () => {
-      // TODO
+    it('throws if get reserved on jig externally', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      expect(() => a.encryption).to.throw('Cannot get encryption')
+      expect(() => a.recover).to.throw('Cannot get recover')
+      expect(() => a.latest).to.throw('Cannot get latest')
     })
 
     // ------------------------------------------------------------------------
