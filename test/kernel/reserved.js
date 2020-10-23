@@ -233,6 +233,8 @@ describe('Reserved', () => {
       expect(() => run.deploy(class A extends Jig { static blocktime () { } })).to.throw()
       expect(() => run.deploy(class A extends Jig { static blockheight () { } })).to.throw()
       expect(() => run.deploy(class A extends Jig { static load () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { static restricts () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { static consume () { } })).to.throw()
     })
 
     // ------------------------------------------------------------------------
@@ -247,6 +249,8 @@ describe('Reserved', () => {
       expect(() => run.deploy(class A extends Jig { blockhash () { } })).to.throw()
       expect(() => run.deploy(class A extends Jig { blocktime () { } })).to.throw()
       expect(() => run.deploy(class A extends Jig { blockheight () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { consume () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { eject () { } })).to.throw()
     })
 
     // ------------------------------------------------------------------------
@@ -488,15 +492,16 @@ describe('Reserved', () => {
     it('throws if reserved prop as method on code', () => {
       const run = new Run()
       const O = run.deploy(class O { })
-      expect(() => O.upgrade(class A extends Jig { static latest () { } })).to.throw()
-      expect(() => O.upgrade(class A extends Jig { static recent () { } })).to.throw()
-      expect(() => O.upgrade(class A extends Jig { static mustBeLatest () { } })).to.throw()
+      expect(() => O.upgrade(class A { static latest () { } })).to.throw()
+      expect(() => O.upgrade(class A { static recent () { } })).to.throw()
+      expect(() => O.upgrade(class A { static mustBeLatest () { } })).to.throw()
       expect(() => O.upgrade(class A extends Jig { static mustBeRecent () { } })).to.throw()
       expect(() => O.upgrade(class A extends Jig { static encryption () { } })).to.throw()
       expect(() => O.upgrade(class A extends Jig { static blockhash () { } })).to.throw()
-      expect(() => O.upgrade(class A extends Jig { static blocktime () { } })).to.throw()
-      expect(() => O.upgrade(class A extends Jig { static blockheight () { } })).to.throw()
-      expect(() => O.upgrade(class A extends Jig { static load () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Berry { static blocktime () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Berry { static blockheight () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Berry { static load () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Berry { static delegate () { } })).to.throw()
     })
 
     // ------------------------------------------------------------------------
@@ -513,6 +518,8 @@ describe('Reserved', () => {
       expect(() => O.upgrade(class A extends Jig { blocktime () { } })).to.throw()
       expect(() => O.upgrade(class A extends Jig { blockheight () { } })).to.throw()
       expect(() => O.upgrade(class A extends Jig { load () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { restricts () { } })).to.throw()
+      expect(() => O.upgrade(class A extends Jig { makeBackup () { } })).to.throw()
     })
 
     // ------------------------------------------------------------------------
@@ -684,6 +691,7 @@ describe('Reserved', () => {
       expect(() => C.f('encryption')).to.throw()
       expect(() => C.f('latest')).to.throw()
       expect(() => C.f('blocktime')).to.throw()
+      expect(() => C.f('restricts')).to.throw()
     })
 
     // ------------------------------------------------------------------------
@@ -695,6 +703,7 @@ describe('Reserved', () => {
       expect(() => a.f('encryption')).to.throw()
       expect(() => a.f('latest')).to.throw()
       expect(() => a.f('blocktime')).to.throw()
+      expect(() => a.f('replicate')).to.throw()
     })
   })
 
