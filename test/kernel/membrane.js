@@ -778,7 +778,7 @@ describe('Membrane', () => {
     it('throws if read undetermined creation bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
       _sudo(() => { A.location = '_o1' })
-      _sudo(() => { A.origin = 'commit://def_d2' })
+      _sudo(() => { A.origin = `commit://${DUMMY_TXID2}_d2` })
       expect(() => A.location).to.throw('Cannot read location')
       expect(() => A.origin).to.throw('Cannot read origin')
       expect(() => A.nonce).to.throw('Cannot read nonce')
@@ -851,7 +851,7 @@ describe('Membrane', () => {
     it('throws if get descriptor of undetermined creation bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
       _sudo(() => { A.location = '_o1' })
-      _sudo(() => { A.origin = 'commit://def_d2' })
+      _sudo(() => { A.origin = `commit://${DUMMY_TXID1}_d2` })
       expect(() => Object.getOwnPropertyDescriptor(A, 'location').value).to.throw('Cannot read location')
       expect(() => Object.getOwnPropertyDescriptor(A, 'origin').value).to.throw('Cannot read origin')
       expect(() => Object.getOwnPropertyDescriptor(A, 'nonce').value).to.throw('Cannot read nonce')

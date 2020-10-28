@@ -61,11 +61,11 @@ describe('Bindings', () => {
       expect(_location('error://line1\nline2')).to.deep.equal({ error: 'line1\nline2' })
       expect(_location('error://Undeployed')).to.deep.equal({ error: 'Undeployed', undeployed: true })
       // Commit locations
-      expect(_location(`commit://${TXID}_o1`)).to.deep.equal({ commitid: `commit://${TXID}`, vout: 1 })
-      expect(_location(`commit://${TXID}_d2`)).to.deep.equal({ commitid: `commit://${TXID}`, vdel: 2 })
+      expect(_location(`commit://${TXID}_o1`)).to.deep.equal({ commit: TXID, vout: 1 })
+      expect(_location(`commit://${TXID}_d2`)).to.deep.equal({ commit: TXID, vdel: 2 })
       // Record locations
-      expect(_location(`record://${TXID}_o1`)).to.deep.equal({ recordid: `record://${TXID}`, vout: 1 })
-      expect(_location(`record://${TXID}_d2`)).to.deep.equal({ recordid: `record://${TXID}`, vdel: 2 })
+      expect(_location(`record://${TXID}_o1`)).to.deep.equal({ record: TXID, vout: 1 })
+      expect(_location(`record://${TXID}_d2`)).to.deep.equal({ record: TXID, vdel: 2 })
     })
 
     // ------------------------------------------------------------------------
@@ -144,6 +144,48 @@ describe('Bindings', () => {
     it('native', () => {
       expect(_compileLocation({ native: 'Code' })).to.equal('native://Code')
       expect(_compileLocation({ native: 'StandardLock' })).to.equal('native://StandardLock')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('record', () => {
+      expect(_compileLocation({ record: TXID, vout: 0 })).to.equal(`record://${TXID}_o0`)
+      expect(_compileLocation({ record: TXID, vdel: 1 })).to.equal(`record://${TXID}_d1`)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('commit', () => {
+      expect(_compileLocation({ commit: TXID, vout: 1 })).to.equal(`commit://${TXID}_o1`)
+      expect(_compileLocation({ commit: TXID, vdel: 0 })).to.equal(`commit://${TXID}_d0`)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('jig', () => {
+      expect(_compileLocation({ txid: TXID, vout: 0 })).to.equal(`${TXID}_o0`)
+      expect(_compileLocation({ txid: TXID, vdel: 1 })).to.equal(`${TXID}_d1`)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('partial jig', () => {
+      expect(_compileLocation({ vout: 1 })).to.equal('_o1')
+      expect(_compileLocation({ vdel: 0 })).to.equal('_d0')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('berry', () => {
+      expect(_compileLocation({ txid: TXID, vout: 0, berry: 'abc', hash: HASH, version: 5 }))
+        .to.equal(`${TXID}_o0?berry=abc&hash=${HASH}&version=5`)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('partial berry', () => {
+      expect(_compileLocation({ txid: TXID, vout: 0, berry: '😀', version: 6 }))
+        .to.equal(`${TXID}_o0?berry=${encodeURIComponent('😀')}&version=6`)
     })
   })
 
