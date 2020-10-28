@@ -19,7 +19,7 @@ const { COVER } = require('../env/config')
 // ------------------------------------------------------------------------------------------------
 
 // Whether to capture all test transactions in a unit.json file
-const CAPTURE_UNITS = true
+const CAPTURE_UNITS = false
 
 // Enable/disable capture mode based on the above global var
 if (CAPTURE_UNITS) enableUnitCaptureMode()

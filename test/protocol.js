@@ -8,6 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const Run = require('./env/run')
 const { COVER } = require('./env/config')
+const { CAPTURE_UNITS } = require('./data/capture')
 
 // ------------------------------------------------------------------------------------------------
 // Protocol
@@ -21,6 +22,7 @@ describe('Protocol', () => {
 
   // Coverage does not support all transactions. We'll get cover from our other tests.
   if (COVER) return
+  if (CAPTURE_UNITS) return
 
   // --------------------------------------------------------------------------
 
