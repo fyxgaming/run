@@ -138,6 +138,13 @@ describe('Bindings', () => {
       expect(_compileLocation({ error: '123' })).to.equal('error://123')
       expect(_compileLocation({ error: '😀' })).to.equal('error://😀')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('native', () => {
+      expect(_compileLocation({ nativeid: 'Code' })).to.equal('native://Code')
+      expect(_compileLocation({ nativeid: 'StandardLock' })).to.equal('native://StandardLock')
+    })
   })
 
   // ----------------------------------------------------------------------------------------------

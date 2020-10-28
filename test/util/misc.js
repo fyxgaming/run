@@ -12,11 +12,11 @@ const unmangle = require('../env/unmangle')
 const Sandbox = unmangle(Run)._Sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
-  _isBasicObject, _isBasicArray, _isBasicSet, _isBasicMap, _isBasicUint8Array, _isArbitraryObject,
-  _isUndefined, _isBoolean, _isIntrinsic, _isSerializable, _protoLen, _anonymizeSourceCode,
-  _deanonymizeSourceCode, _isAnonymous, _getOwnProperty, _hasOwnProperty, _setOwnProperty,
+  _basicObject, _basicArray, _basicSet, _basicMap, _basicUint8Array, _arbitraryObject,
+  _defined, _intrinsic, _serializable, _protoLen, _anonymizeSourceCode,
+  _deanonymizeSourceCode, _anonymous, _getOwnProperty, _hasOwnProperty, _setOwnProperty,
   _ownGetters, _ownMethods, _sameJig, _hasJig, _addJigs, _subtractJigs, _limit, _Timeout,
-  _deterministicJSONStringify, _deterministicCompareKeys, _isNegativeZero
+  _deterministicJSONStringify, _deterministicCompareKeys, _negativeZero
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -326,116 +326,116 @@ describe('Misc', () => {
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _isBasicObject
+  // _basicObject
   // ----------------------------------------------------------------------------------------------
 
-  describe('_isBasicObject', () => {
+  describe('_basicObject', () => {
     it('returns whether basic object', () => {
-      expect(_isBasicObject({})).to.equal(true)
-      expect(_isBasicObject(null)).to.equal(false)
-      expect(_isBasicObject(new class {}())).to.equal(false)
-      expect(_isBasicObject([])).to.equal(false)
-      expect(_isBasicObject(1)).to.equal(false)
-      expect(_isBasicObject(Symbol.hasInstance)).to.equal(false)
-      expect(_isBasicObject(function () { })).to.equal(false)
+      expect(_basicObject({})).to.equal(true)
+      expect(_basicObject(null)).to.equal(false)
+      expect(_basicObject(new class {}())).to.equal(false)
+      expect(_basicObject([])).to.equal(false)
+      expect(_basicObject(1)).to.equal(false)
+      expect(_basicObject(Symbol.hasInstance)).to.equal(false)
+      expect(_basicObject(function () { })).to.equal(false)
     })
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _isBasicArray
+  // _basicArray
   // ----------------------------------------------------------------------------------------------
 
-  describe('_isBasicArray', () => {
+  describe('_basicArray', () => {
     it('returns whether basic array', () => {
-      expect(_isBasicArray([])).to.equal(true)
-      expect(_isBasicArray(new SI.Array())).to.equal(true)
-      expect(_isBasicArray(new class C extends Array {}())).to.equal(false)
-      expect(_isBasicArray({})).to.equal(false)
-      expect(_isBasicArray(null)).to.equal(false)
-      expect(_isBasicArray(new class {}())).to.equal(false)
-      expect(_isBasicArray('hello')).to.equal(false)
-      expect(_isBasicArray(Symbol.hasInstance)).to.equal(false)
-      expect(_isBasicArray(class A { })).to.equal(false)
+      expect(_basicArray([])).to.equal(true)
+      expect(_basicArray(new SI.Array())).to.equal(true)
+      expect(_basicArray(new class C extends Array {}())).to.equal(false)
+      expect(_basicArray({})).to.equal(false)
+      expect(_basicArray(null)).to.equal(false)
+      expect(_basicArray(new class {}())).to.equal(false)
+      expect(_basicArray('hello')).to.equal(false)
+      expect(_basicArray(Symbol.hasInstance)).to.equal(false)
+      expect(_basicArray(class A { })).to.equal(false)
     })
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _isBasicSet
+  // _basicSet
   // ----------------------------------------------------------------------------------------------
 
-  describe('_isBasicSet', () => {
+  describe('_basicSet', () => {
     it('returns whether basic set', () => {
-      expect(_isBasicSet(new Set())).to.equal(true)
-      expect(_isBasicSet(new Set([1, 2, 3]))).to.equal(true)
-      expect(_isBasicSet(new SI.Set())).to.equal(true)
-      expect(_isBasicSet(new (class Set2 extends Set {})())).to.equal(false)
-      expect(_isBasicSet([])).to.equal(false)
-      expect(_isBasicSet(new Map())).to.equal(false)
-      expect(_isBasicSet(new (class Set {})())).to.equal(false)
-      expect(_isBasicSet(null)).to.equal(false)
-      expect(_isBasicSet('Set')).to.equal(false)
+      expect(_basicSet(new Set())).to.equal(true)
+      expect(_basicSet(new Set([1, 2, 3]))).to.equal(true)
+      expect(_basicSet(new SI.Set())).to.equal(true)
+      expect(_basicSet(new (class Set2 extends Set {})())).to.equal(false)
+      expect(_basicSet([])).to.equal(false)
+      expect(_basicSet(new Map())).to.equal(false)
+      expect(_basicSet(new (class Set {})())).to.equal(false)
+      expect(_basicSet(null)).to.equal(false)
+      expect(_basicSet('Set')).to.equal(false)
     })
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _isBasicMap
+  // _basicMap
   // ----------------------------------------------------------------------------------------------
 
-  describe('_isBasicMap', () => {
+  describe('_basicMap', () => {
     it('returns whether basic map', () => {
-      expect(_isBasicMap(new Map())).to.equal(true)
-      expect(_isBasicMap(new Map([[1, 2]]))).to.equal(true)
-      expect(_isBasicMap(new SI.Map())).to.equal(true)
-      expect(_isBasicMap(new (class Map2 extends Map {})())).to.equal(false)
-      expect(_isBasicMap([])).to.equal(false)
-      expect(_isBasicMap(new Set())).to.equal(false)
-      expect(_isBasicMap(new (class Map {})())).to.equal(false)
-      expect(_isBasicMap(null)).to.equal(false)
-      expect(_isBasicMap('Map')).to.equal(false)
+      expect(_basicMap(new Map())).to.equal(true)
+      expect(_basicMap(new Map([[1, 2]]))).to.equal(true)
+      expect(_basicMap(new SI.Map())).to.equal(true)
+      expect(_basicMap(new (class Map2 extends Map {})())).to.equal(false)
+      expect(_basicMap([])).to.equal(false)
+      expect(_basicMap(new Set())).to.equal(false)
+      expect(_basicMap(new (class Map {})())).to.equal(false)
+      expect(_basicMap(null)).to.equal(false)
+      expect(_basicMap('Map')).to.equal(false)
     })
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _isBasicUint8Array
+  // _basicUint8Array
   // ----------------------------------------------------------------------------------------------
 
-  describe('_isBasicUint8Array', () => {
+  describe('_basicUint8Array', () => {
     it('returns whether basic uint8array', () => {
-      expect(_isBasicUint8Array(new Uint8Array())).to.equal(true)
-      expect(_isBasicUint8Array(new Uint8Array([1, 2, 3]))).to.equal(true)
-      expect(_isBasicUint8Array(new SI.Uint8Array())).to.equal(true)
-      expect(_isBasicMap(new (class Buffer extends Uint8Array {})())).to.equal(false)
-      expect(_isBasicUint8Array(Buffer.alloc(1))).to.equal(false)
-      expect(_isBasicUint8Array([])).to.equal(false)
-      expect(_isBasicUint8Array({})).to.equal(false)
-      expect(_isBasicUint8Array(null)).to.equal(false)
-      expect(_isBasicUint8Array(new class {}())).to.equal(false)
-      expect(_isBasicUint8Array('hello')).to.equal(false)
-      expect(_isBasicUint8Array(Symbol.hasInstance)).to.equal(false)
-      expect(_isBasicUint8Array(class A { })).to.equal(false)
+      expect(_basicUint8Array(new Uint8Array())).to.equal(true)
+      expect(_basicUint8Array(new Uint8Array([1, 2, 3]))).to.equal(true)
+      expect(_basicUint8Array(new SI.Uint8Array())).to.equal(true)
+      expect(_basicMap(new (class Buffer extends Uint8Array {})())).to.equal(false)
+      expect(_basicUint8Array(Buffer.alloc(1))).to.equal(false)
+      expect(_basicUint8Array([])).to.equal(false)
+      expect(_basicUint8Array({})).to.equal(false)
+      expect(_basicUint8Array(null)).to.equal(false)
+      expect(_basicUint8Array(new class {}())).to.equal(false)
+      expect(_basicUint8Array('hello')).to.equal(false)
+      expect(_basicUint8Array(Symbol.hasInstance)).to.equal(false)
+      expect(_basicUint8Array(class A { })).to.equal(false)
     })
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _isArbitraryObject
+  // _arbitraryObject
   // ----------------------------------------------------------------------------------------------
 
-  describe('_isArbitraryObject', () => {
+  describe('_arbitraryObject', () => {
     it('returns whether arbitrary object', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
-      expect(_isArbitraryObject(new CA())).to.equal(true)
-      expect(_isArbitraryObject(new A())).to.equal(false)
+      expect(_arbitraryObject(new CA())).to.equal(true)
+      expect(_arbitraryObject(new A())).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
 
     it('non-arbitrary objects', () => {
-      expect(_isArbitraryObject(new Map())).to.equal(false)
-      expect(_isArbitraryObject(new Set())).to.equal(false)
-      expect(_isArbitraryObject(null)).to.equal(false)
-      expect(_isArbitraryObject({ $arb: 1 })).to.equal(false)
+      expect(_arbitraryObject(new Map())).to.equal(false)
+      expect(_arbitraryObject(new Set())).to.equal(false)
+      expect(_arbitraryObject(null)).to.equal(false)
+      expect(_arbitraryObject({ $arb: 1 })).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -444,8 +444,8 @@ describe('Misc', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
-      expect(_isArbitraryObject(new CA())).to.equal(false)
-      expect(_isArbitraryObject(new A())).to.equal(false)
+      expect(_arbitraryObject(new CA())).to.equal(false)
+      expect(_arbitraryObject(new A())).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -454,170 +454,155 @@ describe('Misc', () => {
       new Run() // eslint-disable-line
       class B extends Berry { }
       const b = await B.load('abc')
-      expect(_isArbitraryObject(b)).to.equal(false)
+      expect(_arbitraryObject(b)).to.equal(false)
     })
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _isUndefined
+  // _defined
   // ----------------------------------------------------------------------------------------------
 
-  describe('_isUndefined', () => {
-    it('returns whether undefined', () => {
-      expect(_isUndefined()).to.equal(true)
-      expect(_isUndefined(undefined)).to.equal(true)
-      expect(_isUndefined(null)).to.equal(false)
-      expect(_isUndefined(0)).to.equal(false)
-      expect(_isUndefined({})).to.equal(false)
+  describe('_defined', () => {
+    it('returns whether not undefined', () => {
+      expect(_defined()).to.equal(false)
+      expect(_defined(undefined)).to.equal(false)
+      expect(_defined(null)).to.equal(true)
+      expect(_defined(0)).to.equal(true)
+      expect(_defined({})).to.equal(true)
     })
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _isBoolean
+  // _negativeZero
   // ----------------------------------------------------------------------------------------------
 
-  describe('_isBoolean', () => {
-    it('returns whether boolean', () => {
-      expect(_isBoolean(true)).to.equal(true)
-      expect(_isBoolean(false)).to.equal(true)
-      expect(_isBoolean()).to.equal(false)
-      expect(_isBoolean('true')).to.equal(false)
-      expect(_isBoolean(null)).to.equal(false)
-      expect(_isBoolean(0)).to.equal(false)
-    })
-  })
-
-  // ----------------------------------------------------------------------------------------------
-  // _isNegativeZero
-  // ----------------------------------------------------------------------------------------------
-
-  describe('_isNegativeZero', () => {
+  describe('_negativeZero', () => {
     it('returns whether negative zero', () => {
-      expect(_isNegativeZero(-0)).to.equal(true)
-      expect(_isNegativeZero(1 / -Infinity)).to.equal(true)
-      expect(_isNegativeZero(0)).to.equal(false)
-      expect(_isNegativeZero(1)).to.equal(false)
-      expect(_isNegativeZero(-1)).to.equal(false)
-      expect(_isNegativeZero(-Infinity)).to.equal(false)
-      expect(_isNegativeZero(NaN)).to.equal(false)
+      expect(_negativeZero(-0)).to.equal(true)
+      expect(_negativeZero(1 / -Infinity)).to.equal(true)
+      expect(_negativeZero(0)).to.equal(false)
+      expect(_negativeZero(1)).to.equal(false)
+      expect(_negativeZero(-1)).to.equal(false)
+      expect(_negativeZero(-Infinity)).to.equal(false)
+      expect(_negativeZero(NaN)).to.equal(false)
     })
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _isIntrinsic
+  // _intrinsic
   // ----------------------------------------------------------------------------------------------
 
-  describe('_isIntrinsic', () => {
+  describe('_intrinsic', () => {
     it('true for intrinsic', () => {
-      expect(_isIntrinsic(Math)).to.equal(true)
-      expect(_isIntrinsic(Set)).to.equal(true)
-      expect(_isIntrinsic(RegExp)).to.equal(true)
+      expect(_intrinsic(Math)).to.equal(true)
+      expect(_intrinsic(Set)).to.equal(true)
+      expect(_intrinsic(RegExp)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('true for sandbox intrinsic', () => {
-      expect(_isIntrinsic(SI.Object)).to.equal(true)
-      expect(_isIntrinsic(SI.Uint8Array)).to.equal(true)
-      expect(_isIntrinsic(SI.Date)).to.equal(true)
+      expect(_intrinsic(SI.Object)).to.equal(true)
+      expect(_intrinsic(SI.Uint8Array)).to.equal(true)
+      expect(_intrinsic(SI.Date)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('false for non-intrinsic', () => {
-      expect(_isIntrinsic(class A { })).to.equal(false)
-      expect(_isIntrinsic(function f () { })).to.equal(false)
+      expect(_intrinsic(class A { })).to.equal(false)
+      expect(_intrinsic(function f () { })).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
 
     it('false for intrinsic instance', () => {
-      expect(_isIntrinsic({})).to.equal(false)
-      expect(_isIntrinsic([])).to.equal(false)
-      expect(_isIntrinsic(new Set())).to.equal(false)
-      expect(_isIntrinsic(new Map())).to.equal(false)
-      expect(_isIntrinsic(new Date())).to.equal(false)
+      expect(_intrinsic({})).to.equal(false)
+      expect(_intrinsic([])).to.equal(false)
+      expect(_intrinsic(new Set())).to.equal(false)
+      expect(_intrinsic(new Map())).to.equal(false)
+      expect(_intrinsic(new Date())).to.equal(false)
     })
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _isSerializable
+  // _serializable
   // ----------------------------------------------------------------------------------------------
 
-  describe('_isSerializable', () => {
+  describe('_serializable', () => {
     it('true if serializable', () => {
       const run = new Run()
-      expect(_isSerializable(undefined)).to.equal(true)
-      expect(_isSerializable(true)).to.equal(true)
-      expect(_isSerializable(false)).to.equal(true)
-      expect(_isSerializable(0)).to.equal(true)
-      expect(_isSerializable(1)).to.equal(true)
-      expect(_isSerializable(-1.5)).to.equal(true)
-      expect(_isSerializable(NaN)).to.equal(true)
-      expect(_isSerializable(Infinity)).to.equal(true)
-      expect(_isSerializable(-Infinity)).to.equal(true)
-      expect(_isSerializable(-0)).to.equal(true)
-      expect(_isSerializable('')).to.equal(true)
-      expect(_isSerializable('abc')).to.equal(true)
-      expect(_isSerializable('😃')).to.equal(true)
-      expect(_isSerializable(null)).to.equal(true)
-      expect(_isSerializable({})).to.equal(true)
-      expect(_isSerializable([])).to.equal(true)
-      expect(_isSerializable(new Set())).to.equal(true)
-      expect(_isSerializable(new Map())).to.equal(true)
-      expect(_isSerializable(new Uint8Array())).to.equal(true)
-      expect(_isSerializable(new SI.Set())).to.equal(true)
-      expect(_isSerializable(new SI.Map())).to.equal(true)
-      expect(_isSerializable(new SI.Uint8Array())).to.equal(true)
-      expect(_isSerializable(run.deploy(class A {}))).to.equal(true)
-      expect(_isSerializable(new (class A extends Jig { })())).to.equal(true)
-      expect(_isSerializable(new (run.deploy(class A { }))())).to.equal(true)
+      expect(_serializable(undefined)).to.equal(true)
+      expect(_serializable(true)).to.equal(true)
+      expect(_serializable(false)).to.equal(true)
+      expect(_serializable(0)).to.equal(true)
+      expect(_serializable(1)).to.equal(true)
+      expect(_serializable(-1.5)).to.equal(true)
+      expect(_serializable(NaN)).to.equal(true)
+      expect(_serializable(Infinity)).to.equal(true)
+      expect(_serializable(-Infinity)).to.equal(true)
+      expect(_serializable(-0)).to.equal(true)
+      expect(_serializable('')).to.equal(true)
+      expect(_serializable('abc')).to.equal(true)
+      expect(_serializable('😃')).to.equal(true)
+      expect(_serializable(null)).to.equal(true)
+      expect(_serializable({})).to.equal(true)
+      expect(_serializable([])).to.equal(true)
+      expect(_serializable(new Set())).to.equal(true)
+      expect(_serializable(new Map())).to.equal(true)
+      expect(_serializable(new Uint8Array())).to.equal(true)
+      expect(_serializable(new SI.Set())).to.equal(true)
+      expect(_serializable(new SI.Map())).to.equal(true)
+      expect(_serializable(new SI.Uint8Array())).to.equal(true)
+      expect(_serializable(run.deploy(class A {}))).to.equal(true)
+      expect(_serializable(new (class A extends Jig { })())).to.equal(true)
+      expect(_serializable(new (run.deploy(class A { }))())).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('false if unserializable', () => {
-      expect(_isSerializable(new RegExp())).to.equal(false)
-      expect(_isSerializable(Math)).to.equal(false)
-      expect(_isSerializable(Date)).to.equal(false)
-      expect(_isSerializable(new Date())).to.equal(false)
-      expect(_isSerializable(new Uint16Array())).to.equal(false)
-      expect(_isSerializable(class A { })).to.equal(false)
-      expect(_isSerializable(class A extends Jig { })).to.equal(false)
-      expect(_isSerializable(function f () { })).to.equal(false)
-      expect(_isSerializable(() => { })).to.equal(false)
+      expect(_serializable(new RegExp())).to.equal(false)
+      expect(_serializable(Math)).to.equal(false)
+      expect(_serializable(Date)).to.equal(false)
+      expect(_serializable(new Date())).to.equal(false)
+      expect(_serializable(new Uint16Array())).to.equal(false)
+      expect(_serializable(class A { })).to.equal(false)
+      expect(_serializable(class A extends Jig { })).to.equal(false)
+      expect(_serializable(function f () { })).to.equal(false)
+      expect(_serializable(() => { })).to.equal(false)
     })
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _isAnonymous
+  // _anonymous
   // ----------------------------------------------------------------------------------------------
 
-  describe('_isAnonymous', () => {
+  describe('_anonymous', () => {
     it('true if anonymous', () => {
       const A = class { }
       const f = function () { }
       const g = () => { }
-      expect(_isAnonymous(A)).to.equal(true)
-      expect(_isAnonymous(f)).to.equal(true)
-      expect(_isAnonymous(g)).to.equal(true)
-      expect(_isAnonymous(() => { })).to.equal(true)
-      expect(_isAnonymous(x => x)).to.equal(true)
-      expect(_isAnonymous(class { })).to.equal(true)
-      expect(_isAnonymous(class extends A { })).to.equal(true)
+      expect(_anonymous(A)).to.equal(true)
+      expect(_anonymous(f)).to.equal(true)
+      expect(_anonymous(g)).to.equal(true)
+      expect(_anonymous(() => { })).to.equal(true)
+      expect(_anonymous(x => x)).to.equal(true)
+      expect(_anonymous(class { })).to.equal(true)
+      expect(_anonymous(class extends A { })).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('false if non-anonymous', () => {
-      expect(_isAnonymous(0)).to.equal(false)
-      expect(_isAnonymous(true)).to.equal(false)
-      expect(_isAnonymous(null)).to.equal(false)
-      expect(_isAnonymous(undefined)).to.equal(false)
-      expect(_isAnonymous('function f() { }')).to.equal(false)
-      expect(_isAnonymous({})).to.equal(false)
-      expect(_isAnonymous(function f () { })).to.equal(false)
-      expect(_isAnonymous(class A { })).to.equal(false)
+      expect(_anonymous(0)).to.equal(false)
+      expect(_anonymous(true)).to.equal(false)
+      expect(_anonymous(null)).to.equal(false)
+      expect(_anonymous(undefined)).to.equal(false)
+      expect(_anonymous('function f() { }')).to.equal(false)
+      expect(_anonymous({})).to.equal(false)
+      expect(_anonymous(function f () { })).to.equal(false)
+      expect(_anonymous(class A { })).to.equal(false)
     })
   })
 
