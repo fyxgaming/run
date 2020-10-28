@@ -2654,7 +2654,7 @@ describe('Jig', () => {
       run.deploy(B)
       await run.sync()
       const error = '[berry B] not an instance of A'
-      await expect(A.load(`${B.location}_abc`)).to.be.rejectedWith(error)
+      await expect(A.load(`${B.location}?berry=abc`)).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------

@@ -624,9 +624,9 @@ describe('Reserved', () => {
 
         static async pluck (prop) { return new B(prop) }
       }
-      await expect(B.load('encryption')).to.be.rejectedWith('Cannot define encryption')
-      await expect(B.load('mustBeRecent')).to.be.rejectedWith('Cannot define mustBeRecent')
-      await expect(B.load('eject')).to.be.rejectedWith('Cannot define eject')
+      expect(() => B.load('encryption')).to.throw('Cannot define encryption')
+      expect(() => B.load('mustBeRecent')).to.throw('Cannot define mustBeRecent')
+      expect(() => B.load('eject')).to.throw('Cannot define eject')
     })
   })
 
@@ -683,13 +683,13 @@ describe('Reserved', () => {
     // ------------------------------------------------------------------------
 
     it('throws if delete reserved prop on berry', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry {
         init (prop) { delete this[prop] }
         static async pluck (prop) { return new B(prop) }
       }
-      await expect(run.load('encryption', { berry: B })).to.be.rejectedWith('Cannot delete encryption')
-      await expect(run.load('makeBackup', { berry: B })).to.be.rejectedWith('Cannot delete makeBackup')
+      expect(() => B.load('encryption')).to.throw('Cannot delete encryption')
+      expect(() => B.load('makeBackup')).to.throw('Cannot delete makeBackup')
     })
 
     // ------------------------------------------------------------------------
@@ -748,9 +748,9 @@ describe('Reserved', () => {
     // ------------------------------------------------------------------------
 
     it('throws if get reserved prop on berry', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(() => b.encryption).to.throw('Cannot get encryption')
       expect(() => b.recent).to.throw('Cannot get recent')
     })
@@ -805,9 +805,9 @@ describe('Reserved', () => {
     // ------------------------------------------------------------------------
 
     it('throws if get descriptor for reserved prop on berry', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(() => Object.getOwnPropertyDescriptor(b, 'mustBeLatest')).to.throw('Cannot get descriptor for mustBeLatest')
       expect(() => Object.getOwnPropertyDescriptor(b, 'makeBackup')).to.throw('Cannot get descriptor for makeBackup')
     })
@@ -1036,9 +1036,9 @@ describe('Reserved', () => {
     // ------------------------------------------------------------------------
 
     it('throws if set reserved prop on berry', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { init () { this.mustBeRecent = true } }
-      await expect(run.load('abc', { berry: B })).to.be.rejectedWith('Cannot set mustBeRecent')
+      expect(() => B.load('abc')).to.throw('Cannot set mustBeRecent')
     })
   })
 
@@ -1048,36 +1048,36 @@ describe('Reserved', () => {
 
   describe('Pluck', () => {
     it('may set sync during pluck', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { init () { this.sync = 1 } }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(b.sync).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
     it('may set auth during pluck', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { init () { this.auth = [] } }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(b.auth).to.deep.equal([])
     })
 
     // ------------------------------------------------------------------------
 
     it('may set destroy during pluck', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { init () { this.destroy = null } }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(b.destroy).to.deep.equal(null)
     })
 
     // ------------------------------------------------------------------------
 
     it('may set utxo bindings during pluck', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { init () { this.owner = true; this.satoshis = false } }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(b.owner).to.deep.equal(true)
       expect(b.satoshis).to.deep.equal(false)
     })
@@ -1085,13 +1085,13 @@ describe('Reserved', () => {
     // ------------------------------------------------------------------------
 
     it('throws if set creation bindings during pluck', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { init () { this.location = 'abc' } }
-      await expect(run.load('abc', { berry: B })).to.be.rejectedWith('Cannot set location')
+      expect(() => B.load('abc')).to.throw('Cannot set location')
       class C extends Berry { init () { this.origin = 'abc' } }
-      await expect(run.load('abc', { berry: C })).to.be.rejectedWith('Cannot set origin')
+      expect(() => C.load('abc')).to.throw('Cannot set origin')
       class D extends Berry { init () { this.nonce = 0 } }
-      await expect(run.load('abc', { berry: D })).to.be.rejectedWith('Cannot set nonce')
+      expect(() => D.load('abc')).to.throw('Cannot set nonce')
     })
   })
 })

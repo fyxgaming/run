@@ -51,6 +51,12 @@ describe('Bindings', () => {
       // Partial berries
       expect(_location(`_d1?berry=abc&hash=${HASH}&version=5`))
         .to.deep.equal({ vdel: 1, berry: 'abc', hash: HASH, version: 5 })
+      expect(_location(`${TXID}_o0?berry=&version=5`))
+        .to.deep.equal({ txid: TXID, vout: 0, berry: '', version: 5 })
+      expect(_location(`${TXID}_o0?berry=&hash=${HASH}`))
+        .to.deep.equal({ txid: TXID, vout: 0, berry: '', hash: HASH })
+      expect(_location(`${TXID}_o0?berry=abc`))
+        .to.deep.equal({ txid: TXID, vout: 0, berry: 'abc' })
       // Errors
       expect(_location('error://')).to.deep.equal({ error: '' })
       expect(_location('error://Something bad happened')).to.deep.equal({ error: 'Something bad happened' })
@@ -93,8 +99,6 @@ describe('Bindings', () => {
       expect(() => _location(`${TXID}_o0?berry=abc&hash=${HASH}&version=abc`)).to.throw()
       expect(() => _location(`${TXID}_o0?hash=${HASH}&version=5`)).to.throw()
       expect(() => _location(`${TXID}_o0?berry=abc&hash=abc&version=5`)).to.throw()
-      expect(() => _location(`${TXID}_o0?berry=abc&version=5`)).to.throw()
-      expect(() => _location(`${TXID}_o0?berry=abc&hash=${HASH}`)).to.throw()
       expect(() => _location(`${TXID}_o0?berry=%abc&hash=${HASH}&version=5`)).to.throw()
       // Bad commit structure
       expect(() => _location(`commit://${TXID}_o`)).to.throw()

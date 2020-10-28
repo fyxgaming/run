@@ -815,7 +815,7 @@ describe('Private', () => {
 
   describe('Berry', () => {
     it('no private properties', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry {
         init () { this._n = 1 }
         _g () { return 2 }
@@ -825,7 +825,7 @@ describe('Private', () => {
         g (b) { return b._g() }
       }
       const a = new A()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(a.f(b)).to.equal(1)
       expect(a.g(b)).to.equal(2)
     })

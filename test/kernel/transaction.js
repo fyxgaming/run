@@ -1726,7 +1726,7 @@ describe('Transaction', () => {
       const runoutput = new bsv.Transaction.Output({ script: runscript, satoshis: 0 })
       const tx = new bsv.Transaction().addOutput(runoutput).to(run.purse.address, 1000)
       const rawtx = tx.toString('hex')
-      const error = 'Not a run transaction: unsupported run version'
+      const error = 'Unsupported payload version: 04'
       await expect(run.import(rawtx)).to.be.rejectedWith(error)
     })
 

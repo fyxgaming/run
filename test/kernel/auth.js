@@ -514,7 +514,7 @@ describe('Auth', () => {
     it('throws if auth undeployed berry class', async () => {
       const run = new Run()
       class B extends Berry { }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       b.constructor.auth()
       await expect(run.sync()).to.be.rejectedWith('Bad location')
     })

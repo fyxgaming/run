@@ -8,7 +8,10 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { stub } = require('sinon')
 const { expect } = require('chai')
-const { PrivateKey } = require('bsv')
+const bsv = require('bsv')
+const { PrivateKey } = bsv
+const { sha256 } = bsv.crypto.Hash
+const bsvBuffer = bsv.deps.Buffer
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const { expectTx } = require('../env/misc')
@@ -21,7 +24,7 @@ const _sudo = unmangle(Run)._sudo
 // Globals
 // ------------------------------------------------------------------------------------------------
 
-const randomLocation = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + '_o0'
+const randomLocation = () => sha256(bsvBuffer.from(Math.random().toString()), 'utf8').toString('hex') + '_o0'
 const randomOwner = () => new PrivateKey().toAddress().toString()
 
 // ------------------------------------------------------------------------------------------------
@@ -1059,7 +1062,7 @@ describe('Deploy', () => {
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
 
       class A extends Jig { }
       A.B = B
@@ -1467,7 +1470,7 @@ describe('Deploy', () => {
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: CB })
+      const b = await CB.load('abc')
 
       class A { static f () { return b } }
       A.deps = { b }
@@ -1796,7 +1799,7 @@ describe('Deploy', () => {
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
 
       const network = run.blockchain.network
       class A extends Jig { }
@@ -2198,7 +2201,7 @@ describe('Deploy', () => {
       class B extends Berry { constructor () { super(); this.n = 1 } }
       const error = 'Berry must use init() instead of constructor()'
       expect(() => run.deploy(B)).to.throw(error)
-      await expect(run.load('abc', { berry: B })).to.be.rejectedWith(error)
+      expect(() => B.load('abc')).to.throw(error)
     })
   })
 })

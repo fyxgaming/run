@@ -54,9 +54,9 @@ describe('Creation', () => {
     // ------------------------------------------------------------------------
 
     it('berry', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(b instanceof Creation).to.equal(true)
     })
 

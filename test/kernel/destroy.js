@@ -478,7 +478,7 @@ describe('Destroy', () => {
       async function test (CB) {
         expect(CB.location.endsWith('_d0')).to.equal(true)
         expect(CB.nonce).to.equal(2)
-        await run.load('abc', { berry: CB })
+        await CB.load('abc')
       }
 
       CB.destroy()
@@ -523,10 +523,10 @@ describe('Destroy', () => {
       async function test (CB) {
         expect(CB.location.endsWith('_d0')).to.equal(true)
         expect(CB.nonce).to.equal(2)
-        await run.load('abc', { berry: CB })
+        await CB.load('abc')
       }
 
-      const b = await run.load('abc', { berry: CB })
+      const b = await CB.load('abc')
       a.f(b)
       await a.sync()
       await test(CB)
@@ -544,7 +544,7 @@ describe('Destroy', () => {
     it('throws if destroy undeployed berry class', async () => {
       const run = new Run()
       class B extends Berry { }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       b.constructor.destroy()
       await expect(run.sync()).to.be.rejectedWith('Bad location')
     })

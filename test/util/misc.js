@@ -451,9 +451,9 @@ describe('Misc', () => {
     // ------------------------------------------------------------------------
 
     it('berries', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(_isArbitraryObject(b)).to.equal(false)
     })
   })
@@ -827,8 +827,8 @@ describe('Misc', () => {
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: CB })
-      const b2 = await run.load('abc', { berry: CB })
+      const b = await CB.load('abc')
+      const b2 = await CB.load('abc')
       expect(_sameJig(b, b2)).to.equal(true)
     })
 
@@ -840,15 +840,15 @@ describe('Misc', () => {
       const CB = run.deploy(B)
       await CB.sync()
 
-      const b = await run.load('abc', { berry: CB })
-      const b2 = await run.load('def', { berry: CB })
+      const b = await CB.load('abc')
+      const b2 = await CB.load('def')
       expect(_sameJig(b, b2)).to.equal(false)
 
       class C extends Berry { }
       const CC = run.deploy(C)
       await CC.sync()
 
-      const c = await run.load('abc', { berry: C })
+      const c = await C.load('abc')
       expect(_sameJig(b, c)).to.equal(false)
 
       const b3 = { location: `${CB.location}_abc` }
@@ -859,10 +859,10 @@ describe('Misc', () => {
     // ------------------------------------------------------------------------
 
     it('returns false for undeployed berries', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
-      const b = await run.load('abc', { berry: B })
-      const b2 = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
+      const b2 = await B.load('abc')
       expect(_sameJig(b, b2)).to.equal(false)
     })
   })

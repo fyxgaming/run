@@ -25,6 +25,8 @@ const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
 // ------------------------------------------------------------------------------------------------
 
 const DUMMY_OWNER = '1NbnqkQJSH86yx4giugZMDPJr2Ss2djt3N'
+const DUMMY_TXID1 = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+const DUMMY_TXID2 = 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
 
 // Reads and updates must happen in action to be recorded. This simulates one for ease of testing.
 function simulateAction (f) {
@@ -45,8 +47,8 @@ function makeJig (x, options = {}) {
   options = mangle(Object.assign(options, { _admin: true }))
   const jig = new Membrane(x, options)
   _sudo(() => {
-    jig.location = `abc_o${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)}`
-    jig.origin = `def_o${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)}`
+    jig.location = `${DUMMY_TXID1}_d${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)}`
+    jig.origin = `${DUMMY_TXID2}_o${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)}`
     jig.nonce = 0
     jig.owner = null
     jig.satoshis = null
@@ -753,11 +755,11 @@ describe('Membrane', () => {
   describe('Creation bindings', () => {
     it('read creation bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
-      _sudo(() => { A.location = 'abc_o1' })
-      _sudo(() => { A.origin = 'def_o2' })
+      _sudo(() => { A.location = `${DUMMY_TXID1}_o1` })
+      _sudo(() => { A.origin = `${DUMMY_TXID2}_o2` })
       _sudo(() => { A.nonce = 1 })
-      expect(A.location).to.equal('abc_o1')
-      expect(A.origin).to.equal('def_o2')
+      expect(A.location).to.equal(`${DUMMY_TXID1}_o1`)
+      expect(A.origin).to.equal(`${DUMMY_TXID2}_o2`)
       expect(A.nonce).to.equal(1)
     })
 
@@ -823,11 +825,11 @@ describe('Membrane', () => {
 
     it('get descriptor for creation bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
-      _sudo(() => { A.location = 'abc_o1' })
-      _sudo(() => { A.origin = 'def_o2' })
+      _sudo(() => { A.location = `${DUMMY_TXID1}_o1` })
+      _sudo(() => { A.origin = `${DUMMY_TXID2}_o2` })
       _sudo(() => { A.nonce = 1 })
-      expect(Object.getOwnPropertyDescriptor(A, 'location').value).to.equal('abc_o1')
-      expect(Object.getOwnPropertyDescriptor(A, 'origin').value).to.equal('def_o2')
+      expect(Object.getOwnPropertyDescriptor(A, 'location').value).to.equal(`${DUMMY_TXID1}_o1`)
+      expect(Object.getOwnPropertyDescriptor(A, 'origin').value).to.equal(`${DUMMY_TXID2}_o2`)
       expect(Object.getOwnPropertyDescriptor(A, 'nonce').value).to.equal(1)
     })
 

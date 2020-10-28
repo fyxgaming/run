@@ -615,7 +615,7 @@ describe('Call', () => {
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: CB })
+      const b = await CB.load('abc')
       testArgumentPass(b)
     })
 

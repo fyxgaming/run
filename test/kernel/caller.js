@@ -230,7 +230,7 @@ describe('Caller', () => {
       }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: CB })
+      const b = await CB.load('abc')
       expect(b.c).to.equal(null)
     })
 
@@ -241,7 +241,7 @@ describe('Caller', () => {
       class B extends Berry { init (c) { this.c = caller } }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: CB })
+      const b = await CB.load('abc')
       expect(b.c).to.equal(null)
     })
 
@@ -252,7 +252,7 @@ describe('Caller', () => {
       class B extends Berry { f() { return caller } } // eslint-disable-line
       run.deploy(B)
       await run.sync()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
 
       class A extends Jig { static g () { return b.f() }}
       A.deps = { b }

@@ -28,35 +28,36 @@ describe('Berry', () => {
   // --------------------------------------------------------------------------
 
   describe('pluck', () => {
-    it.only('basic berry', async () => {
+    it('basic berry', async () => {
       const run = new Run()
       class B extends Berry { static async pluck () { return new B() } }
       const CB = run.deploy(B)
       await run.sync()
 
+      const regex = new RegExp(`^${CB.location}\\?berry=abc&hash=[a-f0-9]{64}&version=${Run.protocol}$`)
+
       function test (b) {
         expect(b instanceof B).to.equal(true)
-        expect(b.location).to.equal(location)
+        expect(regex.test(b.location)).to.equal(true)
       }
 
-      const b = await run.load('abc', { berry: CB })
-      const location = CB.location + '_abc'
+      const b = await CB.load('abc')
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
     // ------------------------------------------------------------------------
 
     it('undeployed berry', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(b instanceof B).to.equal(true)
       expect(() => b.location).to.throw()
     })
@@ -67,7 +68,7 @@ describe('Berry', () => {
       const run = new Run()
       class B extends Berry { }
       const CB = run.deploy(B)
-      const b = await run.load('abc', { berry: CB })
+      const b = await CB.load('abc')
       expect(b instanceof B).to.equal(true)
       expect(() => b.location).to.throw()
       await run.sync()
@@ -77,10 +78,10 @@ describe('Berry', () => {
     // ------------------------------------------------------------------------
 
     it('berry with parent', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
       class C extends B { }
-      const c = await run.load('', { berry: C })
+      const c = await C.load('')
       expect(c instanceof C).to.equal(true)
     })
     // ------------------------------------------------------------------------
@@ -99,17 +100,17 @@ describe('Berry', () => {
         expect(d instanceof D).to.equal(true)
       }
 
-      const c = await run.load('', { berry: C })
-      const d = await run.load('', { berry: D })
+      const c = await C.load('_')
+      const d = await D.load('_')
       test(c, d)
 
-      const c2 = await run.load(C.location + '_')
-      const d2 = await run.load(D.location + '_')
+      const c2 = await C.load('_')
+      const d2 = await D.load('_')
       test(c2, d2)
 
       run.cache = new LocalCache()
-      const c3 = await run.load(C.location + '_')
-      const d3 = await run.load(D.location + '_')
+      const c3 = await C.load('_')
+      const d3 = await D.load('_')
       test(c3, d3)
     })
 
@@ -129,20 +130,21 @@ describe('Berry', () => {
       run.deploy(B)
       await run.sync()
 
+      const regex = new RegExp(`^${B.location}\\?berry=123&hash=[a-f0-9]{64}&version=${Run.protocol}$`)
+
       function test (b) {
-        expect(b.location).to.equal(location)
         expect(b.n).to.equal(1)
+        expect(regex.test(b.location)).to.equal(true)
       }
 
-      const b = await run.load('123', { berry: B })
-      const location = b.constructor.location + '_123'
+      const b = await B.load('123')
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -166,15 +168,14 @@ describe('Berry', () => {
         expect(() => { b.a.push(1) }).to.throw('set disabled')
       }
 
-      const b = await run.load('123', { berry: B })
-      const location = b.constructor.location + '_123'
+      const b = await B.load('123')
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -201,15 +202,14 @@ describe('Berry', () => {
         expect(() => b.g()).to.throw('set disabled')
       }
 
-      const b = await run.load('123', { berry: B })
-      const location = b.constructor.location + '_123'
+      const b = await B.load('123')
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -231,21 +231,21 @@ describe('Berry', () => {
       
 Line 3`
 
-      const location = B.location + '_' + text
+      const regex = new RegExp(`^${B.location}\\?berry=${encodeURIComponent(text)}&hash=[a-f0-9]{64}&version=${Run.protocol}$`)
 
       function test (b) {
         expect(b.s).to.equal(text)
-        expect(b.location).to.equal(location)
+        expect(regex.test(b.location)).to.equal(true)
       }
 
-      const b = await run.load(text, { berry: B })
+      const b = await B.load(text)
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -264,42 +264,42 @@ Line 3`
 
       const text = '😀'
 
-      const location = B.location + '_' + text
+      const regex = new RegExp(`^${B.location}\\?berry=${encodeURIComponent(text)}&hash=[a-f0-9]{64}&version=${Run.protocol}$`)
 
       function test (b) {
         expect(b.s).to.equal(text)
-        expect(b.location).to.equal(location)
+        expect(regex.test(b.location)).to.equal(true)
       }
 
-      const b = await run.load(text, { berry: B })
+      const b = await B.load(text)
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
     // ------------------------------------------------------------------------
 
     it('throws for invalid path', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { static async pluck () { return new B() } }
       const error = 'Berry path must be a string'
-      await expect(run.load(null, { berry: B })).to.be.rejectedWith(error)
-      await expect(run.load(undefined, { berry: B })).to.be.rejectedWith(error)
-      await expect(run.load({}, { berry: B })).to.be.rejectedWith(error)
+      await expect(B.load(null)).to.be.rejectedWith(error)
+      await expect(B.load(undefined)).to.be.rejectedWith(error)
+      await expect(B.load({})).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if return unrelated object', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { static async pluck () { return {} } }
       const error = 'Berry must be an instance of B'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      await expect(B.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
@@ -309,11 +309,11 @@ Line 3`
       class B extends Berry { static async pluck () { return new B() } }
       run.deploy(B)
       await run.sync()
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       class C extends Berry { static async pluck () { return C.b } }
       C.b = b
       const error = 'Berry must be an instance of C'
-      await expect(run.load('', { berry: C })).to.be.rejectedWith(error)
+      await expect(C.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
@@ -323,74 +323,57 @@ Line 3`
       class B extends Berry { static async pluck () { return new B() } }
       run.deploy(B)
       await run.sync()
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       class C extends B { static async pluck () { return C.b } }
       C.b = b
       const error = 'Berry must be an instance of C'
-      await expect(run.load('', { berry: C })).to.be.rejectedWith(error)
+      await expect(C.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if return non-object', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { static async pluck () { return null } }
       class C extends Berry { static async pluck () { return 'hello' } }
       const error = name => 'Berry must be an instance of ' + name
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error('B'))
-      await expect(run.load('', { berry: C })).to.be.rejectedWith(error('C'))
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if pluck Berry', async () => {
-      const run = new Run()
-      const error = 'Berry class must extend from Berry'
-      await expect(run.load('', { berry: Berry })).to.be.rejectedWith(error)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if pluck non-berry', async () => {
-      const run = new Run()
-      const error = 'Berry class must extend from Berry'
-      await expect(run.load('', { berry: class B { } })).to.be.rejectedWith(error)
-      await expect(run.load('', { berry: class C extends Jig { } })).to.be.rejectedWith(error)
+      await expect(B.load('')).to.be.rejectedWith(error('B'))
+      await expect(C.load('')).to.be.rejectedWith(error('C'))
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if pluck more than one', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry {
         static async pluck () {
           new B() // eslint-disable-line
           return new B()
         }
       }
-      const error = 'Must only pluck one berry at a time'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      const error = 'Must only create berry from its berry class'
+      await expect(B.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if not async', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry {
         static pluck () {
           return new B()
         }
       }
       const error = 'pluck method must be async'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      await expect(B.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if init throws', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { static async pluck () { throw new Error('abc') } }
-      await expect(run.load('', { berry: B })).to.be.rejectedWith('abc')
+      await expect(B.load('')).to.be.rejectedWith('abc')
     })
 
     // ------------------------------------------------------------------------
@@ -410,10 +393,8 @@ Line 3`
       class B extends Berry { }
       const CB = run.deploy(B)
       await run.sync()
-      const b = await run.load('abc', { berry: B })
-      const c = await run.load('123', { berry: B })
-      expect(b.location).to.equal(CB.location + '_abc')
-      expect(c.location).to.equal(CB.location + '_123')
+      const b = await B.load('abc')
+      expect(b instanceof CB).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -424,8 +405,8 @@ Line 3`
       const CB = run.deploy(B)
       CB.destroy()
       await CB.sync()
-      const b = await run.load('abc', { berry: CB })
-      expect(b.location).to.equal(CB.location + '_' + 'abc')
+      const b = await CB.load('abc')
+      expect(b.location.startsWith(CB.location)).to.equal(true)
     })
   })
 
@@ -457,15 +438,14 @@ Line 3`
         expect(Array.from(b.s)[0]).to.equal(b)
       }
 
-      const b = await run.load('123', { berry: B })
-      const location = b.constructor.location + '_123'
+      const b = await B.load('123')
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -492,15 +472,14 @@ Line 3`
         expect(b.arr[1]).to.equal(2)
       }
 
-      const b = await run.load('123', { berry: B })
-      const location = b.constructor.location + '_123'
+      const b = await B.load('123')
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -527,15 +506,14 @@ Line 3`
         expect(typeof b.o.m).to.equal('undefined')
       }
 
-      const b = await run.load('123', { berry: B })
-      const location = b.constructor.location + '_123'
+      const b = await B.load('123')
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -562,15 +540,14 @@ Line 3`
         expect(b.p).to.deep.equal(props2)
       }
 
-      const b = await run.load('123', { berry: B })
-      const location = b.constructor.location + '_123'
+      const b = await B.load('123')
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -599,15 +576,14 @@ Line 3`
         expect(b.m.get(2)).to.equal(3)
       }
 
-      const b = await run.load('123', { berry: B })
-      const location = b.constructor.location + '_123'
+      const b = await B.load('123')
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -642,15 +618,14 @@ Line 3`
         expect(b.o.m).to.equal(2)
       }
 
-      const b = await run.load('123', { berry: B })
-      const location = b.constructor.location + '_123'
+      const b = await B.load('123')
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -677,27 +652,26 @@ Line 3`
         expect(typeof b.m).to.equal('undefined')
       }
 
-      const b = await run.load('123', { berry: B })
-      const location = b.constructor.location + '_123'
+      const b = await B.load('123')
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if set unserializable properties', async () => {
-      const run = new Run()
+    it('throws if set unserializable properties', () => {
+      new Run() // eslint-disable-line
       class B extends Berry { init () { this.x = new WeakMap() } }
       class C extends Berry { init () { this.x = function f () { } } }
       const error = 'Not serializable'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
-      await expect(run.load('', { berry: C })).to.be.rejectedWith(error)
+      expect(() => B.load('')).to.throw(error)
+      expect(() => C.load('')).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
@@ -712,58 +686,57 @@ Line 3`
       }
       run.deploy(B)
       await run.sync()
-      const location = B.location + '_abc'
 
       function test (b) {
         expect(b.owner).to.deep.equal({ n: 1 })
         expect(b.satoshis).to.equal(b)
       }
 
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       test(b)
 
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
 
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if set creation bindings', async () => {
-      const run = new Run()
+    it('throws if set creation bindings', () => {
+      new Run() // eslint-disable-line
       class B extends Berry { init () { this.location = '123' } }
       class C extends Berry { init () { this.origin = '123' } }
       class D extends Berry { init () { this.nonce = '123' } }
-      await expect(run.load('', { berry: B })).to.be.rejectedWith('Cannot set location')
-      await expect(run.load('', { berry: C })).to.be.rejectedWith('Cannot set origin')
-      await expect(run.load('', { berry: D })).to.be.rejectedWith('Cannot set nonce')
+      expect(() => B.load('')).to.throw('Cannot set location')
+      expect(() => C.load('')).to.throw('Cannot set origin')
+      expect(() => D.load('')).to.throw('Cannot set nonce')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if set init', async () => {
-      const run = new Run()
+    it('throws if set init', () => {
+      new Run() // eslint-disable-line
       class B extends Berry { init () { this.init = 1 } }
       const error = 'Cannot set init'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      expect(() => B.load('')).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if delete init', async () => {
-      const run = new Run()
+    it('throws if delete init', () => {
+      new Run() // eslint-disable-line
       class B extends Berry { init () { delete this.init } }
       const error = 'Cannot delete init'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      expect(() => B.load('')).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if define creation bindings', async () => {
-      const run = new Run()
+    it('throws if define creation bindings', () => {
+      new Run() // eslint-disable-line
       class B extends Berry {
         init () {
           const desc = { configurable: true, enumerable: true, writable: true, value: 'abc' }
@@ -771,16 +744,16 @@ Line 3`
         }
       }
       const error = 'Cannot set location'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      expect(() => B.load('')).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if set prototype', async () => {
-      const run = new Run()
+    it('throws if set prototype', () => {
+      new Run() // eslint-disable-line
       class B extends Berry { init () { Object.setPrototypeOf(this, {}) } }
       const error = 'setPrototypeOf disabled'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      expect(() => B.load('')).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
@@ -804,38 +777,38 @@ Line 3`
     // ------------------------------------------------------------------------
 
     it('throws if create in a different plucker', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
       class C extends Berry { static async pluck () { return new B() } }
       C.deps = { B }
       const error = 'Must only create berry from its berry class'
-      await expect(run.load('', { berry: C })).to.be.rejectedWith(error)
+      await expect(C.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if return value', async () => {
-      const run = new Run()
+    it('throws if return value', () => {
+      new Run() // eslint-disable-line
       class B extends Berry { init () { return 1 } }
       class C extends Berry { init () { return this } }
       const error = 'init must not return a value'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
-      await expect(run.load('', { berry: C })).to.be.rejectedWith(error)
+      expect(() => B.load('')).to.throw(error)
+      expect(() => C.load('')).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if async', async () => {
-      const run = new Run()
+    it('throws if async', () => {
+      new Run() // eslint-disable-line
       class B extends Berry { async init () { } }
       const error = 'init must not return a value'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      expect(() => B.load('')).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('cannot swallow init errors', async () => {
-      const run = new Run()
+    it('cannot swallow init errors', () => {
+      new Run() // eslint-disable-line
 
       class B extends Berry {
         init () {
@@ -843,7 +816,7 @@ Line 3`
         }
       }
       const error = 'Cannot set location'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      expect(() => B.load('')).to.throw(error)
 
       class C extends Berry {
         init () {
@@ -852,13 +825,13 @@ Line 3`
 
         f () { throw new Error('abc') }
       }
-      await expect(run.load('', { berry: C })).to.be.rejectedWith('abc')
+      expect(() => C.load('')).to.throw('abc')
     })
 
     // ------------------------------------------------------------------------
 
     it('runs in sandbox', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       const n = 1
       class B extends Berry {
         init () {
@@ -867,7 +840,7 @@ Line 3`
           this.c = typeof n
         }
       }
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       expect(b.a).to.equal('undefined')
       expect(b.b).to.equal('undefined')
       expect(b.c).to.equal('undefined')
@@ -892,33 +865,33 @@ Line 3`
       await CB.sync()
       const txid = CB.location.slice(0, 64)
       const rawtx = await run.blockchain.fetch(txid)
-      const b = await run.load(txid, { berry: CB })
+      const b = await CB.load(txid)
       expect(b.rawtx).to.equal(rawtx)
     })
 
     // ------------------------------------------------------------------------
 
     it('immutable', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry {
         static async pluck (path, fetch) {
           fetch.n = 1
         }
       }
-      await expect(run.load('', { berry: B })).to.be.rejected
+      await expect(B.load('')).to.be.rejected
     })
 
     // ------------------------------------------------------------------------
 
     it('sandboxed', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry {
         init (b) { this.b = b }
         static async pluck (path, fetch) {
           return new B(fetch instanceof Function)
         }
       }
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       expect(b.b).to.equal(true)
     })
 
@@ -937,7 +910,7 @@ Line 3`
         }
       }
       await run.deploy(B).sync()
-      const b = await run.load(txidA + ',' + txidB, { berry: B })
+      const b = await B.load(txidA + ',' + txidB)
       const txA = await run.blockchain.fetch(txidA)
       const txB = await run.blockchain.fetch(txidB)
       expect(b.a).to.equal(txA)
@@ -964,7 +937,7 @@ Line 3`
       await CB.sync()
       const txid = CB.location.slice(0, 64)
       const rawtx = await run.blockchain.fetch(txid)
-      const b = await run.load(txid, { berry: CB })
+      const b = await CB.load(txid)
       expect(b.rawtx).to.equal(rawtx)
     })
 
@@ -987,14 +960,14 @@ Line 3`
       await CB.sync()
       const txid = CB.location.slice(0, 64)
       const rawtx = await run.blockchain.fetch(txid)
-      const b = await run.load(txid, { berry: CB })
+      const b = await CB.load(txid)
       expect(b.rawtx).to.equal(rawtx)
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if not a transaction', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry {
         static async pluck (path, fetch) {
           await fetch('123')
@@ -1002,7 +975,7 @@ Line 3`
         }
       }
       const error = 'No such mempool or blockchain transaction: 123'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      await expect(B.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
@@ -1017,13 +990,13 @@ Line 3`
           return new B(rawtx)
         }
       }
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(Run.errors.TimeoutError)
+      await expect(B.load('')).to.be.rejectedWith(Run.errors.TimeoutError)
     })
 
     // ------------------------------------------------------------------------
 
     it('cannot swallow fetch errors', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry {
         static async pluck (path, fetch) {
           try { await fetch('123') } catch (e) { }
@@ -1031,7 +1004,7 @@ Line 3`
         }
       }
       const error = 'No such mempool or blockchain transaction: 123'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      await expect(B.load('')).to.be.rejectedWith(error)
     })
   })
 
@@ -1048,14 +1021,13 @@ Line 3`
       }
       run.deploy(B)
       await run.sync()
-      const location = B.location + '_'
       function test (b) { expect(b.f()).to.equal(1) }
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       test(b)
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -1074,19 +1046,18 @@ Line 3`
       }
       run.deploy(B)
       await run.sync()
-      const location = B.location + '_'
 
       function test (b) {
         expect(b.getOwner()).to.equal(1)
         expect(b.getSatoshis()).to.equal(2)
       }
 
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       test(b)
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -1100,17 +1071,16 @@ Line 3`
       }
       run.deploy(B)
       await run.sync()
-      const location = B.location + '_'
       function test (b) {
         const desc = { configurable: true, enumerable: true, writable: true, value: b.o }
         expect(b.f()).to.deep.equal(desc)
       }
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       test(b)
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -1121,14 +1091,13 @@ Line 3`
       class B extends Berry { f () { this.n = 1 } }
       run.deploy(B)
       await run.sync()
-      const location = B.location + '_'
       function test (b) { expect(() => b.f()).to.throw('set disabled') }
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       test(b)
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -1145,14 +1114,13 @@ Line 3`
       }
       run.deploy(B)
       await run.sync()
-      const location = B.location + '_'
       function test (b) { expect(() => b.f()).to.throw('defineProperty disabled') }
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       test(b)
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -1166,14 +1134,13 @@ Line 3`
       }
       run.deploy(B)
       await run.sync()
-      const location = B.location + '_'
       function test (b) { expect(() => b.f()).to.throw('delete disabled') }
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       test(b)
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -1184,14 +1151,13 @@ Line 3`
       class B extends Berry { f () { Object.setPrototypeOf(this, B) } }
       run.deploy(B)
       await run.sync()
-      const location = B.location + '_'
       function test (b) { expect(() => b.f()).to.throw('setPrototypeOf disabled') }
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       test(b)
-      const b2 = await run.load(location)
+      const b2 = await run.load(b.location)
       test(b2)
       run.cache = new LocalCache()
-      const b3 = await run.load(location)
+      const b3 = await run.load(b.location)
       test(b3)
     })
 
@@ -1202,7 +1168,7 @@ Line 3`
       class B extends Berry { f () { return 1 } }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       class A extends Jig { f (b) { this.n = b.f() } }
       const a = new A()
       await run.sync()
@@ -1247,7 +1213,7 @@ Line 3`
       B.deps = { g: cg }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       class A extends Jig { f (b) { this.n = b.f() } }
       const a = new A()
       await run.sync()
@@ -1289,7 +1255,7 @@ Line 3`
       class B extends Berry { f () { return B.nonce } }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: CB })
+      const b = await CB.load('abc')
       expect(b.f()).to.equal(1)
       const CB2 = await run.load(CB.location)
       CB2.auth()
@@ -1316,7 +1282,7 @@ Line 3`
       class B extends Berry { init () { this.n = 1 } }
       run.deploy(B)
       await run.sync()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
 
       function test (a) {
         expect(a.b instanceof B).to.equal(true)
@@ -1360,9 +1326,9 @@ Line 3`
     // ------------------------------------------------------------------------
 
     it('throws if pass undeployed berry', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       class A extends Jig { init (b) { this.b = b } }
       const a = new A(b)
       await expect(a.sync()).to.be.rejectedWith('Bad location')
@@ -1370,19 +1336,19 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('throws if create jig in init', async () => {
-      const run = new Run()
+    it('throws if create jig in init', () => {
+      new Run() // eslint-disable-line
       class A extends Jig { }
       class B extends Berry { init () { this.b = new A() } }
       B.deps = { A }
       const error = 'Cannot create A in berry'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      expect(() => B.load('')).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if create jig in inner method of init', async () => {
-      const run = new Run()
+    it('throws if create jig in inner method of init', () => {
+      new Run() // eslint-disable-line
       class A extends Jig { }
       class B extends Berry {
         init () { this.f() }
@@ -1390,18 +1356,18 @@ Line 3`
       }
       B.deps = { A }
       const error = 'Cannot create A in berry'
-      await expect(run.load('', { berry: B })).to.be.rejectedWith(error)
+      expect(() => B.load('')).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
     it('may create jig in berry method', async () => {
       // Berries are sidekick code
-      const run = new Run()
+      new Run() // eslint-disable-line
       class A extends Jig { }
       class B extends Berry { f () { return new A() } }
       B.deps = { A }
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       expect(b.f() instanceof A).to.equal(true)
     })
 
@@ -1409,12 +1375,12 @@ Line 3`
 
     it('may update jig in berry method', async () => {
       // Berries are sidekick code
-      const run = new Run()
+      new Run() // eslint-disable-line
       class A extends Jig { g () { this.n = 1 } }
       class B extends Berry { f (a) { a.g() } }
       const a = new A()
       await a.sync()
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
 
       expectTx({
         nin: 1,
@@ -1450,7 +1416,7 @@ Line 3`
       class B extends Berry { init () { this.n = 1 } }
       run.deploy(B)
       await run.sync()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
 
       function test (CA) {
         expect(CA.b instanceof B).to.equal(true)
@@ -1499,7 +1465,7 @@ Line 3`
       class B extends Berry { init () { this.n = 1 } }
       run.deploy(B)
       await run.sync()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
 
       function test (CA) {
         expect(CA.b instanceof B).to.equal(true)
@@ -1545,7 +1511,7 @@ Line 3`
     it('throws if use undeployed berry', async () => {
       const run = new Run()
       class B extends Berry { }
-      const b = await run.load('', { berry: B })
+      const b = await B.load('')
       class A { }
       A.b = b
       const CA = run.deploy(A)
@@ -1559,7 +1525,7 @@ Line 3`
       class B extends Berry { f (CA) { CA.auth() } }
       run.deploy(B)
       await run.sync()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       const CA = run.deploy(class A { })
       await CA.sync()
 
@@ -1588,9 +1554,9 @@ Line 3`
 
   describe('Sync', () => {
     it('no sync method', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(typeof b.sync).to.equal('undefined')
     })
 
@@ -1604,8 +1570,8 @@ Line 3`
       CB.destroy()
       await CB.sync()
       await CB.sync()
-      const b = await run.load('abc', { berry: CB })
-      expect(b.location).to.equal(CB.location + '_abc')
+      const b = await CB.load('abc')
+      expect(b.location.startsWith(CB.location + '?berry=abc&')).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -1618,8 +1584,8 @@ Line 3`
       CB.auth()
       await CB.sync()
       await CB.sync()
-      const b = await run.load('abc', { berry: CB })
-      expect(b.location).to.equal(CB.location + '_abc')
+      const b = await CB.load('abc')
+      expect(b.location.startsWith(CB.location + '?berry=abc&')).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -1629,7 +1595,7 @@ Line 3`
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: CB })
+      const b = await CB.load('abc')
 
       class A extends Jig { init (b) { this.b = b } }
       const a = new A(b)
@@ -1651,7 +1617,7 @@ Line 3`
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: CB })
+      const b = await CB.load('abc')
 
       class A extends Jig {
         init (b) { this.b = b }
@@ -1686,7 +1652,7 @@ Line 3`
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: CB })
+      const b = await CB.load('abc')
       const bLocation = b.location
       CB.destroy()
       await CB.sync()
@@ -1702,38 +1668,38 @@ Line 3`
 
   describe('instanceof', () => {
     it('returns true for Berry', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(b instanceof Berry).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('returns true for berry class', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(b instanceof B).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('returns true for parent class', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
       class C extends B { }
-      const b = await run.load('abc', { berry: C })
+      const b = await C.load('abc')
       expect(b instanceof C).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('returns false for another class', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry { }
       class C extends B { }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       expect(b instanceof C).to.equal(false)
     })
 
@@ -1744,7 +1710,7 @@ Line 3`
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: CB })
+      const b = await CB.load('abc')
       expect(b instanceof B).to.equal(true)
     })
 
@@ -1775,7 +1741,7 @@ Line 3`
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       CB.destroy()
       expect(b instanceof CB).to.equal(true)
     })
@@ -1787,7 +1753,7 @@ Line 3`
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       CB.auth()
       await CB.sync()
       expect(b instanceof CB).to.equal(true)
@@ -1796,7 +1762,7 @@ Line 3`
     // ------------------------------------------------------------------------
 
     it('returns true in pluck', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry {
         static async pluck () {
           const b = new B()
@@ -1804,19 +1770,19 @@ Line 3`
           return b
         }
       }
-      await run.load('abc', { berry: B })
+      await B.load('abc')
     })
 
     // ------------------------------------------------------------------------
 
     it('returns true in init', async () => {
-      const run = new Run()
+      new Run() // eslint-disable-line
       class B extends Berry {
         init () {
           if (!(this instanceof Berry)) throw new Error()
         }
       }
-      await run.load('abc', { berry: B })
+      await B.load('abc')
     })
   })
 
@@ -1830,8 +1796,8 @@ Line 3`
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await Berry.load(`${CB.location}_abc`)
-      expect(b.location).to.equal(`${CB.location}_abc`)
+      const b = await Berry.load(`${CB.location}?berry=abc`)
+      expect(b.location.startsWith(`${CB.location}?berry=abc&`)).to.equal(true)
       expect(b instanceof CB).to.equal(true)
     })
 
@@ -1843,7 +1809,7 @@ Line 3`
       const CB = run.deploy(B)
       await CB.sync()
       const b = await CB.load('abc')
-      expect(b.location).to.equal(`${CB.location}_abc`)
+      expect(b.location.startsWith(`${CB.location}?berry=abc&`)).to.equal(true)
       expect(b instanceof B).to.equal(true)
     })
 
@@ -1855,7 +1821,7 @@ Line 3`
       const CB = run.deploy(B)
       await CB.sync()
       const b = await B.load('abc')
-      expect(b.location).to.equal(`${CB.location}_abc`)
+      expect(b.location.startsWith(`${CB.location}?berry=abc&`)).to.equal(true)
       expect(b instanceof B).to.equal(true)
     })
 
@@ -1878,7 +1844,7 @@ Line 3`
       await run.sync()
       const b = await B.load('abc')
       expect(b instanceof B).to.equal(true)
-      expect(b.location).to.equal(`${B.location}_abc`)
+      expect(b.location.startsWith(`${B.location}?berry=abc&`)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -1900,8 +1866,8 @@ Line 3`
       expect(b instanceof B).to.equal(true)
       expect(b.c instanceof B).to.equal(true)
       expect(b.c.c).to.equal(null)
-      expect(b.location).to.equal(`${CB.location}_abc`)
-      expect(b.c.location).to.equal(`${CB.location}_`)
+      expect(b.location.startsWith(`${CB.location}?berry=abc&`)).to.equal(true)
+      expect(b.c.location.startsWith(`${CB.location}?berry=&`)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -2012,7 +1978,7 @@ Line 3`
       await CB.sync()
       const CA = Run.install(A)
       const b = await CA.f('abc')
-      expect(b.location).to.equal(`${CB.location}_abc`)
+      expect(b.location.startsWith(`${CB.location}?berry=abc&`)).to.equal(true)
       expect(b instanceof B).to.equal(true)
     })
 

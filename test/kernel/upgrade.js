@@ -751,7 +751,7 @@ describe('Upgrade', () => {
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
 
       class A2 extends Jig { }
       A2.b = b
@@ -1088,7 +1088,7 @@ describe('Upgrade', () => {
       class B extends Berry { init () { this.n = 1 } }
       const CB = run.deploy(B)
       await CB.sync()
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
 
       function test (cf) {
         expect(cf()).to.equal(1)
@@ -1239,7 +1239,7 @@ describe('Upgrade', () => {
       })
       await run.sync()
 
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       class A2 { }
       A2.b = b
       class C2 extends Jig { }
@@ -1396,7 +1396,7 @@ describe('Upgrade', () => {
     it('cannot upgrade with undeployed berry', async () => {
       const run = new Run()
       class B extends Berry { }
-      const b = await run.load('abc', { berry: B })
+      const b = await B.load('abc')
       class A { }
       class A2 { }
       A2.b = b
