@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { CommonLock } = Run
 const unmangle = require('../env/unmangle')
-const { _location, _nonce, _satoshis, _owner, _markUndeployed } = unmangle(unmangle(Run)._Bindings)
+const { _location, _compileLocation, _nonce, _satoshis, _owner, _markUndeployed } = unmangle(unmangle(Run)._Bindings)
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -34,7 +34,7 @@ describe('Bindings', () => {
       expect(_location(`${TXID}_o0`)).to.deep.equal({ txid: TXID, vout: 0 })
       expect(_location(`${TXID}_d1`)).to.deep.equal({ txid: TXID, vdel: 1 })
       expect(_location('native://Jig')).to.deep.equal({ nativeid: 'native://Jig' })
-      // Local jigs
+      // Partial jigs
       expect(_location('_o10')).to.deep.equal({ vout: 10 })
       expect(_location('_d1')).to.deep.equal({ vdel: 1 })
       // Berries
@@ -49,8 +49,6 @@ describe('Bindings', () => {
       expect(_location(`${TXID}_o0?berry=${encodeURIComponent('😀')}&hash=${HASH}&version=5`))
         .to.deep.equal({ txid: TXID, vout: 0, berry: '😀', hash: HASH, version: 5 })
       // Partial berries
-      expect(_location(`_d1?berry=abc&hash=${HASH}&version=5`))
-        .to.deep.equal({ vdel: 1, berry: 'abc', hash: HASH, version: 5 })
       expect(_location(`${TXID}_o0?berry=&version=5`))
         .to.deep.equal({ txid: TXID, vout: 0, berry: '', version: 5 })
       expect(_location(`${TXID}_o0?berry=&hash=${HASH}`))
@@ -100,6 +98,7 @@ describe('Bindings', () => {
       expect(() => _location(`${TXID}_o0?hash=${HASH}&version=5`)).to.throw()
       expect(() => _location(`${TXID}_o0?berry=abc&hash=abc&version=5`)).to.throw()
       expect(() => _location(`${TXID}_o0?berry=%abc&hash=${HASH}&version=5`)).to.throw()
+      expect(() => _location(`_d1?berry=abc&hash=${HASH}&version=5`)).to.throw()
       // Bad commit structure
       expect(() => _location(`commit://${TXID}_o`)).to.throw()
       expect(() => _location(`commit://${TXID}_0`)).to.throw()
@@ -127,6 +126,17 @@ describe('Bindings', () => {
       expect(() => _location(`error:/${TXID}_o1`)).to.throw()
       expect(() => _location(`err://${TXID}_o1`)).to.throw()
       expect(() => _location('nat://Jig')).to.throw()
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _compileLocation
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_compileLocation', () => {
+    it('error', () => {
+      expect(_compileLocation({ error: '123' })).to.equal('error://123')
+      expect(_compileLocation({ error: '😀' })).to.equal('error://😀')
     })
   })
 
