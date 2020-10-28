@@ -33,7 +33,7 @@ describe('Bindings', () => {
       // Jigs
       expect(_location(`${TXID}_o0`)).to.deep.equal({ txid: TXID, vout: 0 })
       expect(_location(`${TXID}_d1`)).to.deep.equal({ txid: TXID, vdel: 1 })
-      expect(_location('native://Jig')).to.deep.equal({ nativeid: 'native://Jig' })
+      expect(_location('native://Jig')).to.deep.equal({ native: 'Jig' })
       // Partial jigs
       expect(_location('_o10')).to.deep.equal({ vout: 10 })
       expect(_location('_d1')).to.deep.equal({ vdel: 1 })
@@ -142,8 +142,8 @@ describe('Bindings', () => {
     // ------------------------------------------------------------------------
 
     it('native', () => {
-      expect(_compileLocation({ nativeid: 'Code' })).to.equal('native://Code')
-      expect(_compileLocation({ nativeid: 'StandardLock' })).to.equal('native://StandardLock')
+      expect(_compileLocation({ native: 'Code' })).to.equal('native://Code')
+      expect(_compileLocation({ native: 'StandardLock' })).to.equal('native://StandardLock')
     })
   })
 
