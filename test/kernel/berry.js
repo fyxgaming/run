@@ -768,6 +768,39 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
+    it('throws if get creation bindings', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init (prop) { this.x = this[prop] }
+        static async pluck (path) { return new B(path) }
+      }
+      expect(() => B.load('location')).to.throw('Cannot read location')
+      expect(() => B.load('origin')).to.throw('Cannot read origin')
+      expect(() => B.load('nonce')).to.throw('Cannot read nonce')
+      const CB = run.deploy(B)
+      await CB.sync()
+      await expect(CB.load('location')).to.be.rejectedWith('Cannot read location')
+      await expect(CB.load('origin')).to.be.rejectedWith('Cannot read origin')
+      await expect(CB.load('nonce')).to.be.rejectedWith('Cannot read nonce')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if get descriptor for creation bindings', async () => {
+      const run = new Run()
+      class B extends Berry {
+        init (prop) { this.x = Object.getOwnPropertyDescriptor(this, prop).value }
+        static async pluck (path) { return new B(path) }
+      }
+      const CB = run.deploy(B)
+      await CB.sync()
+      await expect(CB.load('location')).to.be.rejectedWith('Cannot read location')
+      await expect(CB.load('origin')).to.be.rejectedWith('Cannot read origin')
+      await expect(CB.load('nonce')).to.be.rejectedWith('Cannot read nonce')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if define creation bindings', () => {
       new Run() // eslint-disable-line
       class B extends Berry {
