@@ -224,6 +224,27 @@ describe('Token', () => {
       const sender3 = await run.load(sender.location)
       expect(sender3.sender).to.equal(null)
     })
+
+    // ------------------------------------------------------------------------
+
+    it.only('custom lock', async () => {
+      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      class CustomLock {
+        script () { return '' }
+        domain () { return 0 }
+      }
+      class TestToken extends Token { }
+      const a = TestToken.mint(2)
+      await a.sync()
+      console.log(a)
+      const b = a.send(new CustomLock())
+      expect(b.owner instanceof CustomLock).to.equal(true)
+      await b.sync()
+      if (COVER) return
+      run.cache = new LocalCache()
+      const b2 = await run.load(b.location)
+      expect(b2.owner instanceof CustomLock).to.equal(true)
+    })
   })
 
   // --------------------------------------------------------------------------

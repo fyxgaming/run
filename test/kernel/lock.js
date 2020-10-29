@@ -8,6 +8,8 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { Jig } = Run
+const { LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
 // Lock
@@ -118,6 +120,52 @@ describe('Lock', () => {
       await expect(a.sync()).to.be.rejected
     })
     */
+  })
+
+  // ------------------------------------------------------------------------
+  // Method
+  // ------------------------------------------------------------------------
+
+  describe('Method', () => {
+    it('cloned when assigned from another jig', async () => {
+      const run = new Run()
+
+      const CustomLock = await run.deploy(
+        class CustomLock {
+          script () { return '' }
+          domain () { return 0 }
+        }
+      ).sync()
+
+      class A extends Jig { init () { this.owner = new CustomLock() }}
+      A.deps = { CustomLock }
+
+      const a = new A()
+      await a.sync()
+
+      class B extends Jig {
+        static f (a) { this.owner = a.owner; this.owner.n = 1 }
+      }
+      const CB = run.deploy(B)
+      CB.f(a)
+      await CB.sync()
+
+      function test (a, B) {
+        expect(typeof a.n).to.equal('undefined')
+        expect(B.owner.n).to.equal(1)
+      }
+
+      test(a, CB)
+
+      const a2 = await run.load(a.location)
+      const CB2 = await run.load(CB.location)
+      test(a2, CB2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      const CB3 = await run.load(CB.location)
+      test(a3, CB3)
+    })
   })
 })
 
