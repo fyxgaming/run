@@ -2679,6 +2679,18 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if location has query params', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      await expect(A.load(`${a.location}?version=${Run.protocol}`)).to.be.rejectedWith('Bad location')
+      const HASH = '0000000000000000000000000000000000000000000000000000000000000000'
+      await expect(A.load(`${a.location}?hash=${HASH}`)).to.be.rejectedWith('Bad location')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if load times out', async () => {
       const run = new Run()
       class A extends Jig { }

@@ -477,8 +477,6 @@ Line 3`
       const b2 = await B.load(b.location)
       test(b2)
 
-      console.log(b.location)
-
       run.cache = new LocalCache()
       const b3 = await B.load(b.location)
       test(b3)
@@ -1826,14 +1824,40 @@ Line 3`
   // --------------------------------------------------------------------------
 
   describe('load', () => {
-    it('load general berry', async () => {
+    it('load general berry with location and path', async () => {
       const run = new Run()
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
       const b = await Berry.load(`${CB.location}?berry=abc`)
       expect(b.location.startsWith(`${CB.location}?berry=abc&`)).to.equal(true)
+      expect(b.location.indexOf(`&version=${Run.protocol}`)).not.to.equal(-1)
       expect(b instanceof CB).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('load general berry with location and path and version', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await Berry.load(`${CB.location}?berry=abc&version=5`)
+      expect(b.location.startsWith(`${CB.location}?berry=abc&`)).to.equal(true)
+      expect(b.location.indexOf('&version=5')).not.to.equal(-1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('load general berry with location and path and hash', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b1 = await Berry.load(`${CB.location}?berry=abc`)
+      const hash = b1.location.match(/hash=([0-9a-f]{64})/)[1]
+      const b2 = await Berry.load(`${CB.location}?berry=abc&hash=${hash}`)
+      expect(b2.location).to.equal(b1.location)
     })
 
     // ------------------------------------------------------------------------
@@ -2034,6 +2058,28 @@ Line 3`
       await expect(Berry.load(false)).to.be.rejectedWith('Location is not a string')
       await expect(Berry.load('abc_')).to.be.rejectedWith('Bad location')
       await expect(Berry.load()).to.be.rejectedWith('Location is not a string')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if unsupported version', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      run.deploy(B)
+      await run.sync()
+      await expect(Berry.load(`${B.location}?berry=abc&version=4`)).to.be.rejected
+      await expect(Berry.load(`${B.location}?berry=abc&version=def`)).to.be.rejected
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if incorrect hash ', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      run.deploy(B)
+      await run.sync()
+      const HASH = '0000000000000000000000000000000000000000000000000000000000000000'
+      await expect(Berry.load(`${B.location}?berry=abc&hash=${HASH}`)).to.be.rejectedWith('Berry state mismatch')
     })
 
     // ------------------------------------------------------------------------

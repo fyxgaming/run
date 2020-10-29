@@ -37,6 +37,17 @@ describe('Load', () => {
     const B2 = await run.load(middleLocation)
     await B2.sync()
   })
+
+  // --------------------------------------------------------------------------
+
+  it('throws if location has query params', async () => {
+    const run = new Run()
+    const A = run.deploy(class A extends Jig { })
+    await run.sync()
+    await expect(run.load(`${A.location}?version=${Run.protocol}`)).to.be.rejectedWith('Bad location')
+    const HASH = '0000000000000000000000000000000000000000000000000000000000000000'
+    await expect(run.load(`${A.location}?hash=${HASH}`)).to.be.rejectedWith('Bad location')
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
