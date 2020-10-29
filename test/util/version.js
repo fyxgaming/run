@@ -84,13 +84,16 @@ describe('_parseStateVersion', () => {
 
 describe('_getPayloadVersion', () => {
   it('returns converted version', () => {
-    console.log(_getPayloadVersion)
+    expect(_getPayloadVersion(5)).to.equal('05')
   })
 
   // --------------------------------------------------------------------------
 
   it('throws if unsupported', () => {
-    // TODO
+    expect(() => _getPayloadVersion()).to.throw('Unsupported protocol version: undefined')
+    expect(() => _getPayloadVersion(6)).to.throw('Unsupported protocol version: 6')
+    expect(() => _getPayloadVersion(4)).to.throw('Unsupported protocol version: 4')
+    expect(() => _getPayloadVersion('05')).to.throw('Unsupported protocol version: 05')
   })
 })
 
@@ -100,13 +103,16 @@ describe('_getPayloadVersion', () => {
 
 describe('_getStateVersion', () => {
   it('returns converted version', () => {
-    console.log(_getStateVersion)
+    expect(_getStateVersion(5)).to.equal('04')
   })
 
   // --------------------------------------------------------------------------
 
   it('throws if unsupported', () => {
-    // TODO
+    expect(() => _getStateVersion()).to.throw('Unsupported protocol version: undefined')
+    expect(() => _getStateVersion(6)).to.throw('Unsupported protocol version: 6')
+    expect(() => _getStateVersion(4)).to.throw('Unsupported protocol version: 4')
+    expect(() => _getStateVersion('05')).to.throw('Unsupported protocol version: 05')
   })
 })
 
