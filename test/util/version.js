@@ -63,13 +63,18 @@ describe('_parsePayloadVersion', () => {
 
 describe('_parseStateVersion', () => {
   it('returns parsed version', () => {
-    console.log(_parseStateVersion)
+    expect(_parseStateVersion('04')).to.equal(5)
   })
 
   // --------------------------------------------------------------------------
 
   it('throws if unsupported', () => {
-    // TODO
+    expect(() => _parseStateVersion()).to.throw('Unsupported state version: undefined')
+    expect(() => _parseStateVersion(4)).to.throw('Unsupported state version: 4')
+    expect(() => _parseStateVersion(5)).to.throw('Unsupported state version: 5')
+    expect(() => _parseStateVersion('03')).to.throw('Unsupported state version: 03')
+    expect(() => _parseStateVersion('05')).to.throw('Unsupported state version: 05')
+    expect(() => _parseStateVersion('0004')).to.throw('Unsupported state version: 0004')
   })
 })
 
