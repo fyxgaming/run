@@ -17,6 +17,7 @@ const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const Unbound = unmangle(Run)._Unbound
 const _sudo = unmangle(Run)._sudo
 const JIG_OBJECTS = unmangle(unmangle(Run)._Creation)._JIG_OBJECTS
+const CODE = unmangle(unmangle(Run)._Creation)._CODE
 const { _RESERVED_PROPS, _RESERVED_CODE_METHODS, _RESERVED_JIG_METHODS } = unmangle(Run)
 const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
 
@@ -42,8 +43,7 @@ function simulateAction (f) {
   }
 }
 
-// Helpers to make a mock jig with a membrane
-function makeJig (x, options = {}) {
+function makeJig (x, options = {}, code = false) {
   options = mangle(Object.assign(options, { _admin: true }))
   const jig = new Membrane(x, options)
   _sudo(() => {
@@ -53,13 +53,16 @@ function makeJig (x, options = {}) {
     jig.owner = null
     jig.satoshis = null
   })
-  JIG_OBJECTS.add(jig)
+  if (!code) JIG_OBJECTS.add(jig)
+  if (code) CODE.add(jig)
   if (typeof x === 'function') {
     const desc = { value: jig, configurable: true, enumerable: true, writable: true }
     Object.defineProperty(x.prototype, 'constructor', desc)
   }
   return jig
 }
+
+function makeCode (x, options = { }) { return makeJig(x, options, true) }
 
 // ------------------------------------------------------------------------------------------------
 // Membrane
@@ -1028,6 +1031,38 @@ describe('Membrane', () => {
       _sudo(() => { A.satoshis = new Unbound(1) })
       expect(Object.getOwnPropertyDescriptor(A, 'owner').value).to.equal(DUMMY_OWNER)
       expect(Object.getOwnPropertyDescriptor(A, 'satoshis').value).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get owner binding is cow', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
+      const Lock = makeCode(class Lock {
+        script () { return '' }
+        domain () { return 0 }
+      })
+      _sudo(() => { A.owner = new Lock() })
+      A.owner.n = 1
+      expect(typeof A.owner.n).to.equal('undefined')
+      expect(A.owner).not.to.equal(A.owner)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('return owner binding is cow', () => {
+      const A = makeCode(class A extends Jig { f () { return this.owner } })
+      const a = new Membrane({}, mangle({ _admin: true, _utxoBindings: true }))
+      _sudo(() => Object.setPrototypeOf(a, A.prototype))
+      const Lock = makeCode(class Lock {
+        script () { return '' }
+        domain () { return 0 }
+      })
+      _sudo(() => { a.owner = new Lock() })
+      expect(a.f() instanceof Lock).to.equal(true)
+      a.f().n = 1
+      expect(typeof a.owner.n).to.equal('undefined')
+      expect(typeof a.f().n).to.equal('undefined')
+      expect(a.f()).not.to.equal(a.f())
     })
   })
 
