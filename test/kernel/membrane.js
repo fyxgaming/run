@@ -856,6 +856,16 @@ describe('Membrane', () => {
       expect(() => Object.getOwnPropertyDescriptor(A, 'origin').value).to.throw('Cannot read origin')
       expect(() => Object.getOwnPropertyDescriptor(A, 'nonce').value).to.throw('Cannot read nonce')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if get descriptor of partial berry location', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
+      _sudo(() => { A.location = `${DUMMY_TXID1}?berry=abc&version=5` })
+      expect(() => Object.getOwnPropertyDescriptor(A, 'location').value).to.throw('Cannot read location')
+      expect(() => Object.getOwnPropertyDescriptor(A, 'origin').value).to.throw('Cannot read origin')
+      expect(() => Object.getOwnPropertyDescriptor(A, 'nonce').value).to.throw('Cannot read nonce')
+    })
   })
 
   // --------------------------------------------------------------------------

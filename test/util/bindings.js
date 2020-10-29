@@ -184,8 +184,18 @@ describe('Bindings', () => {
     // ------------------------------------------------------------------------
 
     it('partial berry', () => {
+      expect(_compileLocation({ txid: TXID, vout: 0, berry: '😀' }))
+        .to.equal(`${TXID}_o0?berry=${encodeURIComponent('😀')}`)
       expect(_compileLocation({ txid: TXID, vout: 0, berry: '😀', version: 6 }))
         .to.equal(`${TXID}_o0?berry=${encodeURIComponent('😀')}&version=6`)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if not an object', () => {
+      expect(() => _compileLocation()).to.throw()
+      expect(() => _compileLocation(null)).to.throw()
+      expect(() => _compileLocation(123)).to.throw()
     })
   })
 
@@ -259,6 +269,7 @@ describe('Bindings', () => {
       expect(() => _satoshis(1)).not.to.throw()
       expect(() => _satoshis(Transaction.DUST_AMOUNT)).not.to.throw()
       expect(() => _satoshis(100000000)).not.to.throw()
+      expect(() => _satoshis(null, true)).not.to.throw()
     })
 
     // ------------------------------------------------------------------------
@@ -272,6 +283,7 @@ describe('Bindings', () => {
       expect(() => _satoshis(NaN)).to.throw('satoshis must be an integer')
       expect(() => _satoshis(Infinity)).to.throw('satoshis must be an integer')
       expect(() => _satoshis(100000001)).to.throw('satoshis must be <= 100000000')
+      expect(() => _satoshis(null)).to.throw('satoshis must be a number')
     })
   })
 
