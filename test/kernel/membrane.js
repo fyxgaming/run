@@ -1115,6 +1115,43 @@ describe('Membrane', () => {
       testRecord(() => B.g(A))
       expect(typeof A.owner.n).to.equal('undefined')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('get clone of owner is not cow externally', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
+      const Lock = makeCode(class Lock {
+        script () { return '' }
+        domain () { return 0 }
+      })
+      _sudo(() => { A.owner = new Lock() })
+      _sudo(() => { A.x = A.owner })
+      expect(A.x).to.equal(A.x)
+      expect(A.x).not.to.equal(A.owner)
+      A.x.n = 1
+      expect(A.x.n).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get clone of owner is not cow internally', () => {
+      const A = makeJig(class A {
+        static f () { return this.x === this.owner }
+        static g () { return this.m.get(1) === this.owner }
+      }, { _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      const Lock = makeCode(class Lock {
+        script () { return '' }
+        domain () { return 0 }
+      })
+      _sudo(() => {
+        A.owner = new Lock()
+        A.x = A.owner
+        A.m = new Map()
+        A.m.set(1, A.owner)
+      })
+      expect(testRecord(() => A.f())).to.equal(true)
+      expect(testRecord(() => A.g())).to.equal(true)
+    })
   })
 
   // --------------------------------------------------------------------------
