@@ -227,16 +227,17 @@ describe('Token', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('custom lock', async () => {
+    it('custom lock', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class CustomLock {
+      const CustomLock = await run.deploy(class CustomLock {
         script () { return '' }
         domain () { return 0 }
-      }
+      }).sync()
       class TestToken extends Token { }
       const a = TestToken.mint(2)
       await a.sync()
       const b = a.send(new CustomLock())
+      await run.sync()
       expect(b.owner instanceof CustomLock).to.equal(true)
       await b.sync()
       if (COVER) return
