@@ -475,9 +475,28 @@ describe('Call', () => {
       const b = new B()
       a.setB(b)
       b.setA(a)
-      expect(() => b.f()).to.throw('Updates must be performed in a method')
+      expect(() => b.f()).to.throw('Attempt to update [jig B] outside of a method')
     })
 
+    // ------------------------------------------------------------------------
+
+    it('throws if set in object on another jig', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        setB (b) { this.b = b }
+        g () { this.b.o.n = 1 }
+      }
+      class B extends Jig {
+        init () { this.o = { } }
+        setA (a) { this.a = a }
+        f () { this.a.g() }
+      }
+      const a = new A()
+      const b = new B()
+      a.setB(b)
+      b.setA(a)
+      expect(() => b.f()).to.throw('Attempt to update [jig B] outside of a method')
+    })
     // ------------------------------------------------------------------------
 
     it('throws if async', async () => {
@@ -503,7 +522,7 @@ describe('Call', () => {
         }
       }
       const a = new A()
-      const error = 'Updates must be performed in a method'
+      const error = 'Attempt to update [jig A] outside of a method'
       expect(() => { a.f().n = 1 }).to.throw(error)
       class B extends Jig {
         f (a) { a.f().n = 1 }

@@ -5,6 +5,7 @@
  */
 
 const { describe, it, afterEach } = require('mocha')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { stub } = require('sinon')
 const Run = require('../env/run')
@@ -69,7 +70,7 @@ describe('Deps', () => {
       class A extends Jig { }
       A.deps = { B: 1 }
       const CA = run.deploy(A)
-      expect(() => { CA.deps.B = 1 }).to.throw('Updates must be performed in a method')
+      expect(() => { CA.deps.B = 1 }).to.throw('Attempt to update A outside of a method')
     })
 
     // ------------------------------------------------------------------------
@@ -147,7 +148,7 @@ describe('Deps', () => {
       class A extends Jig { }
       A.deps = { B: [0] }
       const CA = run.deploy(A)
-      expect(() => { CA.deps.B[0] = 1 }).to.throw('Updates must be performed in a method')
+      expect(() => { CA.deps.B[0] = 1 }).to.throw('Attempt to update A outside of a method')
     })
 
     // ------------------------------------------------------------------------
@@ -185,7 +186,7 @@ describe('Deps', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
-      expect(() => { CA.deps.B = 1 }).to.throw('Updates must be performed in a method')
+      expect(() => { CA.deps.B = 1 }).to.throw('Attempt to update A outside of a method')
     })
 
     // ------------------------------------------------------------------------
@@ -195,7 +196,7 @@ describe('Deps', () => {
       class A extends Jig { }
       A.deps = { B: { } }
       const CA = run.deploy(A)
-      expect(() => { CA.deps.B.n = 1 }).to.throw('Updates must be performed in a method')
+      expect(() => { CA.deps.B.n = 1 }).to.throw('Attempt to update A outside of a method')
     })
 
     // ------------------------------------------------------------------------
@@ -236,7 +237,7 @@ describe('Deps', () => {
       class A extends Jig { }
       A.deps = { B: { } }
       const CA = run.deploy(A)
-      expect(() => { delete CA.deps.B }).to.throw('Updates must be performed in a method')
+      expect(() => { delete CA.deps.B }).to.throw('Attempt to update A outside of a method')
     })
 
     // ------------------------------------------------------------------------
@@ -278,7 +279,7 @@ describe('Deps', () => {
       A.deps = { B: { n: 1 } }
       class B extends A { static f () { delete A.deps.B.n } }
       const CB = run.deploy(B)
-      expect(() => CB.f()).to.throw('Updates must be performed in a method')
+      expect(() => CB.f()).to.throw('Attempt to update A outside of a method')
     })
 
     // ------------------------------------------------------------------------
@@ -319,7 +320,7 @@ describe('Deps', () => {
       class A extends Jig { }
       const CA = run.deploy(A)
       const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
-      expect(() => Object.defineProperty(CA.deps, 'B', desc)).to.throw('Updates must be performed in a method')
+      expect(() => Object.defineProperty(CA.deps, 'B', desc)).to.throw('Attempt to update A outside of a method')
     })
 
     // ------------------------------------------------------------------------
@@ -361,7 +362,7 @@ describe('Deps', () => {
       A.deps = { B: { } }
       const CA = run.deploy(A)
       const desc = { configurable: true, enumerable: true, writable: true, value: 1 }
-      expect(() => Object.defineProperty(CA.deps.B, 'n', desc)).to.throw('Updates must be performed in a method')
+      expect(() => Object.defineProperty(CA.deps.B, 'n', desc)).to.throw('Attempt to update A outside of a method')
     })
 
     // ------------------------------------------------------------------------

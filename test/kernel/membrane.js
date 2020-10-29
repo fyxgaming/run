@@ -1567,7 +1567,7 @@ describe('Membrane', () => {
   describe('Smart API', () => {
     it('delete throws if outside method', () => {
       const a = makeJig({}, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
-      const error = 'Updates must be performed in a method'
+      const error = 'Attempt to update [jig Object] outside of a method'
       expect(() => { delete a.n }).to.throw(error)
     })
 
@@ -1585,7 +1585,7 @@ describe('Membrane', () => {
       class A { static f (b) { delete b.n } }
       const a = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const b = makeJig({}, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
-      const error = 'Updates must be performed in a method'
+      const error = 'Attempt to update [jig Object] outside of a method'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
 
@@ -1593,7 +1593,7 @@ describe('Membrane', () => {
 
     it('defineProperty throws if outside method', () => {
       const a = makeJig({}, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
-      const error = 'Updates must be performed in a method'
+      const error = 'Attempt to update [jig Object] outside of a method'
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(a, 'n', desc)).to.throw(error)
     })
@@ -1622,7 +1622,7 @@ describe('Membrane', () => {
       }
       const a = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const b = makeJig({}, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
-      const error = 'Updates must be performed in a method'
+      const error = 'Attempt to update [jig Object] outside of a method'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
 
@@ -1630,7 +1630,7 @@ describe('Membrane', () => {
 
     it('set throws if outside method', () => {
       const a = makeJig({}, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
-      const error = 'Updates must be performed in a method'
+      const error = 'Attempt to update [jig Object] outside of a method'
       expect(() => { a.n = 1 }).to.throw(error)
     })
 
@@ -1648,7 +1648,7 @@ describe('Membrane', () => {
       class A { static f (b) { b.n = 1 } }
       const a = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const b = makeJig({}, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
-      const error = 'Updates must be performed in a method'
+      const error = 'Attempt to update [jig Object] outside of a method'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
 
@@ -1656,7 +1656,7 @@ describe('Membrane', () => {
 
     it('intrinsicUpdate throws if outside method', () => {
       const s = makeJig(new Set(), { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
-      const error = 'Updates must be performed in a method'
+      const error = 'Attempt to update [jig Set] outside of a method'
       expect(() => s.add(1)).to.throw(error)
     })
 
@@ -1675,7 +1675,7 @@ describe('Membrane', () => {
       class A { static f (b) { b.add(1) } }
       const a = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const b = makeJig(new Set(), { _recordCalls: true, _smartAPI: true })
-      const error = 'Updates must be performed in a method'
+      const error = 'Attempt to update [jig Set] outside of a method'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
     })
   })

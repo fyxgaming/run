@@ -236,7 +236,6 @@ describe('Token', () => {
       class TestToken extends Token { }
       const a = TestToken.mint(2)
       await a.sync()
-      console.log(a)
       const b = a.send(new CustomLock())
       expect(b.owner instanceof CustomLock).to.equal(true)
       await b.sync()
