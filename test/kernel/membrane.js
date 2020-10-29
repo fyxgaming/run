@@ -2117,48 +2117,97 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Ownership', () => {
-    it('set throws if owned by another jig', () => {
+    it('set copies object owned by another jig', () => {
       const a = makeJig({})
-      const b = new Membrane({}, mangle({ _parentJig: a }))
-      const c = makeJig({})
-      expect(() => { c.n = b }).to.throw('Ownership violation')
+      const ai = new Membrane({}, mangle({ _parentJig: a }))
+      const b = makeJig({})
+      b.n = ai
+      b.n.m = 1
+      expect(b.n).not.to.equal(ai)
+      expect(b.n.m).to.equal(1)
+      expect(typeof ai.m).to.equal('undefined')
+      a.n2 = b.n
+      expect(a.n2).not.to.equal(b.n)
     })
 
     // ------------------------------------------------------------------------
 
-    it('set throws if inner prop owned by another jig', () => {
+    it('set copies inner prop owned by another jig', () => {
       const a = makeJig({})
-      const b = new Membrane({}, mangle({ _parentJig: a }))
-      const c = makeJig({})
-      expect(() => { c.n = [b] }).to.throw('Ownership violation')
+      const ai = new Membrane({}, mangle({ _parentJig: a }))
+      const b = makeJig({})
+      b.n = [ai]
+      b.n[0].m = 1
+      expect(b.n[0]).not.to.equal(ai)
+      expect(b.n[0].m).to.equal(1)
+      expect(typeof ai.m).to.equal('undefined')
     })
 
     // ------------------------------------------------------------------------
 
-    it('defineProperty throws if owned by another jig', () => {
+    it('defineProperty copies object owned by another jig', () => {
       const a = makeJig({})
-      const b = new Membrane({}, mangle({ _parentJig: a }))
-      const c = makeJig({})
-      const desc = { value: b, configurable: true, enumerable: true, writable: true }
-      expect(() => Object.defineProperty(c, 'n', desc)).to.throw('Ownership violation')
+      const ai = new Membrane(new Set([1, 2, 3]), mangle({ _parentJig: a }))
+      const b = makeJig({})
+      const desc = { value: ai, configurable: true, enumerable: true, writable: true }
+      Object.defineProperty(b, 'n', desc)
+      b.n.m = 1
+      expect(b.n).not.to.equal(ai)
+      expect(b.n).to.deep.equal(ai)
+      expect(b.n instanceof SI.Set).to.equal(true)
+      expect(b.n.m).to.equal(1)
+      expect(typeof ai.m).to.equal('undefined')
     })
 
     // ------------------------------------------------------------------------
 
-    it('intrinsicIn throws if owned by another jig', () => {
+    it('defineProperty copies inner prop owned by another jig', () => {
       const a = makeJig({})
-      const b = new Membrane({}, mangle({ _parentJig: a }))
-      const c = makeJig(new Set())
-      expect(() => c.add(b)).to.throw('Ownership violation')
+      const ai = new Membrane({}, mangle({ _parentJig: a }))
+      const b = makeJig({})
+      const bi = new Membrane({}, mangle({ _parentJig: b }))
+      const desc = { value: bi, configurable: true, enumerable: true, writable: true }
+      Object.defineProperty(ai, 'n', desc)
+      ai.m = 1
+      expect(ai.n).not.to.equal(bi)
+      expect(typeof b.m).to.equal('undefined')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicIn copies object owned by another jig', () => {
+      const a = makeJig({})
+      const ai = new Membrane({}, mangle({ _parentJig: a }))
+      const b = makeJig(new Map())
+      b.set(1, ai)
+      b.get(1).m = 1
+      expect(b.get(1)).not.to.equal(ai)
+      expect(b.get(1).m).to.equal(1)
+      expect(typeof ai.m).to.equal('undefined')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('intrinsicIn copies inner prop owned by another jig', () => {
+      const a = makeJig({})
+      const ai = new Membrane({}, mangle({ _parentJig: a }))
+      const b = makeJig(new Set())
+      b.add({ ai })
+      Array.from(b)[0].ai.n = 1
+      expect(Array.from(b)[0].ai).not.to.equal(ai)
+      expect(Array.from(b)[0].ai.n).to.equal(1)
+      expect(typeof ai.n).to.equal('undefined')
     })
 
     // ------------------------------------------------------------------------
 
     it('set allowed if owned by us', () => {
       const a = makeJig({})
-      const b = new Membrane({}, mangle({ _parentJig: a }))
-      a.n = b
-      a.o = { b }
+      const ai = new Membrane({}, mangle({ _parentJig: a }))
+      a.n = ai
+      a.o = { ai }
+      a.n.m = 1
+      expect(ai.m).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
@@ -2381,17 +2430,6 @@ describe('Membrane', () => {
       const A2 = makeJig(A, options)
       const B2 = makeJig(B, options)
       testRecord(() => expect(B2.g(A2)).to.equal(true))
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('set claims ownership', () => {
-      const a = makeJig({})
-      const b = makeJig({})
-      const c = new Membrane({})
-      a.n = c
-      expect(() => { b.n = c }).to.throw()
-      expect(unmangle(Proxy2._getHandler(c))._jig).to.equal(a)
     })
   })
 

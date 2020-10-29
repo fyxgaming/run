@@ -2502,7 +2502,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if store inner object', () => {
+    it('copies if store inner object', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         init () {
@@ -2512,22 +2512,30 @@ describe('Jig', () => {
         }
       }
       class B extends Jig {
-        f (a) { this.x = a.obj }
+        f (a) {
+          this.x = a.obj
+          this.y = a.arr
+          this.z = a.buf
 
-        g (a) { this.y = a.arr }
-
-        h (a) { this.z = a.buf }
+          this.x.n = 2
+          this.y.push(4)
+          this.z.set([0])
+        }
       }
       const a = new A()
       const b = new B()
-      expect(() => b.f(a)).to.throw('Ownership violation')
-      expect(() => b.g(a)).to.throw('Ownership violation')
-      expect(() => b.h(a)).to.throw('Ownership violation')
+      b.f(a)
+      expect(b.x.n).to.equal(2)
+      expect(b.y[3]).to.equal(4)
+      expect(b.z[0]).to.equal(0)
+      expect(a.obj.n).to.equal(1)
+      expect(typeof a.arr[3]).to.equal('undefined')
+      expect(a.buf[0]).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws for store arbitrary objects', () => {
+    it('copies if store arbitrary objects', () => {
       new Run() // eslint-disable-line
       class Blob { f () { return 2 } }
       class A extends Jig {
@@ -2537,11 +2545,14 @@ describe('Jig', () => {
       }
       A.deps = { Blob }
       class B extends Jig {
-        set (a) { this.x = a.blob }
+        set (a) { this.x = a.blob; this.x.n = 1 }
       }
       const a = new A()
       const b = new B()
-      expect(() => b.set(a)).to.throw('Ownership violation')
+      b.set(a)
+      expect(b.x).not.to.equal(a.blob)
+      expect(b.x.n).to.equal(1)
+      expect(typeof a.blob.n).to.equal('undefined')
     })
 
     // ------------------------------------------------------------------------
