@@ -1076,7 +1076,7 @@ describe('Membrane', () => {
       })
       _sudo(() => { C.owner = new Lock() })
       expect(testRecord(() => C.f())).to.equal(true)
-      C.g()
+      testRecord(() => C.g())
       expect(C.owner.n).to.equal(1)
     })
 
@@ -1096,6 +1096,24 @@ describe('Membrane', () => {
       expect(typeof a.owner.n).to.equal('undefined')
       expect(typeof a.f().n).to.equal('undefined')
       expect(a.f()).not.to.equal(a.f())
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('return owner binding to another jig is cow', () => {
+      const B = makeJig(class B extends Jig {
+        static f (A) { return A.owner === A.owner } // eslint-disable-line
+        static g (A) { A.owner.n = 1 }
+      })
+      const A = makeJig({}, { _utxoBindings: true })
+      const Lock = makeCode(class Lock {
+        script () { return '' }
+        domain () { return 0 }
+      })
+      _sudo(() => { A.owner = new Lock() })
+      expect(testRecord(() => B.f(A))).to.equal(false)
+      testRecord(() => B.g(A))
+      expect(typeof A.owner.n).to.equal('undefined')
     })
   })
 
