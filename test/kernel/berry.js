@@ -423,7 +423,7 @@ Line 3`
           this.n = 1
           this.o = {}
           this.o.m = 2
-          this.s = new Set([this])
+          this.s = new Set([1, 2, 3])
         }
       }
 
@@ -435,7 +435,7 @@ Line 3`
         expect(typeof b.o).to.equal('object')
         expect(b.o.m).to.equal(2)
         expect(b.s.constructor.name).to.equal('Set')
-        expect(Array.from(b.s)[0]).to.equal(b)
+        expect(Array.from(b.s)).to.deep.equal([1, 2, 3])
       }
 
       const b = await B.load('123')
@@ -446,6 +446,41 @@ Line 3`
 
       run.cache = new LocalCache()
       const b3 = await run.load(b.location)
+      test(b3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set self reference', async () => {
+      const run = new Run()
+
+      class B extends Berry {
+        init () {
+          this.self = this
+          this.arr = [this]
+          this.arr2 = this.arr
+        }
+      }
+
+      run.deploy(B)
+      await run.sync()
+
+      function test (b) {
+        expect(b.self).to.equal(b)
+        expect(b.arr[0]).to.equal(b)
+        expect(b.arr2).to.equal(b.arr)
+      }
+
+      const b = await B.load('123')
+      test(b)
+
+      const b2 = await B.load(b.location)
+      test(b2)
+
+      console.log(b.location)
+
+      run.cache = new LocalCache()
+      const b3 = await B.load(b.location)
       test(b3)
     })
 
