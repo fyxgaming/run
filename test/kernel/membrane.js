@@ -1075,8 +1075,8 @@ describe('Membrane', () => {
         domain () { return 0 }
       })
       _sudo(() => { C.owner = new Lock() })
-      expect(testRecord(() => C.f())).to.equal(true)
-      testRecord(() => C.g())
+      expect(simulateAction(() => C.f())).to.equal(true)
+      simulateAction(() => C.g())
       expect(C.owner.n).to.equal(1)
     })
 
@@ -1111,8 +1111,8 @@ describe('Membrane', () => {
         domain () { return 0 }
       })
       _sudo(() => { A.owner = new Lock() })
-      expect(testRecord(() => B.f(A))).to.equal(false)
-      testRecord(() => B.g(A))
+      expect(simulateAction(() => B.f(A))).to.equal(false)
+      simulateAction(() => B.g(A))
       expect(typeof A.owner.n).to.equal('undefined')
     })
 
@@ -1149,8 +1149,23 @@ describe('Membrane', () => {
         A.m = new Map()
         A.m.set(1, A.owner)
       })
-      expect(testRecord(() => A.f())).to.equal(true)
-      expect(testRecord(() => A.g())).to.equal(true)
+      expect(simulateAction(() => A.f())).to.equal(true)
+      expect(simulateAction(() => A.g())).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set owner lock internally and return is not cow', () => {
+      const Lock = makeCode(class Lock {
+        script () { return '' }
+        domain () { return 0 }
+      })
+      const A = makeJig(class A {
+        static f () { const x = new Lock(); this.owner = x; return x }
+      }, { _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      const owner = simulateAction(() => A.f())
+      owner.n = 1
+      expect(A.owner.n).to.equal(1)
     })
   })
 
