@@ -37,7 +37,7 @@ function simulateAction (f) {
     const jig = makeJig({})
     const action = mangle({ _jig: jig })
     CURRENT_RECORD._stack.push(action)
-    f()
+    return f()
   } finally {
     CURRENT_RECORD._stack.pop()
   }
@@ -1049,7 +1049,40 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('return owner binding is cow', () => {
+    it('get descriptor of owner binding is cow', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
+      const Lock = makeCode(class Lock {
+        script () { return '' }
+        domain () { return 0 }
+      })
+      _sudo(() => { A.owner = new Lock() })
+      Object.getOwnPropertyDescriptor(A, 'owner').value.n = 1
+      expect(typeof Object.getOwnPropertyDescriptor(A, 'owner').value.n).to.equal('undefined')
+      expect(Object.getOwnPropertyDescriptor(A, 'owner').value)
+        .not.to.equal(Object.getOwnPropertyDescriptor(A, 'owner').value)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('return owner binding internally is not cow', () => {
+      class A extends Jig {
+        static f () { return this.owner === this.owner } // eslint-disable-line
+        static g () { this.owner.n = 1 }
+      }
+      const C = makeJig(A, { _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      const Lock = makeCode(class Lock {
+        script () { return '' }
+        domain () { return 0 }
+      })
+      _sudo(() => { C.owner = new Lock() })
+      expect(testRecord(() => C.f())).to.equal(true)
+      C.g()
+      expect(C.owner.n).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('return owner binding externally is cow', () => {
       const A = makeCode(class A extends Jig { f () { return this.owner } })
       const a = new Membrane({}, mangle({ _admin: true, _utxoBindings: true }))
       _sudo(() => Object.setPrototypeOf(a, A.prototype))
