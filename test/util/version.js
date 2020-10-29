@@ -43,13 +43,17 @@ describe('_version', () => {
 
 describe('_parsePayloadVersion', () => {
   it('returns parsed version', () => {
-    console.log(_parsePayloadVersion)
+    expect(_parsePayloadVersion('05')).to.equal(5)
   })
 
   // --------------------------------------------------------------------------
 
   it('throws if unsupported', () => {
-    // TODO
+    expect(() => _parsePayloadVersion()).to.throw('Unsupported payload version: undefined')
+    expect(() => _parsePayloadVersion(5)).to.throw('Unsupported payload version: 5')
+    expect(() => _parsePayloadVersion('04')).to.throw('Unsupported payload version: 04')
+    expect(() => _parsePayloadVersion('06')).to.throw('Unsupported payload version: 06')
+    expect(() => _parsePayloadVersion('0005')).to.throw('Unsupported payload version: 0005')
   })
 })
 
