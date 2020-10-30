@@ -207,8 +207,8 @@ describe('Rules', () => {
         _cowProps: Math.random() < 0.5
       }
       const parentJig = new Membrane({}, mangle(Object.assign({}, parentRules)))
-      const owned = Math.random() < 0.5
-      const rules = unmangle(Rules._childProperty(parentJig, false, owned))
+      const method = false
+      const rules = unmangle(Rules._childProperty(parentJig, method))
       expect(rules._parentJig).to.equal(parentJig)
       expect(rules._admin).to.equal(parentRules._admin)
       expect(rules._errors).to.equal(parentRules._errors)
@@ -225,7 +225,7 @@ describe('Rules', () => {
       expect(rules._recordCalls).to.equal(parentRules._recordCalls)
       expect(rules._recordableTarget).to.equal(false)
       expect(rules._smartAPI).to.equal(parentRules._smartAPI)
-      expect(rules._thisless).to.equal(parentRules._thisless && owned)
+      expect(rules._thisless).to.equal(parentRules._thisless)
       expect(rules._cow).to.equal(parentRules._cow)
       expect(rules._cowProps).to.equal(parentRules._cowProps)
       expect(rules._disabledMethods).to.deep.equal([])
@@ -233,7 +233,7 @@ describe('Rules', () => {
 
     it('method are immutable', () => {
       const parentJig = new Membrane({})
-      const rules = unmangle(Rules._childProperty(parentJig, true, false))
+      const rules = unmangle(Rules._childProperty(parentJig, true))
       expect(rules._immutable).to.equal(true)
     })
   })

@@ -2639,10 +2639,21 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('thisless', () => {
+    it('thisless function', () => {
+      function f () {
+        'use strict'
+        return this
+      }
+      const cf = new Membrane(f, mangle({ _thisless: true }))
+      expect(cf()).to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('thisless static method', () => {
       class A { static f () { return this } }
-      const A2 = new Membrane(A, mangle({ _thisless: true }))
-      expect(A2.f()).to.equal(undefined)
+      const CA = new Membrane(A, mangle({ _thisless: true }))
+      expect(CA.f()).to.equal(undefined)
     })
   })
 
