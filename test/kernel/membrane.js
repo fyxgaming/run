@@ -359,7 +359,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set disabled on methods', () => {
+    it.only('set disabled on methods', () => {
       const A = makeJig(class A { f () { } })
       const a = makeJig(new A())
       expect(() => { a.f.n = 1 }).to.throw('set disabled')
@@ -1513,6 +1513,44 @@ describe('Membrane', () => {
       const b = makeJig({}, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const error = 'Attempt to update [jig Object] outside of a method'
       testRecord(record => expect(() => a.f(b)).to.throw(error))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('set throws for returned objects from another jig', () => {
+      class A {
+        static f () {
+          const x = [{ n: 1 }, { n: 2 }]
+          this.x = x[0]
+          x[0].n2 = x[1]
+          return x[1]
+        }
+
+        static g () {
+          const m = {}
+          this.m = m
+          const n = { }
+          m.n = n
+          return m
+        }
+
+        static h () {
+          console.log('>>>>')
+          const m = this.g()
+          console.log('>>>>')
+          return this.m === m
+        }
+      }
+      const a = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      console.log(a)
+      console.log('---')
+      // testRecord(() => a.f())
+      // console.log('---')
+      // testRecord(() => { a.f().a = 1 })
+      console.log('---')
+      console.log(a)
+
+      testRecord(() => simulateAction(() => console.log(a.h())))
     })
 
     // ------------------------------------------------------------------------
