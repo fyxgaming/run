@@ -2557,7 +2557,32 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('save copy', () => {
+    it('copies returned inner and owned object', () => {
+      const run = new Run()
+      class A extends Jig {
+        static f () {
+          this.x = {}
+          return [this.x]
+        }
+      }
+      class B extends Jig {
+        g (A) {
+          this.y = A.f()
+          this.y[0].n = 1
+        }
+      }
+      const CA = run.deploy(A)
+      const b = new B()
+      CA.f()
+      b.g(CA)
+      expect(b.y[0]).not.to.equal(CA.x)
+      expect(b.y[0].n).to.equal(1)
+      expect(typeof CA.x.n).to.equal('undefined')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('save copy manually', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         init () {
