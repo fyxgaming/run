@@ -38,7 +38,6 @@ describe('Rules', () => {
       expect(rules._smartAPI).to.equal(true)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
-      expect(rules._cowProps).to.equal(false)
       expect(rules._disabledMethods).to.deep.equal([])
     })
   })
@@ -67,7 +66,6 @@ describe('Rules', () => {
       expect(rules._smartAPI).to.equal(false)
       expect(rules._thisless).to.equal(!isClass)
       expect(rules._cow).to.equal(false)
-      expect(rules._cowProps).to.equal(false)
       expect(rules._disabledMethods).to.deep.equal([])
     })
   })
@@ -95,7 +93,6 @@ describe('Rules', () => {
       expect(rules._smartAPI).to.equal(true)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
-      expect(rules._cowProps).to.equal(false)
       expect(rules._disabledMethods).to.deep.equal([])
     })
   })
@@ -123,7 +120,6 @@ describe('Rules', () => {
       expect(rules._smartAPI).to.equal(true)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
-      expect(rules._cowProps).to.equal(false)
       expect(rules._disabledMethods).to.deep.equal([])
     })
   })
@@ -151,7 +147,6 @@ describe('Rules', () => {
       expect(rules._smartAPI).to.equal(false)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(false)
-      expect(rules._cowProps).to.equal(false)
       expect(rules._disabledMethods).to.deep.equal([])
     })
   })
@@ -179,7 +174,6 @@ describe('Rules', () => {
       expect(rules._smartAPI).to.equal(false)
       expect(rules._thisless).to.equal(false)
       expect(rules._cow).to.equal(true)
-      expect(rules._cowProps).to.equal(false)
       expect(rules._disabledMethods).to.deep.equal([])
     })
   })
@@ -203,8 +197,7 @@ describe('Rules', () => {
         _recordUpdates: Math.random() < 0.5,
         _recordCalls: Math.random() < 0.5,
         _recordableTarget: Math.random() < 0.5,
-        _smartAPI: Math.random() < 0.5,
-        _cowProps: Math.random() < 0.5
+        _smartAPI: Math.random() < 0.5
       }
       const parentJig = new Membrane({}, mangle(Object.assign({}, parentRules)))
       const method = false
@@ -227,7 +220,6 @@ describe('Rules', () => {
       expect(rules._smartAPI).to.equal(parentRules._smartAPI)
       expect(rules._thisless).to.equal(parentRules._thisless)
       expect(rules._cow).to.equal(parentRules._cow)
-      expect(rules._cowProps).to.equal(parentRules._cowProps)
       expect(rules._disabledMethods).to.deep.equal([])
     })
 
