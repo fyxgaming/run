@@ -1551,44 +1551,6 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('set throws for returned objects from another jig', () => {
-      class A {
-        static f () {
-          const x = [{ n: 1 }, { n: 2 }]
-          this.x = x[0]
-          x[0].n2 = x[1]
-          return x[1]
-        }
-
-        static g () {
-          const m = {}
-          this.m = m
-          const n = { }
-          m.n = n
-          return m
-        }
-
-        static h () {
-          console.log('>>>>')
-          const m = this.g()
-          console.log('>>>>')
-          return this.m === m
-        }
-      }
-      const a = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
-      console.log(a)
-      console.log('---')
-      // testRecord(() => a.f())
-      // console.log('---')
-      // testRecord(() => { a.f().a = 1 })
-      console.log('---')
-      console.log(a)
-
-      testRecord(() => simulateAction(() => console.log(a.h())))
-    })
-
-    // ------------------------------------------------------------------------
-
     it('intrinsicUpdate throws if outside method', () => {
       const s = makeJig(new Set(), { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const error = 'Attempt to update [jig Set] outside of a method'
@@ -2377,7 +2339,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('returns membrane object to external jig after internal create and claim inner', () => {
+    it('returns inner membrane to external jig after internal create and claim inner', () => {
       class A {
         static f () {
           const o = {}
@@ -2389,11 +2351,11 @@ describe('Membrane', () => {
       class B {
         static g (a) {
           const p = a.f()
-          p.n = 2
+          p.n = 2 // Test unclaimed
           return p.o === a.o
         }
       }
-      const options = { _recordableTarget: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true, _smartAPI: true }
       const A2 = makeCode(A, options)
       const B2 = makeCode(B, options)
       testRecord(() => expect(B2.g(A2)).to.equal(true))
@@ -2425,6 +2387,86 @@ describe('Membrane', () => {
       const A2 = makeCode(A, options)
       const B2 = makeCode(B, options)
       testRecord(() => expect(B2.g(A2)).to.equal(true))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('naked set to pending and returns as membrane', () => {
+      class A {
+        static f () {
+          const x = { }
+          const y = { }
+          this.x = x
+          x.y = y
+          return y
+        }
+      }
+      const C = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      const y = testRecord(() => C.f())
+      expect(y).to.equal(C.x.y)
+      expect(() => { y.n = 1 }).to.throw('Attempt to update A outside of a method')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('foreign set to pending is copied after return', () => {
+      class A { }
+      A.x = { }
+      const CA = makeCode(A, { _smartAPI: true })
+      class B {
+        static f (CA) {
+          const y = { }
+          this.y = y
+          y.x = CA.x
+          return y.x
+        }
+
+        static g () {
+          this.y.x.n = 1
+        }
+      }
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
+      const Byx = testRecord(() => CB.f(CA))
+      expect(Byx).not.to.equal(CA.x)
+      expect(B.y.x).not.to.equal(CA.x)
+      testRecord(() => CB.g())
+      expect(CB.y.x.n).to.equal(1)
+      expect(typeof CA.x.n).to.equal('undefined')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('pending returned is pending retrieved internally', () => {
+      class A {
+        static f () {
+          const x = {}
+          this.x = x
+          const y = { }
+          x.y = y
+          return x
+        }
+
+        static g () {
+          const x = this.f()
+          return this.x === x
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      expect(testRecord(() => CA.g())).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('throws for unserializable naked set to pending', () => {
+      class A {
+        static f () {
+          const x = {}
+          this.x = x
+          x.y = new WeakMap()
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true })
+      expect(() => testRecord(() => CA.f())).to.throw('Not serializable')
     })
   })
 
