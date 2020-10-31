@@ -2468,6 +2468,22 @@ describe('Membrane', () => {
       const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true })
       expect(() => testRecord(() => CA.f())).to.throw('Not serializable')
     })
+
+    // ------------------------------------------------------------------------
+
+    it.only('return foreign property without claim', () => {
+      class A { }
+      A.x = { }
+      const CA = makeCode(A)
+      class B {
+        static f (CA) {
+          return CA.x
+        }
+      }
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
+      const x = testRecord(() => CB.f(CA))
+      expect(x).to.equal(CA.x)
+    })
   })
 
   // --------------------------------------------------------------------------
