@@ -29,7 +29,7 @@ describe('Protocol', () => {
   it('Unit', () => runProtocolTest(require('./data/unit.json'))).timeout(1000000)
   it('Relay', () => runProtocolTest(require('./data/relay.json'))).timeout(1000000)
   it('Zhell', () => runProtocolTest(require('./data/zhell.json'))).timeout(1000000)
-  it('Kronoverse', () => runProtocolTest(require('./data/kronoverse.json'))).timeout(1000000)
+  it.only('Kronoverse', () => runProtocolTest(require('./data/kronoverse.json'))).timeout(1000000)
 })
 
 // ------------------------------------------------------------------------------------------------
