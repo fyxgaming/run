@@ -82,7 +82,7 @@ function makeCode (x, options = {}) {
 
   x.prototype.constructor = C
 
-  const makeMethod = (method, C) => new Membrane(method, Rules._childProperty(C, true))
+  const makeMethod = (method, C) => new Membrane(method, unmangle(Rules)._childProperty(C, true))
 
   Object.getOwnPropertyNames(x.prototype)
     .filter(name => name !== 'constructor')
@@ -90,7 +90,7 @@ function makeCode (x, options = {}) {
 
   _CODE.add(C)
 
-  const editor = { _deploy: () => { }, _installed: true }
+  const editor = mangle({ _deploy: () => { }, _installed: true })
   _EDITORS.set(C, editor)
 
   return C

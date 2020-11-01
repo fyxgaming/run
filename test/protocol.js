@@ -26,13 +26,13 @@ describe('Protocol', () => {
 
   // --------------------------------------------------------------------------
 
-  it('Unit', () => runProtocolTest(require('./data/unit.json'))).timeout(1000000)
+  it.skip('Unit', () => runProtocolTest(require('./data/unit.json'))).timeout(1000000)
   it('Relay', () => runProtocolTest(require('./data/relay.json'))).timeout(1000000)
   it('Zhell', () => runProtocolTest(require('./data/zhell.json'))).timeout(1000000)
-  it('Kronoverse', () => runProtocolTest(require('./data/kronoverse.json'))).timeout(1000000)
+  it.skip('Kronoverse', () => runProtocolTest(require('./data/kronoverse.json'))).timeout(1000000)
 })
 
-it.only('IMPORT', async () => {
+it.skip('IMPORT', async () => {
   console.log('ORIG', Object.keys(require('./data/kronoverse.json').txns).length)
   console.log('NEXT', require('../txns.json').length)
   const run = new Run()
