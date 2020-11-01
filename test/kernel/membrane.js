@@ -1699,7 +1699,7 @@ describe('Membrane', () => {
       const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeCode(A, options)
       const b = makeJig({}, options)
-      const error = 'Cannot access private property _n'
+      const error = 'Cannot get private property _n'
       expect(() => testRecord(() => a.f(b))).to.throw(error)
     })
 
@@ -1726,7 +1726,7 @@ describe('Membrane', () => {
       const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeCode(A, options)
       const b = makeJig({}, options)
-      const error = 'Cannot access private property _n'
+      const error = 'Cannot get descriptor for private property _n'
       expect(() => testRecord(() => a.f(b))).to.throw(error)
     })
 
@@ -1753,7 +1753,7 @@ describe('Membrane', () => {
       const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeCode(A, options)
       const b = makeJig({}, options)
-      const error = 'Cannot access private property _n'
+      const error = 'Cannot check private property _n'
       expect(() => testRecord(() => a.f(b))).to.throw(error)
     })
 
@@ -1859,7 +1859,7 @@ describe('Membrane', () => {
       class B extends A2 { }
       const B2 = makeCode(B, options)
       A._n = 1
-      expect(() => testRecord(() => B2.testGet())).to.throw('Cannot access private property _n')
+      expect(() => testRecord(() => B2.testGet())).to.throw('Cannot get private property _n')
     })
 
     // ------------------------------------------------------------------------
@@ -1885,7 +1885,7 @@ describe('Membrane', () => {
       const B2 = makeCode(B, options)
       const x = makeJig(new A2(), options)
       const y = makeJig(new B2(), options)
-      const error = 'Cannot access private property _n'
+      const error = 'Cannot get private property _n'
       expect(() => testRecord(() => x.f(y))).to.throw(error)
       expect(() => testRecord(() => y.f(x))).to.throw(error)
     })

@@ -475,12 +475,12 @@ describe('Deps', () => {
       class B extends A { static f (A) { return A.deps._B } }
       const CA = run.deploy(A)
       const CB = run.deploy(B)
-      expect(() => CB.f(CA)).to.throw('Cannot access private property _B')
+      expect(() => CB.f(CA)).to.throw('Cannot get private property _B')
       await run.sync()
       run.cache = new LocalCache()
       const CA2 = await run.load(CA.location)
       const CB2 = await run.load(CB.location)
-      expect(() => CB2.f(CA2)).to.throw('Cannot access private property _B')
+      expect(() => CB2.f(CA2)).to.throw('Cannot get private property _B')
     })
 
     // ------------------------------------------------------------------------

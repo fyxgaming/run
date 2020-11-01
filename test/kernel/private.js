@@ -69,7 +69,7 @@ describe('Private', () => {
         const run = new Run()
         class A extends Jig { init () { this._x = 1 } }
         class B extends Jig { has (a) { return '_x' in a }}
-        function test (a, b) { expect(() => b.has(a)).to.throw('Cannot access private property _x') }
+        function test (a, b) { expect(() => b.has(a)).to.throw('Cannot check private property _x') }
         const a = new A()
         const b = new B()
         test(a, b)
@@ -89,7 +89,7 @@ describe('Private', () => {
         const run = new Run()
         class A extends Jig { init () { this._x = 1 } }
         class B extends A { has (a) { return '_x' in a }}
-        function test (a, b) { expect(() => b.has(a)).to.throw('Cannot access private property _x') }
+        function test (a, b) { expect(() => b.has(a)).to.throw('Cannot check private property _x') }
         const a = new A()
         const b = new B()
         test(a, b)
@@ -170,7 +170,7 @@ describe('Private', () => {
         const run = new Run()
         class A extends Jig { init () { this._x = 1 } }
         class B extends Jig { get (a) { return a._x }}
-        function test (a, b) { expect(() => b.get(a)).to.throw('Cannot access private property _x') }
+        function test (a, b) { expect(() => b.get(a)).to.throw('Cannot get private property _x') }
         const a = new A()
         const b = new B()
         test(a, b)
@@ -190,7 +190,7 @@ describe('Private', () => {
         const run = new Run()
         class B extends Jig { get (a) { return a._x }}
         class A extends B { init () { this._x = 1 } }
-        function test (a, b) { expect(() => b.get(a)).to.throw('Cannot access private property _x') }
+        function test (a, b) { expect(() => b.get(a)).to.throw('Cannot get private property _x') }
         const a = new A()
         const b = new B()
         test(a, b)
@@ -273,7 +273,7 @@ describe('Private', () => {
         const run = new Run()
         class A extends Jig { init () { this._x = 1 } }
         class B extends Jig { get (a) { return Object.getOwnPropertyDescriptor(a, '_x').value }}
-        function test (a, b) { expect(() => b.get(a)).to.throw('Cannot access private property _x') }
+        function test (a, b) { expect(() => b.get(a)).to.throw('Cannot get descriptor for private property _x') }
         const a = new A()
         const b = new B()
         test(a, b)
@@ -438,7 +438,7 @@ describe('Private', () => {
         const run = new Run()
         class A extends Jig { _g () { return 1 } }
         class B extends Jig { f (a) { return a._g() } }
-        function test (a, b) { expect(() => b.f(a)).to.throw('Cannot access private property _g') }
+        function test (a, b) { expect(() => b.f(a)).to.throw('Cannot get private property _g') }
         const a = new A()
         const b = new B()
         test(a, b)
@@ -537,7 +537,7 @@ describe('Private', () => {
       class B extends A { static f (a) { return a._g() } }
       const CA = run.deploy(A)
       const CB = run.deploy(B)
-      function test (CA, CB) { expect(() => CB.f(CA)).to.throw('Cannot access private property _g') }
+      function test (CA, CB) { expect(() => CB.f(CA)).to.throw('Cannot get private property _g') }
       test(CA, CB)
       await CA.sync()
       await CB.sync()
@@ -603,7 +603,7 @@ describe('Private', () => {
       class B extends A { }
       const a = new A()
       const b = new B()
-      function test (a, b) { expect(() => b.f(a)).to.throw('Cannot access private property _g') }
+      function test (a, b) { expect(() => b.f(a)).to.throw('Cannot get private property _g') }
       test(a, b)
       await a.sync()
       await b.sync()
@@ -726,9 +726,9 @@ describe('Private', () => {
       B.deps = { A: CA }
       const CB = run.deploy(B)
       function test (CB) {
-        expect(() => CB.f()).to.throw('Cannot access private property _a')
-        expect(() => CB.g()).to.throw('Cannot access private property _b')
-        expect(() => CB.h()).to.throw('Cannot access private property _c')
+        expect(() => CB.f()).to.throw('Cannot get private property _a')
+        expect(() => CB.g()).to.throw('Cannot get private property _b')
+        expect(() => CB.h()).to.throw('Cannot get private property _c')
       }
       await CB.sync()
       test(CB)
@@ -797,7 +797,7 @@ describe('Private', () => {
       const b = new B()
       await CA.sync()
       await b.sync()
-      function test (CA, b) { expect(() => b.has(CA)).to.throw('Cannot access private property _n') }
+      function test (CA, b) { expect(() => b.has(CA)).to.throw('Cannot check private property _n') }
       test(CA, b)
       const CA2 = await run.load(CA.location)
       const b2 = await run.load(b.location)
