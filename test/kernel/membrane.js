@@ -2391,7 +2391,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('naked set to pending and returns as membrane', () => {
+    it('naked set to pending and returns as membrane', () => {
       class A {
         static f () {
           const x = { }
@@ -2409,7 +2409,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('foreign set to pending is copied after return', () => {
+    it('foreign set to pending is copied after return', () => {
       class A { }
       A.x = { }
       const CA = makeCode(A, { _smartAPI: true })
@@ -2436,7 +2436,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('pending returned is pending retrieved internally', () => {
+    it('pending returned is pending retrieved internally', () => {
       class A {
         static f () {
           const x = {}
@@ -2457,7 +2457,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('throws for unserializable naked set to pending', () => {
+    it('throws for unserializable naked set to pending', () => {
       class A {
         static f () {
           const x = {}
@@ -2471,7 +2471,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('return foreign property without claim', () => {
+    it('return foreign property without claim', () => {
       class A { }
       A.x = { }
       const CA = makeCode(A)
