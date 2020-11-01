@@ -618,7 +618,7 @@ describe('Call', () => {
     const o = { }
     o.o = o
     it('circular reference', () => testArgumentPass([o]))
-    it.only('arbitrary object', () => testArgumentPass(run => {
+    it('arbitrary object', () => testArgumentPass(run => {
       const Blob = run.deploy(class Blob {})
       return [new Blob()]
     }))
