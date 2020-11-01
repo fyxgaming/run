@@ -2427,7 +2427,7 @@ describe('Membrane', () => {
       }
       const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
       const Byx = testRecord(() => CB.f(CA))
-      expect(Byx).not.to.equal(CA.x)
+      expect(Byx).to.equal(CA.x)
       expect(B.y.x).not.to.equal(CA.x)
       testRecord(() => CB.g())
       expect(CB.y.x.n).to.equal(1)
