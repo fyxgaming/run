@@ -77,6 +77,34 @@ function enableUnitCaptureMode () {
 }
 
 // ------------------------------------------------------------------------------------------------
+// convertKronoverseTxns
+// ------------------------------------------------------------------------------------------------
+
+/*
+function convertKronoverseTxns() {
+  const run = new Run()
+  const txns = require('../txns.json')
+  let pass = 0; let fail = 0
+  const m = {}
+  const bsv = require('bsv')
+  txns.forEach(rawtx => { m[new bsv.Transaction(rawtx).hash] = rawtx })
+  run.blockchain.fetch = async txid => m[txid]
+  for (const rawtx of txns) {
+    try {
+      await run.import(rawtx)
+      pass++
+    } catch (e) {
+      fail++
+      if (e.message.indexOf('Not a run transaction') !== -1) continue
+      throw e
+    }
+    console.log(pass, fail)
+  }
+  // TODO: Write out the txids that passed as tests, and rawtxns otherwise. Network = mock.
+}
+*/
+
+// ------------------------------------------------------------------------------------------------
 // CaptureMockchain
 // ------------------------------------------------------------------------------------------------
 

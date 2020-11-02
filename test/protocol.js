@@ -32,29 +32,6 @@ describe('Protocol', () => {
   it.skip('Kronoverse', () => runProtocolTest(require('./data/kronoverse.json'))).timeout(1000000)
 })
 
-it.skip('IMPORT', async () => {
-  console.log('ORIG', Object.keys(require('./data/kronoverse.json').txns).length)
-  console.log('NEXT', require('../txns.json').length)
-  const run = new Run()
-  const txns = require('../txns.json')
-  let pass = 0; let fail = 0
-  const m = {}
-  const bsv = require('bsv')
-  txns.forEach(rawtx => { m[new bsv.Transaction(rawtx).hash] = rawtx })
-  run.blockchain.fetch = async txid => m[txid]
-  for (const rawtx of txns) {
-    try {
-      await run.import(rawtx)
-      pass++
-    } catch (e) {
-      fail++
-      if (e.message.indexOf('Not a run transaction') !== -1) continue
-      throw e
-    }
-    console.log(pass, fail)
-  }
-})
-
 // ------------------------------------------------------------------------------------------------
 // runProtocolTest
 // ------------------------------------------------------------------------------------------------
