@@ -2708,6 +2708,17 @@ describe('Membrane', () => {
       const CA = new Membrane(A, mangle({ _thisless: true }))
       expect(CA.f()).to.equal(undefined)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if apply to naked object', () => {
+      class A extends Jig {
+        static f () { const o = []; this.g.apply(o, []) }
+        static g () { this.x = 1 }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true })
+      expect(() => testRecord(() => CA.f())).to.throw('Cannot call g on [object Array]')
+    })
   })
 
   // --------------------------------------------------------------------------
