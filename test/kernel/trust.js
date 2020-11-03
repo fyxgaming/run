@@ -49,6 +49,7 @@ describe('Trust', () => {
       await expect(run2.load(A.location)).to.be.rejectedWith('Cannot load untrusted code')
       run2.trust('*')
       await run2.load(A.location)
+      await run2.load(A.location)
     })
 
     // ------------------------------------------------------------------------
@@ -61,6 +62,7 @@ describe('Trust', () => {
       run2.cache = new LocalCache()
       await expect(run2.load(A.location)).to.be.rejectedWith('Cannot load untrusted code')
       run2.trust(A.location.slice(0, 64))
+      await run2.load(A.location)
       await run2.load(A.location)
     })
 
@@ -191,6 +193,23 @@ describe('Trust', () => {
       await run2.load(CB.location)
       await run2.load(CA.location)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('trusts cache state references if trusted', async () => {
+      const run = new Run()
+      class A extends Jig { init (B) { this.B = B } }
+      class B { }
+      function f () { }
+      B.f = f
+      run.deploy(A)
+      run.deploy(B)
+      const a = new A(B)
+      await run.sync()
+      const run2 = new Run({ trust: [] })
+      run2.trust(a.location.slice(0, 64))
+      await run2.load(a.location)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -257,12 +276,12 @@ describe('Trust', () => {
 
     // ------------------------------------------------------------------------
 
-    it('loads untrusted via cache', async () => {
+    it('throws if untrusted load via cache', async () => {
       const run = new Run()
       const A = run.deploy(class A extends Jig { })
       await run.sync()
       const run2 = new Run({ trust: [] })
-      await run2.load(A.location)
+      await expect(run2.load(A.location)).to.be.rejectedWith('Cannot load untrusted code')
     })
   })
 
