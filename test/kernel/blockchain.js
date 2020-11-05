@@ -267,10 +267,7 @@ describe('Blockchain', () => {
   describe('spends', () => {
     it('returns spending txid or null', async () => {
       const run = new Run()
-      if (run.blockchain.api === 'whatsonchain' || run.blockchain.api === 'mattercloud') {
-        // spends API is not supported
-        return
-      }
+      if (run.blockchain.api === 'whatsonchain') return // Not supported
       const tx = randomTx()
       const parents = []
       const paidraw = await run.purse.pay(tx, parents)
@@ -288,6 +285,15 @@ describe('Blockchain', () => {
       const run = new Run()
       const badid = '0000000000000000000000000000000000000000000000000000000000000000'
       await expect(run.blockchain.spends(badid, 0)).to.be.rejected
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('large number of outputs', async () => {
+      const run = new Run()
+      if (run.blockchain.api === 'whatsonchain') return // Not supported
+      const txid = await transactionWithManyOutputs(run.blockchain)
+      await run.blockchain.spends(txid, 0)
     })
   })
 
@@ -381,6 +387,31 @@ async function addressWithManyUtxos (blockchain) {
       const largeraw = largetx.toString('hex')
       await blockchain.broadcast(largeraw)
       return addr
+    }
+  }
+}
+
+async function transactionWithManyOutputs (blockchain) {
+  switch (blockchain.network) {
+    case 'main': return 'cb6b87526c31540ced3584a558eb31e1a119a121e2cbcd8f657cc8e5853845b1'
+    case 'test': return 'f3584a4c0b29af9d642750b5a3ea757ee6e24ed936d8abd42ff5740dc669f459'
+    case 'mock': {
+      const privkey = new PrivateKey()
+      const addr = privkey.toAddress()
+      const fundid = blockchain.fund(addr, 100000000)
+      const fundraw = await blockchain.fetch(fundid)
+      const fundtx = new Transaction(fundraw)
+      const fundout = fundtx.outputs[1]
+      const fundutxo = { txid: fundid, vout: 1, script: fundout.script, satoshis: fundout.satoshis }
+      const largetx = randomTx()
+      largetx.from(fundutxo)
+      for (let i = 0; i < 500; i++) {
+        largetx.to(addr, Transaction.DUST_AMOUNT)
+      }
+      largetx.sign(privkey)
+      const largeraw = largetx.toString('hex')
+      await blockchain.broadcast(largeraw)
+      return largetx.hash
     }
   }
 }

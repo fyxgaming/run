@@ -972,6 +972,13 @@ describe('Misc', () => {
       expect(() => _limit(-2)).to.throw('Invalid limit')
       expect(() => _limit(-Infinity)).to.throw('Invalid limit')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('custom name', () => {
+      expect(() => _limit(undefined, 'timeout')).to.throw('Invalid timeout: undefined')
+      expect(() => _limit({}, 'size')).to.throw('Invalid size: [object Object]')
+    })
   })
 
   // ----------------------------------------------------------------------------------------------

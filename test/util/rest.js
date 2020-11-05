@@ -50,6 +50,14 @@ describe('REST', () => {
     it('server error', async () => {
       await expect(REST._get('https://api.run.network/badurl', TIMEOUT)).to.be.rejectedWith(RequestError)
     }).timeout(TIMEOUT)
+
+    // ------------------------------------------------------------------------
+
+    it('custom headers', async () => {
+      const headers = { Date: (new Date()).toUTCString() }
+      const response = await REST._get('https://httpbin.org/get', TIMEOUT, headers)
+      expect(response.headers.Date).to.equal(headers.Date)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -79,6 +87,14 @@ describe('REST', () => {
     it('server error', async () => {
       await expect(REST._post('https://api.run.network/badurl', TIMEOUT)).to.be.rejectedWith(RequestError)
     }).timeout(TIMEOUT)
+
+    // ------------------------------------------------------------------------
+
+    it('custom headers', async () => {
+      const headers = { Date: (new Date()).toUTCString() }
+      const response = await REST._post('https://httpbin.org/post', 'hello', TIMEOUT, headers)
+      expect(response.headers.Date).to.equal(headers.Date)
+    })
   })
 })
 
