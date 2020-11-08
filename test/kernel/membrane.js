@@ -1966,11 +1966,12 @@ describe('Membrane', () => {
 
     it('cannot pass unserializable arg to internal method', () => {
       class A {
-        static f() {
-          function h() { } 
+        static f () {
+          function h () { }
           this.g(h)
         }
-        static g() { }
+
+        static g () { }
       }
       const C = makeCode(A, { _recordCalls: true, _recordableTarget: true })
       expect(() => testRecord(() => C.f())).to.throw('Not serializable')
@@ -1980,11 +1981,12 @@ describe('Membrane', () => {
 
     it('cannot return unserializable value from internal method', () => {
       class A {
-        static f() {
+        static f () {
           this.g()
         }
-        static g() {
-          return function h() { } 
+
+        static g () {
+          return function h () { }
         }
       }
       const C = makeCode(A, { _recordCalls: true, _recordableTarget: true })
