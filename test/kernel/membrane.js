@@ -1961,6 +1961,20 @@ describe('Membrane', () => {
       const s = new Membrane(new Set())
       expect(() => s.add(Symbol.hasInstance)).to.throw('Not serializable')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot pass unserializable arg to method', () => {
+      class A {
+        static f() {
+          function h() { } 
+          this.g(h)
+        }
+        static g() { }
+      }
+      const C = makeCode(A, { _recordCalls: true, _recordableTarget: true })
+      expect(() => testRecord(() => C.f())).to.throw('Not serializable')
+    })
   })
 
   // --------------------------------------------------------------------------
