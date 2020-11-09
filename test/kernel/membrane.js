@@ -2251,7 +2251,28 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get naked object in method', () => {
+    it('foreign property returned without claim', () => {
+      class A { }
+      A.x = { }
+      const CA = makeCode(A, { _smartAPI: true })
+      class B {
+        static f (CA) {
+          return CA.x
+        }
+      }
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
+      const x = testRecord(() => CB.f(CA))
+      expect(x).to.equal(CA.x)
+      expect(() => { x.n = 2 }).to.throw()
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Pending membranes
+  // --------------------------------------------------------------------------
+
+  describe('Pending membranes', () => {
+    it('get pending in method', () => {
       class A {
         f () {
           const o = { }
@@ -2267,7 +2288,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get naked object in inner method', () => {
+    it('get pending in inner method', () => {
       class A {
         static f () {
           const o = { }
@@ -2286,7 +2307,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get naked object in internal intrinsic method', () => {
+    it('get pending from intrinsic method', () => {
       class A {
         static f () {
           this.m = new Map()
@@ -2306,7 +2327,38 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('returns membraned object to external jig after internal create and claim', () => {
+    it('get own property descriptor of pending', () => {
+      class A {
+        static f () {
+          const o = { }
+          this.x = o
+          return Object.getOwnPropertyDescriptor(this, 'x').value === o
+        }
+      }
+      const options = { _recordableTarget: true, _recordCalls: true }
+      const C = makeCode(A, options)
+      testRecord(() => expect(C.f()).to.equal(true))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get pending on inner property', () => {
+      class A {
+        static f () {
+          const o = { }
+          this.x = []
+          this.x.push(o)
+          return this.x[0] === o
+        }
+      }
+      const options = { _recordableTarget: true, _recordCalls: true }
+      const C = makeCode(A, options)
+      testRecord(() => expect(C.f()).to.equal(true))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns pending as membrane to another jig', () => {
       class A {
         static f () {
           const o = {}
@@ -2319,16 +2371,19 @@ describe('Membrane', () => {
           const o = a.f()
           return o === a.o
         }
+
+        static h (a) { a.f().n = 1 }
       }
-      const options = { _recordableTarget: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true, _smartAPI: true }
       const A2 = makeCode(A, options)
       const B2 = makeCode(B, options)
       testRecord(() => expect(B2.g(A2)).to.equal(true))
+      testRecord(() => expect(() => B2.h(A2)).to.throw())
     })
 
     // ------------------------------------------------------------------------
 
-    it('returns naked object to external jig after internal create and no claim', () => {
+    it('returns unclaimed as naked to another jig', () => {
       class A {
         static f () {
           return {}
@@ -2340,7 +2395,7 @@ describe('Membrane', () => {
           o.n = 2
         }
       }
-      const options = { _recordableTarget: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true, _smartAPI: true }
       const A2 = makeCode(A, options)
       const B2 = makeCode(B, options)
       testRecord(() => B2.g(A2))
@@ -2348,7 +2403,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('returns naked circular object to external jig after internal create and no claim', () => {
+    it('returns circular unclaimed as naked to another jig', () => {
       class A {
         static f () {
           const o = {}
@@ -2359,18 +2414,19 @@ describe('Membrane', () => {
       class B {
         static g (a) {
           const o = a.f()
-          o.n = 2
+          o.n = 2 // Test unclaimed
+          return o === o.o
         }
       }
-      const options = { _recordableTarget: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true, _smartAPI: true }
       const A2 = makeCode(A, options)
       const B2 = makeCode(B, options)
-      testRecord(() => B2.g(A2))
+      expect(testRecord(() => B2.g(A2))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it('returns inner membrane to external jig after internal create and claim inner', () => {
+    it('returns pending inner wrapped in naked to another jig', () => {
       class A {
         static f () {
           const o = {}
@@ -2385,16 +2441,21 @@ describe('Membrane', () => {
           p.n = 2 // Test unclaimed
           return p.o === a.o
         }
+
+        static h (a) {
+          a.f().p.n = 3
+        }
       }
       const options = { _recordableTarget: true, _recordCalls: true, _smartAPI: true }
       const A2 = makeCode(A, options)
       const B2 = makeCode(B, options)
-      testRecord(() => expect(B2.g(A2)).to.equal(true))
+      expect(testRecord(() => B2.g(A2))).to.equal(true)
+      expect(() => testRecord(() => B2.h(A2))).to.throw()
     })
 
     // ------------------------------------------------------------------------
 
-    it('returns membrane object to external jig after internal create and claim in intrinsic', () => {
+    it('returns pending inner stored in naked intrinsic to another jig', () => {
       class A {
         static f () {
           const o = {}
@@ -2414,7 +2475,7 @@ describe('Membrane', () => {
           return p.get(1) === a.o && p.get(2) === a.s
         }
       }
-      const options = { _recordableTarget: true, _recordCalls: true }
+      const options = { _recordableTarget: true, _recordCalls: true, _smartAPI: true }
       const A2 = makeCode(A, options)
       const B2 = makeCode(B, options)
       testRecord(() => expect(B2.g(A2)).to.equal(true))
@@ -2422,7 +2483,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('naked set to pending and returns as membrane', () => {
+    it('set naked to pending becomes pending', () => {
       class A {
         static f () {
           const x = { }
@@ -2440,7 +2501,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('foreign set to pending is copied after return', () => {
+    it('foreign set to pending is cloned', () => {
       class A { }
       A.x = { }
       const CA = makeCode(A, { _smartAPI: true })
@@ -2456,13 +2517,19 @@ describe('Membrane', () => {
           this.y.x.n = 1
         }
       }
-      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const Byx = testRecord(() => CB.f(CA))
       expect(Byx).to.equal(CA.x)
       expect(B.y.x).not.to.equal(CA.x)
       testRecord(() => CB.g())
       expect(CB.y.x.n).to.equal(1)
       expect(typeof CA.x.n).to.equal('undefined')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('foreign set to pending inner is cloned', () => {
+      // TODO
     })
 
     // ------------------------------------------------------------------------
@@ -2488,7 +2555,27 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws for unserializable naked set to pending', () => {
+    it('owned set to pending is kept intact', () => {
+      class A {
+        static f () {
+          this.x = { }
+        }
+
+        static g () {
+          this.y = { }
+          this.y.x = this.x
+          return this.y.x === this.x
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      testRecord(() => CA.f())
+      expect(testRecord(() => CA.g())).to.equal(true)
+      expect(CA.y.x).to.equal(CA.x)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if unserializable set to pending', () => {
       class A {
         static f () {
           const x = {}
@@ -2502,18 +2589,75 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('return foreign property without claim', () => {
-      class A { }
-      A.x = { }
-      const CA = makeCode(A)
-      class B {
-        static f (CA) {
-          return CA.x
-        }
-      }
-      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
-      const x = testRecord(() => CB.f(CA))
-      expect(x).to.equal(CA.x)
+    it.skip('throws if unserializable set to pending inner', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if reserved set to pending', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('set private to pending', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('assign cow args to pending', () => {
+      // TODO
+      // use before and after
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('assign cow args to pending inner', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('assign pending to unclaimed cow args returned', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('assign pending to claimed cow args stored in pending', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('foreign set to circular cow args in pending inner is cloned', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('pending cow args with owned prop is kept intact', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set object with getter to pending', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set object with setter to pending', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set non-configurable object to pending', () => {
+      // TODO
     })
   })
 
