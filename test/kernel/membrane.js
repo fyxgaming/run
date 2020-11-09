@@ -2584,25 +2584,111 @@ describe('Membrane', () => {
         }
       }
       const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true })
-      expect(() => testRecord(() => CA.f())).to.throw('Not serializable')
+      expect(() => testRecord(() => CA.f())).to.throw('Not serializable: [object WeakMap]')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if unserializable set to pending inner', () => {
+    it('throws if unserializable set to pending inner', () => {
+      class A {
+        static f () {
+          this.x = {}
+          this.g()
+        }
+
+        static g () {
+          this.x.y = new WeakSet()
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true })
+      expect(() => testRecord(() => CA.f())).to.throw('Not serializable: [object WeakSet]')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if unserializable set to pending cow args', () => {
+      class B {
+        static f (CA) {
+          this.arr = []
+          CA.g(this.arr)
+        }
+      }
+      class A {
+        static g (arr) {
+          arr.push(function h () { })
+          this.arr = arr
+        }
+      }
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      expect(() => testRecord(() => CB.f(CA))).to.throw('Not serializable: h')
+      expect(CB.arr.length).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if reserved set symbol prop to pending', () => {
+      class A {
+        static f () {
+          const o = {}
+          this.x = o
+          o[Symbol.hasInstance] = 1
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _reserved: true })
+      expect(() => testRecord(() => CA.f())).to.throw('Symbol properties not supported')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if set object with getter to pending', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if reserved set to pending', () => {
+    it.skip('throws if set object with setter to pending', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('set private to pending', () => {
+    it.skip('throws if set non-configurable object to pending cow arg', () => {
       // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('may set reserved to pending inner', () => {
+      class A {
+        static f () {
+          const o = {}
+          o.p = new Set()
+          this.x = o
+          o.p.blocktime = 123
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _reserved: true })
+      testRecord(() => CA.f())
+      expect(CA.x.p.blocktime).to.equal(123)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('may set private to pending', () => {
+      class A {
+        static f () {
+          const o = {}
+          this.x = o
+          o._n = 1
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _privacy: true })
+      testRecord(() => CA.f())
+      expect(CA.x._n).to.equal(1)
+      class B { static g (CA) { return CA.x._n } }
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
+      expect(() => testRecord(() => CB.g(CA))).to.throw('Cannot get private property _n')
     })
 
     // ------------------------------------------------------------------------
@@ -2639,24 +2725,6 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it.skip('pending cow args with owned prop is kept intact', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if set object with getter to pending', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if set object with setter to pending', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if set non-configurable object to pending', () => {
       // TODO
     })
   })
