@@ -2641,19 +2641,68 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set object with getter to pending', () => {
+    it('may define to pending', () => {
+      class A {
+        static f () {
+          const o = {}
+          this.x = o
+          const desc = { configurable: true, enumerable: true, writable: true, value: [] }
+          Object.defineProperty(o, 'arr', desc)
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      testRecord(() => CA.f())
+      expect(CA.x.arr).to.deep.equal([])
+      expect(() => CA.x.arr.push(1)).to.throw('Attempt to update A outside of a method')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if define getter to pending', () => {
+      class A {
+        static f () {
+          const o = {}
+          this.x = o
+          const desc = { configurable: true, enumerable: true, get: () => 1 }
+          Object.defineProperty(o, 'n', desc)
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true })
+      expect(() => testRecord(() => CA.f())).to.throw('Descriptor must have a value')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if define setter to pending inner', () => {
+      class A {
+        static f () {
+          const o = {}
+          const p = new Map()
+          this.x = o
+          o.p = p
+          const desc = { configurable: true, enumerable: true, set: () => 1 }
+          Object.defineProperty(p, 'n', desc)
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true })
+      expect(() => testRecord(() => CA.f())).to.throw('Descriptor must have a value')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if define non-configurable to pending cow arg', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set object with setter to pending', () => {
+    it.skip('throws if define non-enumerable to pending in pending cow arg', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if set non-configurable object to pending cow arg', () => {
+    it.skip('throws if define non-writable to pending inner cow arg', () => {
       // TODO
     })
 
