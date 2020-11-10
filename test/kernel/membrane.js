@@ -2690,20 +2690,38 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if define non-configurable to pending cow arg', () => {
-      // TODO
+    it('throws if define non-configurable to pending cow arg', () => {
+      class B { static f (CA) { CA.g({}) }}
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
+      class A {
+        static g (o) {
+          this.x = o
+          const desc = { configurable: false, enumerable: true, writable: true, value: 1 }
+          Object.defineProperty(o, 'n', desc)
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      expect(() => testRecord(() => CB.f(CA))).to.throw('Descriptor must be configurable')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if define non-enumerable to pending in pending cow arg', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if define non-writable to pending inner cow arg', () => {
-      // TODO
+    it('throws if define non-writable to pending in pending inner cow arg', () => {
+      class B { static f (CA) { CA.g({}) }}
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
+      class A {
+        static g (o) {
+          const x = { }
+          this.x = x
+          x.o = o
+          const p = {}
+          o.p = p
+          const desc = { configurable: true, enumerable: true, writable: false, value: 1 }
+          Object.defineProperty(p, 'n', desc)
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      expect(() => testRecord(() => CB.f(CA))).to.throw('Descriptor must be writable')
     })
 
     // ------------------------------------------------------------------------
