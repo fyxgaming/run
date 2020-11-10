@@ -2760,15 +2760,52 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('assign cow args to pending', () => {
-      // TODO
-      // use before and after
+    it('assign cow args to pending', () => {
+      class B {
+        static f (CA) {
+          this.o = {}
+          CA.g(this.o)
+        }
+      }
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
+
+      class A {
+        static g (o) {
+          this.o = o
+          o.n = 1
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      testRecord(() => CB.f(CA))
+      expect(CA.o.n).to.equal(1)
+      expect(typeof CB.o.n).to.equal('undefined')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('assign cow args to pending inner', () => {
-      // TODO
+    it('assign cow args to pending inner', () => {
+      class B {
+        static f (CA) {
+          this.o = {}
+          CA.g(this.o)
+        }
+      }
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
+
+      class A {
+        static g (o) {
+          const p = new Map()
+          p.set('a', o)
+          o.n = 1
+          this.p = p
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      testRecord(() => CB.f(CA))
+      expect(typeof CB.o.n).to.equal('undefined')
+      expect(CA.p.get('a').n).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
