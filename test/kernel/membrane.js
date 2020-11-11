@@ -2924,6 +2924,30 @@ describe('Membrane', () => {
       testRecord(() => CB.f(CA))
       expect(CA.x.o.arr).to.equal(CA.arr)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('unclaimed cow args return are same', () => {
+      class B {
+        static f (CA) {
+          const o = {}
+          console.log('1')
+          return CA.g(o) === o
+        }
+      }
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      class A {
+        static g (o) {
+          console.log('2')
+          return o
+        }
+      }
+      A.arr = []
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      expect(testRecord(() => CB.f(CA))).to.equal(true)
+    })
   })
 
   // --------------------------------------------------------------------------
