@@ -2726,6 +2726,24 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if define non-writable to pending in pending cow arg', () => {
+      class B { static f (CA) { CA.g({}) }}
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
+      class A {
+        static g (o) {
+          const p = {}
+          o.p = p
+          const desc = { configurable: true, enumerable: false, writable: true, value: 1 }
+          Object.defineProperty(p, 'n', desc)
+          this.o = o
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      expect(() => testRecord(() => CB.f(CA))).to.throw('Descriptor must be enumerable')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('may set reserved to pending inner', () => {
       class A {
         static f () {
@@ -2810,26 +2828,101 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('assign pending to unclaimed cow args returned', () => {
-      // TODO
+    it('assign pending to unclaimed cow args returned', () => {
+      class B {
+        static f (CA) {
+          const p = {}
+          const o = CA.g(p)
+          const q = { n: 1 }
+          o.q = q
+          this.o = o
+        }
+      }
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      class A {
+        static g (o) {
+          return o
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      testRecord(() => CB.f(CA))
+      expect(CB.o.q.n).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('assign pending to claimed cow args stored in pending', () => {
-      // TODO
+    it('assign pending to claimed cow args stored in pending', () => {
+      class B {
+        static f (CA) {
+          const o = {}
+          CA.g(o)
+          return typeof o.q === 'undefined'
+        }
+      }
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      class A {
+        static g (o) {
+          const p = { o }
+          this.p = p
+          o.q = { n: 1 }
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      expect(testRecord(() => CB.f(CA))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('foreign set to circular cow args in pending inner is cloned', () => {
-      // TODO
+    it('foreign set to circular cow args in pending inner is cloned', () => {
+      class B {
+        static f (CA) {
+          this.arr = []
+          const o = {}
+          o.o = o
+          CA.g(o, this)
+        }
+      }
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      class A {
+        static g (o, CB) {
+          o.arr = CB.arr
+          o.arr.push(1)
+          this.o = o
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      testRecord(() => CB.f(CA))
+      expect(CA.o.arr.length).to.equal(1)
+      expect(CB.arr.length).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('pending cow args with owned prop is kept intact', () => {
-      // TODO
+    it('pending cow args with owned prop is kept intact', () => {
+      class B {
+        static f (CA) {
+          CA.g({})
+        }
+      }
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      class A {
+        static g (o) {
+          o.arr = this.arr
+          this.x = { o }
+        }
+      }
+      A.arr = []
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      testRecord(() => CB.f(CA))
+      expect(CA.x.o.arr).to.equal(CA.arr)
     })
   })
 
