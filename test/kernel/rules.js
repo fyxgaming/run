@@ -20,7 +20,7 @@ describe('Rules', () => {
   describe('jig code', () => {
     it('creates rules', () => {
       const rules = unmangle(Rules._jigCode())
-      expect(rules._parentJig).to.equal(null)
+      expect(rules._creation).to.equal(undefined)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
       expect(rules._creationBindings).to.equal(true)
@@ -48,7 +48,7 @@ describe('Rules', () => {
     it('creates rules', () => {
       const isClass = Math.random() < 0.5
       const rules = unmangle(Rules._sidekickCode(isClass))
-      expect(rules._parentJig).to.equal(null)
+      expect(rules._creation).to.equal(undefined)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
       expect(rules._creationBindings).to.equal(true)
@@ -75,7 +75,7 @@ describe('Rules', () => {
   describe('native code', () => {
     it('creates rules', () => {
       const rules = unmangle(Rules._nativeCode())
-      expect(rules._parentJig).to.equal(null)
+      expect(rules._creation).to.equal(undefined)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
       expect(rules._creationBindings).to.equal(true)
@@ -102,7 +102,7 @@ describe('Rules', () => {
   describe('jig object', () => {
     it('creates rules', () => {
       const rules = unmangle(Rules._jigObject())
-      expect(rules._parentJig).to.equal(null)
+      expect(rules._creation).to.equal(undefined)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
       expect(rules._creationBindings).to.equal(true)
@@ -129,7 +129,7 @@ describe('Rules', () => {
   describe('berry object', () => {
     it('creates rules', () => {
       const rules = unmangle(Rules._berryObject())
-      expect(rules._parentJig).to.equal(null)
+      expect(rules._creation).to.equal(undefined)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
       expect(rules._creationBindings).to.equal(true)
@@ -156,7 +156,7 @@ describe('Rules', () => {
   describe('cow', () => {
     it('creates rules', () => {
       const rules = unmangle(Rules._cow())
-      expect(rules._parentJig).to.equal(null)
+      expect(rules._creation).to.equal(null)
       expect(rules._admin).to.equal(true)
       expect(rules._errors).to.equal(true)
       expect(rules._creationBindings).to.equal(false)
@@ -199,10 +199,10 @@ describe('Rules', () => {
         _recordableTarget: Math.random() < 0.5,
         _smartAPI: Math.random() < 0.5
       }
-      const parentJig = new Membrane({}, mangle(Object.assign({}, parentRules)))
+      const creation = new Membrane({}, mangle(Object.assign({}, parentRules)))
       const method = false
-      const rules = unmangle(Rules._childProperty(parentJig, method))
-      expect(rules._parentJig).to.equal(parentJig)
+      const rules = unmangle(Rules._childProperty(creation, method))
+      expect(rules._creation).to.equal(creation)
       expect(rules._admin).to.equal(parentRules._admin)
       expect(rules._errors).to.equal(parentRules._errors)
       expect(rules._creationBindings).to.equal(false)
@@ -224,8 +224,8 @@ describe('Rules', () => {
     })
 
     it('method are immutable', () => {
-      const parentJig = new Membrane({})
-      const rules = unmangle(Rules._childProperty(parentJig, true))
+      const creation = new Membrane({})
+      const rules = unmangle(Rules._childProperty(creation, true))
       expect(rules._immutable).to.equal(true)
     })
   })

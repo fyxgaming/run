@@ -517,7 +517,7 @@ describe('Membrane', () => {
       expect(Object.getPrototypeOf(f)).to.equal(g)
       const m = new Map()
       const o = {}
-      const m2 = new Membrane(m, mangle({ _admin: true, _parentJig: f }))
+      const m2 = new Membrane(m, mangle({ _admin: true, _creation: f }))
       const mset = m2.set
       const mhas = m2.has
       const mget = m2.get
@@ -545,7 +545,7 @@ describe('Membrane', () => {
     it('throws if use jig that has errors', () => {
       const A = new Membrane(class A { }, mangle({ _errors: true }))
       const f = new Membrane(function f () {}, mangle({ _errors: true }))
-      const m = new Membrane(new Map(), mangle({ _parentJig: A, _errors: true }))
+      const m = new Membrane(new Map(), mangle({ _creation: A, _errors: true }))
 
       const mset = m.set
       const mclear = m.clear
@@ -581,7 +581,7 @@ describe('Membrane', () => {
     it('throws if inner objects jig has errors', () => {
       const jig = new Membrane(class A { })
       jig.location = 'error://hello'
-      const o = new Membrane({}, mangle({ _parentJig: jig, _errors: true }))
+      const o = new Membrane({}, mangle({ _creation: jig, _errors: true }))
       expect(() => o.n).to.throw('hello')
     })
 
@@ -823,7 +823,7 @@ describe('Membrane', () => {
 
     it('set inner object creation binding properties', () => {
       const jig = new Membrane(class A { }, mangle({ _creationBindings: true }))
-      const o = new Membrane({}, mangle({ _parentJig: jig }))
+      const o = new Membrane({}, mangle({ _creation: jig }))
       o.location = 'abc_o1'
       o.nonce = 'bad nonce'
     })
@@ -850,7 +850,7 @@ describe('Membrane', () => {
 
     it('can delete inner object creation bindings', () => {
       const jig = new Membrane(class A { }, mangle({ _creationBindings: true }))
-      const o = new Membrane({}, mangle({ _parentJig: jig }))
+      const o = new Membrane({}, mangle({ _creation: jig }))
       delete o.location
       delete o.origin
       delete o.nonce
@@ -872,7 +872,7 @@ describe('Membrane', () => {
 
     it('get descriptor for creation bindings on inner objects', () => {
       const jig = new Membrane(class A { }, mangle({ _creationBindings: true }))
-      const o = new Membrane({}, mangle({ _admin: true, _parentJig: jig }))
+      const o = new Membrane({}, mangle({ _admin: true, _creation: jig }))
       _sudo(() => { o.location = [] })
       _sudo(() => { o.origin = null })
       _sudo(() => { o.nonce = new Set() })
@@ -978,7 +978,7 @@ describe('Membrane', () => {
 
     it('set inner object creation utxo properties', () => {
       const jig = new Membrane(class A { }, mangle({ _utxoBindings: true }))
-      const o = new Membrane({}, mangle({ _parentJig: jig }))
+      const o = new Membrane({}, mangle({ _creation: jig }))
       o.owner = DUMMY_OWNER
       o.satoshis = 123
     })
@@ -1019,7 +1019,7 @@ describe('Membrane', () => {
 
     it('can delete inner object utxo bindings', () => {
       const jig = new Membrane(class A { }, mangle({ _utxoBindings: true }))
-      const o = new Membrane({}, mangle({ _parentJig: jig }))
+      const o = new Membrane({}, mangle({ _creation: jig }))
       delete o.owner
       delete o.satoshis
     })
@@ -1038,7 +1038,7 @@ describe('Membrane', () => {
 
     it('get descriptor for utxo bindings on inner objects', () => {
       const jig = new Membrane(class A { }, mangle({ _utxoBindings: true }))
-      const o = new Membrane({}, mangle({ _admin: true, _parentJig: jig }))
+      const o = new Membrane({}, mangle({ _admin: true, _creation: jig }))
       _sudo(() => { o.owner = false })
       _sudo(() => { o.satoshis = -1000 })
       expect(Object.getOwnPropertyDescriptor(o, 'owner').value).to.equal(false)
@@ -1846,7 +1846,7 @@ describe('Membrane', () => {
       const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       class A { static f (b) { return b._n } }
       const a = makeCode(A, options)
-      const b = makeJig({ _n: 1 }, Object.assign({ _parentJig: a }, options))
+      const b = makeJig({ _n: 1 }, Object.assign({ _creation: a }, options))
       expect(testRecord(() => a.f(b))).to.equal(1)
     })
 
@@ -2091,7 +2091,7 @@ describe('Membrane', () => {
     it('clones other membrane objects', () => {
       const a = makeJig({})
       const o = { n: 1 }
-      const b = new Membrane(o, mangle({ _parentJig: a }))
+      const b = new Membrane(o, mangle({ _creation: a }))
       const args = makeJig([b], { _cow: true })
       expect(args[0]).to.equal(b)
       args.push(1)
@@ -2107,7 +2107,7 @@ describe('Membrane', () => {
   describe('Ownership', () => {
     it('set copies object owned by another jig', () => {
       const a = makeJig({})
-      const ai = new Membrane({}, mangle({ _parentJig: a }))
+      const ai = new Membrane({}, mangle({ _creation: a }))
       const b = makeJig({})
       b.n = ai
       b.n.m = 1
@@ -2122,7 +2122,7 @@ describe('Membrane', () => {
 
     it('set copies inner prop owned by another jig', () => {
       const a = makeJig({})
-      const ai = new Membrane({}, mangle({ _parentJig: a }))
+      const ai = new Membrane({}, mangle({ _creation: a }))
       const b = makeJig({})
       b.n = [ai]
       b.n[0].m = 1
@@ -2135,7 +2135,7 @@ describe('Membrane', () => {
 
     it('defineProperty copies object owned by another jig', () => {
       const a = makeJig({})
-      const ai = new Membrane(new Set([1, 2, 3]), mangle({ _parentJig: a }))
+      const ai = new Membrane(new Set([1, 2, 3]), mangle({ _creation: a }))
       const b = makeJig({})
       const desc = { value: ai, configurable: true, enumerable: true, writable: true }
       Object.defineProperty(b, 'n', desc)
@@ -2151,9 +2151,9 @@ describe('Membrane', () => {
 
     it('defineProperty copies inner prop owned by another jig', () => {
       const a = makeJig({})
-      const ai = new Membrane({}, mangle({ _parentJig: a }))
+      const ai = new Membrane({}, mangle({ _creation: a }))
       const b = makeJig({})
-      const bi = new Membrane({}, mangle({ _parentJig: b }))
+      const bi = new Membrane({}, mangle({ _creation: b }))
       const desc = { value: bi, configurable: true, enumerable: true, writable: true }
       Object.defineProperty(ai, 'n', desc)
       ai.m = 1
@@ -2165,7 +2165,7 @@ describe('Membrane', () => {
 
     it('intrinsicIn copies object owned by another jig', () => {
       const a = makeJig({})
-      const ai = new Membrane({}, mangle({ _parentJig: a }))
+      const ai = new Membrane({}, mangle({ _creation: a }))
       const b = makeJig(new Map())
       b.set(1, ai)
       b.get(1).m = 1
@@ -2178,7 +2178,7 @@ describe('Membrane', () => {
 
     it('intrinsicIn copies inner prop owned by another jig', () => {
       const a = makeJig({})
-      const ai = new Membrane({}, mangle({ _parentJig: a }))
+      const ai = new Membrane({}, mangle({ _creation: a }))
       const b = makeJig(new Set())
       b.add({ ai })
       Array.from(b)[0].ai.n = 1
@@ -2191,7 +2191,7 @@ describe('Membrane', () => {
 
     it('set allowed if owned by us', () => {
       const a = makeJig({})
-      const ai = new Membrane({}, mangle({ _parentJig: a }))
+      const ai = new Membrane({}, mangle({ _creation: a }))
       a.n = ai
       a.o = { ai }
       a.n.m = 1
@@ -2202,7 +2202,7 @@ describe('Membrane', () => {
 
     it('defineProperty allowed if owned by us', () => {
       const a = makeJig({})
-      const b = new Membrane({}, mangle({ _parentJig: a }))
+      const b = new Membrane({}, mangle({ _creation: a }))
       const desc = { value: b, configurable: true, enumerable: true, writable: true }
       Object.defineProperty(a, 'n', desc)
     })
@@ -2211,7 +2211,7 @@ describe('Membrane', () => {
 
     it('intrinsicIn allowed if owned by us', () => {
       const a = makeJig(new Set())
-      const b = new Membrane({}, mangle({ _parentJig: a }))
+      const b = new Membrane({}, mangle({ _creation: a }))
       a.add(b)
     })
 
