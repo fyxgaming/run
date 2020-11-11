@@ -15,7 +15,7 @@ const {
   _basicObject, _basicArray, _basicSet, _basicMap, _basicUint8Array, _arbitraryObject,
   _defined, _intrinsic, _serializable, _protoLen, _anonymizeSourceCode,
   _deanonymizeSourceCode, _anonymous, _getOwnProperty, _hasOwnProperty, _setOwnProperty,
-  _ownGetters, _ownMethods, _sameJig, _hasJig, _addJigs, _subtractJigs, _limit, _Timeout,
+  _ownGetters, _ownMethods, _sameCreation, _hasCreation, _addCreations, _subtractCreations, _limit, _Timeout,
   _deterministicJSONStringify, _deterministicCompareKeys, _negativeZero
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
@@ -738,14 +738,14 @@ describe('Misc', () => {
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _sameJig
+  // _sameCreation
   // ----------------------------------------------------------------------------------------------
 
-  describe('_sameJig', () => {
+  describe('_sameCreation', () => {
     it('true if same', () => {
       const run = new Run()
       const A = run.deploy(class A { })
-      expect(_sameJig(A, A)).to.equal(true)
+      expect(_sameCreation(A, A)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -755,7 +755,7 @@ describe('Misc', () => {
       const A = run.deploy(class A { })
       await A.sync()
       const A2 = await run.load(A.location)
-      expect(_sameJig(A, A2)).to.equal(true)
+      expect(_sameCreation(A, A2)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -767,8 +767,8 @@ describe('Misc', () => {
       const a = new A()
       const a2 = new A()
       const b = new B()
-      expect(_sameJig(a, a2)).to.equal(false)
-      expect(_sameJig(a, b)).to.equal(false)
+      expect(_sameCreation(a, a2)).to.equal(false)
+      expect(_sameCreation(a, b)).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -780,19 +780,19 @@ describe('Misc', () => {
       a.auth()
       await a.sync()
       const a2 = await run.load(a.origin)
-      expect(() => _sameJig(a, a2)).to.throw('Inconsistent worldview')
+      expect(() => _sameCreation(a, a2)).to.throw('Inconsistent worldview')
     })
 
     // ------------------------------------------------------------------------
 
     it('false if non-jig', () => {
-      expect(_sameJig({}, {})).to.equal(false)
-      expect(_sameJig(null, null)).to.equal(false)
+      expect(_sameCreation({}, {})).to.equal(false)
+      expect(_sameCreation(null, null)).to.equal(false)
       class A { }
-      expect(_sameJig(A, A)).to.equal(false)
+      expect(_sameCreation(A, A)).to.equal(false)
       const run = new Run()
       const A2 = run.deploy(A)
-      expect(_sameJig(A2, {})).to.equal(false)
+      expect(_sameCreation(A2, {})).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -801,8 +801,8 @@ describe('Misc', () => {
       const run = new Run()
       const A = Run.install(class A { })
       const B = run.deploy(class B { })
-      expect(_sameJig(A, B)).to.equal(false)
-      expect(_sameJig(B, A)).to.equal(false)
+      expect(_sameCreation(A, B)).to.equal(false)
+      expect(_sameCreation(B, A)).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -814,7 +814,7 @@ describe('Misc', () => {
       await CB.sync()
       const b = await CB.load('abc')
       const b2 = await CB.load('abc')
-      expect(_sameJig(b, b2)).to.equal(true)
+      expect(_sameCreation(b, b2)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -827,18 +827,18 @@ describe('Misc', () => {
 
       const b = await CB.load('abc')
       const b2 = await CB.load('def')
-      expect(_sameJig(b, b2)).to.equal(false)
+      expect(_sameCreation(b, b2)).to.equal(false)
 
       class C extends Berry { }
       const CC = run.deploy(C)
       await CC.sync()
 
       const c = await C.load('abc')
-      expect(_sameJig(b, c)).to.equal(false)
+      expect(_sameCreation(b, c)).to.equal(false)
 
       const b3 = { location: `${CB.location}_abc` }
       Object.setPrototypeOf(b3, CB.prototype)
-      expect(_sameJig(b, b3)).to.equal(false)
+      expect(_sameCreation(b, b3)).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -848,27 +848,27 @@ describe('Misc', () => {
       class B extends Berry { }
       const b = await B.load('abc')
       const b2 = await B.load('abc')
-      expect(_sameJig(b, b2)).to.equal(false)
+      expect(_sameCreation(b, b2)).to.equal(false)
     })
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _hasJig
+  // _hasCreation
   // ----------------------------------------------------------------------------------------------
 
-  describe('_hasJig', () => {
+  describe('_hasCreation', () => {
     it('returns true if jig in array', () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
       const a = new A()
-      expect(_hasJig([a], a)).to.equal(true)
+      expect(_hasCreation([a], a)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('returns false for nonjig', () => {
       const o = { }
-      expect(_hasJig([o], o)).to.equal(false)
+      expect(_hasCreation([o], o)).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -877,7 +877,7 @@ describe('Misc', () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
       const a = new A()
-      expect(_hasJig([{}], a)).to.equal(false)
+      expect(_hasCreation([{}], a)).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -889,15 +889,15 @@ describe('Misc', () => {
       a.auth()
       await a.sync()
       const a2 = await run.load(a.origin)
-      expect(() => _hasJig([a], a2)).to.throw('Inconsistent worldview')
+      expect(() => _hasCreation([a], a2)).to.throw('Inconsistent worldview')
     })
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _addJigs
+  // _addCreations
   // ----------------------------------------------------------------------------------------------
 
-  describe('_addJigs', () => {
+  describe('_addCreations', () => {
     it('adds jigs once', async () => {
       const run = new Run()
       class A extends Jig { }
@@ -906,7 +906,7 @@ describe('Misc', () => {
       const a2 = await run.load(a.location)
       const arr = [a]
       const b = new A()
-      expect(_addJigs(arr, [a2, b])).to.deep.equal([a, b])
+      expect(_addCreations(arr, [a2, b])).to.deep.equal([a, b])
     })
 
     // ------------------------------------------------------------------------
@@ -918,15 +918,15 @@ describe('Misc', () => {
       a.auth()
       await a.sync()
       const a2 = await run.load(a.origin)
-      expect(() => _addJigs([a], [a2])).to.throw('Inconsistent worldview')
+      expect(() => _addCreations([a], [a2])).to.throw('Inconsistent worldview')
     })
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _subtractJigs
+  // _subtractCreations
   // ----------------------------------------------------------------------------------------------
 
-  describe('_subtractJigs', () => {
+  describe('_subtractCreations', () => {
     it('removes same jigs', async () => {
       const run = new Run()
       class A extends Jig { }
@@ -935,7 +935,7 @@ describe('Misc', () => {
       const a2 = await run.load(a.location)
       const b = new A()
       const arr = [a, b]
-      expect(_subtractJigs(arr, [a2, b])).to.deep.equal([])
+      expect(_subtractCreations(arr, [a2, b])).to.deep.equal([])
     })
 
     // ------------------------------------------------------------------------
@@ -947,7 +947,7 @@ describe('Misc', () => {
       a.auth()
       await a.sync()
       const a2 = await run.load(a.origin)
-      expect(() => _subtractJigs([a], [a2])).to.throw('Inconsistent worldview')
+      expect(() => _subtractCreations([a], [a2])).to.throw('Inconsistent worldview')
     })
   })
 
