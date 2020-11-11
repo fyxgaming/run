@@ -2931,10 +2931,10 @@ describe('Membrane', () => {
       class B {
         static f (CA) {
           const o = {}
-          console.log('1')
           return CA.g(o) === o
         }
       }
+
       const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
 
       class A {
@@ -2943,7 +2943,29 @@ describe('Membrane', () => {
           return o
         }
       }
-      A.arr = []
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      expect(testRecord(() => CB.f(CA))).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('claimed cow args return are same', () => {
+      class B {
+        static f (CA) {
+          return CA.g(this.arr) === this.arr
+        }
+      }
+      B.arr = []
+
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      class A {
+        static g (o) {
+          console.log('2')
+          return o
+        }
+      }
       const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
 
       expect(testRecord(() => CB.f(CA))).to.equal(true)
