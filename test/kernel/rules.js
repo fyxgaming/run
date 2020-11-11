@@ -22,7 +22,6 @@ describe('Rules', () => {
       const rules = unmangle(Rules._jigCode())
       expect(rules._creation).to.equal(undefined)
       expect(rules._admin).to.equal(true)
-      expect(rules._errors).to.equal(true)
       expect(rules._creationBindings).to.equal(true)
       expect(rules._utxoBindings).to.equal(true)
       expect(rules._reserved).to.equal(true)
@@ -50,7 +49,6 @@ describe('Rules', () => {
       const rules = unmangle(Rules._sidekickCode(isClass))
       expect(rules._creation).to.equal(undefined)
       expect(rules._admin).to.equal(true)
-      expect(rules._errors).to.equal(true)
       expect(rules._creationBindings).to.equal(true)
       expect(rules._utxoBindings).to.equal(true)
       expect(rules._reserved).to.equal(true)
@@ -77,7 +75,6 @@ describe('Rules', () => {
       const rules = unmangle(Rules._nativeCode())
       expect(rules._creation).to.equal(undefined)
       expect(rules._admin).to.equal(true)
-      expect(rules._errors).to.equal(true)
       expect(rules._creationBindings).to.equal(true)
       expect(rules._utxoBindings).to.equal(true)
       expect(rules._reserved).to.equal(false)
@@ -104,7 +101,6 @@ describe('Rules', () => {
       const rules = unmangle(Rules._jigObject())
       expect(rules._creation).to.equal(undefined)
       expect(rules._admin).to.equal(true)
-      expect(rules._errors).to.equal(true)
       expect(rules._creationBindings).to.equal(true)
       expect(rules._utxoBindings).to.equal(true)
       expect(rules._reserved).to.equal(true)
@@ -131,7 +127,6 @@ describe('Rules', () => {
       const rules = unmangle(Rules._berryObject())
       expect(rules._creation).to.equal(undefined)
       expect(rules._admin).to.equal(true)
-      expect(rules._errors).to.equal(true)
       expect(rules._creationBindings).to.equal(true)
       expect(rules._utxoBindings).to.equal(false)
       expect(rules._reserved).to.equal(true)
@@ -158,7 +153,6 @@ describe('Rules', () => {
       const rules = unmangle(Rules._cow())
       expect(rules._creation).to.equal(null)
       expect(rules._admin).to.equal(true)
-      expect(rules._errors).to.equal(true)
       expect(rules._creationBindings).to.equal(false)
       expect(rules._utxoBindings).to.equal(false)
       expect(rules._reserved).to.equal(false)
@@ -184,7 +178,6 @@ describe('Rules', () => {
     it('creates rules', () => {
       const parentRules = {
         _admin: Math.random() < 0.5,
-        _errors: Math.random() < 0.5,
         _creationBindings: Math.random() < 0.5,
         _utxoBindings: Math.random() < 0.5,
         _reserved: Math.random() < 0.5,
@@ -204,7 +197,6 @@ describe('Rules', () => {
       const rules = unmangle(Rules._childProperty(creation, method))
       expect(rules._creation).to.equal(creation)
       expect(rules._admin).to.equal(parentRules._admin)
-      expect(rules._errors).to.equal(parentRules._errors)
       expect(rules._creationBindings).to.equal(false)
       expect(rules._utxoBindings).to.equal(false)
       expect(rules._reserved).to.equal(false)

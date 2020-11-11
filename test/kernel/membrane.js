@@ -543,9 +543,9 @@ describe('Membrane', () => {
 
   describe('Errors', () => {
     it('throws if use jig that has errors', () => {
-      const A = new Membrane(class A { }, mangle({ _errors: true }))
-      const f = new Membrane(function f () {}, mangle({ _errors: true }))
-      const m = new Membrane(new Map(), mangle({ _creation: A, _errors: true }))
+      const A = new Membrane(class A { })
+      const f = new Membrane(function f () {})
+      const m = new Membrane(new Map(), mangle({ _creation: A }))
 
       const mset = m.set
       const mclear = m.clear
@@ -578,7 +578,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if inner objects jig has errors', () => {
+    it('throws if inner objects has errors', () => {
       const jig = new Membrane(class A { })
       jig.location = 'error://hello'
       const o = new Membrane({}, mangle({ _creation: jig, _errors: true }))
@@ -896,7 +896,8 @@ describe('Membrane', () => {
 
     it('throws if get descriptor of partial berry location', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
-      _sudo(() => { A.location = `${DUMMY_TXID1}?berry=abc&version=5` })
+      _sudo(() => { A.location = `${DUMMY_TXID1}_o1?berry=abc&version=5` })
+      console.log(_sudo(() => A.location))
       expect(() => Object.getOwnPropertyDescriptor(A, 'location').value).to.throw('Cannot read location')
       expect(() => Object.getOwnPropertyDescriptor(A, 'origin').value).to.throw('Cannot read origin')
       expect(() => Object.getOwnPropertyDescriptor(A, 'nonce').value).to.throw('Cannot read nonce')
