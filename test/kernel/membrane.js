@@ -2099,6 +2099,24 @@ describe('Membrane', () => {
       expect(args[0]).not.to.equal(b)
       expect(args[1]).to.equal(1)
     })
+
+    // ------------------------------------------------------------------------
+
+    it.only('cow args passed as cow args', () => {
+      class A { static f (B, C) { B.g(C, {}) } }
+      class B { static g (C, obj) { C.h(obj) } }
+      class C {
+        static h (obj) {
+          console.log(obj)
+          console.log(Proxy2._getTarget(obj))
+          console.log(Proxy2._getTarget(Proxy2._getTarget(obj)))
+        }
+      }
+      const CA = makeCode(A, { _recordCalls: true, _recordableTarget: true, _smartAPI: true })
+      const CB = makeCode(B, { _recordCalls: true, _recordableTarget: true, _smartAPI: true })
+      const CC = makeCode(C, { _recordCalls: true, _recordableTarget: true, _smartAPI: true })
+      testRecord(() => CA.f(CB, CC))
+    })
   })
 
   // --------------------------------------------------------------------------
