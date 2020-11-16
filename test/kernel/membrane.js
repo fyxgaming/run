@@ -7,7 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig } = Run
+const { Jig, Code, Berry } = Run
 const unmangle = require('../env/unmangle')
 const { testRecord } = require('../env/misc')
 const { mangle } = unmangle
@@ -154,20 +154,21 @@ describe('Membrane', () => {
       const A = makeCode(class A { f () { } })
       const a = makeJig(new A())
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
-      expect(() => Object.defineProperty(a.f, 'n', desc)).to.throw('defineProperty disabled')
+      expect(() => Object.defineProperty(a.f, 'n', desc)).to.throw('Cannot define n: immutable')
     })
 
     // ------------------------------------------------------------------------
 
-    it('defineProperty on existing throws', () => {
+    it('defineProperty with partial descriptor throws', () => {
       const o = makeJig({})
       o.n = 1
-      expect(() => Object.defineProperty(o, 'n', { value: 2 })).to.throw()
+      const error = 'Descriptor must be configurable'
+      expect(() => Object.defineProperty(o, 'n', { value: 2 })).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('define __proto__ disabled', () => {
+    it('define __proto__ throws', () => {
       const a = makeJig({ })
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(a, '__proto__', desc)).to.throw('define __proto__ disabled')
@@ -212,6 +213,35 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('get object wrapped', () => {
+      class A { }
+      A.o = { }
+      const A2 = new Membrane(A)
+      expect(A2.o).not.to.equal(A.o)
+      expect(Proxy2._getTarget(A2.o)).to.equal(A.o)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get inner object wrapped once', () => {
+      class A { }
+      A.o = { }
+      A.p = { o: A.o }
+      const A2 = new Membrane(A)
+      expect(A2.p.o).not.to.equal(A.o)
+      expect(Proxy2._getTarget(A2.p.o)).to.equal(A.o)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get prototype property', () => {
+      class A { f () { } }
+      const a = new Membrane(new A())
+      expect(typeof a.f).to.equal('function')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('get intrinsic class not wrapped', () => {
       const s = new Membrane(new Set())
       expect(s.constructor).to.equal(Set)
@@ -249,6 +279,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    // Symbol props return directly because they are special and set only by Run.
     it('get returns symbol props directly', () => {
       class A { }
       const A2 = new Membrane(A)
@@ -268,14 +299,21 @@ describe('Membrane', () => {
     it('get an intrinsic property', () => {
       const A = new Membrane(class A { })
       expect(A.toString).to.equal(Function.prototype.toString)
+      const B = new Membrane([])
+      expect(B.length).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
 
     it('get returns the same method every time', () => {
-      const A = new Membrane(class A { f () { } })
-      const a = new Membrane(new A())
+      class A {
+        f () { }
+        static g () { }
+      }
+      const A2 = new Membrane(A)
+      const a = new Membrane(new A2())
       expect(a.f).to.equal(a.f)
+      expect(A2.g).to.equal(A2.g)
     })
 
     // ------------------------------------------------------------------------
@@ -323,11 +361,19 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('getPrototypeOf', () => {
+    it('getPrototypeOf class', () => {
       class B { }
       class A extends B { }
       const A2 = new Membrane(A)
       expect(Object.getPrototypeOf(A2)).to.equal(B)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('getPrototypeOf instance', () => {
+      class A { }
+      const a = new Membrane(new A())
+      expect(Object.getPrototypeOf(a)).to.equal(A.prototype)
     })
 
     // ------------------------------------------------------------------------
@@ -351,9 +397,13 @@ describe('Membrane', () => {
     it('ownKeys', () => {
       class A { }
       A.n = 1
+      A[0] = 2
+      A[1] = 3
+      A[10] = 4
+      A[2] = 5
       const A2 = new Membrane(A)
-      const keys = ['length', 'prototype', 'name', 'n'].sort()
-      expect(Reflect.ownKeys(A2).sort()).to.deep.equal(keys)
+      const keys = ['0', '1', '2', '10', 'length', 'n', 'name', 'prototype']
+      expect(Reflect.ownKeys(A2)).to.deep.equal(keys)
     })
 
     // ------------------------------------------------------------------------
@@ -369,6 +419,29 @@ describe('Membrane', () => {
       const m = new Membrane(class A { })
       m.n = 1
       expect(m.n).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set removes membrane for owned wrapped objects', () => {
+      const a = {}
+      const a2 = new Membrane(a)
+      const b = {}
+      const b2 = new Membrane(b, { _creation: a2 })
+      a2.b = b2
+      expect(a.b).to.equal(b)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set clones for unowned wrapped objects', () => {
+      const a = {}
+      const a2 = new Membrane(a)
+      const b = {}
+      const b2 = new Membrane(b, { _creation: makeCode(class A { }) })
+      a2.b = b2
+      expect(a.b).to.deep.equal(b)
+      expect(Proxy2._getTarget(a.b)).to.equal(undefined)
     })
 
     // ------------------------------------------------------------------------
@@ -396,7 +469,7 @@ describe('Membrane', () => {
     it('set disabled on methods', () => {
       const A = makeCode(class A { f () { } })
       const a = makeJig(new A())
-      expect(() => { a.f.n = 1 }).to.throw('set disabled')
+      expect(() => { a.f.n = 1 }).to.throw('Cannot set n: immutable')
     })
 
     // ------------------------------------------------------------------------
@@ -409,10 +482,42 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('setPrototypeOf disabled', () => {
+    it('set new with prototype', () => {
+      const b = {}
+      const a = {}
+      Object.setPrototypeOf(a, b)
+      const a2 = new Membrane(a)
+      a2.n = 1
+      expect(a.n).to.equal(1)
+      expect(typeof b.n).to.equal('undefined')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('set existing with prototype', () => {
+      const b = { n: 1 }
+      const a = {}
+      Object.setPrototypeOf(a, b)
+      const a2 = new Membrane(a)
+      a2.n = 2
+      expect(a.n).to.equal(2)
+      expect(b.n).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('setPrototypeOf disabled for class', () => {
       class A { }
       const A2 = new Membrane(A)
       expect(() => Object.setPrototypeOf(A2, class B { })).to.throw('setPrototypeOf disabled')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('setPrototypeOf disabled for instance', () => {
+      class A { }
+      const a = new Membrane(new A())
+      expect(() => Object.setPrototypeOf(a, {})).to.throw('setPrototypeOf disabled')
     })
 
     // ------------------------------------------------------------------------
@@ -431,11 +536,12 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('intrinsicIn removes membrane for objects', () => {
+    it('intrinsicIn removes membrane for owned wrapped objects', () => {
+      const A = makeCode(class A {})
       const o = {}
-      const o2 = new Membrane(o)
+      const o2 = new Membrane(o, { _creation: A })
       const s = new Set()
-      const s2 = new Membrane(s)
+      const s2 = new Membrane(s, { _creation: A })
       s2.add(o2)
       expect(s.has(o)).to.equal(true)
     })
@@ -581,7 +687,7 @@ describe('Membrane', () => {
     it('throws if inner objects has errors', () => {
       const jig = new Membrane(class A { })
       jig.location = 'error://hello'
-      const o = new Membrane({}, mangle({ _creation: jig, _errors: true }))
+      const o = new Membrane({}, mangle({ _creation: jig }))
       expect(() => o.n).to.throw('hello')
     })
 
@@ -596,6 +702,19 @@ describe('Membrane', () => {
       }
       const A2 = makeCode(A, options)
       expect(() => testRecord(() => A2.f())).to.throw('Cannot set location')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('cannot swallow errors from another jig', () => {
+      const M = makeCode(class C { })
+      const options = { _creation: M, _recordableTarget: true, _recordCalls: true, _creationBindings: true }
+      class A { static g () { } }
+      A.location = 'error://abc'
+      class B { static f (A2) { A2.g() } }
+      const A2 = makeCode(A, options)
+      const B2 = makeCode(B, options)
+      testRecord(() => B2.f(A2))
     })
   })
 
@@ -616,14 +735,15 @@ describe('Membrane', () => {
 
     it('get', () => {
       const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
-      expect(typeof f.sync).to.equal('function')
-      expect(typeof f.upgrade).to.equal('function')
-      expect(typeof f.destroy).to.equal('function')
-      expect(typeof f.auth).to.equal('function')
+      expect(f.sync).to.equal(Code.prototype.sync)
+      expect(f.upgrade).to.equal(Code.prototype.upgrade)
+      expect(f.destroy).to.equal(Code.prototype.destroy)
+      expect(f.auth).to.equal(Code.prototype.auth)
     })
 
     // ------------------------------------------------------------------------
 
+    // Because these methods are not owned by the creations
     it('getOwnPropertyDescriptor undefined', () => {
       const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
       expect(Object.getOwnPropertyDescriptor(f, 'sync')).to.equal(undefined)
@@ -684,15 +804,16 @@ describe('Membrane', () => {
     it('get', () => {
       const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
-      expect(typeof a.sync).to.equal('function')
-      expect(typeof a.destroy).to.equal('function')
-      expect(typeof a.auth).to.equal('function')
-      expect(typeof a.init).to.equal('function')
-      expect(typeof a.toString).to.equal('function')
+      expect(a.sync).to.equal(Jig.prototype.sync)
+      expect(a.destroy).to.equal(Jig.prototype.destroy)
+      expect(a.auth).to.equal(Jig.prototype.auth)
+      expect(a.init).to.equal(Jig.prototype.init)
+      expect(a.toString).to.equal(Jig.prototype.toString)
     })
 
     // ------------------------------------------------------------------------
 
+    // Because these methods are not owned by the jig itself
     it('getOwnPropertyDescriptor undefined', () => {
       const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
@@ -737,7 +858,7 @@ describe('Membrane', () => {
   describe('Berry methods', () => {
     it('has', () => {
       const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
-      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Berry { }).prototype))
       expect('init' in a).to.equal(true)
     })
 
@@ -745,15 +866,15 @@ describe('Membrane', () => {
 
     it('get', () => {
       const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
-      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
-      expect(typeof a.init).to.equal('function')
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Berry { }).prototype))
+      expect(a.init).to.equal(Berry.prototype.init)
     })
 
     // ------------------------------------------------------------------------
 
     it('getOwnPropertyDescriptor undefined', () => {
       const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
-      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Berry { }).prototype))
       expect(Object.getOwnPropertyDescriptor(a, 'init')).to.equal(undefined)
     })
 
@@ -761,7 +882,7 @@ describe('Membrane', () => {
 
     it('cannot set', () => {
       const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
-      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Berry { }).prototype))
       expect(() => { a.init = 1 }).to.throw('Cannot set init')
     })
 
@@ -769,7 +890,7 @@ describe('Membrane', () => {
 
     it('cannot define', () => {
       const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
-      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Berry { }).prototype))
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(a, 'init', desc)).to.throw('Cannot define init')
     })
@@ -778,7 +899,7 @@ describe('Membrane', () => {
 
     it('cannot delete', () => {
       const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
-      _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
+      _sudo(() => Object.setPrototypeOf(a, (class A extends Berry { }).prototype))
       expect(() => { delete a.init }).to.throw('Cannot delete init')
     })
   })
@@ -897,7 +1018,6 @@ describe('Membrane', () => {
     it('throws if get descriptor of partial berry location', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
       _sudo(() => { A.location = `${DUMMY_TXID1}_o1?berry=abc&version=5` })
-      console.log(_sudo(() => A.location))
       expect(() => Object.getOwnPropertyDescriptor(A, 'location').value).to.throw('Cannot read location')
       expect(() => Object.getOwnPropertyDescriptor(A, 'origin').value).to.throw('Cannot read origin')
       expect(() => Object.getOwnPropertyDescriptor(A, 'nonce').value).to.throw('Cannot read nonce')
@@ -1075,21 +1195,21 @@ describe('Membrane', () => {
     it('defineProperty throws', () => {
       const o = new Membrane({ }, mangle({ _immutable: true }))
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
-      expect(() => Object.defineProperty(o, 'n', desc)).to.throw('defineProperty disabled')
+      expect(() => Object.defineProperty(o, 'n', desc)).to.throw('Cannot define n: immutable')
     })
 
     // ------------------------------------------------------------------------
 
     it('delete disabled', () => {
       const A = new Membrane(class A { }, mangle({ _immutable: true }))
-      expect(() => { delete A.n }).to.throw('delete disabled')
+      expect(() => { delete A.n }).to.throw('Cannot delete n: immutable')
     })
 
     // ------------------------------------------------------------------------
 
     it('set disabled', () => {
       const o = new Membrane({ }, mangle({ _immutable: true }))
-      expect(() => { o.n = 1 }).to.throw('set disabled')
+      expect(() => { o.n = 1 }).to.throw('Cannot set n: immutable')
     })
 
     // ------------------------------------------------------------------------
@@ -1098,7 +1218,7 @@ describe('Membrane', () => {
       const A = new Membrane({ }, mangle({ _admin: true, _immutable: true }))
       _sudo(() => { A.o = {} })
       expect(A.o).not.to.equal(_sudo(() => A.o))
-      expect(() => { A.o.n = 1 }).to.throw('set disabled')
+      expect(() => { A.o.n = 1 }).to.throw('Cannot set n: immutable')
     })
 
     // ------------------------------------------------------------------------
@@ -1109,7 +1229,7 @@ describe('Membrane', () => {
       const value1 = Object.getOwnPropertyDescriptor(A, 'o').value
       const value2 = _sudo(() => Object.getOwnPropertyDescriptor(A, 'o').value)
       expect(value1).not.to.equal(value2)
-      expect(() => { value1.n = 1 }).to.throw('set disabled')
+      expect(() => { value1.n = 1 }).to.throw('Cannot set n: immutable')
     })
 
     // ------------------------------------------------------------------------
@@ -1118,7 +1238,7 @@ describe('Membrane', () => {
       const A = new Membrane(new Map(), mangle({ _admin: true, _immutable: true }))
       _sudo(() => A.set(1, {}))
       expect(A.get(1)).not.to.equal(_sudo(() => A.get(1)))
-      expect(() => { A.get(1).n = 1 }).to.throw('set disabled')
+      expect(() => { A.get(1).n = 1 }).to.throw('Cannot set n: immutable')
     })
 
     // ------------------------------------------------------------------------
@@ -1378,7 +1498,7 @@ describe('Membrane', () => {
         expect(record._reads.includes(A2)).to.equal(true)
         expect(record._actions.length).to.equal(1)
         expect(unmangle(record._actions[0])._method).to.equal('f')
-        expect(unmangle(record._actions[0])._jig).to.equal(A2)
+        expect(unmangle(record._actions[0])._creation).to.equal(A2)
         expect(record._snapshots.has(A2)).to.equal(true)
         expect(record._updates.length).to.equal(1)
         expect(record._updates.includes(A2)).to.equal(true)
@@ -1408,7 +1528,7 @@ describe('Membrane', () => {
         expect(record._reads.includes(A2)).to.equal(true)
         expect(record._actions.length).to.equal(1)
         expect(unmangle(record._actions[0])._method).to.equal('f')
-        expect(unmangle(record._actions[0])._jig).to.equal(a2)
+        expect(unmangle(record._actions[0])._creation).to.equal(a2)
         expect(record._snapshots.has(a2)).to.equal(true)
         expect(record._snapshots.has(A2)).to.equal(true)
         expect(record._updates.length).to.equal(1)
@@ -1900,7 +2020,7 @@ describe('Membrane', () => {
     it('cannot define symbol prop name', () => {
       const a = new Membrane({})
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
-      const error = 'Symbol names are not serializable'
+      const error = 'Cannot define symbol property'
       expect(() => Object.defineProperty(a, Symbol.hasInstance, desc)).to.throw(error)
     })
 
@@ -1933,7 +2053,7 @@ describe('Membrane', () => {
 
     it('cannot set symbol prop name', () => {
       const a = new Membrane({})
-      const error = 'Symbol names are not serializable'
+      const error = 'Cannot set symbol property'
       expect(() => { a[Symbol.hasInstance] = 1 }).to.throw(error)
     })
 
@@ -1993,129 +2113,13 @@ describe('Membrane', () => {
       const C = makeCode(A, { _recordCalls: true, _recordableTarget: true })
       expect(() => testRecord(() => C.f())).to.throw('Not serializable')
     })
-  })
-
-  // --------------------------------------------------------------------------
-  // Copy on Write (COW)
-  // --------------------------------------------------------------------------
-
-  describe('Copy on Write', () => {
-    it('defineProperty copies', () => {
-      const o = { }
-      const o2 = new Membrane(o, mangle({ _cow: true }))
-      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
-      Object.defineProperty(o2, 'n', desc)
-      expect('n' in o).to.equal(false)
-      expect(o2.n).to.equal(1)
-    })
 
     // ------------------------------------------------------------------------
 
-    it('delete copies', () => {
-      const o = { n: 1 }
-      const o2 = new Membrane(o, mangle({ _cow: true }))
-      delete o2.n
-      expect('n' in o).to.equal(true)
-      expect('n' in o2).to.equal(false)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('set copies', () => {
-      const o = { }
-      const o2 = new Membrane(o, mangle({ _cow: true }))
-      o2.n = 1
-      expect('n' in o).to.equal(false)
-      expect(o2.n).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('intrinsic update copies', () => {
-      const s = new Set()
-      const s2 = new Membrane(s, mangle({ _cow: true }))
-      s2.add(1)
-      expect(s.has(1)).to.equal(false)
-      expect(s2.has(1)).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('updates proxy target', () => {
-      const o = { }
-      const o2 = new Membrane(o, mangle({ _cow: true }))
-      expect(Proxy2._getTarget(o2)).to.equal(o)
-      o2.n = 1
-      expect(Proxy2._getTarget(o2)).not.to.equal(o)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('only copies once', () => {
-      const o = { }
-      const p = new Membrane(o, mangle({ _cow: true }))
-      p.n = 1
-      const o2 = Proxy2._getTarget(p)
-      p.n = 2
-      expect(Proxy2._getTarget(p)).to.equal(o2)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if not clonable', () => {
-      const o = { }
-      o.n = new WeakSet()
-      o.m = function f () { }
-      const p = new Membrane(o, mangle({ _cow: true }))
-      expect(() => { p.a = 1 }).to.throw('Cannot clone')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('clones child objects', () => {
-      const o = { }
-      o.o = o
-      o.s = new Set([1])
-      o.a = ['abc']
-      o.n = 1
-      const p = new Membrane(o, mangle({ _cow: true }))
-      p.n = 1
-      const o2 = Proxy2._getTarget(p)
-      expect(o).not.to.equal(o2)
-      expect(o.s).not.to.equal(o2.s)
-      expect(o.a).not.to.equal(o2.a)
-      expect(o).to.deep.equal(o2)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('clones other membrane objects', () => {
-      const a = makeJig({})
-      const o = { n: 1 }
-      const b = new Membrane(o, mangle({ _creation: a }))
-      const args = makeJig([b], { _cow: true })
-      expect(args[0]).to.equal(b)
-      args.push(1)
-      expect(args[0]).not.to.equal(b)
-      expect(args[1]).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.only('cow args passed as cow args', () => {
-      class A { static f (B, C) { B.g(C, {}) } }
-      class B { static g (C, obj) { C.h(obj) } }
-      class C {
-        static h (obj) {
-          console.log(obj)
-          console.log(Proxy2._getTarget(obj))
-          console.log(Proxy2._getTarget(Proxy2._getTarget(obj)))
-        }
-      }
-      const CA = makeCode(A, { _recordCalls: true, _recordableTarget: true, _smartAPI: true })
-      const CB = makeCode(B, { _recordCalls: true, _recordableTarget: true, _smartAPI: true })
-      const CC = makeCode(C, { _recordCalls: true, _recordableTarget: true, _smartAPI: true })
-      testRecord(() => CA.f(CB, CC))
+    it('cannot delete symbol prop name', () => {
+      const a = new Membrane({})
+      const error = 'Cannot delete symbol property'
+      expect(() => { delete a[Symbol.hasInstance] }).to.throw(error)
     })
   })
 
@@ -2236,40 +2240,6 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set copies cow objects', () => {
-      const o = {}
-      const b = new Membrane(o, mangle({ _cow: true }))
-      const a = makeJig({})
-      a.n = b
-      expect(a.n).not.to.equal(b)
-      expect(_sudo(() => a.n)).not.to.equal(o)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('defineProperty copies cow objects', () => {
-      const o = {}
-      const b = new Membrane(o, mangle({ _cow: true }))
-      const a = makeJig({})
-      const desc = { value: b, configurable: true, enumerable: true, writable: true }
-      Object.defineProperty(a, 'n', desc)
-      expect(a.n).not.to.equal(b)
-      expect(_sudo(() => a.n)).not.to.equal(o)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('intrinsicIn copies cow objects', () => {
-      const o = {}
-      const b = new Membrane(o, mangle({ _cow: true }))
-      const a = makeJig(new Map())
-      a.set(1, b)
-      expect(a.get(1)).not.to.equal(b)
-      expect(_sudo(() => a.get(1))).not.to.equal(o)
-    })
-
-    // ------------------------------------------------------------------------
-
     it('foreign property returned without claim', () => {
       class A { }
       A.x = { }
@@ -2282,7 +2252,7 @@ describe('Membrane', () => {
       const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
       const x = testRecord(() => CB.f(CA))
       expect(x).to.equal(CA.x)
-      expect(() => { x.n = 2 }).to.throw()
+      expect(() => { x.n = 2 }).to.throw('Attempt to update A outside of a method')
     })
   })
 
@@ -2296,13 +2266,13 @@ describe('Membrane', () => {
         f () {
           const o = { }
           this.x = o
-          return this.x === o
+          if (this.x !== o) throw new Error()
         }
       }
       const options = { _recordableTarget: true, _recordCalls: true }
       const A2 = makeCode(A, options)
       const a = makeJig(new A2(), options)
-      testRecord(() => expect(a.f()).to.equal(true))
+      testRecord(() => a.f())
     })
 
     // ------------------------------------------------------------------------
@@ -2312,36 +2282,38 @@ describe('Membrane', () => {
         static f () {
           const o = { }
           this.o = o
-          return this.g(o)
+          const o2 = this.g(o)
+          if (o2 !== o) throw new Error()
         }
 
         static g (o) {
-          return o === this.o
+          if (o !== this.o) throw new Error()
+          return o
         }
       }
       const options = { _recordableTarget: true, _recordCalls: true }
       const A2 = makeCode(A, options)
-      testRecord(() => expect(A2.f()).to.equal(true))
+      testRecord(() => A2.f())
     })
 
     // ------------------------------------------------------------------------
 
-    it('get pending from intrinsic method', () => {
+    it('get pending from intrinsic', () => {
       class A {
         static f () {
           this.m = new Map()
-          return this.g()
         }
 
         static g () {
           const o = { n: 1 }
           this.m.set(1, o)
-          return this.m.get(1) === o
+          if (this.m.get(1) !== o) throw new Error()
         }
       }
       const options = { _recordableTarget: true, _recordCalls: true }
       const A2 = makeCode(A, options)
-      testRecord(() => expect(A2.f()).to.equal(true))
+      testRecord(() => A2.f())
+      testRecord(() => A2.g())
     })
 
     // ------------------------------------------------------------------------
@@ -2351,12 +2323,12 @@ describe('Membrane', () => {
         static f () {
           const o = { }
           this.x = o
-          return Object.getOwnPropertyDescriptor(this, 'x').value === o
+          if (Object.getOwnPropertyDescriptor(this, 'x').value !== o) throw new Error()
         }
       }
       const options = { _recordableTarget: true, _recordCalls: true }
       const C = makeCode(A, options)
-      testRecord(() => expect(C.f()).to.equal(true))
+      testRecord(() => C.f())
     })
 
     // ------------------------------------------------------------------------
@@ -2367,12 +2339,12 @@ describe('Membrane', () => {
           const o = { }
           this.x = []
           this.x.push(o)
-          return this.x[0] === o
+          if (this.x[0] !== o) throw new Error()
         }
       }
       const options = { _recordableTarget: true, _recordCalls: true }
       const C = makeCode(A, options)
-      testRecord(() => expect(C.f()).to.equal(true))
+      testRecord(() => C.f())
     })
 
     // ------------------------------------------------------------------------
@@ -2388,7 +2360,7 @@ describe('Membrane', () => {
       class B {
         static g (a) {
           const o = a.f()
-          return o === a.o
+          if (o !== a.o) throw new Error()
         }
 
         static h (a) { a.f().n = 1 }
@@ -2396,7 +2368,7 @@ describe('Membrane', () => {
       const options = { _recordableTarget: true, _recordCalls: true, _smartAPI: true }
       const A2 = makeCode(A, options)
       const B2 = makeCode(B, options)
-      testRecord(() => expect(B2.g(A2)).to.equal(true))
+      testRecord(() => B2.g(A2))
       testRecord(() => expect(() => B2.h(A2)).to.throw())
     })
 
@@ -2547,8 +2519,21 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('foreign set to pending inner is cloned', () => {
-      // TODO
+    it('foreign set to pending inner is cloned', () => {
+      class A { }
+      A.x = new Set()
+      const CA = makeCode(A, { _smartAPI: true })
+      class B {
+        static f (CA) {
+          this.x = {}
+          this.x.m = new Map()
+          this.x.m.set('1', CA.x)
+        }
+      }
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      testRecord(() => CB.f(CA))
+      expect(CB.x.m.get('1')).not.to.equal(CA.x)
+      expect(Proxy2._getHandler(CB.x.m.get('1'))._creation).to.equal(CB)
     })
 
     // ------------------------------------------------------------------------
@@ -2594,6 +2579,27 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
+    it('owned set to pending inner is kept intact', () => {
+      class A {
+        static f () {
+          this.x = { }
+        }
+
+        static g () {
+          this.y = { }
+          this.y.z = { }
+          this.y.z.x = this.x
+          return this.y.z.x === this.x
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      testRecord(() => CA.f())
+      expect(testRecord(() => CA.g())).to.equal(true)
+      expect(CA.y.z.x).to.equal(CA.x)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if unserializable set to pending', () => {
       class A {
         static f () {
@@ -2625,7 +2631,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if unserializable set to pending cow args', () => {
+    it('throws if unserializable set to unclaimed args and returned', () => {
       class B {
         static f (CA) {
           this.arr = []
@@ -2635,13 +2641,12 @@ describe('Membrane', () => {
       class A {
         static g (arr) {
           arr.push(function h () { })
-          this.arr = arr
+          return arr
         }
       }
       const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
-      expect(() => testRecord(() => CB.f(CA))).to.throw('Not serializable: h')
-      expect(CB.arr.length).to.equal(0)
+      expect(() => testRecord(() => CB.f(CA))).to.throw('Not serializable: [object Array]')
     })
 
     // ------------------------------------------------------------------------
@@ -2709,7 +2714,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if define non-configurable to pending cow arg', () => {
+    it('throws if define non-configurable to pending', () => {
       class B { static f (CA) { CA.g({}) }}
       const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
       class A {
@@ -2725,7 +2730,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if define non-writable to pending in pending inner cow arg', () => {
+    it('throws if define non-writable to pending inner', () => {
       class B { static f (CA) { CA.g({}) }}
       const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
       class A {
@@ -2745,7 +2750,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if define non-writable to pending in pending cow arg', () => {
+    it('throws if define non-writable to pending inner', () => {
       class B { static f (CA) { CA.g({}) }}
       const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true })
       class A {
@@ -2797,7 +2802,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('assign cow args to pending', () => {
+    it('assign args to pending', () => {
       class B {
         static f (CA) {
           this.o = {}
@@ -2821,7 +2826,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('assign cow args to pending inner', () => {
+    it('assign args to pending inner', () => {
       class B {
         static f (CA) {
           this.o = {}
@@ -2847,11 +2852,10 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('assign pending to unclaimed cow args returned', () => {
+    it('assign pending to unclaimed args returned', () => {
       class B {
         static f (CA) {
-          const p = {}
-          const o = CA.g(p)
+          const o = CA.g({})
           const q = { n: 1 }
           o.q = q
           this.o = o
@@ -2872,7 +2876,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('assign pending to claimed cow args stored in pending', () => {
+    it('assign pending to claimed args stored in pending', () => {
       class B {
         static f (CA) {
           const o = {}
@@ -2896,34 +2900,34 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('foreign set to circular cow args in pending inner is cloned', () => {
+    it('foreign set to circular args in pending inner is cloned', () => {
       class B {
         static f (CA) {
           this.arr = []
           const o = {}
           o.o = o
           CA.g(o, this)
+          this.arr.push(1)
         }
       }
       const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
 
       class A {
         static g (o, CB) {
-          o.arr = CB.arr
-          o.arr.push(1)
           this.o = o
+          this.o.arr = CB.arr
         }
       }
       const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
 
       testRecord(() => CB.f(CA))
-      expect(CA.o.arr.length).to.equal(1)
-      expect(CB.arr.length).to.equal(0)
+      expect(CA.o.arr.length).to.equal(0)
+      expect(CB.arr.length).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
-    it('pending cow args with owned prop is kept intact', () => {
+    it('pending args with owned prop is kept intact', () => {
       class B {
         static f (CA) {
           CA.g({})
@@ -2942,52 +2946,6 @@ describe('Membrane', () => {
 
       testRecord(() => CB.f(CA))
       expect(CA.x.o.arr).to.equal(CA.arr)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('unclaimed cow args return are same', () => {
-      class B {
-        static f (CA) {
-          const o = {}
-          return CA.g(o) === o
-        }
-      }
-
-      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
-
-      class A {
-        static g (o) {
-          console.log('2')
-          return o
-        }
-      }
-      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
-
-      expect(testRecord(() => CB.f(CA))).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('claimed cow args return are same', () => {
-      class B {
-        static f (CA) {
-          return CA.g(this.arr) === this.arr
-        }
-      }
-      B.arr = []
-
-      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
-
-      class A {
-        static g (o) {
-          console.log('2')
-          return o
-        }
-      }
-      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
-
-      expect(testRecord(() => CB.f(CA))).to.equal(true)
     })
   })
 
@@ -3065,7 +3023,7 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Methods', () => {
-    it('apply args are cow from outside', () => {
+    it('apply args are cloned from outside', () => {
       class A { static f (o) { o.n = 2 } }
       const A2 = makeCode(A, { _recordCalls: true, _recordableTarget: true })
       const o = { n: 1 }
@@ -3075,7 +3033,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('apply args are cow from another jig', () => {
+    it('apply args are cloned from another jig', () => {
       const options = { _recordableTarget: true, _recordCalls: true, _smartAPI: true }
       class B { static g (a) { this.o = { n: 1 }; a.f(this.o) } }
       class A { static f (o) { o.n = 2 } }
@@ -3223,6 +3181,50 @@ describe('Membrane', () => {
       }
       const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true })
       expect(() => testRecord(() => CA.f())).to.throw('Cannot call g on [object Array]')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('unclaimed args returned are different', () => {
+      class B {
+        static f (CA) {
+          const o = {}
+          return CA.g(o) === o
+        }
+      }
+
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      class A {
+        static g (o) {
+          return o
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      expect(testRecord(() => CB.f(CA))).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('claimed args returned are different', () => {
+      class B {
+        static f (CA) {
+          return CA.g(this.arr) === this.arr
+        }
+      }
+      B.arr = []
+
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      class A {
+        static g (o) {
+          return o
+        }
+      }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      expect(testRecord(() => CB.f(CA))).to.equal(false)
     })
   })
 
