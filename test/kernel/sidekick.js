@@ -12,10 +12,10 @@ const { Jig } = Run
 const { LocalCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
-// Static Code
+// Sidekick code Code
 // ------------------------------------------------------------------------------------------------
 
-describe('Static code', () => {
+describe('Sidekick code', () => {
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
   // Deactivate the current run instance. This stops leaks across tests.
@@ -57,7 +57,7 @@ describe('Static code', () => {
       const run = new Run()
       function f () { f.n = 1 }
       const cf = run.deploy(f)
-      expect(() => cf()).to.throw('set disabled')
+      expect(() => cf()).to.throw('Cannot set n: immutable')
     })
 
     // ------------------------------------------------------------------------
@@ -69,12 +69,12 @@ describe('Static code', () => {
         Object.defineProperty(f, 'n', desc)
       }
       const cf = run.deploy(f)
-      expect(() => cf()).to.throw('defineProperty disabled')
+      expect(() => cf()).to.throw('Cannot define n: immutable')
     })
 
     // ------------------------------------------------------------------------
 
-    it('can call other static functions', () => {
+    it('can call other sidekick functions', () => {
       const run = new Run()
       function g () { return 1 }
       function f () { return g() }
@@ -114,7 +114,7 @@ describe('Static code', () => {
   // --------------------------------------------------------------------------
 
   describe('Classes', () => {
-    it('can call other static classes', () => {
+    it('can call other sidekick classes', () => {
       const run = new Run()
       class A { static f () { return 1 } }
       class B { static g () { return A.f() } }
@@ -138,8 +138,8 @@ describe('Static code', () => {
       class A { static f () { delete A.n } }
       A.n = 1
       const CA = run.deploy(A)
-      expect(() => { delete CA.n }).to.throw('delete disabled')
-      expect(() => CA.f()).to.throw('delete disabled')
+      expect(() => { delete CA.n }).to.throw('Cannot delete n: immutable')
+      expect(() => CA.f()).to.throw('Cannot delete n: immutable')
     })
 
     // ------------------------------------------------------------------------

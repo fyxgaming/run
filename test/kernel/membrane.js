@@ -90,7 +90,12 @@ function makeCode (x, options = {}) {
 
   _CODE.add(C)
 
-  const editor = mangle({ _deploy: () => { }, _installed: true })
+  const editor = mangle({
+    _deploy: () => { },
+    _installed: true,
+    _src: x.toString()
+  })
+
   _EDITORS.set(C, editor)
 
   return C
@@ -3233,7 +3238,7 @@ describe('Membrane', () => {
   // --------------------------------------------------------------------------
 
   describe('Disabled Methods', () => {
-    it('disables static class methods', () => {
+    it('disables sidekick class methods', () => {
       class A { static f () { } }
       const A2 = new Membrane(A, mangle({ _disabledMethods: ['f'] }))
       expect(() => A2.f()).to.throw('f disabled')

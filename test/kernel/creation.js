@@ -35,7 +35,7 @@ describe('Creation', () => {
 
     // ------------------------------------------------------------------------
 
-    it('static class', () => {
+    it('sidekick class', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -44,7 +44,7 @@ describe('Creation', () => {
 
     // ------------------------------------------------------------------------
 
-    it('static function', () => {
+    it('sidekick function', () => {
       const run = new Run()
       function f () { }
       const cf = run.deploy(f)

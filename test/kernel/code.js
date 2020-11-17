@@ -546,9 +546,9 @@ describe('Code', () => {
       const CA = run.deploy(A)
       await CA.sync()
       function test (A) {
-        expect(() => A.f('location', '123')).to.throw('Cannot set location')
-        expect(() => A.f('origin', '123')).to.throw('Cannot set origin')
-        expect(() => A.f('nonce', 10)).to.throw('Cannot set nonce')
+        expect(() => A.f('location', '123')).to.throw('Cannot define location')
+        expect(() => A.f('origin', '123')).to.throw('Cannot define origin')
+        expect(() => A.f('nonce', 10)).to.throw('Cannot define nonce')
       }
       test(CA)
       const CA2 = await run.load(CA.location)

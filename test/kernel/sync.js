@@ -361,7 +361,7 @@ describe('Sync', () => {
   // --------------------------------------------------------------------------
 
   describe('Code', () => {
-    it('static class', async () => {
+    it('sidekick class', async () => {
       const run = new Run()
       class A {}
       run.deploy(A)

@@ -1036,7 +1036,7 @@ describe('Jig', () => {
         f () { this.f.n = 1 }
       }
       const a = new A()
-      expect(() => a.f()).to.throw('set disabled')
+      expect(() => a.f()).to.throw('Cannot set n: immutable')
     })
 
     // ------------------------------------------------------------------------
@@ -1049,7 +1049,7 @@ describe('Jig', () => {
         h () { Array.n = 1 }
       }
       const a = new A()
-      expect(() => a.f()).to.throw('set disabled')
+      expect(() => a.f()).to.throw('Cannot set n: immutable')
       expect(() => a.g()).to.throw()
     })
 
@@ -1590,11 +1590,7 @@ describe('Jig', () => {
 
     it('throws if change externally', async () => {
       new Run() // eslint-disable-line
-      class A extends Jig {
-        init () { this.a = [3, 1, 2, 5, 0] }
-
-        add (n) { this.a.push(n) }
-      }
+      class A extends Jig { init () { this.a = [3, 1, 2, 5, 0] } }
       class B extends Jig { init () { new A().a.push(1) } }
       B.deps = { A }
       const a = new A()
@@ -2258,8 +2254,8 @@ describe('Jig', () => {
       }
       const a = new A()
       const desc = { value: '123', configurable: true, enumerable: true, writable: true }
-      expect(() => Object.defineProperty(a, 'origin', desc)).to.throw('Cannot set origin')
-      expect(() => a.f()).to.throw('Cannot set origin')
+      expect(() => Object.defineProperty(a, 'origin', desc)).to.throw('Cannot define origin')
+      expect(() => a.f()).to.throw('Cannot define origin')
     })
   })
 
@@ -2325,8 +2321,8 @@ describe('Jig', () => {
       }
       const a = new A()
       const desc = { value: '123', configurable: true, enumerable: true, writable: true }
-      expect(() => Object.defineProperty(a, 'location', desc)).to.throw('Cannot set location')
-      expect(() => a.f()).to.throw('Cannot set location')
+      expect(() => Object.defineProperty(a, 'location', desc)).to.throw('Cannot define location')
+      expect(() => a.f()).to.throw('Cannot define location')
     })
   })
 
@@ -2416,8 +2412,8 @@ describe('Jig', () => {
       }
       const a = new A()
       const desc = { value: '123', configurable: true, enumerable: true, writable: true }
-      expect(() => Object.defineProperty(a, 'nonce', desc)).to.throw('Cannot set nonce')
-      expect(() => a.f()).to.throw('Cannot set nonce')
+      expect(() => Object.defineProperty(a, 'nonce', desc)).to.throw('Cannot define nonce')
+      expect(() => a.f()).to.throw('Cannot define nonce')
     })
   })
 

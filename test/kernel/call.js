@@ -626,8 +626,8 @@ describe('Call', () => {
     it('jig', () => testArgumentPass(run => [new (class A extends Jig { })()], false))
     it('undeployed arbitrary object', () => testArgumentPass(run => [new (class Blob {})()], false))
     it('undeployed jig class', () => testArgumentPass(run => [class A extends Jig {}], false))
-    it('undeployed static class', () => testArgumentPass(run => [class A {}], false))
-    it('undeployed static function', () => testArgumentPass(run => [function f () { }], false))
+    it('undeployed sidekick class', () => testArgumentPass(run => [class A {}], false))
+    it('undeployed sidekick function', () => testArgumentPass(run => [function f () { }], false))
 
     it('berry', async () => {
       const run = new Run()

@@ -624,9 +624,9 @@ describe('Reserved', () => {
 
         static async pluck (prop) { return new B(prop) }
       }
-      expect(() => B.load('encryption')).to.throw('Cannot define encryption')
-      expect(() => B.load('mustBeRecent')).to.throw('Cannot define mustBeRecent')
-      expect(() => B.load('eject')).to.throw('Cannot define eject')
+      await expect(B.load('encryption')).to.be.rejectedWith('Cannot define encryption')
+      await expect(B.load('mustBeRecent')).to.be.rejectedWith('Cannot define mustBeRecent')
+      await expect(B.load('eject')).to.be.rejectedWith('Cannot define eject')
     })
   })
 
@@ -688,8 +688,8 @@ describe('Reserved', () => {
         init (prop) { delete this[prop] }
         static async pluck (prop) { return new B(prop) }
       }
-      expect(() => B.load('encryption')).to.throw('Cannot delete encryption')
-      expect(() => B.load('makeBackup')).to.throw('Cannot delete makeBackup')
+      await expect(B.load('encryption')).to.be.rejectedWith('Cannot delete encryption')
+      await expect(B.load('makeBackup')).to.be.rejectedWith('Cannot delete makeBackup')
     })
 
     // ------------------------------------------------------------------------
@@ -1038,7 +1038,7 @@ describe('Reserved', () => {
     it('throws if set reserved prop on berry', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { init () { this.mustBeRecent = true } }
-      expect(() => B.load('abc')).to.throw('Cannot set mustBeRecent')
+      await expect(B.load('abc')).to.be.rejectedWith('Cannot set mustBeRecent')
     })
   })
 
@@ -1087,11 +1087,11 @@ describe('Reserved', () => {
     it('throws if set creation bindings during pluck', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { init () { this.location = 'abc' } }
-      expect(() => B.load('abc')).to.throw('Cannot set location')
+      await expect(B.load('abc')).to.be.rejectedWith('Cannot set location')
       class C extends Berry { init () { this.origin = 'abc' } }
-      expect(() => C.load('abc')).to.throw('Cannot set origin')
+      await expect(C.load('abc')).to.be.rejectedWith('Cannot set origin')
       class D extends Berry { init () { this.nonce = 0 } }
-      expect(() => D.load('abc')).to.throw('Cannot set nonce')
+      await expect(D.load('abc')).to.be.rejectedWith('Cannot set nonce')
     })
   })
 })

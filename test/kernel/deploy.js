@@ -2201,7 +2201,7 @@ describe('Deploy', () => {
       class B extends Berry { constructor () { super(); this.n = 1 } }
       const error = 'Berry must use init() instead of constructor()'
       expect(() => run.deploy(B)).to.throw(error)
-      expect(() => B.load('abc')).to.throw(error)
+      await expect(B.load('abc')).to.be.rejectedWith(error)
     })
   })
 })

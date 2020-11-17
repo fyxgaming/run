@@ -164,8 +164,8 @@ describe('Berry', () => {
       await run.sync()
 
       function test (b) {
-        expect(() => { b.n = 1 }).to.throw('set disabled')
-        expect(() => { b.a.push(1) }).to.throw('set disabled')
+        expect(() => { b.n = 1 }).to.throw('Cannot set n: immutable')
+        expect(() => { b.a.push(1) }).to.throw('Cannot set 0: immutable')
       }
 
       const b = await B.load('123')
@@ -198,8 +198,8 @@ describe('Berry', () => {
       await run.sync()
 
       function test (b) {
-        expect(() => b.f()).to.throw('delete disabled')
-        expect(() => b.g()).to.throw('set disabled')
+        expect(() => b.f()).to.throw('Cannot delete n: immutable')
+        expect(() => b.g()).to.throw('Cannot set n: immutable')
       }
 
       const b = await B.load('123')
@@ -699,13 +699,13 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('throws if set unserializable properties', () => {
+    it('throws if set unserializable properties', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { init () { this.x = new WeakMap() } }
       class C extends Berry { init () { this.x = function f () { } } }
       const error = 'Not serializable'
-      expect(() => B.load('')).to.throw(error)
-      expect(() => C.load('')).to.throw(error)
+      await expect(B.load('')).to.be.rejectedWith(error)
+      await expect(C.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
@@ -739,32 +739,32 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('throws if set creation bindings', () => {
+    it('throws if set creation bindings', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { init () { this.location = '123' } }
       class C extends Berry { init () { this.origin = '123' } }
       class D extends Berry { init () { this.nonce = '123' } }
-      expect(() => B.load('')).to.throw('Cannot set location')
-      expect(() => C.load('')).to.throw('Cannot set origin')
-      expect(() => D.load('')).to.throw('Cannot set nonce')
+      await expect(B.load('')).to.be.rejectedWith('Cannot set location')
+      await expect(C.load('')).to.be.rejectedWith('Cannot set origin')
+      await expect(D.load('')).to.be.rejectedWith('Cannot set nonce')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if set init', () => {
+    it('throws if set init', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { init () { this.init = 1 } }
       const error = 'Cannot set init'
-      expect(() => B.load('')).to.throw(error)
+      await expect(B.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if delete init', () => {
+    it('throws if delete init', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { init () { delete this.init } }
       const error = 'Cannot delete init'
-      expect(() => B.load('')).to.throw(error)
+      await expect(B.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
@@ -775,9 +775,9 @@ Line 3`
         init (prop) { this.x = this[prop] }
         static async pluck (path) { return new B(path) }
       }
-      expect(() => B.load('location')).to.throw('Cannot read location')
-      expect(() => B.load('origin')).to.throw('Cannot read origin')
-      expect(() => B.load('nonce')).to.throw('Cannot read nonce')
+      await expect(B.load('location')).to.be.rejectedWith('Cannot read location')
+      await expect(B.load('origin')).to.be.rejectedWith('Cannot read origin')
+      await expect(B.load('nonce')).to.be.rejectedWith('Cannot read nonce')
       const CB = run.deploy(B)
       await CB.sync()
       await expect(CB.load('location')).to.be.rejectedWith('Cannot read location')
@@ -802,7 +802,7 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('throws if define creation bindings', () => {
+    it('throws if define creation bindings', async () => {
       new Run() // eslint-disable-line
       class B extends Berry {
         init () {
@@ -810,17 +810,17 @@ Line 3`
           Object.defineProperty(this, 'location', desc)
         }
       }
-      const error = 'Cannot set location'
-      expect(() => B.load('')).to.throw(error)
+      const error = 'Cannot define location'
+      await expect(B.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if set prototype', () => {
+    it('throws if set prototype', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { init () { Object.setPrototypeOf(this, {}) } }
       const error = 'setPrototypeOf disabled'
-      expect(() => B.load('')).to.throw(error)
+      await expect(B.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
@@ -854,27 +854,27 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('throws if return value', () => {
+    it('throws if return value', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { init () { return 1 } }
       class C extends Berry { init () { return this } }
       const error = 'init must not return a value'
-      expect(() => B.load('')).to.throw(error)
-      expect(() => C.load('')).to.throw(error)
+      await expect(B.load('')).to.be.rejectedWith(error)
+      await expect(C.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if async', () => {
+    it('throws if async', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { async init () { } }
       const error = 'init must not return a value'
-      expect(() => B.load('')).to.throw(error)
+      await expect(B.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('cannot swallow init errors', () => {
+    it('cannot swallow init errors', async () => {
       new Run() // eslint-disable-line
 
       class B extends Berry {
@@ -883,7 +883,7 @@ Line 3`
         }
       }
       const error = 'Cannot set location'
-      expect(() => B.load('')).to.throw(error)
+      await expect(B.load('')).to.be.rejectedWith(error)
 
       class C extends Berry {
         init () {
@@ -892,7 +892,7 @@ Line 3`
 
         f () { throw new Error('abc') }
       }
-      expect(() => C.load('')).to.throw('abc')
+      await expect(C.load('')).to.be.rejectedWith('abc')
     })
 
     // ------------------------------------------------------------------------
@@ -1158,7 +1158,7 @@ Line 3`
       class B extends Berry { f () { this.n = 1 } }
       run.deploy(B)
       await run.sync()
-      function test (b) { expect(() => b.f()).to.throw('set disabled') }
+      function test (b) { expect(() => b.f()).to.throw('Cannot set n: immutable') }
       const b = await B.load('')
       test(b)
       const b2 = await run.load(b.location)
@@ -1181,7 +1181,7 @@ Line 3`
       }
       run.deploy(B)
       await run.sync()
-      function test (b) { expect(() => b.f()).to.throw('defineProperty disabled') }
+      function test (b) { expect(() => b.f()).to.throw('Cannot define 0: immutable') }
       const b = await B.load('')
       test(b)
       const b2 = await run.load(b.location)
@@ -1201,7 +1201,7 @@ Line 3`
       }
       run.deploy(B)
       await run.sync()
-      function test (b) { expect(() => b.f()).to.throw('delete disabled') }
+      function test (b) { expect(() => b.f()).to.throw('Cannot delete 0: immutable') }
       const b = await B.load('')
       test(b)
       const b2 = await run.load(b.location)
@@ -1403,18 +1403,18 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('throws if create jig in init', () => {
+    it('throws if create jig in init', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
       class B extends Berry { init () { this.b = new A() } }
       B.deps = { A }
       const error = 'Cannot create A in berry'
-      expect(() => B.load('')).to.throw(error)
+      await expect(B.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if create jig in inner method of init', () => {
+    it('throws if create jig in inner method of init', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
       class B extends Berry {
@@ -1423,7 +1423,7 @@ Line 3`
       }
       B.deps = { A }
       const error = 'Cannot create A in berry'
-      expect(() => B.load('')).to.throw(error)
+      await expect(B.load('')).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
