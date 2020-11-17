@@ -3235,7 +3235,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('pending is unique for a frame', () => {
+    it('pending is pending only for a frame', () => {
       // fN, gN, hN are different frames
 
       class A {
