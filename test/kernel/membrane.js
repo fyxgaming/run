@@ -3232,6 +3232,54 @@ describe('Membrane', () => {
 
       expect(testRecord(() => CB.f(CA))).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('pending is unique for a frame', () => {
+      // fN, gN, hN are different frames
+
+      class A {
+        static f (CB) {
+          this.o = {}
+          this.f2()
+
+          CB.g(this)
+
+          expect(typeof Proxy2._getTarget(this.q)).not.to.equal('undefined')
+        }
+
+        static f2 () {
+          expect(typeof Proxy2._getTarget(this.o)).to.equal('undefined')
+        }
+
+        static h (CB) {
+          expect(typeof Proxy2._getTarget(this.o)).not.to.equal('undefined')
+          expect(typeof Proxy2._getTarget(CB.p)).not.to.equal('undefined')
+
+          this.q = new Set()
+        }
+      }
+
+      class B {
+        static g (CA) {
+          this.p = []
+          this.g2()
+
+          expect(typeof Proxy2._getTarget(CA.o)).not.to.equal('undefined')
+
+          CA.h(this)
+        }
+
+        static g2 () {
+          expect(typeof Proxy2._getTarget(this.p)).to.equal('undefined')
+        }
+      }
+
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      testRecord(() => CA.f(CB))
+    })
   })
 
   // --------------------------------------------------------------------------
