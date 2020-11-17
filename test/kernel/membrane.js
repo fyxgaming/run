@@ -432,7 +432,7 @@ describe('Membrane', () => {
       const a = {}
       const a2 = new Membrane(a)
       const b = {}
-      const b2 = new Membrane(b, { _creation: a2 })
+      const b2 = new Membrane(b, mangle({ _creation: a2 }))
       a2.b = b2
       expect(a.b).to.equal(b)
     })
@@ -544,9 +544,9 @@ describe('Membrane', () => {
     it('intrinsicIn removes membrane for owned wrapped objects', () => {
       const A = makeCode(class A {})
       const o = {}
-      const o2 = new Membrane(o, { _creation: A })
+      const o2 = new Membrane(o, mangle({ _creation: A }))
       const s = new Set()
-      const s2 = new Membrane(s, { _creation: A })
+      const s2 = new Membrane(s, mangle({ _creation: A }))
       s2.add(o2)
       expect(s.has(o)).to.equal(true)
     })
@@ -2538,7 +2538,8 @@ describe('Membrane', () => {
       const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       testRecord(() => CB.f(CA))
       expect(CB.x.m.get('1')).not.to.equal(CA.x)
-      expect(Proxy2._getHandler(CB.x.m.get('1'))._creation).to.equal(CB)
+      const membrane = Proxy2._getHandler(CB.x.m.get('1'))
+      expect(unmangle(membrane)._creation).to.equal(CB)
     })
 
     // ------------------------------------------------------------------------
