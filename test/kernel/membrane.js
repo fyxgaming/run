@@ -92,6 +92,7 @@ function makeCode (x, options = {}) {
 
   const editor = mangle({
     _deploy: () => { },
+    _postinstall: () => { },
     _installed: true,
     _src: x.toString()
   })
@@ -3279,6 +3280,15 @@ describe('Membrane', () => {
       const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
 
       testRecord(() => CA.f(CB))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('autocode', () => {
+      class A { static f () { return this.name === 'B' && this instanceof Code } }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true, _autocode: true })
+      class B extends CA { }
+      expect(testRecord(() => B.f())).to.equal(true)
     })
   })
 
