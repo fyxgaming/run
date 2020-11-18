@@ -794,27 +794,66 @@ describe('Membrane', () => {
   // Code options
   // --------------------------------------------------------------------------
 
-  describe.only('Code options', () => {
-    it.skip('set options', () => {
-      // TODO
+  describe('Code options', () => {
+    it('set options', () => {
+      class A { static f (k, v) { this[k] = v } }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeMethods: true })
+      testRecord(() => CA.f('sealed', true))
+      testRecord(() => CA.f('sealed', false))
+      testRecord(() => CA.f('sealed', 'owner'))
+      testRecord(() => CA.f('upgradable', true))
+      testRecord(() => CA.f('upgradable', false))
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('define options', () => {
-      // TODO
+    it('define options', () => {
+      class A { static f (k, v) { Object.defineProperty(this, k, { configurable: true, enumerable: true, writable: true, value: v }) } }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeMethods: true })
+      testRecord(() => CA.f('sealed', true))
+      testRecord(() => CA.f('sealed', false))
+      testRecord(() => CA.f('sealed', 'owner'))
+      testRecord(() => CA.f('upgradable', true))
+      testRecord(() => CA.f('upgradable', false))
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('delete options', () => {
-      // TODO
+    it('delete options', () => {
+      class A { static f (k) { delete this[k] } }
+      A.sealed = true
+      A.upgradable = true
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeMethods: true })
+      testRecord(() => CA.f('sealed'))
+      testRecord(() => CA.f('upgradable'))
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid options', () => {
-      // TODO
+    it('throws if set invalid options', () => {
+      class A { static f (k, v) { this[k] = v } }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeMethods: true })
+      expect(() => testRecord(() => CA.f('sealed', undefined))).to.throw('Invalid sealed option: undefined')
+      expect(() => testRecord(() => CA.f('sealed', null))).to.throw('Invalid sealed option: null')
+      expect(() => testRecord(() => CA.f('sealed', 'false'))).to.throw('Invalid sealed option: false')
+      expect(() => testRecord(() => CA.f('sealed', ''))).to.throw('Invalid sealed option: ')
+      expect(() => testRecord(() => CA.f('sealed', 1))).to.throw('Invalid sealed option: 1')
+      expect(() => testRecord(() => CA.f('upgradable', undefined))).to.throw('Invalid upgradable option: undefined')
+      expect(() => testRecord(() => CA.f('upgradable', 'owner'))).to.throw('Invalid upgradable option: owner')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if define invalid options', () => {
+      class A { static f (k, v) { Object.defineProperty(this, k, { configurable: true, enumerable: true, writable: true, value: v }) } }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeMethods: true })
+      expect(() => testRecord(() => CA.f('sealed', undefined))).to.throw('Invalid sealed option: undefined')
+      expect(() => testRecord(() => CA.f('sealed', null))).to.throw('Invalid sealed option: null')
+      expect(() => testRecord(() => CA.f('sealed', 'false'))).to.throw('Invalid sealed option: false')
+      expect(() => testRecord(() => CA.f('sealed', ''))).to.throw('Invalid sealed option: ')
+      expect(() => testRecord(() => CA.f('sealed', 1))).to.throw('Invalid sealed option: 1')
+      expect(() => testRecord(() => CA.f('upgradable', undefined))).to.throw('Invalid upgradable option: undefined')
+      expect(() => testRecord(() => CA.f('upgradable', 'owner'))).to.throw('Invalid upgradable option: owner')
     })
   })
 
