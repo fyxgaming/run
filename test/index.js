@@ -56,6 +56,7 @@ require('./kernel/unify')
 require('./kernel/upgrade')
 require('./kernel/upgradable')
 
+require('./module/browser-cache')
 require('./module/inventory')
 require('./module/local-cache')
 require('./module/local-owner')
