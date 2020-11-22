@@ -32,30 +32,6 @@ describe('Protocol', () => {
   it.skip('Kronoverse', () => runProtocolTest(require('./data/kronoverse.json'))).timeout(1000000)
 })
 
-// TODO REMOVE
-it.only('txns', async () => {
-  const bsv = require('bsv')
-  const data = { network: 'mock', txns: { } }
-  const tests = []
-  for (const rawtx of require('./REMOVE/txns.json')) {
-    const txid = new bsv.Transaction(rawtx).hash
-    data.txns[txid] = rawtx
-    tests.push(txid)
-  }
-  const blockchain = new TestBlockchain(data)
-  const run = new Run({ blockchain })
-  for (const txid of tests) {
-    console.log(txid)
-    const rawtx = await run.blockchain.fetch(txid)
-    try {
-      await run.import(rawtx)
-    } catch (e) {
-      if (e.message.startsWith('Not a run transaction')) continue
-      throw e
-    }
-  }
-})
-
 // ------------------------------------------------------------------------------------------------
 // runProtocolTest
 // ------------------------------------------------------------------------------------------------

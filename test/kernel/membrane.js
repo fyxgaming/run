@@ -2216,20 +2216,35 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set copies inner prop owned by another jig', () => {
-      const a = makeJig({})
-      const ai = new Membrane({}, mangle({ _creation: a }))
-      const b = makeJig({})
-      b.n = [ai]
-      b.n[0].m = 1
-      expect(b.n[0]).not.to.equal(ai)
-      expect(b.n[0].m).to.equal(1)
-      expect(typeof ai.m).to.equal('undefined')
+    it('set copies foreign in pending after method ends', () => {
+      class A {
+        static f (CB) {
+          this.a = [CB.x]
+          this.a.push(1)
+          return this.a[0]
+        }
+
+        static g (CB) {
+          this.y = [CB.x]
+          this.y[0].n = 1
+        }
+      }
+
+      class B { }
+      B.x = []
+
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      const CB = makeCode(B, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+
+      expect(testRecord(() => CA.f(CB))).to.equal(CB.x)
+      expect(CA.a[0]).not.to.equal(CB.x)
+      expect(CA.a.length).to.equal(2)
+      expect(() => testRecord(() => CA.g(CB))).to.throw('Attempt to update B outside of a method')
     })
 
     // ------------------------------------------------------------------------
 
-    it('defineProperty copies object owned by another jig', () => {
+    it('defineProperty copies foreign', () => {
       const a = makeJig({})
       const ai = new Membrane(new Set([1, 2, 3]), mangle({ _creation: a }))
       const b = makeJig({})
@@ -2245,7 +2260,7 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('defineProperty copies inner prop owned by another jig', () => {
+    it('defineProperty copies foreign inner', () => {
       const a = makeJig({})
       const ai = new Membrane({}, mangle({ _creation: a }))
       const b = makeJig({})
@@ -2272,15 +2287,23 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('intrinsicIn copies inner prop owned by another jig', () => {
-      const a = makeJig({})
-      const ai = new Membrane({}, mangle({ _creation: a }))
-      const b = makeJig(new Set())
-      b.add({ ai })
-      Array.from(b)[0].ai.n = 1
-      expect(Array.from(b)[0].ai).not.to.equal(ai)
-      expect(Array.from(b)[0].ai.n).to.equal(1)
-      expect(typeof ai.n).to.equal('undefined')
+    it('intrinsicIn copies foreign in pending after method ends', () => {
+      class A {
+        static f (CB) {
+          this.m.set(1, { x: CB.x })
+          return this.m.get(1).x
+        }
+      }
+      A.m = new Map()
+
+      class B { }
+      B.x = { }
+
+      const CA = makeJig(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      const CB = makeJig(B)
+
+      expect(testRecord(() => CA.f(CB))).to.equal(CB.x)
+      expect(CA.m.get(1)).not.to.equal(CB.x)
     })
 
     // ------------------------------------------------------------------------

@@ -69,40 +69,12 @@ function enableUnitCaptureMode () {
 
     const fs = require('fs-extra')
     const data = { tests, txns: CAPTURE_TXNS, network: 'mock' }
-    const path = require.resolve('./unit.json')
+    const path = require.resolve('./unit2.json')
     fs.writeFileSync(path, JSON.stringify(data, 0, 3))
   })
 
   beforeEach(() => { Run.defaults.blockchain = new CaptureMockchain() })
 }
-
-// ------------------------------------------------------------------------------------------------
-// convertKronoverseTxns
-// ------------------------------------------------------------------------------------------------
-
-/*
-function convertKronoverseTxns() {
-  const run = new Run()
-  const txns = require('../txns.json')
-  let pass = 0; let fail = 0
-  const m = {}
-  const bsv = require('bsv')
-  txns.forEach(rawtx => { m[new bsv.Transaction(rawtx).hash] = rawtx })
-  run.blockchain.fetch = async txid => m[txid]
-  for (const rawtx of txns) {
-    try {
-      await run.import(rawtx)
-      pass++
-    } catch (e) {
-      fail++
-      if (e.message.indexOf('Not a run transaction') !== -1) continue
-      throw e
-    }
-    console.log(pass, fail)
-  }
-  // TODO: Write out the txids that passed as tests, and rawtxns otherwise. Network = mock.
-}
-*/
 
 // ------------------------------------------------------------------------------------------------
 // CaptureMockchain
@@ -114,6 +86,24 @@ class CaptureMockchain extends Mockchain {
     rawtx = new bsv.Transaction(rawtx).toString('hex')
     CAPTURE_TXNS[txid] = rawtx
     CAPTURE_TXIDS.push(txid)
+
+    // Try loading the run
+    let payload = null
+    try {
+      payload = Run.instance.payload(rawtx)
+    } catch (e) {
+      if (e.message.startsWith('Not a run transaction')) {
+        return txid
+      }
+      throw e
+    }
+    for (let i = 0; i < payload.out.length; i++) {
+      await Run.instance.load(`${txid}_o${i + 1}`)
+    }
+    for (let i = 0; i < payload.del.length; i++) {
+      await Run.instance.load(`${txid}_d${i}`)
+    }
+
     return txid
   }
 
