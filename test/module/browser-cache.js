@@ -28,7 +28,7 @@ async function deleteDatabase (name) {
 // BrowserCache
 // ------------------------------------------------------------------------------------------------
 
-describe('BrowserCache', () => {
+describe.only('BrowserCache', () => {
   // --------------------------------------------------------------------------
   // non-browser
   // --------------------------------------------------------------------------
@@ -67,10 +67,14 @@ describe('BrowserCache', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if different versions open', async () => {
+    it.only('throws if different versions open', async () => {
+      console.log('1')
       await deleteDatabase('upgrade')
+      console.log('2')
       const cache1 = new BrowserCache({ name: 'upgrade', version: 1 }) // eslint-disable-line
+      console.log('3')
       const cache2 = new BrowserCache({ name: 'upgrade', version: 2 })
+      console.log('4')
       await expect(cache2.get('abc')).to.be.rejectedWith('Upgrade not supported')
     })
 
