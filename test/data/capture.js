@@ -69,7 +69,7 @@ function enableUnitCaptureMode () {
 
     const fs = require('fs-extra')
     const data = { tests, txns: CAPTURE_TXNS, network: 'mock' }
-    const path = require.resolve('./unit2.json')
+    const path = require.resolve('./unit.json')
     fs.writeFileSync(path, JSON.stringify(data, 0, 3))
   })
 
