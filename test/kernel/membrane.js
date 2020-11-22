@@ -3047,14 +3047,36 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('inner proxies in pending are not pending', () => {
-      // TODO
+    it('inner proxies in pending are not pending', () => {
+      class A {
+        static f () {
+          const o = { }
+          this.o = o
+          const z = this.y.z
+          this.z2 = z
+          o.z = z
+          return z === o.z && z === this.y.z && this.z2 === this.o.z
+        }
+      }
+      A.y = { z: { } }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      expect(testRecord(() => CA.f())).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.only('owned set to pending stays owned', () => {
-      // TODO
+    it('owned set to pending stays owned', () => {
+      class A {
+        static f () {
+          const o = { }
+          o.z = this.z
+          this.o = o
+          return !!Proxy2._getTarget(this.o.z) && !!Proxy2._getTarget(o.z)
+        }
+      }
+      A.z = { }
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
+      expect(testRecord(() => CA.f())).to.equal(true)
     })
 
     // TODO
