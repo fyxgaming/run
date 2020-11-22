@@ -2083,6 +2083,34 @@ describe('Membrane', () => {
       expect(() => testRecord(() => x.f(y))).to.throw(error)
       expect(() => testRecord(() => y.f(x))).to.throw(error)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('does not clone private properties on assign', () => {
+      class A { static f () { this.o = { _n: 1, o: { _m: 2 } } } }
+      class B { static g (a) { this.o = a.o } }
+      const a = makeCode(A, { _privacy: true })
+      const b = makeCode(B, { _recordableTarget: true, _recordCalls: true })
+      testRecord(() => a.f())
+      testRecord(() => b.g(a))
+      expect(b.o).not.to.equal(a.o)
+      expect(typeof b.o._n).to.equal('undefined')
+      expect(typeof b.o.o._m).to.equal('undefined')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('does not clone private properties on assign pending', () => {
+      class A { static f () { this.o = { _n: 1, o: { _m: 2 } } } }
+      class B { static g (a) { this.x = { o: a.o } } }
+      const a = makeCode(A, { _privacy: true })
+      const b = makeCode(B, { _recordableTarget: true, _recordCalls: true })
+      testRecord(() => a.f())
+      testRecord(() => b.g(a))
+      expect(b.x.o).not.to.equal(a.o)
+      expect(typeof b.x.o._n).to.equal('undefined')
+      expect(typeof b.x.o.o._m).to.equal('undefined')
+    })
   })
 
   // --------------------------------------------------------------------------

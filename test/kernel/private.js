@@ -225,6 +225,26 @@ describe('Private', () => {
         const b3 = await run.load(b.location)
         test(a3, b3)
       })
+
+      // ----------------------------------------------------------------------
+
+      it('throws if read in pending', async () => {
+        const run = new Run()
+        class A extends Jig { init () { this.o = { _x: 1 } } }
+        class B extends Jig { f (a) { this.y = [a.o]; return this.y[0]._x } }
+        const a = new A()
+        const b = new B()
+        function test (a, b) { expect(() => b.f(a)).to.throw('Cannot get private property _x') }
+        test(a, b)
+        await run.sync()
+        const a2 = await run.load(a.location)
+        const b2 = await run.load(b.location)
+        test(a2, b2)
+        run.cache = new LocalCache()
+        const a3 = await run.load(a.location)
+        const b3 = await run.load(b.location)
+        test(a3, b3)
+      })
     })
 
     // ------------------------------------------------------------------------
@@ -388,6 +408,52 @@ describe('Private', () => {
         const a3 = await run.load(a.location)
         const b3 = await run.load(b.location)
         test(a3, b3)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+    // set
+    // ------------------------------------------------------------------------
+
+    describe('set', () => {
+      it('does not clone foreign private properties', async () => {
+        const run = new Run()
+        class A extends Jig { init () { this.o = { _n: 1, p: { _m: [] } } } }
+        class B extends Jig { f (a) { this.o = a.o } }
+        const a = new A()
+        const b = new B()
+        b.f(a)
+        function test (b) {
+          expect('_n' in b.o).to.equal(false)
+          expect('_m' in b.o.p).to.equal(false)
+        }
+        await run.sync()
+        const b2 = await run.load(b.location)
+        test(b2)
+        run.cache = new LocalCache()
+        const b3 = await run.load(b.location)
+        test(b3)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('does not clone foreign pending private properties', async () => {
+        const run = new Run()
+        class A extends Jig { init () { this.o = { _n: 1, p: { _m: [] } } } }
+        class B extends Jig { f (a) { this.z = { o: a.o } } }
+        const a = new A()
+        const b = new B()
+        b.f(a)
+        function test (b) {
+          expect('_n' in b.z.o).to.equal(false)
+          expect('_m' in b.z.o.p).to.equal(false)
+        }
+        await run.sync()
+        const b2 = await run.load(b.location)
+        test(b2)
+        run.cache = new LocalCache()
+        const b3 = await run.load(b.location)
+        test(b3)
       })
     })
 
