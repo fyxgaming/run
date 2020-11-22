@@ -13,6 +13,18 @@ const Run = require('../env/run')
 const { BrowserCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
+// deleteDatabase
+// ------------------------------------------------------------------------------------------------
+
+async function deleteDatabase (name) {
+  return new Promise((resolve, reject) => {
+    const request = window.indexedDB.deleteDatabase(name)
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+// ------------------------------------------------------------------------------------------------
 // BrowserCache
 // ------------------------------------------------------------------------------------------------
 
@@ -45,18 +57,20 @@ describe('BrowserCache', () => {
     // ------------------------------------------------------------------------
 
     it('throws if upgrade required', async () => {
-      const cache1 = new BrowserCache({ name: 'upgrade1', version: 1 })
+      await deleteDatabase('upgrade')
+      const cache1 = new BrowserCache({ name: 'upgrade', version: 1 })
       const db1 = await (unmangle(cache1)._dbPromise)
       db1.close()
-      const cache2 = new BrowserCache({ name: 'upgrade1', version: 2 })
+      const cache2 = new BrowserCache({ name: 'upgrade', version: 2 })
       await expect(cache2.get('abc')).to.be.rejectedWith('Upgrade not supported')
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if different versions open', async () => {
-      const cache1 = new BrowserCache({ name: 'upgrade2', version: 1 }) // eslint-disable-line
-      const cache2 = new BrowserCache({ name: 'upgrade2', version: 2 })
+      await deleteDatabase('upgrade')
+      const cache1 = new BrowserCache({ name: 'upgrade', version: 1 }) // eslint-disable-line
+      const cache2 = new BrowserCache({ name: 'upgrade', version: 2 })
       await expect(cache2.get('abc')).to.be.rejectedWith('Upgrade not supported')
     })
 
