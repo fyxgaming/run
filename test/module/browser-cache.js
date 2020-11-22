@@ -13,18 +13,6 @@ const Run = require('../env/run')
 const { BrowserCache } = Run.module
 
 // ------------------------------------------------------------------------------------------------
-// deleteDatabase
-// ------------------------------------------------------------------------------------------------
-
-async function deleteDatabase (name) {
-  return new Promise((resolve, reject) => {
-    const request = window.indexedDB.deleteDatabase(name)
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
-  })
-}
-
-// ------------------------------------------------------------------------------------------------
 // BrowserCache
 // ------------------------------------------------------------------------------------------------
 
@@ -57,24 +45,20 @@ describe.only('BrowserCache', () => {
     // ------------------------------------------------------------------------
 
     it('throws if upgrade required', async () => {
-      await deleteDatabase('upgrade')
-      const cache1 = new BrowserCache({ name: 'upgrade', version: 1 })
+      const name = Math.random().toString()
+      const cache1 = new BrowserCache({ name, version: 1 })
       const db1 = await (unmangle(cache1)._dbPromise)
       db1.close()
-      const cache2 = new BrowserCache({ name: 'upgrade', version: 2 })
+      const cache2 = new BrowserCache({ name, version: 2 })
       await expect(cache2.get('abc')).to.be.rejectedWith('Upgrade not supported')
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if different versions open', async () => {
-      console.log('1')
-      await deleteDatabase('upgrade')
-      console.log('2')
-      const cache1 = new BrowserCache({ name: 'upgrade', version: 1 }) // eslint-disable-line
-      console.log('3')
-      const cache2 = new BrowserCache({ name: 'upgrade', version: 2 })
-      console.log('4')
+      const name = Math.random().toString()
+      const cache1 = new BrowserCache({ name, version: 1 }) // eslint-disable-line
+      const cache2 = new BrowserCache({ name, version: 2 })
       await expect(cache2.get('abc')).to.be.rejectedWith('Upgrade not supported')
     })
 
