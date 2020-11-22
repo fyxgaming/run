@@ -67,7 +67,7 @@ describe.only('BrowserCache', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('throws if different versions open', async () => {
+    it('throws if different versions open', async () => {
       console.log('1')
       await deleteDatabase('upgrade')
       console.log('2')
