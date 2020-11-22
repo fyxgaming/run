@@ -912,6 +912,28 @@ Line 3`
       expect(b.b).to.equal('undefined')
       expect(b.c).to.equal('undefined')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if call init after create', async () => {
+      const run = new Run() // eslint-disable-line
+      class B extends Berry { }
+      run.deploy(B)
+      await run.sync()
+      const b = await B.load('')
+      expect(() => b.init()).to.throw('init disabled')
+      class A extends Jig { f () { A.b.init() } }
+      A.b = b
+      const a = new A()
+      function test (a) { expect(() => a.f()).to.throw('init disabled') }
+      test(a)
+      await a.sync()
+      const a2 = await run.load(a.location)
+      test(a2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
   })
 
   // --------------------------------------------------------------------------

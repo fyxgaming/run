@@ -166,23 +166,37 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('init', () => {
-    it('throws if called by user', () => {
-      new Run() // eslint-disable-line
+    it('throws if called by user', async () => {
+      const run = new Run()
       class A extends Jig { init (n) { this.n = n } }
       const a = new A(5)
-      expect(() => a.init(6)).to.throw('init disabled')
+      function test (a) { expect(() => a.init(6)).to.throw('init disabled') }
+      test(a)
+      await a.sync()
+      const a2 = await run.load(a.location)
+      test(a2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if called by other jig code', () => {
-      new Run() // eslint-disable-line
+    it('throws if called by other jig code', async () => {
+      const run = new Run()
       class A extends Jig {
         init (n) { this.n = n }
         f (n) { this.init(n) }
       }
       const a = new A(5)
-      expect(() => a.f(6)).to.throw('init disabled')
+      function test (a) { expect(() => a.f(6)).to.throw('init disabled') }
+      test(a)
+      await a.sync()
+      const a2 = await run.load(a.location)
+      test(a2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
     })
 
     // ------------------------------------------------------------------------

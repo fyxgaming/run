@@ -95,7 +95,8 @@ describe('Rules', () => {
 
   describe('jig object', () => {
     it('creates rules', () => {
-      const rules = unmangle(Rules._jigObject())
+      const initialized = Math.random() < 0.5
+      const rules = unmangle(Rules._jigObject(initialized))
       expect(rules._creation).to.equal(undefined)
       expect(rules._admin).to.equal(true)
       expect(rules._creationBindings).to.equal(true)
@@ -112,7 +113,11 @@ describe('Rules', () => {
       expect(rules._recordableTarget).to.equal(true)
       expect(rules._smartAPI).to.equal(true)
       expect(rules._thisless).to.equal(false)
-      expect(rules._disabledMethods).to.deep.equal([])
+      if (initialized) {
+        expect(rules._disabledMethods).to.deep.equal(['init'])
+      } else {
+        expect(rules._disabledMethods).to.deep.equal([])
+      }
     })
   })
 
@@ -120,7 +125,8 @@ describe('Rules', () => {
 
   describe('berry object', () => {
     it('creates rules', () => {
-      const rules = unmangle(Rules._berryObject())
+      const initialized = Math.random() < 0.5
+      const rules = unmangle(Rules._berryObject(initialized))
       expect(rules._creation).to.equal(undefined)
       expect(rules._admin).to.equal(true)
       expect(rules._creationBindings).to.equal(true)
@@ -137,7 +143,11 @@ describe('Rules', () => {
       expect(rules._recordableTarget).to.equal(false)
       expect(rules._smartAPI).to.equal(false)
       expect(rules._thisless).to.equal(false)
-      expect(rules._disabledMethods).to.deep.equal([])
+      if (initialized) {
+        expect(rules._disabledMethods).to.deep.equal(['init'])
+      } else {
+        expect(rules._disabledMethods).to.deep.equal([])
+      }
     })
   })
 

@@ -3078,12 +3078,6 @@ describe('Membrane', () => {
       const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _smartAPI: true })
       expect(testRecord(() => CA.f())).to.equal(true)
     })
-
-    // TODO
-    // - Re-enable membrane checks
-    // - 'init' is not disabled when loading from cache! Test and Fix that.
-    // - Don't clone private properties from others!
-    // - Does deepClone require reads? Check both places. Should be sudo?
   })
 
   // --------------------------------------------------------------------------
