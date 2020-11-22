@@ -3044,6 +3044,24 @@ describe('Membrane', () => {
       testRecord(() => CB.f(CA))
       expect(CA.x.o.arr).to.equal(CA.arr)
     })
+
+    // ------------------------------------------------------------------------
+
+    it.only('inner proxies in pending are not pending', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.only('owned set to pending stays owned', () => {
+      // TODO
+    })
+
+    // TODO
+    // - Re-enable membrane checks
+    // - 'init' is not disabled when loading from cache! Test and Fix that.
+    // - Don't clone private properties from others!
+    // - Does deepClone require reads? Check both places. Should be sudo?
   })
 
   // --------------------------------------------------------------------------
