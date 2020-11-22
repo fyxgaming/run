@@ -157,7 +157,7 @@ async function captureAppTxns (app, path) {
       })
   })
 
-  const run = new Run({ network: 'main', networkTimeout: 30000 })
+  const run = new Run({ network: 'main', timeout: 300000, networkTimeout: 300000 })
   const data = require(path)
   const fullPath = require.resolve(path)
 
@@ -169,8 +169,8 @@ async function captureAppTxns (app, path) {
   }
 
   for (let i = 0; i < txids.length; i++) {
-    console.log(`${i + 1} of ${txids.length}`)
     const txid = txids[i]
+    console.log(`${i + 1} of ${txids.length}`, txid)
     if (data.tests.includes(txid)) continue
     const rawtx = await run.blockchain.fetch(txid)
     await run.import(rawtx)
