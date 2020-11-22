@@ -2165,7 +2165,7 @@ describe('Jig', () => {
       await store.sync()
       expect(!!Dragon.location).to.equal(true)
       await run.load(store.location)
-      run.cache.clear()
+      run.cache = new LocalCache()
       await run.load(store.location)
     })
 
@@ -2182,7 +2182,7 @@ describe('Jig', () => {
       const a = new A()
       await a.sync()
       await run.load(a.location)
-      run.cache.clear()
+      run.cache = new LocalCache()
       await run.load(a.location)
     })
   })
