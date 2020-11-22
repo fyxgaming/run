@@ -62,8 +62,43 @@ describe('BrowserCache', () => {
 
     // ------------------------------------------------------------------------
 
-    it('opens twice', () => {
-      // TODO
+    it('opens twice', async () => {
+      const cache1 = new BrowserCache()
+      const cache2 = new BrowserCache()
+      expect(await cache1.get('abc')).to.equal(undefined)
+      expect(await cache2.get('abc')).to.equal(undefined)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // get
+  // --------------------------------------------------------------------------
+
+  describe('get', () => {
+    it('returns cached value if it exists', async () => {
+      const cache = new BrowserCache()
+      await cache.set('get1', { def: 1 })
+      expect(await cache.get('get1')).to.deep.equal({ def: 1 })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns undefined if it does not exist', async () => {
+      const cache = new BrowserCache()
+      expect(await cache.get('get2')).to.equal(undefined)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // set
+  // --------------------------------------------------------------------------
+
+  describe('set', () => {
+    it('sets json', async () => {
+      const cache = new BrowserCache()
+      const json = { s: '', n: 0, b: true, obj: {}, arr: [1, 2, 3] }
+      await cache.set('set1', json)
+      expect(await cache.get('set1')).to.deep.equal(json)
     })
   })
 })
