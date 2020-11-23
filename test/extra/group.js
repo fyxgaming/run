@@ -136,6 +136,16 @@ describe('Group', () => {
       test(a3)
     }
   })
+
+  // ------------------------------------------------------------------------
+
+  it.skip('deploy', async () => {
+    // Hint: Run with env NETWORK=<network> to deploy with keys
+    const run = new Run()
+    run.deploy(Run.extra.Token)
+    await run.sync()
+    console.log(Run.extra.Token)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

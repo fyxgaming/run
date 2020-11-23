@@ -510,13 +510,11 @@ describe('Token', () => {
   // ------------------------------------------------------------------------
 
   it.skip('deploy', async () => {
-    // const purse = '<purse>'
-    // const owner = '<owner>'
-    // const run = new Run({ network: '<network>', purse, owner })
-
-    // run.deploy(Run.extra.Token)
-    // await run.sync()
-    // console.log(Run.extra.Token)
+    // Hint: Run with env NETWORK=<network> to deploy with keys
+    const run = new Run()
+    run.deploy(Run.extra.Token)
+    await run.sync()
+    console.log(Run.extra.Token)
   })
 })
 

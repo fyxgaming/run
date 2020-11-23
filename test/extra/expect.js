@@ -292,6 +292,16 @@ describe('expect', () => {
     expect(() => Run.extra.expect().not.toExtendFrom(A)).not.to.throw()
     expect(() => Run.extra.expect(class B extends A { }).not.toExtendFrom(A)).to.throw('expected value not to be an extension of A but was class B extends A { }')
   })
+
+  // ------------------------------------------------------------------------
+
+  it.skip('deploy', async () => {
+    // Hint: Run with env NETWORK=<network> to deploy with keys
+    const run = new Run()
+    run.deploy(Run.extra.Token)
+    await run.sync()
+    console.log(Run.extra.Token)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

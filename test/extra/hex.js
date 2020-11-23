@@ -90,6 +90,16 @@ describe('Hex', () => {
       expect(() => Hex.bytesToString([256])).to.throw('Bad digit')
     })
   })
+
+  // ------------------------------------------------------------------------
+
+  it.skip('deploy', async () => {
+    // Hint: Run with env NETWORK=<network> to deploy with keys
+    const run = new Run()
+    run.deploy(Run.extra.Token)
+    await run.sync()
+    console.log(Run.extra.Token)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
