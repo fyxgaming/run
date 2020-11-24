@@ -18,7 +18,7 @@ async function main () {
   // Dragon acquires the princess
   // ------------------------------------------------------------------------
 
-  const dragonRun = new Run({ network: 'mock' })
+  const dragonRun = new Run({ network: 'mock', trust: '*' })
 
   const princess = new Princess()
 
@@ -28,7 +28,7 @@ async function main () {
   // Town acquires some gold
   // ------------------------------------------------------------------------
 
-  const townRun = new Run({ network: 'mock' })
+  const townRun = new Run({ network: 'mock', trust: '*' })
 
   const gold = new Gold()
 
@@ -38,10 +38,10 @@ async function main () {
   // Town creates an atomic swap proposal and signs it
   // ------------------------------------------------------------------------
 
-  const swap = new Run.Transaction(() => {
-    gold.send(dragonRun.owner.pubkey)
-    princess.send(townRun.owner.pubkey)
-  })
+  const swap = new Run.Transaction()
+
+  swap.update(() => gold.send(dragonRun.owner.pubkey))
+  swap.update(() => princess.send(townRun.owner.pubkey))
 
   const swapTransaction = await swap.export()
 
@@ -51,9 +51,7 @@ async function main () {
   // Town sends the proposal to the dragon
   // ------------------------------------------------------------------------
 
-  const buffer = new Uint8Array(swapTransaction.toBuffer())
-
-  const ransom = new Ransom(buffer, dragonRun.owner.pubkey)
+  const ransom = new Ransom(swapTransaction, dragonRun.owner.pubkey)
 
   await ransom.sync()
 
@@ -63,15 +61,11 @@ async function main () {
 
   dragonRun.activate()
 
-  const tx = new bsv.Transaction(bsv.deps.Buffer.from(ransom.tx))
+  const signedSwap = await dragonRun.import(ransom.tx)
 
-  await dragonRun.transaction.import(tx)
+  console.log('Number of jigs swapped:', signedSwap.outputs.length)
 
-  console.log('Number of jigs swapped:', dragonRun.transaction.actions.length)
-
-  dragonRun.transaction.end()
-
-  await dragonRun.sync()
+  await signedSwap.publish()
 }
 
 main()
