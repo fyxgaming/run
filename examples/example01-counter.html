@@ -17,7 +17,7 @@
     <script>
         async function main() {
 
-            // The 'mock' network is a local bitcoin network on this machine.
+            // The 'mock' network is a local bitcoin blockchain on this machine.
             // It is faster for testing and free to use. Our wallet is automatically funded.
             const run = new Run({ network: 'mock' })
 
@@ -42,7 +42,7 @@
             counter.inc()
 
             // Force the counter to publish all pending transactions. This will assign
-            // a 'location', string that uniquely identifies the current state
+            // its 'location', a string that uniquely identifies the current state
             // of the counter on the blockchain.
             await counter.sync()
 

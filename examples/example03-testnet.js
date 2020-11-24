@@ -1,5 +1,5 @@
 /**
- * This example demonstrates creating a real token on testnet using node.js.
+ * This example demonstrates creating a real jig on testnet using node.js.
  *
  * To run, execute `node example03-testnet.js` from its directory.
  */
@@ -10,22 +10,22 @@ const purse = 'cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh'
 const run = new Run({ network: 'test', purse })
 
 async function main () {
-  class SimpleStore extends Jig {
-    set (value) {
-      this.value = value
+  class Dragon extends Jig {
+    setName (name) {
+      this.name = name
     }
   }
 
-  const token = new SimpleStore()
+  const dragon = new Dragon()
 
-  token.set('Satoshi Nakamoto')
+  dragon.set('Satoshi Nakamoto')
 
-  await token.sync()
+  await dragon.sync()
 
-  const token2 = await run.load(token.location)
+  const dragon2 = await run.load(dragon.location)
 
-  console.log('Same token: ', token.value === token2.value)
-  console.log('Token location', token2.location)
+  console.log('Same dragon: ', dragon.value === dragon2.value)
+  console.log('Dragon location', dragon2.location)
 }
 
 main().catch(e => console.error(e))

@@ -7,7 +7,7 @@
 
 const Run = require('../dist/run.node.min')
 const bsv = require('bsv')
-const { Token } = Run
+const { Token } = Run.extra
 
 const aliceRun = new Run({ network: 'mock' })
 const bobRun = new Run({ network: 'mock' })
@@ -24,7 +24,8 @@ async function main () {
   Gold.source = 'Bitcoin Land'
   Gold.quality = 'Excellent'
 
-  const alicesGold = Gold.mint(100)
+  let alicesGold = Gold.mint(100)
+  await alicesGold.sync()
 
   alicesGold.send(bob, 20)
   alicesGold.send(bob, 30)
@@ -37,7 +38,10 @@ async function main () {
 
   bobRun.activate()
 
-  await bobRun.sync()
+  const goldClassTxid = Gold.location.slice(0, 64)
+  bobRun.trust(goldClassTxid)
+
+  await bobRun.inventory.sync()
 
   const pieces = bobRun.inventory.jigs.filter(jig => jig instanceof Gold)
   const bobsGold = new Gold(...pieces)

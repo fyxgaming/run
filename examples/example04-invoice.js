@@ -56,6 +56,11 @@ async function companyGeneratesInvoice () {
 async function customerPaysForInvoice () {
   customerRun.activate()
 
+  // The invoice class must be "trusted" for another Run instance to load it.
+  // The company Run instance that deployed the invoice automatically trusts code it deploys.
+  const invoiceClassTxid = Invoice.location.slice(0, 64)
+  customerRun.trust(invoiceClassTxid)
+
   invoice.pay()
 
   await invoice.sync()

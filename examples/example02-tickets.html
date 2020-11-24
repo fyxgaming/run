@@ -20,6 +20,7 @@
 
             const run = new Run({ network: 'mock' })
 
+            // An Event jig is able to create and redeem tickets
             class Event extends Jig {
                 init(name) {
                     this.name = name
@@ -27,8 +28,8 @@
                     this.redeemed = []
                 }
 
-                createTicket() {
-                    const ticket = new Ticket(this)
+                createTicket(address) {
+                    const ticket = new Ticket(this, address)
                     this.tickets.push(ticket)
                     return ticket
                 }
@@ -38,32 +39,34 @@
                     if (this.redeemed.includes(ticket)) { throw new Error('already redeemed') }
                     this.redeemed.push(ticket)
                 }
-
-                didRedeem(ticket) {
-                    return this.redeemed.includes(ticket)
-                }
             }
 
+            // Tickets are separate jigs that are owned by attendees. 
             class Ticket extends Jig {
-                init(event) {
+                init(event, address) {
                     this.event = event
+                    this.owner = address
                 }
 
                 redeemed() {
-                    return this.event.didRedeem(this)
+                    return this.event.redeemed.includes(this)
                 }
             }
 
+            // The Event class needs access to the Ticket class. By default, Run sandboxes all
+            // code from each other, so we have to tell Run ourselves. We use the 'deps' property.
             Event.deps = { Ticket }
 
-            const event = new Event('coachella')
-            const ticket1 = event.createTicket()
-            const ticket2 = event.createTicket()
+            const event = new Event('Coachella')
+
+            const ticket1 = event.createTicket('mqoWXN4jiDferEhAM5mmXGxHthVtcxf67N')
+            const ticket2 = event.createTicket('muaqCTgXKpMdQCiksFp8nwV4W8oFgrMhzq')
 
             event.redeem(ticket1)
 
             console.log('Ticket 1 redeemed', ticket1.redeemed())
             console.log('Ticket 2 redeemed', ticket2.redeemed())
+
         }
         main()
     </script>
