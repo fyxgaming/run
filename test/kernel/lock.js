@@ -24,7 +24,7 @@ describe('Lock', () => {
   // ------------------------------------------------------------------------
 
   describe('create', () => {
-    it.only('simple lock', async () => {
+    it.skip('simple lock', async () => {
       const run = new Run()
       const L = await run.deploy(class L {
         script () { return '' }
@@ -42,7 +42,7 @@ describe('Lock', () => {
       test(A3)
     })
 
-    it.only('simple lock local', async () => {
+    it.skip('simple lock local', async () => {
       const run = new Run()
       class L {
         script () { return '' }
