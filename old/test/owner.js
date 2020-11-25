@@ -20,6 +20,8 @@ const { asm } = Run.extra
 describe('Owner', () => {
   new Run() // eslint-disable-line
 
+  // Calls owner for every new jig created
+
   describe('address', () => {
     it.skip('should get address for every new jig or code', async () => {
       // Create a jig and code, checking when next() is called
@@ -206,36 +208,6 @@ describe('Owner', () => {
     })
   })
 
-  /*
-  describe('ours', () => {
-    it('should support owner without ours method', () => {
-    })
-
-    it('should add to inventory if returns true', () => {
-    })
-
-    it('should not add to inventory if returns false', () => {
-    })
-
-    it('should rethrow error in sync if ours throws', () => {
-    })
-  })
-
-  describe('locations', () => {
-    it('should support owner without ours method', () => {
-    })
-
-    it('should use locations for inventory sync', () => {
-    })
-
-    it('should throw if locations does not return valid array', () => {
-    })
-
-    it('should log errors if locations do not load', () => {
-    })
-  })
-  */
-
   describe('lock owners', () => {
     it('should throw if Run owner is a Lock', () => {
     })
@@ -267,87 +239,6 @@ describe('Owner', () => {
     it('should support changing owners within batch transaction', () => {
     })
   })
-
-  /*
-  describe('locations', () => {
-    it('should return utxos for address', async () => {
-      const mockchain = new Mockchain()
-      const privateKey = new PrivateKey('testnet')
-      const address = privateKey.toAddress().toString()
-      const txid = mockchain.fund(address, 10000)
-      const owner = new LocalOwner({ privkey: privateKey, blockchain: mockchain })
-      expect((await owner.locations())).to.deep.equal([txid + '_o1'])
-    })
-
-    it('should return empty array is blockchain is undefined', async () => {
-      const owner = new LocalOwner()
-      expect(await owner.locations()).to.deep.equal([])
-    })
-  })
-
-  describe('ours', () => {
-    it('should return true for same address lock', () => {
-      const privateKey = new PrivateKey('testnet')
-      const sameLock = new CommonLock(privateKey.toAddress().toString())
-      const owner = new LocalOwner({ privkey: privateKey })
-      expect(owner.ours(sameLock)).to.equal(true)
-    })
-
-    it('should return false for different addresses', () => {
-      const privateKey = new PrivateKey('testnet')
-      const differentLock = new CommonLock(privateKey.toAddress().toString())
-      const owner = new LocalOwner()
-      expect(owner.ours(differentLock)).to.equal(false)
-    })
-
-    it('should return false for different scripts', () => {
-      const differentLock = new class { script () { return new Uint8Array([1, 2, 3]) }}()
-      const owner = new LocalOwner()
-      expect(owner.ours(differentLock)).to.equal(false)
-    })
-  })
-  */
-
-  /*
-  describe('locations', () => {
-    it('should return utxos for locking script', async () => {
-      const mockchain = new Mockchain()
-      const address = new PrivateKey('testnet').toAddress().toString()
-      const txid = mockchain.fund(address, 10000)
-      const viewer = new Viewer(address)
-      expect((await viewer.locations())).to.deep.equal([txid + '_o1'])
-    })
-
-    it('should return empty array is blockchain is undefined', async () => {
-      const address = new PrivateKey().toAddress().toString()
-      const viewer = new Viewer(address)
-      expect(await viewer.locations()).to.deep.equal([])
-    })
-  })
-
-  describe('ours', () => {
-    it('should return true for same locking scripts', () => {
-      const address = new PrivateKey('testnet').toAddress().toString()
-      const sameLock = new CommonLock(address)
-      const viewer = new Viewer(address)
-      expect(viewer.ours(sameLock)).to.equal(true)
-    })
-
-    it('should return false for different addresses', () => {
-      const address = new PrivateKey('testnet').toAddress().toString()
-      const differentLock = new CommonLock(new PrivateKey().toAddress().toString())
-      const viewer = new Viewer(address)
-      expect(viewer.ours(differentLock)).to.equal(false)
-    })
-
-    it('should return false for different scripts', () => {
-      const address = new PrivateKey('testnet').toAddress().toString()
-      const differentLock = new class { script () { return new Uint8Array([1, 2, 3]) }}()
-      const viewer = new Viewer(address)
-      expect(viewer.ours(differentLock)).to.equal(false)
-    })
-  })
-  */
 })
 
 // ------------------------------------------------------------------------------------------------

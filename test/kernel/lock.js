@@ -23,35 +23,59 @@ describe('Lock', () => {
 
   // ------------------------------------------------------------------------
 
-  describe('deploy', () => {
-    it.skip('deploys with custom lock', async () => {
-      // TODO: Use custom owner
-
+  describe('create', () => {
+    it.only('simple lock', async () => {
       const run = new Run()
+      const L = await run.deploy(class L {
+        script () { return '' }
+        domain () { return 0 }
+      }).sync()
+      run.owner = { sign: () => { }, nextOwner: () => new L() }
+      const A = run.deploy(class A { })
+      await run.sync()
+      function test (A) { expect(A.owner instanceof L).to.equal(true) }
+      test(A)
+      const A2 = await run.load(A.location)
+      test(A2)
+      run.cache = new LocalCache()
+      const A3 = await run.load(A.location)
+      test(A3)
+    })
 
+    it.only('simple lock local', async () => {
+      const run = new Run()
       class L {
         script () { return '' }
         domain () { return 0 }
       }
-      run.deploy()
-
-      class A {
-        static send (to) { this.owner = to }
-      }
-
-      A.send = () => { throw new Error('Must call methods on jigs') }
-      const CA = run.deploy(A)
-      run.deploy(CA)
+      const CL = await run.deploy(L).sync()
+      run.owner = { sign: () => { }, nextOwner: () => new L() }
+      const A = run.deploy(class A { })
       await run.sync()
-      CA.send(new L())
-      await CA.sync()
-      expect(A.location.startsWith('commit://'))
+      function test (A) {
+        expect(A.owner instanceof L).to.equal(false)
+        expect(A.owner instanceof CL).to.equal(true)
+      }
+      test(A)
+      const A2 = await run.load(A.location)
+      test(A2)
+      run.cache = new LocalCache()
+      const A3 = await run.load(A.location)
+      test(A3)
     })
+
+    // Assign owner from inside jig
 
     // ------------------------------------------------------------------------
 
     it.skip('fails to deploy if lock class undeployed', () => {
       // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('updates jig with custom key', () => {
+
     })
 
     /*
