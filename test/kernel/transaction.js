@@ -1753,12 +1753,11 @@ describe('Transaction', () => {
   // --------------------------------------------------------------------------
 
   describe('sync', () => {
-    it('sync unpublished ok', async () => {
+    it('run sync unpublished ok', async () => {
       const run = new Run()
       const tx = new Transaction()
       class A extends Jig { }
       const a = tx.update(() => new A())
-      await a.sync()
       await run.sync()
       expect(() => a.location).to.throw('Cannot read location')
       await tx.publish()
@@ -1772,9 +1771,8 @@ describe('Transaction', () => {
       class A extends Jig { }
       const tx = new Transaction()
       const a = tx.update(() => new A())
-      // const error = 'Cannot sync [jig A]: transaction in progress'
-      await a.sync()
-      // await expect(a.sync()).to.be.rejectedWith(error)
+      const error = 'Cannot sync [jig A]: transaction in progress'
+      await expect(a.sync()).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
