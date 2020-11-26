@@ -60,9 +60,6 @@ describe('Bindings', () => {
       expect(_location('error://Something bad happened')).to.deep.equal({ error: 'Something bad happened' })
       expect(_location('error://line1\nline2')).to.deep.equal({ error: 'line1\nline2' })
       expect(_location('error://Undeployed')).to.deep.equal({ error: 'Undeployed', undeployed: true })
-      // Commit locations
-      expect(_location(`commit://${TXID}_o1`)).to.deep.equal({ commit: TXID, vout: 1 })
-      expect(_location(`commit://${TXID}_d2`)).to.deep.equal({ commit: TXID, vdel: 2 })
       // Record locations
       expect(_location(`record://${TXID}_o1`)).to.deep.equal({ record: TXID, vout: 1 })
       expect(_location(`record://${TXID}_d2`)).to.deep.equal({ record: TXID, vdel: 2 })
@@ -99,22 +96,18 @@ describe('Bindings', () => {
       expect(() => _location(`${TXID}_o0?berry=abc&hash=abc&version=5`)).to.throw()
       expect(() => _location(`${TXID}_o0?berry=%abc&hash=${HASH}&version=5`)).to.throw()
       expect(() => _location(`_d1?berry=abc&hash=${HASH}&version=5`)).to.throw()
-      // Bad commit structure
-      expect(() => _location(`commit://${TXID}_o`)).to.throw()
-      expect(() => _location(`commit://${TXID}_0`)).to.throw()
-      expect(() => _location(`commit://${TXID}_j1`)).to.throw()
-      expect(() => _location('commit://_o1')).to.throw()
-      expect(() => _location('commit://_d2')).to.throw()
       // Bad record structure
-      expect(() => _location('record://_j2')).to.throw()
-      expect(() => _location(`record://${TXID}`)).to.throw()
+      expect(() => _location(`record://${TXID}_o`)).to.throw()
+      expect(() => _location(`record://${TXID}_0`)).to.throw()
+      expect(() => _location(`record://${TXID}_j1`)).to.throw()
+      expect(() => _location('record://_o1')).to.throw()
+      expect(() => _location('record://_d2')).to.throw()
       // Bad record structure
       expect(() => _location('native://')).to.throw()
       expect(() => _location('native://!')).to.throw()
       // Bad lengths
       expect(() => _location('abc_o0')).to.throw()
       expect(() => _location('record://abc_o1')).to.throw()
-      expect(() => _location('commit://abc_d0')).to.throw()
       // Invalid chars
       expect(() => _location('$_o1')).to.throw()
       expect(() => _location(`${TXID}_o*`)).to.throw()
@@ -151,13 +144,6 @@ describe('Bindings', () => {
     it('record', () => {
       expect(_compileLocation({ record: TXID, vout: 0 })).to.equal(`record://${TXID}_o0`)
       expect(_compileLocation({ record: TXID, vdel: 1 })).to.equal(`record://${TXID}_d1`)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('commit', () => {
-      expect(_compileLocation({ commit: TXID, vout: 1 })).to.equal(`commit://${TXID}_o1`)
-      expect(_compileLocation({ commit: TXID, vdel: 0 })).to.equal(`commit://${TXID}_d0`)
     })
 
     // ------------------------------------------------------------------------

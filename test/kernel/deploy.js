@@ -191,8 +191,8 @@ describe('Deploy', () => {
       class A { }
       const CA = run.deploy(A)
       _sudo(() => {
-        expect(CA.location.startsWith('commit://')).to.equal(true)
-        expect(CA.origin.startsWith('commit://')).to.equal(true)
+        expect(CA.location.startsWith('record://')).to.equal(true)
+        expect(CA.origin.startsWith('record://')).to.equal(true)
         expect(CA.nonce).to.equal(1)
         expect(unmangle(CA.owner)._value).to.equal(undefined)
         expect(unmangle(CA.satoshis)._value).to.equal(undefined)

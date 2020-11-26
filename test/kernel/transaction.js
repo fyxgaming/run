@@ -1758,6 +1758,7 @@ describe('Transaction', () => {
       const tx = new Transaction()
       class A extends Jig { }
       const a = tx.update(() => new A())
+      await a.sync()
       await run.sync()
       expect(() => a.location).to.throw('Cannot read location')
       await tx.publish()
@@ -1771,8 +1772,9 @@ describe('Transaction', () => {
       class A extends Jig { }
       const tx = new Transaction()
       const a = tx.update(() => new A())
-      const error = 'Cannot sync [jig A]: transaction in progress'
-      await expect(a.sync()).to.be.rejectedWith(error)
+      // const error = 'Cannot sync [jig A]: transaction in progress'
+      await a.sync()
+      // await expect(a.sync()).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
@@ -1782,6 +1784,18 @@ describe('Transaction', () => {
       class A { }
       const tx = new Transaction()
       const C = tx.update(() => run.deploy(A))
+      const error = 'Cannot sync A: transaction in progress'
+      await expect(C.sync()).to.be.rejectedWith(error)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if sync deleted transaction creation', async () => {
+      const run = new Run()
+      class A { }
+      const tx = new Transaction()
+      const C = tx.update(() => run.deploy(A))
+      tx.update(() => C.destroy())
       const error = 'Cannot sync A: transaction in progress'
       await expect(C.sync()).to.be.rejectedWith(error)
     })
