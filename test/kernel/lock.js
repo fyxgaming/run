@@ -114,6 +114,12 @@ describe('Lock', () => {
 
     // ------------------------------------------------------------------------
 
+    it.skip('assign lock deployed in transaction', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('newly deployed lock goes into inventory', () => {
       // TODO
     })
@@ -291,8 +297,6 @@ describe('Lock', () => {
     it.skip('auth lock assigned as owner', () => {
       // TODO
     })
-
-    // TODO
   })
 
   // --------------------------------------------------------------------------
@@ -303,8 +307,6 @@ describe('Lock', () => {
     it.skip('assign destroyed lock', () => {
       // TODO
     })
-
-    // TODO
   })
 })
 
