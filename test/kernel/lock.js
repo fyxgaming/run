@@ -192,8 +192,16 @@ describe('Lock', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('newly deployed lock goes into inventory', () => {
-      // TODO
+    it('newly deployed lock goes into inventory', async () => {
+      const run = new Run()
+      class L {
+        script () { return '' }
+        domain () { return 0 }
+      }
+      run.owner = { sign: x => x, nextOwner: () => new L() }
+      run.deploy(class A {})
+      await run.sync()
+      expect(run.inventory.code.length).to.equal(2)
     })
 
     // ------------------------------------------------------------------------
