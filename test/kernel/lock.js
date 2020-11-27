@@ -206,8 +206,40 @@ describe('Lock', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('script() reads a jig', () => {
-      // TODO
+    it('script() reads a jig', async () => {
+      const run = new Run()
+      class A { }
+      A.script = ''
+      run.deploy(A)
+      class L {
+        script () { return A.script }
+        domain () { return 0 }
+      }
+      L.deps = { A }
+      const CL = run.deploy(L)
+      await run.sync()
+      run.owner = { sign: x => x, nextOwner: () => new CL() }
+      class B { }
+      expectTx({
+        nin: 0,
+        ref: [
+          L.location,
+          A.location
+        ],
+        nout: 1,
+        ndel: 0,
+        cre: [
+          { $arb: {}, T: { $jig: 0 } }
+        ],
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [B.toString(), { deps: {} }]
+          }
+        ]
+      })
+      run.deploy(B)
+      await run.sync()
     })
 
     // ------------------------------------------------------------------------

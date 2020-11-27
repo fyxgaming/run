@@ -89,6 +89,7 @@ function expectTx (opts) {
     try {
       if ('nin' in opts) expect(payload.in).to.equal(opts.nin, 'bad nin')
       if ('nref' in opts) expect(payload.ref.length).to.equal(opts.nref, 'bad nref')
+      if ('ref' in opts) expect(payload.ref).to.deep.equal(opts.ref, 'bad ref')
       if ('nout' in opts) expect(payload.out.length).to.equal(opts.nout, 'bad nout')
       if ('ndel' in opts) expect(payload.del.length).to.equal(opts.ndel, 'bad ndel')
       if ('ncre' in opts) expect(payload.cre.length).to.equal(opts.ncre, 'bad ncre')
