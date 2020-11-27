@@ -64,7 +64,30 @@ describe('Lock', () => {
       test(A3)
     })
 
+    // ------------------------------------------------------------------------
+
+    it('simple lock undeployed', async () => {
+      const run = new Run()
+      class L {
+        script () { return '' }
+        domain () { return 0 }
+      }
+      run.owner = { sign: x => x, nextOwner: () => new L() }
+      const A = run.deploy(class A { })
+      await run.sync()
+      const CL = Run.install(L)
+      function test (A) { expect(A.owner instanceof CL).to.equal(true) }
+      test(A)
+      const A2 = await run.load(A.location)
+      test(A2)
+      run.cache = new LocalCache()
+      const A3 = await run.load(A.location)
+      test(A3)
+    })
+
     // Assign owner from inside jig
+
+    // TODO: Second nextOwner is undeployed! Throw
 
     // ------------------------------------------------------------------------
 
