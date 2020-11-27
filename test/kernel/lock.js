@@ -34,15 +34,31 @@ describe('Lock', () => {
         domain () { return 0 }
       }).sync()
       run.owner = { sign: x => x, nextOwner: () => new L() }
-      const A = run.deploy(class A { })
+      class A { }
+      expectTx({
+        nin: 0,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        cre: [
+          { $arb: {}, T: { $jig: 0 } }
+        ],
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [A.toString(), { deps: {} }]
+          }
+        ]
+      })
+      const CA = run.deploy(A)
       await run.sync()
       function test (A) { expect(A.owner instanceof L).to.equal(true) }
-      test(A)
-      const A2 = await run.load(A.location)
-      test(A2)
+      test(CA)
+      const CA2 = await run.load(A.location)
+      test(CA2)
       run.cache = new LocalCache()
-      const A3 = await run.load(A.location)
-      test(A3)
+      const CA3 = await run.load(A.location)
+      test(CA3)
     })
 
     // ------------------------------------------------------------------------
@@ -98,19 +114,40 @@ describe('Lock', () => {
         domain () { return 0 }
       }
       run.owner = { sign: x => x, nextOwner: () => new L() }
-      const A = run.deploy(class A { })
+      class A { }
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        cre: [
+          { $arb: {}, T: { $jig: 1 } },
+          { $arb: {}, T: { $jig: 1 } }
+        ],
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [A.toString(), { deps: {} }]
+          },
+          {
+            op: 'DEPLOY',
+            data: [L.toString(), { deps: {} }]
+          }
+        ]
+      })
+      const CA = run.deploy(A)
       await run.sync()
       const CL = Run.install(L)
       function test (A) {
         expect(A.owner instanceof CL).to.equal(true)
         expect(A.owner.constructor.owner instanceof CL).to.equal(true)
       }
-      test(A)
-      const A2 = await run.load(A.location)
-      test(A2)
+      test(CA)
+      const CA2 = await run.load(A.location)
+      test(CA2)
       run.cache = new LocalCache()
-      const A3 = await run.load(A.location)
-      test(A3)
+      const CA3 = await run.load(A.location)
+      test(CA3)
     })
 
     // ------------------------------------------------------------------------
@@ -123,7 +160,6 @@ describe('Lock', () => {
       }
       run.owner = { sign: x => x, nextOwner: () => new L() }
       class A { }
-
       expectTx({
         nin: 0,
         nref: 0,
@@ -144,7 +180,6 @@ describe('Lock', () => {
           }
         ]
       })
-
       run.transaction(() => {
         run.deploy(L)
         run.deploy(A)
