@@ -44,7 +44,27 @@ describe('Lock', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('simple lock local', async () => {
+    it('simple lock deploying', async () => {
+      const run = new Run()
+      const L = run.deploy(class L {
+        script () { return '' }
+        domain () { return 0 }
+      })
+      run.owner = { sign: x => x, nextOwner: () => new L() }
+      const A = run.deploy(class A { })
+      await run.sync()
+      function test (A) { expect(A.owner instanceof L).to.equal(true) }
+      test(A)
+      const A2 = await run.load(A.location)
+      test(A2)
+      run.cache = new LocalCache()
+      const A3 = await run.load(A.location)
+      test(A3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('simple lock local', async () => {
       const run = new Run()
       class L {
         script () { return '' }
@@ -65,10 +85,6 @@ describe('Lock', () => {
       const A3 = await run.load(A.location)
       test(A3)
     })
-
-    // ------------------------------------------------------------------------
-
-    // deploying
 
     // ------------------------------------------------------------------------
 
@@ -94,6 +110,7 @@ describe('Lock', () => {
     // Assign owner from inside jig
 
     // TODO: Second nextOwner is undeployed! Throw
+    // script() reads, readonly, etc.
 
     // ------------------------------------------------------------------------
 
