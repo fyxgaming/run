@@ -22,7 +22,7 @@ TwoPlusTwoLock.deps = { asm }
  * 
  * To update jigs with the above lock, we need to create unlocking scripts.
  * 
- * We can do this by implementing the Owner API below. There are two method.
+ * We can do this by implementing the Owner API below. There are two methods.
  */
 
 class TwoPlusTwoKey {
@@ -43,6 +43,7 @@ class TwoPlusTwoKey {
 /**
  * Create a jig assigned to the TwoPlusTwoLock and update it with the TwoPlusTwoKey
  */
+
 async function main () {
   const run = new Run({ network: 'mock', owner: new TwoPlusTwoKey() })
 
