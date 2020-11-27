@@ -77,6 +77,7 @@ async function populatePreviousOutputs (tx, blockchain) {
  * @param {?Array} out Output hashes
  * @param {?Array} del Deleted hashes
  * @param {?Array} ncre Number of creates
+ * @param {?Array} cre Creates array
  * @param {?Array} exec Program instructions
  */
 function expectTx (opts) {
@@ -91,6 +92,7 @@ function expectTx (opts) {
       if ('nout' in opts) expect(payload.out.length).to.equal(opts.nout, 'bad nout')
       if ('ndel' in opts) expect(payload.del.length).to.equal(opts.ndel, 'bad ndel')
       if ('ncre' in opts) expect(payload.cre.length).to.equal(opts.ncre, 'bad ncre')
+      if ('cre' in opts) expect(payload.cre).to.deep.equal(opts.cre, 'bad cre')
       if ('exec' in opts) expect(payload.exec).to.deep.equal(opts.exec, 'bad exec')
     } catch (e) {
       console.log('Broadcast payload:', JSON.stringify(payload, 0, 3))

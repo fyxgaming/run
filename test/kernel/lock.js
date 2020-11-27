@@ -8,6 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { expectTx } = require('../env/misc')
 const { Jig } = Run
 const { LocalCache } = Run.module
 
@@ -114,8 +115,44 @@ describe('Lock', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('assign lock deployed in transaction', () => {
-      // TODO
+    it('assign lock deployed in transaction', async () => {
+      const run = new Run()
+      class L {
+        script () { return '' }
+        domain () { return 0 }
+      }
+      run.owner = { sign: x => x, nextOwner: () => new L() }
+      class A { }
+
+      expectTx({
+        nin: 0,
+        nref: 0,
+        nout: 2,
+        ndel: 0,
+        cre: [
+          { $arb: {}, T: { $jig: 0 } },
+          { $arb: {}, T: { $jig: 0 } }
+        ],
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [L.toString(), { deps: {} }]
+          },
+          {
+            op: 'DEPLOY',
+            data: [A.toString(), { deps: {} }]
+          }
+        ]
+      })
+
+      run.transaction(() => {
+        run.deploy(L)
+        run.deploy(A)
+      })
+      await run.sync()
+      await run.load(A.location)
+      run.cache = new LocalCache()
+      await run.load(A.location)
     })
 
     // ------------------------------------------------------------------------
