@@ -24,13 +24,13 @@ describe('Lock', () => {
   // ------------------------------------------------------------------------
 
   describe('create', () => {
-    it.skip('simple lock', async () => {
+    it('simple lock deployed', async () => {
       const run = new Run()
       const L = await run.deploy(class L {
         script () { return '' }
         domain () { return 0 }
       }).sync()
-      run.owner = { sign: () => { }, nextOwner: () => new L() }
+      run.owner = { sign: x => x, nextOwner: () => new L() }
       const A = run.deploy(class A { })
       await run.sync()
       function test (A) { expect(A.owner instanceof L).to.equal(true) }
@@ -42,6 +42,8 @@ describe('Lock', () => {
       test(A3)
     })
 
+    // ------------------------------------------------------------------------
+
     it.skip('simple lock local', async () => {
       const run = new Run()
       class L {
@@ -49,7 +51,7 @@ describe('Lock', () => {
         domain () { return 0 }
       }
       const CL = await run.deploy(L).sync()
-      run.owner = { sign: () => { }, nextOwner: () => new L() }
+      run.owner = { sign: x => x, nextOwner: () => new L() }
       const A = run.deploy(class A { })
       await run.sync()
       function test (A) {
@@ -63,6 +65,10 @@ describe('Lock', () => {
       const A3 = await run.load(A.location)
       test(A3)
     })
+
+    // ------------------------------------------------------------------------
+
+    // deploying
 
     // ------------------------------------------------------------------------
 
