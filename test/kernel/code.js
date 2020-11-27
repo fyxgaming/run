@@ -406,6 +406,25 @@ describe('Code', () => {
       expect(Jig instanceof Code).to.equal(true)
       expect(Berry instanceof Code).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('arbitrary object instanceof non-jig code', () => {
+      const run = new Run()
+      const C = run.deploy(class A { })
+      const a = new C()
+      expect(a instanceof C).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('arbitrary object instanceof non-jig local', () => {
+      const run = new Run()
+      class A { }
+      const C = run.deploy(A)
+      const a = new C()
+      expect(a instanceof A).to.equal(true)
+    })
   })
 
   // --------------------------------------------------------------------------

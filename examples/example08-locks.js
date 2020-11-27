@@ -31,12 +31,9 @@ class TwoPlusTwoKey {
   async sign (rawtx, parents, locks) {
     const tx = new bsv.Transaction(rawtx)
 
-    // We install the lock to get the deployed code that is assigned as a lock
-    const InstalledLock = Run.install(TwoPlusTwoLock)
-
     // Sign any TwoPlusTwoLock
     tx.inputs
-      .filter((input, n) => locks[n] instanceof InstalledLock)
+      .filter((input, n) => locks[n] instanceof TwoPlusTwoLock)
       .forEach(input => input.setScript('OP_4'))
     
     return tx.toString('hex')

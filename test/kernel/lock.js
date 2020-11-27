@@ -77,7 +77,7 @@ describe('Lock', () => {
       const A = run.deploy(class A { })
       await run.sync()
       function test (A) {
-        expect(A.owner instanceof L).to.equal(false)
+        expect(A.owner instanceof L).to.equal(true)
         expect(A.owner instanceof CL).to.equal(true)
       }
       test(A)
