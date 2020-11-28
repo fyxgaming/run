@@ -516,7 +516,7 @@ describe('Auth', () => {
       class B extends Berry { }
       const b = await B.load('abc')
       b.constructor.auth()
-      await expect(run.sync()).to.be.rejectedWith('Bad location')
+      await expect(run.sync()).to.be.rejectedWith('Invalid owner')
     })
   })
 })

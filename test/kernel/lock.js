@@ -240,6 +240,9 @@ describe('Lock', () => {
       })
       run.deploy(B)
       await run.sync()
+      await run.load(B.location)
+      run.cache = new LocalCache()
+      await run.load(B.location)
     })
 
     // ------------------------------------------------------------------------
@@ -269,6 +272,12 @@ describe('Lock', () => {
     // ------------------------------------------------------------------------
 
     it.skip('throws if nextOwner() returns non-lock', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if script() reads an undeployed', () => {
       // TODO
     })
 
