@@ -247,8 +247,42 @@ describe('Lock', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('script() reads an deploying jig', () => {
-      // TODO
+    // This isn't an accurate test
+    // A is getting L, but L is in another. Uh oh.
+    // Somehow A needs to be independent of L in its own owner
+    // This should stay a test. We should detect it.
+    it.skip('script() reads a deploying jig', async () => {
+      const run = new Run()
+      class A { }
+      A.script = ''
+      class L {
+        script () { return A.script }
+        domain () { return 0 }
+      }
+      L.deps = { A }
+      const CL = run.deploy(L)
+      run.owner = { sign: x => x, nextOwner: () => new CL() }
+      class B { }
+      expectTx({
+        nin: 0,
+        nref: 2,
+        nout: 1,
+        ndel: 0,
+        cre: [
+          { $arb: {}, T: { $jig: 0 } }
+        ],
+        exec: [
+          {
+            op: 'DEPLOY',
+            data: [B.toString(), { deps: {} }]
+          }
+        ]
+      })
+      run.deploy(B)
+      await run.sync()
+      await run.load(B.location)
+      run.cache = new LocalCache()
+      await run.load(B.location)
     })
 
     // ------------------------------------------------------------------------
@@ -259,7 +293,7 @@ describe('Lock', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('script() reads an deploying inner jig', () => {
+    it.skip('script() reads a deploying inner jig', () => {
       // TODO
     })
 
