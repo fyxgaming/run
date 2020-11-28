@@ -32,6 +32,8 @@ describe('Tx', () => {
     expect(tx.outputs[2].script).to.equal('76a9140710fe5e246c1f1b2e31aa10bbc6ff041a1e1e8088ac')
     expect(tx.nLockTime).to.equal(0)
   })
+
+  // TODO: Compare with bsv library? Pick sample set of transactions?
 })
 
 // ------------------------------------------------------------------------------------------------
