@@ -34,6 +34,16 @@ describe('Tx', () => {
   })
 
   // TODO: Compare with bsv library? Pick sample set of transactions?
+
+  // ------------------------------------------------------------------------
+
+  it.skip('deploy', async () => {
+    // Hint: Run with env NETWORK=<network> to deploy with keys
+    const run = new Run()
+    run.deploy(Run.extra.Tx)
+    await run.sync()
+    console.log(Run.extra.Tx)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------

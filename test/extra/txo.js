@@ -99,6 +99,16 @@ describe('txo', () => {
       }
     }
   })
+
+  // ------------------------------------------------------------------------
+
+  it.skip('deploy', async () => {
+    // Hint: Run with env NETWORK=<network> to deploy with keys
+    const run = new Run()
+    run.deploy(Run.extra.txo)
+    await run.sync()
+    console.log(Run.extra.txo)
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
