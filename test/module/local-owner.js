@@ -258,6 +258,10 @@ describe('LocalOwner', () => {
       await tx.sign()
       await tx.sign()
 
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      expect(bsvtx.inputs[0].script.chunks.length).to.equal(2)
+
       await tx.publish()
     })
 
