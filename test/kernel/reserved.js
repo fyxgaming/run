@@ -189,6 +189,23 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if code has init method', () => {
+      const run = new Run()
+      class A { static init () { } }
+      expect(() => run.deploy(A)).to.throw('Must not have any reserved words: init')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if code has init property', () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.init = 123
+      expect(() => run.deploy(A)).to.throw('Must not have any reserved words: init')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if code has bindings methods', () => {
       const run = new Run()
       expect(() => run.deploy(class A extends Jig { static origin () { } })).to.throw()
