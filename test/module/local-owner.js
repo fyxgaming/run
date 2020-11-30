@@ -15,6 +15,8 @@ const Run = require('../env/run')
 const { Jig, CommonLock } = Run
 const { Group } = Run.extra
 const { LocalOwner, Mockchain } = Run.module
+const unmangle = require('../env/unmangle')
+const { _getSignedPubkeys } = unmangle(LocalOwner)
 
 // ------------------------------------------------------------------------------------------------
 // LocalOwner
@@ -295,85 +297,47 @@ describe('LocalOwner', () => {
 
     // ----------------------------------------------------------------------
 
-    it.skip('sign out of order', async () => {
+    it('sign out of order', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      const run2 = new Run({ blockchain: await getExtrasBlockchain() })
 
-      const pk1 = run.owner.bsvPublicKey
-      const pk2 = run2.owner.bsvPublicKey
-
-      console.log(pk1.toString())
-      console.log(pk2.toString())
-      console.log('-------------')
+      const privkey1 = new bsv.PrivateKey()
+      const privkey2 = new bsv.PrivateKey()
+      const privkey3 = new bsv.PrivateKey()
+      const bsvprivkeys = [privkey1, privkey2, privkey3]
+      const bsvpubkeys = bsvprivkeys.map(privkey => privkey.toPublicKey())
+      const pubkeys = bsvpubkeys.map(bsvpubkey => bsvpubkey.toString())
 
       class A extends Jig {
         init (owner) { this.owner = owner }
         set () { this.n = 1 }
       }
 
-      // Create a jig with a 2-3 group owner
-      run.activate()
-      const a = new A(new Group([run.owner.pubkey, run2.owner.pubkey], 2))
+      const a = new A(new Group(pubkeys, 3))
       await a.sync()
-
-      // Sign with pubkey 1 and export tx
       const tx = new Run.Transaction()
       tx.update(() => a.set())
       await tx.pay()
+      run.owner = privkey2
       await tx.sign()
-
-      run.owner = run2.owner
+      run.owner = privkey3
+      await tx.sign()
+      run.owner = privkey1
       await tx.sign()
       const rawtx = await tx.export()
 
       const bsvtx = new bsv.Transaction(rawtx)
+      const vin = 0
+      const prevrawtx = await run.blockchain.fetch(bsvtx.inputs[vin].prevTxId.toString('hex'))
+      const prevtx = new bsv.Transaction(prevrawtx)
+      const prevout = prevtx.outputs[bsvtx.inputs[vin].outputIndex]
+
       const sig1 = bsvtx.inputs[0].script.chunks[1].buf.toString('hex')
       const sig2 = bsvtx.inputs[0].script.chunks[2].buf.toString('hex')
+      const sig3 = bsvtx.inputs[0].script.chunks[3].buf.toString('hex')
+      const sigs = [sig1, sig2, sig3]
 
-      const unmangle = require('../env/unmangle')
-      const { _sighash } = unmangle(Run)
-      const sighashType = bsv.crypto.Signature.SIGHASH_ALL | bsv.crypto.Signature.SIGHASH_FORKID
-      const prevrawtx = await run.blockchain.fetch(bsvtx.inputs[0].prevTxId.toString('hex'))
-      const prevout = new bsv.Transaction(prevrawtx).outputs[bsvtx.inputs[0].outputIndex]
-      const satoshisBN = new bsv.crypto.BN(prevout.satoshis)
-      const hashbuf = _sighash(bsvtx, sighashType, 0, prevout.script, satoshisBN)
-
-      const sig1hex = sig1.slice(0, sig1.length - 2)
-      const sig1buf = bsv.deps.Buffer.from(sig1hex, 'hex')
-      const bsvsig1 = bsv.crypto.Signature.fromDER(sig1buf)
-
-      const sig2hex = sig2.slice(0, sig2.length - 2)
-      const sig2buf = bsv.deps.Buffer.from(sig2hex, 'hex')
-      const bsvsig2 = bsv.crypto.Signature.fromDER(sig2buf)
-
-      for (let i = 0; i <= 3; i++) {
-        const ecdsa = new bsv.crypto.ECDSA()
-        bsvsig1.i = i
-        ecdsa.set({ hashbuf, sig: bsvsig1 })
-        try {
-          const pk = ecdsa.toPublicKey()
-          console.log(i, pk.toString())
-        } catch (e) { console.log(e) }
-
-        const ecdsa2 = new bsv.crypto.ECDSA()
-        bsvsig2.i = i
-        ecdsa2.set({ hashbuf, sig: bsvsig2 })
-        try {
-          const pk = ecdsa2.toPublicKey()
-          console.log(i, pk.toString())
-        } catch (e) { console.log(e) }
-      }
-
-      const endian = 'little'
-      console.log(bsv.crypto.ECDSA.verify(hashbuf, bsvsig1, pk1, endian))
-      console.log(bsv.crypto.ECDSA.verify(hashbuf, bsvsig1, pk2, endian))
-      console.log(bsv.crypto.ECDSA.verify(hashbuf, bsvsig2, pk1, endian))
-      console.log(bsv.crypto.ECDSA.verify(hashbuf, bsvsig2, pk2, endian))
-
-      // const sig = ECDSA.sign(hashbuf, privateKey, 'little')
-      // const sigbuf = Buffer.from(sig.toDER())
-      // const buf = Buffer.concat([sigbuf, Buffer.from([sighashType & 0xff])])
-      // return buf.toString('hex')
+      const signedPubkeys = _getSignedPubkeys(bsvtx, vin, prevout, sigs, pubkeys)
+      expect(signedPubkeys).to.deep.equal(pubkeys)
     })
   })
 })
