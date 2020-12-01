@@ -829,7 +829,7 @@ describe('Reserved', () => {
       const b = await B.load('abc')
       expect(() => Object.getOwnPropertyDescriptor(b, 'mustBeLatest')).to.throw('Cannot get descriptor for mustBeLatest')
       expect(() => Object.getOwnPropertyDescriptor(b, 'makeBackup')).to.throw('Cannot get descriptor for makeBackup')
-      expect(() => Object.getOwnPropertyDescriptor(b, 'armoured')).to.throw('Cannot get descriptor for makeBackup')
+      expect(() => Object.getOwnPropertyDescriptor(b, 'armoured')).to.throw('Cannot get descriptor for armoured')
     })
 
     // ------------------------------------------------------------------------
