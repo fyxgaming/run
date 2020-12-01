@@ -7,8 +7,7 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-require('chai').use(require('chai-as-promised'))
-const unmangle = require('../env/unmangle')
+// const { stub } = require('sinon')
 const Run = require('../env/run')
 const { BrowserCache } = Run.module
 
@@ -21,7 +20,7 @@ describe('BrowserCache', () => {
   // non-browser
   // --------------------------------------------------------------------------
 
-  // Tests when running in node where BrowserCache is not supported
+  // Tests when running in node where IndexedDbCache is not supported
   if (typeof VARIANT === 'undefined' || VARIANT !== 'browser') {
     describe('non-browser', () => {
       it('throws if not a browser', () => {
@@ -29,65 +28,31 @@ describe('BrowserCache', () => {
       })
     })
 
-    return // Don't run any other tests
+    // Don't run any other tests
   }
 
   // --------------------------------------------------------------------------
   // constructor
   // --------------------------------------------------------------------------
 
+  /*
   describe('constructor', () => {
-    it('opens database', async () => {
-      const cache = new BrowserCache()
-      expect(await cache.get('abc')).to.equal(undefined)
+    it('creates with caches', () => {
+      const cache1 = new LocalCache()
+      const cache2 = { set: async () => { }, get: async () => { } }
+      new MultiLevelCache(cache1, cache2) // eslint-disable-line
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if upgrade required', async () => {
-      const name = Math.random().toString()
-      const cache1 = new BrowserCache({ name, version: 1 })
-      const db1 = await (unmangle(cache1)._dbPromise)
-      db1.close()
-      const cache2 = new BrowserCache({ name, version: 2 })
-      await expect(cache2.get('abc')).to.be.rejectedWith('Upgrade not supported')
+    it('throws if non-cache', () => {
+      expect(() => new MultiLevelCache({})).to.throw('Invalid cache')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if different versions open', async () => {
-      const name = Math.random().toString()
-      const cache1 = new BrowserCache({ name, version: 1 }) // eslint-disable-line
-      const cache2 = new BrowserCache({ name, version: 2 })
-      await expect(cache2.get('abc')).to.be.rejectedWith('Upgrade not supported')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('opens twice', async () => {
-      const cache1 = new BrowserCache()
-      const cache2 = new BrowserCache()
-      expect(await cache1.get('abc')).to.equal(undefined)
-      expect(await cache2.get('abc')).to.equal(undefined)
-    })
-  })
-
-  // --------------------------------------------------------------------------
-  // get
-  // --------------------------------------------------------------------------
-
-  describe('get', () => {
-    it('returns cached value if it exists', async () => {
-      const cache = new BrowserCache()
-      await cache.set('get1', { def: 1 })
-      expect(await cache.get('get1')).to.deep.equal({ def: 1 })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('returns undefined if it does not exist', async () => {
-      const cache = new BrowserCache()
-      expect(await cache.get('get2')).to.equal(undefined)
+    it('throws if no cache', () => {
+      expect(() => new MultiLevelCache()).to.throw('No caches')
     })
   })
 
@@ -96,13 +61,41 @@ describe('BrowserCache', () => {
   // --------------------------------------------------------------------------
 
   describe('set', () => {
-    it('sets json', async () => {
-      const cache = new BrowserCache()
-      const json = { s: '', n: 0, b: true, obj: {}, arr: [1, 2, 3] }
-      await cache.set('set1', json)
-      expect(await cache.get('set1')).to.deep.equal(json)
+    it('sets in all caches', async () => {
+      const cache1 = stub({ set: async () => { }, get: async () => { } })
+      const cache2 = stub({ set: async () => { }, get: async () => { } })
+      const cache = new MultiLevelCache(cache1, cache2)
+      await cache.set('abc', 123)
+      expect(cache1.set.calledWith('abc', 123)).to.equal(true)
+      expect(cache2.set.calledWith('abc', 123)).to.equal(true)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // get
+  // --------------------------------------------------------------------------
+
+  describe('get', () => {
+    it('gets from first cache that returns non-undefined', async () => {
+      const cache1 = stub({ set: async () => { }, get: async () => { } })
+      const cache2 = { set: async () => { }, get: async () => 123 }
+      const cache3 = stub({ set: async () => { }, get: async () => { } })
+      const cache = new MultiLevelCache(cache1, cache2, cache3)
+      expect(await cache.get('abc')).to.equal(123)
+      expect(cache1.get.calledWith('abc')).to.equal(true)
+      expect(cache3.get.called).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns undefined if no cache has value', async () => {
+      const cache1 = stub({ set: async () => { }, get: async () => { } })
+      const cache2 = stub({ set: async () => { }, get: async () => { } })
+      const cache = new MultiLevelCache(cache1, cache2)
+      expect(await cache.get('abc')).to.equal(undefined)
+    })
+  })
+  */
 })
 
 // ------------------------------------------------------------------------------------------------
