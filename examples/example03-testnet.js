@@ -10,22 +10,19 @@ const purse = 'cQP1h2zumWrCr2zxciuNeho61QUGtQ4zBKWFauk7WEhFb8kvjRTh'
 const run = new Run({ network: 'test', purse })
 
 async function main () {
-  class Dragon extends Jig {
+  class TradingCard extends Jig {
     setName (name) {
       this.name = name
     }
   }
 
-  const dragon = new Dragon()
+  const token = new TradingCard()
+  token.setName('Satoshi Nakamoto')
+  await token.sync()
 
-  dragon.set('Satoshi Nakamoto')
-
-  await dragon.sync()
-
-  const dragon2 = await run.load(dragon.location)
-
-  console.log('Same dragon: ', dragon.value === dragon2.value)
-  console.log('Dragon location', dragon2.location)
+  // Try loading the token from its onchain location and comparing
+  const token2 = await run.load(token.location)
+  console.log('Same token: ', token.name === token2.name)
 }
 
 main().catch(e => console.error(e))
