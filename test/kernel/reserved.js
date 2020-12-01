@@ -672,6 +672,7 @@ describe('Reserved', () => {
       const CA = run.deploy(A)
       expect(() => CA.f('blockhash')).to.throw('Cannot delete blockhash')
       expect(() => CA.f('consume')).to.throw('Cannot delete consume')
+      expect(() => CA.f('armoured')).to.throw('Cannot delete armoured')
     })
 
     // ------------------------------------------------------------------------
@@ -797,6 +798,7 @@ describe('Reserved', () => {
       const a = new A()
       expect(() => Object.getOwnPropertyDescriptor(a, 'blockheight')).to.throw('Cannot get descriptor for blockheight')
       expect(() => Object.getOwnPropertyDescriptor(a, 'consume')).to.throw('Cannot get descriptor for consume')
+      expect(() => Object.getOwnPropertyDescriptor(a, 'armored')).to.throw('Cannot get descriptor for armored')
     })
 
     // ------------------------------------------------------------------------
@@ -827,6 +829,7 @@ describe('Reserved', () => {
       const b = await B.load('abc')
       expect(() => Object.getOwnPropertyDescriptor(b, 'mustBeLatest')).to.throw('Cannot get descriptor for mustBeLatest')
       expect(() => Object.getOwnPropertyDescriptor(b, 'makeBackup')).to.throw('Cannot get descriptor for makeBackup')
+      expect(() => Object.getOwnPropertyDescriptor(b, 'armoured')).to.throw('Cannot get descriptor for makeBackup')
     })
 
     // ------------------------------------------------------------------------
