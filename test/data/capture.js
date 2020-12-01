@@ -86,24 +86,6 @@ class CaptureMockchain extends Mockchain {
     rawtx = new bsv.Transaction(rawtx).toString('hex')
     CAPTURE_TXNS[txid] = rawtx
     CAPTURE_TXIDS.push(txid)
-
-    // Try loading the run
-    let payload = null
-    try {
-      payload = Run.instance.payload(rawtx)
-    } catch (e) {
-      if (e.message.startsWith('Not a run transaction')) {
-        return txid
-      }
-      throw e
-    }
-    for (let i = 0; i < payload.out.length; i++) {
-      await Run.instance.load(`${txid}_o${i + 1}`)
-    }
-    for (let i = 0; i < payload.del.length; i++) {
-      await Run.instance.load(`${txid}_d${i}`)
-    }
-
     return txid
   }
 
