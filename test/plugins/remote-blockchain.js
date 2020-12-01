@@ -1,7 +1,7 @@
 /**
  * blockchain-server.js
  *
- * Tests for lib/module/blockchain-server.js
+ * Tests for lib/plugins/blockchain-server.js
  */
 
 const { describe, it } = require('mocha')
@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const { PrivateKey, Script } = require('bsv')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { RemoteBlockchain, BlockchainServer } = Run.module
+const { RemoteBlockchain, BlockchainServer } = Run.plugins
 const { RequestError } = Run.errors
 
 // ------------------------------------------------------------------------------------------------

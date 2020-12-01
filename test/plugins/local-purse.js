@@ -1,7 +1,7 @@
 /**
  * local-purse.js
  *
- * Tests for lib/module/local-purse.js
+ * Tests for lib/plugins/local-purse.js
  */
 
 const bsv = require('bsv')
@@ -12,7 +12,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { payFor } = require('../env/misc')
 const { Jig } = Run
-const { LocalPurse, Mockchain, RemoteBlockchain } = Run.module
+const { LocalPurse, Mockchain, RemoteBlockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // LocalPurse tests

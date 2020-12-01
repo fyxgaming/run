@@ -8,7 +8,7 @@ const { PrivateKey, Transaction } = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { CommonLock } = Run
+const { CommonLock } = Run.util
 const unmangle = require('../env/unmangle')
 const { _location, _compileLocation, _nonce, _satoshis, _owner, _markUndeployed } = unmangle(unmangle(Run)._Bindings)
 
@@ -136,7 +136,7 @@ describe('Bindings', () => {
 
     it('native', () => {
       expect(_compileLocation({ native: 'Code' })).to.equal('native://Code')
-      expect(_compileLocation({ native: 'StandardLock' })).to.equal('native://StandardLock')
+      expect(_compileLocation({ native: 'CommonLock' })).to.equal('native://CommonLock')
     })
 
     // ------------------------------------------------------------------------

@@ -1,14 +1,14 @@
 /**
  * local-cache.js
  *
- * Tests for lib/module/local-cache.js
+ * Tests for lib/plugins/local-cache.js
  */
 
 const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { LocalCache } = Run.module
+const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // LocalCache

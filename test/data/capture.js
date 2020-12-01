@@ -11,7 +11,7 @@ require('chai').use(require('chai-as-promised'))
 const fs = (typeof VARIANT === 'undefined' || VARIANT === 'node') && require('fs-extra')
 const bsv = require('bsv')
 const Run = require('../env/run')
-const { Mockchain } = Run.module
+const { Mockchain } = Run.plugins
 const { COVER } = require('../env/config')
 
 // ------------------------------------------------------------------------------------------------

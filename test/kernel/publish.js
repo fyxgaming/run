@@ -11,7 +11,7 @@ const { stub } = require('sinon')
 const { expectTx } = require('../env/misc')
 const Run = require('../env/run')
 const { Jig } = Run
-const { Mockchain, LocalCache } = Run.module
+const { Mockchain, LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Publish

@@ -14,7 +14,7 @@ const { COVER } = require('../env/config')
 const { getExtrasBlockchain } = require('../env/misc')
 const { Jig } = Run
 const { Group } = Run.extra
-const { LocalCache } = Run.module
+const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Group

@@ -1,7 +1,7 @@
 /**
  * inventory.js
  *
- * Tests for lib/module/inventory.js
+ * Tests for lib/plugins/inventory.js
  */
 
 const { describe, it, afterEach } = require('mocha')
@@ -12,7 +12,7 @@ const { stub } = require('sinon')
 const { PrivateKey, Transaction } = require('bsv')
 const Run = require('../env/run')
 const { Jig } = Run
-const { LocalCache } = Run.module
+const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Inventory

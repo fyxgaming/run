@@ -16,7 +16,7 @@ const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const { expectTx } = require('../env/misc')
 const { Code, Jig, Berry } = Run
-const { LocalCache } = Run.module
+const { LocalCache } = Run.plugins
 const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
 const _sudo = unmangle(Run)._sudo
 

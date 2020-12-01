@@ -12,7 +12,7 @@ const Run = require('../env/run')
 const { COVER, STRESS } = require('../env/config')
 const { getExtrasBlockchain } = require('../env/misc')
 const { Token } = Run.extra
-const { LocalCache } = Run.module
+const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Token

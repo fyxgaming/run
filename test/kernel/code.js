@@ -11,7 +11,7 @@ const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
 const PrivateKey = require('bsv/lib/privatekey')
 const { Code, Jig, Berry } = Run
-const { LocalCache } = Run.module
+const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Globals

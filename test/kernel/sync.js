@@ -11,7 +11,7 @@ const { stub } = require('sinon')
 const { Transaction } = require('bsv')
 const Run = require('../env/run')
 const { Jig } = Run
-const { LocalCache } = Run.module
+const { LocalCache } = Run.plugins
 const { payFor, populatePreviousOutputs } = require('../env/misc')
 
 // ------------------------------------------------------------------------------------------------

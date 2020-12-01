@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const { stub } = require('sinon')
 const Run = require('../env/run')
 const { Jig, Transaction } = Run
-const { LocalCache } = Run.module
+const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Deps

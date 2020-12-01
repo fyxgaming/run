@@ -10,7 +10,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Berry, Code } = Run
-const { LocalCache } = Run.module
+const { LocalCache } = Run.plugins
 const { expectTx } = require('../env/misc')
 const unmangle = require('../env/unmangle')
 const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics

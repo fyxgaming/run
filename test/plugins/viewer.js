@@ -1,15 +1,15 @@
 /**
  * viewer.js
  *
- * Tests for lib/module/viewer.js
+ * Tests for lib/plugins/viewer.js
  */
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { PrivateKey, PublicKey, Transaction } = require('bsv')
 const Run = require('../env/run')
-const { CommonLock } = Run
-const { Viewer } = Run.module
+const { CommonLock } = Run.util
+const { Viewer } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Viewer

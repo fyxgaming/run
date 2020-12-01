@@ -1,7 +1,7 @@
 /**
  * mockchain.js
  *
- * Tests for lib/module/mockchain.js
+ * Tests for lib/plugins/mockchain.js
  */
 
 const { PrivateKey, Transaction, Script } = require('bsv')
@@ -10,7 +10,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { STRESS } = require('../env/config')
-const { Mockchain } = Run.module
+const { Mockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Mockchain Functional Tests

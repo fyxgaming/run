@@ -1,7 +1,7 @@
 /**
  * local-owner.js
  *
- * Tests for lib/module/local-owner.js
+ * Tests for lib/plugins/local-owner.js
  */
 
 const { describe, it, afterEach } = require('mocha')
@@ -12,9 +12,10 @@ const { Address, PrivateKey, PublicKey, Transaction } = bsv
 const { COVER } = require('../env/config')
 const { getExtrasBlockchain } = require('../env/misc')
 const Run = require('../env/run')
-const { Jig, CommonLock } = Run
+const { Jig } = Run
 const { Group } = Run.extra
-const { LocalOwner, Mockchain } = Run.module
+const { CommonLock } = Run.util
+const { LocalOwner, Mockchain } = Run.plugins
 const unmangle = require('../env/unmangle')
 const { _getSignedPubkeys } = unmangle(LocalOwner)
 

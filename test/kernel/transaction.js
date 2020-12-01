@@ -12,7 +12,7 @@ const { stub, fake } = require('sinon')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Berry, Transaction } = Run
-const { LocalCache, LocalPurse, LocalOwner } = Run.module
+const { LocalCache, LocalPurse, LocalOwner } = Run.plugins
 const { STRESS } = require('../env/config')
 
 // ------------------------------------------------------------------------------------------------

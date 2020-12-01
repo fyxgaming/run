@@ -1,7 +1,7 @@
 /**
  * browser-cache.js
  *
- * Tests for lib/module/browser-cache.js
+ * Tests for lib/plugins/browser-cache.js
  */
 /* global VARIANT */
 
@@ -9,7 +9,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 // const { stub } = require('sinon')
 const Run = require('../env/run')
-const { BrowserCache } = Run.module
+const { BrowserCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // BrowserCache

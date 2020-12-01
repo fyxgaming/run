@@ -1,7 +1,7 @@
 /**
  * indexeddb-cache.js
  *
- * Tests for lib/module/indexeddb-cache.js
+ * Tests for lib/plugins/indexeddb-cache.js
  */
 /* global VARIANT */
 
@@ -10,7 +10,7 @@ const { expect } = require('chai')
 require('chai').use(require('chai-as-promised'))
 const unmangle = require('../env/unmangle')
 const Run = require('../env/run')
-const { IndexedDbCache } = Run.module
+const { IndexedDbCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // IndexedDbCache
@@ -45,20 +45,20 @@ describe('IndexedDbCache', () => {
     // ------------------------------------------------------------------------
 
     it('throws if upgrade required', async () => {
-      const name = Math.random().toString()
-      const cache1 = new IndexedDbCache({ name, version: 1 })
+      const dbName = Math.random().toString()
+      const cache1 = new IndexedDbCache({ dbName, dbVersion: 1 })
       const db1 = await (unmangle(cache1)._dbPromise)
       db1.close()
-      const cache2 = new IndexedDbCache({ name, version: 2 })
+      const cache2 = new IndexedDbCache({ dbName, dbVersion: 2 })
       await expect(cache2.get('abc')).to.be.rejectedWith('Upgrade not supported')
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if different versions open', async () => {
-      const name = Math.random().toString()
-      const cache1 = new IndexedDbCache({ name, version: 1 }) // eslint-disable-line
-      const cache2 = new IndexedDbCache({ name, version: 2 })
+      const dbName = Math.random().toString()
+      const cache1 = new IndexedDbCache({ dbName, dbVersion: 1 }) // eslint-disable-line
+      const cache2 = new IndexedDbCache({ dbName, dbVersion: 2 })
       await expect(cache2.get('abc')).to.be.rejectedWith('Upgrade not supported')
     })
 

@@ -9,7 +9,7 @@ const Run = require('./run')
 const unmangle = require('./unmangle')
 const { _payload } = unmangle(Run)
 const { expect } = require('chai')
-const { Mockchain } = Run.module
+const { Mockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Globals

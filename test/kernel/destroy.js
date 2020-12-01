@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { Jig, Berry, Code } = Run
-const { LocalCache } = Run.module
+const { LocalCache } = Run.plugins
 const { expectTx } = require('../env/misc')
 const { stub } = require('sinon')
 

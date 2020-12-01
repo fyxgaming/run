@@ -9,7 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { Run } = require('../../test/env/config')
 const { Jig } = Run
-const { LocalOwner, LocalPurse, LocalCache, Mockchain, RemoteBlockchain } = Run.module
+const { LocalOwner, LocalPurse, LocalCache, Mockchain, RemoteBlockchain } = Run.plugins
 const bsv = require('bsv')
 const { PrivateKey } = bsv
 const packageInfo = require('../../package.json')

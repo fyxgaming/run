@@ -8,7 +8,7 @@ const bsv = require('bsv')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { CommonLock } = Run
+const { CommonLock } = Run.util
 
 // ------------------------------------------------------------------------------------------------
 // CommonLock

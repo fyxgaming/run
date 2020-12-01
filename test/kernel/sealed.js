@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
 const { Jig } = Run
-const { LocalCache } = Run.module
+const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Sealed

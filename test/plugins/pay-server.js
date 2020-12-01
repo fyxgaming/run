@@ -1,7 +1,7 @@
 /**
  * pay-server.js
  *
- * Tests for lib/module/pay-server.js
+ * Tests for lib/plugins/pay-server.js
  */
 
 const { describe, it, afterEach } = require('mocha')
@@ -12,7 +12,7 @@ const Run = require('../env/run')
 const { STRESS } = require('../env/config')
 const { network } = Run.defaults
 const { Jig } = Run
-const { PayServer } = Run.module
+const { PayServer } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Keys

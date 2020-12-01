@@ -12,7 +12,7 @@ const bsv = require('bsv')
 const Run = require('../env/run')
 const { payFor } = require('../env/misc')
 const { Jig } = Run
-const { Mockchain, LocalCache } = Run.module
+const { Mockchain, LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Replay

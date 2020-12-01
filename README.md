@@ -12,7 +12,7 @@
 - `npm run test:cover` - Collect code coverage
 - `npm run deploy` - Redeploy extras to the blockchain
 - `npm run bump` - Create a new patch release
-- `npm run test test/module/local-purse.js` - Run just the purse tests
+- `npm run test test/plugins/local-purse.js` - Run just the purse tests
 
 ## Configuring the tests
 

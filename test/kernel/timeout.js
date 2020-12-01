@@ -10,7 +10,7 @@ const { stub } = require('sinon')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
-const { LocalCache } = Run.module
+const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Timeout
