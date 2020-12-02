@@ -29,7 +29,7 @@ describe('BrowserCache', () => {
       })
     })
 
-    // Don't run any other tests
+    return // Don't run any other tests
   }
 
   // --------------------------------------------------------------------------
