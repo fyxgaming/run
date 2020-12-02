@@ -7,9 +7,10 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-// const { stub } = require('sinon')
+const { spy } = require('sinon')
+const unmangle = require('../env/unmangle')
 const Run = require('../env/run')
-const { BrowserCache } = Run.plugins
+const { BrowserCache, LocalCache, IndexedDbCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // BrowserCache
@@ -35,24 +36,27 @@ describe('BrowserCache', () => {
   // constructor
   // --------------------------------------------------------------------------
 
-  /*
   describe('constructor', () => {
-    it('creates with caches', () => {
-      const cache1 = new LocalCache()
-      const cache2 = { set: async () => { }, get: async () => { } }
-      new MultiLevelCache(cache1, cache2) // eslint-disable-line
+    it('creates internal caches', () => {
+      const cache = new BrowserCache()
+      expect(unmangle(cache)._localCache instanceof LocalCache).to.equal(true)
+      expect(unmangle(cache)._indexedDbCache instanceof IndexedDbCache).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if non-cache', () => {
-      expect(() => new MultiLevelCache({})).to.throw('Invalid cache')
+    it('supports local cache options', () => {
+      const cache = new BrowserCache({ maxSizeMB: 123 })
+      expect(unmangle(cache)._localCache.maxSizeMB).to.equal(123)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if no cache', () => {
-      expect(() => new MultiLevelCache()).to.throw('No caches')
+    it('supports indexeddb cache options', () => {
+      const cache = new BrowserCache({ dbName: 'abc', dbVersion: 456, dbStore: 'def' })
+      expect(unmangle(unmangle(cache)._indexedDbCache)._name).to.equal('abc')
+      expect(unmangle(unmangle(cache)._indexedDbCache)._version).to.equal(456)
+      expect(unmangle(unmangle(cache)._indexedDbCache)._store).to.equal('def')
     })
   })
 
@@ -61,13 +65,13 @@ describe('BrowserCache', () => {
   // --------------------------------------------------------------------------
 
   describe('set', () => {
-    it('sets in all caches', async () => {
-      const cache1 = stub({ set: async () => { }, get: async () => { } })
-      const cache2 = stub({ set: async () => { }, get: async () => { } })
-      const cache = new MultiLevelCache(cache1, cache2)
+    it('sets in both caches', async () => {
+      const cache = new BrowserCache()
+      spy(unmangle(cache)._localCache)
+      spy(unmangle(cache)._indexedDbCache)
       await cache.set('abc', 123)
-      expect(cache1.set.calledWith('abc', 123)).to.equal(true)
-      expect(cache2.set.calledWith('abc', 123)).to.equal(true)
+      expect(unmangle(cache)._localCache.set.calledWith('abc', 123)).to.equal(true)
+      expect(unmangle(cache)._indexedDbCache.set.calledWith('abc', 123)).to.equal(true)
     })
   })
 
@@ -76,26 +80,39 @@ describe('BrowserCache', () => {
   // --------------------------------------------------------------------------
 
   describe('get', () => {
-    it('gets from first cache that returns non-undefined', async () => {
-      const cache1 = stub({ set: async () => { }, get: async () => { } })
-      const cache2 = { set: async () => { }, get: async () => 123 }
-      const cache3 = stub({ set: async () => { }, get: async () => { } })
-      const cache = new MultiLevelCache(cache1, cache2, cache3)
+    it('gets from local cache if exists', async () => {
+      const cache = new BrowserCache()
+      spy(unmangle(cache)._localCache)
+      spy(unmangle(cache)._indexedDbCache)
+      await cache.set('abc', 123)
       expect(await cache.get('abc')).to.equal(123)
-      expect(cache1.get.calledWith('abc')).to.equal(true)
-      expect(cache3.get.called).to.equal(false)
+      expect(unmangle(cache)._localCache.get.calledWith('abc')).to.equal(true)
+      expect(unmangle(cache)._indexedDbCache.get.called).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('gets from indexed cache if not in memory', async () => {
+      const cache = new BrowserCache()
+      spy(unmangle(cache)._localCache)
+      spy(unmangle(cache)._indexedDbCache)
+      await unmangle(cache)._indexedDbCache.set('def', 123)
+      expect(await cache.get('def')).to.equal(123)
+      expect(unmangle(cache)._localCache.get.called).to.equal(true)
+      expect(unmangle(cache)._indexedDbCache.get.called).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('returns undefined if no cache has value', async () => {
-      const cache1 = stub({ set: async () => { }, get: async () => { } })
-      const cache2 = stub({ set: async () => { }, get: async () => { } })
-      const cache = new MultiLevelCache(cache1, cache2)
-      expect(await cache.get('abc')).to.equal(undefined)
+      const cache = new BrowserCache()
+      spy(unmangle(cache)._localCache)
+      spy(unmangle(cache)._indexedDbCache)
+      expect(await cache.get('ghi')).to.equal(undefined)
+      expect(unmangle(cache)._localCache.get.called).to.equal(true)
+      expect(unmangle(cache)._indexedDbCache.get.called).to.equal(true)
     })
   })
-  */
 })
 
 // ------------------------------------------------------------------------------------------------
