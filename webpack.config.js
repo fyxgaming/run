@@ -51,7 +51,7 @@ const reservedNames = [
   'asm', 'expect', 'Group', 'Hex', 'Token', 'Tx', 'txo',
   // Errors
   'ArgumentError', 'InternalError', 'RequestError', 'StateError', 'TimeoutError',
-  'UnimplementedError'
+  'NotImplementedError'
 ]
 
 // Reserved words that should not be mangled in minified builds

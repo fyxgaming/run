@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { UnimplementedError } = Run.errors
+const { NotImplementedError } = Run.errors
 const { Blockchain, Purse, Logger, Cache, Lock, Owner } = Run.api
 
 // ------------------------------------------------------------------------------------------------
@@ -17,48 +17,48 @@ const { Blockchain, Purse, Logger, Cache, Lock, Owner } = Run.api
 
 describe('Blockchain API', () => {
   describe('broadcast', () => {
-    it('throws UnimplementedError by default', async () => {
-      await expect(new Blockchain().broadcast()).to.be.rejectedWith(UnimplementedError)
+    it('throws NotImplementedError by default', async () => {
+      await expect(new Blockchain().broadcast()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
   // --------------------------------------------------------------------------
 
   describe('fetch', () => {
-    it('throws UnimplementedError by default', async () => {
-      await expect(new Blockchain().fetch()).to.be.rejectedWith(UnimplementedError)
+    it('throws NotImplementedError by default', async () => {
+      await expect(new Blockchain().fetch()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
   // --------------------------------------------------------------------------
 
   describe('utxos', () => {
-    it('throws UnimplementedError by default', async () => {
-      await expect(new Blockchain().utxos()).to.be.rejectedWith(UnimplementedError)
+    it('throws NotImplementedError by default', async () => {
+      await expect(new Blockchain().utxos()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
   // --------------------------------------------------------------------------
 
   describe('time', () => {
-    it('throws UnimplementedError by default', async () => {
-      await expect(new Blockchain().time()).to.be.rejectedWith(UnimplementedError)
+    it('throws NotImplementedError by default', async () => {
+      await expect(new Blockchain().time()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
   // --------------------------------------------------------------------------
 
   describe('spends', () => {
-    it('throws UnimplementedError by default', async () => {
-      await expect(new Blockchain().spends()).to.be.rejectedWith(UnimplementedError)
+    it('throws NotImplementedError by default', async () => {
+      await expect(new Blockchain().spends()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
   // --------------------------------------------------------------------------
 
   describe('network', () => {
-    it('throws UnimplementedError by default', async () => {
-      expect(() => new Blockchain().network).to.throw(UnimplementedError)
+    it('throws NotImplementedError by default', async () => {
+      expect(() => new Blockchain().network).to.throw(NotImplementedError)
     })
   })
 
@@ -128,16 +128,16 @@ describe('Blockchain API', () => {
 
 describe('Purse API ', () => {
   describe('pay', () => {
-    it('throws UnimplementedError by default', async () => {
-      await expect(new Purse().pay()).to.be.rejectedWith(UnimplementedError)
+    it('throws NotImplementedError by default', async () => {
+      await expect(new Purse().pay()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
   // --------------------------------------------------------------------------
 
   describe('broadcast', () => {
-    it('throws UnimplementedError by default', async () => {
-      await expect(new Purse().broadcast()).to.be.rejectedWith(UnimplementedError)
+    it('throws NotImplementedError by default', async () => {
+      await expect(new Purse().broadcast()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
@@ -178,16 +178,16 @@ describe('Purse API ', () => {
 
 describe('Owner API', () => {
   describe('sign', () => {
-    it('throws UnimplementedError by default', async () => {
-      await expect(new Owner().sign()).to.be.rejectedWith(UnimplementedError)
+    it('throws NotImplementedError by default', async () => {
+      await expect(new Owner().sign()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
   // --------------------------------------------------------------------------
 
   describe('nextOwner', () => {
-    it('throws UnimplementedError by default', async () => {
-      await expect(new Owner().nextOwner()).to.be.rejectedWith(UnimplementedError)
+    it('throws NotImplementedError by default', async () => {
+      await expect(new Owner().nextOwner()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
@@ -297,7 +297,7 @@ describe('Logger API', () => {
 describe('Cache API', () => {
   describe('get', () => {
     it('does not throw by default', async () => {
-      await expect(new Cache().get()).to.be.rejectedWith(UnimplementedError)
+      await expect(new Cache().get()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
@@ -305,7 +305,7 @@ describe('Cache API', () => {
 
   describe('set', () => {
     it('does not throw by default', async () => {
-      await expect(new Cache().set()).to.be.rejectedWith(UnimplementedError)
+      await expect(new Cache().set()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
@@ -345,16 +345,16 @@ describe('Cache API', () => {
 
 describe('Lock API', () => {
   describe('script', () => {
-    it('throws UnimplementedError by default', () => {
-      expect(() => new Lock().script()).to.throw(UnimplementedError)
+    it('throws NotImplementedError by default', () => {
+      expect(() => new Lock().script()).to.throw(NotImplementedError)
     })
   })
 
   // --------------------------------------------------------------------------
 
   describe('domain', () => {
-    it('throws UnimplementedError by default', () => {
-      expect(() => new Lock().domain()).to.throw(UnimplementedError)
+    it('throws NotImplementedError by default', () => {
+      expect(() => new Lock().domain()).to.throw(NotImplementedError)
     })
   })
 
