@@ -254,6 +254,32 @@ describe('Token', () => {
       const a2 = await run.load(a.location)
       expect(a2.owner instanceof CustomLock).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('extend send to add metadata', async () => {
+      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      class TestToken extends Token2 {
+        send (to, amount, metadata) {
+          this.metadata = metadata
+          return super.send(to, amount)
+        }
+      }
+      const a = TestToken.mint(2)
+      await run.sync()
+      const metadata = { n: 123 }
+      const address = new PrivateKey().toAddress().toString()
+      const change = a.send(address, 1, metadata)
+      expect(a.metadata.n).to.equal(123)
+      expect(typeof change.metadata).to.equal('undefined')
+      if (COVER) return
+      await run.sync()
+      const a2 = await run.load(a.location)
+      expect(a2.metadata.n).to.equal(123)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      expect(a3.metadata.n).to.equal(123)
+    })
   })
 
   // --------------------------------------------------------------------------
