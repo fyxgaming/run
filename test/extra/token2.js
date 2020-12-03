@@ -112,6 +112,15 @@ describe('Token', () => {
       const token3 = await run.load(token.location)
       expect(token3.sender).to.equal(null)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if create using constructor', async () => {
+      new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
+      class TestToken extends Token2 { }
+      expect(() => new TestToken()).to.throw('Must create token using mint()')
+      expect(() => new TestToken(1)).to.throw('Must create token using mint()')
+    })
   })
 
   // --------------------------------------------------------------------------
