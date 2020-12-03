@@ -39,7 +39,8 @@ describe('IndexedDbCache', () => {
   describe('constructor', () => {
     it('opens database', async () => {
       const cache = new IndexedDbCache()
-      expect(await cache.get('abc')).to.equal(undefined)
+      const key = Math.random().toString()
+      expect(await cache.get(key)).to.equal(undefined)
     })
 
     // ------------------------------------------------------------------------
@@ -50,7 +51,8 @@ describe('IndexedDbCache', () => {
       const db1 = await (unmangle(cache1)._dbPromise)
       db1.close()
       const cache2 = new IndexedDbCache({ dbName, dbVersion: 2 })
-      await expect(cache2.get('abc')).to.be.rejectedWith('Upgrade not supported')
+      const key = Math.random().toString()
+      await expect(cache2.get(key)).to.be.rejectedWith('Upgrade not supported')
     })
 
     // ------------------------------------------------------------------------
@@ -59,7 +61,8 @@ describe('IndexedDbCache', () => {
       const dbName = Math.random().toString()
       const cache1 = new IndexedDbCache({ dbName, dbVersion: 1 }) // eslint-disable-line
       const cache2 = new IndexedDbCache({ dbName, dbVersion: 2 })
-      await expect(cache2.get('abc')).to.be.rejectedWith('Upgrade not supported')
+      const key = Math.random().toString()
+      await expect(cache2.get(key)).to.be.rejectedWith('Upgrade not supported')
     })
 
     // ------------------------------------------------------------------------
@@ -67,8 +70,9 @@ describe('IndexedDbCache', () => {
     it('opens twice', async () => {
       const cache1 = new IndexedDbCache()
       const cache2 = new IndexedDbCache()
-      expect(await cache1.get('abc')).to.equal(undefined)
-      expect(await cache2.get('abc')).to.equal(undefined)
+      const key = Math.random().toString()
+      expect(await cache1.get(key)).to.equal(undefined)
+      expect(await cache2.get(key)).to.equal(undefined)
     })
   })
 
@@ -79,15 +83,17 @@ describe('IndexedDbCache', () => {
   describe('get', () => {
     it('returns cached value if it exists', async () => {
       const cache = new IndexedDbCache()
-      await cache.set('get1', { def: 1 })
-      expect(await cache.get('get1')).to.deep.equal({ def: 1 })
+      const key = Math.random().toString()
+      await cache.set(key, { def: 1 })
+      expect(await cache.get(key)).to.deep.equal({ def: 1 })
     })
 
     // ------------------------------------------------------------------------
 
     it('returns undefined if it does not exist', async () => {
       const cache = new IndexedDbCache()
-      expect(await cache.get('get2')).to.equal(undefined)
+      const key = Math.random().toString()
+      expect(await cache.get(key)).to.equal(undefined)
     })
   })
 
@@ -99,8 +105,9 @@ describe('IndexedDbCache', () => {
     it('sets json', async () => {
       const cache = new IndexedDbCache()
       const json = { s: '', n: 0, b: true, obj: {}, arr: [1, 2, 3] }
-      await cache.set('set1', json)
-      expect(await cache.get('set1')).to.deep.equal(json)
+      const key = Math.random().toString()
+      await cache.set(key, json)
+      expect(await cache.get(key)).to.deep.equal(json)
     })
   })
 })
