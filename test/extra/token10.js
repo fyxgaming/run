@@ -1,7 +1,7 @@
 /**
- * token.js
+ * token10.js
  *
- * Tests for lib/extra/token.js
+ * Tests for lib/extra/token10.js
  */
 
 const { describe, it, afterEach } = require('mocha')
@@ -11,14 +11,14 @@ const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { COVER, STRESS } = require('../env/config')
 const { getExtrasBlockchain } = require('../env/misc')
-const { Token } = Run.extra
+const Token = Run.extra.Token10
 const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Token
 // ------------------------------------------------------------------------------------------------
 
-describe('Token', () => {
+describe('Token10', () => {
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
   // Deactivate the current run instance. This stops leaks across tests.

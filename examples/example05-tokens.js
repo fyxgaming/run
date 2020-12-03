@@ -44,7 +44,7 @@ async function main () {
   await bobRun.inventory.sync()
 
   const pieces = bobRun.inventory.jigs.filter(jig => jig instanceof Gold)
-  const bobsGold = new Gold(...pieces)
+  const bobsGold = pieces[0].combine(...pieces.slice(1))
 
   // ------------------------------------------------------------------------
   // Alice mints 30 more gold for herself

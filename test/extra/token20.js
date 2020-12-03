@@ -1,7 +1,7 @@
 /**
- * token2.js
+ * token20.js
  *
- * Tests for lib/extra/token2.js
+ * Tests for lib/extra/token20.js
  */
 
 const { describe, it, afterEach } = require('mocha')
@@ -11,15 +11,14 @@ const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { COVER, STRESS } = require('../env/config')
 const { getExtrasBlockchain } = require('../env/misc')
-const unmangle = require('../env/unmangle')
-const Token2 = unmangle(Run)._Token2
+const { Token } = Run.extra
 const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
-// Token
+// Token20
 // ------------------------------------------------------------------------------------------------
 
-describe('Token', () => {
+describe('Token20', () => {
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
   // Deactivate the current run instance. This stops leaks across tests.
@@ -34,7 +33,7 @@ describe('Token', () => {
   describe('mint', () => {
     it('new tokens', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const token = TestToken.mint(100)
       await token.sync()
       expect(token.amount).to.equal(100)
@@ -45,7 +44,7 @@ describe('Token', () => {
 
     it('updates supply', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      const TestToken = run.deploy(class TestToken extends Token2 { })
+      const TestToken = run.deploy(class TestToken extends Token { })
       TestToken.mint(100)
       TestToken.mint(200)
       TestToken.mint(300)
@@ -56,14 +55,14 @@ describe('Token', () => {
 
     it('throws if class is not extended', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      expect(() => Token2.mint(100)).to.throw('Token2 must be extended')
+      expect(() => Token.mint(100)).to.throw('Token must be extended')
     })
 
     // ------------------------------------------------------------------------
 
     it('large amounts', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       expect(TestToken.mint(2147483647).amount).to.equal(2147483647)
       expect(TestToken.mint(Number.MAX_SAFE_INTEGER).amount).to.equal(Number.MAX_SAFE_INTEGER)
     })
@@ -72,7 +71,7 @@ describe('Token', () => {
 
     it('throws for bad amounts', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       expect(() => TestToken.mint()).to.throw('amount is not a number')
       expect(() => TestToken.mint('1')).to.throw('amount is not a number')
       expect(() => TestToken.mint(0)).to.throw('amount must be positive')
@@ -87,7 +86,7 @@ describe('Token', () => {
 
     it('throws if try to fake class', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       run.deploy(TestToken)
       await run.sync()
 
@@ -101,7 +100,7 @@ describe('Token', () => {
 
     it('sender is null', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const token = TestToken.mint(1)
       await run.sync()
       expect(token.sender).to.equal(null)
@@ -117,7 +116,7 @@ describe('Token', () => {
 
     it('throws if create using constructor', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       expect(() => new TestToken()).to.throw('Must create token using mint()')
       expect(() => new TestToken(1)).to.throw('Must create token using mint()')
     })
@@ -130,7 +129,7 @@ describe('Token', () => {
   describe('send', () => {
     it('full amount', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
       await token.sync()
@@ -145,7 +144,7 @@ describe('Token', () => {
 
     it('partial amount', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
       await token.sync()
@@ -164,7 +163,7 @@ describe('Token', () => {
 
     it('throws if send too much', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
       expect(() => token.send(address, 101)).to.throw('Not enough funds')
@@ -174,7 +173,7 @@ describe('Token', () => {
 
     it('throws if send bad amount', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
       expect(() => token.send(address, {})).to.throw('amount is not a number')
@@ -191,7 +190,7 @@ describe('Token', () => {
 
     it('throws if send to bad owner', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const token = TestToken.mint(100)
       await token.sync()
       expect(() => token.send(10)).to.throw('Invalid owner: 10')
@@ -202,7 +201,7 @@ describe('Token', () => {
 
     it('sender on sent token is sending owner', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const token = TestToken.mint(2)
       await token.sync()
       const change = token.send(run.purse.address, 1)
@@ -220,7 +219,7 @@ describe('Token', () => {
 
     it('sender on change token is null', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const token = TestToken.mint(2)
       await token.sync()
       const change = token.send(run.owner.address, 1)
@@ -242,7 +241,7 @@ describe('Token', () => {
         script () { return '' }
         domain () { return 0 }
       }).sync()
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const a = TestToken.mint(2)
       await a.sync()
       a.send(new CustomLock())
@@ -259,7 +258,7 @@ describe('Token', () => {
 
     it('extend send to add metadata', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 {
+      class TestToken extends Token {
         send (to, amount, metadata) {
           this.metadata = metadata
           return super.send(to, amount)
@@ -289,7 +288,7 @@ describe('Token', () => {
   describe('combine', () => {
     it('two tokens', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const a = TestToken.mint(30)
       const b = TestToken.mint(70)
       expect(a.combine(b)).to.equal(a)
@@ -305,7 +304,7 @@ describe('Token', () => {
 
     it('many tokens', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const tokens = []
       for (let i = 0; i < 10; ++i) tokens.push(TestToken.mint(1))
       const combined = tokens[0].combine(...tokens.slice(1))
@@ -325,7 +324,7 @@ describe('Token', () => {
     // load() does not work in cover mode for preinstalls
     it('load after combine', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const a = TestToken.mint(30)
       const b = TestToken.mint(70)
       a.combine(b)
@@ -340,7 +339,7 @@ describe('Token', () => {
 
     it('throws if combine different owners without signatures', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const a = TestToken.mint(1)
       const b = TestToken.mint(2)
       const address = new PrivateKey().toAddress().toString()
@@ -353,7 +352,7 @@ describe('Token', () => {
 
     it('throws if empty', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const a = TestToken.mint(1)
       expect(() => a.combine()).to.throw('Invalid tokens to combine')
     })
@@ -362,7 +361,7 @@ describe('Token', () => {
 
     it('throws if combined amount is too large', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const a = TestToken.mint(Number.MAX_SAFE_INTEGER)
       const b = TestToken.mint(1)
       expect(() => a.combine(b)).to.throw('amount too large')
@@ -372,7 +371,7 @@ describe('Token', () => {
 
     it('throws if combine non-tokens', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const error = 'Cannot combine different token classes'
       expect(() => TestToken.mint(1).combine(1)).to.throw(error)
       expect(() => TestToken.mint(1).combine({})).to.throw(error)
@@ -383,9 +382,9 @@ describe('Token', () => {
 
     it('throws if combine different token classes', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const error = 'Cannot combine different token classes'
-      class DifferentToken extends Token2 { }
+      class DifferentToken extends Token { }
       class ExtendedToken extends TestToken { }
       expect(() => TestToken.mint(1).combine(DifferentToken.mint(1))).to.throw(error)
       expect(() => TestToken.mint(1).combine(ExtendedToken.mint(1))).to.throw(error)
@@ -395,7 +394,7 @@ describe('Token', () => {
 
     it('throws if combine duplicate tokens', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const token = TestToken.mint(1)
       expect(() => token.combine(token)).to.throw('Cannot combine duplicate tokens')
     })
@@ -404,7 +403,7 @@ describe('Token', () => {
 
     it('sender on combined token is null', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const a = TestToken.mint(2)
       const b = TestToken.mint(2)
       await run.sync()
@@ -428,7 +427,7 @@ describe('Token', () => {
   describe('destroy', () => {
     it('amount is 0', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const token = TestToken.mint(2)
       expect(token.amount).to.equal(2)
       token.destroy()
@@ -446,7 +445,7 @@ describe('Token', () => {
 
     it('sender is null', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const token = TestToken.mint(2)
       await token.sync()
       token.send(run.owner.address, 1)
@@ -466,7 +465,7 @@ describe('Token', () => {
 
     it('cannot be combined', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const a = TestToken.mint(2)
       a.destroy()
       const b = TestToken.mint(2)
@@ -478,7 +477,7 @@ describe('Token', () => {
 
     it('cannot be sent', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const a = TestToken.mint(2)
       a.destroy()
       expect(() => a.send(run.owner.address)).to.throw()
@@ -492,7 +491,7 @@ describe('Token', () => {
   describe('Batch', () => {
     it('combine and send', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token2 { }
+      class TestToken extends Token { }
       const a = TestToken.mint(1)
       const b = TestToken.mint(2)
       await run.sync()
@@ -525,7 +524,7 @@ describe('Token', () => {
           a.timeout = 500000
           const b = new Run()
           b.timeout = 500000
-          class TestToken extends Token2 { }
+          class TestToken extends Token { }
           const TT = b.deploy(TestToken)
           await b.sync()
 
@@ -566,9 +565,9 @@ describe('Token', () => {
   it.skip('deploy', async () => {
     // Hint: Run with env NETWORK=<network> to deploy with keys
     const run = new Run()
-    run.deploy(Run.extra.Token2)
+    run.deploy(Run.extra.Token)
     await run.sync()
-    console.log(Run.extra.Token2)
+    console.log(Run.extra.Token)
   })
 })
 
