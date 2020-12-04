@@ -82,6 +82,27 @@ describe('Creation', () => {
       expect(null instanceof Creation).to.equal(false)
       expect({} instanceof Creation).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('jigs in jigs', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init () {
+          this.x = this instanceof Creation
+          this.y = this.constructor instanceof Creation
+        }
+      }
+      A.deps = { Creation }
+      const a = new A()
+      await a.sync()
+      expect(a.x && a.y).to.equal(true)
+      const a2 = await run.load(a.location)
+      expect(a2.x && a2.y).to.equal(true)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      expect(a3.x && a3.y).to.equal(true)
+    })
   })
 
   // --------------------------------------------------------------------------
