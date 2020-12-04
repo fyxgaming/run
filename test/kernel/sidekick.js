@@ -91,7 +91,7 @@ describe('Sidekick code', () => {
       const cf = run.deploy(f)
       expect(typeof cf.sync).to.equal('function')
       expect(typeof cf.upgrade).to.equal('function')
-      expect(typeof cf.auth).to.equal('function')
+      expect(typeof cf.sign).to.equal('function')
       expect(typeof cf.destroy).to.equal('function')
     })
 
@@ -150,7 +150,7 @@ describe('Sidekick code', () => {
       const CA = run.deploy(A)
       expect(typeof CA.sync).to.equal('function')
       expect(typeof CA.upgrade).to.equal('function')
-      expect(typeof CA.auth).to.equal('function')
+      expect(typeof CA.sign).to.equal('function')
       expect(typeof CA.destroy).to.equal('function')
     })
 

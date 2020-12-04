@@ -182,7 +182,7 @@ describe('Trust', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
-      CA.auth()
+      CA.sign()
       class B { }
       B.A = CA
       const CB = run.deploy(B)

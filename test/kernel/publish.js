@@ -120,7 +120,7 @@ describe('Publish', () => {
 
     class A extends Jig { }
     const A2 = run.deploy(A)
-    A2.auth()
+    A2.sign()
     await A2.sync()
     const A1 = await run.load(A.origin)
 

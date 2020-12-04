@@ -1,7 +1,7 @@
 /**
- * auth.js
+ * sign.js
  *
- * Tests for auth functionality
+ * Tests for sign functionality
  */
 
 const { describe, it, afterEach } = require('mocha')
@@ -15,10 +15,10 @@ const { expectTx } = require('../env/misc')
 const { stub } = require('sinon')
 
 // ------------------------------------------------------------------------------------------------
-// Auth
+// Sign
 // ------------------------------------------------------------------------------------------------
 
-describe('Auth', () => {
+describe('Sign', () => {
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
   // Deactivate the current run instance. This stops leaks across tests.
@@ -48,13 +48,13 @@ describe('Auth', () => {
         ncre: 0,
         exec: [
           {
-            op: 'AUTH',
+            op: 'SIGN',
             data: { $jig: 0 }
           }
         ]
       })
 
-      expect(CA.auth()).to.equal(CA)
+      expect(CA.sign()).to.equal(CA)
       await CA.sync()
       test(CA)
 
@@ -68,10 +68,10 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('auths jig in method', async () => {
+    it('signs jig in method', async () => {
       const run = new Run()
 
-      class A extends Jig { static f (b) { b.auth() } }
+      class A extends Jig { static f (b) { b.sign() } }
       class B extends Jig { }
       const CA = run.deploy(A)
       const b = new B()
@@ -110,7 +110,7 @@ describe('Auth', () => {
 
     // --------------------------------------------------------------------------
 
-    it('throws if auth jig destroyed in another transaction', async () => {
+    it('throws if signs jig destroyed in another transaction', async () => {
       const run = new Run()
 
       class A { }
@@ -120,24 +120,24 @@ describe('Auth', () => {
       CA.destroy()
       await CA.sync()
 
-      expect(() => CA.auth()).to.throw('Cannot auth destroyed jig')
+      expect(() => CA.sign()).to.throw('Cannot sign destroyed jig')
     })
 
     // --------------------------------------------------------------------------
 
-    it('auth jig not synced', async () => {
+    it('signs jig not synced', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
-      CA.auth()
+      CA.sign()
       await CA.sync()
     })
 
     // ------------------------------------------------------------------------
 
-    it('auth in a static method', async () => {
+    it('signs in a static method', async () => {
       const run = new Run()
-      class A { static f () { A.auth() } }
+      class A { static f () { A.sign() } }
       const CA = run.deploy(A)
       await CA.sync()
 
@@ -149,7 +149,7 @@ describe('Auth', () => {
         ncre: 0,
         exec: [
           {
-            op: 'AUTH',
+            op: 'SIGN',
             data: { $jig: 0 }
           }
         ]
@@ -164,27 +164,27 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if auth non-code', () => {
+    it('throws if sign non-code', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
-      const error = 'auth unavailable'
-      expect(() => CA.auth.apply(A, [])).to.throw('auth unavailable')
-      expect(() => Code.prototype.auth.call({})).to.throw(error)
-      expect(() => Code.prototype.auth.call(class A { })).to.throw(error)
-      expect(() => Code.prototype.auth.call(null)).to.throw(error)
+      const error = 'sign unavailable'
+      expect(() => CA.sign.apply(A, [])).to.throw('sign unavailable')
+      expect(() => Code.prototype.sign.call({})).to.throw(error)
+      expect(() => Code.prototype.sign.call(class A { })).to.throw(error)
+      expect(() => Code.prototype.sign.call(null)).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if auth non-code children', async () => {
+    it('throws if sign non-code children', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
       await CA.sync()
       class B extends CA { }
-      expect(() => B.auth()).to.throw('auth unavailable')
-      expect(() => Code.prototype.auth.call(B)).to.throw('auth unavailable')
+      expect(() => B.sign()).to.throw('sign unavailable')
+      expect(() => Code.prototype.sign.call(B)).to.throw('sign unavailable')
     })
 
     // ------------------------------------------------------------------------
@@ -195,7 +195,7 @@ describe('Auth', () => {
       const CA = run.deploy(A)
       await CA.sync()
       stub(run.blockchain, 'broadcast').throwsException()
-      CA.auth()
+      CA.sign()
       await expect(CA.sync()).to.be.rejected
       expect(CA.location).to.equal(CA.origin)
       expect(CA.nonce).to.equal(1)
@@ -203,7 +203,7 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('auth multiple in a batch', async () => {
+    it('sign multiple in a batch', async () => {
       const run = new Run()
       class A { }
       class B extends Berry { }
@@ -222,19 +222,19 @@ describe('Auth', () => {
         ndel: 0,
         ncre: 0,
         exec: [
-          { op: 'AUTH', data: { $jig: 0 } },
-          { op: 'AUTH', data: { $jig: 1 } },
-          { op: 'AUTH', data: { $jig: 2 } },
-          { op: 'AUTH', data: { $jig: 3 } },
-          { op: 'AUTH', data: { $jig: 4 } }
+          { op: 'SIGN', data: { $jig: 0 } },
+          { op: 'SIGN', data: { $jig: 1 } },
+          { op: 'SIGN', data: { $jig: 2 } },
+          { op: 'SIGN', data: { $jig: 3 } },
+          { op: 'SIGN', data: { $jig: 4 } }
         ]
       })
       run.transaction(() => {
-        CA.auth()
-        CB.auth()
-        CC.auth()
-        cf.auth()
-        c.auth()
+        CA.sign()
+        CB.sign()
+        CC.sign()
+        cf.sign()
+        c.sign()
       })
       await run.sync()
       function test (CA, CB, CC, cf, a) {
@@ -261,41 +261,41 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if send then auth in batch', async () => {
+    it('throws if send then sign in batch', async () => {
       const run = new Run()
       class A extends Jig { send (owner) { this.owner = owner } }
       const a = new A()
       await a.sync()
       expect(() => run.transaction(() => {
         a.send(run.purse.address)
-        a.auth()
-      })).to.throw('auth disabled: [jig A] has an unbound new owner or satoshis value')
+        a.sign()
+      })).to.throw('sign disabled: [jig A] has an unbound new owner or satoshis value')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if back then auth in batch', async () => {
+    it('throws if back then sign in batch', async () => {
       const run = new Run()
       class A extends Jig { back () { this.satoshis = 1000 } }
       const a = new A()
       await a.sync()
       expect(() => run.transaction(() => {
         a.back()
-        a.auth()
-      })).to.throw('auth disabled: [jig A] has an unbound new owner or satoshis value')
+        a.sign()
+      })).to.throw('sign disabled: [jig A] has an unbound new owner or satoshis value')
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if destroy then auth in batch', async () => {
+    it('throws if destroy then sign in batch', async () => {
       const run = new Run()
       class A extends Jig { static send (owner) { this.owner = owner } }
       const CA = run.deploy(A)
       await CA.sync()
       expect(() => run.transaction(() => {
         CA.destroy()
-        CA.auth()
-      })).to.throw('Cannot auth destroyed jigs')
+        CA.sign()
+      })).to.throw('Cannot sign destroyed jigs')
     })
   })
 
@@ -304,7 +304,7 @@ describe('Auth', () => {
   // --------------------------------------------------------------------------
 
   describe('Jig', () => {
-    it('auths jig', async () => {
+    it('signs jig', async () => {
       const run = new Run()
 
       class A extends Jig { }
@@ -323,13 +323,13 @@ describe('Auth', () => {
         ncre: 0,
         exec: [
           {
-            op: 'AUTH',
+            op: 'SIGN',
             data: { $jig: 0 }
           }
         ]
       })
 
-      expect(a.auth()).to.equal(a)
+      expect(a.sign()).to.equal(a)
       await a.sync()
       test(a)
 
@@ -343,10 +343,10 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('auths code in method', async () => {
+    it('signs code in method', async () => {
       const run = new Run()
 
-      class A extends Jig { f (B) { B.auth() } }
+      class A extends Jig { f (B) { B.sign() } }
       class B { }
       const a = new A()
       const CB = run.deploy(B)
@@ -385,28 +385,28 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if auth non-jig', () => {
+    it('throws if sign non-jig', () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
       const a = new A()
-      expect(() => a.auth.apply({}, [])).to.throw('auth unavailable')
-      expect(() => Jig.prototype.auth.apply(A, [])).to.throw('auth unavailable')
+      expect(() => a.sign.apply({}, [])).to.throw('sign unavailable')
+      expect(() => Jig.prototype.sign.apply(A, [])).to.throw('sign unavailable')
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if undeployed', async () => {
       new Run() // eslint-disable-line
-      class A extends Jig { init () { this.auth() } }
-      expect(() => new A()).to.throw('auth unavailable')
+      class A extends Jig { init () { this.sign() } }
+      expect(() => new A()).to.throw('sign unavailable')
     })
 
     // ------------------------------------------------------------------------
 
-    it('send and auth in same method', async () => {
-      // auth is a request to happen on the owner at method start
+    it('send and sign in same method', async () => {
+      // sign is a request to happen on the owner at method start
       new Run() // eslint-disable-line
-      class A extends Jig { f (owner) { this.owner = owner; this.auth() } }
+      class A extends Jig { f (owner) { this.owner = owner; this.sign() } }
       const a = new A()
       await a.sync()
       const owner = new PrivateKey().toPublicKey().toString()
@@ -415,10 +415,10 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if destroy and auth in same method', async () => {
+    it('throws if destroy and sign in same method', async () => {
       // destroy is a request to happen after the method ends
       new Run() // eslint-disable-line
-      class A extends Jig { f () { this.destroy(); this.auth() } }
+      class A extends Jig { f () { this.destroy(); this.sign() } }
       const a = new A()
       await a.sync()
       expect(() => a.f()).not.to.throw()
@@ -426,9 +426,9 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('auth twice in same method', async () => {
+    it('sign twice in same method', async () => {
       new Run() // eslint-disable-line
-      class A extends Jig { f () { this.auth(); this.auth() } }
+      class A extends Jig { f () { this.sign(); this.sign() } }
       const a = new A()
       await a.sync()
       expect(() => a.f()).not.to.throw()
@@ -436,13 +436,13 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('auth twice in same transaction', async () => {
+    it('sign twice in same transaction', async () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
       run.transaction(() => {
-        CA.auth()
-        CA.auth()
+        CA.sign()
+        CA.sign()
       })
       await run.sync()
     })
@@ -453,7 +453,7 @@ describe('Auth', () => {
   // --------------------------------------------------------------------------
 
   describe('Berry', () => {
-    it('can auth berry class', async () => {
+    it('can sign berry class', async () => {
       const run = new Run()
       class B extends Berry { }
       const CB = run.deploy(B)
@@ -466,12 +466,12 @@ describe('Auth', () => {
         ncre: 0,
         exec: [
           {
-            op: 'AUTH',
+            op: 'SIGN',
             data: { $jig: 0 }
           }
         ]
       })
-      CB.auth()
+      CB.sign()
       await CB.sync()
       expect(CB.nonce).to.equal(2)
       const CB2 = await run.load(CB.location)
@@ -483,10 +483,10 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('can auth berry class in jig method', async () => {
+    it('can sign berry class in jig method', async () => {
       const run = new Run()
       class B extends Berry { }
-      class A extends Jig { static f (B) { B.auth() } }
+      class A extends Jig { static f (B) { B.sign() } }
       const CA = run.deploy(A)
       const CB = run.deploy(B)
       await run.sync()
@@ -511,11 +511,11 @@ describe('Auth', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if auth undeployed berry class', async () => {
+    it('throws if sign undeployed berry class', async () => {
       const run = new Run()
       class B extends Berry { }
       const b = await B.load('abc')
-      b.constructor.auth()
+      b.constructor.sign()
       await expect(run.sync()).to.be.rejectedWith('Invalid owner')
     })
   })

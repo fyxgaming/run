@@ -37,11 +37,11 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may override auth method on jig', async () => {
+    it('may override sign method on jig', async () => {
       const run = new Run()
-      class A extends Jig { auth () { this.n = 1 } }
+      class A extends Jig { sign () { this.n = 1 } }
       const a = new A()
-      a.auth()
+      a.sign()
       expect(a.n).to.equal(1)
       await run.sync()
       run.cache = new LocalCache()
@@ -82,9 +82,9 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may override auth method on berry', () => {
+    it('may override sign method on berry', () => {
       const run = new Run()
-      run.deploy(class B extends Berry { auth () { } })
+      run.deploy(class B extends Berry { sign () { } })
     })
 
     // ------------------------------------------------------------------------
@@ -155,18 +155,18 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if code has auth method', () => {
+    it('throws if code has sign method', () => {
       const run = new Run()
-      class A { static auth () { } }
+      class A { static sign () { } }
       expect(() => run.deploy(A)).to.throw()
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if code has auth property', () => {
+    it('throws if code has sign property', () => {
       const run = new Run()
       class A { }
-      A.auth = 1
+      A.sign = 1
       expect(() => run.deploy(A)).to.throw()
     })
 
@@ -358,10 +358,10 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('Upgrade', () => {
-    it('may override auth method on jig', () => {
+    it('may override sign method on jig', () => {
       const run = new Run()
       const O = run.deploy(class O extends Jig { })
-      class A extends Jig { auth () { } }
+      class A extends Jig { sign () { } }
       O.upgrade(A)
     })
 
@@ -442,20 +442,20 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if code has auth method', () => {
+    it('throws if code has sign method', () => {
       const run = new Run()
       const O = run.deploy(class O { })
-      class A { static auth () { } }
+      class A { static sign () { } }
       expect(() => O.upgrade(A)).to.throw()
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if code has auth property', () => {
+    it('throws if code has sign property', () => {
       const run = new Run()
       const O = run.deploy(class O { })
       class A { }
-      A.auth = []
+      A.sign = []
       expect(() => O.upgrade(A)).to.throw()
     })
 
@@ -581,7 +581,7 @@ describe('Reserved', () => {
       const C = run.deploy(A)
       expect(() => C.f('toString')).to.throw('Cannot define toString')
       expect(() => C.f('load')).to.throw('Cannot define load')
-      expect(() => C.f('auth')).to.throw('Cannot define auth')
+      expect(() => C.f('sign')).to.throw('Cannot define sign')
       expect(() => C.f('destroy')).to.throw('Cannot define destroy')
     })
 
@@ -908,16 +908,16 @@ describe('Reserved', () => {
   // --------------------------------------------------------------------------
 
   describe('set', () => {
-    it('may set auth property on jig', async () => {
+    it('may set sign property on jig', async () => {
       const run = new Run()
-      class A extends Jig { f () { this.auth = 1 } }
+      class A extends Jig { f () { this.sign = 1 } }
       const a = new A()
       a.f()
-      expect(a.auth).to.equal(1)
+      expect(a.sign).to.equal(1)
       await run.sync()
       run.cache = new LocalCache()
       const a2 = await run.load(a.location)
-      expect(a2.auth).to.equal(1)
+      expect(a2.sign).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
@@ -1019,11 +1019,11 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if set auth on code', () => {
+    it('throws if set sign on code', () => {
       const run = new Run()
-      class A extends Jig { static f () { this.auth = 1 } }
+      class A extends Jig { static f () { this.sign = 1 } }
       const C = run.deploy(A)
-      expect(() => C.f()).to.throw('Cannot set auth')
+      expect(() => C.f()).to.throw('Cannot set sign')
     })
 
     // ------------------------------------------------------------------------
@@ -1076,11 +1076,11 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may set auth during pluck', async () => {
+    it('may set sign during pluck', async () => {
       new Run() // eslint-disable-line
-      class B extends Berry { init () { this.auth = [] } }
+      class B extends Berry { init () { this.sign = [] } }
       const b = await B.load('abc')
-      expect(b.auth).to.deep.equal([])
+      expect(b.sign).to.deep.equal([])
     })
 
     // ------------------------------------------------------------------------

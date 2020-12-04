@@ -335,7 +335,7 @@ describe('Lock', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if script() auths a jig', () => {
+    it.skip('throws if script() signs a jig', () => {
       // TODO
     })
 
@@ -445,11 +445,11 @@ describe('Lock', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Auth
+  // Sign
   // --------------------------------------------------------------------------
 
-  describe('Auth', () => {
-    it.skip('auth lock assigned as owner', () => {
+  describe('Sign', () => {
+    it.skip('sign lock assigned as owner', () => {
       // TODO
     })
   })

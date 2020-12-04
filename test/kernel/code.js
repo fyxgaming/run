@@ -18,7 +18,7 @@ const { LocalCache } = Run.plugins
 // ------------------------------------------------------------------------------------------------
 
 // Methods available on all code instances
-const CODE_METHODS = ['upgrade', 'sync', 'destroy', 'auth', Symbol.hasInstance]
+const CODE_METHODS = ['upgrade', 'sync', 'destroy', 'sign', Symbol.hasInstance]
 
 // ------------------------------------------------------------------------------------------------
 // Code
@@ -835,12 +835,12 @@ describe('Code', () => {
     it('apply allowed code methods directly', async () => {
       const run = new Run()
       class A extends Jig {
-        static auth2 () { return Code.prototype.auth.apply(this) }
+        static sign2 () { return Code.prototype.sign.apply(this) }
         static destroy2 () { return Code.prototype.destroy.apply(this) }
       }
       A.deps = { Code }
       const CA = run.deploy(A)
-      CA.auth2()
+      CA.sign2()
       CA.destroy2()
       await CA.sync()
 
@@ -875,7 +875,7 @@ describe('Code', () => {
     it('code methods are the same', () => {
       const run = new Run()
 
-      expect(Code.auth).to.equal(Code.prototype.auth)
+      expect(Code.sign).to.equal(Code.prototype.sign)
 
       function f () { return f.upgrade === Code.upgrade }
       f.deps = { Code }
