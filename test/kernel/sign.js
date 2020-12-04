@@ -48,8 +48,8 @@ describe('Sign', () => {
         ncre: 0,
         exec: [
           {
-            op: 'SIGN',
-            data: { $jig: 0 }
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'sign', []]
           }
         ]
       })
@@ -149,8 +149,8 @@ describe('Sign', () => {
         ncre: 0,
         exec: [
           {
-            op: 'SIGN',
-            data: { $jig: 0 }
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'sign', []]
           }
         ]
       })
@@ -222,11 +222,11 @@ describe('Sign', () => {
         ndel: 0,
         ncre: 0,
         exec: [
-          { op: 'SIGN', data: { $jig: 0 } },
-          { op: 'SIGN', data: { $jig: 1 } },
-          { op: 'SIGN', data: { $jig: 2 } },
-          { op: 'SIGN', data: { $jig: 3 } },
-          { op: 'SIGN', data: { $jig: 4 } }
+          { op: 'CALL', data: [{ $jig: 0 }, 'sign', []] },
+          { op: 'CALL', data: [{ $jig: 1 }, 'sign', []] },
+          { op: 'CALL', data: [{ $jig: 2 }, 'sign', []] },
+          { op: 'CALL', data: [{ $jig: 3 }, 'sign', []] },
+          { op: 'CALL', data: [{ $jig: 4 }, 'sign', []] }
         ]
       })
       run.transaction(() => {
@@ -323,8 +323,8 @@ describe('Sign', () => {
         ncre: 0,
         exec: [
           {
-            op: 'SIGN',
-            data: { $jig: 0 }
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'sign', []]
           }
         ]
       })
@@ -466,8 +466,8 @@ describe('Sign', () => {
         ncre: 0,
         exec: [
           {
-            op: 'SIGN',
-            data: { $jig: 0 }
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'sign', []]
           }
         ]
       })

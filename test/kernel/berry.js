@@ -1626,8 +1626,8 @@ Line 3`
         ncre: 0,
         exec: [
           {
-            op: 'SIGN',
-            data: { $jig: 0 }
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'sign', []]
           }
         ]
       })

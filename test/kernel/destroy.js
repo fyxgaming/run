@@ -50,8 +50,8 @@ describe('Destroy', () => {
         ncre: 0,
         exec: [
           {
-            op: 'DESTROY',
-            data: { $jig: 0 }
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'destroy', []]
           }
         ]
       })
@@ -104,8 +104,8 @@ describe('Destroy', () => {
         ncre: 0,
         exec: [
           {
-            op: 'DESTROY',
-            data: { $jig: 0 }
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'destroy', []]
           }
         ]
       })
@@ -300,8 +300,8 @@ describe('Destroy', () => {
         ncre: 0,
         exec: [
           {
-            op: 'DESTROY',
-            data: { $jig: 0 }
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'destroy', []]
           }
         ]
       })
@@ -469,8 +469,8 @@ describe('Destroy', () => {
         ncre: 0,
         exec: [
           {
-            op: 'DESTROY',
-            data: { $jig: 0 }
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'destroy', []]
           }
         ]
       })
