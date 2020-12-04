@@ -72,7 +72,7 @@ describe('Sealed', () => {
       const CA = run.deploy(A)
       await CA.sync()
       class B extends A {}
-      expect(() => run.deploy(B)).to.throw('Cannot deploy: A is sealed')
+      expect(() => run.deploy(B)).to.throw('A is sealed')
     })
 
     // ------------------------------------------------------------------------
@@ -201,7 +201,7 @@ describe('Sealed', () => {
       class A { }
       A.sealed = true
       class B extends A { }
-      const error = 'Cannot deploy: A is sealed'
+      const error = 'A is sealed'
       expect(() => run.deploy(B)).to.throw(error)
     })
 
@@ -232,7 +232,7 @@ describe('Sealed', () => {
       await CB.sync()
       CA.seal()
       class C extends CA { }
-      expect(() => run.deploy(C)).to.throw('Cannot deploy: A is sealed')
+      expect(() => run.deploy(C)).to.throw('A is sealed')
       await run.load(CB.location)
       run.cache = new LocalCache()
       await run.load(CB.location)
@@ -249,7 +249,7 @@ describe('Sealed', () => {
       expect(CA.sealed).to.equal(true)
       await CA.sync()
       class B extends A {}
-      expect(() => run.deploy(B)).to.throw('Cannot deploy: A is sealed')
+      expect(() => run.deploy(B)).to.throw('A is sealed')
     })
 
     // ------------------------------------------------------------------------
@@ -456,7 +456,7 @@ describe('Sealed', () => {
       const CA = run.deploy(A)
 
       class B extends CA { }
-      const error = 'Cannot upgrade: A is sealed'
+      const error = 'A is sealed'
       expect(() => CO.upgrade(B)).to.throw(error)
     })
 
@@ -469,7 +469,7 @@ describe('Sealed', () => {
       class A { }
       A.sealed = true
       class B extends A { }
-      const error = 'Cannot upgrade: A is sealed'
+      const error = 'A is sealed'
       expect(() => CO.upgrade(B)).to.throw(error)
     })
 
@@ -504,7 +504,7 @@ describe('Sealed', () => {
       await CO.sync()
       CA.seal()
       class C extends CA { }
-      expect(() => CO.upgrade(C)).to.throw('Cannot upgrade: A is sealed')
+      expect(() => CO.upgrade(C)).to.throw('A is sealed')
       await run.load(CO.location)
       run.cache = new LocalCache()
       await run.load(CO.location)
@@ -522,7 +522,7 @@ describe('Sealed', () => {
       const CA = run.deploy(A)
       await run.deploy(class B extends A { }).sync()
       CA.seal()
-      const error = 'Cannot deploy: A is sealed'
+      const error = 'A is sealed'
       await run.sync()
       function test (CA) {
         expect(() => run.deploy(class C extends A { }).sync()).to.throw(error)
@@ -542,7 +542,7 @@ describe('Sealed', () => {
       class A extends Jig { static unseal () { this.sealed = false } }
       A.sealed = true
       const CA = run.deploy(A)
-      const error = 'Cannot deploy: A is sealed'
+      const error = 'A is sealed'
       expect(() => run.deploy(class B extends A { }).sync()).to.throw(error)
       CA.unseal()
       const CC = run.deploy(class C extends A { })
@@ -562,7 +562,7 @@ describe('Sealed', () => {
       }
       A.sealed = true
       const CA = run.deploy(A)
-      const error = 'Cannot deploy: A is sealed'
+      const error = 'A is sealed'
       expect(() => run.deploy(class B extends A { }).sync()).to.throw(error)
       CA.f()
       run.deploy(class C extends A { })

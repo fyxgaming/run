@@ -46,7 +46,8 @@ if (!fs.existsSync('./dist/bsv.browser.min.js')) {
 // Reserved variables, usually for sandboxing reasons
 const reservedNames = [
   // Kernel classes
-  'Jig', 'JigDeps', 'Berry', 'BerryDeps', 'Code', 'CodeDeps', 'CommonLock', 'Unbound',
+  'Jig', 'JigDeps', 'Berry', 'BerryDeps', 'Code', 'CodeDeps', 'Creation', 'CreationDeps',
+  'CommonLock', 'Unbound',
   // Extras
   'asm', 'expect', 'Group', 'Hex', 'Token', 'Tx', 'txo',
   // Errors

@@ -6,16 +6,21 @@
 
 const { describe, it } = require('mocha')
 const Run = require('../env/run')
-const unmangle = require('../env/unmangle')
+const { expectTx } = require('../env/misc')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
-const { Jig, Berry } = Run
-const Creation = unmangle(Run)._Creation
+const LocalCache = require('../../lib/plugins/local-cache')
+const { Jig, Berry, Creation } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Creation
 // ------------------------------------------------------------------------------------------------
 
 describe('Creation', () => {
+  // --------------------------------------------------------------------------
+  // hasInstance
+  // --------------------------------------------------------------------------
+
   describe('hasInstance', () => {
     it('jig', () => {
       new Run() // eslint-disable-line
@@ -76,6 +81,97 @@ describe('Creation', () => {
       expect(undefined instanceof Creation).to.equal(false)
       expect(null instanceof Creation).to.equal(false)
       expect({} instanceof Creation).to.equal(false)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Bindigns
+  // --------------------------------------------------------------------------
+
+  describe('Bindings', () => {
+    it('has native bindings', () => {
+      expect(Creation.location).to.equal('native://Creation')
+      expect(Creation.origin).to.equal('native://Creation')
+      expect(Creation.nonce).to.equal(0)
+      expect(Creation.owner).to.equal(null)
+      expect(Creation.satoshis).to.equal(null)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Jigs
+  // --------------------------------------------------------------------------
+
+  describe('Jigs', () => {
+    it('pass into jig method', async () => {
+      const run = new Run()
+      class A extends Jig {
+        f (Creation) { this.Creation = Creation }
+      }
+      const a = new A()
+      await a.sync()
+      expectTx({
+        nin: 1,
+        ref: [
+          'native://Creation',
+          A.location
+        ],
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'CALL',
+            data: [{ $jig: 0 }, 'f', [{ $jig: 1 }]]
+          }
+        ]
+      })
+      a.f(Creation)
+      await a.sync()
+      expect(a.Creation).to.equal(Creation)
+      const a2 = await run.load(a.location)
+      expect(a2.Creation).to.equal(Creation)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      expect(a3.Creation).to.equal(Creation)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Code
+  // --------------------------------------------------------------------------
+
+  describe('Code', () => {
+    it('reference as code property', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.Creation = Creation
+      const CA = run.deploy(A)
+      await run.sync()
+      expect(CA.Creation).to.equal(Creation)
+      const CA2 = await run.load(CA.location)
+      expect(CA2.Creation).to.equal(Creation)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      expect(CA3.Creation).to.equal(Creation)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if deploy direct extension', async () => {
+      const run = new Run()
+      class A extends Creation { }
+      expect(() => run.deploy(A)).to.throw('Creation is sealed')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if upgrade direct extension', async () => {
+      const run = new Run()
+      class A {}
+      const CA = run.deploy(A)
+      class B extends Creation { }
+      expect(() => CA.upgrade(B)).to.throw('Creation is sealed')
     })
   })
 })

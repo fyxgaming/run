@@ -13,10 +13,10 @@ const { testRecord } = require('../env/misc')
 const { mangle } = unmangle
 const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const {
-  _Membrane: Membrane, _Rules: Rules, _Unbound: Unbound, _sudo, _Creation, _Sandbox,
+  _Membrane: Membrane, _Rules: Rules, _Unbound: Unbound, _sudo, _Sandbox,
   _EDITORS, _RESERVED_PROPS, _RESERVED_CODE_METHODS, _RESERVED_JIG_METHODS
 } = unmangle(Run)
-const { _CODE, _JIG_OBJECTS } = unmangle(_Creation)
+const { _CODE, _JIGS } = unmangle(Run._misc)
 const SI = unmangle(_Sandbox)._intrinsics
 
 // ------------------------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ function makeJig (x, options = {}) {
     jig.satoshis = null
   })
 
-  _JIG_OBJECTS.add(jig)
+  _JIGS.add(jig)
 
   return jig
 }

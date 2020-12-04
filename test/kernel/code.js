@@ -890,6 +890,24 @@ describe('Code', () => {
       expect(cf.upgrade).to.equal(Code.upgrade)
       expect(cf.upgrade).to.equal(Code.prototype.upgrade)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if deploy direct extension', async () => {
+      const run = new Run()
+      class A extends Code { }
+      expect(() => run.deploy(A)).to.throw('Code is sealed')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if upgrade direct extension', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      class B extends Code { }
+      expect(() => CA.upgrade(B)).to.throw('Code is sealed')
+    })
   })
 })
 
