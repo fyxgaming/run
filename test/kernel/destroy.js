@@ -39,7 +39,7 @@ describe('Destroy', () => {
       function test (CA) {
         expect(CA.location.endsWith('_d0')).to.equal(true)
         expect(CA.owner).to.equal(null)
-        expect(CA.satoshis).to.equal(0)
+        expect(CA.satoshis).to.equal(null)
       }
 
       expectTx({
@@ -58,7 +58,7 @@ describe('Destroy', () => {
 
       expect(CA.destroy()).to.equal(CA)
       expect(CA.owner).to.equal(null)
-      expect(CA.satoshis).to.equal(0)
+      expect(CA.satoshis).to.equal(null)
 
       await CA.sync()
       test(CA)
@@ -289,7 +289,7 @@ describe('Destroy', () => {
       function test (a) {
         expect(a.location.endsWith('_d0')).to.equal(true)
         expect(a.owner).to.equal(null)
-        expect(a.satoshis).to.equal(0)
+        expect(a.satoshis).to.equal(null)
       }
 
       expectTx({
@@ -308,7 +308,7 @@ describe('Destroy', () => {
 
       expect(a.destroy()).to.equal(a)
       expect(a.owner).to.equal(null)
-      expect(a.satoshis).to.equal(0)
+      expect(a.satoshis).to.equal(null)
 
       await a.sync()
       test(a)
