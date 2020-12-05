@@ -56,7 +56,7 @@ describe('Native', () => {
       expect(N.origin).to.equal('native://' + N.name)
       expect(N.nonce).to.equal(0)
       expect(N.owner).to.equal(null)
-      expect(N.satoshis).to.equal(null)
+      expect(N.satoshis).to.equal(0)
     })
   })
 

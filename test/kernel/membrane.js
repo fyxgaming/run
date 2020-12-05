@@ -57,7 +57,7 @@ function makeJig (x, options = {}) {
     jig.origin = `${DUMMY_TXID2}_o${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)}`
     jig.nonce = 0
     jig.owner = null
-    jig.satoshis = null
+    jig.satoshis = 0
   })
 
   _JIGS.add(jig)
@@ -77,7 +77,7 @@ function makeCode (x, options = {}) {
     C.origin = `${DUMMY_TXID2}_o${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)}`
     C.nonce = 0
     C.owner = null
-    C.satoshis = null
+    C.satoshis = 0
   })
 
   x.prototype.constructor = C

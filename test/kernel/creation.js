@@ -115,7 +115,7 @@ describe('Creation', () => {
       expect(Creation.origin).to.equal('native://Creation')
       expect(Creation.nonce).to.equal(0)
       expect(Creation.owner).to.equal(null)
-      expect(Creation.satoshis).to.equal(null)
+      expect(Creation.satoshis).to.equal(0)
     })
   })
 

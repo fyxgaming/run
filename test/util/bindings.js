@@ -255,7 +255,6 @@ describe('Bindings', () => {
       expect(() => _satoshis(1)).not.to.throw()
       expect(() => _satoshis(Transaction.DUST_AMOUNT)).not.to.throw()
       expect(() => _satoshis(100000000)).not.to.throw()
-      expect(() => _satoshis(null, true)).not.to.throw()
     })
 
     // ------------------------------------------------------------------------
