@@ -42,6 +42,18 @@ describe('Token20', () => {
 
     // ------------------------------------------------------------------------
 
+    it('new tokens with custom owner', async () => {
+      new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
+      class TestToken extends Token { }
+      const address = new PrivateKey().toAddress().toString()
+      const token = TestToken.mint(100, address)
+      await token.sync()
+      expect(token.amount).to.equal(100)
+      expect(token.owner).to.equal(address)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('updates supply', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
       const TestToken = run.deploy(class TestToken extends Token { })
@@ -53,7 +65,7 @@ describe('Token20', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if class is not extended', async () => {
+    it.only('throws if class is not extended', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
       expect(() => Token.mint(100)).to.throw('Token must be extended')
     })
@@ -117,7 +129,6 @@ describe('Token20', () => {
     it('throws if create using constructor', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
       class TestToken extends Token { }
-      expect(() => new TestToken()).to.throw('Must create token using mint()')
       expect(() => new TestToken(1)).to.throw('Must create token using mint()')
     })
   })
@@ -128,16 +139,17 @@ describe('Token20', () => {
 
   describe('send', () => {
     it('full amount', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
       class TestToken extends Token { }
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
       await token.sync()
-      const change = token.send(address)
-      expect(change).to.equal(null)
-      expect(token.owner).to.equal(address)
-      expect(token.amount).to.equal(100)
-      expect(token.sender).to.equal(run.owner.address)
+      const sent = token.send(address)
+      await sent.sync()
+      expect(sent.owner).to.equal(address)
+      expect(sent.amount).to.equal(100)
+      expect(token.owner).to.equal(null)
+      expect(token.amount).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
@@ -148,15 +160,13 @@ describe('Token20', () => {
       const address = new PrivateKey().toAddress().toString()
       const token = TestToken.mint(100)
       await token.sync()
-      const change = token.send(address, 30)
+      const sent = token.send(address, 30)
       await run.sync()
-      expect(token.owner).to.equal(address)
-      expect(token.amount).to.equal(30)
-      expect(token.sender).to.equal(run.owner.address)
-      expect(change).to.be.instanceOf(TestToken)
-      expect(change.owner).to.equal(run.owner.address)
-      expect(change.amount).to.equal(70)
-      expect(change.sender).to.equal(null)
+      expect(token.owner).to.equal(run.owner.address)
+      expect(token.amount).to.equal(70)
+      expect(sent).to.be.instanceOf(TestToken)
+      expect(sent.owner).to.equal(address)
+      expect(sent.amount).to.equal(30)
     })
 
     // ------------------------------------------------------------------------
@@ -202,35 +212,37 @@ describe('Token20', () => {
     it('sender on sent token is sending owner', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
       class TestToken extends Token { }
-      const token = TestToken.mint(2)
-      await token.sync()
-      const change = token.send(run.purse.address, 1)
-      expect(token.sender).to.equal(change.owner)
-      await change.sync()
+      const sender = TestToken.mint(2)
+      await sender.sync()
+      const sent = sender.send(run.purse.address, 1)
+      expect(sent.sender).to.equal(sender.owner)
+      await sent.sync()
       if (COVER) return
-      const token2 = await run.load(token.location)
-      expect(token2.sender).to.equal(change.owner)
+      const sent2 = await run.load(sent.location)
+      expect(sent2.sender).to.equal(sender.owner)
       run.cache = new LocalCache()
-      const token3 = await run.load(token.location)
-      expect(token3.sender).to.equal(change.owner)
+      const sent3 = await run.load(sent.location)
+      expect(sent3.sender).to.equal(sender.owner)
     })
 
     // ------------------------------------------------------------------------
 
-    it('sender on change token is null', async () => {
+    it('sender on sending token is null', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
       class TestToken extends Token { }
-      const token = TestToken.mint(2)
-      await token.sync()
-      const change = token.send(run.owner.address, 1)
-      await change.sync()
-      expect(change.sender).to.equal(null)
+      const orig = TestToken.mint(2)
+      await orig.sync()
+      const sender = orig.send(run.owner.address, 1)
+      await sender.sync()
+      sender.send(run.purse.address, 1)
+      expect(sender.sender).to.equal(null)
+      await sender.sync()
       if (COVER) return
-      const change2 = await run.load(change.location)
-      expect(change2.sender).to.equal(null)
+      const sender2 = await run.load(sender.location)
+      expect(sender2.sender).to.equal(null)
       run.cache = new LocalCache()
-      const change3 = await run.load(change.location)
-      expect(change3.sender).to.equal(null)
+      const sender3 = await run.load(sender.location)
+      expect(sender3.sender).to.equal(null)
     })
 
     // ------------------------------------------------------------------------
@@ -244,40 +256,38 @@ describe('Token20', () => {
       class TestToken extends Token { }
       const a = TestToken.mint(2)
       await a.sync()
-      a.send(new CustomLock())
+      const b = a.send(new CustomLock())
       await run.sync()
-      expect(a.owner instanceof CustomLock).to.equal(true)
-      await a.sync()
+      expect(b.owner instanceof CustomLock).to.equal(true)
+      await b.sync()
       if (COVER) return
       run.cache = new LocalCache()
-      const a2 = await run.load(a.location)
-      expect(a2.owner instanceof CustomLock).to.equal(true)
+      const b2 = await run.load(b.location)
+      expect(b2.owner instanceof CustomLock).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it('extend send to add metadata', async () => {
+    it('extend send to add metadata to sent', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
       class TestToken extends Token {
-        send (to, amount, metadata) {
-          this.metadata = metadata
-          return super.send(to, amount)
-        }
+        send (to, amount, metadata) { return super.send(to, amount)._setMetadata(metadata) }
+        _setMetadata (metadata) { this.metadata = metadata; return this }
       }
       const a = TestToken.mint(2)
       await run.sync()
       const metadata = { n: 123 }
       const address = new PrivateKey().toAddress().toString()
-      const change = a.send(address, 1, metadata)
-      expect(a.metadata.n).to.equal(123)
-      expect(typeof change.metadata).to.equal('undefined')
+      const sent = a.send(address, 1, metadata)
+      expect(sent.metadata.n).to.equal(123)
+      expect(typeof a.metadata).to.equal('undefined')
       if (COVER) return
       await run.sync()
-      const a2 = await run.load(a.location)
-      expect(a2.metadata.n).to.equal(123)
+      const sent2 = await run.load(sent.location)
+      expect(sent2.metadata.n).to.equal(123)
       run.cache = new LocalCache()
-      const a3 = await run.load(a.location)
-      expect(a3.metadata.n).to.equal(123)
+      const sent3 = await run.load(sent.location)
+      expect(sent3.metadata.n).to.equal(123)
     })
   })
 
@@ -337,6 +347,18 @@ describe('Token20', () => {
 
     // ------------------------------------------------------------------------
 
+    it('empty', async () => {
+      new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
+      class TestToken extends Token { }
+      const a = TestToken.mint(1)
+      await a.sync()
+      expect(a.combine()).to.equal(a)
+      expect(a.combine().amount).to.equal(1)
+      expect(a.combine().nonce).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if combine different owners without signatures', async () => {
       new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
       class TestToken extends Token { }
@@ -346,15 +368,6 @@ describe('Token20', () => {
       await b.sync()
       b.send(address)
       await expect(a.combine(b).sync()).to.be.rejected
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if empty', async () => {
-      new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      class TestToken extends Token { }
-      const a = TestToken.mint(1)
-      expect(() => a.combine()).to.throw('Invalid tokens to combine')
     })
 
     // ------------------------------------------------------------------------
@@ -448,8 +461,9 @@ describe('Token20', () => {
       class TestToken extends Token { }
       const token = TestToken.mint(2)
       await token.sync()
-      token.send(run.owner.address, 1)
-      expect(token.sender).to.equal(run.owner.address)
+      const sent = token.send(run.owner.address, 1)
+      expect(token.sender).to.equal(null)
+      expect(sent.sender).to.equal(run.owner.address)
       token.destroy()
       expect(token.sender).to.equal(null)
       await run.sync()
@@ -492,23 +506,71 @@ describe('Token20', () => {
     it('combine and send', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
       class TestToken extends Token { }
-      const a = TestToken.mint(1)
-      const b = TestToken.mint(2)
+      const a = TestToken.mint(2)
+      const b = TestToken.mint(3)
       await run.sync()
       const address = new PrivateKey().toAddress().toString()
-      run.transaction(() => a.combine(b).send(address))
-      function test (a) {
-        expect(a.amount).to.equal(3)
-        expect(a.owner).to.equal(address)
+      const c = run.transaction(() => a.combine(b).send(address, 4))
+      function test (a, b, c) {
+        expect(a.amount).to.equal(1)
+        expect(a.owner).to.equal(run.owner.address)
+        expect(b.amount).to.equal(0)
+        expect(b.owner).to.equal(null)
+        expect(c.amount).to.equal(4)
+        expect(c.owner).to.equal(address)
       }
-      test(a)
+      test(a, b, c)
       await run.sync()
       if (COVER) return
       const a2 = await run.load(a.location)
-      test(a2)
+      const b2 = await run.load(b.location)
+      const c2 = await run.load(c.location)
+      test(a2, b2, c2)
       run.cache = new LocalCache()
       const a3 = await run.load(a.location)
-      test(a3)
+      const b3 = await run.load(b.location)
+      const c3 = await run.load(c.location)
+      test(a3, b3, c3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('send multiple', async () => {
+      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      class TestToken extends Token { }
+      const a = TestToken.mint(6)
+      await a.sync()
+      const address = new PrivateKey().toAddress().toString()
+      const [b, c] = run.transaction(() => [a.send(address, 2), a.send(address, 3)])
+      function test (a, b, c) {
+        expect(a.amount).to.equal(1)
+        expect(a.owner).to.equal(run.owner.address)
+        expect(b.amount).to.equal(2)
+        expect(b.owner).to.equal(address)
+        expect(c.amount).to.equal(3)
+        expect(c.owner).to.equal(address)
+      }
+      test(a, b, c)
+      await run.sync()
+      if (COVER) return
+      const a2 = await run.load(a.location)
+      const b2 = await run.load(b.location)
+      const c2 = await run.load(c.location)
+      test(a2, b2, c2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      const b3 = await run.load(b.location)
+      const c3 = await run.load(c.location)
+      test(a3, b3, c3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if mint and send', async () => {
+      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      class TestToken extends Token { }
+      const address = new PrivateKey().toAddress().toString()
+      expect(() => run.transaction(() => TestToken.mint(100).send(address, 5))).to.throw()
     })
   })
 
