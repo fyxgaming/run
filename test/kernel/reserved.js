@@ -285,7 +285,7 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if override creation bindings on berry', () => {
+    it('throws if override location bindings on berry', () => {
       const run = new Run()
       expect(() => run.deploy(class A extends Berry { location () { } })).to.throw()
       expect(() => run.deploy(class A extends Berry { origin () { } })).to.throw()
@@ -1104,7 +1104,7 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if set creation bindings during pluck', async () => {
+    it('throws if set location bindings during pluck', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { init () { this.location = 'abc' } }
       await expect(B.load('abc')).to.be.rejectedWith('Cannot set location')

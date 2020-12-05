@@ -700,7 +700,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot swallow inner errors', () => {
-      const options = { _recordableTarget: true, _recordCalls: true, _creationBindings: true }
+      const options = { _recordableTarget: true, _recordCalls: true, _locationBindings: true }
       class A {
         static f () {
           try { this.location = '123' } catch (e) { }
@@ -714,7 +714,7 @@ describe('Membrane', () => {
 
     it('cannot swallow errors from another jig', () => {
       const M = makeCode(class C { })
-      const options = { _creation: M, _recordableTarget: true, _recordCalls: true, _creationBindings: true }
+      const options = { _creation: M, _recordableTarget: true, _recordCalls: true, _locationBindings: true }
       class A { static g () { } }
       A.location = 'error://abc'
       class B { static f (A2) { A2.g() } }
@@ -978,12 +978,12 @@ describe('Membrane', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Creation bindings
+  // Location bindings
   // --------------------------------------------------------------------------
 
-  describe('Creation bindings', () => {
-    it('read creation bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
+  describe('Location bindings', () => {
+    it('read location bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _locationBindings: true }))
       _sudo(() => { A.location = `${DUMMY_TXID1}_o1` })
       _sudo(() => { A.origin = `${DUMMY_TXID2}_o2` })
       _sudo(() => { A.nonce = 1 })
@@ -995,7 +995,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('read native bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
+      const A = new Membrane(class A { }, mangle({ _admin: true, _locationBindings: true }))
       _sudo(() => { A.location = 'native://A' })
       _sudo(() => { A.origin = 'native://A' })
       expect(A.location).to.equal('native://A')
@@ -1004,8 +1004,8 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if read undetermined creation bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
+    it('throws if read undetermined location bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _locationBindings: true }))
       _sudo(() => { A.location = '_o1' })
       _sudo(() => { A.origin = `record://${DUMMY_TXID2}_d2` })
       expect(() => A.location).to.throw('Cannot read location')
@@ -1015,8 +1015,8 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('set inner object creation binding properties', () => {
-      const jig = new Membrane(class A { }, mangle({ _creationBindings: true }))
+    it('set inner object location binding props', () => {
+      const jig = new Membrane(class A { }, mangle({ _locationBindings: true }))
       const o = new Membrane({}, mangle({ _creation: jig }))
       o.location = 'abc_o1'
       o.nonce = 'bad nonce'
@@ -1024,8 +1024,8 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if set creation bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _creationBindings: true }))
+    it('throws if set location bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _locationBindings: true }))
       expect(() => { A.location = 'abc_o1' }).to.throw('Cannot set location')
       expect(() => { A.origin = 'def_d2' }).to.throw('Cannot set origin')
       expect(() => { A.nonce = 1 }).to.throw('Cannot set nonce')
@@ -1033,8 +1033,8 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('cannot delete creation bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _creationBindings: true }))
+    it('cannot delete location bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _locationBindings: true }))
       expect(() => { delete A.location }).to.throw('Cannot delete location')
       expect(() => { delete A.origin }).to.throw('Cannot delete origin')
       expect(() => { delete A.nonce }).to.throw('Cannot delete nonce')
@@ -1042,8 +1042,8 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('can delete inner object creation bindings', () => {
-      const jig = new Membrane(class A { }, mangle({ _creationBindings: true }))
+    it('can delete inner object location bindings', () => {
+      const jig = new Membrane(class A { }, mangle({ _locationBindings: true }))
       const o = new Membrane({}, mangle({ _creation: jig }))
       delete o.location
       delete o.origin
@@ -1052,8 +1052,8 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get descriptor for creation bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
+    it('get descriptor for location bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _locationBindings: true }))
       _sudo(() => { A.location = `${DUMMY_TXID1}_o1` })
       _sudo(() => { A.origin = `${DUMMY_TXID2}_o2` })
       _sudo(() => { A.nonce = 1 })
@@ -1064,8 +1064,8 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('get descriptor for creation bindings on inner objects', () => {
-      const jig = new Membrane(class A { }, mangle({ _creationBindings: true }))
+    it('get descriptor for location bindings on inner objects', () => {
+      const jig = new Membrane(class A { }, mangle({ _locationBindings: true }))
       const o = new Membrane({}, mangle({ _admin: true, _creation: jig }))
       _sudo(() => { o.location = [] })
       _sudo(() => { o.origin = null })
@@ -1077,8 +1077,8 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if get descriptor of undetermined creation bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
+    it('throws if get descriptor of undetermined location bindings', () => {
+      const A = new Membrane(class A { }, mangle({ _admin: true, _locationBindings: true }))
       _sudo(() => { A.location = '_o1' })
       _sudo(() => { A.origin = `record://${DUMMY_TXID1}_d2` })
       expect(() => Object.getOwnPropertyDescriptor(A, 'location').value).to.throw('Cannot read location')
@@ -1089,7 +1089,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('throws if get descriptor of partial berry location', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _creationBindings: true }))
+      const A = new Membrane(class A { }, mangle({ _admin: true, _locationBindings: true }))
       _sudo(() => { A.location = `${DUMMY_TXID1}_o1?berry=abc&version=5` })
       expect(() => Object.getOwnPropertyDescriptor(A, 'location').value).to.throw('Cannot read location')
       expect(() => Object.getOwnPropertyDescriptor(A, 'origin').value).to.throw('Cannot read origin')

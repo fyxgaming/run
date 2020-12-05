@@ -739,7 +739,7 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('throws if set creation bindings', async () => {
+    it('throws if set location bindings', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { init () { this.location = '123' } }
       class C extends Berry { init () { this.origin = '123' } }
@@ -769,7 +769,7 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('throws if get creation bindings', async () => {
+    it('throws if get location bindings', async () => {
       const run = new Run()
       class B extends Berry {
         init (prop) { this.x = this[prop] }
@@ -787,7 +787,7 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('throws if get descriptor for creation bindings', async () => {
+    it('throws if get descriptor for location bindings', async () => {
       const run = new Run()
       class B extends Berry {
         init (prop) { this.x = Object.getOwnPropertyDescriptor(this, prop).value }
@@ -802,7 +802,7 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('throws if define creation bindings', async () => {
+    it('throws if define location bindings', async () => {
       new Run() // eslint-disable-line
       class B extends Berry {
         init () {
