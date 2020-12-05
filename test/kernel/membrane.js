@@ -16,7 +16,7 @@ const {
   _Membrane: Membrane, _Rules: Rules, _Unbound: Unbound, _sudo, _Sandbox,
   _EDITORS, _RESERVED_PROPS, _RESERVED_CODE_METHODS, _RESERVED_JIG_METHODS
 } = unmangle(Run)
-const { _CODE, _JIGS } = unmangle(Run._misc)
+const { _CODE, _JIGS } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(_Sandbox)._intrinsics
 
 // ------------------------------------------------------------------------------------------------
