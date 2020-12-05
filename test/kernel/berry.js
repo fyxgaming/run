@@ -568,8 +568,8 @@ Line 3`
       await run.sync()
 
       function test (b) {
-        const props1 = ['location', 'm', 'n', 'nonce', 'origin', 'p']
-        const props2 = ['location', 'm', 'n', 'nonce', 'origin']
+        const props1 = ['location', 'm', 'n', 'nonce', 'origin', 'owner', 'p', 'satoshis']
+        const props2 = ['location', 'm', 'n', 'nonce', 'origin', 'owner', 'satoshis']
         expect(Object.getOwnPropertyNames(b)).to.deep.equal(props1)
         expect(b.p).to.deep.equal(props2)
       }
@@ -710,31 +710,17 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('set utxo bindings', async () => {
+    it('throws if set utxo bindings', async () => {
       const run = new Run()
       class B extends Berry {
-        init () {
+        init (n) {
           this.owner = { n: 1 }
           this.satoshis = this
         }
       }
       run.deploy(B)
       await run.sync()
-
-      function test (b) {
-        expect(b.owner).to.deep.equal({ n: 1 })
-        expect(b.satoshis).to.equal(b)
-      }
-
-      const b = await B.load('abc')
-      test(b)
-
-      const b2 = await run.load(b.location)
-      test(b2)
-
-      run.cache = new LocalCache()
-      const b3 = await run.load(b.location)
-      test(b3)
+      await expect(B.load('abc')).to.be.rejectedWith('Cannot set owner')
     })
 
     // ------------------------------------------------------------------------
@@ -1125,11 +1111,6 @@ Line 3`
     it('get utxo bindings', async () => {
       const run = new Run()
       class B extends Berry {
-        init () {
-          this.owner = 1
-          this.satoshis = 2
-        }
-
         getOwner () { return this.owner }
         getSatoshis () { return this.satoshis }
       }
@@ -1137,8 +1118,8 @@ Line 3`
       await run.sync()
 
       function test (b) {
-        expect(b.getOwner()).to.equal(1)
-        expect(b.getSatoshis()).to.equal(2)
+        expect(b.getOwner()).to.equal(null)
+        expect(b.getSatoshis()).to.equal(0)
       }
 
       const b = await B.load('')

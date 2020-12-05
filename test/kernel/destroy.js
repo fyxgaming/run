@@ -323,6 +323,28 @@ describe('Destroy', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if change owner or satoshis after destroy', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f () {
+          this.destroy()
+          this.satoshis = 100
+        }
+
+        g (addr) {
+          this.destroy()
+          this.owner = addr
+        }
+      }
+      const a = new A()
+      expect(() => a.f()).to.throw('Cannot set satoshis')
+      const b = new A()
+      const addr = new PrivateKey().toAddress().toString()
+      expect(() => b.g(addr)).to.throw('Cannot set owner')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('create and destroy in same transaction', async () => {
       const run = new Run()
       class A extends Jig { init () { this.destroy() } }

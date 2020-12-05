@@ -130,7 +130,7 @@ describe('Rules', () => {
       expect(rules._creation).to.equal(undefined)
       expect(rules._admin).to.equal(true)
       expect(rules._locationBindings).to.equal(true)
-      expect(rules._utxoBindings).to.equal(false)
+      expect(rules._utxoBindings).to.equal(true)
       expect(rules._reserved).to.equal(true)
       expect(rules._codeMethods).to.equal(false)
       expect(rules._jigMethods).to.equal(false)

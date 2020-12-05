@@ -1094,16 +1094,6 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may set utxo bindings during pluck', async () => {
-      new Run() // eslint-disable-line
-      class B extends Berry { init () { this.owner = true; this.satoshis = false } }
-      const b = await B.load('abc')
-      expect(b.owner).to.deep.equal(true)
-      expect(b.satoshis).to.deep.equal(false)
-    })
-
-    // ------------------------------------------------------------------------
-
     it('throws if set location bindings during pluck', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { init () { this.location = 'abc' } }
