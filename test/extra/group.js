@@ -191,6 +191,7 @@ describe('Group', () => {
     }
 
     Group.deps = { asm, Hex }
+    Group.sealed = false
 
     Group.toString()
 
