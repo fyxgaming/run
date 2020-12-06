@@ -571,7 +571,7 @@ describe('Unify', () => {
       const CA = run.deploy(A)
       const CB = run.deploy(B)
       expect(() => run.transaction(() => { CA.f(); CB.f() })).to.throw()
-      run.unify(CA, CB)
+      Run.util.unify(CA, CB)
       run.transaction(() => { CA.f(); CB.f() })
     })
 
@@ -586,7 +586,7 @@ describe('Unify', () => {
       const a1 = new A1()
       const a2 = new A2()
       expect(() => run.transaction(() => { a1.f(); a2.f() })).to.throw()
-      run.unify(a1, a2)
+      Run.util.unify(a1, a2)
       await run.transaction(() => { a1.f(); a2.f() })
     })
 
@@ -609,7 +609,7 @@ describe('Unify', () => {
       await run.sync()
 
       class D extends Jig { init (n) { this.n = n } }
-      run.unify(CB, CC)
+      Run.util.unify(CB, CC)
       const d = run.transaction(() => new D(CB.f() + CC.f()))
       await d.sync()
       expect(d.n).to.equal(4)
@@ -623,7 +623,7 @@ describe('Unify', () => {
       A2.destroy()
       await A2.sync()
       const A1 = await run.load(A2.origin)
-      expect(() => run.unify(A1, A2)).to.throw('Cannot unify inconsistent A')
+      expect(() => Run.util.unify(A1, A2)).to.throw('Cannot unify inconsistent A')
     })
   })
 
