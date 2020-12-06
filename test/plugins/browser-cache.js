@@ -45,9 +45,13 @@ describe('BrowserCache', () => {
 
     // ------------------------------------------------------------------------
 
-    it('supports local cache options', () => {
-      const cache = new BrowserCache({ maxSizeMB: 123 })
-      expect(unmangle(cache)._localCache.maxSizeMB).to.equal(123)
+    it('supports maxMemorySizeMB option', () => {
+      const browserCache = new BrowserCache({ maxMemorySizeMB: 123 })
+      const localCache = unmangle(browserCache)._localCache
+      expect(localCache.maxSizeMB).to.equal(123)
+      browserCache.maxMemorySizeMB = 456
+      expect(browserCache.maxMemorySizeMB).to.equal(456)
+      expect(localCache.maxSizeMB).to.equal(456)
     })
 
     // ------------------------------------------------------------------------
