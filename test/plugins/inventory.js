@@ -35,7 +35,7 @@ describe('Inventory', () => {
       const a = new A()
       await a.sync()
       expect(run.inventory.jigs).to.deep.equal([a])
-      expect(run.inventory.code).to.deep.equal([Run.install(A)])
+      expect(run.inventory.code).to.deep.equal([Run.util.install(A)])
     })
 
     // ------------------------------------------------------------------------

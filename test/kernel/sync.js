@@ -377,7 +377,7 @@ describe('Sync', () => {
     it('deploys code', async () => {
       new Run() // eslint-disable-line
       class A { }
-      const CA = Run.install(A)
+      const CA = Run.util.install(A)
       await CA.sync()
       expect(CA.location.length).to.equal(67)
     })

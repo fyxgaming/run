@@ -35,7 +35,7 @@ describe('Snapshot', () => {
       class A { }
       A.n = null
       A.m = undefined
-      const CA = Run.install(A)
+      const CA = Run.util.install(A)
       const snapshot = new Snapshot(CA)
       expect(unmangle(snapshot)._kind).to.equal('code')
       expect(unmangle(snapshot)._props.n).to.equal(null)

@@ -137,7 +137,7 @@ describe('Lock', () => {
       })
       const CA = run.deploy(A)
       await run.sync()
-      const CL = Run.install(L)
+      const CL = Run.util.install(L)
       function test (A) {
         expect(A.owner instanceof CL).to.equal(true)
         expect(A.owner.constructor.owner instanceof CL).to.equal(true)

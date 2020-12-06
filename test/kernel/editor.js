@@ -68,7 +68,7 @@ describe('Editor', () => {
 
   describe('Preinstall', () => {
     it('creates code without bindings', () => {
-      const C = Run.install(class A { })
+      const C = Run.util.install(class A { })
       expect(C instanceof Code).to.equal(true)
       _sudo(() => {
         expect(C.location).to.equal(undefined)
@@ -82,7 +82,7 @@ describe('Editor', () => {
     // ------------------------------------------------------------------------
 
     it('throws if read bindings', () => {
-      const C = Run.install(class A { })
+      const C = Run.util.install(class A { })
       expect(() => C.location).to.throw('Cannot read location')
       expect(() => C.origin).to.throw('Cannot read origin')
       expect(() => C.nonce).to.throw('Cannot read nonce')
@@ -94,8 +94,8 @@ describe('Editor', () => {
 
     it('only preinstalls once', () => {
       class A { }
-      const C1 = Run.install(A)
-      const C2 = Run.install(A)
+      const C1 = Run.util.install(A)
+      const C2 = Run.util.install(A)
       expect(C1).to.equal(C2)
     })
 
@@ -103,7 +103,7 @@ describe('Editor', () => {
 
     it('create jigs using preinstalled code', async () => {
       class A extends Jig { }
-      const CA = Run.install(A)
+      const CA = Run.util.install(A)
       new Run() // eslint-disable-line
       const a = new CA()
       await a.sync()
@@ -115,7 +115,7 @@ describe('Editor', () => {
 
     it('pass as args preinstalled code', async () => {
       class A extends Jig { }
-      const CA = Run.install(A)
+      const CA = Run.util.install(A)
       new Run() // eslint-disable-line
       class B extends Jig { init (A) { this.A = A } }
       const b = new B(CA)
@@ -128,7 +128,7 @@ describe('Editor', () => {
 
     it('use preinstalled code as code props', async () => {
       class A extends Jig { }
-      const CA = Run.install(A)
+      const CA = Run.util.install(A)
       const run = new Run()
       class B {}
       B.A = CA
@@ -142,7 +142,7 @@ describe('Editor', () => {
 
     it('locks onto network once used', async () => {
       class A extends Jig { }
-      const CA = Run.install(A)
+      const CA = Run.util.install(A)
       const run = new Run()
       run.deploy(CA)
       await run.sync()
@@ -162,7 +162,7 @@ describe('Editor', () => {
       class A { }
       const C = run.deploy(A)
       await C.sync()
-      Run.uninstall(A)
+      Run.util.uninstall(A)
       expect('presets' in A).to.equal(false)
       expect('location' in A).to.equal(false)
       expect('origin' in A).to.equal(false)
@@ -178,7 +178,7 @@ describe('Editor', () => {
       const run = new Run()
       class A { }
       const C = run.deploy(A)
-      Run.uninstall(C)
+      Run.util.uninstall(C)
       const D = run.deploy(A)
       await run.sync()
       expect(C.location).not.to.equal(D.location)
@@ -190,7 +190,7 @@ describe('Editor', () => {
       const run = new Run()
       class A extends Jig { static f () { this.n = 1 } }
       const C = run.deploy(A)
-      Run.uninstall(A)
+      Run.util.uninstall(A)
       C.sign()
       C.f()
       C.destroy()
@@ -201,8 +201,8 @@ describe('Editor', () => {
     // ------------------------------------------------------------------------
 
     it('throws for native code', () => {
-      expect(() => Run.uninstall(Jig)).to.throw('Cannot uninstall native code')
-      expect(() => Run.uninstall(Berry)).to.throw('Cannot uninstall native code')
+      expect(() => Run.util.uninstall(Jig)).to.throw('Cannot uninstall native code')
+      expect(() => Run.util.uninstall(Berry)).to.throw('Cannot uninstall native code')
     })
 
     // ------------------------------------------------------------------------
@@ -215,7 +215,7 @@ describe('Editor', () => {
       const location = A.location
 
       const presets = A.presets
-      Run.uninstall(A)
+      Run.util.uninstall(A)
       expect(A.location).to.equal(undefined)
       A.presets = presets
       const A3 = run.deploy(A)

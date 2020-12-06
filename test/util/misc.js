@@ -799,7 +799,7 @@ describe('Misc', () => {
 
     it('returns false if undeployed', () => {
       const run = new Run()
-      const A = Run.install(class A { })
+      const A = Run.util.install(class A { })
       const B = run.deploy(class B { })
       expect(_sameCreation(A, B)).to.equal(false)
       expect(_sameCreation(B, A)).to.equal(false)

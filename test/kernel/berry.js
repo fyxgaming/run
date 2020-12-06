@@ -2072,7 +2072,7 @@ Line 3`
       A.deps = { B }
       const CB = run.deploy(B)
       await CB.sync()
-      const CA = Run.install(A)
+      const CA = Run.util.install(A)
       const b = await CA.f('abc')
       expect(b.location.startsWith(`${CB.location}?berry=abc&`)).to.equal(true)
       expect(b instanceof B).to.equal(true)

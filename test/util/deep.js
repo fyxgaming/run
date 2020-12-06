@@ -542,7 +542,7 @@ describe('_deepClone', () => {
 
   it('undeployed arbitrary objects', () => {
     class A { }
-    const A2 = Run.install(A)
+    const A2 = Run.util.install(A)
     const a = new A2()
     const a2 = _deepClone(a)
     expect(a).to.deep.equal(a2)

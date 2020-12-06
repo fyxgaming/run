@@ -1788,7 +1788,7 @@ describe('Deploy', () => {
       const CB = run.deploy(B)
       expect(CB.A).not.to.equal(A)
       expect(CB.A.toString()).to.equal(A.toString())
-      expect(CB.A).to.equal(Run.install(A))
+      expect(CB.A).to.equal(Run.util.install(A))
     })
 
     // ------------------------------------------------------------------------
@@ -2045,8 +2045,8 @@ describe('Deploy', () => {
       await run.sync()
 
       const presetsB = B.presets
-      Run.uninstall(A)
-      Run.uninstall(B)
+      Run.util.uninstall(A)
+      Run.util.uninstall(B)
       B.presets = presetsB
 
       expect(() => run.deploy(B)).to.throw('A must have presets')
