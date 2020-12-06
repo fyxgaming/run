@@ -65,10 +65,12 @@ describe('Token20', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('throws if class is not extended', async () => {
-      new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
-      expect(() => Token.mint(100)).to.throw('Token must be extended')
-    })
+    if (!COVER) {
+      it('throws if class is not extended', async () => {
+        new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
+        expect(() => Token.mint(100)).to.throw('Token must be extended')
+      })
+    }
 
     // ------------------------------------------------------------------------
 
