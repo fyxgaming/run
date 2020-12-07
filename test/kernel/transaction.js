@@ -1788,7 +1788,7 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if sync deleted transaction creation', async () => {
+    it('throws if sync destroyed transaction creation', async () => {
       const run = new Run()
       class A { }
       const tx = new Transaction()

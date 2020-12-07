@@ -323,7 +323,75 @@ describe('Destroy', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if change owner or satoshis after destroy', async () => {
+    it('allowed to change properties after destroy', async () => {
+      const run = new Run()
+
+      class A extends Jig {
+        init () { this.n = 1 }
+        f () { this.destroy(); delete this.n; this.m = 2 }
+      }
+
+      const a = new A()
+      a.f()
+      await a.sync()
+
+      function test (a) {
+        expect(typeof a.n).to.equal('undefined')
+        expect(a.m).to.equal(2)
+      }
+
+      const a2 = await run.load(a.location)
+      test(a2)
+
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws to change properties after destroy and finalize', () => {
+      new Run() // eslint-disable-line
+
+      class A extends Jig {
+        f () { this.destroy() }
+        h (b) { b.g(this); delete this.n }
+      }
+
+      class B extends Jig {
+        g (a) {
+          a.f()
+        }
+      }
+
+      const a = new A()
+      const b = new B()
+      expect(() => a.h(b)).to.throw('Cannot delete n: unbound')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('create and destroy may still set properties', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init () {
+          this.destroy()
+          this.n = 1
+        }
+      }
+      const a = new A()
+      expect(a.n).to.equal(1)
+      await a.sync()
+      const a2 = await run.load(a.location)
+      expect(a2.n).to.equal(1)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      expect(a3.n).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if change owner or satoshis after destroy', () => {
       new Run() // eslint-disable-line
       class A extends Jig {
         f () {
