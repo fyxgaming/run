@@ -474,7 +474,6 @@ Line 3`
       const b = await B.load('123')
       test(b)
 
-      console.log(b)
       const b2 = await B.load(b.location)
       test(b2)
 

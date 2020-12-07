@@ -30,7 +30,7 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it.only('basic jig', async () => {
+    it('basic jig', async () => {
       const run = new Run()
       class A extends Jig { }
 
@@ -84,7 +84,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('calls init method with constructor args', async () => {
+    it.only('calls init method with constructor args', async () => {
       const run = new Run()
       class A extends Jig { init (a, b) { this.a = a; this.b = b } }
 
@@ -115,15 +115,19 @@ describe('Jig', () => {
       }
 
       const a = new A(1, 'z')
-      test(a)
-      await a.sync()
+      // test(a)
+      // await a.sync()
 
+      console.log(!!run, !!a, !!test, !!A)
+
+      /*
       const a2 = await run.load(a.location)
       test(a2)
 
       run.cache = new LocalCache()
       const a3 = await run.load(a.location)
       test(a3)
+      */
     })
 
     // ------------------------------------------------------------------------
