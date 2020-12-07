@@ -13,8 +13,8 @@ const { testRecord } = require('../env/misc')
 const { mangle } = unmangle
 const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const {
-  _Membrane: Membrane, _Rules: Rules, _Unbound: Unbound, _sudo, _Sandbox,
-  _EDITORS, _RESERVED_PROPS, _RESERVED_CODE_METHODS, _RESERVED_JIG_METHODS
+  _Membrane: Membrane, _Rules: Rules, _sudo, _Sandbox, _EDITORS, _RESERVED_PROPS,
+  _RESERVED_CODE_METHODS, _RESERVED_JIG_METHODS
 } = unmangle(Run)
 const { _CODE, _JIGS } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(_Sandbox)._intrinsics
@@ -56,8 +56,8 @@ function makeJig (x, options = {}) {
     jig.location = `${DUMMY_TXID1}_d${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)}`
     jig.origin = `${DUMMY_TXID2}_o${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)}`
     jig.nonce = 0
-    jig.owner = null
-    jig.satoshis = 0
+    jig.owner = undefined
+    jig.satoshis = undefined
   })
 
   _JIGS.add(jig)
@@ -76,8 +76,8 @@ function makeCode (x, options = {}) {
     C.location = `${DUMMY_TXID1}_d${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)}`
     C.origin = `${DUMMY_TXID2}_o${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)}`
     C.nonce = 0
-    C.owner = null
-    C.satoshis = 0
+    C.owner = undefined
+    C.satoshis = undefined
   })
 
   x.prototype.constructor = C
@@ -1114,57 +1114,153 @@ describe('Membrane', () => {
 
     it('throws if read undetermined utxo bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
-      _sudo(() => { A.owner = new Unbound() })
-      _sudo(() => { A.satoshis = new Unbound() })
+      _sudo(() => { A.owner = undefined })
+      _sudo(() => { A.satoshis = undefined })
       expect(() => A.owner).to.throw('Cannot read owner')
       expect(() => A.satoshis).to.throw('Cannot read satoshis')
     })
 
     // ------------------------------------------------------------------------
 
-    it('read unbound utxo bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
-      _sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
-      _sudo(() => { A.satoshis = new Unbound(1) })
-      expect(A.owner).to.equal(DUMMY_OWNER)
-      expect(A.satoshis).to.equal(1)
+    it('set utxo bindings in method marks unbound', () => {
+      class A {
+        static f () { this.owner = DUMMY_OWNER }
+        static g () { this.satoshis = 1 }
+      }
+      const A2 = makeCode(A, { _admin: true, _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      _sudo(() => { A2.owner = undefined })
+      _sudo(() => { A2.satoshis = undefined })
+      testRecord(record => {
+        expect(record._unbound.length).to.equal(0)
+        A2.f()
+        expect(record._unbound[0]).to.equal(A2)
+      })
+      testRecord(record => {
+        expect(record._unbound.length).to.equal(0)
+        A2.g()
+        expect(record._unbound[0]).to.equal(A2)
+      })
     })
 
     // ------------------------------------------------------------------------
 
-    it('set utxo bindings makes them unbound', () => {
-      const A2 = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
-      A2.owner = DUMMY_OWNER
-      A2.satoshis = 1
-      expect(_sudo(() => A2.owner) instanceof Unbound).to.equal(true)
-      expect(_sudo(() => A2.satoshis) instanceof Unbound).to.equal(true)
+    it('marks unbound after leave last method', () => {
+      class A {
+        static f () {
+          this.n = 1
+          this.g()
+          this.n = 2
+        }
+
+        static g () {
+          this.owner = DUMMY_OWNER
+        }
+
+        static h () {
+          this.n = 3
+        }
+      }
+      const A2 = makeCode(A, { _admin: true, _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      testRecord(record => {
+        A2.f()
+        expect(A2.n).to.equal(2)
+        expect(record._unbound).to.deep.equal([A2])
+        expect(() => A2.h()).to.throw('Cannot set n: unbound')
+      })
     })
 
     // ------------------------------------------------------------------------
 
-    it('define utxo bindings makes them unbound', () => {
-      const A2 = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
-      Object.defineProperty(A2, 'owner', { value: DUMMY_OWNER, configurable: true, enumerable: true, writable: true })
-      Object.defineProperty(A2, 'satoshis', { value: 1, configurable: true, enumerable: true, writable: true })
-      expect(_sudo(() => A2.owner) instanceof Unbound).to.equal(true)
-      expect(_sudo(() => A2.satoshis) instanceof Unbound).to.equal(true)
+    it('marks unbound after leave last method to another jig', () => {
+      class A {
+        static f () {
+          this.n = 1
+          this.g()
+          this.n = 2
+        }
+
+        static g () {
+          this.owner = DUMMY_OWNER
+        }
+
+        static h () {
+          this.m = 3
+        }
+      }
+      class B {
+        static i (A) {
+          A.f()
+          A.h()
+        }
+      }
+      const A2 = makeCode(A, { _admin: true, _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      const B2 = makeCode(B, { _admin: true, _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      expect(() => testRecord(record => B2.i(A2))).to.throw('Cannot set m: unbound')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('marks unbound after leave last method to another jig then to self again', () => {
+      class A {
+        static f () {
+          this.owner = DUMMY_OWNER
+        }
+
+        static h (B) {
+          B.g(this)
+          this.n = 1
+        }
+      }
+      class B {
+        static g (A) {
+          A.f()
+        }
+      }
+      const A2 = makeCode(A, { _admin: true, _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      const B2 = makeCode(B, { _admin: true, _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      expect(() => testRecord(record => A2.h(B2))).to.throw('Cannot set n: unbound')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('define utxo bindings in method makes them unbound', () => {
+      const desc = { configurable: true, enumerable: true, writable: true }
+      class A {
+        static f () { Object.defineProperty(this, 'owner', Object.assign({ value: DUMMY_OWNER }, desc)) }
+        static g () { Object.defineProperty(this, 'satoshis', Object.assign({ value: 1 }, desc)) }
+      }
+      const A2 = makeCode(A, { _admin: true, _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      _sudo(() => { A2.owner = undefined })
+      _sudo(() => { A2.satoshis = undefined })
+      testRecord(record => {
+        expect(record._unbound.length).to.equal(0)
+        A2.f()
+        expect(record._unbound[0]).to.equal(A2)
+      })
+      testRecord(record => {
+        expect(record._unbound.length).to.equal(0)
+        A2.g()
+        expect(record._unbound[0]).to.equal(A2)
+      })
     })
 
     // ------------------------------------------------------------------------
 
     it('set owner when undetermined', () => {
-      const A2 = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
-      _sudo(() => { A2.owner = new Unbound(undefined) })
-      A2.owner = DUMMY_OWNER
+      class A { static f () { this.owner = DUMMY_OWNER } }
+      const A2 = makeCode(A, { _admin: true, _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      _sudo(() => { A2.owner = undefined })
+      testRecord(() => A2.f())
       expect(A2.owner).to.equal(DUMMY_OWNER)
     })
 
     // ------------------------------------------------------------------------
 
     it('set satoshis when undetermined', () => {
-      const A2 = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
-      _sudo(() => { A2.satoshis = new Unbound(undefined) })
-      A2.satoshis = 1
+      class A { static f () { this.satoshis = 1 } }
+      const A2 = makeCode(A, { _admin: true, _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      _sudo(() => { A2.satoshis = undefined })
+      testRecord(() => A2.f())
       expect(A2.satoshis).to.equal(1)
     })
 
@@ -1187,18 +1283,35 @@ describe('Membrane', () => {
 
     // ------------------------------------------------------------------------
 
-    it('cannot change owner once unbound', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
-      _sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
-      expect(() => { A.owner = DUMMY_OWNER }).to.throw('Cannot set owner')
+    it('throws if set while unbound owner', () => {
+      class A {
+        static f () { this.owner = DUMMY_OWNER }
+        static g () { this.n = 1 }
+      }
+      const A2 = makeCode(A, { _admin: true, _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      _sudo(() => { A2.owner = undefined })
+      _sudo(() => { A2.satoshis = undefined })
+      expect(() => testRecord(record => {
+        A2.f()
+        A2.g()
+      })).to.throw('Cannot set n')
     })
 
     // ------------------------------------------------------------------------
 
-    it('cannot change satoshis once unbound', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
-      _sudo(() => { A.satoshis = new Unbound(1) })
-      expect(() => { A.satoshis = 1 }).to.throw('Cannot set satoshis')
+    it('throws if define while unbound satoshis', () => {
+      const desc = { value: 1, configurable: true, enumerable: true, writable: true }
+      class A {
+        static f () { this.satoshis = 1 }
+        static g () { Object.defineProperty(this, 'n', desc) }
+      }
+      const A2 = makeCode(A, { _admin: true, _utxoBindings: true, _recordCalls: true, _recordableTarget: true })
+      _sudo(() => { A2.owner = undefined })
+      _sudo(() => { A2.satoshis = undefined })
+      expect(() => testRecord(record => {
+        A2.f()
+        A2.g()
+      })).to.throw('Cannot define n')
     })
 
     // ------------------------------------------------------------------------
@@ -1243,20 +1356,10 @@ describe('Membrane', () => {
 
     it('throws if get descriptor of undetermined utxo bindings', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
-      _sudo(() => { A.owner = new Unbound() })
-      _sudo(() => { A.satoshis = new Unbound() })
+      _sudo(() => { A.owner = undefined })
+      _sudo(() => { A.satoshis = undefined })
       expect(() => Object.getOwnPropertyDescriptor(A, 'owner').value).to.throw('Cannot read owner')
       expect(() => Object.getOwnPropertyDescriptor(A, 'satoshis').value).to.throw('Cannot read satoshis')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('can get descriptor of unbound utxo bindings', () => {
-      const A = new Membrane(class A { }, mangle({ _admin: true, _utxoBindings: true }))
-      _sudo(() => { A.owner = new Unbound(DUMMY_OWNER) })
-      _sudo(() => { A.satoshis = new Unbound(1) })
-      expect(Object.getOwnPropertyDescriptor(A, 'owner').value).to.equal(DUMMY_OWNER)
-      expect(Object.getOwnPropertyDescriptor(A, 'satoshis').value).to.equal(1)
     })
   })
 
@@ -1318,7 +1421,7 @@ describe('Membrane', () => {
 
     it('intrinsic update disabled', () => {
       const s = new Membrane(new Set(), mangle({ _immutable: true }))
-      expect(() => s.add(1)).to.throw('Immutable')
+      expect(() => s.add(1)).to.throw('Cannot update [object Set]: immutable')
     })
   })
 
