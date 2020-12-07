@@ -537,13 +537,16 @@ describe('Token20', () => {
 
     // ------------------------------------------------------------------------
 
-    it('send multiple', async () => {
+    it.only('send multiple', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
+      console.log('SENDER', run.owner.address)
       class TestToken extends Token { }
       const a = TestToken.mint(6)
       await a.sync()
       const address = new PrivateKey().toAddress().toString()
+      console.log('-----------------------------------')
       const [b, c] = run.transaction(() => [a.send(address, 2), a.send(address, 3)])
+      console.log('-----------------------------------2')
       function test (a, b, c) {
         expect(a.amount).to.equal(1)
         expect(a.owner).to.equal(run.owner.address)

@@ -35,14 +35,17 @@ const DUMMY_TXID2 = 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef01234
 function simulateAction (f) {
   const Record = unmangle(unmangle(Run)._Record)
   const CURRENT_RECORD = unmangle(Record._CURRENT_RECORD)
+  const jig = makeJig({})
+  let ret
   try {
-    const jig = makeJig({})
-    const action = mangle({ _jig: jig })
-    CURRENT_RECORD._stack.push(action)
-    return f()
+    CURRENT_RECORD._stack.push(jig)
+    ret = f()
   } finally {
     CURRENT_RECORD._stack.pop()
   }
+  const action = mangle({ _jig: jig })
+  CURRENT_RECORD._action(action)
+  return ret
 }
 
 // ------------------------------------------------------------------------------------------------

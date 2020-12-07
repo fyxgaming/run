@@ -30,7 +30,7 @@ describe('Jig', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('basic jig', async () => {
+    it.only('basic jig', async () => {
       const run = new Run()
       class A extends Jig { }
 
@@ -481,7 +481,7 @@ describe('Jig', () => {
     it('throws if access JigDeps', () => {
       new Run() // eslint-disable-line
       class A extends Jig { init () { JigDeps._stack.push(1) } } // eslint-disable-line
-      expect(() => new A()).to.throw()
+      expect(() => new A()).to.throw('JigDeps')
     })
 
     // ------------------------------------------------------------------------
