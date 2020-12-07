@@ -257,7 +257,7 @@ describe('Destroy', () => {
       expect(() => run.transaction(() => {
         a.send(run.owner.address)
         a.destroy()
-      })).to.throw('delete disabled: [jig A] has an unbound new owner or satoshis value')
+      })).to.throw('delete disabled: [jig A] has an unbound owner or satoshis value')
     })
 
     // ------------------------------------------------------------------------
@@ -270,7 +270,7 @@ describe('Destroy', () => {
       expect(() => run.transaction(() => {
         a.back()
         a.destroy()
-      })).to.throw('delete disabled: [jig A] has an unbound new owner or satoshis value')
+      })).to.throw('delete disabled: [jig A] has an unbound owner or satoshis value')
     })
   })
 

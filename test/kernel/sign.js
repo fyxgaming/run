@@ -269,7 +269,7 @@ describe('Sign', () => {
       expect(() => run.transaction(() => {
         a.send(run.purse.address)
         a.sign()
-      })).to.throw('sign disabled: [jig A] has an unbound new owner or satoshis value')
+      })).to.throw('sign disabled: [jig A] has an unbound owner or satoshis value')
     })
 
     // ------------------------------------------------------------------------
@@ -282,7 +282,7 @@ describe('Sign', () => {
       expect(() => run.transaction(() => {
         a.back()
         a.sign()
-      })).to.throw('sign disabled: [jig A] has an unbound new owner or satoshis value')
+      })).to.throw('sign disabled: [jig A] has an unbound owner or satoshis value')
     })
 
     // ------------------------------------------------------------------------
