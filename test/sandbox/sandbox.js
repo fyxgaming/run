@@ -15,7 +15,7 @@ const Sandbox = unmangle(unmangle(Run)._Sandbox)
 // ------------------------------------------------------------------------------------------------
 
 describe('Sandbox', () => {
-  it('sandboxes code', () => {
+  it.skip('sandboxes code', () => {
 
   })
 
@@ -33,11 +33,11 @@ describe('Sandbox', () => {
     expect(logs).to.deep.equal(['hello', 'world'])
   })
 
-  it('can set globals', () => {
+  it.skip('can set globals', () => {
 
   })
 
-  it('intrinsics frozen', () => {
+  it.skip('intrinsics frozen', () => {
     /*
     const run = new Run()
     function f () {
@@ -50,7 +50,7 @@ describe('Sandbox', () => {
     */
   })
 
-  it('intrinsic prototypes frozen', () => {
+  it.skip('intrinsic prototypes frozen', () => {
     /*
     const run = new Run()
     function f () {
