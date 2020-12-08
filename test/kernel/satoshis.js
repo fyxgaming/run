@@ -7,7 +7,8 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, LocalCache } = Run
+const { Jig } = Run
+const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // satoshis

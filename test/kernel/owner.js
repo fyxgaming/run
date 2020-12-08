@@ -9,7 +9,8 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
-const { Jig, LocalCache } = Run
+const { Jig } = Run
+const { LocalCache } = Run.plugins
 const PrivateKey = require('bsv/lib/privatekey')
 
 // ------------------------------------------------------------------------------------------------
