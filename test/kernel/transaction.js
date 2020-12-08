@@ -294,7 +294,7 @@ describe('Transaction', () => {
       class A extends Jig { static send (to) { this.owner = to }; static f () { this.n = 1 } }
       const to = new PrivateKey().toAddress().toString()
       const C = run.deploy(A)
-      const error = 'update disabled: A has an unbound owner or satoshis value'
+      const error = 'Cannot set n: unbound'
       expect(() => run.transaction(() => { C.send(to); C.f() })).to.throw(error)
     })
 

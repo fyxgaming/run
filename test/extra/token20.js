@@ -267,30 +267,6 @@ describe('Token20', () => {
       const b2 = await run.load(b.location)
       expect(b2.owner instanceof CustomLock).to.equal(true)
     })
-
-    // ------------------------------------------------------------------------
-
-    it('extend send to add metadata to sent', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class TestToken extends Token {
-        send (to, amount, metadata) { return super.send(to, amount)._setMetadata(metadata) }
-        _setMetadata (metadata) { this.metadata = metadata; return this }
-      }
-      const a = TestToken.mint(2)
-      await run.sync()
-      const metadata = { n: 123 }
-      const address = new PrivateKey().toAddress().toString()
-      const sent = a.send(address, 1, metadata)
-      expect(sent.metadata.n).to.equal(123)
-      expect(typeof a.metadata).to.equal('undefined')
-      if (COVER) return
-      await run.sync()
-      const sent2 = await run.load(sent.location)
-      expect(sent2.metadata.n).to.equal(123)
-      run.cache = new LocalCache()
-      const sent3 = await run.load(sent.location)
-      expect(sent3.metadata.n).to.equal(123)
-    })
   })
 
   // --------------------------------------------------------------------------
@@ -537,7 +513,7 @@ describe('Token20', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('send multiple', async () => {
+    it('send multiple', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
       class TestToken extends Token { }
       const a = TestToken.mint(6)

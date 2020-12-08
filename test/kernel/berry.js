@@ -150,7 +150,7 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it('immutable externally', async () => {
+    it.only('immutable externally', async () => {
       const run = new Run()
 
       class B extends Berry {
@@ -868,7 +868,7 @@ Line 3`
         }
       }
       const error = 'Cannot set location'
-      await expect(B.load('')).to.be.rejectedWith(error)
+      await expect(B.load('')).to.rejectedWith(error)
 
       class C extends Berry {
         init () {

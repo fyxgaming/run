@@ -84,7 +84,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('calls init method with constructor args', async () => {
+    it('calls init method with constructor args', async () => {
       const run = new Run()
       class A extends Jig { init (a, b) { this.a = a; this.b = b } }
 
@@ -115,19 +115,15 @@ describe('Jig', () => {
       }
 
       const a = new A(1, 'z')
-      // test(a)
-      // await a.sync()
+      test(a)
+      await a.sync()
 
-      console.log(!!run, !!a, !!test, !!A)
-
-      /*
       const a2 = await run.load(a.location)
       test(a2)
 
       run.cache = new LocalCache()
       const a3 = await run.load(a.location)
       test(a3)
-      */
     })
 
     // ------------------------------------------------------------------------
@@ -206,7 +202,7 @@ describe('Jig', () => {
 
     it('throws if init returns a value', async () => {
       new Run() // eslint-disable-line
-      class A extends Jig { init () { return {} }}
+      class A extends Jig { init () { return {} } }
       expect(() => new A()).to.throw('init must not return a value')
     })
 
@@ -580,7 +576,7 @@ describe('Jig', () => {
   describe('Spends', async () => {
     it('spend all callers for a change', async () => {
       const run = new Run()
-      class A extends Jig { set (n) { this.n = n }}
+      class A extends Jig { set (n) { this.n = n } }
       class B extends Jig { set (a, n) { a.set(n); return this } }
       const a = new A()
       const b = new B()
@@ -1024,7 +1020,7 @@ describe('Jig', () => {
     it('throws if external', () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
-      class B extends Jig { init () { this.a = new A(); this.a.n = 1 }}
+      class B extends Jig { init () { this.a = new A(); this.a.n = 1 } }
       B.deps = { A }
       const a = new A()
       expect(() => { a.n = 1 }).to.throw()
@@ -1187,7 +1183,7 @@ describe('Jig', () => {
 
     it('throws if delete externally', () => {
       new Run() // eslint-disable-line
-      class A extends Jig { init () { this.n = 1 }}
+      class A extends Jig { init () { this.n = 1 } }
       const a = new A()
       expect(() => { delete a.n }).to.throw('Attempt to update [jig A] outside of a method')
     })
@@ -1293,7 +1289,7 @@ describe('Jig', () => {
   describe('setPrototypeOf', () => {
     it('throws', () => {
         new Run() // eslint-disable-line
-      class A extends Jig { f () { Reflect.setPrototypeOf(this, Object) }}
+      class A extends Jig { f () { Reflect.setPrototypeOf(this, Object) } }
       const a = new A()
       expect(() => Reflect.setPrototypeOf(a, Object)).to.throw('setPrototypeOf disabled')
       expect(() => a.f()).to.throw('setPrototypeOf disabled')
@@ -1307,7 +1303,7 @@ describe('Jig', () => {
   describe('preventExtensions', () => {
     it('throws', () => {
         new Run() // eslint-disable-line
-      class A extends Jig { f () { Object.preventExtensions(this) }}
+      class A extends Jig { f () { Object.preventExtensions(this) } }
       const a = new A()
       expect(() => Object.preventExtensions(a)).to.throw()
       expect(() => a.f()).to.throw()
@@ -1369,7 +1365,7 @@ describe('Jig', () => {
   describe('has', () => {
     it('reads jig', async () => {
       const run = new Run()
-      class A extends Jig { init () { this.arr = [1] }}
+      class A extends Jig { init () { this.arr = [1] } }
       class B extends Jig {
         f (a) { this.x = 'n' in a }
 
@@ -1467,7 +1463,7 @@ describe('Jig', () => {
     it('reads jig', async () => {
       const run = new Run()
       class A extends Jig {}
-      class B extends Jig { f (a) { this.x = Reflect.ownKeys(a) }}
+      class B extends Jig { f (a) { this.x = Reflect.ownKeys(a) } }
       const a = new A()
       const b = new B()
       await run.sync()
@@ -1536,8 +1532,8 @@ describe('Jig', () => {
   describe('getOwnPropertyDescriptor', () => {
     it('reads jig', async () => {
       const run = new Run()
-      class A extends Jig { init () { this.n = 1 }}
-      class B extends Jig { f (a) { this.x = Object.getOwnPropertyDescriptor(a, 'n') }}
+      class A extends Jig { init () { this.n = 1 } }
+      class B extends Jig { f (a) { this.x = Object.getOwnPropertyDescriptor(a, 'n') } }
       const a = new A()
       const b = new B()
       await run.sync()
@@ -1700,7 +1696,7 @@ describe('Jig', () => {
 
     it('read class properties from inside', async () => {
       const run = new Run()
-      class A extends Jig { f () { this.n = this.constructor.n }}
+      class A extends Jig { f () { this.n = this.constructor.n } }
       A.n = 1
       const a = new A()
       a.f()
@@ -1951,7 +1947,7 @@ describe('Jig', () => {
 
     it('returns overridden value', () => {
       new Run() // eslint-disable-line
-      class A extends Jig { toString () { return 'hello' }}
+      class A extends Jig { toString () { return 'hello' } }
       const a = new A()
       expect(a.toString()).to.equal('hello')
     })
@@ -1964,7 +1960,7 @@ describe('Jig', () => {
   describe('origin', () => {
     it('throws if read before sync', async () => {
       new Run() // eslint-disable-line
-      class A extends Jig { f () { this.origin2 = this.origin }}
+      class A extends Jig { f () { this.origin2 = this.origin } }
       const a = new A()
       expect(() => a.origin).to.throw('Cannot read origin')
       expect(() => a.f()).to.throw('Cannot read origin')
@@ -1977,7 +1973,7 @@ describe('Jig', () => {
 
     it('read after sync', async () => {
       new Run() // eslint-disable-line
-      class A extends Jig { f () { this.origin2 = this.origin }}
+      class A extends Jig { f () { this.origin2 = this.origin } }
       const a = new A()
       await a.sync()
       a.f()
@@ -1988,7 +1984,7 @@ describe('Jig', () => {
 
     it('throws if delete', () => {
       new Run() // eslint-disable-line
-      class A extends Jig { f () { delete this.origin }}
+      class A extends Jig { f () { delete this.origin } }
       const a = new A()
       expect(() => { delete a.origin }).to.throw('Cannot delete origin')
       expect(() => a.f()).to.throw('Cannot delete origin')
@@ -1998,7 +1994,7 @@ describe('Jig', () => {
 
     it('throws if set', () => {
       new Run() // eslint-disable-line
-      class A extends Jig { f () { this.origin = '123' }}
+      class A extends Jig { f () { this.origin = '123' } }
       const a = new A()
       expect(() => { a.origin = '123' }).to.throw('Cannot set origin')
       expect(() => a.f()).to.throw('Cannot set origin')
@@ -2039,7 +2035,7 @@ describe('Jig', () => {
 
     it('read after sync', async () => {
       new Run() // eslint-disable-line
-      class A extends Jig { f () { this.location2 = this.location }}
+      class A extends Jig { f () { this.location2 = this.location } }
       const a = new A()
       await a.sync()
       a.f()
@@ -2055,7 +2051,7 @@ describe('Jig', () => {
 
     it('throws if delete', () => {
       new Run() // eslint-disable-line
-      class A extends Jig { f () { delete this.location }}
+      class A extends Jig { f () { delete this.location } }
       const a = new A()
       expect(() => { delete a.location }).to.throw('Cannot delete location')
       expect(() => a.f()).to.throw('Cannot delete location')
@@ -2065,7 +2061,7 @@ describe('Jig', () => {
 
     it('throws if set', () => {
       new Run() // eslint-disable-line
-      class A extends Jig { f () { this.location = '123' }}
+      class A extends Jig { f () { this.location = '123' } }
       const a = new A()
       expect(() => { a.location = '123' }).to.throw('Cannot set location')
       expect(() => a.f()).to.throw('Cannot set location')
@@ -2131,7 +2127,7 @@ describe('Jig', () => {
 
     it('read after sync', async () => {
       new Run() // eslint-disable-line
-      class A extends Jig { f () { this.nonce2 = this.nonce }}
+      class A extends Jig { f () { this.nonce2 = this.nonce } }
       const a = new A()
       await a.sync()
       a.f()
@@ -2146,7 +2142,7 @@ describe('Jig', () => {
 
     it('throws if delete', () => {
       new Run() // eslint-disable-line
-      class A extends Jig { f () { delete this.nonce }}
+      class A extends Jig { f () { delete this.nonce } }
       const a = new A()
       expect(() => { delete a.nonce }).to.throw('Cannot delete nonce')
       expect(() => a.f()).to.throw('Cannot delete nonce')
@@ -2156,7 +2152,7 @@ describe('Jig', () => {
 
     it('throws if set', () => {
       new Run() // eslint-disable-line
-      class A extends Jig { f () { this.nonce = '123' }}
+      class A extends Jig { f () { this.nonce = '123' } }
       const a = new A()
       expect(() => { a.nonce = '123' }).to.throw('Cannot set nonce')
       expect(() => a.f()).to.throw('Cannot set nonce')
