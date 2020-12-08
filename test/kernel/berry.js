@@ -150,7 +150,7 @@ describe('Berry', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('immutable externally', async () => {
+    it('immutable externally', async () => {
       const run = new Run()
 
       class B extends Berry {
@@ -853,7 +853,7 @@ Line 3`
     it('throws if async', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { async init () { } }
-      const error = 'init must not return a value'
+      const error = 'async methods not supported'
       await expect(B.load('')).to.be.rejectedWith(error)
     })
 
