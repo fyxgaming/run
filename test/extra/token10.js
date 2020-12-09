@@ -540,9 +540,9 @@ describe('Token10', () => {
   it.skip('deploy', async () => {
     // Hint: Run with env NETWORK=<network> to deploy with keys
     const run = new Run()
-    run.deploy(Run.extra.Token)
+    run.deploy(Run.extra.Token10)
     await run.sync()
-    console.log(Run.extra.Token)
+    console.log(Run.extra.Token10)
   })
 })
 
