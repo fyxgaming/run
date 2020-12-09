@@ -297,6 +297,100 @@ describe('Sign', () => {
         CA.sign()
       })).to.throw('Cannot sign destroyed jigs')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if send then sign while pending in method', async () => {
+      const run = new Run()
+      class A extends Jig {
+        f (owner) {
+          this.owner = owner
+          this.auth()
+        }
+      }
+      const a = new A()
+      await a.sync()
+      expect(() => a.f(run.purse.address)).to.throw('sign disabled: [jig A] has an unbound owner or satoshis value')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if back then sign in separate methods', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig {
+        f () {
+          this.satoshis = 1000
+          this.auth()
+        }
+      }
+      const a = new A()
+      await a.sync()
+      expect(() => a.f()).to.throw('sign disabled: [jig A] has an unbound owner or satoshis value')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if send then sign in separate methods', async () => {
+      const run = new Run()
+      class A extends Jig {
+        f (owner) {
+          this.owner = owner
+        }
+      }
+      class B extends Jig {
+        g (a, owner) {
+          a.f(owner)
+          a.auth()
+        }
+      }
+      const a = new A()
+      const b = new B()
+      await run.sync()
+      expect(() => b.g(a, run.purse.address)).to.throw('sign disabled: [jig A] has an unbound owner or satoshis value')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if back then sign while pending in method', async () => {
+      const run = new Run()
+      class A extends Jig {
+        f () {
+          this.satoshis = 1000
+        }
+      }
+      class B extends Jig {
+        g (a) {
+          a.f()
+          a.auth()
+        }
+      }
+      const a = new A()
+      const b = new B()
+      await run.sync()
+      expect(() => b.g(a)).to.throw('sign disabled: [jig A] has an unbound owner or satoshis value')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if sign, send, then sign in separate methods', async () => {
+      const run = new Run()
+      class A extends Jig {
+        f (owner) {
+          this.owner = owner
+        }
+      }
+      class B extends Jig {
+        g (a, owner) {
+          a.auth()
+          a.f(owner)
+          a.auth()
+        }
+      }
+      const a = new A()
+      const b = new B()
+      await run.sync()
+      expect(() => b.g(a, run.purse.address)).to.throw('sign disabled: [jig A] has an unbound owner or satoshis value')
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -403,10 +497,10 @@ describe('Sign', () => {
 
     // ------------------------------------------------------------------------
 
-    it('send and sign in same method', async () => {
+    it('sign and send in same method', async () => {
       // sign is a request to happen on the owner at method start
       new Run() // eslint-disable-line
-      class A extends Jig { f (owner) { this.owner = owner; this.sign() } }
+      class A extends Jig { f (owner) { this.sign(); this.owner = owner } }
       const a = new A()
       await a.sync()
       const owner = new PrivateKey().toPublicKey().toString()
