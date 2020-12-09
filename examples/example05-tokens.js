@@ -9,13 +9,13 @@ const Run = require('../dist/run.node.min')
 const bsv = require('bsv')
 const { Token } = Run.extra
 
-const aliceRun = new Run({ network: 'mock' })
-const bobRun = new Run({ network: 'mock' })
+const aliceRun = new Run({ network: 'mock', trust: 'cache' })
+const bobRun = new Run({ network: 'mock', trust: 'cache' })
 const bob = bobRun.owner.pubkey.toString()
 
 async function main () {
   // ------------------------------------------------------------------------
-  // Alice mints 100 gold and sends 50 to Bob in two pieces
+  // Alice deploys the Gold token. She is the issuer.
   // ------------------------------------------------------------------------
 
   aliceRun.activate()
@@ -24,8 +24,17 @@ async function main () {
   Gold.source = 'Bitcoin Land'
   Gold.quality = 'Excellent'
 
-  let alicesGold = Gold.mint(100)
-  await alicesGold.sync()
+  aliceRun.deploy(Gold)
+
+  await aliceRun.sync()
+
+  // ------------------------------------------------------------------------
+  // Alice mints 100 gold and sends 50 to Bob in two pieces
+  // ------------------------------------------------------------------------
+
+  aliceRun.activate()
+
+  const alicesGold = Gold.mint(100, aliceRun.owner.address)
 
   alicesGold.send(bob, 20)
   alicesGold.send(bob, 30)
@@ -37,9 +46,6 @@ async function main () {
   // ------------------------------------------------------------------------
 
   bobRun.activate()
-
-  const goldClassTxid = Gold.location.slice(0, 64)
-  bobRun.trust(goldClassTxid)
 
   await bobRun.inventory.sync()
 
@@ -54,7 +60,7 @@ async function main () {
 
   const newGold = Gold.mint(30)
 
-  alicesGold = new Gold(alicesGold, newGold)
+  alicesGold.combine(newGold)
 
   // ------------------------------------------------------------------------
   // Display the final balances

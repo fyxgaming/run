@@ -178,6 +178,24 @@ describe('Caller', () => {
     class A extends Jig { init () { caller = 1 } } // eslint-disable-line
       expect(() => new A()).to.throw('Cannot set caller')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('caller is creator for a new jig', async () => {
+      const run = new Run()
+      class A extends Jig { init () { this.callerAtInit = caller } }
+      class B extends Jig { f () { return new A() } }
+      B.deps = { A }
+      const b = new B()
+      const a = b.f()
+      await a.sync()
+      expect(a.callerAtInit.location).to.equal(b.location)
+      const a2 = await run.load(a.location)
+      expect(a2.callerAtInit.location).to.equal(b.location)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      expect(a3.callerAtInit.location).to.equal(b.location)
+    })
   })
 
   // --------------------------------------------------------------------------

@@ -595,8 +595,8 @@ describe('Deps', () => {
         static h () { A.deps.o = A.deps.m + 3 }
         static i () { return o } // eslint-disable-line
       }
+      const CA = run.deploy(A)
       const tx = new Transaction()
-      const CA = tx.update(() => run.deploy(A))
       tx.update(() => CA.f())
       tx.update(() => CA.g())
       tx.update(() => CA.h())

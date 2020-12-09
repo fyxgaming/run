@@ -886,9 +886,9 @@ describe('Jig', () => {
       await run.sync()
       const a2 = await run.load(a.location)
       a2.set(2)
+      const b = new B()
+      const b2 = new B()
       expect(() => run.transaction(() => {
-        const b = new B()
-        const b2 = new B()
         b.apply(a)
         b2.apply(a2)
       })).to.throw('Inconsistent worldview')

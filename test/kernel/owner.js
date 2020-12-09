@@ -61,8 +61,25 @@ describe('Owner', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('may change assigned creator owner', () => {
-    // TODO
+  it('may change assigned creator owner in transaction', async () => {
+    const run = new Run()
+    class A extends Jig { f (owner) { this.owner = owner } }
+    class B extends Jig { static g () { return new A() } }
+    B.deps = { A }
+    const CB = run.deploy(B)
+    const a = run.transaction(() => {
+      const a = CB.g()
+      a.f(run.purse.address)
+      return a
+    })
+    await run.sync()
+    function test (a) { expect(a.owner).to.equal(run.purse.address) }
+    test(a)
+    const a2 = await run.load(a.location)
+    test(a2)
+    run.cache = new LocalCache()
+    const a3 = await run.load(a.location)
+    test(a3)
   })
 
   // --------------------------------------------------------------------------
@@ -108,20 +125,41 @@ describe('Owner', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('throws if delete unassigned owner', () => {
-    // TODO
+  it('delete in init', () => {
+    new Run() // eslint-disable-line
+    class A extends Jig {
+      init () {
+        this.destroy()
+      }
+    }
+    expect(() => new A()).not.to.throw()
   })
 
   // --------------------------------------------------------------------------
 
-  it.skip('throws if delete unbound owner', () => {
-    // TODO
+  it('throws if delete unassigned owner in transaction', () => {
+    const run = new Run()
+    class A extends Jig { }
+    const error = 'delete disabled: [jig A] has an unbound owner or satoshis value'
+    expect(() => run.transaction(() => new A().destroy())).to.throw(error)
   })
 
   // --------------------------------------------------------------------------
 
-  it.skip('throws if set externally', () => {
-      new Run () // eslint-disable-line
+  it('throws if delete unbound owner from another method', () => {
+    const run = new Run()
+    class A extends Jig { init (owner) { this.owner = owner } }
+    class B extends Jig { f (owner) { new A(owner).destroy() } }
+    B.deps = { A }
+    const error = 'delete disabled: [jig A] has an unbound owner or satoshis value'
+    const b = new B()
+    expect(() => b.f(run.purse.address)).to.throw(error)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('throws if set externally', () => {
+    new Run () // eslint-disable-line
     class A extends Jig { }
     const a = new A()
     const error = 'Attempt to update [jig A] outside of a method'
@@ -132,7 +170,7 @@ describe('Owner', () => {
   // --------------------------------------------------------------------------
 
   it('throws if set to address on another network', async () => {
-      new Run() // eslint-disable-line
+    new Run() // eslint-disable-line
     class A extends Jig { send (addr) { this.owner = addr } }
     const a = new A()
     await a.sync()
@@ -143,48 +181,115 @@ describe('Owner', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('may read if assigned from parent', () => {
+  it.only('may read if assigned from parent', () => {
 
   })
 
   // --------------------------------------------------------------------------
 
-  it.skip('bound if assigned from bound parent', () => {
+  it.only('bound if assigned from bound parent', () => {
     // TODO
   })
 
   // --------------------------------------------------------------------------
 
-  it.skip('unbound if assigned from unbound parent', () => {
+  it.only('unbound if assigned from unbound parent', () => {
     // TODO
   })
 
   // --------------------------------------------------------------------------
 
-  it.skip('unbound if assigned to owner in init', () => {
+  it.only('unbound if assigned to owner in init', () => {
     // TODO
   })
 
   // --------------------------------------------------------------------------
 
-  it.skip('may change until marked unbound', () => {
-      new Run() // eslint-disable-line
+  it('may change until marked unbound', () => {
+    new Run() // eslint-disable-line
     class A extends Jig { f (owner) { this.owner = owner; this.owner = owner } }
-    const addr = new PrivateKey().toPublicKey().toAddress().toString()
+    const addr = new PrivateKey().toAddress().toString()
     const a = new A(addr)
-    expect(() => a.f(addr)).to.throw('Cannot set owner')
+    expect(() => a.f(addr)).not.to.throw()
   })
 
   // --------------------------------------------------------------------------
 
-  it.skip('marks unbound after first inner method leaves', () => {
-    // TODO
+  it('bound if creator is fully bound', async () => {
+    const run = new Run()
+    class A extends Jig {
+      f () { return new A().g() }
+      g () { this.n = 1; return this }
+    }
+    const a = new A()
+    await a.sync()
+    const b = a.f()
+    await b.sync()
+    expect(b.n).to.equal(1)
+    const b2 = await run.load(b.location)
+    expect(b2.n).to.equal(1)
+    run.cache = new LocalCache()
+    const b3 = await run.load(b.location)
+    expect(b3.n).to.equal(1)
   })
 
   // --------------------------------------------------------------------------
 
-  it.skip('throws if change after unbound', () => {
-    // TODO
+  it('throws if creator is pending unbind', async () => {
+    const run = new Run()
+    class A extends Jig {
+      f (owner) { this.owner = owner; return new A().g() }
+      g () { this.n = 1; return this }
+    }
+    const a = new A()
+    await a.sync()
+    const error = 'Cannot set n: unbound'
+    expect(() => a.f(run.purse.address)).to.throw(error)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('throws if creator is pending unbind in transaction', async () => {
+    const run = new Run()
+    class A extends Jig {
+      f (owner) { this.owner = owner; return new A() }
+      g () { this.n = 1; return this }
+    }
+    const a = new A()
+    await a.sync()
+    run.transaction(() => {
+      const b = a.f(run.purse.address)
+      // b.g()
+      return b
+    })
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('throws if update after inner method leaves', () => {
+    const run = new Run()
+    class A extends Jig {
+      f (b, owner) {
+        b.g(this, owner)
+        this.i()
+      }
+
+      h (owner) {
+        this.owner = owner
+      }
+
+      i () {
+        this.n = 1
+      }
+    }
+    class B extends Jig {
+      g (a, owner) {
+        a.h(owner)
+      }
+    }
+    const a = new A()
+    const b = new B()
+    expect(() => a.f(b, run.purse.address)).to.throw('Cannot set n: unbound')
   })
 
   // --------------------------------------------------------------------------

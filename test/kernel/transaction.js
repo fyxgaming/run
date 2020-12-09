@@ -57,89 +57,123 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('deploy and send', async () => {
+    it('throws if deploy and send', async () => {
       const run = new Run()
       class A extends Jig { static send (to) { this.owner = to } }
       const to = new PrivateKey().publicKey.toString()
-      const C = run.transaction(() => { const C = run.deploy(A); C.send(to); return C })
-      function test (C) { expect(C.owner).to.equal(to) }
-      await run.sync()
-      test(C)
-      run.cache = new LocalCache()
-      const C2 = await run.load(C.location)
-      test(C2)
+      expect(() => run.transaction(() => { const C = run.deploy(A); C.send(to); return C }))
+        .to.throw('Cannot set owner: unbound')
     })
 
     // ------------------------------------------------------------------------
 
-    it('deploy and destroy', async () => {
+    it('throws if deploy and destroy', async () => {
       const run = new Run()
       class A { }
-      const C = run.transaction(() => { const C = run.deploy(A); C.destroy(); return C })
-      await run.sync()
-      function test (C) { expect(C.location.endsWith('_d0')).to.equal(true) }
-      test(C)
-      run.cache = new LocalCache()
-      const C2 = await run.load(C.location)
-      test(C2)
+      expect(() => run.transaction(() => { const C = run.deploy(A); C.destroy(); return C }))
+        .to.throw('delete disabled: A has an unbound owner or satoshis value')
     })
 
     // ------------------------------------------------------------------------
 
-    it('create and call', async () => {
+    it('throws if create unbound and update', () => {
       const run = new Run()
       class A extends Jig { f () { this.n = 1 } }
-      const a = run.transaction(() => { const a = new A(); a.f(); return a })
-      await run.sync()
-      function test (a) { expect(a.n).to.equal(1) }
-      test(a)
-      run.cache = new LocalCache()
-      const a2 = await run.load(a.location)
-      test(a2)
+      expect(() => run.transaction(() => { const a = new A(); a.f(); return a }))
+        .to.throw('Cannot set n: unbound')
     })
 
     // ------------------------------------------------------------------------
 
-    it('create and destroy', async () => {
+    it('throws if deploy and call', async () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.n = 1; return A } }
+      expect(() => run.transaction(() => run.deploy(A).f()))
+        .to.throw('Cannot set n: unbound')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('create bound and update', async () => {
+      const run = new Run()
+      class A extends Jig {
+        f () { return new B() }
+      }
+      class B extends Jig {
+        g () { this.n = 1 }
+        h () { this.m = 2 }
+      }
+      A.deps = { B }
+      const a = new A()
+      await a.sync()
+      const b = run.transaction(() => {
+        const b = a.f()
+        b.g()
+        b.h()
+        return b
+      })
+      await run.sync()
+      function test (b) { expect(b.n + b.m).to.equal(3) }
+      test(b)
+      run.cache = new LocalCache()
+      const b2 = await run.load(b.location)
+      test(b2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('create bound and destroy', async () => {
+      const run = new Run()
+      class A extends Jig {
+        f () { return new B() }
+      }
+      class B extends Jig {
+        g () { this.n = 1 }
+        h () { this.m = 2 }
+      }
+      A.deps = { B }
+      const a = new A()
+      await a.sync()
+      const b = run.transaction(() => {
+        const b = a.f()
+        b.destroy()
+        return b
+      })
+      await run.sync()
+      function test (b) { expect(b.location.endsWith('_d0')).to.equal(true) }
+      test(b)
+      run.cache = new LocalCache()
+      const b2 = await run.load(b.location)
+      test(b2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if create and destroy', async () => {
       const run = new Run()
       class A extends Jig { }
-      const a = run.transaction(() => { const a = new A(); a.destroy(); return a })
-      await run.sync()
-      function test (a) { expect(a.location.endsWith('_d0')).to.equal(true) }
-      test(a)
-      run.cache = new LocalCache()
-      const a2 = await run.load(a.location)
-      test(a2)
+      expect(() => run.transaction(() => { const a = new A(); a.destroy(); return a }))
+        .to.throw('delete disabled: [jig A] has an unbound owner or satoshis value')
     })
 
     // ------------------------------------------------------------------------
 
-    it('create and send', async () => {
+    it('throws if create and send', async () => {
       const run = new Run()
       class A extends Jig { send (to) { this.owner = to } }
       const to = new PrivateKey().publicKey.toString()
-      const a = run.transaction(() => { const a = new A(); a.send(to); return a })
-      function test (a) { expect(a.owner).to.equal(to) }
-      await run.sync()
-      test(a)
-      run.cache = new LocalCache()
-      const a2 = await run.load(a.location)
-      test(a2)
+      expect(() => run.transaction(() => { const a = new A(); a.send(to); return a }))
+        .to.throw('Cannot set owner: unbound')
     })
 
     // ------------------------------------------------------------------------
 
-    it('create and upgrade', async () => {
+    it('throws if create and upgrade', async () => {
       const run = new Run()
       class A extends Jig { }
       class B extends Jig { }
-      const a = run.transaction(() => { const a = new A(); a.constructor.upgrade(B); return a })
-      function test (a) { expect(a.constructor.name).to.equal('B') }
-      test(a)
-      await run.sync()
-      run.cache = new LocalCache()
-      const a2 = await run.load(a.location)
-      test(a2)
+      expect(() => run.transaction(() => { const a = new A(); a.constructor.upgrade(B); return a }))
+        .to.throw('update disabled: B has an unbound owner or satoshis value')
     })
 
     // ------------------------------------------------------------------------
@@ -207,13 +241,11 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('deploy and call', async () => {
+    it('throws if deploy and call', async () => {
       const run = new Run()
       class A extends Jig { static f () { this.n = 1 } }
-      const C = run.transaction(() => { const C = run.deploy(A); C.f(); return C })
-      await run.sync()
-      run.cache = new LocalCache()
-      await run.load(C.location)
+      expect(() => run.transaction(() => { const C = run.deploy(A); C.f(); return C }))
+        .to.throw('Cannot set n: unbound')
     })
 
     // ------------------------------------------------------------------------
@@ -374,8 +406,8 @@ describe('Transaction', () => {
     it('multiple updates', async () => {
       const run = new Run()
       class A extends Jig { static f () { this.n = 1 } }
+      const C = run.deploy(A)
       const tx = new Transaction()
-      const C = tx.update(() => run.deploy(A))
       tx.update(() => C.f())
       tx.update(() => C.destroy())
       await tx.publish()
@@ -405,6 +437,7 @@ describe('Transaction', () => {
       const run = new Run()
       class A extends Jig { }
       const tx = new Transaction()
+      run.deploy(A)
       const a = tx.update(() => new A())
       class B extends Jig { }
       tx.update(() => a.constructor.upgrade(B))
@@ -1791,8 +1824,8 @@ describe('Transaction', () => {
     it('throws if sync destroyed transaction creation', async () => {
       const run = new Run()
       class A { }
+      const C = run.deploy(A)
       const tx = new Transaction()
-      const C = tx.update(() => run.deploy(A))
       tx.update(() => C.destroy())
       const error = 'Cannot sync A: transaction in progress'
       await expect(C.sync()).to.be.rejectedWith(error)
@@ -1812,15 +1845,15 @@ describe('Transaction', () => {
       const b = new A()
 
       const tx = new Transaction()
-      const c = tx.update(() => new A())
+      const c = new A()
       tx.update(() => c.set(2))
       tx.update(() => a.sign())
       tx.update(() => b.set(1))
       tx.update(() => b.destroy(1))
 
       expect(tx.outputs.length).to.equal(2)
-      expect(tx.outputs[0]).to.equal(a)
-      expect(tx.outputs[1]).to.equal(c)
+      expect(tx.outputs[0]).to.equal(c)
+      expect(tx.outputs[1]).to.equal(a)
     })
 
     // ------------------------------------------------------------------------
@@ -1840,7 +1873,8 @@ describe('Transaction', () => {
       const run = new Run()
       const tx = new Transaction()
       class A { }
-      tx.update(() => { run.deploy(A).destroy() })
+      const C = run.deploy(A)
+      tx.update(() => { C.destroy() })
       expect(tx.deletes.length).to.equal(1)
     })
 
@@ -1866,11 +1900,11 @@ describe('Transaction', () => {
       const run = new Run()
       class A extends Jig { }
       const tx = new Transaction()
-      const a = tx.update(() => new A())
+      const a = new A()
       tx.update(() => a.destroy())
       const rawtx = await tx.export()
       const tx2 = await run.import(rawtx)
-      expect(tx2.outputs.length).to.equal(1)
+      expect(tx2.outputs.length).to.equal(0)
       expect(tx2.deletes.length).to.equal(1)
     })
 
@@ -1933,13 +1967,23 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('dynamically updated', () => {
+    it('outputs dynamically updated', () => {
       const run = new Run()
       const tx = new Transaction()
       expect(tx.outputs).to.deep.equal([])
       expect(tx.deletes).to.deep.equal([])
       const CA = tx.update(() => run.deploy(class A extends Jig { }))
       expect(tx.outputs).to.deep.equal([CA])
+      expect(tx.deletes).to.deep.equal([])
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('deletes dynamically updated', () => {
+      const run = new Run()
+      const CA = run.deploy(class A extends Jig { })
+      const tx = new Transaction()
+      expect(tx.outputs).to.deep.equal([])
       expect(tx.deletes).to.deep.equal([])
       tx.update(() => CA.destroy())
       expect(tx.outputs).to.deep.equal([])

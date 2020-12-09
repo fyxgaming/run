@@ -313,25 +313,20 @@ describe('Upgrade', () => {
 
     // ------------------------------------------------------------------------
 
-    it('deploy and upgrade in same transaction', async () => {
+    it('upgrade and destroy in same transaction', async () => {
       const run = new Run()
       class A { }
       class B { }
+      const C = run.deploy(A)
+      await C.sync()
 
       expectTx({
-        nin: 0,
+        nin: 1,
         nref: 0,
-        nout: 1,
-        ndel: 0,
-        ncre: 1,
+        nout: 0,
+        ndel: 1,
+        ncre: 0,
         exec: [
-          {
-            op: 'DEPLOY',
-            data: [
-              A.toString(),
-              { deps: { } }
-            ]
-          },
           {
             op: 'UPGRADE',
             data: [
@@ -339,19 +334,27 @@ describe('Upgrade', () => {
               B.toString(),
               { deps: { } }
             ]
+          },
+          {
+            op: 'CALL',
+            data: [
+              { $jig: 0 },
+              'destroy',
+              []
+            ]
           }
         ]
       })
 
-      const C = run.transaction(() => {
-        const C = run.deploy(A)
+      run.transaction(() => {
         C.upgrade(B)
-        return C
+        C.destroy()
       })
 
       function test (C) {
         expect(C.name).to.equal('B')
-        expect(C.nonce).to.equal(1)
+        expect(C.location.endsWith('_d0')).to.equal(true)
+        expect(C.nonce).to.equal(2)
       }
 
       await C.sync()
