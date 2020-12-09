@@ -69,9 +69,9 @@ describe('Native', () => {
     NATIVE.forEach(N => expect(() => Code.prototype.destroy.apply(N)).to.throw(error))
   })
 
-  it('cannot sign', () => {
-    const error = 'sign unavailable'
-    NATIVE.forEach(N => expect(() => Code.prototype.sign.apply(N)).to.throw(error))
+  it('cannot auth', () => {
+    const error = 'auth unavailable'
+    NATIVE.forEach(N => expect(() => Code.prototype.auth.apply(N)).to.throw(error))
   })
 
   it('cannot upgrade', () => {

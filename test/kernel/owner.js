@@ -181,30 +181,6 @@ describe('Owner', () => {
 
   // --------------------------------------------------------------------------
 
-  it.only('may read if assigned from parent', () => {
-
-  })
-
-  // --------------------------------------------------------------------------
-
-  it.only('bound if assigned from bound parent', () => {
-    // TODO
-  })
-
-  // --------------------------------------------------------------------------
-
-  it.only('unbound if assigned from unbound parent', () => {
-    // TODO
-  })
-
-  // --------------------------------------------------------------------------
-
-  it.only('unbound if assigned to owner in init', () => {
-    // TODO
-  })
-
-  // --------------------------------------------------------------------------
-
   it('may change until marked unbound', () => {
     new Run() // eslint-disable-line
     class A extends Jig { f (owner) { this.owner = owner; this.owner = owner } }

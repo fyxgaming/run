@@ -737,7 +737,7 @@ describe('Membrane', () => {
       expect('sync' in f).to.equal(true)
       expect('upgrade' in f).to.equal(true)
       expect('destroy' in f).to.equal(true)
-      expect('sign' in f).to.equal(true)
+      expect('auth' in f).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -747,7 +747,7 @@ describe('Membrane', () => {
       expect(f.sync).to.equal(Code.prototype.sync)
       expect(f.upgrade).to.equal(Code.prototype.upgrade)
       expect(f.destroy).to.equal(Code.prototype.destroy)
-      expect(f.sign).to.equal(Code.prototype.sign)
+      expect(f.auth).to.equal(Code.prototype.auth)
     })
 
     // ------------------------------------------------------------------------
@@ -758,7 +758,7 @@ describe('Membrane', () => {
       expect(Object.getOwnPropertyDescriptor(f, 'sync')).to.equal(undefined)
       expect(Object.getOwnPropertyDescriptor(f, 'upgrade')).to.equal(undefined)
       expect(Object.getOwnPropertyDescriptor(f, 'destroy')).to.equal(undefined)
-      expect(Object.getOwnPropertyDescriptor(f, 'sign')).to.equal(undefined)
+      expect(Object.getOwnPropertyDescriptor(f, 'auth')).to.equal(undefined)
     })
 
     // ------------------------------------------------------------------------
@@ -768,7 +768,7 @@ describe('Membrane', () => {
       expect(() => { f.sync = 1 }).to.throw('Cannot set sync')
       expect(() => { f.upgrade = 1 }).to.throw('Cannot set upgrade')
       expect(() => { f.destroy = 1 }).to.throw('Cannot set destroy')
-      expect(() => { f.sign = 1 }).to.throw('Cannot set sign')
+      expect(() => { f.auth = 1 }).to.throw('Cannot set auth')
     })
 
     // ------------------------------------------------------------------------
@@ -779,7 +779,7 @@ describe('Membrane', () => {
       expect(() => Object.defineProperty(f, 'sync', desc)).to.throw('Cannot define sync')
       expect(() => Object.defineProperty(f, 'upgrade', desc)).to.throw('Cannot define upgrade')
       expect(() => Object.defineProperty(f, 'destroy', desc)).to.throw('Cannot define destroy')
-      expect(() => Object.defineProperty(f, 'sign', desc)).to.throw('Cannot define sign')
+      expect(() => Object.defineProperty(f, 'auth', desc)).to.throw('Cannot define auth')
     })
 
     // ------------------------------------------------------------------------
@@ -789,7 +789,7 @@ describe('Membrane', () => {
       expect(() => { delete f.sync }).to.throw('Cannot delete sync')
       expect(() => { delete f.upgrade }).to.throw('Cannot delete upgrade')
       expect(() => { delete f.destroy }).to.throw('Cannot delete destroy')
-      expect(() => { delete f.sign }).to.throw('Cannot delete sign')
+      expect(() => { delete f.auth }).to.throw('Cannot delete auth')
     })
   })
 
@@ -870,7 +870,7 @@ describe('Membrane', () => {
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect('sync' in a).to.equal(true)
       expect('destroy' in a).to.equal(true)
-      expect('sign' in a).to.equal(true)
+      expect('auth' in a).to.equal(true)
       expect('init' in a).to.equal(true)
       expect('toString' in a).to.equal(true)
     })
@@ -882,7 +882,7 @@ describe('Membrane', () => {
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect(a.sync).to.equal(Jig.prototype.sync)
       expect(a.destroy).to.equal(Jig.prototype.destroy)
-      expect(a.sign).to.equal(Jig.prototype.sign)
+      expect(a.auth).to.equal(Jig.prototype.auth)
       expect(a.init).to.equal(Jig.prototype.init)
       expect(a.toString).to.equal(Jig.prototype.toString)
     })

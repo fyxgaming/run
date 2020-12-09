@@ -1327,7 +1327,7 @@ Line 3`
       const b = await CB.load('abc')
       expect(b.f()).to.equal(1)
       const CB2 = await run.load(CB.location)
-      CB2.sign()
+      CB2.auth()
       await CB2.sync()
       class A extends Jig { init (b, CB2) { this.n = b.f() } }
       const a = new A(b, CB2)
@@ -1589,9 +1589,9 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('may sign code in berry method', async () => {
+    it('may auth code in berry method', async () => {
       const run = new Run()
-      class B extends Berry { f (CA) { CA.sign() } }
+      class B extends Berry { f (CA) { CA.auth() } }
       run.deploy(B)
       await run.sync()
       const b = await B.load('abc')
@@ -1607,7 +1607,7 @@ Line 3`
         exec: [
           {
             op: 'CALL',
-            data: [{ $jig: 0 }, 'sign', []]
+            data: [{ $jig: 0 }, 'auth', []]
           }
         ]
       })
@@ -1645,12 +1645,12 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('may sync signed berry class', async () => {
+    it('may sync authed berry class', async () => {
       const run = new Run()
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
-      CB.sign()
+      CB.auth()
       await CB.sync()
       await CB.sync()
       const b = await CB.load('abc')
@@ -1817,13 +1817,13 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('returns true for signed class', async () => {
+    it('returns true for authed class', async () => {
       const run = new Run()
       class B extends Berry { }
       const CB = run.deploy(B)
       await CB.sync()
       const b = await B.load('abc')
-      CB.sign()
+      CB.auth()
       await CB.sync()
       expect(b instanceof CB).to.equal(true)
     })

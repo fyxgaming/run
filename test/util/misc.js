@@ -777,7 +777,7 @@ describe('Misc', () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
-      a.sign()
+      a.auth()
       await a.sync()
       const a2 = await run.load(a.origin)
       expect(() => _sameCreation(a, a2)).to.throw('Inconsistent worldview')
@@ -886,7 +886,7 @@ describe('Misc', () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
-      a.sign()
+      a.auth()
       await a.sync()
       const a2 = await run.load(a.origin)
       expect(() => _hasCreation([a], a2)).to.throw('Inconsistent worldview')
@@ -915,7 +915,7 @@ describe('Misc', () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
-      a.sign()
+      a.auth()
       await a.sync()
       const a2 = await run.load(a.origin)
       expect(() => _addCreations([a], [a2])).to.throw('Inconsistent worldview')
@@ -944,7 +944,7 @@ describe('Misc', () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
-      a.sign()
+      a.auth()
       await a.sync()
       const a2 = await run.load(a.origin)
       expect(() => _subtractCreations([a], [a2])).to.throw('Inconsistent worldview')

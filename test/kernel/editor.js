@@ -191,7 +191,7 @@ describe('Editor', () => {
       class A extends Jig { static f () { this.n = 1 } }
       const C = run.deploy(A)
       Run.util.uninstall(A)
-      C.sign()
+      C.auth()
       C.f()
       C.destroy()
       new C() // eslint-disable-line

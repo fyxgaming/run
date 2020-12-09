@@ -29,7 +29,7 @@ describe('Unify', () => {
       await a.sync()
       const a2 = await run.load(a.origin)
       a2.set(1)
-      a2.constructor.sign()
+      a2.constructor.auth()
       await a2.sync()
       const b = new A()
       await b.sync()
@@ -204,7 +204,7 @@ describe('Unify', () => {
       }
 
       const CA = run.deploy(A)
-      CA.sign()
+      CA.auth()
       await CA.sync()
 
       const CO = await run.load(CA.origin)
@@ -419,7 +419,7 @@ describe('Unify', () => {
       const X1 = run.deploy(class X extends Jig { })
       await X1.sync()
       const X2 = await run.load(X1.location)
-      X2.sign()
+      X2.auth()
 
       class A { }
       class B { }
@@ -511,7 +511,7 @@ describe('Unify', () => {
 
       class A extends Jig { }
       const a2 = new A()
-      a2.sign()
+      a2.auth()
       await a2.sync()
       const a1 = await run.load(a2.origin)
 
@@ -647,7 +647,7 @@ describe('Unify', () => {
       await run.sync()
 
       const CC2 = await run.load(CC.location)
-      CC2.sign()
+      CC2.auth()
       CA.f(CC2)
       await run.sync()
 

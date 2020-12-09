@@ -195,11 +195,11 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('call and sign', async () => {
+    it('call and auth', async () => {
       const run = new Run()
       class A extends Jig { f () { this.n = 1 } }
       const a = new A()
-      run.transaction(() => { a.f(); a.sign() })
+      run.transaction(() => { a.f(); a.auth() })
       function test (a) { expect(a.nonce).to.equal(2) }
       await run.sync()
       test(a)
@@ -262,40 +262,40 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if deploy and sign', async () => {
+    it('throws if deploy and auth', async () => {
       const run = new Run()
       class A { }
-      const error = 'sign unavailable on new jigs'
-      expect(() => run.transaction(() => { const C = run.deploy(A); C.sign() })).to.throw(error)
+      const error = 'auth unavailable on new jigs'
+      expect(() => run.transaction(() => { const C = run.deploy(A); C.auth() })).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if create and sign', async () => {
+    it('throws if create and auth', async () => {
       const run = new Run()
       class A extends Jig { }
-      const error = 'sign unavailable on new jigs'
-      expect(() => run.transaction(() => { const a = new A(); a.sign() })).to.throw(error)
+      const error = 'auth unavailable on new jigs'
+      expect(() => run.transaction(() => { const a = new A(); a.auth() })).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if destroy and sign jig', async () => {
+    it('throws if destroy and auth jig', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
-      const error = 'Cannot sign destroyed jigs'
-      expect(() => run.transaction(() => { a.destroy(); a.sign() })).to.throw(error)
+      const error = 'Cannot auth destroyed jigs'
+      expect(() => run.transaction(() => { a.destroy(); a.auth() })).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if destroy and sign code', async () => {
+    it('throws if destroy and auth code', async () => {
       const run = new Run()
       class A extends Jig { }
       const C = run.deploy(A)
-      const error = 'Cannot sign destroyed jigs'
-      expect(() => run.transaction(() => { C.destroy(); C.sign() })).to.throw(error)
+      const error = 'Cannot auth destroyed jigs'
+      expect(() => run.transaction(() => { C.destroy(); C.auth() })).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
@@ -343,13 +343,13 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if send and sign', async () => {
+    it('throws if send and auth', async () => {
       const run = new Run()
       class A extends Jig { static send (to) { this.owner = to } }
       const to = new PrivateKey().toAddress().toString()
       const C = run.deploy(A)
-      const error = 'sign disabled: A has an unbound owner or satoshis value'
-      expect(() => run.transaction(() => { C.send(to); C.sign() })).to.throw(error)
+      const error = 'auth disabled: A has an unbound owner or satoshis value'
+      expect(() => run.transaction(() => { C.send(to); C.auth() })).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
@@ -362,7 +362,7 @@ describe('Transaction', () => {
       const a2 = await run.load(a1.location)
       const error = 'Inconsistent worldview'
       expect(() => run.transaction(() => { a1.f(); a2.f() })).to.throw(error)
-      expect(() => run.transaction(() => { a1.sign(); a2.sign() })).to.throw(error)
+      expect(() => run.transaction(() => { a1.auth(); a2.auth() })).to.throw(error)
       expect(() => run.transaction(() => { a1.destroy(); a2.destroy() })).to.throw(error)
     })
 
@@ -374,8 +374,8 @@ describe('Transaction', () => {
       const a1 = new A()
       await a1.sync()
       const a2 = await run.load(a1.location)
-      run.transaction(() => a1.sign())
-      run.transaction(() => a2.sign())
+      run.transaction(() => a1.auth())
+      run.transaction(() => a2.auth())
       const error = '[jig A] was spent in another transaction'
       await expect(run.sync()).to.be.rejectedWith(error)
     })
@@ -469,11 +469,11 @@ describe('Transaction', () => {
       class A extends Jig { }
       const tx = new Transaction()
       const a = tx.update(() => new A())
-      expect(() => a.sign()).to.throw('Cannot sign [jig A]: open transaction')
+      expect(() => a.auth()).to.throw('Cannot auth [jig A]: open transaction')
       await tx.export()
-      expect(() => a.sign()).to.throw('Cannot sign [jig A]: open transaction')
+      expect(() => a.auth()).to.throw('Cannot auth [jig A]: open transaction')
       await tx.publish()
-      a.sign()
+      a.auth()
       await a.sync()
     })
 
@@ -769,7 +769,7 @@ describe('Transaction', () => {
       class A extends Jig { }
       const a = new A()
       const tx = new Transaction()
-      tx.update(() => a.sign())
+      tx.update(() => a.auth())
       await tx.pay()
       await tx.sign()
       await tx.publish({ pay: false, sign: false })
@@ -801,7 +801,7 @@ describe('Transaction', () => {
       const tx = new Transaction()
       class A extends Jig { }
       const a = new A()
-      tx.update(() => a.sign())
+      tx.update(() => a.auth())
       const error = 'Missing signature for [jig A]'
       await expect(tx.publish({ sign: false })).to.be.rejectedWith(error)
     })
@@ -947,7 +947,7 @@ describe('Transaction', () => {
       class A extends Jig { }
       const tx = new Transaction()
       const C = run.deploy(A)
-      tx.update(() => C.sign())
+      tx.update(() => C.auth())
       const rawtx1 = await tx.export()
       tx.update(() => C.destroy())
       const rawtx2 = await tx.export()
@@ -977,7 +977,7 @@ describe('Transaction', () => {
       class A extends Jig { }
       const a = new A()
       const tx = new Transaction()
-      tx.update(() => a.sign())
+      tx.update(() => a.auth())
       await tx.pay()
       await tx.sign()
       await tx.export({ pay: false, sign: false })
@@ -1128,12 +1128,12 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('rolls back signs', async () => {
+    it('rolls back auths', async () => {
       const run = new Run()
       const A = run.deploy(class A { })
       await run.sync()
       const tx = new Transaction()
-      tx.update(() => A.sign())
+      tx.update(() => A.auth())
       tx.rollback()
       expect(A.location).to.equal(A.origin)
     })
@@ -1724,7 +1724,7 @@ describe('Transaction', () => {
       const a = new A()
       await run.sync()
       const tx = new Transaction()
-      tx.update(() => a.sign())
+      tx.update(() => a.auth())
       const rawtx = await tx.export({ sign: false })
       const tx2 = await run.import(rawtx)
       const error = 'Missing signature for [jig A]'
@@ -1847,7 +1847,7 @@ describe('Transaction', () => {
       const tx = new Transaction()
       const c = new A()
       tx.update(() => c.set(2))
-      tx.update(() => a.sign())
+      tx.update(() => a.auth())
       tx.update(() => b.set(1))
       tx.update(() => b.destroy(1))
 

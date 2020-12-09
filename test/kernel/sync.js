@@ -334,7 +334,7 @@ describe('Sync', () => {
     it('sync during publish does not inner sync by default', async () => {
       const run = new Run()
       const A2 = run.deploy(class A extends Jig { })
-      A2.sign()
+      A2.auth()
       await A2.sync()
       const A1 = await run.load(A2.origin)
       const a = new A1()
@@ -347,7 +347,7 @@ describe('Sync', () => {
     it('sync during publish with inner true syncs inner', async () => {
       const run = new Run()
       const A2 = run.deploy(class A extends Jig { })
-      A2.sign()
+      A2.auth()
       await A2.sync()
       const A1 = await run.load(A2.origin)
       const a = new A1()
