@@ -264,6 +264,30 @@ describe('Caller', () => {
       const CC = run.deploy(C)
       expect(CC.h()).to.equal(CC)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('caller is null in berry load in pluck', async () => {
+      const run = new Run()
+      class A extends Berry {
+        init () {
+          this.caller = caller
+        }
+      }
+      class B extends Berry {
+        static async pluck () {
+          const a = await A.load('')
+          return new B(a)
+        }
+
+        init (a) { this.a = a }
+      }
+      B.deps = { A }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await CB.load('')
+      expect(b.a.caller).to.equal(null)
+    })
   })
 })
 
