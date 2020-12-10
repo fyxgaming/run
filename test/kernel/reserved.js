@@ -67,14 +67,6 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('may override utxo bindings on berry', () => {
-      const run = new Run()
-      run.deploy(class B extends Berry { owner () { } })
-      run.deploy(class B extends Berry { satoshis () { } })
-    })
-
-    // ------------------------------------------------------------------------
-
     it('may override sync method on berry', () => {
       const run = new Run()
       run.deploy(class B extends Berry { sync () { } })
@@ -285,11 +277,13 @@ describe('Reserved', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if override location bindings on berry', () => {
+    it('throws if bindings on berry', () => {
       const run = new Run()
       expect(() => run.deploy(class A extends Berry { location () { } })).to.throw()
       expect(() => run.deploy(class A extends Berry { origin () { } })).to.throw()
       expect(() => run.deploy(class A extends Berry { nonce () { } })).to.throw()
+      expect(() => run.deploy(class A extends Berry { owner () { } })).to.throw()
+      expect(() => run.deploy(class A extends Berry { satoshis () { } })).to.throw()
     })
 
     // ------------------------------------------------------------------------
