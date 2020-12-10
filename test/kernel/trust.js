@@ -94,7 +94,7 @@ describe('Trust', () => {
 
     // ------------------------------------------------------------------------
 
-    it('loads via import trusted', async () => {
+    it('loads via replay trusted', async () => {
       const run = new Run()
       const A = run.deploy(class A extends Jig { })
       await run.sync()
@@ -112,6 +112,20 @@ describe('Trust', () => {
       const run2 = new Run({ trust: [] })
       run2.trust(A.location.slice(0, 64))
       await run2.load(A.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('loads via cache if origin is trusted', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      class B extends Jig { }
+      const C = run.deploy(A)
+      C.upgrade(B)
+      await run.sync()
+      const run2 = new Run({ trust: [] })
+      run2.trust(C.origin.slice(0, 64))
+      await run2.load(C.location)
     })
   })
 
@@ -228,7 +242,7 @@ describe('Trust', () => {
 
     // ------------------------------------------------------------------------
 
-    it('loads via import when trust all', async () => {
+    it('loads via replay when trust all', async () => {
       const run = new Run()
       const A = run.deploy(class A extends Jig { })
       await run.sync()
@@ -265,7 +279,7 @@ describe('Trust', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if untrusted load via import', async () => {
+    it('throws if untrusted load via replay', async () => {
       const run = new Run()
       const A = run.deploy(class A extends Jig { })
       await run.sync()
@@ -282,6 +296,21 @@ describe('Trust', () => {
       await run.sync()
       const run2 = new Run({ trust: [] })
       await expect(run2.load(A.location)).to.be.rejectedWith('Cannot load untrusted code from cache')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if untrusted load with trusted origin with via replay', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      class B extends Jig { }
+      const C = run.deploy(A)
+      C.upgrade(B)
+      await run.sync()
+      const run2 = new Run({ trust: [] })
+      run2.trust(C.origin.slice(0, 64))
+      run2.cache = new LocalCache()
+      await expect(run2.load(C.location)).to.be.rejectedWith('Cannot load untrusted code via replay')
     })
   })
 
