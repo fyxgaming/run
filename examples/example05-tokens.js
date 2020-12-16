@@ -9,8 +9,8 @@ const Run = require('../dist/run.node.min')
 const bsv = require('bsv')
 const { Token } = Run.extra
 
-const aliceRun = new Run({ network: 'mock', trust: 'cache' })
-const bobRun = new Run({ network: 'mock', trust: 'cache' })
+const aliceRun = new Run({ network: 'mock' })
+const bobRun = new Run({ network: 'mock' })
 const bob = bobRun.owner.pubkey.toString()
 
 async function main () {
@@ -46,6 +46,8 @@ async function main () {
   // ------------------------------------------------------------------------
 
   bobRun.activate()
+
+  bobRun.trust(Gold.origin.slice(0, 64))
 
   await bobRun.inventory.sync()
 
