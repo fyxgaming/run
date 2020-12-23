@@ -57,6 +57,7 @@ Run.configure({
 
 if (COVER) {
   Run.cover('asm')
+  Run.cover('B')
   Run.cover('expect')
   Run.cover('Group')
   Run.cover('Hex')

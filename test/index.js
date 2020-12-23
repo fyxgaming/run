@@ -10,6 +10,7 @@ require('./run')
 require('./data/capture')
 
 require('./extra/asm')
+require('./extra/b')
 require('./extra/expect')
 require('./extra/group')
 require('./extra/hex')
