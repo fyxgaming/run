@@ -57,7 +57,7 @@ Run.configure({
 
 if (COVER) {
   Run.cover('asm')
-  Run.cover('B')
+  // Run.cover('B') - Breaks tests because of common usage of B
   Run.cover('expect')
   Run.cover('Group')
   Run.cover('Hex')
