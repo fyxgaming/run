@@ -53,109 +53,11 @@ describe('B', () => {
   // ------------------------------------------------------------------------
 
   it.skip('deploy', async () => {
-    const ml = '24cde3638a444c8ad397536127833878ffdfe1b04d5595489bd294e50d77105a_o1'
-    const tl = '8d7846899722f154022e782049246d78eafd098fde16f56ad935df13e43d924c_o1'
-
     // Hint: Run with env NETWORK=<network> to deploy with keys
     const run = new Run()
-    const C = await run.load()
     run.deploy(Run.extra.B)
     await run.sync()
     console.log(Run.extra.B)
-  })
-
-  it.skip('upgrade mainnet', async () => {
-    const run = new Run()
-
-    const OldB = await run.load('24cde3638a444c8ad397536127833878ffdfe1b04d5595489bd294e50d77105a_o1')
-
-    const txo = Run.extra.txo
-
-class B extends Berry {
-  init (base64Data, mediaType, filename, metadata = {}) {
-    this.base64Data = base64Data
-    this.mediaType = mediaType
-    this.filename = filename
-    this.metadata = metadata
-
-    if (mediaType === 'image/svg+xml' || mediaType === 'image/png') {
-      this.metadata.image = this
-    }
-  }
-
-  static async pluck (path, fetch) {
-    const txid = path.length === 64 ? path : JSON.parse(path).txid
-    const metadata = path.length === 64 ? {} : JSON.parse(path).metadata
-    const data = txo(await fetch(txid))
-    const out = data.out.find(o => o.s2 === '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut' && o.s5 === 'binary')
-    if (!out) throw new Error(`Cannot find B:// binary data in ${txid}`)
-    return new B(out.b3, out.s4, out.s6, metadata)
-  }
-
-  static async loadWithMetadata (txid, metadata) {
-    return this.load(JSON.stringify({ txid, metadata }))
-  }
-}
-
-B.metadata = {
-  author: 'Run ▸ Extra'
-  website: 'https://www.run.network',
-  license: 'MIT'
-}
-
-B.deps = { txo }
-
-OldB.upgrade(B)
-await OldB.sync()
-
-console.log(OldB)
-  })
-
-  it.skip('upgrade testnet', async () => {
-    const run = new Run()
-
-    const OldB = await run.load('8d7846899722f154022e782049246d78eafd098fde16f56ad935df13e43d924c_o1')
-
-    const txo = Run.extra.txo
-
-class B extends Berry {
-  init (base64Data, mediaType, filename, metadata = {}) {
-    this.base64Data = base64Data
-    this.mediaType = mediaType
-    this.filename = filename
-    this.metadata = metadata
-
-    if (mediaType === 'image/svg+xml' || mediaType === 'image/png') {
-      this.metadata.image = this
-    }
-  }
-
-  static async pluck (path, fetch) {
-    const txid = path.length === 64 ? path : JSON.parse(path).txid
-    const metadata = path.length === 64 ? {} : JSON.parse(path).metadata
-    const data = txo(await fetch(txid))
-    const out = data.out.find(o => o.s2 === '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut' && o.s5 === 'binary')
-    if (!out) throw new Error(`Cannot find B:// binary data in ${txid}`)
-    return new B(out.b3, out.s4, out.s6, metadata)
-  }
-
-  static async loadWithMetadata (txid, metadata) {
-    return this.load(JSON.stringify({ txid, metadata }))
-  }
-}
-
-B.metadata = {
-  author: 'Run ▸ Extra'
-  website: 'https://www.run.network',
-  license: 'MIT'
-}
-
-B.deps = { txo }
-
-OldB.upgrade(B)
-await OldB.sync()
-
-console.log(OldB)
   })
 })
 
