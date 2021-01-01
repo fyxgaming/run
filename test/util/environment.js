@@ -59,6 +59,8 @@ describe.only('_check', () => {
   // ------------------------------------------------------------------------
 
   describe('node', () => {
+    if (typeof window !== 'undefined') return
+
     function testNodeVersion (version) {
       const oldVersionDesc = Object.getOwnPropertyDescriptor(process, 'version')
       try {
@@ -106,6 +108,40 @@ describe.only('_check', () => {
   // ------------------------------------------------------------------------
 
   describe('browser', () => {
-    // TODO
+    if (typeof window === 'undefined') return
+
+    it('IE not supported', () => {
+      const oldNavigatorDesc = Object.getOwnPropertyDescriptor(window, 'navigator')
+      try {
+        Object.defineProperty(window, 'navigator', {
+          value: { userAgent: 'MSIE: 8.1', platform: '', appVersion: '' },
+          configurable: true,
+          enumerable: true,
+          writable: true
+        })
+        const error = 'Run is not supported on Internet Explorer. Please upgrade to Edge.'
+        expect(() => _check()).to.throw(error)
+      } finally {
+        Object.defineProperty(window, 'navigator', oldNavigatorDesc)
+      }
+    })
+
+    // ----------------------------------------------------------------------
+
+    it('iOS <= 12 not supported', () => {
+      const oldNavigatorDesc = Object.getOwnPropertyDescriptor(window, 'navigator')
+      try {
+        Object.defineProperty(window, 'navigator', {
+          value: { platform: 'iPhone', appVersion: 'OS 12_0', userAgent: '' },
+          configurable: true,
+          enumerable: true,
+          writable: true
+        })
+        const error = 'Run is not supported on this iOS version. Please upgrade to iOS 13 or above.'
+        expect(() => _check()).to.throw(error)
+      } finally {
+        Object.defineProperty(window, 'navigator', oldNavigatorDesc)
+      }
+    })
   })
 })
