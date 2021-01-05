@@ -575,6 +575,33 @@ describe('Token20', () => {
 
     // ------------------------------------------------------------------------
 
+    it('mint multiple', async () => {
+      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      class TestToken extends Token { }
+      const TestTokenCode = run.deploy(TestToken)
+      run.transaction(() => {
+        TestTokenCode.mint(100)
+        TestTokenCode.mint(200)
+        TestTokenCode.mint(300)
+      })
+      await run.sync()
+      function test (C) {
+        expect(C.nonce).to.equal(2)
+        expect(C.supply).to.equal(600)
+      }
+      test(TestTokenCode)
+      if (COVER) return
+      const TestToken2 = await run.load(TestTokenCode.location)
+      await TestToken2.sync()
+      test(TestToken2)
+      run.cache = new LocalCache()
+      const TestToken3 = await run.load(TestToken2.location)
+      await TestToken3.sync()
+      test(TestToken3)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if mint and send', async () => {
       const run = new Run({ blockchain: await getExtrasBlockchain() })
       class TestToken extends Token { }
