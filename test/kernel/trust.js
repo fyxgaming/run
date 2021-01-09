@@ -295,7 +295,7 @@ describe('Trust', () => {
       const A = run.deploy(class A extends Jig { })
       await run.sync()
       const run2 = new Run({ trust: [] })
-      await expect(run2.load(A.location)).to.be.rejectedWith('Cannot load untrusted code from cache')
+      await expect(run2.load(A.location)).to.be.rejectedWith('Cannot load untrusted code via cache')
     })
 
     // ------------------------------------------------------------------------
