@@ -210,19 +210,17 @@ describe('Trust', () => {
 
     // ------------------------------------------------------------------------
 
-    it('trusts cache state references if trusted', async () => {
+    it('trusts code references if trusted', async () => {
       const run = new Run()
-      class A extends Jig { init (B) { this.B = B } }
+      class A extends Jig { static f (B) { this.B = B } }
       class B { }
-      function f () { }
-      B.f = f
       run.deploy(A)
       run.deploy(B)
-      const a = new A(B)
+      A.f(B)
       await run.sync()
       const run2 = new Run({ trust: [] })
-      run2.trust(a.location.slice(0, 64))
-      await run2.load(a.location)
+      run2.trust(A.location.slice(0, 64))
+      await run2.load(A.location)
     })
   })
 
