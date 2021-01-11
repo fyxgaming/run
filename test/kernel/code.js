@@ -656,6 +656,18 @@ describe('Code', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('updates local bindings only on deploy', async () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.n = 1 } }
+      const CA = run.deploy(A)
+      CA.f()
+      await CA.sync()
+      expect(A.location).to.equal(CA.origin)
+      expect(A.nonce).to.equal(1)
+    })
   })
 
   // --------------------------------------------------------------------------
