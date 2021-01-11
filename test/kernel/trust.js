@@ -134,7 +134,7 @@ describe('Trust', () => {
   // --------------------------------------------------------------------------
 
   describe('Dependencies', () => {
-    it('imports dependencies if trusted', async () => {
+    it('throws if imports untrusted dependency of trusted', async () => {
       const run = new Run()
       const A = run.deploy(class A extends Jig { })
       const B = run.deploy(class B extends A { })
@@ -143,12 +143,12 @@ describe('Trust', () => {
       run2.trust(B.location.slice(0, 64))
       run2.cache = new LocalCache()
       const rawtx = await run2.blockchain.fetch(B.location.slice(0, 64))
-      await run2.import(rawtx)
+      await expect(run2.import(rawtx)).to.be.rejectedWith('Cannot load untrusted code')
     })
 
     // ------------------------------------------------------------------------
 
-    it('loads dependencies if trusted', async () => {
+    it('throws if loads untrusted dependencies of trusted', async () => {
       const run = new Run()
       const A = run.deploy(class A extends Jig { })
       const B = run.deploy(class B extends A { })
@@ -156,12 +156,12 @@ describe('Trust', () => {
       const run2 = new Run({ trust: [] })
       run2.trust(B.location.slice(0, 64))
       run2.cache = new LocalCache()
-      await run2.load(B.location)
+      await expect(run2.load(B.location)).to.be.rejectedWith('Cannot load untrusted code')
     })
 
     // ------------------------------------------------------------------------
 
-    it('trusts inputs if trusted', async () => {
+    it('throws if load untrusted inputs of trusted', async () => {
       const run = new Run()
       const A = run.deploy(class A extends Jig { })
       const B = run.deploy(class B extends A { })
@@ -169,13 +169,13 @@ describe('Trust', () => {
       const run2 = new Run({ trust: [] })
       run2.trust(B.location.slice(0, 64))
       run2.cache = new LocalCache()
-      await run2.load(B.location)
-      await run2.load(A.location)
+      await expect(run2.load(B.location)).to.be.rejectedWith('Cannot load untrusted code')
+      await expect(run2.load(A.location)).to.be.rejectedWith('Cannot load untrusted code')
     })
 
     // ------------------------------------------------------------------------
 
-    it('trusts references if trusted', async () => {
+    it('throws if load untrusted references of trusted', async () => {
       const run = new Run()
       class A { }
       class B { }
@@ -186,13 +186,13 @@ describe('Trust', () => {
       const run2 = new Run({ trust: [] })
       run2.trust(B.location.slice(0, 64))
       run2.cache = new LocalCache()
-      await run2.load(B.location)
-      await run2.load(A.location)
+      await expect(run2.load(A.location)).to.be.rejectedWith('Cannot load untrusted code')
+      await expect(run2.load(B.location)).to.be.rejectedWith('Cannot load untrusted code')
     })
 
     // ------------------------------------------------------------------------
 
-    it('trusts updated references if trusted', async () => {
+    it('throws if load updated references of trusted', async () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
@@ -204,8 +204,8 @@ describe('Trust', () => {
       const run2 = new Run({ trust: [] })
       run2.trust(CB.location.slice(0, 64))
       run2.cache = new LocalCache()
-      await run2.load(CB.location)
-      await run2.load(CA.location)
+      await expect(run2.load(CB.location)).to.be.rejectedWith('Cannot load untrusted code')
+      await expect(run2.load(CA.location)).to.be.rejectedWith('Cannot load untrusted code')
     })
 
     // ------------------------------------------------------------------------
@@ -221,6 +221,18 @@ describe('Trust', () => {
       const run2 = new Run({ trust: [] })
       run2.trust(A.location.slice(0, 64))
       await run2.load(A.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if load dependency of untrusted transaction', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      run.deploy(A)
+      const a = new A()
+      await a.sync()
+      const run2 = new Run({ trust: [], cache: new Run.LocalCache() })
+      await expect(run2.load(a.location)).to.be.rejectedWith('Cannot load untrusted code via replay')
     })
   })
 
