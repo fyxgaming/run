@@ -233,6 +233,7 @@ describe('Reserved', () => {
       expect(() => run.deploy(class A extends Jig { static recent () { } })).to.throw()
       expect(() => run.deploy(class A extends Jig { static mustBeLatest () { } })).to.throw()
       expect(() => run.deploy(class A extends Jig { static mustBeRecent () { } })).to.throw()
+      expect(() => run.deploy(class A extends Jig { static checkForUpdates () { } })).to.throw()
       expect(() => run.deploy(class A extends Jig { static encryption () { } })).to.throw()
       expect(() => run.deploy(class A extends Jig { static blockhash () { } })).to.throw()
       expect(() => run.deploy(class A extends Jig { static blocktime () { } })).to.throw()
@@ -636,7 +637,7 @@ describe('Reserved', () => {
         static async pluck (prop) { return new B(prop) }
       }
       await expect(B.load('encryption')).to.be.rejectedWith('Cannot define encryption')
-      await expect(B.load('mustBeRecent')).to.be.rejectedWith('Cannot define mustBeRecent')
+      await expect(B.load('checkForUpdates')).to.be.rejectedWith('Cannot define checkForUpdates')
       await expect(B.load('eject')).to.be.rejectedWith('Cannot define eject')
     })
   })
@@ -1051,8 +1052,8 @@ describe('Reserved', () => {
 
     it('throws if set reserved prop on berry', async () => {
       new Run() // eslint-disable-line
-      class B extends Berry { init () { this.mustBeRecent = true } }
-      await expect(B.load('abc')).to.be.rejectedWith('Cannot set mustBeRecent')
+      class B extends Berry { init () { this.checkForUpdates = true } }
+      await expect(B.load('abc')).to.be.rejectedWith('Cannot set checkForUpdates')
     })
   })
 
