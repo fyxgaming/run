@@ -806,6 +806,8 @@ describe('Membrane', () => {
       testRecord(() => CA.f('sealed', 'owner'))
       testRecord(() => CA.f('upgradable', true))
       testRecord(() => CA.f('upgradable', false))
+      testRecord(() => CA.f('interactive', true))
+      testRecord(() => CA.f('interactive', false))
     })
 
     // ------------------------------------------------------------------------
@@ -818,6 +820,8 @@ describe('Membrane', () => {
       testRecord(() => CA.f('sealed', 'owner'))
       testRecord(() => CA.f('upgradable', true))
       testRecord(() => CA.f('upgradable', false))
+      testRecord(() => CA.f('interactive', true))
+      testRecord(() => CA.f('interactive', false))
     })
 
     // ------------------------------------------------------------------------
@@ -826,9 +830,11 @@ describe('Membrane', () => {
       class A { static f (k) { delete this[k] } }
       A.sealed = true
       A.upgradable = true
+      A.interactive = true
       const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeMethods: true })
       testRecord(() => CA.f('sealed'))
       testRecord(() => CA.f('upgradable'))
+      testRecord(() => CA.f('interactive'))
     })
 
     // ------------------------------------------------------------------------
@@ -843,6 +849,9 @@ describe('Membrane', () => {
       expect(() => testRecord(() => CA.f('sealed', 1))).to.throw('Invalid sealed option: 1')
       expect(() => testRecord(() => CA.f('upgradable', undefined))).to.throw('Invalid upgradable option: undefined')
       expect(() => testRecord(() => CA.f('upgradable', 'owner'))).to.throw('Invalid upgradable option: owner')
+      expect(() => testRecord(() => CA.f('interactive', null))).to.throw('Invalid interactive option: null')
+      expect(() => testRecord(() => CA.f('interactive', undefined))).to.throw('Invalid interactive option: undefined')
+      expect(() => testRecord(() => CA.f('interactive', 1))).to.throw('Invalid interactive option: 1')
     })
 
     // ------------------------------------------------------------------------
@@ -857,6 +866,8 @@ describe('Membrane', () => {
       expect(() => testRecord(() => CA.f('sealed', 1))).to.throw('Invalid sealed option: 1')
       expect(() => testRecord(() => CA.f('upgradable', undefined))).to.throw('Invalid upgradable option: undefined')
       expect(() => testRecord(() => CA.f('upgradable', 'owner'))).to.throw('Invalid upgradable option: owner')
+      expect(() => testRecord(() => CA.f('interactive', 0))).to.throw('Invalid interactive option: 0')
+      expect(() => testRecord(() => CA.f('interactive', 'false'))).to.throw('Invalid interactive option: false')
     })
   })
 

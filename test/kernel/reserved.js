@@ -814,7 +814,6 @@ describe('Reserved', () => {
       const CA = run.deploy(A)
       expect(() => CA.f('blocktime')).to.throw('Cannot get descriptor for blocktime')
       expect(() => CA.f('replicate')).to.throw('Cannot get descriptor for replicate')
-      expect(() => CA.f('interactsWith')).to.throw('Cannot get descriptor for interactsWith')
     })
 
     // ------------------------------------------------------------------------
@@ -886,7 +885,6 @@ describe('Reserved', () => {
       const b = await CB.load('123')
       expect(() => 'replicate' in b).to.throw('Cannot check replicate')
       expect(() => 'delegate' in b).to.throw('Cannot check delegate')
-      expect(() => 'interactsWith' in b).to.throw('Cannot check interactsWith')
     })
 
     // ------------------------------------------------------------------------
