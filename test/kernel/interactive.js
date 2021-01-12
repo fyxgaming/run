@@ -221,8 +221,21 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
-    it('pass instance as parameter', () => {
-      // TODO
+    it('pass instance as parameter', async () => {
+      const run = new Run()
+      class A extends Jig { static f (x) { this.x = x.constructor.name } }
+      A.interactive = false
+      const CA = run.deploy(A)
+      const a = new CA()
+      CA.f(a)
+      function test (CA) { expect(CA.x).to.equal('A') }
+      await CA.sync()
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     // ------------------------------------------------------------------------
