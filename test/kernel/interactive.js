@@ -327,13 +327,25 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
-    it('atomically swap two instances', () => {
-      // TODO
+    it('atomically use two instances', async () => {
+      const run = new Run()
+      class A extends Jig { f () { this.n = 1 } }
+      A.interactive = false
+      const a1 = new A()
+      const a2 = new A()
+      run.transaction(() => {
+        a1.f()
+        a2.f()
+      })
+      await run.sync()
+      await run.load(a2.location)
+      run.cache = new LocalCache()
+      await run.load(a2.location)
     })
 
     // ------------------------------------------------------------------------
 
-    it('atomically swap a class and an instance', () => {
+    it('atomically use a class and an instance', () => {
       // TODO
     })
 
