@@ -415,6 +415,31 @@ describe('Interactive', () => {
       class B extends Berry { init () { this.interactive = true } }
       await expect(B.load('')).to.be.rejectedWith('Cannot set interactive: reserved')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('code can set interactive property on sub-object', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.x = { interactive: [] }
+      const CA = run.deploy(A)
+      await CA.sync()
+      await run.load(CA.location)
+      run.cache = new LocalCache()
+      await run.load(CA.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('jigs can set interactive property on sub-object', async () => {
+      const run = new Run()
+      class A extends Jig { init () { this.x = { interactive: null } } }
+      const a = new A()
+      await run.sync()
+      await run.load(a.location)
+      run.cache = new LocalCache()
+      await run.load(a.location)
+    })
   })
 })
 
