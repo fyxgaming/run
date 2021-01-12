@@ -259,6 +259,12 @@ describe('Interactive', () => {
     it('throws if mark non-interactive in method that uses non-dependency', () => {
       // TODO
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if non-interactive in update to transaction', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
