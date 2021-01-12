@@ -132,8 +132,27 @@ describe('Interactive', () => {
   // --------------------------------------------------------------------------
 
   describe('Method', () => {
-    it('set to interactive', () => {
-      // TODO
+    it('set to interactive', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f (x) { this.x = x.name }
+        static g () { this.interactive = true }
+      }
+      A.interactive = false
+      function h () { }
+      const ch = run.deploy(h)
+      const CA = run.deploy(A)
+      expect(() => CA.f(ch)).to.throw('A is not permitted to interact with h')
+      CA.g()
+      CA.f(ch)
+      function test (CA) { expect(CA.x).to.equal('h') }
+      test(CA)
+      await run.sync()
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     // ------------------------------------------------------------------------
