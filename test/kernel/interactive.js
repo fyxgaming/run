@@ -345,8 +345,22 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
-    it('atomically use a class and an instance', () => {
-      // TODO
+    it('atomically use a class and an instance', async () => {
+      const run = new Run()
+      class A extends Jig {
+        f () { this.n = 1 }
+        static g () { this.m = 1 }
+      }
+      A.interactive = false
+      const a = new A()
+      run.transaction(() => {
+        a.f()
+        a.constructor.g()
+      })
+      await run.sync()
+      await run.load(a.location)
+      run.cache = new LocalCache()
+      await run.load(a.location)
     })
 
     // ------------------------------------------------------------------------
