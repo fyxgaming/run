@@ -5,9 +5,10 @@
  */
 
 const { describe, it } = require('mocha')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig } = Run
+const { Jig, Berry } = Run
 const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
@@ -347,13 +348,18 @@ describe('Interactive', () => {
 
   describe('Misc', () => {
     it('jigs cannot set interactive property', () => {
-      // TODO
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { this.interactive = true } }
+      const a = new A()
+      expect(() => a.f()).to.throw('Cannot set interactive: reserved')
     })
 
     // ------------------------------------------------------------------------
 
-    it('berries cannot set interactive property', () => {
-      // TODO
+    it('berries cannot set interactive property', async () => {
+      new Run() // eslint-disable-line
+      class B extends Berry { init () { this.interactive = true } }
+      await expect(B.load('')).to.be.rejectedWith('Cannot set interactive: reserved')
     })
   })
 })
