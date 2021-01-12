@@ -59,7 +59,7 @@ describe('Interactive', () => {
       const CB = run.deploy(B)
       const CA = run.deploy(A)
       await run.sync()
-      expect(() => CA.f(CB)).to.throw('Interactivity violation: A cannot interact with B')
+      expect(() => CA.f(CB)).to.throw('A is not permitted to interact with B')
     })
   })
 
