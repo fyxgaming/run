@@ -14,7 +14,7 @@ const { mangle } = unmangle
 const Proxy2 = unmangle(unmangle(Run)._Proxy2)
 const {
   _Membrane: Membrane, _Rules: Rules, _sudo, _Sandbox, _EDITORS, _RESERVED_PROPS,
-  _RESERVED_CODE_METHODS, _RESERVED_JIG_METHODS
+  _RESERVED_CODE_PROPS, _RESERVED_JIG_PROPS
 } = unmangle(Run)
 const { _CODE, _JIGS } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(_Sandbox)._intrinsics
@@ -3260,7 +3260,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('can set jig methods on non-jig', () => {
-      expect(_RESERVED_JIG_METHODS.includes('sync') && !_RESERVED_PROPS.includes('sync')).to.equal(true)
+      expect(_RESERVED_JIG_PROPS.includes('sync') && !_RESERVED_PROPS.includes('sync')).to.equal(true)
       const a = new Membrane({}, mangle({ _reserved: true }))
       a.sync = 1
     })
@@ -3268,9 +3268,9 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('can set code methods on non-code', () => {
-      expect(_RESERVED_CODE_METHODS.includes('toString') && !_RESERVED_PROPS.includes('toString')).to.equal(true)
-      expect(_RESERVED_CODE_METHODS.includes('upgrade') && !_RESERVED_PROPS.includes('upgrade')).to.equal(true)
-      expect(_RESERVED_CODE_METHODS.includes('sync') && !_RESERVED_PROPS.includes('sync')).to.equal(true)
+      expect(_RESERVED_CODE_PROPS.includes('toString') && !_RESERVED_PROPS.includes('toString')).to.equal(true)
+      expect(_RESERVED_CODE_PROPS.includes('upgrade') && !_RESERVED_PROPS.includes('upgrade')).to.equal(true)
+      expect(_RESERVED_CODE_PROPS.includes('sync') && !_RESERVED_PROPS.includes('sync')).to.equal(true)
       const a = new Membrane({}, mangle({ _reserved: true }))
       a.toString = 1
       a.upgrade = 1
