@@ -157,8 +157,18 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
-    it('define non-interactive', () => {
-      // TODO
+    it('define non-interactive', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f (x) { this.x = x.name }
+        static g () { Object.defineProperty(this, 'interactive', { value: false, configurable: true, enumerable: true, writable: true }) }
+      }
+      function h () { }
+      const ch = run.deploy(h)
+      const CA = run.deploy(A)
+      await run.sync()
+      CA.g()
+      expect(() => CA.f(ch)).to.throw('A is not permitted to interact with h')
     })
 
     // ------------------------------------------------------------------------
