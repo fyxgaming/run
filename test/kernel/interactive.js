@@ -301,7 +301,7 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
-    it('pass native code as parameter', () => {
+    it('pass native dependency as parameter', () => {
       // TODO
     })
 
@@ -368,6 +368,12 @@ describe('Interactive', () => {
     // ------------------------------------------------------------------------
 
     it('use non-interactive function with dependency', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if pass native non-dependency as parameter', () => {
       // TODO
     })
 
