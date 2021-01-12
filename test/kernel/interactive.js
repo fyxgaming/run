@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig, Berry } = Run
+const { Jig, Berry, Code } = Run
 const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
@@ -301,8 +301,28 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
-    it('pass native dependency as parameter', () => {
-      // TODO
+    it('pass native dependency as parameter', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f (x) { this.x = x.name }
+        static g (y) { this.y = y.name }
+      }
+      A.interactive = false
+      A.deps = { Code }
+      const CA = run.deploy(A)
+      CA.f(Jig)
+      CA.g(Code)
+      function test (CA) {
+        expect(CA.x).to.equal('Jig')
+        expect(CA.y).to.equal('Code')
+      }
+      await CA.sync()
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     // ------------------------------------------------------------------------
