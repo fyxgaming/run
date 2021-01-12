@@ -203,8 +203,20 @@ describe('Interactive', () => {
   // --------------------------------------------------------------------------
 
   describe('Non-interactivity', () => {
-    it('pass self as parameter', () => {
-      // TODO
+    it('pass self as parameter', async () => {
+      const run = new Run()
+      class A extends Jig { static f (x) { this.x = x.name } }
+      A.interactive = false
+      const CA = run.deploy(A)
+      CA.f(CA)
+      function test (CA) { expect(CA.x).to.equal('A') }
+      await CA.sync()
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
 
     // ------------------------------------------------------------------------
