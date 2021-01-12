@@ -109,8 +109,21 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
-    it('become non-interactive', () => {
-      // TODO
+    it('become non-interactive', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f (x) { this.x = x.name }
+        static g () { this.interactive = false }
+      }
+      function h () { }
+      function i () { }
+      const ch = run.deploy(h)
+      const ci = run.deploy(i)
+      const CA = run.deploy(A)
+      await run.sync()
+      CA.f(ch)
+      CA.g()
+      expect(() => CA.f(ci)).to.throw('A is not permitted to interact with i')
     })
   })
 
