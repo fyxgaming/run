@@ -5,7 +5,7 @@
  */
 
 const { describe, it } = require('mocha')
-// const { expect } = require('chai')
+const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
 const { LocalCache } = Run.plugins
@@ -21,9 +21,8 @@ describe('Interactive', () => {
   describe('Deploy', () => {
     it('interactive by default', async () => {
       const run = new Run()
-      class A extends Jig { static f (B) { this.B2 = B } }
+      class A extends Jig { static f (B) { this.B = B } }
       class B { }
-      A.B = B
       const CB = run.deploy(B)
       const CA = run.deploy(A)
       CA.f(CB)
@@ -35,14 +34,32 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
-    it('interactive set to true', () => {
-      // TODO
+    it('interactive set to true', async () => {
+      const run = new Run()
+      class A extends Jig { static f (B) { this.B = B } }
+      class B { }
+      A.interactive = true
+      B.interactive = true
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      CA.f(CB)
+      await run.sync()
+      await run.load(CA.location)
+      run.cache = new LocalCache()
+      await run.load(CA.location)
     })
 
     // ------------------------------------------------------------------------
 
-    it('non-interactive', () => {
-      // TODO
+    it('non-interactive', async () => {
+      const run = new Run()
+      class A extends Jig { static f (B) { this.B2 = B } }
+      class B { }
+      A.interactive = false
+      const CB = run.deploy(B)
+      const CA = run.deploy(A)
+      await run.sync()
+      expect(() => CA.f(CB)).to.throw('wefwefplkm')
     })
   })
 
