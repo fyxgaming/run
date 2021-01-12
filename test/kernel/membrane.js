@@ -733,7 +733,7 @@ describe('Membrane', () => {
 
   describe('Code methods', () => {
     it('has', () => {
-      const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
+      const f = new Membrane(function f () { }, mangle({ _codeProps: true }))
       expect('sync' in f).to.equal(true)
       expect('upgrade' in f).to.equal(true)
       expect('destroy' in f).to.equal(true)
@@ -743,7 +743,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get', () => {
-      const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
+      const f = new Membrane(function f () { }, mangle({ _codeProps: true }))
       expect(f.sync).to.equal(Code.prototype.sync)
       expect(f.upgrade).to.equal(Code.prototype.upgrade)
       expect(f.destroy).to.equal(Code.prototype.destroy)
@@ -754,7 +754,7 @@ describe('Membrane', () => {
 
     // Because these methods are not owned by the creations
     it('getOwnPropertyDescriptor undefined', () => {
-      const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
+      const f = new Membrane(function f () { }, mangle({ _codeProps: true }))
       expect(Object.getOwnPropertyDescriptor(f, 'sync')).to.equal(undefined)
       expect(Object.getOwnPropertyDescriptor(f, 'upgrade')).to.equal(undefined)
       expect(Object.getOwnPropertyDescriptor(f, 'destroy')).to.equal(undefined)
@@ -764,7 +764,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot set', () => {
-      const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
+      const f = new Membrane(function f () { }, mangle({ _codeProps: true }))
       expect(() => { f.sync = 1 }).to.throw('Cannot set sync')
       expect(() => { f.upgrade = 1 }).to.throw('Cannot set upgrade')
       expect(() => { f.destroy = 1 }).to.throw('Cannot set destroy')
@@ -774,7 +774,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot define', () => {
-      const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
+      const f = new Membrane(function f () { }, mangle({ _codeProps: true }))
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(f, 'sync', desc)).to.throw('Cannot define sync')
       expect(() => Object.defineProperty(f, 'upgrade', desc)).to.throw('Cannot define upgrade')
@@ -785,7 +785,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot delete', () => {
-      const f = new Membrane(function f () { }, mangle({ _codeMethods: true }))
+      const f = new Membrane(function f () { }, mangle({ _codeProps: true }))
       expect(() => { delete f.sync }).to.throw('Cannot delete sync')
       expect(() => { delete f.upgrade }).to.throw('Cannot delete upgrade')
       expect(() => { delete f.destroy }).to.throw('Cannot delete destroy')
@@ -800,7 +800,7 @@ describe('Membrane', () => {
   describe('Code options', () => {
     it('set options', () => {
       class A { static f (k, v) { this[k] = v } }
-      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeMethods: true })
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeProps: true })
       testRecord(() => CA.f('sealed', true))
       testRecord(() => CA.f('sealed', false))
       testRecord(() => CA.f('sealed', 'owner'))
@@ -814,7 +814,7 @@ describe('Membrane', () => {
 
     it('define options', () => {
       class A { static f (k, v) { Object.defineProperty(this, k, { configurable: true, enumerable: true, writable: true, value: v }) } }
-      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeMethods: true })
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeProps: true })
       testRecord(() => CA.f('sealed', true))
       testRecord(() => CA.f('sealed', false))
       testRecord(() => CA.f('sealed', 'owner'))
@@ -831,7 +831,7 @@ describe('Membrane', () => {
       A.sealed = true
       A.upgradable = true
       A.interactive = true
-      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeMethods: true })
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeProps: true })
       testRecord(() => CA.f('sealed'))
       testRecord(() => CA.f('upgradable'))
       testRecord(() => CA.f('interactive'))
@@ -841,7 +841,7 @@ describe('Membrane', () => {
 
     it('throws if set invalid options', () => {
       class A { static f (k, v) { this[k] = v } }
-      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeMethods: true })
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeProps: true })
       expect(() => testRecord(() => CA.f('sealed', undefined))).to.throw('Invalid sealed option: undefined')
       expect(() => testRecord(() => CA.f('sealed', null))).to.throw('Invalid sealed option: null')
       expect(() => testRecord(() => CA.f('sealed', 'false'))).to.throw('Invalid sealed option: false')
@@ -858,7 +858,7 @@ describe('Membrane', () => {
 
     it('throws if define invalid options', () => {
       class A { static f (k, v) { Object.defineProperty(this, k, { configurable: true, enumerable: true, writable: true, value: v }) } }
-      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeMethods: true })
+      const CA = makeCode(A, { _recordableTarget: true, _recordCalls: true, _codeProps: true })
       expect(() => testRecord(() => CA.f('sealed', undefined))).to.throw('Invalid sealed option: undefined')
       expect(() => testRecord(() => CA.f('sealed', null))).to.throw('Invalid sealed option: null')
       expect(() => testRecord(() => CA.f('sealed', 'false'))).to.throw('Invalid sealed option: false')
@@ -877,7 +877,7 @@ describe('Membrane', () => {
 
   describe('Jig methods', () => {
     it('has', () => {
-      const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
+      const a = new Membrane({}, mangle({ _admin: true, _jigProps: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect('sync' in a).to.equal(true)
       expect('destroy' in a).to.equal(true)
@@ -889,7 +889,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get', () => {
-      const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
+      const a = new Membrane({}, mangle({ _admin: true, _jigProps: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect(a.sync).to.equal(Jig.prototype.sync)
       expect(a.destroy).to.equal(Jig.prototype.destroy)
@@ -902,7 +902,7 @@ describe('Membrane', () => {
 
     // Because these methods are not owned by the jig itself
     it('getOwnPropertyDescriptor undefined', () => {
-      const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
+      const a = new Membrane({}, mangle({ _admin: true, _jigProps: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect(Object.getOwnPropertyDescriptor(a, 'sync')).to.equal(undefined)
       expect(Object.getOwnPropertyDescriptor(a, 'init')).to.equal(undefined)
@@ -912,7 +912,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot set', () => {
-      const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
+      const a = new Membrane({}, mangle({ _admin: true, _jigProps: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect(() => { a.sync = 1 }).to.throw('Cannot set sync')
       expect(() => { a.init = 1 }).to.throw('Cannot set init')
@@ -921,7 +921,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot define', () => {
-      const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
+      const a = new Membrane({}, mangle({ _admin: true, _jigProps: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(a, 'sync', desc)).to.throw('Cannot define sync')
@@ -931,7 +931,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot delete', () => {
-      const a = new Membrane({}, mangle({ _admin: true, _jigMethods: true }))
+      const a = new Membrane({}, mangle({ _admin: true, _jigProps: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Jig { }).prototype))
       expect(() => { delete a.sync }).to.throw('Cannot delete sync')
       expect(() => { delete a.init }).to.throw('Cannot delete init')
@@ -944,7 +944,7 @@ describe('Membrane', () => {
 
   describe('Berry methods', () => {
     it('has', () => {
-      const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
+      const a = new Membrane({}, mangle({ _admin: true, _berryProps: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Berry { }).prototype))
       expect('init' in a).to.equal(true)
     })
@@ -952,7 +952,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('get', () => {
-      const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
+      const a = new Membrane({}, mangle({ _admin: true, _berryProps: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Berry { }).prototype))
       expect(a.init).to.equal(Berry.prototype.init)
     })
@@ -960,7 +960,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('getOwnPropertyDescriptor undefined', () => {
-      const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
+      const a = new Membrane({}, mangle({ _admin: true, _berryProps: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Berry { }).prototype))
       expect(Object.getOwnPropertyDescriptor(a, 'init')).to.equal(undefined)
     })
@@ -968,7 +968,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot set', () => {
-      const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
+      const a = new Membrane({}, mangle({ _admin: true, _berryProps: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Berry { }).prototype))
       expect(() => { a.init = 1 }).to.throw('Cannot set init')
     })
@@ -976,7 +976,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot define', () => {
-      const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
+      const a = new Membrane({}, mangle({ _admin: true, _berryProps: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Berry { }).prototype))
       const desc = { value: 1, configurable: true, enumerable: true, writable: true }
       expect(() => Object.defineProperty(a, 'init', desc)).to.throw('Cannot define init')
@@ -985,7 +985,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot delete', () => {
-      const a = new Membrane({}, mangle({ _admin: true, _berryMethods: true }))
+      const a = new Membrane({}, mangle({ _admin: true, _berryProps: true }))
       _sudo(() => Object.setPrototypeOf(a, (class A extends Berry { }).prototype))
       expect(() => { delete a.init }).to.throw('Cannot delete init')
     })
@@ -3280,14 +3280,14 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('cannot set reserved jig methods on jig', () => {
-      const a = new Membrane({}, mangle({ _reserved: true, _jigMethods: true }))
+      const a = new Membrane({}, mangle({ _reserved: true, _jigProps: true }))
       expect(() => { a.sync = 1 }).to.throw('Cannot set sync')
     })
 
     // ------------------------------------------------------------------------
 
     it('cannot define reserved jig methods on code', () => {
-      const a = new Membrane({}, mangle({ _reserved: true, _codeMethods: true }))
+      const a = new Membrane({}, mangle({ _reserved: true, _codeProps: true }))
       expect(() => { a.toString = 1 }).to.throw('Cannot set toString')
       expect(() => { a.upgrade = 1 }).to.throw('Cannot set upgrade')
       expect(() => { a.sync = 1 }).to.throw('Cannot set sync')
