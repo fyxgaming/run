@@ -6,6 +6,9 @@
 
 const { describe, it } = require('mocha')
 // const { expect } = require('chai')
+const Run = require('../env/run')
+const { Jig } = Run
+const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Interactive
@@ -16,8 +19,18 @@ describe('Interactive', () => {
   // Deploy
   // --------------------------------------------------------------------------
   describe('Deploy', () => {
-    it('interactive by default', () => {
-      // TODO
+    it('interactive by default', async () => {
+      const run = new Run()
+      class A extends Jig { static f (B) { this.B2 = B } }
+      class B { }
+      A.B = B
+      const CB = run.deploy(B)
+      const CA = run.deploy(A)
+      CA.f(CB)
+      await run.sync()
+      await run.load(CA.location)
+      run.cache = new LocalCache()
+      await run.load(CA.location)
     })
 
     // ------------------------------------------------------------------------
