@@ -280,6 +280,27 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
+    it('pass dependency instance as parameter', async () => {
+      const run = new Run()
+      class B extends Jig { }
+      const b = new B()
+      class A extends Jig { static f (x) { this.x = x.constructor.name } }
+      A.interactive = false
+      A.deps = { B }
+      const CA = run.deploy(A)
+      CA.f(b)
+      function test (CA) { expect(CA.x).to.equal('B') }
+      await CA.sync()
+      test(CA)
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('pass native code as parameter', () => {
       // TODO
     })
