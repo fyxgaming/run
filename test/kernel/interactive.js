@@ -53,13 +53,13 @@ describe('Interactive', () => {
 
     it('non-interactive', async () => {
       const run = new Run()
-      class A extends Jig { static f (B) { this.B2 = B } }
+      class A extends Jig { static f (B) { this.x = B.name } }
       class B { }
       A.interactive = false
       const CB = run.deploy(B)
       const CA = run.deploy(A)
       await run.sync()
-      expect(() => CA.f(CB)).to.throw('wefwefplkm')
+      expect(() => CA.f(CB)).to.throw('Interactivity violation: A cannot interact with B')
     })
   })
 
