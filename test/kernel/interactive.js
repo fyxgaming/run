@@ -173,8 +173,28 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
-    it('delete to become interactive', () => {
-      // TODO
+    it('delete to become interactive', async () => {
+      const run = new Run()
+      class A extends Jig {
+        static f (x) { this.x = x.name }
+        static g () { this.interactive = false }
+        static h () { delete this.interactive }
+      }
+      class B extends A { }
+      const CB = run.deploy(B)
+      const CA = run.deploy(A)
+      CA.g()
+      expect(() => CA.f(CB)).to.throw('A is not permitted to interact with B')
+      CA.h()
+      CA.f(CB)
+      function test (CA) { expect(CA.x).to.equal('B') }
+      test(CA)
+      await run.sync()
+      const CA2 = await run.load(CA.location)
+      test(CA2)
+      run.cache = new LocalCache()
+      const CA3 = await run.load(CA.location)
+      test(CA3)
     })
   })
 
