@@ -10,6 +10,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { CommonLock } = Run.util
 const unmangle = require('../env/unmangle')
+const { mangle } = unmangle
 const { _location, _compileLocation, _nonce, _satoshis, _owner, _markUndeployed } = unmangle(unmangle(Run)._Bindings)
 
 // ------------------------------------------------------------------------------------------------
@@ -31,38 +32,38 @@ describe('Bindings', () => {
   describe('_location', () => {
     it('valid locations', () => {
       // Jigs
-      expect(_location(`${TXID}_o0`)).to.deep.equal({ txid: TXID, vout: 0 })
-      expect(_location(`${TXID}_d1`)).to.deep.equal({ txid: TXID, vdel: 1 })
-      expect(_location('native://Jig')).to.deep.equal({ native: 'Jig' })
+      expect(_location(`${TXID}_o0`)).to.deep.equal(mangle({ _txid: TXID, _vout: 0 }))
+      expect(_location(`${TXID}_d1`)).to.deep.equal(mangle({ _txid: TXID, _vdel: 1 }))
+      expect(_location('native://Jig')).to.deep.equal(mangle({ _native: 'Jig' }))
       // Partial jigs
-      expect(_location('_o10')).to.deep.equal({ vout: 10 })
-      expect(_location('_d1')).to.deep.equal({ vdel: 1 })
+      expect(_location('_o10')).to.deep.equal(mangle({ _vout: 10 }))
+      expect(_location('_d1')).to.deep.equal(mangle({ _vdel: 1 }))
       // Berries
       expect(_location(`${TXID}_o0?berry=&hash=${HASH}&version=5`))
-        .to.deep.equal({ txid: TXID, vout: 0, berry: '', hash: HASH, version: 5 })
+        .to.deep.equal(mangle({ _txid: TXID, _vout: 0, _berry: '', _hash: HASH, _version: 5 }))
       expect(_location(`${TXID}_o0?berry=abc&hash=${HASH}&version=5`))
-        .to.deep.equal({ txid: TXID, vout: 0, berry: 'abc', hash: HASH, version: 5 })
+        .to.deep.equal(mangle({ _txid: TXID, _vout: 0, _berry: 'abc', _hash: HASH, _version: 5 }))
       expect(_location(`${TXID}_d0?berry=${TXID}_o0&hash=${HASH}&version=5`))
-        .to.deep.equal({ txid: TXID, vdel: 0, berry: `${TXID}_o0`, hash: HASH, version: 5 })
+        .to.deep.equal(mangle({ _txid: TXID, _vdel: 0, _berry: `${TXID}_o0`, _hash: HASH, _version: 5 }))
       expect(_location(`${TXID}_o0?berry=line1%0Aline2&hash=${HASH}&version=5`))
-        .to.deep.equal({ txid: TXID, vout: 0, berry: 'line1\nline2', hash: HASH, version: 5 })
+        .to.deep.equal(mangle({ _txid: TXID, _vout: 0, _berry: 'line1\nline2', _hash: HASH, _version: 5 }))
       expect(_location(`${TXID}_o0?berry=${encodeURIComponent('😀')}&hash=${HASH}&version=5`))
-        .to.deep.equal({ txid: TXID, vout: 0, berry: '😀', hash: HASH, version: 5 })
+        .to.deep.equal(mangle({ _txid: TXID, _vout: 0, _berry: '😀', _hash: HASH, _version: 5 }))
       // Partial berries
       expect(_location(`${TXID}_o0?berry=&version=5`))
-        .to.deep.equal({ txid: TXID, vout: 0, berry: '', version: 5 })
+        .to.deep.equal(mangle({ _txid: TXID, _vout: 0, _berry: '', _version: 5 }))
       expect(_location(`${TXID}_o0?berry=&hash=${HASH}`))
-        .to.deep.equal({ txid: TXID, vout: 0, berry: '', hash: HASH })
+        .to.deep.equal(mangle({ _txid: TXID, _vout: 0, _berry: '', _hash: HASH }))
       expect(_location(`${TXID}_o0?berry=abc`))
-        .to.deep.equal({ txid: TXID, vout: 0, berry: 'abc' })
+        .to.deep.equal(mangle({ _txid: TXID, _vout: 0, _berry: 'abc' }))
       // Errors
-      expect(_location('error://')).to.deep.equal({ error: '' })
-      expect(_location('error://Something bad happened')).to.deep.equal({ error: 'Something bad happened' })
-      expect(_location('error://line1\nline2')).to.deep.equal({ error: 'line1\nline2' })
-      expect(_location('error://Undeployed')).to.deep.equal({ error: 'Undeployed', undeployed: true })
+      expect(_location('error://')).to.deep.equal(mangle({ _error: '' }))
+      expect(_location('error://Something bad happened')).to.deep.equal(mangle({ _error: 'Something bad happened' }))
+      expect(_location('error://line1\nline2')).to.deep.equal(mangle({ _error: 'line1\nline2' }))
+      expect(_location('error://Undeployed')).to.deep.equal(mangle({ _error: 'Undeployed', _undeployed: true }))
       // Record locations
-      expect(_location(`record://${TXID}_o1`)).to.deep.equal({ record: TXID, vout: 1 })
-      expect(_location(`record://${TXID}_d2`)).to.deep.equal({ record: TXID, vdel: 2 })
+      expect(_location(`record://${TXID}_o1`)).to.deep.equal(mangle({ _record: TXID, _vout: 1 }))
+      expect(_location(`record://${TXID}_d2`)).to.deep.equal(mangle({ _record: TXID, _vdel: 2 }))
     })
 
     // ------------------------------------------------------------------------
@@ -128,51 +129,51 @@ describe('Bindings', () => {
 
   describe('_compileLocation', () => {
     it('error', () => {
-      expect(_compileLocation({ error: '123' })).to.equal('error://123')
-      expect(_compileLocation({ error: '😀' })).to.equal('error://😀')
+      expect(_compileLocation(mangle({ _error: '123' }))).to.equal('error://123')
+      expect(_compileLocation(mangle({ _error: '😀' }))).to.equal('error://😀')
     })
 
     // ------------------------------------------------------------------------
 
     it('native', () => {
-      expect(_compileLocation({ native: 'Code' })).to.equal('native://Code')
-      expect(_compileLocation({ native: 'CommonLock' })).to.equal('native://CommonLock')
+      expect(_compileLocation(mangle({ _native: 'Code' }))).to.equal('native://Code')
+      expect(_compileLocation(mangle({ _native: 'CommonLock' }))).to.equal('native://CommonLock')
     })
 
     // ------------------------------------------------------------------------
 
     it('record', () => {
-      expect(_compileLocation({ record: TXID, vout: 0 })).to.equal(`record://${TXID}_o0`)
-      expect(_compileLocation({ record: TXID, vdel: 1 })).to.equal(`record://${TXID}_d1`)
+      expect(_compileLocation(mangle({ _record: TXID, _vout: 0 }))).to.equal(`record://${TXID}_o0`)
+      expect(_compileLocation(mangle({ _record: TXID, _vdel: 1 }))).to.equal(`record://${TXID}_d1`)
     })
 
     // ------------------------------------------------------------------------
 
     it('jig', () => {
-      expect(_compileLocation({ txid: TXID, vout: 0 })).to.equal(`${TXID}_o0`)
-      expect(_compileLocation({ txid: TXID, vdel: 1 })).to.equal(`${TXID}_d1`)
+      expect(_compileLocation(mangle({ _txid: TXID, _vout: 0 }))).to.equal(`${TXID}_o0`)
+      expect(_compileLocation(mangle({ _txid: TXID, _vdel: 1 }))).to.equal(`${TXID}_d1`)
     })
 
     // ------------------------------------------------------------------------
 
     it('partial jig', () => {
-      expect(_compileLocation({ vout: 1 })).to.equal('_o1')
-      expect(_compileLocation({ vdel: 0 })).to.equal('_d0')
+      expect(_compileLocation(mangle({ _vout: 1 }))).to.equal('_o1')
+      expect(_compileLocation(mangle({ _vdel: 0 }))).to.equal('_d0')
     })
 
     // ------------------------------------------------------------------------
 
     it('berry', () => {
-      expect(_compileLocation({ txid: TXID, vout: 0, berry: 'abc', hash: HASH, version: 5 }))
+      expect(_compileLocation(mangle({ _txid: TXID, _vout: 0, _berry: 'abc', _hash: HASH, _version: 5 })))
         .to.equal(`${TXID}_o0?berry=abc&hash=${HASH}&version=5`)
     })
 
     // ------------------------------------------------------------------------
 
     it('partial berry', () => {
-      expect(_compileLocation({ txid: TXID, vout: 0, berry: '😀' }))
+      expect(_compileLocation(mangle({ _txid: TXID, _vout: 0, _berry: '😀' })))
         .to.equal(`${TXID}_o0?berry=${encodeURIComponent('😀')}`)
-      expect(_compileLocation({ txid: TXID, vout: 0, berry: '😀', version: 6 }))
+      expect(_compileLocation(mangle({ _txid: TXID, _vout: 0, _berry: '😀', _version: 6 })))
         .to.equal(`${TXID}_o0?berry=${encodeURIComponent('😀')}&version=6`)
     })
 
