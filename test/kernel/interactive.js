@@ -365,139 +365,139 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
-    it('call methods on class and a dependency instance', () => {
+    it.skip('call methods on class and a dependency instance', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('add dependencies in method', () => {
+    it.skip('add dependencies in method', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('add dependencies in upgrade', () => {
+    it.skip('add dependencies in upgrade', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('upgrade and deploy new dependency', () => {
+    it.skip('upgrade and deploy new dependency', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('use dependency with non-dependency inside', () => {
+    it.skip('use dependency with non-dependency inside', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('call non-dependency with reference before non-interactive upgrade', () => {
+    it.skip('call non-dependency with reference before non-interactive upgrade', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('use non-dependency if upgrade to make interactive', () => {
+    it.skip('use non-dependency if upgrade to make interactive', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('use non-dependency if call method to make interactive', () => {
+    it.skip('use non-dependency if call method to make interactive', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('use non-interactive function with dependency', () => {
+    it.skip('use non-interactive function with dependency', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if pass native non-dependency as parameter', () => {
+    it.skip('throws if pass native non-dependency as parameter', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if use dependency removed in transaction due to method', () => {
+    it.skip('throws if use dependency removed in transaction due to method', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if use dependency removed in transaction due to upgrade', () => {
+    it.skip('throws if use dependency removed in transaction due to upgrade', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if use dependency removed in transaction due to upgrade sync', () => {
+    it.skip('throws if use dependency removed in transaction due to upgrade sync', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if call method on non-dependency', () => {
+    it.skip('throws if call method on non-dependency', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if deploy while non-interactive', () => {
+    it.skip('throws if deploy while non-interactive', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if deploy code that extends without extending', () => {
+    it.skip('throws if deploy code that extends without extending', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if delete non-dependency instance', () => {
+    it.skip('throws if delete non-dependency instance', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if call method on dependency with non-dependency parameter', () => {
+    it.skip('throws if call method on dependency with non-dependency parameter', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if dependency is more restricted than self', () => {
+    it.skip('throws if dependency is more restricted than self', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if spend non-dependency to update', () => {
+    it.skip('throws if spend non-dependency to update', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if mark non-interactive in method that uses non-dependency', () => {
+    it.skip('throws if mark non-interactive in method that uses non-dependency', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if non-interactive in update to transaction', () => {
+    it.skip('throws if non-interactive in update to transaction', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if use non-interactive function with non-dependency', () => {
+    it.skip('throws if use non-interactive function with non-dependency', () => {
       // TODO
     })
   })
@@ -507,38 +507,72 @@ describe('Interactive', () => {
   // --------------------------------------------------------------------------
 
   describe('Use cases', () => {
-    it('mint non-interactive tokens', () => {
+    it('mint non-interactive tokens', async () => {
+      const run = new Run()
+      class A extends Run.extra.Token { }
+      A.interactive = false
+      const CA = run.deploy(A)
+      const a = CA.mint(100)
+      await a.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('combine non-interactive tokens', async () => {
+      const run = new Run()
+      class A extends Run.extra.Token { }
+      A.interactive = false
+      const CA = run.deploy(A)
+      const a = CA.mint(100)
+      const b = CA.mint(100)
+      a.combine(b)
+      expect(a.amount).to.equal(200)
+      await a.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('batch send interactive tokens', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('combine non-interactive tokens', () => {
+    it.skip('send token from interactive jig', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('batch send interactive tokens', () => {
-      // TODO
+    it('throws if use different two tokens that are not-interactive', async () => {
+      const run = new Run()
+      class A extends Run.extra.Token { }
+      A.interactive = false
+      class B extends Run.extra.Token { }
+      B.interactive = false
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      const a = CA.mint(100)
+      const b = CB.mint(100)
+      await run.sync()
+      expect(() => run.transaction(() => {
+        a.send(run.purse.address)
+        b.send(run.purse.address, 50)
+      })).to.throw('B is not permitted to interact with A')
     })
 
     // ------------------------------------------------------------------------
 
-    it('send token from interactive jig', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if use different two tokens that are not-interactive', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if send from non-interactive jig', () => {
-      // TODO
+    it('throws if send from non-interactive jig', async () => {
+      const run = new Run()
+      class A extends Run.extra.Token { }
+      A.interactive = false
+      class B extends Jig { static f (a, owner) { a.send(owner) } }
+      const CA = run.deploy(A)
+      const CB = run.deploy(B)
+      const a = CA.mint(100)
+      await run.sync()
+      expect(() => CB.f(a, run.purse.address)).to.throw('A is not permitted to interact with B')
     })
   })
 
