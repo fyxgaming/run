@@ -231,6 +231,12 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
+    it('use non-interactive function with dependency', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if use dependency removed in transaction due to method', () => {
       // TODO
     })
@@ -298,6 +304,12 @@ describe('Interactive', () => {
     // ------------------------------------------------------------------------
 
     it('throws if non-interactive in update to transaction', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if use non-interactive function with non-dependency', () => {
       // TODO
     })
   })
