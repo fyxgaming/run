@@ -87,8 +87,23 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
-    it('become interactive in same transaction', () => {
-      // TODO
+    it('become interactive in same transaction', async () => {
+      const run = new Run()
+      class A extends Jig { static f (B) { this.x = B.name } }
+      class B { }
+      A.interactive = false
+      const CB = run.deploy(B)
+      const CA = run.deploy(A)
+      await run.sync()
+      expect(() => CA.f(CB)).to.throw('A is not permitted to interact with B')
+      class A2 extends Jig { static f (B) { this.x = B.name } }
+      A2.interactive = true
+      run.transaction(() => {
+        CA.upgrade(A2)
+        CA.f(B)
+      })
+      await CA.sync()
+      expect(CA.x).to.equal('B')
     })
 
     // ------------------------------------------------------------------------
