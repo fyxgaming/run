@@ -4,10 +4,11 @@
  * Tests for the interactive code property
  */
 
-const { describe, it } = require('mocha')
+const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { getExtrasBlockchain } = require('../env/misc')
 const { Jig, Berry, Code } = Run
 const { LocalCache } = Run.plugins
 
@@ -16,6 +17,11 @@ const { LocalCache } = Run.plugins
 // ------------------------------------------------------------------------------------------------
 
 describe('Interactive', () => {
+  // Wait for every test to finish. This makes debugging easier.
+  afterEach(() => Run.instance && Run.instance.sync())
+  // Deactivate the current run instance. This stops leaks across tests.
+  afterEach(() => Run.instance && Run.instance.deactivate())
+
   // --------------------------------------------------------------------------
   // Deploy
   // --------------------------------------------------------------------------
@@ -508,7 +514,7 @@ describe('Interactive', () => {
 
   describe('Use cases', () => {
     it('mint non-interactive tokens', async () => {
-      const run = new Run()
+      const run = new Run({ blockchain: await getExtrasBlockchain() })
       class A extends Run.extra.Token { }
       A.interactive = false
       const CA = run.deploy(A)
@@ -519,7 +525,7 @@ describe('Interactive', () => {
     // ------------------------------------------------------------------------
 
     it('combine non-interactive tokens', async () => {
-      const run = new Run()
+      const run = new Run({ blockchain: await getExtrasBlockchain() })
       class A extends Run.extra.Token { }
       A.interactive = false
       const CA = run.deploy(A)
@@ -544,8 +550,8 @@ describe('Interactive', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if use different two tokens that are not-interactive', async () => {
-      const run = new Run()
+    it('throws if use different two tokens that are non-interactive', async () => {
+      const run = new Run({ blockchain: await getExtrasBlockchain() })
       class A extends Run.extra.Token { }
       A.interactive = false
       class B extends Run.extra.Token { }
@@ -564,7 +570,7 @@ describe('Interactive', () => {
     // ------------------------------------------------------------------------
 
     it('throws if send from non-interactive jig', async () => {
-      const run = new Run()
+      const run = new Run({ blockchain: await getExtrasBlockchain() })
       class A extends Run.extra.Token { }
       A.interactive = false
       class B extends Jig { static f (a, owner) { a.send(owner) } }
