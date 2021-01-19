@@ -73,9 +73,9 @@ describe('LocalPurse', () => {
 
       // ----------------------------------------------------------------------
 
-      it('default to 10 if not specified', () => {
+      it('default to 1 if not specified', () => {
         const blockchain = new Run().blockchain
-        expect(new LocalPurse({ blockchain }).splits).to.equal(10)
+        expect(new LocalPurse({ blockchain }).splits).to.equal(1)
       })
 
       // ----------------------------------------------------------------------
@@ -213,8 +213,9 @@ describe('LocalPurse', () => {
 
     // ------------------------------------------------------------------------
 
-    it('automatically splits utxos', async () => {
+    it('splits utxos', async () => {
       const run = new Run()
+      run.purse.splits = 10
       const address = new PrivateKey().toAddress()
       const tx = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       await run.blockchain.broadcast(tx)
@@ -226,6 +227,7 @@ describe('LocalPurse', () => {
 
     it('shuffles UTXOs', async () => {
       const run = new Run()
+      run.purse.splits = 10
       const address = new PrivateKey().toAddress()
       const tx = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       await run.blockchain.broadcast(tx)
@@ -243,6 +245,7 @@ describe('LocalPurse', () => {
 
     it('respects custom feePerKb', async () => {
       const run = new Run()
+      run.purse.splits = 10
       const address = new PrivateKey().toAddress()
       run.purse.feePerKb = 1
       const tx = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
@@ -274,6 +277,7 @@ describe('LocalPurse', () => {
 
     it('still has a change output when splits is lower than number of utxos', async () => {
       const run = new Run()
+      run.purse.splits = 10
       const address = new PrivateKey().toAddress()
       const tx = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       await run.blockchain.broadcast(tx)
@@ -288,6 +292,7 @@ describe('LocalPurse', () => {
 
     it('receives change from extra inputs', async () => {
       const run = new Run()
+      run.purse.splits = 10
       const tx1 = await payFor(new Transaction().to(run.owner.address, 10000), run)
       await run.blockchain.broadcast(tx1)
       const utxo = { txid: tx1.hash, vout: 0, script: tx1.outputs[0].script, satoshis: 10000 }
@@ -299,6 +304,7 @@ describe('LocalPurse', () => {
 
     it('no change if not enough to receive dust', async () => {
       const run = new Run()
+      run.purse.splits = 10
       const tx1 = await payFor(new Transaction().to(run.owner.address, 1000), run)
       await run.blockchain.broadcast(tx1)
       const utxo = { txid: tx1.hash, vout: 0, script: tx1.outputs[0].script, satoshis: 1000 }
@@ -311,6 +317,7 @@ describe('LocalPurse', () => {
 
     it('throws if pay with jig utxo', async () => {
       const run = new Run()
+      run.purse.splits = 10
       class Dragon extends Jig { }
       new Dragon() // eslint-disable-line
       await run.sync()
@@ -323,9 +330,11 @@ describe('LocalPurse', () => {
 
     it('split purse UTXOs when balance is low', async () => {
       const run = new Run()
+      run.purse.splits = 10
       const tx1 = await payFor(new Transaction().to(run.owner.address, 10000), run)
       await run.blockchain.broadcast(tx1)
       run.purse = new LocalPurse({ blockchain: run.blockchain })
+      run.purse.splits = 10
       run.purse.address = run.owner.address
       run.purse.script = bsv.Script.fromAddress(run.purse.address).toHex()
       const tx2 = await payFor(new Transaction().to(run.owner.address, 1000), run)
@@ -340,10 +349,12 @@ describe('LocalPurse', () => {
   describe('balance', () => {
     it('sums non-jig utxos', async () => {
       const run = new Run()
+      run.purse.splits = 10
       const address = new PrivateKey().toAddress()
       const send = await payFor(new Transaction().to(address, Transaction.DUST_AMOUNT), run)
       await run.blockchain.broadcast(send)
-      new Run({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain }) // eslint-disable-line
+      const run2 = new Run({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain }) // eslint-disable-line
+      run2.purse.splits = 10
       class A extends Jig { init () { this.satoshis = 888 } }
       const a = new A()
       await a.sync()
@@ -359,10 +370,12 @@ describe('LocalPurse', () => {
   // --------------------------------------------------------------------------
 
   describe('utxos', () => {
-    it('returns non-jig utxos', async () => {
+    it('returns only non-jig utxos', async () => {
       // Valid run transaction
       const run = new Run()
       const run2 = new Run({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain })
+      run.purse.splits = 10
+      run2.purse.splits = 10
       class A extends Jig { init () { this.satoshis = 888 } }
       const a = new A()
       await a.sync()
