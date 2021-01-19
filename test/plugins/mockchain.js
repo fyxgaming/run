@@ -69,14 +69,14 @@ describe('Mockchain', () => {
   // --------------------------------------------------------------------------
 
   describe('block', () => {
-    it('respects 25 chain limit', async () => {
+    it('respects 1000 chain limit', async () => {
       const mockchain = new Mockchain()
       const privkey = new PrivateKey('testnet')
       const address = privkey.toAddress()
       const script = Script.fromAddress(address)
       mockchain.fund(address, 100000000)
 
-      for (let i = 0; i < 25; i++) {
+      for (let i = 0; i < 1000; i++) {
         const utxo = (await mockchain.utxos(script))[0]
         const tx = new Transaction().from(utxo).change(address).sign(privkey)
         await mockchain.broadcast(tx)
@@ -86,7 +86,7 @@ describe('Mockchain', () => {
       await expect(mockchain.broadcast(tx)).to.be.rejectedWith('too-long-mempool-chain')
       mockchain.block()
       await mockchain.broadcast(tx)
-    })
+    }).timeout(30000)
   })
 
   // --------------------------------------------------------------------------
