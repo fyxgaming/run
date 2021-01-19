@@ -4,6 +4,9 @@
  * Master list of test modules
  */
 
+// Setup the extras blockchain before any other tests start! The classes need to be deployed correctly.
+require('mocha').before(() => require('./env/misc').getExtrasBlockchain())
+
 require('./protocol')
 require('./run')
 
