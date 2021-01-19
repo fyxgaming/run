@@ -318,6 +318,19 @@ describe('LocalPurse', () => {
       new Dragon() // eslint-disable-line
       await expect(run2.sync()).to.be.rejectedWith('Not enough funds')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('split purse UTXOs when balance is low', async () => {
+      const run = new Run()
+      const tx1 = await payFor(new Transaction().to(run.owner.address, 10000), run)
+      await run.blockchain.broadcast(tx1)
+      run.purse = new LocalPurse({ blockchain: run.blockchain })
+      run.purse.address = run.owner.address
+      run.purse.script = bsv.Script.fromAddress(run.purse.address).toHex()
+      const tx2 = await payFor(new Transaction().to(run.owner.address, 1000), run)
+      expect(tx2.outputs.length).to.equal(11)
+    })
   })
 
   // --------------------------------------------------------------------------
