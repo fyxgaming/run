@@ -16,6 +16,48 @@ const { Jig } = Run
 
 describe('Run', () => {
   // --------------------------------------------------------------------------
+  // api
+  // --------------------------------------------------------------------------
+
+  describe('api', () => {
+    it('change', () => {
+      const run = new Run({ api: 'run', apiKey: '123', network: 'test' })
+      run.api = 'whatsonchain'
+      expect(run.api).to.equal(run.blockchain.api)
+      expect(run.api).to.equal('whatsonchain')
+      expect(run.apiKey).to.equal('123')
+      expect(run.network).to.equal('test')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // apiKey
+  // --------------------------------------------------------------------------
+
+  describe('apiKey', () => {
+    it('change', () => {
+      const run = new Run({ api: 'mattercloud', network: 'main' })
+      run.apiKey = '123'
+      expect(run.apiKey).to.equal(run.blockchain.apiKey)
+      expect(run.apiKey).to.equal('123')
+      expect(run.api).to.equal('mattercloud')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // network
+  // --------------------------------------------------------------------------
+
+  describe('network', () => {
+    it('change', () => {
+      const run = new Run()
+      run.network = 'main'
+      expect(run.network).to.equal(run.blockchain.network)
+      expect(run.network).to.equal('main')
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // util
   // --------------------------------------------------------------------------
 
