@@ -107,9 +107,9 @@ describe('LocalPurse', () => {
 
       // ----------------------------------------------------------------------
 
-      it('defaults to 500 if not specified', () => {
+      it('defaults to bsv.Transaction.FEE_PER_KB if not specified', () => {
         const blockchain = new Run().blockchain
-        expect(new LocalPurse({ blockchain }).feePerKb).to.equal(500)
+        expect(new LocalPurse({ blockchain }).feePerKb).to.equal(bsv.Transaction.FEE_PER_KB)
       })
 
       // ----------------------------------------------------------------------
@@ -304,6 +304,8 @@ describe('LocalPurse', () => {
 
     it('no change if not enough to receive dust', async () => {
       const run = new Run()
+      bsv.Transaction.FEE_PER_KB = 500
+      run.purse.feePerKb = 500
       run.purse.splits = 10
       const tx1 = await payFor(new Transaction().to(run.owner.address, 1000), run)
       await run.blockchain.broadcast(tx1)
