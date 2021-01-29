@@ -80,6 +80,7 @@ require('./sandbox/sandbox')
 
 require('./util/admin')
 require('./util/bindings')
+require('./util/bsv')
 require('./util/codec')
 require('./util/common-lock')
 require('./util/deep')
