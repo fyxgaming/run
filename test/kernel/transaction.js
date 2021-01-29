@@ -2026,46 +2026,43 @@ describe('Transaction', () => {
     // ------------------------------------------------------------------------
 
     it('satoshi output is minimum of dust amount and jig satoshis', async () => {
-      const oldDustAmount = bsv.Transaction.DUST_AMOUNT
-      try {
-        const run = new Run()
-        class A extends Jig { init (satoshis) { this.satoshis = satoshis } }
-        run.deploy(A)
+      const dustAmount = bsv.Transaction.DUST_AMOUNT * bsv.Transaction.FEE_PER_KB / 1000
+      const run = new Run()
+      class A extends Jig { init (satoshis) { this.satoshis = satoshis } }
+      run.deploy(A)
 
-        const tx = new Run.Transaction()
-        const [a, b, c] = tx.update(() => {
-          return [
-            new A(0),
-            new A(oldDustAmount - 1),
-            new A(oldDustAmount + 1)
-          ]
-        })
+      const tx = new Run.Transaction()
+      const [a, b, c] = tx.update(() => {
+        return [
+          new A(0),
+          new A(dustAmount - 1),
+          new A(dustAmount + 1)
+        ]
+      })
 
-        const rawtx = await tx.export()
-        const bsvtx = new bsv.Transaction(rawtx)
-        expect(bsvtx.outputs[1].satoshis).to.equal(oldDustAmount)
-        expect(bsvtx.outputs[2].satoshis).to.equal(oldDustAmount)
-        expect(bsvtx.outputs[3].satoshis).to.equal(oldDustAmount + 1)
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      expect(bsvtx.outputs[1].satoshis).to.equal(dustAmount)
+      expect(bsvtx.outputs[2].satoshis).to.equal(dustAmount)
+      expect(bsvtx.outputs[3].satoshis).to.equal(dustAmount + 1)
 
-        await tx.publish()
+      await tx.publish()
 
-        await run.load(a.location)
-        await run.load(b.location)
-        await run.load(c.location)
+      await run.load(a.location)
+      await run.load(b.location)
+      await run.load(c.location)
 
-        run.cache = new LocalCache()
-        await run.load(a.location)
-        await run.load(b.location)
-        await run.load(c.location)
-      } finally {
-        bsv.Transaction.DUST_AMOUNT = oldDustAmount
-      }
+      run.cache = new LocalCache()
+      await run.load(a.location)
+      await run.load(b.location)
+      await run.load(c.location)
     })
 
     // ------------------------------------------------------------------------
 
     it('raise dust amount ok', async () => {
-      const oldDustAmount = bsv.Transaction.DUST_AMOUNT
+      const oldFeePerKb = bsv.Transaction.FEE_PER_KB
+      const oldDustAmount = bsv.Transaction.DUST_AMOUNT * bsv.Transaction.FEE_PER_KB / 1000
       try {
         const run = new Run()
         class A extends Jig { init (satoshis) { this.satoshis = satoshis } }
@@ -2081,7 +2078,7 @@ describe('Transaction', () => {
         })
         await tx.publish()
 
-        bsv.Transaction.DUST_AMOUNT += 1
+        bsv.Transaction.FEE_PER_KB += 1
 
         await run.load(a.location)
         await run.load(b.location)
@@ -2092,14 +2089,15 @@ describe('Transaction', () => {
         await run.load(b.location)
         await run.load(c.location)
       } finally {
-        bsv.Transaction.DUST_AMOUNT = oldDustAmount
+        bsv.Transaction.FEE_PER_KB = oldFeePerKb
       }
     })
 
     // ------------------------------------------------------------------------
 
     it('lower dust amount ok', async () => {
-      const oldDustAmount = bsv.Transaction.DUST_AMOUNT
+      const oldFeePerKb = bsv.Transaction.FEE_PER_KB
+      const oldDustAmount = bsv.Transaction.DUST_AMOUNT * bsv.Transaction.FEE_PER_KB / 1000
       try {
         const run = new Run()
         class A extends Jig { init (satoshis) { this.satoshis = satoshis } }
@@ -2115,7 +2113,7 @@ describe('Transaction', () => {
         })
         await tx.publish()
 
-        bsv.Transaction.DUST_AMOUNT -= 1
+        bsv.Transaction.FEE_PER_KB -= 1
 
         await run.load(a.location)
         await run.load(b.location)
@@ -2126,7 +2124,7 @@ describe('Transaction', () => {
         await run.load(b.location)
         await run.load(c.location)
       } finally {
-        bsv.Transaction.DUST_AMOUNT = oldDustAmount
+        bsv.Transaction.FEE_PER_KB = oldFeePerKb
       }
     })
 
