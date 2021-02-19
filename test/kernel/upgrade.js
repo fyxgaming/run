@@ -1423,6 +1423,7 @@ describe('Upgrade', () => {
       const a = new CA()
       expect(a.f()).to.equal(1)
       CA.upgrade(B)
+      await CA.sync()
       expect(a.f()).to.equal(2)
       await a.sync()
       const a2 = await run.load(a.origin)

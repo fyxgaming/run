@@ -341,7 +341,7 @@ describe('LocalOwner', () => {
       const sig3 = bsvtx.inputs[0].script.chunks[3].buf.toString('hex')
       const sigs = [sig1, sig2, sig3]
 
-      const signedPubkeys = _getSignedPubkeys(bsvtx, vin, prevout, sigs, pubkeys)
+      const signedPubkeys = await _getSignedPubkeys(bsvtx, vin, prevout, sigs, pubkeys)
       expect(signedPubkeys).to.deep.equal(pubkeys)
     })
   })
