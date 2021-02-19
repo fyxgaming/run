@@ -85,7 +85,7 @@ describe('Owner', () => {
   // --------------------------------------------------------------------------
 
   it('throws if creator owner is undetermined', () => {
-      new Run() // eslint-disable-line
+    new Run() // eslint-disable-line
     class A extends Jig { init () { this.ownerAtInit = this.owner } }
     class B extends Jig { create () { return new A() } }
     B.deps = { A }
@@ -96,7 +96,7 @@ describe('Owner', () => {
   // --------------------------------------------------------------------------
 
   it('throws if read before assigned', () => {
-      new Run() // eslint-disable-line
+    new Run() // eslint-disable-line
     class A extends Jig { init () { this.ownerAtInit = this.owner }}
     expect(() => new A()).to.throw('Cannot read owner')
   })
@@ -104,7 +104,7 @@ describe('Owner', () => {
   // --------------------------------------------------------------------------
 
   it('throws if invalid', () => {
-      new Run() // eslint-disable-line
+    new Run() // eslint-disable-line
     class A extends Jig { f (owner) { this.owner = owner } }
     const a = new A()
     expect(() => a.f(new PrivateKey().publicKey)).to.throw()
@@ -116,7 +116,7 @@ describe('Owner', () => {
   // --------------------------------------------------------------------------
 
   it('throws if delete bound owner', () => {
-      new Run() // eslint-disable-line
+    new Run() // eslint-disable-line
     class A extends Jig { f () { delete this.owner }}
     const a = new A()
     expect(() => { delete a.owner }).to.throw('Cannot delete owner')
