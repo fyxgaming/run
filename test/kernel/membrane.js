@@ -1145,14 +1145,14 @@ describe('Membrane', () => {
       _sudo(() => { A2.owner = undefined })
       _sudo(() => { A2.satoshis = undefined })
       testRecord(record => {
-        expect(record._unbound._size).to.equal(0)
+        expect(unmangle(record._unbound)._size).to.equal(0)
         A2.f()
-        expect(record._unbound._arr()[0]).to.equal(A2)
+        expect(unmangle(record._unbound)._arr()[0]).to.equal(A2)
       })
       testRecord(record => {
-        expect(record._unbound._size).to.equal(0)
+        expect(unmangle(record._unbound)._size).to.equal(0)
         A2.g()
-        expect(record._unbound._arr()[0]).to.equal(A2)
+        expect(unmangle(record._unbound)._arr()[0]).to.equal(A2)
       })
     })
 
@@ -1178,7 +1178,7 @@ describe('Membrane', () => {
       testRecord(record => {
         A2.f()
         expect(A2.n).to.equal(2)
-        expect(record._unbound._arr()).to.deep.equal([A2])
+        expect(unmangle(record._unbound)._arr()).to.deep.equal([A2])
         expect(() => A2.h()).to.throw('Cannot set n: unbound')
       })
     })
@@ -1247,14 +1247,14 @@ describe('Membrane', () => {
       _sudo(() => { A2.owner = undefined })
       _sudo(() => { A2.satoshis = undefined })
       testRecord(record => {
-        expect(record._unbound._size).to.equal(0)
+        expect(unmangle(record._unbound)._size).to.equal(0)
         A2.f()
-        expect(record._unbound._arr()[0]).to.equal(A2)
+        expect(unmangle(record._unbound)._arr()[0]).to.equal(A2)
       })
       testRecord(record => {
-        expect(record._unbound._size).to.equal(0)
+        expect(unmangle(record._unbound)._size).to.equal(0)
         A2.g()
-        expect(record._unbound._arr()[0]).to.equal(A2)
+        expect(unmangle(record._unbound)._arr()[0]).to.equal(A2)
       })
     })
 
@@ -1449,7 +1449,7 @@ describe('Membrane', () => {
       testRecord(record => {
         simulateAction(() => {
         new A() // eslint-disable-line
-          expect(record._reads._has(A)).to.equal(true)
+          expect(unmangle(record._reads)._has(A)).to.equal(true)
           expect(record._before.has(A)).to.equal(true)
         })
       })
@@ -1463,8 +1463,8 @@ describe('Membrane', () => {
       testRecord(record => {
         simulateAction(() => {
         new B() // eslint-disable-line
-          expect(record._reads._has(A)).to.equal(true)
-          expect(record._reads._has(B)).to.equal(true)
+          expect(unmangle(record._reads)._has(A)).to.equal(true)
+          expect(unmangle(record._reads)._has(B)).to.equal(true)
           expect(record._before.has(A)).to.equal(true)
           expect(record._before.has(B)).to.equal(true)
         })
@@ -1478,8 +1478,8 @@ describe('Membrane', () => {
       testRecord(record => {
         simulateAction(() => {
           o.n // eslint-disable-line
-          expect(record._reads._size).to.equal(1)
-          expect(record._reads._has(o)).to.equal(true)
+          expect(unmangle(record._reads)._size).to.equal(1)
+          expect(unmangle(record._reads)._has(o)).to.equal(true)
           expect(record._before.has(o)).to.equal(true)
         })
       })
@@ -1493,9 +1493,9 @@ describe('Membrane', () => {
       testRecord(record => {
         simulateAction(() => {
         a.f // eslint-disable-line
-          expect(record._reads._size).to.equal(2)
-          expect(record._reads._has(A)).to.equal(true)
-          expect(record._reads._has(a)).to.equal(true)
+          expect(unmangle(record._reads)._size).to.equal(2)
+          expect(unmangle(record._reads)._has(A)).to.equal(true)
+          expect(unmangle(record._reads)._has(a)).to.equal(true)
           expect(record._before.has(A)).to.equal(true)
           expect(record._before.has(a)).to.equal(true)
         })
@@ -1511,10 +1511,10 @@ describe('Membrane', () => {
       testRecord(record => {
         simulateAction(() => {
         b.f // eslint-disable-line
-          expect(record._reads._size).to.equal(3)
-          expect(record._reads._has(A)).to.equal(true)
-          expect(record._reads._has(B)).to.equal(true)
-          expect(record._reads._has(b)).to.equal(true)
+          expect(unmangle(record._reads)._size).to.equal(3)
+          expect(unmangle(record._reads)._has(A)).to.equal(true)
+          expect(unmangle(record._reads)._has(B)).to.equal(true)
+          expect(unmangle(record._reads)._has(b)).to.equal(true)
           expect(record._before.has(A)).to.equal(true)
           expect(record._before.has(B)).to.equal(true)
           expect(record._before.has(b)).to.equal(true)
@@ -1529,8 +1529,8 @@ describe('Membrane', () => {
       testRecord(record => {
         simulateAction(() => {
           Object.getOwnPropertyDescriptor(o, 'n')
-          expect(record._reads._size).to.equal(1)
-          expect(record._reads._has(o)).to.equal(true)
+          expect(unmangle(record._reads)._size).to.equal(1)
+          expect(unmangle(record._reads)._has(o)).to.equal(true)
           expect(record._before.has(o)).to.equal(true)
         })
       })
@@ -1544,8 +1544,8 @@ describe('Membrane', () => {
       testRecord(record => {
         simulateAction(() => {
           Object.getPrototypeOf(a)
-          expect(record._reads._size).to.equal(1)
-          expect(record._reads._has(a)).to.equal(true)
+          expect(unmangle(record._reads)._size).to.equal(1)
+          expect(unmangle(record._reads)._has(a)).to.equal(true)
           expect(record._before.has(a)).to.equal(true)
         })
       })
@@ -1558,8 +1558,8 @@ describe('Membrane', () => {
       testRecord(record => {
         simulateAction(() => {
         'n' in o // eslint-disable-line
-          expect(record._reads._size).to.equal(1)
-          expect(record._reads._has(o)).to.equal(true)
+          expect(unmangle(record._reads)._size).to.equal(1)
+          expect(unmangle(record._reads)._has(o)).to.equal(true)
           expect(record._before.has(o)).to.equal(true)
         })
       })
@@ -1572,8 +1572,8 @@ describe('Membrane', () => {
       testRecord(record => {
         simulateAction(() => {
           Object.keys(o)
-          expect(record._reads._size).to.equal(1)
-          expect(record._reads._has(o)).to.equal(true)
+          expect(unmangle(record._reads)._size).to.equal(1)
+          expect(unmangle(record._reads)._has(o)).to.equal(true)
           expect(record._before.has(o)).to.equal(true)
         })
       })
@@ -1586,8 +1586,8 @@ describe('Membrane', () => {
       testRecord(record => {
         simulateAction(() => {
         s.add // eslint-disable-line
-          expect(record._reads._size).to.equal(1)
-          expect(record._reads._has(s)).to.equal(true)
+          expect(unmangle(record._reads)._size).to.equal(1)
+          expect(unmangle(record._reads)._has(s)).to.equal(true)
           expect(record._before.has(s)).to.equal(true)
         })
       })
@@ -1600,8 +1600,8 @@ describe('Membrane', () => {
       testRecord(record => {
         simulateAction(() => {
           m.has(1)
-          expect(record._reads._size).to.equal(1)
-          expect(record._reads._has(m)).to.equal(true)
+          expect(unmangle(record._reads)._size).to.equal(1)
+          expect(unmangle(record._reads)._has(m)).to.equal(true)
           expect(record._before.has(m)).to.equal(true)
         })
       })
@@ -1620,8 +1620,8 @@ describe('Membrane', () => {
         simulateAction(() => {
           Object.defineProperty(o, 'n', desc)
           expect(record._before.has(o)).to.equal(true)
-          expect(record._updates._size).to.equal(1)
-          expect(record._updates._has(o)).to.equal(true)
+          expect(unmangle(record._updates)._size).to.equal(1)
+          expect(unmangle(record._updates)._has(o)).to.equal(true)
         })
       })
     })
@@ -1634,8 +1634,8 @@ describe('Membrane', () => {
         simulateAction(() => {
           delete o.n
           expect(record._before.has(o)).to.equal(true)
-          expect(record._updates._size).to.equal(1)
-          expect(record._updates._has(o)).to.equal(true)
+          expect(unmangle(record._updates)._size).to.equal(1)
+          expect(unmangle(record._updates)._has(o)).to.equal(true)
         })
       })
     })
@@ -1648,8 +1648,8 @@ describe('Membrane', () => {
         simulateAction(() => {
           o.n = 1
           expect(record._before.has(o)).to.equal(true)
-          expect(record._updates._size).to.equal(1)
-          expect(record._updates._has(o)).to.equal(true)
+          expect(unmangle(record._updates)._size).to.equal(1)
+          expect(unmangle(record._updates)._has(o)).to.equal(true)
         })
       })
     })
@@ -1662,8 +1662,8 @@ describe('Membrane', () => {
         simulateAction(() => {
           m.set(1, 2)
           expect(record._before.has(m)).to.equal(true)
-          expect(record._updates._size).to.equal(1)
-          expect(record._updates._has(m)).to.equal(true)
+          expect(unmangle(record._updates)._size).to.equal(1)
+          expect(unmangle(record._updates)._has(m)).to.equal(true)
         })
       })
     })
@@ -1684,14 +1684,14 @@ describe('Membrane', () => {
       })
       testRecord(record => {
         A2.f()
-        expect(record._reads._size).to.equal(1)
-        expect(record._reads._has(A2)).to.equal(true)
+        expect(unmangle(record._reads)._size).to.equal(1)
+        expect(unmangle(record._reads)._has(A2)).to.equal(true)
         expect(record._actions.length).to.equal(1)
         expect(unmangle(record._actions[0])._method).to.equal('f')
         expect(unmangle(record._actions[0])._creation).to.equal(A2)
         expect(record._before.has(A2)).to.equal(true)
-        expect(record._updates._size).to.equal(1)
-        expect(record._updates._has(A2)).to.equal(true)
+        expect(unmangle(record._updates)._size).to.equal(1)
+        expect(unmangle(record._updates)._has(A2)).to.equal(true)
         expect(A2._n).to.equal(1)
       })
     })
@@ -1715,14 +1715,14 @@ describe('Membrane', () => {
       })
       testRecord(record => {
         a2.f()
-        expect(record._reads._has(A2)).to.equal(true)
+        expect(unmangle(record._reads)._has(A2)).to.equal(true)
         expect(record._actions.length).to.equal(1)
         expect(unmangle(record._actions[0])._method).to.equal('f')
         expect(unmangle(record._actions[0])._creation).to.equal(a2)
         expect(record._before.has(a2)).to.equal(true)
         expect(record._before.has(A2)).to.equal(true)
-        expect(record._updates._size).to.equal(1)
-        expect(record._updates._has(a2)).to.equal(true)
+        expect(unmangle(record._updates)._size).to.equal(1)
+        expect(unmangle(record._updates)._has(a2)).to.equal(true)
         expect(a2._n).to.equal(1)
       })
     })
