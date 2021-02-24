@@ -1621,7 +1621,7 @@ describe('Membrane', () => {
           Object.defineProperty(o, 'n', desc)
           expect(record._before.has(o)).to.equal(true)
           expect(record._updates._size).to.equal(1)
-          expect(record._updates._add(o)).to.equal(true)
+          expect(record._updates._has(o)).to.equal(true)
         })
       })
     })
@@ -1635,7 +1635,7 @@ describe('Membrane', () => {
           delete o.n
           expect(record._before.has(o)).to.equal(true)
           expect(record._updates._size).to.equal(1)
-          expect(record._updates._add(o)).to.equal(true)
+          expect(record._updates._has(o)).to.equal(true)
         })
       })
     })
@@ -1649,7 +1649,7 @@ describe('Membrane', () => {
           o.n = 1
           expect(record._before.has(o)).to.equal(true)
           expect(record._updates._size).to.equal(1)
-          expect(record._updates._add(o)).to.equal(true)
+          expect(record._updates._has(o)).to.equal(true)
         })
       })
     })
@@ -1663,7 +1663,7 @@ describe('Membrane', () => {
           m.set(1, 2)
           expect(record._before.has(m)).to.equal(true)
           expect(record._updates._size).to.equal(1)
-          expect(record._updates._add(m)).to.equal(true)
+          expect(record._updates._has(m)).to.equal(true)
         })
       })
     })
@@ -1691,7 +1691,7 @@ describe('Membrane', () => {
         expect(unmangle(record._actions[0])._creation).to.equal(A2)
         expect(record._before.has(A2)).to.equal(true)
         expect(record._updates._size).to.equal(1)
-        expect(record._updates._add(A2)).to.equal(true)
+        expect(record._updates._has(A2)).to.equal(true)
         expect(A2._n).to.equal(1)
       })
     })
@@ -1722,7 +1722,7 @@ describe('Membrane', () => {
         expect(record._before.has(a2)).to.equal(true)
         expect(record._before.has(A2)).to.equal(true)
         expect(record._updates._size).to.equal(1)
-        expect(record._updates._add(a2)).to.equal(true)
+        expect(record._updates._has(a2)).to.equal(true)
         expect(a2._n).to.equal(1)
       })
     })
@@ -2073,13 +2073,13 @@ describe('Membrane', () => {
     it('ownKeys includes all properties if outside', () => {
       const A = new Membrane(class A { }, mangle({ _admin: true, _privacy: true }))
       _sudo(() => { A._n = 1 })
-      expect(Object.getOwnPropertyNames(A).has('_n')).to.equal(true)
+      expect(Object.getOwnPropertyNames(A).includes('_n')).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
     it('ownKeys returns private properties in jig methods', () => {
-      class A { static f () { return Object.getOwnPropertyNames(this).has('_n') } }
+      class A { static f () { return Object.getOwnPropertyNames(this).includes('_n') } }
       A._n = 1
       const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeCode(A, options)
@@ -2089,7 +2089,7 @@ describe('Membrane', () => {
     // ------------------------------------------------------------------------
 
     it('ownKeys filters private properties from another jigs method', () => {
-      class A { static f (b) { return Object.getOwnPropertyNames(b).has('_n') } }
+      class A { static f (b) { return Object.getOwnPropertyNames(b).includes('_n') } }
       A._n = 1
       const options = { _privacy: true, _recordableTarget: true, _recordCalls: true }
       const a = makeCode(A, options)
