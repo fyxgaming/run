@@ -79,7 +79,7 @@ describe('Client mode', () => {
     await run.sync()
     run.client = true
     run.cache = new LocalCache()
-    await expect(run.load(b.location)).to.be.rejectedWith(`Cannot load ${b.location}\n\nOnly cached jigs may be loaded in client mode`)
+    await expect(run.load(b.location)).to.be.rejected
   })
 
   // --------------------------------------------------------------------------
