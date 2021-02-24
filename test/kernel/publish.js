@@ -151,6 +151,20 @@ describe('Publish', () => {
     const D4 = await run.load(D2.location)
     test(D4)
   })
+
+  // --------------------------------------------------------------------------
+
+  it('parent satoshis correct after changing fees', async () => {
+    const bsv = require('bsv')
+    bsv.Transaction.FEE_PER_KB = 1000
+    new Run() // eslint-disable-line
+    class A extends Jig { f () { this.n = 1 } }
+    const a = new A()
+    await a.sync()
+    bsv.Transaction.FEE_PER_KB = 500
+    a.f()
+    await a.sync()
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
