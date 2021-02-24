@@ -13,7 +13,7 @@ const { RunDB } = Run.plugins
 // ------------------------------------------------------------------------------------------------
 
 describe('RunDB', () => {
-  it.only('tests get', async () => {
+  it.skip('tests get', async () => {
     const rundb = new RunDB('http://localhost:8000')
     const run = new Run({ cache: rundb, client: true, network: 'main' })
     const jig = await run.load('c07f9f41fc8a4d78be44a6c3e3d38d2ae58ae62f3ac6f33e567f4f4a653b5f20_o1')

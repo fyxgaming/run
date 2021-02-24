@@ -950,6 +950,7 @@ describe('Jig', () => {
       }
       const a = new A()
       a.set()
+      await run.sync()
       expect(a.check1(new Uint8Array([1, 2, 3]))).to.equal(true)
       const b = new B()
       b.set()

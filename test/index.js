@@ -73,6 +73,7 @@ require('./plugins/local-purse')
 require('./plugins/mockchain')
 require('./plugins/pay-server')
 require('./plugins/remote-blockchain')
+require('./plugins/run-db')
 require('./plugins/viewer')
 
 require('./sandbox/realm')

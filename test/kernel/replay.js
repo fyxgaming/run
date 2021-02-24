@@ -76,7 +76,7 @@ describe('Replay', () => {
 
   // ------------------------------------------------------------------------
 
-  it.only('many actions', async () => {
+  it('many actions', async () => {
     const { getExtrasBlockchain } = require('../env/misc')
     class A extends Run.extra.Token { }
     const blockchain = await getExtrasBlockchain()
@@ -87,9 +87,7 @@ describe('Replay', () => {
     await a.sync()
     run.transaction(() => {
       for (let i = 0; i < 200; i++) {
-        const now = new Date()
         a.send(run.purse.address, 50)
-        console.log(i, new Date() - now)
       }
     })
     await run.sync()
