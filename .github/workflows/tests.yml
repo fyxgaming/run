@@ -6,36 +6,10 @@ env:
   PURSE_TESTNET: ${{ secrets.PURSE_TESTNET }}
 
 jobs:
-  mac_tests:
-    name: Mac Tests
-    runs-on: macos-latest
-    timeout-minutes: 10
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: Cache Dependencies
-      id: cache-node-modules
-      uses: actions/cache@v1
-      env:
-        cache-version: 1
-      with:
-        path: node_modules
-        key: v${{ env.cache-version }}-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-
-    - name: Install
-      if: steps.cache-node-modules.outputs.cache-hit != 'true'
-      run: |
-        echo "//npm.pkg.github.com/:_authToken=${{ secrets.AUTH_TOKEN }}" > ~/.npmrc
-        npm ci
-
-    - name: Test Safari
-      run: env BROWSER=safari npm run test:browser
-
-  linux_tests:
-    name: Linux Tests
+  cover_tests:
+    name: Cover Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
     - name: Setup Node 10
       uses: actions/setup-node@v1
@@ -76,17 +50,122 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: coverage/lcov.info
 
+  node_10_tests:
+    name: Node 10 Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - name: Setup Node 10
+      uses: actions/setup-node@v1
+      with:
+        node-version: '10.x'
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Cache Dependencies
+      id: cache-node-modules
+      uses: actions/cache@v1
+      env:
+        cache-version: 1
+      with:
+        path: node_modules
+        key: v${{ env.cache-version }}-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      run: |
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.AUTH_TOKEN }}" > ~/.npmrc
+        npm ci
+
     - name: Test Node
       run: npm run test:node
+
+  node_12_tests:
+    name: Node 12 Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - name: Setup Node 12
+      uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Cache Dependencies
+      id: cache-node-modules
+      uses: actions/cache@v1
+      env:
+        cache-version: 1
+      with:
+        path: node_modules
+        key: v${{ env.cache-version }}-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      run: |
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.AUTH_TOKEN }}" > ~/.npmrc
+        npm ci
+
+    - name: Test Node
+      run: npm run test:node
+
+  firefox_tests:
+    name: Firefox Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Cache Dependencies
+      id: cache-node-modules
+      uses: actions/cache@v1
+      env:
+        cache-version: 1
+      with:
+        path: node_modules
+        key: v${{ env.cache-version }}-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      run: |
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.AUTH_TOKEN }}" > ~/.npmrc
+        npm ci
 
     - name: Test Firefox
       run: env BROWSER=firefox npm run test:browser
 
+  chrome_tests:
+    name: Chrome Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Cache Dependencies
+      id: cache-node-modules
+      uses: actions/cache@v1
+      env:
+        cache-version: 1
+      with:
+        path: node_modules
+        key: v${{ env.cache-version }}-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      run: |
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.AUTH_TOKEN }}" > ~/.npmrc
+        npm ci
+
     - name: Test Chrome
       run: env BROWSER=chrome npm run test:browser
 
-  windows_tests:
-    name: Windows Tests
+  edge_tests:
+    name: Edge Tests
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
@@ -112,3 +191,29 @@ jobs:
     - name: Test Edge
       run: env BROWSER=MicrosoftEdge npm run test:browser
       shell: bash
+
+  safari_tests:
+    name: Safari Tests
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Cache Dependencies
+      id: cache-node-modules
+      uses: actions/cache@v1
+      env:
+        cache-version: 1
+      with:
+        path: node_modules
+        key: v${{ env.cache-version }}-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      run: |
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.AUTH_TOKEN }}" > ~/.npmrc
+        npm ci
+
+    - name: Test Safari
+      run: env BROWSER=safari npm run test:browser
