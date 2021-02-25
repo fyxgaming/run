@@ -1,20 +1,39 @@
+/**
+ * creation-set.js
+ *
+ * Tests for lib/util/creation-set.js
+ */
 
-/*
+const { describe, it } = require('mocha')
+const { expect } = require('chai')
+const Run = require('../env/run')
+const { Jig, Berry } = Run
+const unmangle = require('../env/unmangle')
+const CreationSet = unmangle(unmangle(Run)._CreationSet)
 
-  // ----------------------------------------------------------------------------------------------
-  // _addCreations
-  // ----------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// CreationSet
+// ------------------------------------------------------------------------------------------------
 
-  describe('_addCreations', () => {
+describe('CreationSet', () => {
+  // --------------------------------------------------------------------------
+  // _add
+  // --------------------------------------------------------------------------
+
+  describe('_add', () => {
     it('adds jigs once', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
       await a.sync()
       const a2 = await run.load(a.location)
-      const arr = [a]
       const b = new A()
-      expect(_addCreations(arr, [a2, b])).to.deep.equal([a, b])
+      const s = unmangle(new CreationSet())
+      s._add(a)
+      s._add(a2)
+      s._add(b)
+      expect(s._size).to.equal(2)
+      expect(s._arr()).to.deep.equal([a, b])
     })
 
     // ------------------------------------------------------------------------
@@ -26,21 +45,57 @@
       a.auth()
       await a.sync()
       const a2 = await run.load(a.origin)
-      expect(() => _addCreations([a], [a2])).to.throw('Inconsistent worldview')
+      const s = unmangle(new CreationSet())
+      s._add(a)
+      expect(() => s._add(a2)).to.throw('Inconsistent worldview')
     })
   })
-  */
 
-/*
-  // ----------------------------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
+  // _delete
+  // --------------------------------------------------------------------------
+
+  describe('_subtractCreations', () => {
+    it('removes same jigs', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const a2 = await run.load(a.location)
+      const b = new A()
+      const s = unmangle(new CreationSet())
+      s._add(a)
+      s._add(b)
+      s._delete(a2)
+      s._delete(b)
+      expect(s._size).to.equal(0)
+      expect(s._arr()).to.deep.equal([])
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if inconsistent worldview', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      a.auth()
+      await a.sync()
+      const a2 = await run.load(a.origin)
+      const s = unmangle(new CreationSet())
+      s._add(a)
+      expect(() => s._delete(a2)).to.throw('Inconsistent worldview')
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // _sameCreation
-  // ----------------------------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
 
-  describe('_sameCreation', () => {
+  describe('sameCreation', () => {
     it('true if same', () => {
       const run = new Run()
       const A = run.deploy(class A { })
-      expect(_sameCreation(A, A)).to.equal(true)
+      expect(CreationSet._sameCreation(A, A)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -50,7 +105,7 @@
       const A = run.deploy(class A { })
       await A.sync()
       const A2 = await run.load(A.location)
-      expect(_sameCreation(A, A2)).to.equal(true)
+      expect(CreationSet._sameCreation(A, A2)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -62,8 +117,8 @@
       const a = new A()
       const a2 = new A()
       const b = new B()
-      expect(_sameCreation(a, a2)).to.equal(false)
-      expect(_sameCreation(a, b)).to.equal(false)
+      expect(CreationSet._sameCreation(a, a2)).to.equal(false)
+      expect(CreationSet._sameCreation(a, b)).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -75,19 +130,19 @@
       a.auth()
       await a.sync()
       const a2 = await run.load(a.origin)
-      expect(() => _sameCreation(a, a2)).to.throw('Inconsistent worldview')
+      expect(() => CreationSet._sameCreation(a, a2)).to.throw('Inconsistent worldview')
     })
 
     // ------------------------------------------------------------------------
 
-    it('false if non-jig', () => {
-      expect(_sameCreation({}, {})).to.equal(false)
-      expect(_sameCreation(null, null)).to.equal(false)
+    it('false if non-creation', () => {
+      expect(CreationSet._sameCreation({}, {})).to.equal(false)
+      expect(CreationSet._sameCreation(null, null)).to.equal(false)
       class A { }
-      expect(_sameCreation(A, A)).to.equal(false)
+      expect(CreationSet._sameCreation(A, A)).to.equal(false)
       const run = new Run()
       const A2 = run.deploy(A)
-      expect(_sameCreation(A2, {})).to.equal(false)
+      expect(CreationSet._sameCreation(A2, {})).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -96,8 +151,8 @@
       const run = new Run()
       const A = Run.util.install(class A { })
       const B = run.deploy(class B { })
-      expect(_sameCreation(A, B)).to.equal(false)
-      expect(_sameCreation(B, A)).to.equal(false)
+      expect(CreationSet._sameCreation(A, B)).to.equal(false)
+      expect(CreationSet._sameCreation(B, A)).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -109,7 +164,7 @@
       await CB.sync()
       const b = await CB.load('abc')
       const b2 = await CB.load('abc')
-      expect(_sameCreation(b, b2)).to.equal(true)
+      expect(CreationSet._sameCreation(b, b2)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -122,18 +177,18 @@
 
       const b = await CB.load('abc')
       const b2 = await CB.load('def')
-      expect(_sameCreation(b, b2)).to.equal(false)
+      expect(CreationSet._sameCreation(b, b2)).to.equal(false)
 
       class C extends Berry { }
       const CC = run.deploy(C)
       await CC.sync()
 
       const c = await C.load('abc')
-      expect(_sameCreation(b, c)).to.equal(false)
+      expect(CreationSet._sameCreation(b, c)).to.equal(false)
 
       const b3 = { location: `${CB.location}_abc` }
       Object.setPrototypeOf(b3, CB.prototype)
-      expect(_sameCreation(b, b3)).to.equal(false)
+      expect(CreationSet._sameCreation(b, b3)).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -143,39 +198,9 @@
       class B extends Berry { }
       const b = await B.load('abc')
       const b2 = await B.load('abc')
-      expect(_sameCreation(b, b2)).to.equal(false)
+      expect(CreationSet._sameCreation(b, b2)).to.equal(false)
     })
   })
+})
 
-  */
-
-/*
-  // ----------------------------------------------------------------------------------------------
-  // _subtractCreations
-  // ----------------------------------------------------------------------------------------------
-
-  describe('_subtractCreations', () => {
-    it('removes same jigs', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      const a2 = await run.load(a.location)
-      const b = new A()
-      const arr = [a, b]
-      expect(_subtractCreations(arr, [a2, b])).to.deep.equal([])
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if inconsistent worldview', async () => {
-      const run = new Run()
-      class A extends Jig { }
-      const a = new A()
-      a.auth()
-      await a.sync()
-      const a2 = await run.load(a.origin)
-      expect(() => _subtractCreations([a], [a2])).to.throw('Inconsistent worldview')
-    })
-  })
-  */
+// ------------------------------------------------------------------------------------------------
