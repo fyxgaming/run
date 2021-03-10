@@ -2188,6 +2188,24 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('metadata with custom output', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      const base = new bsv.Transaction()
+      base.addOutput(new bsv.Transaction.Output({ script: '123', satoshis: '456' }))
+      base.addOutput(new bsv.Transaction.Output({ script: '789', satoshis: '1012' }))
+      tx.base = base.toString('hex')
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
+      const metadata = Run.util.metadata(rawtx)
+      expect(metadata.vrun).to.equal(2)
+      expect(metadata.base).to.equal(tx.base)
+      expect(metadata.out.length).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('custom lock time', async () => {
       const run = new Run()
       class A extends Jig { }
