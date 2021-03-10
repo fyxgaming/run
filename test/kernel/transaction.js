@@ -2188,6 +2188,21 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('custom lock time', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      const base = new bsv.Transaction()
+      base.nLockTime = 123
+      tx.base = base.toString('hex')
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      expect(bsvtx.nLockTime).to.equal(123)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if custom input', async () => {
       new Run() // eslint-disable-line
       const tx = new Transaction()
