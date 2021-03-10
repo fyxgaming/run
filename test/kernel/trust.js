@@ -231,7 +231,7 @@ describe('Trust', () => {
       run.deploy(A)
       const a = new A()
       await a.sync()
-      const run2 = new Run({ trust: [], cache: new Run.LocalCache() })
+      const run2 = new Run({ trust: [], cache: new Run.plugins.LocalCache() })
       await expect(run2.load(a.location)).to.be.rejectedWith('Cannot load untrusted code via replay')
     })
   })
