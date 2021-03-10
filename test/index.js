@@ -14,6 +14,7 @@ require('./data/capture')
 
 require('./extra/asm')
 require('./extra/b')
+require('./extra/base58')
 require('./extra/expect')
 require('./extra/group')
 require('./extra/hex')
