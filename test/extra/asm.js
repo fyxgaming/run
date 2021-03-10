@@ -43,6 +43,8 @@ describe('asm', () => {
   // --------------------------------------------------------------------------
 
   it('push data 1', () => {
+    expect(asm('00e59200c2382263a0724a2336e079c7fff7ef5c'))
+      .to.equal('1400e59200c2382263a0724a2336e079c7fff7ef5c')
     let x = ''
     for (let i = 0; i < 76; i++) x = x + 'ff'
     expect(asm(x).slice(0, 6)).to.deep.equal(hex([asm.OP_CODES.OP_PUSHDATA1, 76, 255]))
