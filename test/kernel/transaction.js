@@ -2083,8 +2083,13 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if sign after', async () => {
-      // TODO
+    it('throws if sign after', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      class A extends Jig { }
+      tx.update(() => new A())
+      await tx.cache()
+      expect(() => tx.sign()).to.throw('sign disabled once cached')
     })
 
     // ------------------------------------------------------------------------
