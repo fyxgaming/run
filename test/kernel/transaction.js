@@ -870,6 +870,17 @@ describe('Transaction', () => {
       await tx.publish()
       expect(() => tx.pay()).to.throw('pay disabled once published')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if sign after', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      class A extends Jig { }
+      tx.update(() => new A())
+      await tx.publish()
+      expect(() => tx.sign()).to.throw('sign disabled once published')
+    })
   })
 
   // --------------------------------------------------------------------------
