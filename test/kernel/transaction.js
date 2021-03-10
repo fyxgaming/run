@@ -2008,8 +2008,15 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('caches deleted', () => {
-      // TODO
+    it('caches deleted', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      const tx = new Transaction()
+      tx.update(() => a.destroy())
+      await tx.cache()
+      expect(a.location.endsWith('_d0')).to.equal(true)
+      expect(typeof await run.cache.get('jig://' + a.location)).to.equal('object')
     })
 
     // ------------------------------------------------------------------------
