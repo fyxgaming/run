@@ -881,6 +881,17 @@ describe('Transaction', () => {
       await tx.publish()
       expect(() => tx.sign()).to.throw('sign disabled once published')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if export with pay after', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      class A extends Jig { }
+      tx.update(() => new A())
+      await tx.publish()
+      expect(() => tx.export({ pay: true, sign: false })).to.throw('pay disabled once published')
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -1611,7 +1622,7 @@ describe('Transaction', () => {
       const rawtx = await run.blockchain.fetch(txid)
       const tx = await run.import(rawtx)
       await tx.publish()
-      const rawtx2 = await tx.export()
+      const rawtx2 = await tx.export({ pay: false, sign: false })
       expect(rawtx).to.equal(rawtx2)
     })
 
