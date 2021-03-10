@@ -1995,14 +1995,26 @@ describe('Transaction', () => {
   // cache
   // --------------------------------------------------------------------------
 
-  describe.skip('cache', () => {
-    it.skip('caches outputs', () => {
-      // TODO
+  describe('cache', () => {
+    it('caches outputs', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      class A extends Jig { }
+      const a = tx.update(() => new A())
+      await tx.cache()
+      expect(typeof await run.cache.get('jig://' + a.location)).to.equal('object')
+      expect(typeof await run.cache.get('jig://' + A.location)).to.equal('object')
     })
 
     // ------------------------------------------------------------------------
 
     it.skip('caches deleted', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('caches imported', () => {
       // TODO
     })
 
