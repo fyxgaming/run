@@ -1995,7 +1995,7 @@ describe('Transaction', () => {
   // cache
   // --------------------------------------------------------------------------
 
-  describe('cache', () => {
+  describe.only('cache', () => {
     it('caches outputs', async () => {
       const run = new Run()
       const tx = new Transaction()
@@ -2055,6 +2055,12 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it.skip('publish after', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if update after', async () => {
       new Run() // eslint-disable-line
       const tx = new Transaction()
@@ -2066,13 +2072,30 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if pay or sign after', async () => {
-      // tODO
+    it('throws if pay after', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      class A extends Jig { }
+      tx.update(() => new A())
+      await tx.cache()
+      expect(() => tx.pay()).to.throw('pay disabled once cached')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('may publish after', async () => {
+    it.skip('throws if sign after', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if publish with pay after', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if export with sign after', async () => {
       // TODO
     })
   })
