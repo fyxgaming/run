@@ -2047,7 +2047,7 @@ describe('Transaction', () => {
       await tx.cache()
       const ALocation = CA.location
       const aLocation = a.location
-      const rawtx = await tx.export({ sign: false, pay: false })
+      const rawtx = await tx.export({ pay: false, sign: false })
       const txid = new bsv.Transaction(rawtx).hash
       expect(ALocation).to.equal(txid + '_d0')
       expect(aLocation).to.equal(txid + '_o1')
@@ -2055,7 +2055,24 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('supports changes afterward', () => {
+    it('throws if update after', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      class A extends Jig { }
+      tx.update(() => new A())
+      await tx.cache()
+      expect(() => tx.update(() => new A())).to.throw('update disabled once cached')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if pay or sign after', async () => {
+      // tODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('may publish after', async () => {
       // TODO
     })
   })
