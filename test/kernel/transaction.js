@@ -2094,8 +2094,13 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if publish with pay after', async () => {
-      // TODO
+    it('throws if publish with pay after', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      class A extends Jig { }
+      tx.update(() => new A())
+      await tx.cache()
+      expect(() => tx.publish({ pay: true, sign: false })).to.throw('pay disabled once cached')
     })
 
     // ------------------------------------------------------------------------
