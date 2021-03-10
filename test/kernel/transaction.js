@@ -2068,8 +2068,13 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('export after', async () => {
-      // TODO
+    it('export after', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      class A extends Jig { }
+      tx.update(() => new A())
+      await tx.cache()
+      await tx.export({ pay: false, sign: false })
     })
 
     // ------------------------------------------------------------------------
