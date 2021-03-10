@@ -2173,7 +2173,6 @@ describe('Transaction', () => {
   describe('base', () => {
     it('custom output', async () => {
       const run = new Run()
-      run.preverify = false
       class A extends Jig { }
       const tx = new Transaction()
       const base = new bsv.Transaction()
@@ -2185,6 +2184,18 @@ describe('Transaction', () => {
       await run.load(A.location)
       run.cache = new LocalCache()
       await run.load(A.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if custom input', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      const base = new bsv.Transaction()
+      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
+      base.from({ script: '123', amount: '456', txid, vout: 0 })
+      const error = 'Only custom outputs are supported in base transactions'
+      expect(() => { tx.base = base.toString('hex') }).to.throw(error)
     })
   })
 
