@@ -2021,8 +2021,18 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('caches imported', () => {
-      // TODO
+    it('caches imported', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      class A extends Jig { }
+      tx.update(() => new A())
+      const rawtx = await tx.export()
+      tx.rollback()
+      const txid = new bsv.Transaction(rawtx).hash
+      expect(typeof await run.cache.get('jig://' + txid + '_o1')).to.equal('undefined')
+      const tx2 = await run.import(rawtx)
+      await tx2.cache()
+      expect(typeof await run.cache.get('jig://' + txid + '_o1')).to.equal('object')
     })
 
     // ------------------------------------------------------------------------
