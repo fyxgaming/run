@@ -2176,7 +2176,7 @@ describe('Transaction', () => {
       class A extends Jig { }
       const tx = new Transaction()
       const base = new bsv.Transaction()
-      base.addOutput(new bsv.Transaction.Output({ script: '123', satoshis: '456' }))
+      base.addOutput(new bsv.Transaction.Output({ script: 'OP_RETURN', satoshis: '123' }))
       tx.base = base.toString('hex')
       tx.update(() => run.deploy(A))
       await tx.publish()
@@ -2193,8 +2193,8 @@ describe('Transaction', () => {
       class A extends Jig { }
       const tx = new Transaction()
       const base = new bsv.Transaction()
-      base.addOutput(new bsv.Transaction.Output({ script: '123', satoshis: '456' }))
-      base.addOutput(new bsv.Transaction.Output({ script: '789', satoshis: '1012' }))
+      base.addOutput(new bsv.Transaction.Output({ script: 'OP_RETURN', satoshis: '123' }))
+      base.addOutput(new bsv.Transaction.Output({ script: 'OP_RETURN', satoshis: '456' }))
       tx.base = base.toString('hex')
       tx.update(() => run.deploy(A))
       const rawtx = await tx.export()
@@ -2244,7 +2244,7 @@ describe('Transaction', () => {
       const tx = new Transaction()
       const base = new bsv.Transaction()
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
-      base.from({ script: '123', amount: '456', txid, vout: 0 })
+      base.from({ script: 'OP_RETURN', amount: '456', txid, vout: 0 })
       const error = 'Only custom outputs are supported in base transactions'
       expect(() => { tx.base = base.toString('hex') }).to.throw(error)
     })
