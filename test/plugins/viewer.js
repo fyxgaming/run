@@ -6,9 +6,9 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { PrivateKey, PublicKey, Transaction } = require('bsv')
+const { PrivateKey, Transaction } = require('bsv')
 const Run = require('../env/run')
-const { CommonLock } = Run.util
+const { Jig } = Run
 const { Viewer } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
@@ -24,18 +24,15 @@ describe('Viewer', () => {
     it('address owners', () => {
       const address = new PrivateKey().toAddress().toString()
       const viewer = new Viewer(address)
-      expect(viewer.lock instanceof CommonLock).to.equal(true)
-      expect(viewer.lock.address).to.equal(address)
+      expect(viewer.owner).to.equal(address)
     })
 
     // ------------------------------------------------------------------------
 
     it('pubkey owners', () => {
       const pubkey = new PrivateKey().publicKey.toString()
-      const address = new PublicKey(pubkey).toAddress().toString()
       const viewer = new Viewer(pubkey)
-      expect(viewer.lock instanceof CommonLock).to.equal(true)
-      expect(viewer.lock.address).to.equal(address)
+      expect(viewer.owner).to.equal(pubkey)
     })
 
     // ------------------------------------------------------------------------
@@ -47,7 +44,7 @@ describe('Viewer', () => {
       }
       const lock = new CustomLock()
       const viewer = new Viewer(lock)
-      expect(viewer.lock).to.deep.equal(lock)
+      expect(viewer.owner).to.deep.equal(lock)
     })
 
     // ------------------------------------------------------------------------
@@ -87,6 +84,21 @@ describe('Viewer', () => {
       const hashBefore = tx.hash
       expect(await viewer.sign(tx, [])).to.equal(tx)
       expect(tx.hash).to.equal(hashBefore)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // misc
+  // --------------------------------------------------------------------------
+
+  describe('misc', () => {
+    it('deploy to viewer', async () => {
+      const run = new Run()
+      run.owner = new PrivateKey().toAddress().toString()
+      expect(run.owner instanceof Viewer).to.equal(true)
+      class A extends Jig { }
+      run.deploy(A)
+      await run.sync()
     })
   })
 })
