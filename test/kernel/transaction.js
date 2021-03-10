@@ -1995,7 +1995,7 @@ describe('Transaction', () => {
   // cache
   // --------------------------------------------------------------------------
 
-  describe.only('cache', () => {
+  describe('cache', () => {
     it('caches outputs', async () => {
       const run = new Run()
       const tx = new Transaction()
@@ -2055,7 +2055,20 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('publish after', async () => {
+    it('publish after', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      class A extends Jig { }
+      tx.update(() => new A())
+      await tx.pay()
+      await tx.cache()
+      await tx.publish({ pay: false, sign: false })
+      expect(typeof await run.blockchain.fetch(A.location.slice(0, 64))).to.equal('string')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('export after', async () => {
       // TODO
     })
 
