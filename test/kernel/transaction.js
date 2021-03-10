@@ -2167,6 +2167,28 @@ describe('Transaction', () => {
   })
 
   // --------------------------------------------------------------------------
+  // base
+  // --------------------------------------------------------------------------
+
+  describe('base', () => {
+    it('custom output', async () => {
+      const run = new Run()
+      run.preverify = false
+      class A extends Jig { }
+      const tx = new Transaction()
+      const base = new bsv.Transaction()
+      base.addOutput(new bsv.Transaction.Output({ script: '123', satoshis: '456' }))
+      tx.base = base.toString('hex')
+      tx.update(() => run.deploy(A))
+      await tx.publish()
+      expect(A.location.endsWith('_o2')).to.equal(true)
+      await run.load(A.location)
+      run.cache = new LocalCache()
+      await run.load(A.location)
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // Misc
   // --------------------------------------------------------------------------
 
