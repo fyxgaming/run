@@ -4,16 +4,13 @@
  * Tests for mustBeRecent functionality
  */
 
-const { describe, it } = require('mocha')
+const { describe } = require('mocha')
 
 // ------------------------------------------------------------------------------------------------
 // Recent
 // ------------------------------------------------------------------------------------------------
 
-describe('Recent', () => {
-  it('TODO', () => {
-  })
-
+describe.skip('Recent', () => {
   // A destroyed jig does not fail recent
 
   /*
