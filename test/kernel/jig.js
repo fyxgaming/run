@@ -996,6 +996,65 @@ describe('Jig', () => {
       const a3 = await run.load(a.location)
       test(a3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('define', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init () {
+          this.x = new Uint8Array([1, 2, 3])
+          const desc = { value: 100, configurable: true, writable: true, enumerable: true }
+          Object.defineProperty(this.x, '0', desc)
+        }
+
+        f () {
+          const desc = { value: 200, configurable: true, writable: true, enumerable: true }
+          Object.defineProperty(this.x, '1', desc)
+        }
+
+        g () {
+          const desc = { value: 300, configurable: false, writable: true, enumerable: true }
+          Object.defineProperty(this.x, '2', desc)
+        }
+      }
+      const a = new A()
+      a.f()
+      expect(() => a.g()).to.throw('Descriptor must be configurable')
+      await run.sync()
+      await run.load(a.location)
+      run.cache = new LocalCache()
+      await run.load(a.location)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('get descriptor', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init () {
+          this.x = new Uint8Array([1, 2, 3])
+          this.y = Object.getOwnPropertyDescriptor(this.x, '0')
+        }
+
+        f () {
+          this.z = Object.getOwnPropertyDescriptor(this.x, '1')
+        }
+      }
+      const a = new A()
+      a.f()
+      function test (a) {
+        expect(a.y).to.deep.equal({ value: 1, configurable: true, writable: true, enumerable: true })
+        expect(a.z).to.deep.equal({ value: 2, configurable: true, writable: true, enumerable: true })
+      }
+      test(a)
+      await a.sync()
+      const a2 = await run.load(a.location)
+      test(a2)
+      run.cache = new LocalCache()
+      const a3 = await run.load(a.location)
+      test(a3)
+    })
   })
 
   // --------------------------------------------------------------------------
