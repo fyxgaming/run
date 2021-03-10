@@ -2105,8 +2105,13 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if export with sign after', async () => {
-      // TODO
+    it('throws if export with sign after', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Transaction()
+      class A extends Jig { }
+      tx.update(() => new A())
+      await tx.cache()
+      expect(() => tx.export({ pay: false, sign: true })).to.throw('sign disabled once cached')
     })
   })
 
