@@ -2037,8 +2037,20 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('assigns locations', () => {
-      // TODO
+    it('assigns locations', async () => {
+      const run = new Run()
+      const tx = new Transaction()
+      class A extends Jig { }
+      const CA = run.deploy(A)
+      const a = tx.update(() => new A())
+      tx.update(() => CA.destroy())
+      await tx.cache()
+      const ALocation = CA.location
+      const aLocation = a.location
+      const rawtx = await tx.export({ sign: false, pay: false })
+      const txid = new bsv.Transaction(rawtx).hash
+      expect(ALocation).to.equal(txid + '_d0')
+      expect(aLocation).to.equal(txid + '_o1')
     })
 
     // ------------------------------------------------------------------------
