@@ -2203,6 +2203,24 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('get base after set', () => {
+      const run = new Run()
+      class A extends Jig { }
+      const tx = new Transaction()
+      const base = new bsv.Transaction()
+      base.nLockTime = 123
+      base.addOutput(new bsv.Transaction.Output({ script: 'OP_RETURN', satoshis: '456' }))
+      tx.base = base.toString('hex')
+      tx.update(() => run.deploy(A))
+      const bsvtx = new bsv.Transaction(tx.base)
+      expect(bsvtx.outputs.length).to.equal(1)
+      expect(bsvtx.outputs[0].script.toString()).to.equal('OP_RETURN')
+      expect(bsvtx.outputs[0].satoshis).to.equal(456)
+      expect(bsvtx.nLockTime).to.equal(123)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if custom input', async () => {
       new Run() // eslint-disable-line
       const tx = new Transaction()
