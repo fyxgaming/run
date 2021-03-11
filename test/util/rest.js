@@ -28,32 +28,37 @@ describe('REST', () => {
   // --------------------------------------------------------------------------
 
   describe('_get', () => {
-    it('returns json', async () => {
+    it('returns json', async function () {
+      this.timeout(TIMEOUT)
       const status = await REST._get('https://api.run.network/v1/test/status', TIMEOUT)
       expect(status.version > 0).to.equal(true)
-    }).timeout(TIMEOUT)
+    })
 
     // ------------------------------------------------------------------------
 
-    it('timeout', async () => {
+    it('timeout', async function () {
+      this.timeout(TIMEOUT)
       await expect(REST._get('https://www.google.com:81', 100)).to.be.rejectedWith(TimeoutError)
-    }).timeout(TIMEOUT)
+    })
 
     // ------------------------------------------------------------------------
 
-    it('client error', async () => {
+    it('client error', async function () {
+      this.timeout(TIMEOUT)
       await expect(REST._get('123', TIMEOUT)).to.be.rejected
-    }).timeout(TIMEOUT)
+    })
 
     // ------------------------------------------------------------------------
 
-    it('server error', async () => {
+    it('server error', async function () {
+      this.timeout(TIMEOUT)
       await expect(REST._get('https://api.run.network/badurl', TIMEOUT)).to.be.rejectedWith(RequestError)
-    }).timeout(TIMEOUT)
+    })
 
     // ------------------------------------------------------------------------
 
-    it('custom headers', async () => {
+    it('custom headers', async function () {
+      this.timeout(TIMEOUT)
       const headers = { Date: (new Date()).toUTCString() }
       const response = await REST._get('https://httpbin.org/get', TIMEOUT, headers)
       expect(response.headers.Date).to.equal(headers.Date)
@@ -65,32 +70,37 @@ describe('REST', () => {
   // --------------------------------------------------------------------------
 
   describe('_post', () => {
-    it('posts json', async () => {
+    it('posts json', async function () {
+      this.timeout(TIMEOUT)
       const response = await REST._post('https://httpbin.org/post', 'hello', TIMEOUT)
       expect(response.data).to.equal('"hello"')
-    }).timeout(TIMEOUT)
+    })
 
     // ------------------------------------------------------------------------
 
-    it('timeout', async () => {
+    it('timeout', async function () {
+      this.timeout(TIMEOUT)
       await expect(REST._post('https://www.google.com:81', {}, 100)).to.be.rejectedWith(TimeoutError)
-    }).timeout(TIMEOUT)
+    })
 
     // ------------------------------------------------------------------------
 
-    it('client error', async () => {
+    it('client error', async function () {
+      this.timeout(TIMEOUT)
       await expect(REST._post('abcdef', {}, TIMEOUT)).to.be.rejected
-    }).timeout(TIMEOUT)
+    })
 
     // ------------------------------------------------------------------------
 
-    it('server error', async () => {
+    it('server error', async function () {
+      this.timeout(TIMEOUT)
       await expect(REST._post('https://api.run.network/badurl', TIMEOUT)).to.be.rejectedWith(RequestError)
-    }).timeout(TIMEOUT)
+    })
 
     // ------------------------------------------------------------------------
 
-    it('custom headers', async () => {
+    it('custom headers', async function () {
+      this.timeout(TIMEOUT)
       const headers = { Date: (new Date()).toUTCString() }
       const response = await REST._post('https://httpbin.org/post', 'hello', TIMEOUT, headers)
       expect(response.headers.Date).to.equal(headers.Date)

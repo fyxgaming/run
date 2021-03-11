@@ -43,8 +43,8 @@ describe('Capture', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('Capture Relay', () => captureAppTxns('relayx.io', './relay.json')).timeout(1000000)
-  it.skip('Capture Zhell', () => captureAppTxns('b1b605103e', './zhell.json')).timeout(1000000)
+  it.skip('Capture Relay', function () { this.timeout(1000000); return captureAppTxns('relayx.io', './relay.json') })
+  it.skip('Capture Zhell', function () { this.timeout(1000000); return captureAppTxns('b1b605103e', './zhell.json') })
 })
 
 // ------------------------------------------------------------------------------------------------

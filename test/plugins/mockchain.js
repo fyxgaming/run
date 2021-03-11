@@ -69,7 +69,8 @@ describe('Mockchain', () => {
   // --------------------------------------------------------------------------
 
   describe('block', () => {
-    it('respects 1000 chain limit', async () => {
+    it('respects 1000 chain limit', async function () {
+      this.timeout(30000)
       const mockchain = new Mockchain()
       const privkey = new PrivateKey('testnet')
       const address = privkey.toAddress()
@@ -86,7 +87,7 @@ describe('Mockchain', () => {
       await expect(mockchain.broadcast(tx)).to.be.rejectedWith('too-long-mempool-chain')
       mockchain.block()
       await mockchain.broadcast(tx)
-    }).timeout(30000)
+    })
   })
 
   // --------------------------------------------------------------------------

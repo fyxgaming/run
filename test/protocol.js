@@ -26,10 +26,10 @@ describe('Protocol', () => {
 
   // --------------------------------------------------------------------------
 
-  it('Unit', () => runProtocolTest(require('./data/unit.json'))).timeout(1000000)
-  it('Relay', () => runProtocolTest(require('./data/relay.json'))).timeout(1000000)
-  it('Zhell', () => runProtocolTest(require('./data/zhell.json'))).timeout(1000000)
-  it('Kronoverse', () => runProtocolTest(require('./data/kronoverse.json'))).timeout(1000000)
+  it('Unit', function () { this.timeout(1000000); return runProtocolTest(require('./data/unit.json')) })
+  it('Relay', function () { this.timeout(1000000); return runProtocolTest(require('./data/relay.json')) })
+  it('Zhell', function () { this.timeout(1000000); return runProtocolTest(require('./data/zhell.json')) })
+  it('Kronoverse', function () { this.timeout(1000000); return runProtocolTest(require('./data/kronoverse.json')) })
 })
 
 // ------------------------------------------------------------------------------------------------
