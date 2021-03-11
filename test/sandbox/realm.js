@@ -364,7 +364,6 @@ describe('DeterministicRealm', () => {
   describe('Misc', () => {
     it('should log in admin mode', () => {
       const run = new Run()
-      run.preverify = false
       class A extends Jig { init () { console.log(this) } }
       new A() // eslint-disable-line
     })

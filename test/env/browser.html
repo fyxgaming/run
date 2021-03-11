@@ -42,7 +42,7 @@
       methods.forEach(method => {
           window.console[method] = (...args) => {
               original[method].call(console, ...args)
-              this.logs.push([...args])
+              this.logs.push(([...args.map(x => JSON.parse(JSON.stringify(x)))]))
           }
       })
 
