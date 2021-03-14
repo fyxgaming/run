@@ -1,9 +1,9 @@
 /**
  * utxo-corrector
  *
- * Makes corrections to UTXOs returned from a remote server for safe use in Run.
+ * Makes corrections to UTXOs returned from a remote server for safe use in RUN.
  *
- * In case the server has a bug, Run must be able to handle duplicate utxos returned. If we
+ * In case the server has a bug, RUN must be able to handle duplicate utxos returned. If we
  * don't dedup, then later we may create a transaction with more than one of the same input.
  *
  * Also, most APIs have delays in indexing UTXOs after a broadcast. Because we create the

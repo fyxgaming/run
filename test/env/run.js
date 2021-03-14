@@ -1,7 +1,7 @@
 /**
  * run.js
  *
- * Provides the build of Run for testing
+ * Provides the build of RUN for testing
  */
 
 require('dotenv').config()
