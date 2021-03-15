@@ -9,6 +9,7 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { MatterCloud } = Run.plugins
 const { PrivateKey, Script, Transaction } = bsv
 
 // ------------------------------------------------------------------------------------------------
@@ -50,6 +51,7 @@ describe('Blockchain', () => {
       const badtx = new Transaction(paidraw)
       badtx.inputs[0].outputIndex = 9999
       const badraw = badtx.toString('hex')
+      const { ERR_MISSING_INPUTS } = errors(run.blockchain)
       await expect(run.blockchain.broadcast(badraw)).to.be.rejectedWith(ERR_MISSING_INPUTS)
     })
 
@@ -64,6 +66,7 @@ describe('Blockchain', () => {
       const cutxo = { txid: cid, vout: 0, script: cout.script, satoshis: cout.satoshis }
       const tx = randomTx().from(cutxo)
       const rawtx = tx.toString('hex')
+      const { ERR_MISSING_INPUTS } = errors(run.blockchain)
       await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_MISSING_INPUTS)
     })
 
@@ -72,17 +75,21 @@ describe('Blockchain', () => {
     it('throws if input is already spent and not confirmed', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
-      const atx = new Transaction()
+      const atxraw = new Transaction()
         .from(utxos)
-        .addData('1')
+        .addSafeData('1')
         .change(run.purse.address)
         .sign(run.purse.bsvPrivateKey)
-      const btx = new Transaction()
-        .from(utxos).addData('2')
+        .toString('hex')
+      const btxraw = new Transaction()
+        .from(utxos)
+        .addSafeData('2')
         .change(run.purse.address)
         .sign(run.purse.bsvPrivateKey)
-      await run.blockchain.broadcast(atx)
-      await expect(run.blockchain.broadcast(btx)).to.be.rejectedWith(ERR_MEMPOOL_CONFLICT)
+        .toString('hex')
+      await run.blockchain.broadcast(atxraw)
+      const { ERR_MEMPOOL_CONFLICT } = errors(run.blockchain)
+      await expect(run.blockchain.broadcast(btxraw)).to.be.rejectedWith(ERR_MEMPOOL_CONFLICT)
     })
 
     // ------------------------------------------------------------------------
@@ -90,8 +97,9 @@ describe('Blockchain', () => {
     it('throws if no inputs', async () => {
       const run = new Run()
       const dummyaddr = new PrivateKey().toAddress().toString()
-      const tx = new Transaction().to(dummyaddr, 1000)
-      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NO_INPUTS)
+      const rawtx = new Transaction().to(dummyaddr, 1000).toString('hex')
+      const { ERR_NO_INPUTS } = errors(run.blockchain)
+      await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_NO_INPUTS)
     })
 
     // ------------------------------------------------------------------------
@@ -99,8 +107,9 @@ describe('Blockchain', () => {
     it('throws if no outputs', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
-      const tx = new Transaction().from(utxos).sign(run.purse.bsvPrivateKey)
-      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NO_OUTPUTS)
+      const rawtx = new Transaction().from(utxos).sign(run.purse.bsvPrivateKey).toString('hex')
+      const { ERR_NO_OUTPUTS } = errors(run.blockchain)
+      await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_NO_OUTPUTS)
     })
 
     // ------------------------------------------------------------------------
@@ -108,12 +117,14 @@ describe('Blockchain', () => {
     it('throws if fee too low', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
-      const tx = new Transaction()
+      const rawtx = new Transaction()
         .from(utxos)
         .change(run.purse.address)
         .fee(0)
         .sign(run.purse.bsvPrivateKey)
-      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_FEE_TOO_LOW)
+        .toString('hex')
+      const { ERR_FEE_TOO_LOW } = errors(run.blockchain)
+      await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_FEE_TOO_LOW)
     })
 
     // ------------------------------------------------------------------------
@@ -121,8 +132,13 @@ describe('Blockchain', () => {
     it('throws if not signed', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
-      const tx = new Transaction().from(utxos).change(run.purse.address).addData('')
-      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_NOT_SIGNED)
+      const rawtx = new Transaction()
+        .from(utxos)
+        .addSafeData('')
+        .change(run.purse.address)
+        .toString('hex')
+      const { ERR_NOT_SIGNED } = errors(run.blockchain)
+      await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_NOT_SIGNED)
     })
 
     // ------------------------------------------------------------------------
@@ -130,8 +146,14 @@ describe('Blockchain', () => {
     it('throws if duplicate input', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
-      const tx = new Transaction().from(utxos).from(utxos).addData('').sign(run.purse.bsvPrivateKey)
-      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_DUP_INPUT)
+      const rawtx = new Transaction()
+        .from(utxos)
+        .from(utxos)
+        .addSafeData('')
+        .sign(run.purse.bsvPrivateKey)
+        .toString('hex')
+      const { ERR_DUP_INPUT } = errors(run.blockchain)
+      await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_DUP_INPUT)
     })
 
     // ------------------------------------------------------------------------
@@ -139,9 +161,14 @@ describe('Blockchain', () => {
     it('throws if bad signature', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
-      const tx = new Transaction().from(utxos).change(run.purse.address).addData('')
+      const tx = new Transaction()
+        .from(utxos)
+        .change(run.purse.address)
+        .addSafeData('')
       tx.inputs[0].setScript('OP_FALSE')
-      await expect(run.blockchain.broadcast(tx)).to.be.rejectedWith(ERR_BAD_SIGNATURE)
+      const rawtx = tx.toString('hex')
+      const { ERR_BAD_SIGNATURE } = errors(run.blockchain)
+      await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_BAD_SIGNATURE)
     })
   })
 
@@ -164,6 +191,7 @@ describe('Blockchain', () => {
     it('throws if nonexistant', async () => {
       const run = new Run()
       const badid = '0000000000000000000000000000000000000000000000000000000000000001'
+      const { ERR_TX_NOT_FOUND } = errors(run.blockchain)
       await expect(run.blockchain.fetch(badid)).to.be.rejectedWith(ERR_TX_NOT_FOUND)
     })
 
@@ -172,7 +200,7 @@ describe('Blockchain', () => {
     it('caches repeated requests', async () => {
       const run = new Run()
       const goodid = await spentAndConfirmed(run.blockchain)
-      const badid = '0000000000000000000000000000000000000000000000000000000000000001'
+      const badid = '0000000000000000000000000000000000000000000000000000000000000002'
       const good = []
       for (let i = 0; i < 100; i++) {
         good.push(run.blockchain.fetch(goodid))
@@ -182,6 +210,7 @@ describe('Blockchain', () => {
       for (let i = 0; i < 100; i++) {
         bad.push(run.blockchain.fetch(badid))
       }
+      const { ERR_TX_NOT_FOUND } = errors(run.blockchain)
       await expect(Promise.all(bad)).to.be.rejectedWith(ERR_TX_NOT_FOUND)
     })
   })
@@ -342,16 +371,33 @@ describe('Blockchain', () => {
 // Create a transaction with a new random txid
 const randomTx = () => new Transaction().addSafeData(Math.random().toString())
 
-// Error messages
-const ERR_NO_INPUTS = 'tx has no inputs'
-const ERR_NO_OUTPUTS = 'tx has no outputs'
-const ERR_FEE_TOO_LOW = 'insufficient priority'
-const ERR_NOT_SIGNED = 'mandatory-script-verify-flag-failed'
-const ERR_DUP_INPUT = /transaction input [0-9]* duplicate input/
-const ERR_MISSING_INPUTS = 'Missing inputs'
-const ERR_MEMPOOL_CONFLICT = 'txn-mempool-conflict'
-const ERR_BAD_SIGNATURE = 'mandatory-script-verify-flag-failed'
-const ERR_TX_NOT_FOUND = 'No such mempool or blockchain transaction'
+function errors (blockchain) {
+  if (blockchain instanceof MatterCloud) {
+    return {
+      ERR_NO_INPUTS: 'tx has no inputs',
+      ERR_NO_OUTPUTS: 'tx has no outputs',
+      ERR_FEE_TOO_LOW: 'Not enough fees',
+      ERR_NOT_SIGNED: 'mandatory-script-verify-flag-failed',
+      ERR_DUP_INPUT: /transaction input [0-9]* duplicate input/,
+      ERR_MISSING_INPUTS: '', // Usually 'Missing inputs', sometimes 502 gateway error
+      ERR_MEMPOOL_CONFLICT: 'txn-mempool-conflict',
+      ERR_BAD_SIGNATURE: 'mandatory-script-verify-flag-failed',
+      ERR_TX_NOT_FOUND: 'No such mempool or blockchain transaction'
+    }
+  } else {
+    return {
+      ERR_NO_INPUTS: 'tx has no inputs',
+      ERR_NO_OUTPUTS: 'tx has no outputs',
+      ERR_FEE_TOO_LOW: 'insufficient priority',
+      ERR_NOT_SIGNED: 'mandatory-script-verify-flag-failed',
+      ERR_DUP_INPUT: /transaction input [0-9]* duplicate input/,
+      ERR_MISSING_INPUTS: 'Missing inputs',
+      ERR_MEMPOOL_CONFLICT: 'txn-mempool-conflict',
+      ERR_BAD_SIGNATURE: 'mandatory-script-verify-flag-failed',
+      ERR_TX_NOT_FOUND: 'No such mempool or blockchain transaction'
+    }
+  }
+}
 
 // Gets a txid that spent output 0 and is confirmed
 async function spentAndConfirmed (blockchain) {
