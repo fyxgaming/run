@@ -75,16 +75,16 @@ describe('PayServer', () => {
 
     it('pay for non-standard inputs', async () => {
       class CustomLock {
-        script () { return '01' }
+        script () { return '' }
         domain () { return 1 }
       }
 
       class CustomKey {
         nextOwner () { return new CustomLock() }
 
-        sign (rawtx, parents) {
+        sign (rawtx, parents, locks) {
           const tx = new Transaction(rawtx)
-          parents[0].lock && tx.inputs[0].setScript('OP_1')
+          locks[0] && tx.inputs[0].setScript('OP_1')
           return tx.toString('hex')
         }
       }
@@ -96,14 +96,11 @@ describe('PayServer', () => {
       await run.sync()
 
       class A extends Jig {
+        init (owner) { this.owner = owner }
         send (to) { this.owner = to }
       }
 
-      const a = run.transaction(() => {
-        const a = new A()
-        a.send(new CustomLock())
-        return a
-      })
+      const a = new A(new CustomLock())
       await run.sync()
 
       a.send(new CustomLock())
