@@ -2,9 +2,6 @@ name: tests
 
 on: push
 
-env:
-  PURSE_TESTNET: ${{ secrets.PURSE_TESTNET }}
-
 jobs:
   cover_tests:
     name: Cover Tests
@@ -43,15 +40,33 @@ jobs:
       
     - name: RUN Testnet Tests
       run:
-        env STRESS=1 env CLEAN=false env API=run env NETWORK=test npm run test:api
+        npm run test:api
+      env: 
+        API: run
+        NETWORK: test
+        STRESS: 1
+        CLEAN: false
+        PURSE_TEST: ${{ secrets.PURSE_TESTNET }}
       
     - name: MatterCloud Mainnet Tests
       run:
-        env STRESS=1 env CLEAN=false env API=mattercloud env NETWORK=main npm run test:api
+        npm run test:api
+      env: 
+        API: mattercloud
+        NETWORK: main
+        STRESS: 1
+        CLEAN: false
+        PURSE_MAIN: ${{ secrets.PURSE_MAINNET }}
       
     - name: WhatsOnChain Testnet Tests
       run:
-        env STRESS=1 env CLEAN=false env API=whatsonchain env NETWORK=test npm run test:api
+        npm run test:api
+      env: 
+        API: whatsonchain
+        NETWORK: test
+        STRESS: 1
+        CLEAN: false
+        PURSE_TEST: ${{ secrets.PURSE_TESTNET2 }}
 
     - name: Publish Coverage
       uses: codecov/codecov-action@v1
