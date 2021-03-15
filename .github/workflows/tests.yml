@@ -43,15 +43,15 @@ jobs:
       
     - name: RUN Testnet Tests
       run:
-        env STRESS=1 env CLEAN=false env API=run env NETWORK=test npm run test:network
+        env STRESS=1 env CLEAN=false env API=run env NETWORK=test npm run test:api
       
     - name: MatterCloud Mainnet Tests
       run:
-        env STRESS=1 env CLEAN=false env API=mattercloud env NETWORK=main npm run test:network
+        env STRESS=1 env CLEAN=false env API=mattercloud env NETWORK=main npm run test:api
       
     - name: WhatsOnChain Testnet Tests
       run:
-        env STRESS=1 env CLEAN=false env API=whatsonchain env NETWORK=test npm run test:network
+        env STRESS=1 env CLEAN=false env API=whatsonchain env NETWORK=test npm run test:api
 
     - name: Publish Coverage
       uses: codecov/codecov-action@v1

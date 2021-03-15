@@ -10,14 +10,13 @@ const { expect } = require('chai')
 const { PrivateKey, Script } = require('bsv')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { RemoteBlockchain, BlockchainServer } = Run.plugins
-const { RequestError } = Run.errors
+const { RemoteBlockchain, RunConnect } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // RemoteBlockchain
 // ------------------------------------------------------------------------------------------------
 
-describe.skip('RemoteBlockchain', () => {
+describe('RemoteBlockchain', () => {
   // --------------------------------------------------------------------------
   // constructor
   // --------------------------------------------------------------------------
@@ -48,7 +47,7 @@ describe.skip('RemoteBlockchain', () => {
 
     describe('api', () => {
       it('should default to run api', () => {
-        expect(RemoteBlockchain.create() instanceof BlockchainServer).to.equal(true)
+        expect(RemoteBlockchain.create() instanceof RunConnect).to.equal(true)
       })
 
       // ----------------------------------------------------------------------
@@ -82,45 +81,6 @@ describe.skip('RemoteBlockchain', () => {
         expect(mainnet.cache).not.to.equal(testnet2.cache)
       })
     })
-
-    // ------------------------------------------------------------------------
-    // timeout
-    // ------------------------------------------------------------------------
-
-    describe('timeout', () => {
-      it('should time out', async () => {
-        const blockchain = RemoteBlockchain.create({ timeout: 1 })
-        expect(blockchain.timeout).to.equal(1)
-        await expect(blockchain.fetch('31b982157ccd5d1a64bfd7c1415b5ed44fb38e153bdc6742c2261a147aeeb744')).to.be.rejectedWith('Request timed out')
-      })
-
-      // ----------------------------------------------------------------------
-
-      it('should default timeout to 10000', () => {
-        expect(RemoteBlockchain.create().timeout).to.equal(10000)
-      })
-
-      // ----------------------------------------------------------------------
-
-      it('should throw for bad timeout', () => {
-        expect(() => RemoteBlockchain.create({ timeout: 'bad' })).to.throw('Invalid timeout: bad')
-        expect(() => RemoteBlockchain.create({ timeout: null })).to.throw('Invalid timeout: null')
-        expect(() => RemoteBlockchain.create({ timeout: -1 })).to.throw('Invalid timeout: -1')
-        expect(() => RemoteBlockchain.create({ timeout: NaN })).to.throw('Invalid timeout: NaN')
-      })
-    })
-  })
-
-  // --------------------------------------------------------------------------
-  // fetch
-  // --------------------------------------------------------------------------
-
-  describe('fetch', () => {
-    it('should throw RequestError', async () => {
-      const blockchain = RemoteBlockchain.create({ network: 'main' })
-      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
-      await expect(blockchain.fetch(txid)).to.be.rejectedWith(RequestError)
-    })
   })
 
   // --------------------------------------------------------------------------
@@ -128,8 +88,7 @@ describe.skip('RemoteBlockchain', () => {
   // --------------------------------------------------------------------------
 
   describe('utxos', () => {
-    // SAVE AND RESTORE LOGGER
-    it.skip('should correct for server returning duplicates', async () => {
+    it('should correct for server returning duplicates', async () => {
       const address = new PrivateKey('mainnet').toAddress().toString()
       const script = Script.fromAddress(address)
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
@@ -143,7 +102,7 @@ describe.skip('RemoteBlockchain', () => {
       Log._logger = { warn: (time, tag, ...warning) => { lastWarning = warning.join(' ') } }
       const utxos = await blockchain.utxos(script)
       expect(utxos.length).to.equal(1)
-      expect(lastWarning).to.equal(`Duplicate utxo returned from server: ${txid}_o0`)
+      expect(lastWarning).to.equal(`[RemoteBlockchain] Duplicate utxo returned from server: ${txid}_o0`)
       Log._logger = Log._defaultLogger
     })
   })

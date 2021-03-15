@@ -14,7 +14,7 @@
     "build": "webpack",
     "test": "env LIB=lib mocha",
     "test:cover": "env LIB=lib env COVER=1 nyc --clean=${CLEAN:=true} -r=text -r=lcovonly -x=test/** -x=**/determinism.js -x=**/stringify.js mocha",
-    "test:network": "npm run test:cover test/kernel/blockchain.js test/plugins/pay-server.js test/plugins/remote-blockchain.js",
+    "test:api": "npm run test:cover test/kernel/blockchain.js test/plugins/pay-server.js",
     "test:node": "webpack && env LIB=dist/run.node.min.js env MANGLED=1 mocha",
     "test:browser": "node test/env/browser",
     "deploy": "deploy -mt lib/extra/*.js",
