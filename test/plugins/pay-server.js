@@ -9,8 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { HDPrivateKey, Transaction } = require('bsv')
 const Run = require('../env/run')
-const { STRESS } = require('../env/config')
-const { network } = Run.defaults
+const { STRESS, API, NETWORK } = require('../env/config')
 const { Jig } = Run
 const { PayServer } = Run.plugins
 
@@ -28,12 +27,14 @@ const apiKeys = {
 // ------------------------------------------------------------------------------------------------
 
 describe('PayServer', () => {
+  if (NETWORK !== 'test' || API !== 'run') return
+
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  const apiKey = apiKeys[network]
+  const apiKey = apiKeys[NETWORK]
   if (!apiKey) return
 
   // --------------------------------------------------------------------------
@@ -43,7 +44,7 @@ describe('PayServer', () => {
   describe('constructor', () => {
     it('should detect network', () => {
       const purse = new PayServer(apiKey)
-      expect(purse.network).to.equal(network)
+      expect(purse.network).to.equal(NETWORK)
     })
 
     // ------------------------------------------------------------------------

@@ -37,12 +37,21 @@ jobs:
     - name: Lint
       run: npx standard
 
-    - name: Collect Coverage
+    - name: Cover Tests
       run:
         env STRESS=1 npm run test:cover
-        env NETWORK=test env LIB=lib env COVER=1 npx nyc --clean=false -r=text -r=lcovonly -x=test/** -x=test/env/** npm test test/plugins/blockchain-api.js test/kernel/blockchain.js test/plugins/pay-server.js
-      env:
-        STRESS: 1
+      
+    - name: RUN Testnet Tests
+      run:
+        env STRESS=1 env CLEAN=false env API=run env NETWORK=test npm run test:network
+      
+    - name: MatterCloud Mainnet Tests
+      run:
+        env STRESS=1 env CLEAN=false env API=mattercloud env NETWORK=main npm run test:network
+      
+    - name: WhatsOnChain Testnet Tests
+      run:
+        env STRESS=1 env CLEAN=false env API=whatsonchain env NETWORK=test npm run test:network
 
     - name: Publish Coverage
       uses: codecov/codecov-action@v1
