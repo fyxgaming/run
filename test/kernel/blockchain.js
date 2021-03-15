@@ -302,7 +302,7 @@ describe('Blockchain', () => {
   // --------------------------------------------------------------------------
 
   describe('time', () => {
-    it('returns transaction time', async () => {
+    it('returns mempool transaction time', async () => {
       const run = new Run()
       const tx = randomTx()
       const parents = []
@@ -311,6 +311,16 @@ describe('Blockchain', () => {
       const paidtx = new Transaction(paidraw)
       const time = await run.blockchain.time(paidtx.hash)
       expect(typeof time).to.equal('number')
+      expect(time > new Date('January 3, 2009')).to.equal(true)
+      expect(time <= Date.now()).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns block transaction time', async () => {
+      const run = new Run()
+      const txid = await spentAndConfirmed(run.blockchain)
+      const time = await run.blockchain.time(txid)
       expect(time > new Date('January 3, 2009')).to.equal(true)
       expect(time <= Date.now()).to.equal(true)
     })
