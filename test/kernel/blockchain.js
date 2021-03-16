@@ -5,7 +5,7 @@
  */
 
 const bsv = require('bsv')
-const { describe, it } = require('mocha')
+const { describe, it, before } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
@@ -17,28 +17,35 @@ const { PrivateKey, Script, Transaction } = bsv
 // ------------------------------------------------------------------------------------------------
 
 describe('Blockchain', () => {
+  let spentPurseScript
+  let spentPurseUtxos
+  let mempoolTx
+  let mempoolRawtx
+  let mempoolTxid
+  let spentAndConfirmedTxid
+
+  // Broadcast a mempool transaction once that we'll check below
+  before(async () => {
+    const run = new Run()
+    spentAndConfirmedTxid = await spentAndConfirmed(run.blockchain)
+    spentPurseScript = run.purse.script
+    spentPurseUtxos = await run.purse.utxos()
+    mempoolTx = randomTx()
+    mempoolTx.from(spentPurseUtxos)
+    mempoolTx.change(run.purse.address)
+    mempoolTx.sign(run.purse.privkey)
+    mempoolRawtx = mempoolTx.toString('hex')
+    mempoolTxid = await run.blockchain.broadcast(mempoolRawtx)
+  })
+
   // --------------------------------------------------------------------------
   // broadcast
   // --------------------------------------------------------------------------
 
   describe('broadcast', () => {
-    it('simple transaction', async () => {
-      const run = new Run()
-      const tx = randomTx()
-      const parents = []
-      const rawtx = await run.purse.pay(tx, parents)
-      await run.blockchain.broadcast(rawtx)
-    })
-
-    // ------------------------------------------------------------------------
-
     it('same transaction twice', async () => {
       const run = new Run()
-      const tx = randomTx()
-      const parents = []
-      const rawtx = await run.purse.pay(tx, parents)
-      await run.blockchain.broadcast(rawtx)
-      await run.blockchain.broadcast(rawtx)
+      await run.blockchain.broadcast(mempoolRawtx)
     })
 
     // ------------------------------------------------------------------------
@@ -59,12 +66,15 @@ describe('Blockchain', () => {
 
     it('throws if input is already spent and confirmed', async () => {
       const run = new Run()
-      const cid = await spentAndConfirmed(run.blockchain)
-      const craw = await run.blockchain.fetch(cid)
+      const craw = await run.blockchain.fetch(spentAndConfirmedTxid)
       const ctx = new Transaction(craw)
-      const cout = ctx.outputs[0]
-      const cutxo = { txid: cid, vout: 0, script: cout.script, satoshis: cout.satoshis }
-      const tx = randomTx().from(cutxo)
+      const prevtxid = ctx.inputs[0].prevTxId.toString('hex')
+      const prevvout = ctx.inputs[0].outputIndex
+      const prevraw = await run.blockchain.fetch(prevtxid)
+      const prevtx = new bsv.Transaction(prevraw)
+      const prevout = prevtx.outputs[prevvout]
+      const utxo = { txid: prevtxid, vout: prevvout, script: prevout.script, satoshis: prevout.satoshis }
+      const tx = randomTx().from(utxo)
       const rawtx = tx.toString('hex')
       const { ERR_MISSING_INPUTS } = errors(run.blockchain)
       await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_MISSING_INPUTS)
@@ -74,22 +84,14 @@ describe('Blockchain', () => {
 
     it('throws if input is already spent and not confirmed', async () => {
       const run = new Run()
-      const utxos = await run.purse.utxos()
-      const atxraw = new Transaction()
-        .from(utxos)
-        .addSafeData('1')
-        .change(run.purse.address)
-        .sign(run.purse.bsvPrivateKey)
-        .toString('hex')
-      const btxraw = new Transaction()
-        .from(utxos)
+      const rawtx = new Transaction()
+        .from(spentPurseUtxos)
         .addSafeData('2')
         .change(run.purse.address)
         .sign(run.purse.bsvPrivateKey)
         .toString('hex')
-      await run.blockchain.broadcast(atxraw)
       const { ERR_MEMPOOL_CONFLICT } = errors(run.blockchain)
-      await expect(run.blockchain.broadcast(btxraw)).to.be.rejectedWith(ERR_MEMPOOL_CONFLICT)
+      await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_MEMPOOL_CONFLICT)
     })
 
     // ------------------------------------------------------------------------
@@ -179,11 +181,10 @@ describe('Blockchain', () => {
   describe('fetch', () => {
     it('raw transaction', async () => {
       const run = new Run()
-      const cid = await spentAndConfirmed(run.blockchain)
-      const rawtx = await run.blockchain.fetch(cid)
+      const rawtx = await run.blockchain.fetch(spentAndConfirmedTxid)
       expect(typeof rawtx).to.equal('string')
       const tx = new Transaction(rawtx)
-      expect(tx.hash).to.equal(cid)
+      expect(tx.hash).to.equal(spentAndConfirmedTxid)
     })
 
     // ------------------------------------------------------------------------
@@ -199,7 +200,7 @@ describe('Blockchain', () => {
 
     it('caches repeated requests', async () => {
       const run = new Run()
-      const goodid = await spentAndConfirmed(run.blockchain)
+      const goodid = spentAndConfirmedTxid
       const badid = '0000000000000000000000000000000000000000000000000000000000000002'
       const good = []
       for (let i = 0; i < 100; i++) {
@@ -246,15 +247,11 @@ describe('Blockchain', () => {
 
     it('no spent outputs', async () => {
       const run = new Run()
-      const randomtx = randomTx()
-      const paidraw = await run.purse.pay(randomtx, [])
-      const paidtx = new Transaction(paidraw)
-      await run.blockchain.broadcast(paidraw)
-      const utxos = await run.blockchain.utxos(run.purse.script)
-      const prevtxid = paidtx.inputs[0].prevTxId.toString('hex')
-      const prevvout = paidtx.inputs[0].outputIndex
+      const utxos = await run.blockchain.utxos(spentPurseScript)
+      const prevtxid = mempoolTx.inputs[0].prevTxId.toString('hex')
+      const prevvout = mempoolTx.inputs[0].outputIndex
       expect(utxos.some(utxo => utxo.txid === prevtxid && utxo.vout === prevvout)).to.equal(false)
-      expect(utxos.some(utxo => utxo.txid === paidtx.hash && utxo.vout === 1)).to.equal(true)
+      expect(utxos.some(utxo => utxo.txid === mempoolTxid && utxo.vout === 1)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -294,26 +291,41 @@ describe('Blockchain', () => {
   // --------------------------------------------------------------------------
 
   describe('spends', () => {
-    it('returns spending txid or null', async () => {
+    it('returns mempool spending txid', async () => {
       const run = new Run()
       if (run.blockchain.api === 'whatsonchain') return // Not supported
-      const tx = randomTx()
-      const parents = []
-      const paidraw = await run.purse.pay(tx, parents)
-      await run.blockchain.broadcast(paidraw)
-      const paidtx = new Transaction(paidraw)
-      expect(await run.blockchain.spends(paidtx.hash, 1)).to.equal(null)
-      const prevtxid = paidtx.inputs[0].prevTxId.toString('hex')
-      const prevvout = paidtx.inputs[0].outputIndex
-      expect(await run.blockchain.spends(prevtxid, prevvout)).to.equal(paidtx.hash)
+      const prevtxid = mempoolTx.inputs[0].prevTxId.toString('hex')
+      const prevvout = mempoolTx.inputs[0].outputIndex
+      expect(await run.blockchain.spends(prevtxid, prevvout)).to.equal(mempoolTxid)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if location not found', async () => {
+    it('returns mempool unspent as null', async () => {
       const run = new Run()
-      const badid = '0000000000000000000000000000000000000000000000000000000000000000'
-      await expect(run.blockchain.spends(badid, 0)).to.be.rejected
+      if (run.blockchain.api === 'whatsonchain') return // Not supported
+      expect(await run.blockchain.spends(mempoolTxid, 1)).to.equal(null)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns block spending txid', async () => {
+      const run = new Run()
+      if (run.blockchain.api === 'whatsonchain') return // Not supported
+      const spenttxid = spentAndConfirmedTxid
+      const spentrawtx = await run.blockchain.fetch(spenttxid)
+      const spenttx = new bsv.Transaction(spentrawtx)
+      const prevtxid = spenttx.inputs[0].prevTxId.toString('hex')
+      const prevvout = spenttx.inputs[0].outputIndex
+      expect(await run.blockchain.spends(prevtxid, prevvout)).to.equal(spenttxid)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns block unspent as null', async () => {
+      const run = new Run()
+      if (run.blockchain.api === 'whatsonchain') return // Not supported
+      expect(await run.blockchain.spends(spentAndConfirmedTxid, 0)).to.equal(null)
     })
 
     // ------------------------------------------------------------------------
@@ -333,12 +345,7 @@ describe('Blockchain', () => {
   describe('time', () => {
     it('returns mempool transaction time', async () => {
       const run = new Run()
-      const tx = randomTx()
-      const parents = []
-      const paidraw = await run.purse.pay(tx, parents)
-      await run.blockchain.broadcast(paidraw)
-      const paidtx = new Transaction(paidraw)
-      const time = await run.blockchain.time(paidtx.hash)
+      const time = await run.blockchain.time(mempoolTxid)
       expect(typeof time).to.equal('number')
       expect(time > new Date('January 3, 2009')).to.equal(true)
       expect(time <= Date.now()).to.equal(true)
@@ -348,8 +355,7 @@ describe('Blockchain', () => {
 
     it('returns block transaction time', async () => {
       const run = new Run()
-      const txid = await spentAndConfirmed(run.blockchain)
-      const time = await run.blockchain.time(txid)
+      const time = await run.blockchain.time(spentAndConfirmedTxid)
       expect(time > new Date('January 3, 2009')).to.equal(true)
       expect(time <= Date.now()).to.equal(true)
     })
@@ -399,11 +405,11 @@ function errors (blockchain) {
   }
 }
 
-// Gets a txid that spent output 0 and is confirmed
+// Gets a txid that spent an input 0 and is confirmed, whose output 0 is unspent
 async function spentAndConfirmed (blockchain) {
   switch (blockchain.network) {
-    case 'main': return '8b580cd23c2d2cb0236b888a977a19153eaa9f5ff50b40876699738e747e87ef'
-    case 'test': return '883bcccba28ca185b4d20b90f344f32f7fd9e273f962f661a48cea0849609443'
+    case 'main': return '3bc7b98fb6f8950661454f8bf344e9dafc84d1845f8304e0e436f32b903a234b'
+    case 'test': return '2819948748c3ddfc700a528ffc7f62f3ca056b8efd4af445c9ebafa428fcb3e7'
     case 'mock': {
       const privkey = new PrivateKey('testnet')
       const addr = privkey.toAddress().toString()
@@ -414,9 +420,9 @@ async function spentAndConfirmed (blockchain) {
       const autxo = { txid: aid, vout: 1, script: aout.script, satoshis: aout.satoshis }
       const btx = new Transaction().from(autxo).change(addr).sign(privkey)
       const braw = btx.toString('hex')
-      await blockchain.broadcast(braw)
+      const bid = await blockchain.broadcast(braw)
       blockchain.block()
-      return aid
+      return bid
     }
     default: throw new Error(`No confirmed tx set for network: ${blockchain.network}`)
   }
