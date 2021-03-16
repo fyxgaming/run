@@ -144,12 +144,16 @@ describe('LocalCache', () => {
     it('throws if set different value', async () => {
       const cache = new LocalCache()
       const error = 'Attempt to set different values for the same key'
-      await cache.set('a', { n: 1 })
-      await expect(cache.set('a', 0)).to.be.rejectedWith(error)
-      await expect(cache.set('a', 'hello')).to.be.rejectedWith(error)
-      await expect(cache.set('a', { n: 2 })).to.be.rejectedWith(error)
-      await expect(cache.set('a', { n: 1, m: 2 })).to.be.rejectedWith(error)
-      await cache.set('a', { n: 1 })
+      const prefixes = ['jig://', 'berry://', 'tx://']
+      for (const prefix of prefixes) {
+        const key = prefix + Math.random().toString()
+        await cache.set(key, { n: 1 })
+        await expect(cache.set(key, 0)).to.be.rejectedWith(error)
+        await expect(cache.set(key, 'hello')).to.be.rejectedWith(error)
+        await expect(cache.set(key, { n: 2 })).to.be.rejectedWith(error)
+        await expect(cache.set(key, { n: 1, m: 2 })).to.be.rejectedWith(error)
+        await cache.set(key, { n: 1 })
+      }
     })
 
     // ------------------------------------------------------------------------
