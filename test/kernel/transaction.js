@@ -692,8 +692,9 @@ describe('Transaction', () => {
       const tx = new Transaction()
       const a = tx.update(() => new A())
       const b = tx.update(() => new A())
-      await tx.publish()
+      const txid = await tx.publish()
       expect(a.location.slice(0, 64)).to.equal(b.location.slice(0, 64))
+      expect(a.location.slice(0, 64)).to.equal(txid)
     })
 
     // ------------------------------------------------------------------------
