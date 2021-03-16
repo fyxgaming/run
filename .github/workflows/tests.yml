@@ -36,37 +36,47 @@ jobs:
 
     - name: Cover Tests
       run:
-        env STRESS=1 npm run test:cover
+        npm run test:cover
+      env:
+        STRESS: true
       
-    - name: RUN Testnet Tests
+    - name: RunConnect Testnet Tests
       run:
-        npm run test:api
+        npm run test:cover test/kernel/blockchain.js
       env: 
         API: run
         NETWORK: test
-        STRESS: 1
+        STRESS: true
         CLEAN: false
         PURSE_TEST: ${{ secrets.PURSE_TESTNET }}
       
     - name: MatterCloud Mainnet Tests
       run:
-        npm run test:api
+        npm run test:cover test/kernel/blockchain.js
       env: 
         API: mattercloud
         NETWORK: main
-        STRESS: 1
+        STRESS: true
         CLEAN: false
         PURSE_MAIN: ${{ secrets.PURSE_MAINNET }}
       
     - name: WhatsOnChain Testnet Tests
       run:
-        npm run test:api
+        npm run test:cover test/kernel/blockchain.js
       env: 
         API: whatsonchain
         NETWORK: test
-        STRESS: 1
+        STRESS: true
         CLEAN: false
         PURSE_TEST: ${{ secrets.PURSE_TESTNET2 }}
+
+    - name: PayServer Testnet Tests
+      run:
+        npm run test:cover test/plugins/pay-server.js
+      env: 
+        API: run
+        NETWORK: test
+        CLEAN: false
 
     - name: Publish Coverage
       uses: codecov/codecov-action@v1

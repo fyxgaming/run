@@ -121,8 +121,8 @@ describe('PayServer', () => {
     // ------------------------------------------------------------------------
 
     if (STRESS) {
-      it.skip('stress test', async () => {
-      // Post 120 transactions over 2 minutes
+      it('stress test', async () => {
+        // Post 120 transactions over 2 minutes
         const purse = new PayServer(apiKey)
         const run = new Run({ purse })
         class A extends Jig { f () { this.n = 1 } }
