@@ -100,14 +100,26 @@ describe('Run', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if not a run transaction', () => {
-      // TODO
+    it('throws if not a run transaction', () => {
+      const error = 'Not a run transaction: invalid op_return protocol'
+      expect(() => Run.util.metadata(new bsv.Transaction().toString())).to.throw(error)
+      expect(() => Run.util.metadata(new bsv.Transaction().addSafeData('run').toString())).to.throw(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid run metadata', () => {
-      // TODO
+    it('throws if invalid run metadata', () => {
+      const error = 'Not a run transaction: invalid run metadata'
+      const metadata = { version: '06', in: 0, ref: [], out: [], del: [], cre: [], exec: [] }
+      const Buffer = bsv.deps.Buffer
+      const proto = Buffer.from('run', 'utf8')
+      const ver = Buffer.from([0x05])
+      const app = Buffer.from('', 'utf8')
+      const json = Buffer.from(metadata.toString(), 'utf8')
+      const script = bsv.Script.buildSafeDataOut([proto, ver, app, json])
+      const output = new bsv.Transaction.Output({ script, satoshis: 0 })
+      const rawtx = new bsv.Transaction().addOutput(output).toString()
+      expect(() => Run.util.metadata(rawtx)).to.throw(error)
     })
   })
 })
