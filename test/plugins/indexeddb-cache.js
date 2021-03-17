@@ -24,8 +24,8 @@ describe('IndexedDbCache', () => {
   // Tests when running in node where IndexedDbCache is not supported
   if (typeof VARIANT === 'undefined' || VARIANT !== 'browser') {
     describe('non-browser', () => {
-      it('throws if not a browser', () => {
-        expect(() => new IndexedDbCache()).to.throw('Your browser doesn\'t support IndexedDB')
+      it('null if not a browser', () => {
+        expect(IndexedDbCache).to.equal(null)
       })
     })
 
