@@ -1716,7 +1716,42 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it('berry location does not change with sync', async () => {
+    it('stored read of updated berry class', async () => {
+      const run = new Run()
+      class B extends Berry { }
+      const CB = run.deploy(B)
+      await CB.sync()
+      const b = await CB.load('abc')
+
+      class A extends Jig {
+        init (b) { this.b = b }
+        f () { this.B = this.b.constructor }
+      }
+      const a = new A(b)
+      await a.sync()
+
+      CB.destroy()
+      await CB.sync()
+
+      const a2 = await run.load(a.location)
+      await a2.sync()
+      expect(a2.b.constructor.location).to.equal(CB.location)
+      a2.f()
+      await a2.sync()
+
+      const a3 = await run.load(a2.location)
+      expect(a3.B.location).to.equal(CB.origin)
+      expect(a3.b.constructor.location).to.equal(CB.origin)
+
+      run.cache = new LocalCache()
+      const a4 = await run.load(a2.location)
+      expect(a4.B.location).to.equal(CB.origin)
+      expect(a4.b.constructor.location).to.equal(CB.origin)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('berry location does not change with sync destroyed', async () => {
       const run = new Run()
       class B extends Berry { }
       const CB = run.deploy(B)
