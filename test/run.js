@@ -6,6 +6,7 @@
 
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
+const bsv = require('bsv')
 const { expect } = require('chai')
 const Run = require('./env/run')
 const { Jig } = Run
@@ -90,8 +91,11 @@ describe('Run', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid transaction', () => {
-      // TODO
+    it('throws if invalid transaction', () => {
+      expect(() => Run.util.metadata()).to.throw('Invalid transaction')
+      expect(() => Run.util.metadata(null)).to.throw('Invalid transaction')
+      expect(() => Run.util.metadata('')).to.throw('Invalid transaction')
+      expect(() => Run.util.metadata(new bsv.Transaction())).to.throw('Invalid transaction')
     })
 
     // ------------------------------------------------------------------------
