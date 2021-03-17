@@ -83,8 +83,7 @@ function expectTx (opts) {
   const run = Run.instance
 
   function verify (rawtx) {
-    const tx = new Transaction(rawtx)
-    const metadata = Run.util.metadata(tx)
+    const metadata = Run.util.metadata(rawtx)
     try {
       if ('nin' in opts) expect(metadata.in).to.equal(opts.nin, 'bad nin')
       if ('nref' in opts) expect(metadata.ref.length).to.equal(opts.nref, 'bad nref')

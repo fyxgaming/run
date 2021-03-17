@@ -385,9 +385,9 @@ describe('LocalPurse', () => {
 
       // Non-run OP_RETURN prototocol
       const Buffer = bsv.deps.Buffer
-      const proto = Buffer.from('slp', 'utf8')
+      const slpprefix = Buffer.from('slp', 'utf8')
       const dat = Buffer.from('', 'utf8')
-      const slpscript = Script.buildSafeDataOut([proto, dat, dat, dat, dat])
+      const slpscript = Script.buildSafeDataOut([slpprefix, dat, dat, dat, dat])
       const slpoutput = new Transaction.Output({ script: slpscript, satoshis: 0 })
       const tx1 = new Transaction().addOutput(slpoutput).to(run2.purse.address, 1000)
       const tx2 = await payFor(tx1, run)
