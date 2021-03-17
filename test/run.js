@@ -87,6 +87,24 @@ describe('Run', () => {
       expect(metadata.cre).to.deep.equal([run.owner.address])
       expect(metadata.exec).to.deep.equal(exec)
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid transaction', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if not a run transaction', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid run metadata', () => {
+      // TODO
+    })
   })
 })
 
