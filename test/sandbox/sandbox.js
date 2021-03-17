@@ -16,8 +16,10 @@ const Sandbox = unmangle(unmangle(Run)._Sandbox)
 
 describe('Sandbox', () => {
   it.skip('sandboxes code', () => {
-
+    // TODO
   })
+
+  // --------------------------------------------------------------------------
 
   it('proxies console', () => {
     const logs = []
@@ -33,9 +35,24 @@ describe('Sandbox', () => {
     expect(logs).to.deep.equal(['hello', 'world'])
   })
 
-  it.skip('can set globals', () => {
+  // --------------------------------------------------------------------------
 
+  it('configuration objects not present', () => {
+    expect(Sandbox._evaluate('typeof makeDeterministic')[0]).to.equal('undefined')
+    expect(Sandbox._evaluate('typeof SES')[0]).to.equal('undefined')
+    expect(Sandbox._evaluate('typeof Compartment')[0]).to.equal('undefined')
+    expect(Sandbox._evaluate('typeof m')[0]).to.equal('undefined')
+    expect(Sandbox._evaluate('typeof n')[0]).to.equal('undefined')
+    expect(Sandbox._evaluate('typeof C')[0]).to.equal('undefined')
   })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('can set globals', () => {
+    // TODO
+  })
+
+  // --------------------------------------------------------------------------
 
   it.skip('intrinsics frozen', () => {
     /*
@@ -49,6 +66,8 @@ describe('Sandbox', () => {
     console.log(cf())
     */
   })
+
+  // --------------------------------------------------------------------------
 
   it.skip('intrinsic prototypes frozen', () => {
     /*
