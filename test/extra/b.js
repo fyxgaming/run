@@ -26,6 +26,7 @@ describe('B', () => {
     const b = await B.load('2f3492ef5401d887a93ca09820dff952f355431cea306841a70d163e32b2acad')
     expect(typeof b.base64Data).to.equal('string')
     expect(b.mediaType).to.equal('image/png')
+    expect(b.encoding).to.equal('binary')
     expect(b.filename).to.equal('99e4ecd0-4488-11eb-b38a-2178d1454340.png')
     expect(b.metadata.image).to.equal(b)
   })
