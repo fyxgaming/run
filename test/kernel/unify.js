@@ -727,7 +727,7 @@ describe('Unify', () => {
       CD.f(CA)
       await run.sync()
 
-      // Load with and without the cache. The payload should be the same.
+      // Load with and without the cache. The metadata should be the same.
       await run.load(CD.location)
       run.cache = new LocalCache()
       await run.load(CD.location)

@@ -7,7 +7,6 @@
 const { Transaction } = require('bsv')
 const Run = require('./run')
 const unmangle = require('./unmangle')
-const { _payload } = unmangle(Run)
 const { expect } = require('chai')
 const { Mockchain } = Run.plugins
 
@@ -69,7 +68,7 @@ async function populatePreviousOutputs (tx, blockchain) {
 // ------------------------------------------------------------------------------------------------
 
 /**
- * Checks the payload data in next Run transaction broadcast
+ * Checks the metadata in next Run transaction broadcast
  *
  * @param {object} opts
  * @param {?number} nin Number of inputs
@@ -85,18 +84,18 @@ function expectTx (opts) {
 
   function verify (rawtx) {
     const tx = new Transaction(rawtx)
-    const payload = _payload(tx)
+    const metadata = Run.util.metadata(tx)
     try {
-      if ('nin' in opts) expect(payload.in).to.equal(opts.nin, 'bad nin')
-      if ('nref' in opts) expect(payload.ref.length).to.equal(opts.nref, 'bad nref')
-      if ('ref' in opts) expect(payload.ref).to.deep.equal(opts.ref, 'bad ref')
-      if ('nout' in opts) expect(payload.out.length).to.equal(opts.nout, 'bad nout')
-      if ('ndel' in opts) expect(payload.del.length).to.equal(opts.ndel, 'bad ndel')
-      if ('ncre' in opts) expect(payload.cre.length).to.equal(opts.ncre, 'bad ncre')
-      if ('cre' in opts) expect(payload.cre).to.deep.equal(opts.cre, 'bad cre')
-      if ('exec' in opts) expect(payload.exec).to.deep.equal(opts.exec, 'bad exec')
+      if ('nin' in opts) expect(metadata.in).to.equal(opts.nin, 'bad nin')
+      if ('nref' in opts) expect(metadata.ref.length).to.equal(opts.nref, 'bad nref')
+      if ('ref' in opts) expect(metadata.ref).to.deep.equal(opts.ref, 'bad ref')
+      if ('nout' in opts) expect(metadata.out.length).to.equal(opts.nout, 'bad nout')
+      if ('ndel' in opts) expect(metadata.del.length).to.equal(opts.ndel, 'bad ndel')
+      if ('ncre' in opts) expect(metadata.cre.length).to.equal(opts.ncre, 'bad ncre')
+      if ('cre' in opts) expect(metadata.cre).to.deep.equal(opts.cre, 'bad cre')
+      if ('exec' in opts) expect(metadata.exec).to.deep.equal(opts.exec, 'bad exec')
     } catch (e) {
-      console.log('Broadcast payload:', JSON.stringify(payload, 0, 3))
+      console.log('Broadcast RUN metadata:', JSON.stringify(metadata, 0, 3))
       throw e
     }
   }

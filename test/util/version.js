@@ -10,9 +10,9 @@ const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const {
   _version,
-  _parsePayloadVersion,
+  _parseMetadataVersion,
   _parseStateVersion,
-  _getPayloadVersion,
+  _getMetadataVersion,
   _getStateVersion
 } = unmangle(unmangle(Run)._version)
 
@@ -38,22 +38,22 @@ describe('_version', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
-// _parsePayloadVersion
+// _parseMetadataVersion
 // ------------------------------------------------------------------------------------------------
 
-describe('_parsePayloadVersion', () => {
+describe('_parseMetadataVersion', () => {
   it('returns parsed version', () => {
-    expect(_parsePayloadVersion('05')).to.equal(5)
+    expect(_parseMetadataVersion('05')).to.equal(5)
   })
 
   // --------------------------------------------------------------------------
 
   it('throws if unsupported', () => {
-    expect(() => _parsePayloadVersion()).to.throw('Unsupported payload version: undefined')
-    expect(() => _parsePayloadVersion(5)).to.throw('Unsupported payload version: 5')
-    expect(() => _parsePayloadVersion('04')).to.throw('Unsupported payload version: 04')
-    expect(() => _parsePayloadVersion('06')).to.throw('Unsupported payload version: 06')
-    expect(() => _parsePayloadVersion('0005')).to.throw('Unsupported payload version: 0005')
+    expect(() => _parseMetadataVersion()).to.throw('Unsupported metadata version: undefined')
+    expect(() => _parseMetadataVersion(5)).to.throw('Unsupported metadata version: 5')
+    expect(() => _parseMetadataVersion('04')).to.throw('Unsupported metadata version: 04')
+    expect(() => _parseMetadataVersion('06')).to.throw('Unsupported metadata version: 06')
+    expect(() => _parseMetadataVersion('0005')).to.throw('Unsupported metadata version: 0005')
   })
 })
 
@@ -79,21 +79,21 @@ describe('_parseStateVersion', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
-// _getPayloadVersion
+// _getMetadataVersion
 // ------------------------------------------------------------------------------------------------
 
-describe('_getPayloadVersion', () => {
+describe('_getMetadataVersion', () => {
   it('returns converted version', () => {
-    expect(_getPayloadVersion(5)).to.equal('05')
+    expect(_getMetadataVersion(5)).to.equal('05')
   })
 
   // --------------------------------------------------------------------------
 
   it('throws if unsupported', () => {
-    expect(() => _getPayloadVersion()).to.throw('Unsupported protocol version: undefined')
-    expect(() => _getPayloadVersion(6)).to.throw('Unsupported protocol version: 6')
-    expect(() => _getPayloadVersion(4)).to.throw('Unsupported protocol version: 4')
-    expect(() => _getPayloadVersion('05')).to.throw('Unsupported protocol version: 05')
+    expect(() => _getMetadataVersion()).to.throw('Unsupported protocol version: undefined')
+    expect(() => _getMetadataVersion(6)).to.throw('Unsupported protocol version: 6')
+    expect(() => _getMetadataVersion(4)).to.throw('Unsupported protocol version: 4')
+    expect(() => _getMetadataVersion('05')).to.throw('Unsupported protocol version: 05')
   })
 })
 

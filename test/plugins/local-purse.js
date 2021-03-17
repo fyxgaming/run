@@ -394,12 +394,12 @@ describe('LocalPurse', () => {
       await run2.blockchain.broadcast(tx2.toString('hex'))
       expect((await run2.purse.utxos()).length).to.equal(11)
 
-      // Invalid run payload
+      // Invalid run metadata
       const prefix = Buffer.from('run', 'utf8')
       const protocol = Buffer.from([Run.protocol], 'hex')
       const app = Buffer.from([])
-      const badPayload = Buffer.from([1, 2, 3])
-      const script = Script.buildSafeDataOut([prefix, protocol, app, badPayload])
+      const badMetadata = Buffer.from([1, 2, 3])
+      const script = Script.buildSafeDataOut([prefix, protocol, app, badMetadata])
       const output = new Transaction.Output({ script, satoshis: 0 })
       const tx3 = new Transaction().addOutput(output).to(run2.purse.address, 1000)
       const tx4 = await payFor(tx3, run)

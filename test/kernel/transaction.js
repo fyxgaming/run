@@ -1782,7 +1782,7 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if unsupported version payload', async () => {
+    it('throws if unsupported metadata version', async () => {
       const run = new Run()
       const Buffer = bsv.deps.Buffer
       const slp = Buffer.from('run', 'utf8')
@@ -1793,13 +1793,13 @@ describe('Transaction', () => {
       const runoutput = new bsv.Transaction.Output({ script: runscript, satoshis: 0 })
       const tx = new bsv.Transaction().addOutput(runoutput).to(run.purse.address, 1000)
       const rawtx = tx.toString('hex')
-      const error = 'Unsupported payload version: 04'
+      const error = 'Unsupported metadata version: 04'
       await expect(run.import(rawtx)).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------
 
-    it('throws if invalid payload', async () => {
+    it('throws if invalid metadata', async () => {
       const run = new Run()
       const Buffer = bsv.deps.Buffer
       const slp = Buffer.from('run', 'utf8')
@@ -1810,7 +1810,7 @@ describe('Transaction', () => {
       const runoutput = new bsv.Transaction.Output({ script: runscript, satoshis: 0 })
       const tx = new bsv.Transaction().addOutput(runoutput).to(run.purse.address, 1000)
       const rawtx = tx.toString('hex')
-      const error = 'Not a run transaction: invalid run payload'
+      const error = 'Not a run transaction: invalid run metadata'
       await expect(run.import(rawtx)).to.be.rejectedWith(error)
     })
   })
