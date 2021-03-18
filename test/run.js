@@ -64,6 +64,47 @@ describe('Run', () => {
   })
 
   // --------------------------------------------------------------------------
+  // trust
+  // --------------------------------------------------------------------------
+
+  describe.only('trust', () => {
+    it('trust valid values', () => {
+      const run = new Run()
+      run.trust('*')
+      run.trust('cache')
+      run.trust('61e1265acb3d93f1bf24a593d70b2a6b1c650ec1df90ddece8d6954ae3cdd915')
+      run.trust('1111111111111111111111111111111111111111111111111111111111111111')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('trust array of valid values', () => {
+      const run = new Run()
+      run.trust([
+        '*',
+        'cache',
+        '61e1265acb3d93f1bf24a593d70b2a6b1c650ec1df90ddece8d6954ae3cdd915',
+        '1111111111111111111111111111111111111111111111111111111111111111'
+      ])
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid values', () => {
+      const run = new Run()
+      expect(() => run.trust('61e1265acb3d93f1bf24a593d70b2a6b1c650ec1df90ddece8d6954ae3cdd915_o1')).to.throw('Not trustable')
+      expect(() => run.trust('')).to.throw('Not trustable')
+      expect(() => run.trust(null)).to.throw('Not trustable')
+      expect(() => run.trust(1)).to.throw('Not trustable')
+      expect(() => run.trust('cache2')).to.throw('Not trustable')
+      expect(() => run.trust('-')).to.throw('Not trustable')
+      expect(() => run.trust('all')).to.throw('Not trustable')
+      expect(() => run.trust([''])).to.throw('Not trustable')
+      expect(() => run.trust(['*', ''])).to.throw('Not trustable')
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // util
   // --------------------------------------------------------------------------
 
