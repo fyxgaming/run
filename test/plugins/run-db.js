@@ -20,7 +20,7 @@ const HOST = 'http://localhost:8000'
 // RunDB
 // ------------------------------------------------------------------------------------------------
 
-describe('RunDB', () => {
+describe.skip('RunDB', () => {
   it('load from cache', async () => {
     const rundb = new RunDB(HOST)
     const run = new Run({ cache: rundb, client: true, network: 'main', trust: 'cache' })
