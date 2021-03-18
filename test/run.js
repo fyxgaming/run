@@ -67,7 +67,7 @@ describe('Run', () => {
   // trust
   // --------------------------------------------------------------------------
 
-  describe.only('trust', () => {
+  describe('trust', () => {
     it('trust valid values', () => {
       const run = new Run()
       run.trust('*')
