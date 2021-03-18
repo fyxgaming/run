@@ -17,6 +17,7 @@ const unmangle = require('../env/unmangle')
 const { expectTx } = require('../env/misc')
 const { Code, Jig, Berry } = Run
 const { LocalCache } = Run.plugins
+const { CommonLock } = Run.util
 const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
 const _sudo = unmangle(Run)._sudo
 
@@ -1536,6 +1537,17 @@ describe('Deploy', () => {
       run.cache = new LocalCache()
       const cf3 = await run.load(cf.location)
       test(cf3)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if internal dep', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      A.deps = { CommonLock }
+      run.deploy(A)
+      const error = 'CommonLock is internal to RUN and cannot be deployed'
+      await expect(run.sync()).to.be.rejectedWith(error)
     })
 
     // ------------------------------------------------------------------------

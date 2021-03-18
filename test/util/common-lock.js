@@ -15,11 +15,17 @@ const { CommonLock } = Run.util
 // ------------------------------------------------------------------------------------------------
 
 describe('CommonLock', () => {
+  // --------------------------------------------------------------------------
+  // script
+  // --------------------------------------------------------------------------
+
   describe('script', () => {
     it('valid addresses', () => {
       new CommonLock('14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1').script() // eslint-disable-line
       new CommonLock('mhZZFmSiUqcmf8wQrBNjPAVHUCFsHso9ni').script() // eslint-disable-line
     })
+
+    // ------------------------------------------------------------------------
 
     it('throws if bad address', () => {
       expect(() => new CommonLock().script()).to.throw('Address is not a string')
@@ -30,6 +36,8 @@ describe('CommonLock', () => {
       expect(() => new CommonLock('3P14').script()).to.throw('Address too short: 3P14')
     })
 
+    // ------------------------------------------------------------------------
+
     it('returns P2PKH script', () => {
       const addr = '14kPnFashu7rYZKTXvJU8gXpJMf9e3f8k1'
       const script = bsv.Script.fromAddress(addr)
@@ -38,6 +46,10 @@ describe('CommonLock', () => {
       expect(hex1).to.deep.equal(hex2)
     })
   })
+
+  // --------------------------------------------------------------------------
+  // domain
+  // --------------------------------------------------------------------------
 
   describe('domain', () => {
     it('returns P2PKH unlock script max size', () => {
