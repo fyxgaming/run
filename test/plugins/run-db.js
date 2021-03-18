@@ -37,7 +37,7 @@ describe.skip('RunDB', () => {
 
   // --------------------------------------------------------------------------
 
-  it('sync and replay', async () => {
+  it('sync from origin', async () => {
     const rundb = new RunDB(HOST)
     const run = new Run({ cache: rundb, client: true, network: 'main', trust: [] })
     const ShuaCoin = await run.load('ce8629aa37a1777d6aa64d0d33cd739fd4e231dc85cfe2f9368473ab09078b78_o1')
