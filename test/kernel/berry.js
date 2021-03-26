@@ -1957,6 +1957,27 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
+    it.skip('load two different berries at once', async () => {
+      const run = new Run({ network: 'mock' })
+      const txid1 = (await run.deploy(class A { }).sync()).location.slice(0, 64)
+      const txid2 = (await run.deploy(class B { }).sync()).location.slice(0, 64)
+      class A extends Berry { static async pluck (path, fetch) { await fetch(path); return new A() } }
+      class B extends Berry { static async pluck (path, fetch) { await fetch(path); return new B() } }
+      run.deploy(A)
+      run.deploy(B)
+      await run.sync()
+      const a = await A.load(txid1)
+      const b = await B.load(txid2)
+      class C { }
+      C.arr = [a, b]
+      run.deploy(C)
+      await run.sync()
+      run.cache = new LocalCache()
+      await run.load(C.location)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('can load with undeployed berry class', async () => {
       new Run() // eslint-disable-line
       class B extends Berry { }
