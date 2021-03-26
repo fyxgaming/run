@@ -1957,7 +1957,7 @@ Line 3`
 
     // ------------------------------------------------------------------------
 
-    it.skip('load two different berries at once', async () => {
+    it('load two different berries at once', async () => {
       const run = new Run({ network: 'mock' })
       const txid1 = (await run.deploy(class A { }).sync()).location.slice(0, 64)
       const txid2 = (await run.deploy(class B { }).sync()).location.slice(0, 64)
