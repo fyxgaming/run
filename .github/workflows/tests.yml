@@ -49,6 +49,14 @@ jobs:
         STRESS: true
         CLEAN: false
         PURSE_TEST: ${{ secrets.PURSE_TESTNET }}
+
+    - name: RunState Mainnet Tests
+      run:
+        npm run test:cover test/plugins/run-state.js
+      env: 
+        API: run
+        NETWORK: main
+        CLEAN: false
       
     - name: MatterCloud Mainnet Tests
       run:
