@@ -1782,6 +1782,11 @@ describe('Deploy', () => {
 
     it('copies jig presets', async () => {
       const run = new Run()
+
+      class B extends Jig { }
+      const b = new B()
+      await b.sync()
+
       const network = run.blockchain.network
       class A extends Jig { }
       A.presets = {
@@ -1790,17 +1795,14 @@ describe('Deploy', () => {
           origin: randomLocation(),
           nonce: 2,
           owner: randomOwner(),
-          satoshis: 0
+          satoshis: 0,
+          b
         }
       }
-      run.deploy(A)
-      await run.sync()
-      class B { }
-      B.presets = { [network]: { A } }
-      const CB = run.deploy(B)
-      expect(CB.A).not.to.equal(A)
-      expect(CB.A.toString()).to.equal(A.toString())
-      expect(CB.A).to.equal(Run.util.install(A))
+
+      const CA = run.deploy(A)
+      expect(CA.b instanceof B).to.equal(true)
+      expect(CA.b.location).to.equal(b.location)
     })
 
     // ------------------------------------------------------------------------
