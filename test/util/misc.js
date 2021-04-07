@@ -827,10 +827,20 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_dedup', () => {
-    it.skip('returns same result', async () => {
-      console.log(_dedup)
-      // TODO
-      // Cache key gone
+    it('returns same result', async () => {
+      const cache = {}
+      let resolver = null
+      let count = 0
+      const f = () => new Promise((resolve, reject) => { count++; resolver = resolve })
+      const key = '123'
+      const promise1 = _dedup(cache, key, f)
+      expect(key in cache).to.equal(true)
+      const promise2 = _dedup(cache, key, f)
+      resolver('abc')
+      expect(count).to.equal(1)
+      expect(await promise1).to.equal('abc')
+      expect(await promise2).to.equal('abc')
+      expect(key in cache).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
