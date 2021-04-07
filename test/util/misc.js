@@ -16,7 +16,7 @@ const {
   _defined, _intrinsic, _serializable, _protoLen, _anonymizeSourceCode,
   _deanonymizeSourceCode, _anonymous, _getOwnProperty, _hasOwnProperty, _setOwnProperty,
   _ownGetters, _ownMethods, _limit, _Timeout,
-  _deterministicJSONStringify, _deterministicCompareKeys, _negativeZero
+  _deterministicJSONStringify, _deterministicCompareKeys, _negativeZero, _dedup, _cache
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -819,6 +819,60 @@ describe('Misc', () => {
       const x = ['b', 'a', '0', '01', '10', '11', '1', '2', '011']
       const y = x.sort(_deterministicCompareKeys)
       expect(y).to.deep.equal(['0', '1', '2', '10', '11', '01', '011', 'a', 'b'])
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _dedup
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_dedup', () => {
+    it.skip('returns same result', async () => {
+      console.log(_dedup)
+      // TODO
+      // Cache key gone
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('returns same error', async () => {
+      // TODO
+      // Cache key gone
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('does not dedup after completion', async () => {
+      // TODO
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _cache
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_cache', () => {
+    it.skip('caches result', () => {
+      console.log(_cache)
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('caches error', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('expires result', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('expires error', () => {
+      // TODO
     })
   })
 })
