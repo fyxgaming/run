@@ -910,8 +910,14 @@ describe('Misc', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('expires result', () => {
-      // TODO
+    it('expires result', async () => {
+      const cache = {}
+      let count = 0
+      const f = async () => { count++; return 'abc' }
+      expect(await _cache(cache, '123', 1, f)).to.equal('abc')
+      await new Promise((resolve, reject) => setTimeout(resolve, 10))
+      expect(await _cache(cache, '123', 1, f)).to.equal('abc')
+      expect(count).to.equal(2)
     })
 
     // ------------------------------------------------------------------------
