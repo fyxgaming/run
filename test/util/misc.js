@@ -898,8 +898,14 @@ describe('Misc', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('caches error', () => {
-      // TODO
+    it('caches error', async () => {
+      const cache = {}
+      let count = 0
+      const error = new Error('abc')
+      const f = async () => { count++; throw error }
+      await expect(_cache(cache, '123', 10, f)).to.be.rejectedWith(error)
+      await expect(_cache(cache, '123', 10, f)).to.be.rejectedWith(error)
+      expect(count).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
