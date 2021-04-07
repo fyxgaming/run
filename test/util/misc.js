@@ -922,8 +922,15 @@ describe('Misc', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('expires error', () => {
-      // TODO
+    it('expires error', async () => {
+      const cache = {}
+      let count = 0
+      const error = new Error('abc')
+      const f = async () => { count++; throw error }
+      await expect(_cache(cache, '123', 1, f)).to.be.rejectedWith(error)
+      await new Promise((resolve, reject) => setTimeout(resolve, 10))
+      await expect(_cache(cache, '123', 1, f)).to.be.rejectedWith(error)
+      expect(count).to.equal(2)
     })
   })
 })
