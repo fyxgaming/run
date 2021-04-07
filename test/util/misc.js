@@ -866,8 +866,19 @@ describe('Misc', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('does not dedup after completion', async () => {
-      // TODO
+    it('does not dedup after completion', async () => {
+      const cache = {}
+      let resolver = null
+      let count = 0
+      const f = () => new Promise((resolve, reject) => { count++; resolver = resolve })
+      const key = '123'
+      const promise1 = _dedup(cache, key, f)
+      resolver('abc')
+      expect(await promise1).to.equal('abc')
+      const promise2 = _dedup(cache, key, f)
+      resolver('def')
+      expect(await promise2).to.equal('def')
+      expect(count).to.equal(2)
     })
   })
 
