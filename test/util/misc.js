@@ -887,9 +887,13 @@ describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_cache', () => {
-    it.skip('caches result', () => {
-      console.log(_cache)
-      // TODO
+    it('caches result', async () => {
+      const cache = {}
+      let count = 0
+      const f = async () => { count++; return 'abc' }
+      expect(await _cache(cache, '123', 10, f)).to.equal('abc')
+      expect(await _cache(cache, '123', 10, f)).to.equal('abc')
+      expect(count).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
