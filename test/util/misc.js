@@ -5,6 +5,7 @@
  */
 
 const { describe, it } = require('mocha')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig, Berry } = Run
@@ -833,21 +834,34 @@ describe('Misc', () => {
       let count = 0
       const f = () => new Promise((resolve, reject) => { count++; resolver = resolve })
       const key = '123'
+      const result = 'abc'
       const promise1 = _dedup(cache, key, f)
       expect(key in cache).to.equal(true)
       const promise2 = _dedup(cache, key, f)
-      resolver('abc')
+      resolver(result)
       expect(count).to.equal(1)
-      expect(await promise1).to.equal('abc')
-      expect(await promise2).to.equal('abc')
+      expect(await promise1).to.equal(result)
+      expect(await promise2).to.equal(result)
       expect(key in cache).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('returns same error', async () => {
-      // TODO
-      // Cache key gone
+    it('returns same error', async () => {
+      const cache = {}
+      let rejecter = null
+      let count = 0
+      const error = new Error('abc')
+      const f = () => new Promise((resolve, reject) => { count++; rejecter = reject })
+      const key = '123'
+      const promise1 = _dedup(cache, key, f)
+      expect(key in cache).to.equal(true)
+      const promise2 = _dedup(cache, key, f)
+      rejecter(error)
+      expect(count).to.equal(1)
+      await expect(promise1).to.be.rejectedWith(error)
+      await expect(promise2).to.be.rejectedWith(error)
+      expect(key in cache).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
