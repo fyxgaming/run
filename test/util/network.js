@@ -9,7 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { _dedupRequest, _cacheResponse } = unmangle(unmangle(Run)._network)
+const { _dedupRequest, _cacheResponse, _dedupUtxos } = unmangle(unmangle(Run)._network)
 
 // ------------------------------------------------------------------------------------------------
 // Network
@@ -124,6 +124,18 @@ describe('Network', () => {
       await new Promise((resolve, reject) => setTimeout(resolve, 10))
       await expect(_cacheResponse(cache, '123', 1, f)).to.be.rejectedWith(error)
       expect(count).to.equal(2)
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _dedupUtxos
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_dedupUtxos', () => {
+    it('dedups utxos', () => {
+      const a = { txid: '0', vout: 1, script: '2', satoshis: 3 }
+      const b = { txid: '4', vout: 5, script: '6', satoshis: 7 }
+      expect(_dedupUtxos([a, b, b])).to.deep.equal([a, b])
     })
   })
 })
