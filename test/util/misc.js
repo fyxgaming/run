@@ -1,7 +1,7 @@
 /**
  * misc.js
  *
- * Tests for lib/kernel/misc.js
+ * Tests for lib/util/misc.js
  */
 
 const { describe, it } = require('mocha')
@@ -17,9 +17,13 @@ const {
   _defined, _intrinsic, _serializable, _protoLen, _anonymizeSourceCode,
   _deanonymizeSourceCode, _anonymous, _getOwnProperty, _hasOwnProperty, _setOwnProperty,
   _ownGetters, _ownMethods, _limit, _Timeout,
-  _deterministicJSONStringify, _deterministicCompareKeys, _negativeZero, _dedup, _cache
+  _deterministicJSONStringify, _deterministicCompareKeys, _negativeZero
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
+
+// ------------------------------------------------------------------------------------------------
+// Misc
+// ----------------------------------------------------------------------------------------------_-
 
 describe('Misc', () => {
   // ----------------------------------------------------------------------------------------------
@@ -787,7 +791,7 @@ describe('Misc', () => {
     })
   })
 
-  // ----------------------------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------------------------
   // _deterministicJSONStringify
   // ----------------------------------------------------------------------------------------------
 
@@ -820,117 +824,6 @@ describe('Misc', () => {
       const x = ['b', 'a', '0', '01', '10', '11', '1', '2', '011']
       const y = x.sort(_deterministicCompareKeys)
       expect(y).to.deep.equal(['0', '1', '2', '10', '11', '01', '011', 'a', 'b'])
-    })
-  })
-
-  // ----------------------------------------------------------------------------------------------
-  // _dedup
-  // ----------------------------------------------------------------------------------------------
-
-  describe('_dedup', () => {
-    it('returns same result', async () => {
-      const cache = {}
-      let resolver = null
-      let count = 0
-      const f = () => new Promise((resolve, reject) => { count++; resolver = resolve })
-      const key = '123'
-      const result = 'abc'
-      const promise1 = _dedup(cache, key, f)
-      expect(key in cache).to.equal(true)
-      const promise2 = _dedup(cache, key, f)
-      resolver(result)
-      expect(count).to.equal(1)
-      expect(await promise1).to.equal(result)
-      expect(await promise2).to.equal(result)
-      expect(key in cache).to.equal(false)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('returns same error', async () => {
-      const cache = {}
-      let rejecter = null
-      let count = 0
-      const error = new Error('abc')
-      const f = () => new Promise((resolve, reject) => { count++; rejecter = reject })
-      const key = '123'
-      const promise1 = _dedup(cache, key, f)
-      expect(key in cache).to.equal(true)
-      const promise2 = _dedup(cache, key, f)
-      rejecter(error)
-      expect(count).to.equal(1)
-      await expect(promise1).to.be.rejectedWith(error)
-      await expect(promise2).to.be.rejectedWith(error)
-      expect(key in cache).to.equal(false)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('does not dedup after completion', async () => {
-      const cache = {}
-      let resolver = null
-      let count = 0
-      const f = () => new Promise((resolve, reject) => { count++; resolver = resolve })
-      const key = '123'
-      const promise1 = _dedup(cache, key, f)
-      resolver('abc')
-      expect(await promise1).to.equal('abc')
-      const promise2 = _dedup(cache, key, f)
-      resolver('def')
-      expect(await promise2).to.equal('def')
-      expect(count).to.equal(2)
-    })
-  })
-
-  // ----------------------------------------------------------------------------------------------
-  // _cache
-  // ----------------------------------------------------------------------------------------------
-
-  describe('_cache', () => {
-    it('caches result', async () => {
-      const cache = {}
-      let count = 0
-      const f = async () => { count++; return 'abc' }
-      expect(await _cache(cache, '123', 10, f)).to.equal('abc')
-      expect(await _cache(cache, '123', 10, f)).to.equal('abc')
-      expect(count).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('caches error', async () => {
-      const cache = {}
-      let count = 0
-      const error = new Error('abc')
-      const f = async () => { count++; throw error }
-      await expect(_cache(cache, '123', 10, f)).to.be.rejectedWith(error)
-      await expect(_cache(cache, '123', 10, f)).to.be.rejectedWith(error)
-      expect(count).to.equal(1)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('expires result', async () => {
-      const cache = {}
-      let count = 0
-      const f = async () => { count++; return 'abc' }
-      expect(await _cache(cache, '123', 1, f)).to.equal('abc')
-      await new Promise((resolve, reject) => setTimeout(resolve, 10))
-      expect(await _cache(cache, '123', 1, f)).to.equal('abc')
-      expect(count).to.equal(2)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('expires error', async () => {
-      const cache = {}
-      let count = 0
-      const error = new Error('abc')
-      const f = async () => { count++; throw error }
-      await expect(_cache(cache, '123', 1, f)).to.be.rejectedWith(error)
-      await new Promise((resolve, reject) => setTimeout(resolve, 10))
-      await expect(_cache(cache, '123', 1, f)).to.be.rejectedWith(error)
-      expect(count).to.equal(2)
     })
   })
 })
