@@ -50,9 +50,9 @@ jobs:
         CLEAN: false
         PURSE_TEST: ${{ secrets.PURSE_TESTNET }}
 
-    - name: RunState Mainnet Tests
+    - name: RunConnect Mainnet Tests
       run:
-        npm run test:cover test/plugins/run-state.js
+        npm run test:cover test/plugins/run-connect.js
       env: 
         API: run
         NETWORK: main

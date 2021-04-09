@@ -10,6 +10,7 @@ const bsv = require('bsv')
 const { expect } = require('chai')
 const Run = require('./env/run')
 const { Jig } = Run
+const { RunConnect } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Run
@@ -20,6 +21,26 @@ describe('Run', () => {
   afterEach(() => Run.instance && Run.instance.sync())
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
+
+  // --------------------------------------------------------------------------
+  // constructor
+  // --------------------------------------------------------------------------
+
+  describe('constructor', () => {
+    it('RunConnect enabled by default on mainnet', () => {
+      const run = new Run({ network: 'main' })
+      expect(run.cache instanceof RunConnect).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('RunConnect not used on testnet or mocknet', () => {
+      const run1 = new Run({ network: 'test', purse: undefined, owner: undefined })
+      expect(run1.cache instanceof RunConnect).to.equal(false)
+      const run2 = new Run({ network: 'mock', purse: undefined, owner: undefined })
+      expect(run2.cache instanceof RunConnect).to.equal(false)
+    })
+  })
 
   // --------------------------------------------------------------------------
   // api
