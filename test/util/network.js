@@ -170,8 +170,18 @@ describe('Network', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('filters expired', () => {
-      // TODO
+    it('filters expired', async () => {
+      const broadcasts = []
+      const tx1 = new bsv.Transaction()
+      tx1.to(new bsv.PrivateKey().toAddress(), 100)
+      _addToBroadcastCache(broadcasts, 10, tx1.hash, tx1)
+      await new Promise((resolve, reject) => setTimeout(resolve, 100))
+      const tx2 = new bsv.Transaction()
+      tx2.to(new bsv.PrivateKey().toAddress(), 100)
+      _addToBroadcastCache(broadcasts, 10, tx2.hash, tx2)
+      expect(broadcasts.length).to.equal(1)
+      expect(broadcasts[0].txid).to.equal(tx2.hash)
+      expect(broadcasts[0].tx).to.equal(tx2)
     })
   })
 
