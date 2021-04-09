@@ -157,8 +157,15 @@ describe('Network', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('does not add duplicate', () => {
-      // TODO
+    it('does not add duplicate', () => {
+      const broadcasts = []
+      const tx = new bsv.Transaction()
+      tx.to(new bsv.PrivateKey().toAddress(), 100)
+      _addToBroadcastCache(broadcasts, 1000, tx.hash, tx)
+      _addToBroadcastCache(broadcasts, 1000, tx.hash, tx)
+      expect(broadcasts.length).to.equal(1)
+      expect(broadcasts[0].txid).to.equal(tx.hash)
+      expect(broadcasts[0].tx).to.equal(tx)
     })
 
     // ------------------------------------------------------------------------
