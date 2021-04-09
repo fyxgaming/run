@@ -7,9 +7,10 @@
 const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
+const bsv = require('bsv')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { _dedupRequest, _cacheResponse, _dedupUtxos } = unmangle(unmangle(Run)._network)
+const { _dedupRequest, _cacheResponse, _dedupUtxos, _addToBroadcastCache } = unmangle(unmangle(Run)._network)
 
 // ------------------------------------------------------------------------------------------------
 // Network
@@ -144,8 +145,14 @@ describe('Network', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_addToBroadcastQueue', () => {
-    it.skip('adds new transaction', () => {
-      // TODO
+    it('adds new transaction', () => {
+      const broadcasts = []
+      const tx = new bsv.Transaction()
+      tx.to(new bsv.PrivateKey().toAddress(), 100)
+      _addToBroadcastCache(broadcasts, 1000, tx.hash, tx)
+      expect(broadcasts.length).to.equal(1)
+      expect(broadcasts[0].txid).to.equal(tx.hash)
+      expect(broadcasts[0].tx).to.equal(tx)
     })
 
     // ------------------------------------------------------------------------
