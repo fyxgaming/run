@@ -86,6 +86,16 @@ describe('StateFilter', () => {
       expect(() => StateFilter.add(filter, true)).to.throw('invalid key: true')
       expect(() => StateFilter.add(filter, {})).to.throw('invalid key: [object Object]')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('does not change if already added', () => {
+      const filter = StateFilter.create()
+      StateFilter.add(filter, 'abc')
+      const buckets = Array.from(filter.buckets)
+      StateFilter.add(filter, 'abc')
+      expect(filter.buckets).to.deep.equal(buckets)
+    })
   })
 
   // --------------------------------------------------------------------------
