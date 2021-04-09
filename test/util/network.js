@@ -222,8 +222,18 @@ describe('Network', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('does not add spent utxos in broadcasts', () => {
-      // TODO
+    it('does not add spent utxos in broadcasts', () => {
+      const broadcasts = []
+      const address = new bsv.PrivateKey().toAddress()
+      const tx1 = new bsv.Transaction()
+      tx1.to(address, 100)
+      const utxos = [{ txid: tx1.hash, vout: 0, script: tx1.outputs[0].script, satoshis: tx1.outputs[0].satoshis }]
+      const tx2 = new bsv.Transaction()
+      tx2.from(utxos[0])
+      tx2.to(address, 200)
+      _addToBroadcastCache(broadcasts, 100, tx2.hash, tx2)
+      const utxos2 = _updateUtxosWithBroadcasts(broadcasts, 1000, utxos, new bsv.Script(address))
+      expect(utxos2.length).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
