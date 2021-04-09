@@ -17,7 +17,7 @@ const {
   _defined, _intrinsic, _serializable, _protoLen, _anonymizeSourceCode,
   _deanonymizeSourceCode, _anonymous, _getOwnProperty, _hasOwnProperty, _setOwnProperty,
   _ownGetters, _ownMethods, _limit, _Timeout,
-  _deterministicJSONStringify, _deterministicCompareKeys, _negativeZero
+  _deterministicJSONStringify, _deterministicCompareKeys, _negativeZero, _filterInPlace
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -824,6 +824,24 @@ describe('Misc', () => {
       const x = ['b', 'a', '0', '01', '10', '11', '1', '2', '011']
       const y = x.sort(_deterministicCompareKeys)
       expect(y).to.deep.equal(['0', '1', '2', '10', '11', '01', '011', 'a', 'b'])
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _filterInPlace
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_filterInPlace', () => {
+    it('filters', () => {
+      const arr = [1, 2, 3, 4, 5]
+      _filterInPlace(arr, x => x % 2 === 1)
+      expect(arr).to.deep.equal([1, 3, 5])
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('empty array', () => {
+      expect(_filterInPlace([], x => true)).to.deep.equal([])
     })
   })
 })
