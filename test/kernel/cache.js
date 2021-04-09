@@ -86,12 +86,6 @@ describe('Cache', () => {
       const buckets2 = Array.from((await run.cache.get('filter://code')).buckets)
       expect(buckets1).not.to.deep.equal(buckets2)
     })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('does not update code filter for existing code', () => {
-      // TODO
-    })
   })
 })
 
