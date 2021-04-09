@@ -198,8 +198,14 @@ describe('LocalCache', () => {
   // --------------------------------------------------------------------------
 
   describe('filter', () => {
-    it.skip('updates code filter for code', () => {
-      // TODO
+    it('updates code filter for code', async () => {
+      const cache = new LocalCache()
+      await cache.set('jig://123', { kind: 'code' })
+      const buckets = Array.from((await cache.get('filter://code')).buckets)
+      expect(buckets.some(x => x > 0)).to.equal(true)
+      await cache.set('jig://456', { kind: 'code' })
+      const buckets2 = Array.from((await cache.get('filter://code')).buckets)
+      expect(buckets).not.to.deep.equal(buckets2)
     })
 
     // ------------------------------------------------------------------------
