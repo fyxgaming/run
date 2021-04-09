@@ -191,6 +191,16 @@ describe('LocalCache', () => {
       await cache.set('b', 'b')
       expect(await cache.get('b')).to.equal('b')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('clears code filter', async () => {
+      const cache = new LocalCache()
+      await cache.set('jig://123', { kind: 'code' })
+      expect((await cache.get('filter://code')).buckets.some(x => x > 0)).to.equal(true)
+      cache.clear()
+      expect(await cache.get('filter://code')).to.equal(undefined)
+    })
   })
 })
 
