@@ -10,7 +10,9 @@ const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { _dedupRequest, _cacheResponse, _dedupUtxos, _addToBroadcastCache } = unmangle(unmangle(Run)._network)
+const {
+  _dedupRequest, _cacheResponse, _dedupUtxos, _addToBroadcastCache, _updateUtxosWithBroadcasts
+} = unmangle(unmangle(Run)._network)
 
 // ------------------------------------------------------------------------------------------------
 // Network
@@ -196,8 +198,15 @@ describe('Network', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('adds unspent utxos in broadcasts', () => {
-      // TODO
+    it('adds unspent utxos in broadcasts', () => {
+      const utxos = []
+      const broadcasts = []
+      const address = new bsv.PrivateKey().toAddress()
+      const tx = new bsv.Transaction()
+      tx.to(address, 100)
+      _addToBroadcastCache(broadcasts, 100, tx.hash, tx)
+      const utxos2 = _updateUtxosWithBroadcasts(broadcasts, 1000, utxos, new bsv.Script(address))
+      expect(utxos2.length).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
