@@ -210,8 +210,11 @@ describe('LocalCache', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('does not update code filter for jigs or berries', () => {
-      // TODO
+    it('does not update code filter for jigs or berries', async () => {
+      const cache = new LocalCache()
+      await cache.set('jig://123', { kind: 'jig' })
+      await cache.set('berry://456', { kind: 'berry' })
+      expect(await cache.get('filter://code')).to.equal(undefined)
     })
 
     // ------------------------------------------------------------------------
