@@ -192,8 +192,19 @@ describe('Network', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_updateUtxosWithBroadcasts', () => {
-    it.skip('removes spent utxos', () => {
-      // TODO
+    it('removes spent utxos', () => {
+      const broadcasts = []
+      const address1 = new bsv.PrivateKey().toAddress()
+      const address2 = new bsv.PrivateKey().toAddress()
+      const tx1 = new bsv.Transaction()
+      tx1.to(address1, 100)
+      const utxos = [{ txid: tx1.hash, vout: 0, script: tx1.outputs[0].script, satoshis: tx1.outputs[0].satoshis }]
+      const tx2 = new bsv.Transaction()
+      tx2.from(utxos[0])
+      tx2.to(address2, 200)
+      _addToBroadcastCache(broadcasts, 100, tx2.hash, tx2)
+      const utxos2 = _updateUtxosWithBroadcasts(broadcasts, 1000, utxos, new bsv.Script(address1))
+      expect(utxos2.length).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
