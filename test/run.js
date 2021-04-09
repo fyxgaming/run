@@ -31,7 +31,6 @@ describe('Run', () => {
       run.api = 'whatsonchain'
       expect(run.api).to.equal(run.blockchain.api)
       expect(run.api).to.equal('whatsonchain')
-      expect(run.apiKey).to.equal('123')
       expect(run.network).to.equal('test')
     })
   })

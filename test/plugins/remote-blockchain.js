@@ -92,7 +92,7 @@ describe('RemoteBlockchain', () => {
       const address = new PrivateKey('mainnet').toAddress().toString()
       const script = Script.fromAddress(address)
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
-      const blockchain = RemoteBlockchain.create()
+      const blockchain = RemoteBlockchain.create({ api: 'whatsonchain' })
       unmangle(blockchain)._getUtxos = async () => {
         const utxo = { txid, vout: 0, satoshis: 0, script: '' }
         return [utxo, utxo]
@@ -102,7 +102,7 @@ describe('RemoteBlockchain', () => {
       Log._logger = { warn: (time, tag, ...warning) => { lastWarning = warning.join(' ') } }
       const utxos = await blockchain.utxos(script)
       expect(utxos.length).to.equal(1)
-      expect(lastWarning).to.equal(`[RemoteBlockchain] Duplicate utxo returned from server: ${txid}_o0`)
+      expect(lastWarning).to.equal(`[Network] Duplicate utxo returned from server: ${txid}_o0`)
       Log._logger = Log._defaultLogger
     })
   })

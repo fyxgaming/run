@@ -7,7 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { RunConnect2: RunConnect } = Run.plugins
+const { RunConnect } = Run.plugins
 const { Cache } = Run.api
 
 // ------------------------------------------------------------------------------------------------
