@@ -9,6 +9,8 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { LocalCache } = Run.plugins
+const unmangle = require('../env/unmangle')
+const StateFilter = unmangle(Run)._StateFilter
 
 // ------------------------------------------------------------------------------------------------
 // LocalCache
@@ -219,8 +221,19 @@ describe('LocalCache', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('updates code filter when shrink', () => {
-      // TODO
+    it('updates code filter when shrunk', async () => {
+      const cache = new LocalCache()
+      await cache.set('jig://123', { kind: 'code' })
+      const singleCodeSize = cache.sizeBytes / 1000 / 1000
+      await cache.set('jig://456', { kind: 'jig' })
+      await cache.set('jig://789', { kind: 'code' })
+      cache.maxSizeMB = singleCodeSize
+      expect(await cache.get('jig://123')).to.equal(undefined)
+      expect(await cache.get('jig://456')).to.equal(undefined)
+      expect(await cache.get('jig://789')).not.to.equal(undefined)
+      const filter = StateFilter.create()
+      StateFilter.add(filter, 'jig://789')
+      expect((await cache.get('filter://code')).buckets).to.deep.equal(filter.buckets)
     })
 
     // ------------------------------------------------------------------------
