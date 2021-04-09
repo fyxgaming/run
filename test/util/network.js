@@ -238,8 +238,16 @@ describe('Network', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('filters expired', () => {
-      // TODO
+    it('filters expired', async () => {
+      const utxos = []
+      const broadcasts = []
+      const address = new bsv.PrivateKey().toAddress()
+      const tx = new bsv.Transaction()
+      tx.to(address, 100)
+      _addToBroadcastCache(broadcasts, 10, tx.hash, tx)
+      await new Promise((resolve, reject) => setTimeout(resolve, 100))
+      const utxos2 = _updateUtxosWithBroadcasts(broadcasts, 10, utxos, new bsv.Script(address))
+      expect(utxos2.length).to.equal(0)
     })
   })
 })
