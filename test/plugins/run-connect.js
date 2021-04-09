@@ -126,7 +126,11 @@ describe('RunConnect', () => {
   // --------------------------------------------------------------------------
 
   describe('set', () => {
-    // TODO
+    it('sets on local cache', async () => {
+      const connect = new RunConnect()
+      await connect.set('abc', 123)
+      expect(await connect.cache.get('abc')).to.equal(123)
+    })
   })
 })
 
