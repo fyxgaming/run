@@ -12,7 +12,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { payFor } = require('../env/misc')
 const { Jig } = Run
-const { LocalPurse, Mockchain, RemoteBlockchain } = Run.plugins
+const { LocalPurse, Mockchain, RunConnect } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // LocalPurse tests
@@ -132,8 +132,8 @@ describe('LocalPurse', () => {
       it('valid blockchain', () => {
         const mockchain = new Mockchain()
         expect(new LocalPurse({ blockchain: mockchain }).blockchain).to.equal(mockchain)
-        const remoteBlockchain = RemoteBlockchain.create()
-        expect(new LocalPurse({ blockchain: remoteBlockchain }).blockchain).to.equal(remoteBlockchain)
+        const connect = RunConnect.create()
+        expect(new LocalPurse({ blockchain: connect }).blockchain).to.equal(connect)
       })
 
       // ----------------------------------------------------------------------

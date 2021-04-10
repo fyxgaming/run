@@ -8,8 +8,8 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { PrivateKey, Script } = require('bsv')
-const Run = require('../env/run')
-const unmangle = require('../env/unmangle')
+const Run = require('../../test/env/run')
+const unmangle = require('../../test/env/unmangle')
 const { RemoteBlockchain, RunConnect } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
