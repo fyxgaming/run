@@ -59,10 +59,10 @@ describe('Cache', () => {
   })
 
   // --------------------------------------------------------------------------
-  // code filter
+  // filter
   // --------------------------------------------------------------------------
 
-  describe('code filter', () => {
+  describe('filter', () => {
     it('sets code filter for new code', async () => {
       const run = new Run()
       class A extends Jig { }
@@ -85,6 +85,20 @@ describe('Cache', () => {
       await run.sync()
       const buckets2 = Array.from((await run.cache.get('filter://code')).buckets)
       expect(buckets1).not.to.deep.equal(buckets2)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('does not update code filter for jigs or berries', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      run.deploy(A)
+      await run.sync()
+      const buckets1 = Array.from((await run.cache.get('filter://code')).buckets)
+      const a = new A()
+      await a.sync()
+      const buckets2 = Array.from((await run.cache.get('filter://code')).buckets)
+      expect(buckets1).to.deep.equal(buckets2)
     })
   })
 })

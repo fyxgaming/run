@@ -200,29 +200,12 @@ describe('LocalCache', () => {
   // --------------------------------------------------------------------------
 
   describe('filter', () => {
-    it('updates code filter for code', async () => {
-      const cache = new LocalCache()
-      await cache.set('jig://123', { kind: 'code' })
-      const buckets = Array.from((await cache.get('filter://code')).buckets)
-      expect(buckets.some(x => x > 0)).to.equal(true)
-      await cache.set('jig://456', { kind: 'code' })
-      const buckets2 = Array.from((await cache.get('filter://code')).buckets)
-      expect(buckets).not.to.deep.equal(buckets2)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('does not update code filter for jigs or berries', async () => {
-      const cache = new LocalCache()
-      await cache.set('jig://123', { kind: 'jig' })
-      await cache.set('berry://456', { kind: 'berry' })
-      expect(await cache.get('filter://code')).to.equal(undefined)
-    })
-
-    // ------------------------------------------------------------------------
-
     it('updates code filter when shrunk', async () => {
       const cache = new LocalCache()
+      const filter = StateFilter.create()
+      StateFilter.add(filter, 'jig://123')
+      StateFilter.add(filter, 'jig://789')
+      await cache.set('filter://code', filter)
       await cache.set('jig://123', { kind: 'code' })
       const singleCodeSize = cache.sizeBytes / 1000 / 1000
       await cache.set('jig://456', { kind: 'jig' })
@@ -231,19 +214,11 @@ describe('LocalCache', () => {
       expect(await cache.get('jig://123')).to.equal(undefined)
       expect(await cache.get('jig://456')).to.equal(undefined)
       expect(await cache.get('jig://789')).not.to.equal(undefined)
-      const filter = StateFilter.create()
-      StateFilter.add(filter, 'jig://789')
-      expect((await cache.get('filter://code')).buckets).to.deep.equal(filter.buckets)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('clears code filter', async () => {
-      const cache = new LocalCache()
-      await cache.set('jig://123', { kind: 'code' })
-      expect((await cache.get('filter://code')).buckets.some(x => x > 0)).to.equal(true)
-      cache.clear()
-      expect(await cache.get('filter://code')).to.equal(undefined)
+      expect(await cache.get('filter://code')).not.to.equal(undefined)
+      const expectedFilter = StateFilter.create()
+      StateFilter.add(expectedFilter, 'jig://789')
+      const originalFilter = await cache.get('filter://code')
+      expect(originalFilter).to.deep.equal(expectedFilter)
     })
   })
 })

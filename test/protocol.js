@@ -9,6 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const Run = require('./env/run')
 const { COVER } = require('./env/config')
 const { CAPTURE_UNITS } = require('./data/capture')
+const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Protocol
@@ -39,6 +40,7 @@ describe('Protocol', () => {
 async function runProtocolTest (data) {
   const blockchain = new TestBlockchain(data)
   const run = new Run({ blockchain })
+  run.cache = new LocalCache()
 
   for (let i = 0; i < data.tests.length; i++) {
     console.log(`${i + 1} of ${data.tests.length}`)
