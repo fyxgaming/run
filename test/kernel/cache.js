@@ -74,7 +74,7 @@ describe('Cache', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('updates code filter for new code', async () => {
+    it('updates code filter for new code', async () => {
       const run = new Run()
       class A extends Jig { }
       run.deploy(A)
