@@ -74,16 +74,16 @@ describe('Cache', () => {
 
     // ------------------------------------------------------------------------
 
-    it('updates code filter for new code', async () => {
+    it.only('updates code filter for new code', async () => {
       const run = new Run()
       class A extends Jig { }
       run.deploy(A)
       await run.sync()
-      const buckets1 = Array.from((await run.cache.get('filter://code')).buckets)
+      const buckets1 = [...(await run.cache.get('filter://code')).buckets]
       class B extends Jig { }
       run.deploy(B)
       await run.sync()
-      const buckets2 = Array.from((await run.cache.get('filter://code')).buckets)
+      const buckets2 = [...(await run.cache.get('filter://code')).buckets]
       expect(buckets1).not.to.deep.equal(buckets2)
     })
 
@@ -94,10 +94,10 @@ describe('Cache', () => {
       class A extends Jig { }
       run.deploy(A)
       await run.sync()
-      const buckets1 = Array.from((await run.cache.get('filter://code')).buckets)
+      const buckets1 = [...(await run.cache.get('filter://code')).buckets]
       const a = new A()
       await a.sync()
-      const buckets2 = Array.from((await run.cache.get('filter://code')).buckets)
+      const buckets2 = [...(await run.cache.get('filter://code')).buckets]
       expect(buckets1).to.deep.equal(buckets2)
     })
   })
