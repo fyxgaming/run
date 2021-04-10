@@ -7,6 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
+const LocalCache = require('../../lib/plugins/local-cache')
 const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -64,7 +65,7 @@ describe('Cache', () => {
 
   describe('filter', () => {
     it('sets code filter for new code', async () => {
-      const run = new Run()
+      const run = new Run({ cache: new LocalCache() })
       class A extends Jig { }
       run.deploy(A)
       await run.sync()
@@ -75,29 +76,30 @@ describe('Cache', () => {
     // ------------------------------------------------------------------------
 
     it('updates code filter for new code', async () => {
-      const run = new Run()
+      const run = new Run({ cache: new LocalCache() })
+      run.cache = new LocalCache()
       class A extends Jig { }
       run.deploy(A)
       await run.sync()
-      const buckets1 = [...(await run.cache.get('filter://code')).buckets]
+      const buckets1 = Array.from((await run.cache.get('filter://code')).buckets)
       class B extends Jig { }
       run.deploy(B)
       await run.sync()
-      const buckets2 = [...(await run.cache.get('filter://code')).buckets]
+      const buckets2 = Array.from((await run.cache.get('filter://code')).buckets)
       expect(buckets1).not.to.deep.equal(buckets2)
     })
 
     // ------------------------------------------------------------------------
 
     it('does not update code filter for jigs or berries', async () => {
-      const run = new Run()
+      const run = new Run({ cache: new LocalCache() })
       class A extends Jig { }
       run.deploy(A)
       await run.sync()
-      const buckets1 = [...(await run.cache.get('filter://code')).buckets]
+      const buckets1 = Array.from((await run.cache.get('filter://code')).buckets)
       const a = new A()
       await a.sync()
-      const buckets2 = [...(await run.cache.get('filter://code')).buckets]
+      const buckets2 = Array.from((await run.cache.get('filter://code')).buckets)
       expect(buckets1).to.deep.equal(buckets2)
     })
   })
