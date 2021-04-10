@@ -132,7 +132,7 @@ describe('LocalPurse', () => {
       it('valid blockchain', () => {
         const mockchain = new Mockchain()
         expect(new LocalPurse({ blockchain: mockchain }).blockchain).to.equal(mockchain)
-        const connect = RunConnect.create()
+        const connect = new RunConnect()
         expect(new LocalPurse({ blockchain: connect }).blockchain).to.equal(connect)
       })
 
