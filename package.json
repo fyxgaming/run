@@ -1,6 +1,6 @@
 {
   "name": "@runonbitcoin/run",
-  "version": "0.6.19",
+  "version": "0.6.20",
   "description": "RUN Javascript library",
   "main": "dist/run.node.min.js",
   "browser": "dist/run.browser.min.js",
