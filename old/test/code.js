@@ -20,17 +20,6 @@ describe('Code', () => {
   beforeEach(() => run.activate())
   beforeEach(() => run.blockchain.block())
 
-  describe('misc', () => {
-    it('should pass instanceof checks', async () => {
-      class A { }
-      const A2 = await run.load(await run.deploy(A))
-      expect(new A()).to.be.instanceOf(A)
-      expect(new A()).not.to.be.instanceOf(A2)
-      expect(new A2()).not.to.be.instanceOf(A)
-      expect(new A2()).to.be.instanceOf(A2)
-    })
-  })
-
   describe('activate', () => {
     it.skip('should support activating different network', async () => {
       if (Run.instance) Run.instance.deactivate()
