@@ -215,7 +215,7 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('does not set metadata on local type until deployed', async () => {
+    it('does not set metadata on local type until deployed', async () => {
       const run = new Run()
       class A { }
       run.deploy(A)
