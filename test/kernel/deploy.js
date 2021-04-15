@@ -199,6 +199,19 @@ describe('Deploy', () => {
       const A3 = await run.load(A.location)
       expect(A3.owner instanceof CustomOwner).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('queue up multiple', async () => {
+      const run = new Run()
+      class A { }
+      class B { }
+      run.deploy(A)
+      run.deploy(B)
+      await run.sync()
+      expect(A.origin.slice(0, 64)).not.to.equal(B.origin.slice(0, 64))
+      expect(A.location.slice(0, 64)).not.to.equal(B.location.slice(0, 64))
+    })
   })
 
   // --------------------------------------------------------------------------

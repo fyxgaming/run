@@ -22,16 +22,6 @@ describe('Code', () => {
   beforeEach(() => run.blockchain.block())
 
   describe('deploy', () => {
-    it('should deploy all queued', async () => {
-      class A { }
-      class B { }
-      run.deploy(A)
-      run.deploy(B)
-      await run.sync()
-      expect(A.origin.split('_')[0]).not.to.equal(B.origin.split('_')[0])
-      expect(A.location.split('_')[0]).not.to.equal(B.location.split('_')[0])
-    })
-
     it('should revert metadata for deploy failures', async () => {
       const run = new Run()
       stub(run.purse, 'pay').returns()
