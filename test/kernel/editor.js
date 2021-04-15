@@ -60,6 +60,45 @@ describe('Editor', () => {
       expect(A.owner).to.equal(owner)
       expect(A.satoshis).to.equal(satoshis)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('should support changing networks', async () => {
+      const run = new Run()
+      class A { }
+      run.deploy(A)
+      await run.sync()
+      const blockchain = new Run.plugins.Mockchain()
+      blockchain.network = 'test'
+      const run2 = new Run({ blockchain })
+      run2.activate()
+      expect(A.location).to.equal(undefined)
+      run.activate()
+      expect(A.location).not.to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('sets correct bindings for network', async () => {
+      const run = new Run()
+      class A { }
+      run.deploy(A)
+      await run.sync()
+      const mockLocation = A.location
+      const mockOwner = A.owner
+      const blockchain = new Run.plugins.Mockchain()
+      blockchain.network = 'test'
+      const run2 = new Run({ blockchain })
+      run2.activate()
+      run2.deploy(A)
+      const testLocation = A.location
+      const testOwner = A.owner
+      expect(A.location).to.equal(testLocation)
+      expect(A.owner).to.equal(testOwner)
+      run.activate()
+      expect(A.location).to.equal(mockLocation)
+      expect(A.owner).to.equal(mockOwner)
+    })
   })
 
   // --------------------------------------------------------------------------
