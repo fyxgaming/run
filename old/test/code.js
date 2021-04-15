@@ -7,7 +7,6 @@
 const { describe, it, beforeEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
-const { stub } = require('sinon')
 const { Run, COVER } = require('../../test/env/config')
 const { unmangle } = require('../../test/env/unmangle')
 const { Jig } = Run
@@ -20,35 +19,6 @@ describe('Code', () => {
   const run = new Run()
   beforeEach(() => run.activate())
   beforeEach(() => run.blockchain.block())
-
-  describe('deploy', () => {
-    // TODO: Re-enable
-    it.skip('should revert metadata for queued deploy failures', async () => {
-      const run = new Run()
-      stub(run.purse, 'pay').callThrough().onSecondCall().returns()
-      class A { }
-      class B { }
-      run.deploy(A).catch(e => {})
-      run.deploy(B).catch(e => {})
-      expect(A.origin.startsWith('_')).to.equal(true)
-      expect(B.origin.startsWith('_')).to.equal(true)
-      expect(A.location.startsWith('_')).to.equal(true)
-      expect(B.location.startsWith('_')).to.equal(true)
-      expect(A.originMocknet.startsWith('_')).to.equal(true)
-      expect(B.originMocknet.startsWith('_')).to.equal(true)
-      expect(A.locationMocknet.startsWith('_')).to.equal(true)
-      expect(B.locationMocknet.startsWith('_')).to.equal(true)
-      await expect(run.sync()).to.be.rejectedWith('tx has no inputs')
-      expect(A.origin.endsWith('_o1')).to.equal(true)
-      expect(A.originMocknet.endsWith('_o1')).to.equal(true)
-      expect(B.origin).to.equal(undefined)
-      expect(B.originMocknet).to.equal(undefined)
-      expect(A.location.endsWith('_o1')).to.equal(true)
-      expect(A.locationMocknet.endsWith('_o1')).to.equal(true)
-      expect(B.location).to.equal(undefined)
-      expect(B.locationMocknet).to.equal(undefined)
-    })
-  })
 
   describe('load', () => {
     it('should load after deploy with preset', async () => {

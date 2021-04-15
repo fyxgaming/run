@@ -212,6 +212,20 @@ describe('Deploy', () => {
       expect(A.origin.slice(0, 64)).not.to.equal(B.origin.slice(0, 64))
       expect(A.location.slice(0, 64)).not.to.equal(B.location.slice(0, 64))
     })
+
+    // ------------------------------------------------------------------------
+
+    it.only('does not set metadata on local type until deployed', async () => {
+      const run = new Run()
+      class A { }
+      run.deploy(A)
+      expect(A.origin).to.equal(undefined)
+      expect(A.location).to.equal(undefined)
+      expect(A.nonce).to.equal(undefined)
+      expect(A.owner).to.equal(undefined)
+      expect(A.satoshis).to.equal(undefined)
+      expect(A.presets).to.equal(undefined)
+    })
   })
 
   // --------------------------------------------------------------------------
