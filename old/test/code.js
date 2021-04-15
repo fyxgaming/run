@@ -22,43 +22,6 @@ describe('Code', () => {
   beforeEach(() => run.blockchain.block())
 
   describe('deploy', () => {
-    it('should support batch deploys', async () => {
-      class A { }
-      class B { }
-      class C { }
-      run.transaction.begin()
-      run.deploy(A)
-      run.deploy(B)
-      run.deploy(C)
-      run.transaction.end()
-      expect(A.origin).to.equal('_d0')
-      expect(B.origin).to.equal('_d1')
-      expect(C.origin).to.equal('_d2')
-      expect(A.location).to.equal('_d0')
-      expect(B.location).to.equal('_d1')
-      expect(C.location).to.equal('_d2')
-      expect(A.originMocknet).to.equal('_d0')
-      expect(B.originMocknet).to.equal('_d1')
-      expect(C.originMocknet).to.equal('_d2')
-      expect(A.locationMocknet).to.equal('_d0')
-      expect(B.locationMocknet).to.equal('_d1')
-      expect(C.locationMocknet).to.equal('_d2')
-      await run.sync()
-      const txid = A.origin.split('_')[0]
-      expect(A.origin.startsWith(txid)).to.equal(true)
-      expect(B.origin.startsWith(txid)).to.equal(true)
-      expect(C.origin.startsWith(txid)).to.equal(true)
-      expect(A.location.startsWith(txid)).to.equal(true)
-      expect(B.location.startsWith(txid)).to.equal(true)
-      expect(C.location.startsWith(txid)).to.equal(true)
-      expect(A.originMocknet.startsWith(txid)).to.equal(true)
-      expect(B.originMocknet.startsWith(txid)).to.equal(true)
-      expect(C.originMocknet.startsWith(txid)).to.equal(true)
-      expect(A.locationMocknet.startsWith(txid)).to.equal(true)
-      expect(B.locationMocknet.startsWith(txid)).to.equal(true)
-      expect(C.locationMocknet.startsWith(txid)).to.equal(true)
-    })
-
     it('should deploy all queued', async () => {
       class A { }
       class B { }
