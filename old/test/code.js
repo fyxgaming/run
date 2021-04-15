@@ -20,27 +20,6 @@ describe('Code', () => {
   beforeEach(() => run.activate())
   beforeEach(() => run.blockchain.block())
 
-  describe('sandbox', () => {
-    it('should sandbox methods from globals', async () => {
-      class A {
-        isUndefined (x) {
-          if (typeof window !== 'undefined') return typeof window[x] === 'undefined'
-          if (typeof global !== 'undefined') return typeof global[x] === 'undefined'
-          return true
-        }
-      }
-      const A1 = await run.load(await run.deploy(A))
-      const a1 = new A1()
-      const bad = ['Date', 'Math', 'eval', 'XMLHttpRequest', 'FileReader', 'WebSocket', 'setTimeout', 'setInterval']
-      bad.forEach(x => expect(a1.isUndefined(x)).to.equal(true))
-      await run.sync()
-      const run2 = new Run()
-      const A2 = await run2.load(A.origin)
-      const a2 = new A2()
-      bad.forEach(x => expect(a2.isUndefined(x)).to.equal(true))
-    })
-  })
-
   describe('misc', () => {
     it('should pass instanceof checks', async () => {
       class A { }
