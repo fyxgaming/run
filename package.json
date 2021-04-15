@@ -2,6 +2,7 @@
   "name": "@runonbitcoin/run",
   "version": "0.6.20",
   "description": "RUN Javascript library",
+  "license": "MIT",
   "main": "dist/run.node.min.js",
   "browser": "dist/run.browser.min.js",
   "files": [
