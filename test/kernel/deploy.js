@@ -1784,6 +1784,36 @@ describe('Deploy', () => {
   })
 
   // --------------------------------------------------------------------------
+  // Sandbox
+  // --------------------------------------------------------------------------
+
+  describe('Sandbox', () => {
+    it('sandboxes methods from globals', async () => {
+      const run = new Run()
+      class A {
+        isUndefined (x) {
+          if (typeof window !== 'undefined') return typeof window[x] === 'undefined'
+          if (typeof global !== 'undefined') return typeof global[x] === 'undefined'
+          return true
+        }
+      }
+      const A1 = run.deploy(A)
+      function test (A) {
+        const a = new A()
+        const bad = ['Date', 'Math', 'eval', 'XMLHttpRequest', 'FileReader', 'WebSocket', 'setTimeout', 'setInterval']
+        bad.forEach(x => expect(a.isUndefined(x)).to.equal(true))
+      }
+      test(A1)
+      await run.sync()
+      const A2 = await run.load(A.origin)
+      test(A2)
+      run.cache = new LocalCache()
+      const A3 = await run.load(A.origin)
+      test(A3)
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // Presets
   // --------------------------------------------------------------------------
 
