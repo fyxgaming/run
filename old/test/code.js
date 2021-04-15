@@ -20,23 +20,6 @@ describe('Code', () => {
   beforeEach(() => run.activate())
   beforeEach(() => run.blockchain.block())
 
-  describe('load', () => {
-    it('should load after deploy with preset', async () => {
-      // get a location
-      class A { }
-      await run.deploy(A)
-      // deactivating, which will leave A.location set
-      run.deactivate()
-      expect(typeof A.location).to.equal('string')
-      // deploy the same code again
-      const run2 = new Run({ blockchain: run.blockchain })
-      await run2.deploy(A)
-      // find the sandbox directly, without using load, because we want to make sure deploy works correctly.
-      // and using load, make sure the sandboxes are the same
-      expect(unmangle(run2.code)._installs.get(A)).to.equal(await run2.load(A.location))
-    })
-  })
-
   describe('sandbox', () => {
     it('should sandbox methods from globals', async () => {
       class A {
