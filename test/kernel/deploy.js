@@ -2120,6 +2120,22 @@ describe('Deploy', () => {
 
     // ------------------------------------------------------------------------
 
+    it('does not set metadata on local type', async () => {
+      const run = new Run()
+      stub(run.purse, 'pay').callsFake(x => x)
+      class A { }
+      run.deploy(A)
+      await expect(run.sync()).to.be.rejected
+      expect(A.origin).to.equal(undefined)
+      expect(A.location).to.equal(undefined)
+      expect(A.nonce).to.equal(undefined)
+      expect(A.owner).to.equal(undefined)
+      expect(A.satoshis).to.equal(undefined)
+      expect(A.presets).to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if non-function', () => {
       const run = new Run()
       const error = 'Only functions and classes are supported'

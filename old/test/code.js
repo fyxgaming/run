@@ -22,17 +22,6 @@ describe('Code', () => {
   beforeEach(() => run.blockchain.block())
 
   describe('deploy', () => {
-    it('should revert metadata for deploy failures', async () => {
-      const run = new Run()
-      stub(run.purse, 'pay').returns()
-      class A { }
-      await expect(run.deploy(A)).to.be.rejected
-      expect(A.origin).to.equal(undefined)
-      expect(A.location).to.equal(undefined)
-      expect(A.originMocknet).to.equal(undefined)
-      expect(A.locationMocknet).to.equal(undefined)
-    })
-
     // TODO: Re-enable
     it.skip('should revert metadata for queued deploy failures', async () => {
       const run = new Run()
