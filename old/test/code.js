@@ -22,17 +22,6 @@ describe('Code', () => {
   beforeEach(() => run.blockchain.block())
 
   describe('deploy', () => {
-    it('should support custom owners', async () => {
-      class CustomOwner {
-        script () { return '' }
-        domain () { return 1 }
-      }
-      const run = new Run({ owner: new CustomOwner() })
-      class A { }
-      await run.deploy(A)
-      expect(A.owner instanceof CustomOwner).to.equal(true)
-    })
-
     it('should support batch deploys', async () => {
       class A { }
       class B { }

@@ -180,6 +180,25 @@ describe('Deploy', () => {
       const CA3 = await run.load(CA.location)
       test(CA3)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('custom owners', async () => {
+      class CustomOwner {
+        script () { return '' }
+        domain () { return 1 }
+      }
+      const run = new Run({ owner: new CustomOwner() })
+      class A { }
+      run.deploy(A)
+      await run.sync()
+      expect(A.owner instanceof CustomOwner).to.equal(true)
+      const A2 = await run.load(A.location)
+      expect(A2.owner instanceof CustomOwner).to.equal(true)
+      run.cache = new LocalCache()
+      const A3 = await run.load(A.location)
+      expect(A3.owner instanceof CustomOwner).to.equal(true)
+    })
   })
 
   // --------------------------------------------------------------------------
