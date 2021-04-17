@@ -46,22 +46,6 @@ describe('_checkRunTransaction', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
-// _extractRunData
-// ------------------------------------------------------------------------------------------------
-
-describe('_extractRunData', () => {
-  it('should decrypt data', () => {
-    const tx = buildRunTransaction('run', [Run.protocol], { code: [1], jigs: 2 }, 'buildSafeDataOut', true, 0)
-    expect(_extractRunData(tx)).to.deep.equal({ code: [1], jigs: 2 })
-  })
-
-  it('should throw if not a run tx', () => {
-    const tx = new bsv.Transaction().to(new bsv.PrivateKey().toAddress(), 100)
-    expect(() => _extractRunData(tx)).to.throw(`not a run tx: ${tx.hash}`)
-  })
-})
-
-// ------------------------------------------------------------------------------------------------
 // _outputType
 // ------------------------------------------------------------------------------------------------
 
