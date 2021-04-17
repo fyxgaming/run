@@ -23,25 +23,6 @@ describe('RemoteBlockchain', () => {
 
   describe('constructor', () => {
     // ------------------------------------------------------------------------
-    // network
-    // ------------------------------------------------------------------------
-
-    describe('network', () => {
-      it('should default network to main', () => {
-        expect(RemoteBlockchain.create().network).to.equal('main')
-      })
-
-      // ----------------------------------------------------------------------
-
-      it('should throw for bad network', () => {
-        expect(() => RemoteBlockchain.create({ network: 'bad' })).to.throw('Unsupported network: bad')
-        expect(() => RemoteBlockchain.create({ network: 0 })).to.throw('Unsupported network: 0')
-        expect(() => RemoteBlockchain.create({ network: {} })).to.throw('Unsupported network: [object Object]')
-        expect(() => RemoteBlockchain.create({ network: null })).to.throw('Unsupported network: null')
-      })
-    })
-
-    // ------------------------------------------------------------------------
     // api
     // ------------------------------------------------------------------------
 
