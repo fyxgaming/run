@@ -10,11 +10,6 @@
 
 /*
 describe('_checkRunTransaction', () => {
-  it('should throw if bad prefix', () => {
-    const tx = buildRunTransaction('run0', [Run.protocol], {}, 'buildSafeDataOut', true, 0)
-    expect(() => _checkRunTransaction(tx)).to.throw(`not a run tx: ${tx.hash}`)
-  })
-
   it('should throw if bad protocol version', () => {
     const tx1 = buildRunTransaction('run', [0x00, Run.protocol], {}, 'buildSafeDataOut', true, 0)
     expect(() => _checkRunTransaction(tx1)).to.throw('Unsupported run protocol')
