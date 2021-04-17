@@ -4,23 +4,11 @@
  * Tests for lib/util/opreturn.js
  */
 
-const bsv = require('bsv')
-const { describe, it } = require('mocha')
-const { expect } = require('chai')
-const { Run } = require('../../test/env/config')
-const { unmangle } = require('../../test/env/unmangle')
-const {
-  _checkRunTransaction,
-  _extractRunData,
-  _outputType,
-  _encryptRunData,
-  _decryptRunData
-} = unmangle(unmangle(Run)._util)
-
 // ------------------------------------------------------------------------------------------------
 // _checkRunTransaction
 // ------------------------------------------------------------------------------------------------
 
+/*
 describe('_checkRunTransaction', () => {
   it('should detect valid run transaction', () => {
     const tx = buildRunTransaction('run', [Run.protocol], {}, 'buildSafeDataOut', true, 0)
@@ -109,52 +97,6 @@ describe('_outputType', () => {
     expect(_outputType(tx, 4)).to.equal('other')
   })
 })
-
-// ------------------------------------------------------------------------------------------------
-// _encryptRunData
-// ------------------------------------------------------------------------------------------------
-
-describe('_encryptRunData', () => {
-  it('should encrypt run data', () => {
-    const encrypted = _encryptRunData({ a: 1 })
-    expect(encrypted).not.to.equal(JSON.stringify({ a: 1 }))
-  })
-})
-
-// ------------------------------------------------------------------------------------------------
-// _decryptRunData
-// ------------------------------------------------------------------------------------------------
-
-describe('_decryptRunData', () => {
-  it('should decrypt run data', () => {
-    const encrypted = _encryptRunData({ a: 1 })
-    expect(_decryptRunData(encrypted)).to.deep.equal({ a: 1 })
-  })
-
-  it('should throw for bad data', () => {
-    expect(() => _decryptRunData(JSON.stringify({ a: 1 }))).to.throw('unable to parse decrypted run data')
-  })
-})
-
-// ------------------------------------------------------------------------------------------------
-// buildRunTransaction
-// ------------------------------------------------------------------------------------------------
-
-function buildRunTransaction (prefixString, protocolVersionArray, runData, scriptBuilder,
-  containDebugInfo, numAdditionalOutputs) {
-  const Buffer = bsv.deps.Buffer
-  const prefix = Buffer.from(prefixString, 'utf8')
-  const protocolVersion = Buffer.from(protocolVersionArray, 'hex')
-  const appId = Buffer.from('my-app', 'utf8')
-  const payload = Buffer.from(_encryptRunData(runData), 'utf8')
-  const debugInfo = Buffer.from('r11r', 'utf8')
-  const parts = containDebugInfo
-    ? [prefix, protocolVersion, appId, payload, debugInfo]
-    : [prefix, protocolVersion, appId, payload]
-  const script = bsv.Script[scriptBuilder](parts)
-  const tx = new bsv.Transaction().addOutput(new bsv.Transaction.Output({ script, satoshis: 0 }))
-  for (let i = 0; i < numAdditionalOutputs; i++) { tx.to(new bsv.PrivateKey().toAddress(), 100) }
-  return tx
-}
+*/
 
 // ------------------------------------------------------------------------------------------------
