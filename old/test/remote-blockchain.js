@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const { PrivateKey, Script } = require('bsv')
 const Run = require('../../test/env/run')
 const unmangle = require('../../test/env/unmangle')
-const { RemoteBlockchain, RunConnect } = Run.plugins
+const { RemoteBlockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // RemoteBlockchain
@@ -22,24 +22,6 @@ describe('RemoteBlockchain', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    // ------------------------------------------------------------------------
-    // api
-    // ------------------------------------------------------------------------
-
-    describe('api', () => {
-      it('should default to run api', () => {
-        expect(RemoteBlockchain.create() instanceof RunConnect).to.equal(true)
-      })
-
-      // ----------------------------------------------------------------------
-
-      it('should throw for bad api', () => {
-        expect(() => RemoteBlockchain.create({ api: 'bad' })).to.throw('Invalid blockchain API: bad')
-        expect(() => RemoteBlockchain.create({ api: null })).to.throw('Invalid blockchain API: null')
-        expect(() => RemoteBlockchain.create({ api: 123 })).to.throw('Invalid blockchain API: 123')
-      })
-    })
-
     // ------------------------------------------------------------------------
     // lastBlockchain
     // ------------------------------------------------------------------------

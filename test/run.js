@@ -8,7 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('./env/run')
-const { RunConnect } = Run.plugins
+const { RunConnect, WhatsOnChain, Mockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Run
@@ -25,18 +25,56 @@ describe('Run', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('RunConnect enabled by default on mainnet', () => {
+    it('RunConnect used for main network', () => {
       const run = new Run({ network: 'main' })
+      expect(run.blockchain instanceof RunConnect).to.equal(true)
       expect(run.cache instanceof RunConnect).to.equal(true)
+      expect(run.api).to.equal('run')
     })
 
     // ------------------------------------------------------------------------
 
-    it('RunConnect not used on testnet or mocknet', () => {
-      const run1 = new Run({ network: 'test', purse: undefined, owner: undefined })
-      expect(run1.cache instanceof RunConnect).to.equal(false)
-      const run2 = new Run({ network: 'mock', purse: undefined, owner: undefined })
-      expect(run2.cache instanceof RunConnect).to.equal(false)
+    it('RunConnect used for test network', () => {
+      const run = new Run({ network: 'test', purse: undefined, owner: undefined })
+      expect(run.blockchain instanceof RunConnect).to.equal(true)
+      expect(run.cache instanceof RunConnect).to.equal(false)
+      expect(run.api).to.equal('run')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('WhatsOnChain used for stn network', () => {
+      const run = new Run({ network: 'stn', purse: undefined, owner: undefined })
+      expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
+      expect(run.cache instanceof RunConnect).to.equal(false)
+      expect(run.api).to.equal('whatsonchain')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('Mockchain used for mock network', () => {
+      const run = new Run({ network: 'mock', purse: undefined, owner: undefined })
+      expect(run.blockchain instanceof Mockchain).to.equal(true)
+      expect(run.cache instanceof RunConnect).to.equal(false)
+      expect(run.api).to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws for invalid network', () => {
+      expect(() => new Run({ network: '' })).to.throw('Unsupported network')
+      expect(() => new Run({ network: 'mainnet' })).to.throw('Unsupported network')
+      expect(() => new Run({ network: 'tester' })).to.throw('Unsupported network')
+      expect(() => new Run({ network: 'mocknet' })).to.throw('Unsupported network')
+      expect(() => new Run({ network: null })).to.throw('Unsupported network')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws for bad api', () => {
+      expect(() => new Run({ api: 'bad' })).to.throw('Invalid API: bad')
+      expect(() => new Run({ api: null })).to.throw('Invalid API: null')
+      expect(() => new Run({ api: 123 })).to.throw('Invalid API: 123')
     })
   })
 
@@ -50,6 +88,7 @@ describe('Run', () => {
       run.api = 'whatsonchain'
       expect(run.api).to.equal(run.blockchain.api)
       expect(run.api).to.equal('whatsonchain')
+      expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
       expect(run.network).to.equal('test')
     })
   })
