@@ -187,6 +187,22 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
+      it('throws if not op_false op_return', () => {
+        const error = 'Not a run transaction: invalid op_return protocol'
+        const metadata = { in: 0, ref: [], out: [], del: [], cre: [], exec: [] }
+        const Buffer = bsv.deps.Buffer
+        const prefix = Buffer.from('run', 'utf8')
+        const ver = Buffer.from([0x05])
+        const app = Buffer.from('', 'utf8')
+        const json = Buffer.from(JSON.stringify(metadata), 'utf8')
+        const script = bsv.Script.buildDataOut([prefix, ver, app, json])
+        const output = new bsv.Transaction.Output({ script, satoshis: 0 })
+        const rawtx = new bsv.Transaction().addOutput(output).toString()
+        expect(() => Run.util.metadata(rawtx)).to.throw(error)
+      })
+
+      // ------------------------------------------------------------------------
+
       it('throws if invalid prefix', () => {
         const error = 'Not a run transaction: invalid op_return protocol'
         const metadata = { in: 0, ref: [], out: [], del: [], cre: [], exec: [] }
