@@ -1,7 +1,7 @@
 /**
- * network.js
+ * utxos.js
  *
- * Tests for lib/util/network.js
+ * Tests for lib/util/utxos.js
  */
 
 const { describe, it } = require('mocha')
@@ -10,13 +10,13 @@ const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { _dedupUtxos, _addToBroadcastCache, _updateUtxosWithBroadcasts } = unmangle(unmangle(Run)._network)
+const { _dedupUtxos, _addToBroadcastCache, _updateUtxosWithBroadcasts } = unmangle(unmangle(Run)._utxos)
 
 // ------------------------------------------------------------------------------------------------
-// Network
+// Utxos
 // ------------------------------------------------------------------------------------------------
 
-describe('Network', () => {
+describe('Utxos', () => {
   // ----------------------------------------------------------------------------------------------
   // _dedupUtxos
   // ----------------------------------------------------------------------------------------------
