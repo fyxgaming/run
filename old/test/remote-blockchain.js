@@ -18,35 +18,6 @@ const { RemoteBlockchain } = Run.plugins
 
 describe('RemoteBlockchain', () => {
   // --------------------------------------------------------------------------
-  // constructor
-  // --------------------------------------------------------------------------
-
-  describe('constructor', () => {
-    // ------------------------------------------------------------------------
-    // lastBlockchain
-    // ------------------------------------------------------------------------
-
-    describe('lastBlockchain', () => {
-      it('should support passing different last blockchain', () => {
-        const lastBlockchain = { cache: {} }
-        expect(RemoteBlockchain.create({ lastBlockchain }).cache).not.to.equal(lastBlockchain.cache)
-      })
-
-      // ----------------------------------------------------------------------
-
-      it('should only copy cache if same network', async () => {
-        const testnet1 = RemoteBlockchain.create({ network: 'test' })
-        // Fill the cache with one transaction
-        await testnet1.fetch('78db863a75faf35190b3524842abeaa835ed5a5a025df62f275fab63881791bb')
-        const testnet2 = RemoteBlockchain.create({ network: 'test', lastBlockchain: testnet1 })
-        const mainnet = RemoteBlockchain.create({ network: 'main', lastBlockchain: testnet2 })
-        expect(testnet2.cache).to.deep.equal(testnet1.cache)
-        expect(mainnet.cache).not.to.equal(testnet2.cache)
-      })
-    })
-  })
-
-  // --------------------------------------------------------------------------
   // utxos
   // --------------------------------------------------------------------------
 
