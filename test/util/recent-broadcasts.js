@@ -92,6 +92,19 @@ describe('RecentBroadcasts', () => {
 
     // ------------------------------------------------------------------------
 
+    it('does not add already added utxos', async () => {
+      const cache = new Map()
+      const address = new bsv.PrivateKey().toAddress()
+      const tx = new bsv.Transaction()
+      tx.to(address, 100)
+      const utxos = [{ txid: tx.hash, vout: 0, script: bsv.Script.fromAddress(address).toHex(), satoshis: 100 }]
+      await RecentBroadcasts._addToCache(cache, tx, tx.hash)
+      await RecentBroadcasts._correctUtxosUsingCache(cache, utxos, bsv.Script.fromAddress(address).toHex())
+      expect(utxos.length).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('does not add spent utxos', async () => {
       const cache = new Map()
       const address = new bsv.PrivateKey().toAddress()
