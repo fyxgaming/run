@@ -13,6 +13,12 @@ const unmangle = require('../env/unmangle')
 const RecentBroadcasts = unmangle(unmangle(Run)._RecentBroadcasts)
 
 // ------------------------------------------------------------------------------------------------
+// Globals
+// ------------------------------------------------------------------------------------------------
+
+const CONFIG_KEY_RECENT_BROADCASTS = 'config://recent-broadcasts'
+
+// ------------------------------------------------------------------------------------------------
 // RecentBroadcasts
 // ------------------------------------------------------------------------------------------------
 
@@ -33,7 +39,7 @@ describe('RecentBroadcasts', () => {
       tx.from({ txid: prevTxId, vout: 123, script: 'abc', satoshis: 456 })
       const date = Date.now()
       await RecentBroadcasts._addToCache(cache, tx, tx.hash)
-      const recentBroadcasts = cache.get('broadcasts://recent')
+      const recentBroadcasts = cache.get(CONFIG_KEY_RECENT_BROADCASTS)
       expect(recentBroadcasts.length).to.equal(1)
       expect(recentBroadcasts[0].time >= date).to.equal(true)
       expect(recentBroadcasts[0].inputs).to.deep.equal([{ txid: prevTxId, vout: 123 }])
@@ -51,7 +57,7 @@ describe('RecentBroadcasts', () => {
       const tx2 = new bsv.Transaction()
       tx2.to(new bsv.PrivateKey().toAddress(), 100)
       await RecentBroadcasts._addToCache(cache, tx2, tx2.hash, 10)
-      const recentBroadcasts = cache.get('broadcasts://recent')
+      const recentBroadcasts = cache.get(CONFIG_KEY_RECENT_BROADCASTS)
       expect(recentBroadcasts.length).to.equal(1)
       expect(recentBroadcasts[0].outputs[0].txid).to.equal(tx2.hash)
     })

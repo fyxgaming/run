@@ -11,6 +11,12 @@ const LocalCache = require('../../lib/plugins/local-cache')
 const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
+// Globals
+// ------------------------------------------------------------------------------------------------
+
+const CONFIG_KEY_CODE_FILTER = 'config://code-filter'
+
+// ------------------------------------------------------------------------------------------------
 // Cache
 // ------------------------------------------------------------------------------------------------
 
@@ -69,7 +75,7 @@ describe('Cache', () => {
       class A extends Jig { }
       run.deploy(A)
       await run.sync()
-      const filter = await run.cache.get('filter://code')
+      const filter = await run.cache.get(CONFIG_KEY_CODE_FILTER)
       expect(filter.buckets.some(x => x > 0)).to.equal(true)
     })
 
@@ -81,11 +87,11 @@ describe('Cache', () => {
       class A extends Jig { }
       run.deploy(A)
       await run.sync()
-      const buckets1 = Array.from((await run.cache.get('filter://code')).buckets)
+      const buckets1 = Array.from((await run.cache.get(CONFIG_KEY_CODE_FILTER)).buckets)
       class B extends Jig { }
       run.deploy(B)
       await run.sync()
-      const buckets2 = Array.from((await run.cache.get('filter://code')).buckets)
+      const buckets2 = Array.from((await run.cache.get(CONFIG_KEY_CODE_FILTER)).buckets)
       expect(buckets1).not.to.deep.equal(buckets2)
     })
 
@@ -96,10 +102,10 @@ describe('Cache', () => {
       class A extends Jig { }
       run.deploy(A)
       await run.sync()
-      const buckets1 = Array.from((await run.cache.get('filter://code')).buckets)
+      const buckets1 = Array.from((await run.cache.get(CONFIG_KEY_CODE_FILTER)).buckets)
       const a = new A()
       await a.sync()
-      const buckets2 = Array.from((await run.cache.get('filter://code')).buckets)
+      const buckets2 = Array.from((await run.cache.get(CONFIG_KEY_CODE_FILTER)).buckets)
       expect(buckets1).to.deep.equal(buckets2)
     })
   })

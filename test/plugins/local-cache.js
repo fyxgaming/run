@@ -13,6 +13,12 @@ const unmangle = require('../env/unmangle')
 const StateFilter = unmangle(Run)._StateFilter
 
 // ------------------------------------------------------------------------------------------------
+// Globals
+// ------------------------------------------------------------------------------------------------
+
+const CONFIG_KEY_CODE_FILTER = 'config://code-filter'
+
+// ------------------------------------------------------------------------------------------------
 // LocalCache
 // ------------------------------------------------------------------------------------------------
 
@@ -205,7 +211,7 @@ describe('LocalCache', () => {
       const filter = StateFilter.create()
       StateFilter.add(filter, 'jig://123')
       StateFilter.add(filter, 'jig://789')
-      await cache.set('filter://code', filter)
+      await cache.set(CONFIG_KEY_CODE_FILTER, filter)
       await cache.set('jig://123', { kind: 'code' })
       const singleCodeSize = cache.sizeBytes / 1000 / 1000
       await cache.set('jig://456', { kind: 'jig' })
@@ -214,10 +220,10 @@ describe('LocalCache', () => {
       expect(await cache.get('jig://123')).to.equal(undefined)
       expect(await cache.get('jig://456')).to.equal(undefined)
       expect(await cache.get('jig://789')).not.to.equal(undefined)
-      expect(await cache.get('filter://code')).not.to.equal(undefined)
+      expect(await cache.get(CONFIG_KEY_CODE_FILTER)).not.to.equal(undefined)
       const expectedFilter = StateFilter.create()
       StateFilter.add(expectedFilter, 'jig://789')
-      const originalFilter = await cache.get('filter://code')
+      const originalFilter = await cache.get(CONFIG_KEY_CODE_FILTER)
       expect(originalFilter).to.deep.equal(expectedFilter)
     })
   })
