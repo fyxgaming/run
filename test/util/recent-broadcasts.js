@@ -18,7 +18,7 @@ const RecentBroadcasts = unmangle(unmangle(Run)._RecentBroadcasts)
 
 describe('RecentBroadcasts', () => {
   // ----------------------------------------------------------------------------------------------
-  // _add
+  // _addToCache
   // ----------------------------------------------------------------------------------------------
 
   describe('_addToCache', () => {
