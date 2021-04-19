@@ -119,6 +119,15 @@ describe('RecentBroadcasts', () => {
       await RecentBroadcasts._correctUtxosUsingCache(cache, utxos, bsv.Script.fromAddress(address).toHex(), 10)
       expect(utxos.length).to.equal(0)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('empty cache does nothing', async () => {
+      const cache = new Map()
+      const utxos = [{ txid: new bsv.Transaction().hash, vout: 1, script: 'abc', satoshis: 123 }]
+      await RecentBroadcasts._correctUtxosUsingCache(cache, utxos, '123')
+      expect(utxos.length).to.equal(1)
+    })
   })
 })
 
