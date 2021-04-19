@@ -1,7 +1,7 @@
 /**
- * utxos.js
+ * recent-broadcasts.js
  *
- * Tests for lib/util/utxos.js
+ * Tests for lib/util/recent-broadcasts.js
  */
 
 const { describe, it } = require('mocha')
@@ -10,37 +10,27 @@ const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { _dedupUtxos, _addToBroadcastCache, _updateUtxosWithBroadcasts } = unmangle(unmangle(Run)._utxos)
+const RecentBroadcasts = unmangle(unmangle(Run)._RecentBroadcasts)
 
 // ------------------------------------------------------------------------------------------------
-// Utxos
+// RecentBroadcasts
 // ------------------------------------------------------------------------------------------------
 
-describe('Utxos', () => {
+describe('RecentBroadcasts', () => {
+  console.log(RecentBroadcasts, it, expect, bsv)
   // ----------------------------------------------------------------------------------------------
-  // _dedupUtxos
-  // ----------------------------------------------------------------------------------------------
-
-  describe('_dedupUtxos', () => {
-    it('dedups utxos', () => {
-      const a = { txid: '0', vout: 1, script: '2', satoshis: 3 }
-      const b = { txid: '4', vout: 5, script: '6', satoshis: 7 }
-      expect(_dedupUtxos([a, b, b])).to.deep.equal([a, b])
-    })
-  })
-
-  // ----------------------------------------------------------------------------------------------
-  // _addToBroadcastQueue
+  // _addToCache
   // ----------------------------------------------------------------------------------------------
 
-  describe('_addToBroadcastQueue', () => {
+  describe('_addToCache', () => {
+    /*
     it('adds new transaction', () => {
-      const broadcasts = []
+      const cache = new Map()
       const tx = new bsv.Transaction()
       tx.to(new bsv.PrivateKey().toAddress(), 100)
-      _addToBroadcastCache(broadcasts, 1000, tx.hash, tx)
+      _updateRecentBroadcasts(tx, tx.hash, cache)
       expect(broadcasts.length).to.equal(1)
-      expect(broadcasts[0].txid).to.equal(tx.hash)
+      expect(cache.get('broadcasts://recent')[0].txid).to.equal(tx.hash)
       expect(broadcasts[0].tx).to.equal(tx)
     })
 
@@ -72,13 +62,15 @@ describe('Utxos', () => {
       expect(broadcasts[0].txid).to.equal(tx2.hash)
       expect(broadcasts[0].tx).to.equal(tx2)
     })
+    */
   })
 
   // ----------------------------------------------------------------------------------------------
-  // _updateUtxosWithBroadcasts
+  // _correctServerUtxos
   // ----------------------------------------------------------------------------------------------
 
-  describe('_updateUtxosWithBroadcasts', () => {
+  describe('_correctServerUtxos', () => {
+    /*
     it('removes spent utxos', () => {
       const broadcasts = []
       const address1 = new bsv.PrivateKey().toAddress()
@@ -136,6 +128,7 @@ describe('Utxos', () => {
       const utxos2 = _updateUtxosWithBroadcasts(broadcasts, 10, utxos, new bsv.Script(address))
       expect(utxos2.length).to.equal(0)
     })
+    */
   })
 })
 

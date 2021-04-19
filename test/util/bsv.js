@@ -8,7 +8,7 @@ const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
-const { _calculateDust } = unmangle(unmangle(Run)._bsv)
+const { _calculateDust, _dedupUtxos } = unmangle(unmangle(Run)._bsv)
 
 // ------------------------------------------------------------------------------------------------
 // bsv
@@ -34,6 +34,18 @@ describe('bsv', () => {
 
     it('custom script', () => {
       expect(_calculateDust(1000, 1000)).to.equal(3477)
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _dedupUtxos
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_dedupUtxos', () => {
+    it('dedups utxos', () => {
+      const a = { txid: '0', vout: 1, script: '2', satoshis: 3 }
+      const b = { txid: '4', vout: 5, script: '6', satoshis: 7 }
+      expect(_dedupUtxos([a, b, b])).to.deep.equal([a, b])
     })
   })
 })
