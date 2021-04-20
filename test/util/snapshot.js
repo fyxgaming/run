@@ -67,14 +67,12 @@ describe('Snapshot', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should throw if not a jig', () => {
-      /*
+    it('throws if not a jig', () => {
       new Run() // eslint-disable-line
-      expect(() => new Snapshot()).to.throw()
-      expect(() => new Snapshot(null)).to.throw()
-      expect(() => new Snapshot({})).to.throw()
-      expect(() => new Snapshot(class A { })).to.throw()
-      */
+      expect(() => new Snapshot()).to.throw('Not a creation: undefined')
+      expect(() => new Snapshot(null)).to.throw('Not a creation: null')
+      expect(() => new Snapshot({})).to.throw('Not a creation: [object Object]')
+      expect(() => new Snapshot(class A { })).to.throw('Not a creation: A')
     })
   })
 
