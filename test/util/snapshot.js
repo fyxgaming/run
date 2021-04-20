@@ -5,19 +5,21 @@
  */
 
 const { describe, it } = require('mocha')
-/*
 const { expect } = require('chai')
-const { Run } = require('../env/config')
-const { Jig, Berry } = Run
-const { unmangle } = require('../env/unmangle')
-const Snapshot = unmangle(unmangle(Run)._util)._Snapshot
-*/
+const Run = require('../env/run')
+const { Jig } = Run
+const unmangle = require('../env/unmangle')
+const Snapshot = unmangle(Run)._Snapshot
 
 // ------------------------------------------------------------------------------------------------
 // Snapshot
 // ------------------------------------------------------------------------------------------------
 
 describe('Snapshot', () => {
+  // --------------------------------------------------------------------------
+  // constructor
+  // --------------------------------------------------------------------------
+
   describe('constructor', () => {
     it('should snapshot jigs', () => {
       new Run() // eslint-disable-line
@@ -33,6 +35,8 @@ describe('Snapshot', () => {
       expect(unmangle(snapshot)._cls).to.equal(b.constructor)
     })
 
+    // ------------------------------------------------------------------------
+
     it('should snapshot code', () => {
       /*
       class A { }
@@ -46,6 +50,8 @@ describe('Snapshot', () => {
       expect(unmangle(snapshot)._src).to.equal(A.toString())
       */
     })
+
+    // ------------------------------------------------------------------------
 
     it('should snapshot berries', async () => {
       /*
@@ -63,6 +69,8 @@ describe('Snapshot', () => {
       */
     })
 
+    // ------------------------------------------------------------------------
+
     it('should throw if not a jig', () => {
       /*
       new Run() // eslint-disable-line
@@ -74,7 +82,11 @@ describe('Snapshot', () => {
     })
   })
 
-  describe('rollback', () => {
+  // --------------------------------------------------------------------------
+  // _rollback
+  // --------------------------------------------------------------------------
+
+  describe('_rollback', () => {
     it('should rollback instance jigs', () => {
       /*
       new Run() // eslint-disable-line
@@ -89,15 +101,15 @@ describe('Snapshot', () => {
     })
   })
 
-  describe('code should evaluate the same in every environment', () => {
-    it('should save deterministic code', () => {
-      /*
+  // describe('code should evaluate the same in every environment', () => {
+  // it('should save deterministic code', () => {
+  /*
       const test = s => expect(eval(`${s};A`).toString()).to.equal(s) // eslint-disable-line
       test('class A {    \n      f() { return      1 }  }')
       test('class     A        {}')
       */
-    })
-  })
+  // })
+  // })
 })
 
 // ------------------------------------------------------------------------------------------------
