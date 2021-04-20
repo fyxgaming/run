@@ -87,7 +87,7 @@ describe('Snapshot', () => {
       class A extends Jig { f () { this.n = 1 } }
       const a = new A()
       await a.sync()
-      const snapshot = new Snapshot(a, true)
+      const snapshot = new Snapshot(a, true, true)
       expect(unmangle(snapshot)._bindingsOnly).to.equal(true)
       expect(unmangle(snapshot)._rollbackEnabled).to.equal(false)
       unmangle(snapshot)._captureCompletely()
@@ -136,6 +136,19 @@ describe('Snapshot', () => {
       expect(typeof C.g).to.equal('undefined')
       expect(C.n).to.equal(1)
       expect(C.m).to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('with error', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { this.n = 1 } }
+      const a = new A()
+      const snapshot = new Snapshot(a, true)
+      a.f()
+      expect(a.n).to.equal(1)
+      unmangle(snapshot)._rollback(new Error('hello'))
+      expect(() => a.location).to.throw('hello')
     })
 
     // ------------------------------------------------------------------------
