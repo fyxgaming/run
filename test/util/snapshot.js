@@ -114,6 +114,16 @@ describe('Snapshot', () => {
       expect(C.n).to.equal(1)
       expect(C.m).to.equal(undefined)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('does not rollback native code', () => {
+      new Run() // eslint-disable-line
+      const props = Object.assign({}, Jig)
+      const snapshot = new Snapshot(Jig)
+      unmangle(snapshot)._rollback()
+      expect(Object.assign({}, Jig)).to.deep.equal(props)
+    })
   })
 
   // describe('code should evaluate the same in every environment', () => {
