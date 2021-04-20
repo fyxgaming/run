@@ -20,7 +20,6 @@ const Snapshot = unmangle(unmangle(Run)._util)._Snapshot
 describe('Snapshot', () => {
   describe('constructor', () => {
     it('should snapshot jigs', () => {
-      /*
       new Run() // eslint-disable-line
       class A extends Jig { }
       class B extends Jig { init (a) { this.a = a; this.arr = [1, 2, {}] } }
@@ -32,7 +31,6 @@ describe('Snapshot', () => {
       expect(unmangle(snapshot)._props.arr).to.deep.equal(b.arr)
       expect(unmangle(snapshot)._props.arr).not.to.equal(b.arr)
       expect(unmangle(snapshot)._cls).to.equal(b.constructor)
-      */
     })
 
     it('should snapshot code', () => {
