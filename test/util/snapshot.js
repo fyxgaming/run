@@ -78,6 +78,29 @@ describe('Snapshot', () => {
   })
 
   // --------------------------------------------------------------------------
+  // _captureCompletely
+  // --------------------------------------------------------------------------
+
+  describe('_captureCompletely', () => {
+    it('fully captures a jig after bindingsOnly', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { this.n = 1 } }
+      const a = new A()
+      await a.sync()
+      const snapshot = new Snapshot(a, true)
+      expect(unmangle(snapshot)._bindingsOnly).to.equal(true)
+      expect(unmangle(snapshot)._rollbackEnabled).to.equal(false)
+      unmangle(snapshot)._captureCompletely()
+      a.f()
+      await a.sync()
+      expect(unmangle(snapshot)._bindingsOnly).to.equal(false)
+      expect(unmangle(snapshot)._rollbackEnabled).to.equal(true)
+      unmangle(snapshot)._rollback()
+      expect(a.n).to.equal(undefined)
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // _rollback
   // --------------------------------------------------------------------------
 
