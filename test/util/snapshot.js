@@ -81,8 +81,7 @@ describe('Snapshot', () => {
   // --------------------------------------------------------------------------
 
   describe('_rollback', () => {
-    it('should rollback instance jigs', () => {
-      /*
+    it('rollback jigs', () => {
       new Run() // eslint-disable-line
       class A extends Jig { f () { this.n = 1 } }
       const a = new A()
@@ -91,7 +90,6 @@ describe('Snapshot', () => {
       expect(a.n).to.equal(1)
       unmangle(snapshot)._rollback()
       expect('n' in a).to.equal(false)
-      */
     })
   })
 
