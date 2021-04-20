@@ -140,7 +140,7 @@ describe('Snapshot', () => {
 
     // ------------------------------------------------------------------------
 
-    it('with error', async () => {
+    it('bindingsOnly with error', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { f () { this.n = 1 } }
       const a = new A()
@@ -149,6 +149,19 @@ describe('Snapshot', () => {
       expect(a.n).to.equal(1)
       unmangle(snapshot)._rollback(new Error('hello'))
       expect(() => a.location).to.throw('hello')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('bindingsOnly without error', async () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { f () { this.n = 1 } }
+      const a = new A()
+      const snapshot = new Snapshot(a, true)
+      a.f()
+      expect(a.n).to.equal(1)
+      unmangle(snapshot)._rollback()
+      expect(() => a.location).to.throw('Cannot read location')
     })
 
     // ------------------------------------------------------------------------
