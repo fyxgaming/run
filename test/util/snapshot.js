@@ -73,6 +73,7 @@ describe('Snapshot', () => {
       expect(() => new Snapshot(null)).to.throw('Not a creation: null')
       expect(() => new Snapshot({})).to.throw('Not a creation: [object Object]')
       expect(() => new Snapshot(class A { })).to.throw('Not a creation: A')
+      expect(() => new Snapshot(class A extends Jig { })).to.throw('Not a creation: A')
     })
   })
 
@@ -90,6 +91,28 @@ describe('Snapshot', () => {
       expect(a.n).to.equal(1)
       unmangle(snapshot)._rollback()
       expect('n' in a).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('rollback code', () => {
+      const run = new Run()
+      class A extends Jig { static f () { } }
+      A.n = 1
+      const C = run.deploy(A)
+      const snapshot = new Snapshot(C)
+      class B extends Jig { static g () { } }
+      B.m = 2
+      C.upgrade(B)
+      expect(typeof C.f).to.equal('undefined')
+      expect(typeof C.g).to.equal('function')
+      expect(C.n).to.equal(undefined)
+      expect(C.m).to.equal(2)
+      unmangle(snapshot)._rollback()
+      expect(typeof C.f).to.equal('function')
+      expect(typeof C.g).to.equal('undefined')
+      expect(C.n).to.equal(1)
+      expect(C.m).to.equal(undefined)
     })
   })
 
