@@ -2177,7 +2177,6 @@ describe('Deploy', () => {
       stub(run.purse, 'pay').callsFake(x => x)
       const CA = run.deploy(A)
       await expect(CA.sync()).to.be.rejected
-      const error = prop => `Cannot read ${prop}`
       expect(() => CA.location).to.throw('Deploy failed')
       expect(() => CA.origin).to.throw('Deploy failed')
       expect(() => CA.nonce).to.throw('Deploy failed')
