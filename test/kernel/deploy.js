@@ -2178,11 +2178,11 @@ describe('Deploy', () => {
       const CA = run.deploy(A)
       await expect(CA.sync()).to.be.rejected
       const error = prop => `Cannot read ${prop}`
-      expect(() => CA.location).to.throw(error('location'))
-      expect(() => CA.origin).to.throw(error('origin'))
-      expect(() => CA.nonce).to.throw(error('nonce'))
-      expect(() => CA.owner).to.throw(error('owner'))
-      expect(() => CA.satoshis).to.throw(error('satoshis'))
+      expect(() => CA.location).to.throw('Deploy failed')
+      expect(() => CA.origin).to.throw('Deploy failed')
+      expect(() => CA.nonce).to.throw('Deploy failed')
+      expect(() => CA.owner).to.throw('Deploy failed')
+      expect(() => CA.satoshis).to.throw('Deploy failed')
     })
 
     // ------------------------------------------------------------------------
