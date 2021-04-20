@@ -38,7 +38,6 @@ describe('Snapshot', () => {
     // ------------------------------------------------------------------------
 
     it('should snapshot code', () => {
-      /*
       class A { }
       A.n = null
       A.m = undefined
@@ -48,7 +47,6 @@ describe('Snapshot', () => {
       expect(unmangle(snapshot)._props.n).to.equal(null)
       expect(unmangle(snapshot)._props.m).to.equal(undefined)
       expect(unmangle(snapshot)._src).to.equal(A.toString())
-      */
     })
 
     // ------------------------------------------------------------------------
