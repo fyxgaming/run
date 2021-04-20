@@ -7,7 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { Jig } = Run
+const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const Snapshot = unmangle(Run)._Snapshot
 
@@ -21,7 +21,7 @@ describe('Snapshot', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('should snapshot jigs', () => {
+    it('snapshot jigs', () => {
       new Run() // eslint-disable-line
       class A extends Jig { }
       class B extends Jig { init (a) { this.a = a; this.arr = [1, 2, {}] } }
@@ -37,7 +37,7 @@ describe('Snapshot', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should snapshot code', () => {
+    it('snapshot code', () => {
       class A { }
       A.n = null
       A.m = undefined
@@ -51,20 +51,18 @@ describe('Snapshot', () => {
 
     // ------------------------------------------------------------------------
 
-    it('should snapshot berries', async () => {
-      /*
-      const run = new Run()
+    it('snapshot berries', async () => {
+      new Run() // eslint-disable-line
       class A extends Berry {
         init () { this.n = 1 }
-        static pluck () { return new A() }
+        static async pluck () { return new A() }
       }
-      const berry = await run.load('123', A)
+      const berry = await A.load('123')
       const snapshot = new Snapshot(berry)
       expect(unmangle(snapshot)._kind).to.equal('berry')
       expect(unmangle(snapshot)._props.n).to.equal(1)
-      expect(unmangle(snapshot)._props.location).to.equal('!A not deployed')
+      expect(unmangle(snapshot)._props.location).to.equal('error://Undeployed')
       expect(unmangle(snapshot)._cls).to.equal(berry.constructor)
-      */
     })
 
     // ------------------------------------------------------------------------
