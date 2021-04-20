@@ -140,6 +140,17 @@ describe('Snapshot', () => {
 
     // ------------------------------------------------------------------------
 
+    it('rollback undeployed code', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const C = Run.util.install(A)
+      const snapshot = new Snapshot(C)
+      unmangle(snapshot)._rollback(new Error('hello'))
+      expect(() => C.location).to.throw('hello')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('bindingsOnly with error', async () => {
       new Run() // eslint-disable-line
       class A extends Jig { f () { this.n = 1 } }
