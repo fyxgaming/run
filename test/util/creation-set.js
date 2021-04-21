@@ -148,7 +148,7 @@ describe('CreationSet', () => {
 
     // ------------------------------------------------------------------------
 
-    it('returns original jig if same', async () => {
+    it('returns original jig added if same', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
@@ -157,6 +157,20 @@ describe('CreationSet', () => {
       const s = unmangle(new CreationSet())
       s._add(a)
       expect(s._get(a2)).to.equal(a)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if inconsistent worldview', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      a.auth()
+      await a.sync()
+      const a2 = await run.load(a.origin)
+      const s = unmangle(new CreationSet())
+      s._add(a)
+      expect(() => s._get(a2)).to.throw('Inconsistent worldview')
     })
   })
 
