@@ -145,6 +145,19 @@ describe('CreationSet', () => {
       s._add(a)
       expect(s._get(a)).to.equal(a)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('returns original jig if same', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const a2 = await run.load(a.location)
+      const s = unmangle(new CreationSet())
+      s._add(a)
+      expect(s._get(a2)).to.equal(a)
+    })
   })
 
   // --------------------------------------------------------------------------
