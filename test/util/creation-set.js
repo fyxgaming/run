@@ -116,6 +116,20 @@ describe('CreationSet', () => {
       s._add(a)
       expect(s._has(b)).to.equal(false)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if inconsistent worldview', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      a.auth()
+      await a.sync()
+      const a2 = await run.load(a.origin)
+      const s = unmangle(new CreationSet())
+      s._add(a)
+      expect(() => s._has(a2)).to.throw('Inconsistent worldview')
+    })
   })
 
   // --------------------------------------------------------------------------
