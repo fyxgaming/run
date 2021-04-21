@@ -68,8 +68,13 @@ describe('Errors', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('TrustError', () => {
-    // TODO
+  it('TrustError', () => {
+    const error = new Run.errors.TrustError('abc', 'replay')
+    expect(error.name).to.equal('TrustError')
+    const hint = 'Hint: Trust this txid using run.trust(txid) if you know it is safe'
+    expect(error.message).to.equal(`Cannot load untrusted code via replay: abc\n\n${hint}`)
+    expect(error.txid).to.equal('abc')
+    expect(error.method).to.equal('replay')
   })
 })
 
