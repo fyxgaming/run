@@ -60,8 +60,10 @@ describe('Errors', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('TimeoutError', () => {
-    // TODO
+  it('TimeoutError', () => {
+    const error = new Run.errors.TimeoutError('hello')
+    expect(error.name).to.equal('TimeoutError')
+    expect(error.message).to.equal('hello')
   })
 
   // --------------------------------------------------------------------------
