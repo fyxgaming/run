@@ -552,12 +552,12 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('replaces and revives berries', async () => {
-      const run = new Run()
-      class CustomBerry extends Berry { }
-      const CustomBerrySandbox = await run.load(await run.deploy(CustomBerry))
-      const berry = { location: '_o1' }
-      Object.setPrototypeOf(berry, CustomBerrySandbox.prototype)
+    it('replaces and revives berries', async () => {
+      new Run() // eslint-disable-line
+      class B extends Berry {
+        static async pluck () { return new B() }
+      }
+      const berry = await B.load('abc')
       const codec = unmangle(new Codec())._saveJigs(x => '123')
       const json = codec._encode(berry)
       expect(json).to.deep.equal({ $jig: '123' })
