@@ -39,8 +39,10 @@ describe('Errors', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('NotImplementedError', () => {
-    // TODO
+  it('NotImplementedError', () => {
+    const error = new Run.errors.NotImplementedError('hello')
+    expect(error.name).to.equal('NotImplementedError')
+    expect(error.message).to.equal('hello')
   })
 
   // --------------------------------------------------------------------------
