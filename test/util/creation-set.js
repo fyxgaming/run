@@ -161,6 +161,16 @@ describe('CreationSet', () => {
 
     // ------------------------------------------------------------------------
 
+    it('returns undefined if not added', () => {
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      const s = unmangle(new CreationSet())
+      expect(s._get(a)).to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if inconsistent worldview', async () => {
       const run = new Run()
       class A extends Jig { }
