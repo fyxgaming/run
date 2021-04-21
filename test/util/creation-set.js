@@ -30,6 +30,7 @@ describe('CreationSet', () => {
       const b = new A()
       const s = unmangle(new CreationSet())
       s._add(a)
+      s._add(a)
       s._add(a2)
       s._add(b)
       expect(s._size).to.equal(2)
@@ -55,7 +56,7 @@ describe('CreationSet', () => {
   // _delete
   // --------------------------------------------------------------------------
 
-  describe('_subtractCreations', () => {
+  describe('_delete', () => {
     it('removes same jigs', async () => {
       const run = new Run()
       class A extends Jig { }
@@ -88,10 +89,34 @@ describe('CreationSet', () => {
   })
 
   // --------------------------------------------------------------------------
+  // _has
+  // --------------------------------------------------------------------------
+
+  describe('_has', () => {
+    it('returns true for same jigs added', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await a.sync()
+      const a2 = await run.load(a.location)
+      const s = unmangle(new CreationSet())
+      s._add(a)
+      expect(s._has(a)).to.equal(true)
+      expect(s._has(a2)).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns false for jigs not added', () => {
+
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // _sameCreation
   // --------------------------------------------------------------------------
 
-  describe('sameCreation', () => {
+  describe('_sameCreation', () => {
     it('true if same', () => {
       const run = new Run()
       const A = run.deploy(class A { })
