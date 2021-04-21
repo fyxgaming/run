@@ -31,8 +31,10 @@ describe('Errors', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('InternalError', () => {
-    // TODO
+  it('InternalError', () => {
+    const error = new Run.errors.InternalError('hello')
+    expect(error.name).to.equal('InternalError')
+    expect(error.message).to.equal('hello')
   })
 
   // --------------------------------------------------------------------------
