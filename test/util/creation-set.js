@@ -108,7 +108,13 @@ describe('CreationSet', () => {
     // ------------------------------------------------------------------------
 
     it('returns false for jigs not added', () => {
-
+      new Run() // eslint-disable-line
+      class A extends Jig { }
+      const a = new A()
+      const b = new A()
+      const s = unmangle(new CreationSet())
+      s._add(a)
+      expect(s._has(b)).to.equal(false)
     })
   })
 
