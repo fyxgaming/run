@@ -21,8 +21,12 @@ describe('Errors', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('ClientModeError', () => {
-    // TODO
+  it('ClientModeError', () => {
+    const error = new Run.errors.ClientModeError('abc', 'jig')
+    expect(error.name).to.equal('ClientModeError')
+    expect(error.message).to.equal('Cannot load abc\n\nOnly cached jigs may be loaded in client mode')
+    expect(error.data).to.equal('abc')
+    expect(error.type).to.equal('jig')
   })
 
   // --------------------------------------------------------------------------
