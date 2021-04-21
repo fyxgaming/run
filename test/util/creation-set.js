@@ -119,6 +119,16 @@ describe('CreationSet', () => {
 
     // ------------------------------------------------------------------------
 
+    it('returns false for invalid values', () => {
+      const s = unmangle(new CreationSet())
+      expect(s._has({})).to.equal(false)
+      expect(s._has(null)).to.equal(false)
+      expect(s._has(x => x)).to.equal(false)
+      expect(s._has(1)).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if inconsistent worldview', async () => {
       const run = new Run()
       class A extends Jig { }
