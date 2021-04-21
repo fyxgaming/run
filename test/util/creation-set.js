@@ -50,6 +50,16 @@ describe('CreationSet', () => {
       s._add(a)
       expect(() => s._add(a2)).to.throw('Inconsistent worldview')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if not a creation', () => {
+      const s = unmangle(new CreationSet())
+      expect(() => s._add(null)).to.throw()
+      expect(() => s._add('abc')).to.throw()
+      expect(() => s._add([])).to.throw()
+      expect(() => s._add(() => {})).to.throw()
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -177,6 +187,16 @@ describe('CreationSet', () => {
       const a = new A()
       const s = unmangle(new CreationSet())
       expect(s._get(a)).to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns undefined for invalid values', () => {
+      const s = unmangle(new CreationSet())
+      expect(s._get({})).to.equal(undefined)
+      expect(s._get(null)).to.equal(undefined)
+      expect(s._get(x => x)).to.equal(undefined)
+      expect(s._get(1)).to.equal(undefined)
     })
 
     // ------------------------------------------------------------------------
