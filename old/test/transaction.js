@@ -10,30 +10,6 @@
 
 /*
 describe('Transaction', () => {
-  // cosign
-  it('should support atomic updates', async () => {
-    const run = new Run()
-    class A extends Jig { set (x) { this.x = x } }
-    const a = new A()
-    await run.sync()
-
-    const run2 = new Run({ blockchain: run.blockchain })
-    const b = new A()
-    await run2.sync()
-
-    run2.transaction.begin()
-    a.set(1)
-    b.set(1)
-    await run2.transaction.pay()
-    await run2.transaction.sign()
-    const tx = run2.transaction.export()
-
-    run.activate()
-    await run.transaction.import(tx)
-    run.transaction.end()
-    await run.sync()
-  })
-
   // export & publish
   it('should correctly set owners on code and jig outputs', async () => {
     const run = hookRun(new Run())

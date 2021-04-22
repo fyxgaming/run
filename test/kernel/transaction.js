@@ -2390,6 +2390,64 @@ describe('Transaction', () => {
 
     // ------------------------------------------------------------------------
 
+    it('atomic swap with by changing run owner', async () => {
+      const alice = new bsv.PrivateKey()
+      const bob = new bsv.PrivateKey()
+
+      const run = new Run({ owner: alice })
+      class A extends Jig { send (owner) { this.owner = owner } }
+      const a = new A()
+      await a.sync()
+
+      run.owner = bob
+      const b = new A()
+      await b.sync()
+
+      const tx = new Run.Transaction()
+      tx.update(() => a.send(bob.publicKey.toString()))
+      tx.update(() => b.send(alice.publicKey.toString()))
+      await tx.pay()
+      await tx.sign()
+      run.owner = alice
+      await tx.sign()
+      await tx.publish()
+
+      expect(a.owner).to.equal(bob.publicKey.toString())
+      expect(b.owner).to.equal(alice.publicKey.toString())
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('atomic swap with export and import', async () => {
+      const aliceRun = new Run()
+      const bobRun = new Run()
+
+      class A extends Jig { send (owner) { this.owner = owner } }
+      const a = new A()
+      await a.sync()
+
+      bobRun.activate()
+      const b = new A()
+      await b.sync()
+
+      const tx = new Run.Transaction()
+      tx.update(() => a.send(bobRun.owner.pubkey))
+      tx.update(() => b.send(aliceRun.owner.pubkey))
+      await tx.pay()
+      await tx.sign()
+      const rawtx = await tx.export()
+
+      aliceRun.activate()
+      const tx2 = await aliceRun.import(rawtx)
+      await tx2.sign()
+      await tx2.publish()
+
+      expect(tx2.outputs[0].owner).to.equal(bobRun.owner.pubkey)
+      expect(tx2.outputs[1].owner).to.equal(aliceRun.owner.pubkey)
+    })
+
+    // ------------------------------------------------------------------------
+
     if (STRESS) {
       it('many open transactions', async () => {
         const run = new Run()
