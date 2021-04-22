@@ -1,15 +1,19 @@
 /**
- * transaction.js
+ * build.js
  *
- * Tests for lib/kernel/transaction.js
+ * Tests that check properties of the transactions RUN builds
  */
 
+const { describe } = require('mocha')
+
 // ------------------------------------------------------------------------------------------------
-// Transaction
+// Build
 // ------------------------------------------------------------------------------------------------
 
-/*
-describe('Transaction', () => {
+describe('Build', () => {
+  // TODO
+
+  /*
   // export & publish
   it('should correctly set owners on code and jig outputs', async () => {
     const run = hookRun(new Run())
@@ -61,7 +65,7 @@ describe('Transaction', () => {
     await run.deploy(A)
     expect(tx.outputs[0].script.chunks[4].buf.toString('utf8')).to.equal('biz')
   })
+  */
 })
-*/
 
 // ------------------------------------------------------------------------------------------------
