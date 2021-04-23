@@ -150,8 +150,23 @@ describe('Build', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('output satoshis are correct', () => {
-      // TODO
+    it('output satoshis are correct', async () => {
+      const run = new Run()
+      class A extends Jig { init (sats) { this.satoshis = sats } }
+      run.deploy(A)
+      await run.sync()
+      const base = new bsv.Transaction()
+      base.to(new bsv.PrivateKey().toAddress(), 100)
+      base.to(new bsv.PrivateKey().toAddress(), 200)
+      const tx = new Run.Transaction()
+      tx.base = base.toString('hex')
+      tx.update(() => new A(200))
+      tx.update(() => new A(2000))
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      const dust = _calculateDust(bsvtx.outputs[3].script.toBuffer().length, bsv.Transaction.FEE_PER_KB)
+      expect(bsvtx.outputs[3].satoshis).to.equal(dust)
+      expect(bsvtx.outputs[4].satoshis).to.equal(2000)
     })
   })
 
