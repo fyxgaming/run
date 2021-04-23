@@ -8,8 +8,10 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
-const asm = require('../../lib/extra/asm')
+const unmangle = require('../env/unmangle')
 const { Jig } = Run
+const { asm } = Run.extra
+const { _calculateDust } = unmangle(unmangle(Run)._bsv)
 
 // ------------------------------------------------------------------------------------------------
 // Build
@@ -80,8 +82,15 @@ describe('Build', () => {
   // --------------------------------------------------------------------------
 
   describe('satoshis', () => {
-    it.skip('output satoshis are correct for 0', () => {
-      // TODO
+    it('output satoshis are correct for default 0', async () => {
+      const run = new Run()
+      const tx = new Run.Transaction()
+      class A extends Jig { }
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      const dust = _calculateDust(bsvtx.outputs[1].script.toBuffer().length, bsv.Transaction.FEE_PER_KB)
+      expect(bsvtx.outputs[1].satoshis).to.equal(dust)
     })
 
     // ------------------------------------------------------------------------
