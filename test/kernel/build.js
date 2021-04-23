@@ -346,8 +346,41 @@ describe('Build', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('destroy code', () => {
-      // TODO
+    it('destroy code', async () => {
+      const run = new Run()
+      class A { }
+      const CA = run.deploy(A)
+      await run.sync()
+      const tx = new Run.Transaction()
+      tx.update(() => CA.destroy())
+      const rawtx = await tx.export()
+      await tx.cache()
+      const bsvtx = new bsv.Transaction(rawtx)
+      const metadataString = bsvtx.outputs[0].script.chunks[5].buf.toString('utf8')
+      const metadata = JSON.parse(metadataString)
+      const state = {
+        kind: 'code',
+        props: {
+          deps: {},
+          location: '_d0',
+          nonce: 2,
+          origin: CA.origin,
+          owner: null,
+          satoshis: 0
+        },
+        src: 'class A { }',
+        version: '04'
+      }
+      const stateBuffer = bsv.deps.Buffer.from(JSON.stringify(state), 'utf8')
+      const stateHash = bsv.crypto.Hash.sha256(stateBuffer).toString('hex')
+      expect(metadata).to.deep.equal({
+        in: 1,
+        ref: [],
+        out: [],
+        del: [stateHash],
+        cre: [],
+        exec: [{ op: 'CALL', data: [{ $jig: 0 }, 'destroy', []] }]
+      })
     })
 
     // ------------------------------------------------------------------------
