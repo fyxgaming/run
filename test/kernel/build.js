@@ -9,7 +9,7 @@ const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { Jig } = Run
+const { Jig, Berry } = Run
 const { asm } = Run.extra
 const { _calculateDust } = unmangle(unmangle(Run)._bsv)
 
@@ -266,7 +266,7 @@ describe('Build', () => {
 
     // ------------------------------------------------------------------------
 
-    it('instantiate from ref', async () => {
+    it('new jig from class ref', async () => {
       const run = new Run()
       const tx = new Run.Transaction()
       class A extends Jig { }
@@ -304,8 +304,44 @@ describe('Build', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('call method with berry ref', () => {
-      // TODO
+    it('call method with berry ref', async () => {
+      const run = new Run()
+      class B extends Berry { static async pluck () { return new B() } }
+      run.deploy(B)
+      await run.sync()
+      const b = await B.load('123')
+      class A { }
+      A.b = b
+      const tx = new Run.Transaction()
+      tx.update(() => run.deploy(A))
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      const metadataString = bsvtx.outputs[0].script.chunks[5].buf.toString('utf8')
+      const metadata = JSON.parse(metadataString)
+      const state = {
+        kind: 'code',
+        props: {
+          b: { $jig: b.location },
+          deps: {},
+          location: '_o1',
+          nonce: 1,
+          origin: '_o1',
+          owner: run.owner.address,
+          satoshis: 0
+        },
+        src: 'class A { }',
+        version: '04'
+      }
+      const stateBuffer = bsv.deps.Buffer.from(JSON.stringify(state), 'utf8')
+      const stateHash = bsv.crypto.Hash.sha256(stateBuffer).toString('hex')
+      expect(metadata).to.deep.equal({
+        in: 0,
+        ref: [b.location],
+        out: [stateHash],
+        del: [],
+        cre: [run.owner.address],
+        exec: [{ op: 'DEPLOY', data: ['class A { }', { b: { $jig: 0 }, deps: { } }] }]
+      })
     })
 
     // ------------------------------------------------------------------------
