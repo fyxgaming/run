@@ -182,19 +182,21 @@ describe('Build', () => {
       tx.update(() => run.deploy(class A {}))
       const rawtx = await tx.export()
       const bsvtx = new bsv.Transaction(rawtx)
+      console.log(bsvtx.outputs[0].script.chunks.length)
       expect(bsvtx.outputs[0].script.chunks[4].buf.toString('utf8')).to.equal(run.app)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('empty app name is correctly set', () => {
-      // TODO
-      /*
-      const run = hookRun(new Run({ app: 'biz' }))
-      class A extends Jig { }
-      await run.deploy(A)
-      expect(tx.outputs[0].script.chunks[4].buf.toString('utf8')).to.equal('biz')
-      */
+    it('empty app name is correctly set', async () => {
+      const run = new Run()
+      run.app = ''
+      const tx = new Run.Transaction()
+      tx.update(() => run.deploy(class A {}))
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      expect(bsvtx.outputs[0].script.chunks.length).to.equal(6)
+      expect(bsvtx.outputs[0].script.chunks[4].opcodenum).to.equal(0)
     })
   })
 
