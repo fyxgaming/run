@@ -215,8 +215,13 @@ describe('Build', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('has version', () => {
-      // TODO
+    it('has version', async () => {
+      const run = new Run()
+      const tx = new Run.Transaction()
+      tx.update(() => run.deploy(class A {}))
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      expect(bsvtx.outputs[0].script.chunks[3].buf.toString('hex')).to.equal('05')
     })
   })
 
