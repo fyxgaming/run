@@ -423,8 +423,98 @@ describe('Build', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('multiple actions', () => {
-      // TODO
+    it('multiple actions', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      class B extends Jig { }
+      const CA = run.deploy(A)
+      const a = new A()
+      await run.sync()
+      const tx = new Run.Transaction()
+      tx.update(() => new A())
+      tx.update(() => run.deploy(B))
+      tx.update(() => a.auth())
+      tx.update(() => CA.destroy())
+      const rawtx = await tx.export()
+      await tx.cache()
+      const bsvtx = new bsv.Transaction(rawtx)
+      const metadataString = bsvtx.outputs[0].script.chunks[5].buf.toString('utf8')
+      const metadata = JSON.parse(metadataString)
+      const a1State = {
+        cls: { $jig: '_d0' },
+        kind: 'jig',
+        props: {
+          location: '_o1',
+          nonce: 2,
+          origin: a.origin,
+          owner: run.owner.address,
+          satoshis: 0
+        },
+        version: '04'
+      }
+      const a1StateBuffer = bsv.deps.Buffer.from(JSON.stringify(a1State), 'utf8')
+      const a1StateHash = bsv.crypto.Hash.sha256(a1StateBuffer).toString('hex')
+      const a2State = {
+        cls: { $jig: '_d0' },
+        kind: 'jig',
+        props: {
+          location: '_o2',
+          nonce: 1,
+          origin: '_o2',
+          owner: run.owner.address,
+          satoshis: 0
+        },
+        version: '04'
+      }
+      const a2StateBuffer = bsv.deps.Buffer.from(JSON.stringify(a2State), 'utf8')
+      const a2StateHash = bsv.crypto.Hash.sha256(a2StateBuffer).toString('hex')
+      const BState = {
+        kind: 'code',
+        props: {
+          deps: { Jig: { $jig: 'native://Jig' } },
+          location: '_o3',
+          nonce: 1,
+          origin: '_o3',
+          owner: run.owner.address,
+          satoshis: 0
+        },
+        src: 'class B extends Jig { }',
+        version: '04'
+      }
+      const BStateBuffer = bsv.deps.Buffer.from(JSON.stringify(BState), 'utf8')
+      const BStateHash = bsv.crypto.Hash.sha256(BStateBuffer).toString('hex')
+      const AState = {
+        kind: 'code',
+        props: {
+          deps: { Jig: { $jig: 'native://Jig' } },
+          location: '_d0',
+          nonce: 2,
+          origin: CA.origin,
+          owner: null,
+          satoshis: 0
+        },
+        src: 'class A extends Jig { }',
+        version: '04'
+      }
+      const AStateBuffer = bsv.deps.Buffer.from(JSON.stringify(AState), 'utf8')
+      const AStateHash = bsv.crypto.Hash.sha256(AStateBuffer).toString('hex')
+      expect(metadata).to.deep.equal({
+        in: 2,
+        ref: ['native://Jig'],
+        out: [
+          a1StateHash,
+          a2StateHash,
+          BStateHash
+        ],
+        del: [AStateHash],
+        cre: [run.owner.address, run.owner.address],
+        exec: [
+          { op: 'NEW', data: [{ $jig: 1 }, []] },
+          { op: 'DEPLOY', data: ['class B extends Jig { }', { deps: { Jig: { $jig: 2 } } }] },
+          { op: 'CALL', data: [{ $jig: 0 }, 'auth', []] },
+          { op: 'CALL', data: [{ $jig: 1 }, 'destroy', []] }
+        ]
+      })
     })
   })
 })
