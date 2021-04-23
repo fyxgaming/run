@@ -103,13 +103,19 @@ describe('Build', () => {
       const rawtx = await tx.export()
       const bsvtx = new bsv.Transaction(rawtx)
       const dust = _calculateDust(bsvtx.outputs[1].script.toBuffer().length, bsv.Transaction.FEE_PER_KB)
-      expect(bsvtx.outputs[1].satoshis).to.equal(dust)
+      expect(bsvtx.outputs[2].satoshis).to.equal(dust)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('output satoshis are correct for above dust', () => {
-      // TODO
+    it('output satoshis are correct for above dust', async () => {
+      new Run() // eslint-disable-line
+      const tx = new Run.Transaction()
+      class A extends Jig { init (satoshis) { this.satoshis = satoshis } }
+      tx.update(() => new A(5000))
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      expect(bsvtx.outputs[2].satoshis).to.equal(5000)
     })
   })
 
