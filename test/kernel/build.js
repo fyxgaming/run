@@ -5,6 +5,10 @@
  */
 
 const { describe, it } = require('mocha')
+const { expect } = require('chai')
+const bsv = require('bsv')
+const Run = require('../env/run')
+const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
 // Build
@@ -16,19 +20,30 @@ describe('Build', () => {
   // --------------------------------------------------------------------------
 
   describe('output scripts', () => {
-    it.skip('output scripts are correct for address owners', () => {
-    // TODO - jig and code
+    it('p2pkh scripts for address owners', async () => {
+      const run = new Run()
+      const address1 = run.owner.address
+      const address2 = new bsv.PrivateKey().toAddress().toString()
+      const tx = new Run.Transaction()
+      class A extends Jig { init (owner) { this.owner = owner } }
+      tx.update(() => new A(address2))
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      const asm1 = `OP_DUP OP_HASH160 ${new bsv.Address(address1).hashBuffer.toString('hex')} OP_EQUALVERIFY OP_CHECKSIG`
+      const asm2 = `OP_DUP OP_HASH160 ${new bsv.Address(address2).hashBuffer.toString('hex')} OP_EQUALVERIFY OP_CHECKSIG`
+      expect(bsvtx.outputs[1].script.toHex()).to.equal(bsv.Script.fromASM(asm1).toHex())
+      expect(bsvtx.outputs[2].script.toHex()).to.equal(bsv.Script.fromASM(asm2).toHex())
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('output scripts are correct for pubkey owners', () => {
+    it.skip('p2pkh scripts for pubkey owners', () => {
     // TODO - jig
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('output scripts are correct for custom locks', () => {
+    it.skip('custom scripts for custom locks', () => {
     // TODO - jig
     })
   })
