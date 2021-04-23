@@ -175,14 +175,14 @@ describe('Build', () => {
   // --------------------------------------------------------------------------
 
   describe('app name', () => {
-    it.skip('utf8 app name is correctly set', () => {
-      // TODO
-      /*
-      const run = hookRun(new Run({ app: 'biz' }))
-      class A extends Jig { }
-      await run.deploy(A)
-      expect(tx.outputs[0].script.chunks[4].buf.toString('utf8')).to.equal('biz')
-      */
+    it('utf8 app name is correctly set', async () => {
+      const run = new Run()
+      run.app = 'abc 😊 !'
+      const tx = new Run.Transaction()
+      tx.update(() => run.deploy(class A {}))
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      expect(bsvtx.outputs[0].script.chunks[4].buf.toString('utf8')).to.equal(run.app)
     })
 
     // ------------------------------------------------------------------------
