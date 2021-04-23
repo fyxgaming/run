@@ -29,16 +29,29 @@ describe('Build', () => {
       tx.update(() => new A(address2))
       const rawtx = await tx.export()
       const bsvtx = new bsv.Transaction(rawtx)
-      const asm1 = `OP_DUP OP_HASH160 ${new bsv.Address(address1).hashBuffer.toString('hex')} OP_EQUALVERIFY OP_CHECKSIG`
-      const asm2 = `OP_DUP OP_HASH160 ${new bsv.Address(address2).hashBuffer.toString('hex')} OP_EQUALVERIFY OP_CHECKSIG`
+      const hash1 = new bsv.Address(address1).hashBuffer.toString('hex')
+      const hash2 = new bsv.Address(address2).hashBuffer.toString('hex')
+      const asm1 = `OP_DUP OP_HASH160 ${hash1} OP_EQUALVERIFY OP_CHECKSIG`
+      const asm2 = `OP_DUP OP_HASH160 ${hash2} OP_EQUALVERIFY OP_CHECKSIG`
       expect(bsvtx.outputs[1].script.toHex()).to.equal(bsv.Script.fromASM(asm1).toHex())
       expect(bsvtx.outputs[2].script.toHex()).to.equal(bsv.Script.fromASM(asm2).toHex())
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('p2pkh scripts for pubkey owners', () => {
-    // TODO - jig
+    it('p2pkh scripts for pubkey owners', async () => {
+      new Run() // eslint-disable-line
+      const pubkey = new bsv.PrivateKey().publicKey.toString()
+      const tx = new Run.Transaction()
+      class A extends Jig { send (owner) { this.owner = owner } }
+      const a = new A()
+      await a.sync()
+      tx.update(() => a.send(pubkey))
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      const hash = new bsv.PublicKey(pubkey).toAddress().hashBuffer.toString('hex')
+      const asm = `OP_DUP OP_HASH160 ${hash} OP_EQUALVERIFY OP_CHECKSIG`
+      expect(bsvtx.outputs[1].script.toHex()).to.equal(bsv.Script.fromASM(asm).toHex())
     })
 
     // ------------------------------------------------------------------------
