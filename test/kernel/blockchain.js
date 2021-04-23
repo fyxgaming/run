@@ -5,7 +5,7 @@
  */
 
 const bsv = require('bsv')
-const { describe, it, before } = require('mocha')
+const { describe, it, before, after } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
@@ -37,6 +37,9 @@ describe('Blockchain', () => {
     mempoolRawtx = mempoolTx.toString('hex')
     mempoolTxid = await run.blockchain.broadcast(mempoolRawtx)
   })
+
+  // Deactivate the current run instance. This stops leaks across tests.
+  after(() => Run.instance && Run.instance.deactivate())
 
   // --------------------------------------------------------------------------
   // broadcast
