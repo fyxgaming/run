@@ -124,13 +124,33 @@ describe('Build', () => {
   // --------------------------------------------------------------------------
 
   describe('custom base', () => {
-    it.skip('output scripts are correct for custom base', () => {
-      // TODO
+    it('output scripts are correct', async () => {
+      const run = new Run()
+      class A extends Jig { init (owner) { this.owner = owner } }
+      run.deploy(A)
+      await run.sync()
+      const base = new bsv.Transaction()
+      base.to(new bsv.PrivateKey().toAddress(), 100)
+      base.to(new bsv.PrivateKey().toAddress(), 200)
+      const tx = new Run.Transaction()
+      tx.base = base.toString('hex')
+      const address1 = new bsv.PrivateKey().toAddress().toString()
+      const address2 = new bsv.PrivateKey().toAddress().toString()
+      tx.update(() => new A(address1))
+      tx.update(() => new A(address2))
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      const hash1 = new bsv.Address(address1).hashBuffer.toString('hex')
+      const hash2 = new bsv.Address(address2).hashBuffer.toString('hex')
+      const asm1 = `OP_DUP OP_HASH160 ${hash1} OP_EQUALVERIFY OP_CHECKSIG`
+      const asm2 = `OP_DUP OP_HASH160 ${hash2} OP_EQUALVERIFY OP_CHECKSIG`
+      expect(bsvtx.outputs[3].script.toHex()).to.equal(bsv.Script.fromASM(asm1).toHex())
+      expect(bsvtx.outputs[4].script.toHex()).to.equal(bsv.Script.fromASM(asm2).toHex())
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('output satoshis are correct for custom base', () => {
+    it.skip('output satoshis are correct', () => {
       // TODO
     })
   })
