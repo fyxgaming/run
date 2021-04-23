@@ -230,8 +230,38 @@ describe('Build', () => {
   // --------------------------------------------------------------------------
 
   describe('metadata', () => {
-    it.skip('deploy', () => {
-      // TODO
+    it('deploy', async () => {
+      const run = new Run()
+      const tx = new Run.Transaction()
+      tx.update(() => run.deploy(class A { }))
+      const rawtx = await tx.export()
+      await tx.cache()
+      const bsvtx = new bsv.Transaction(rawtx)
+      const metadataString = bsvtx.outputs[0].script.chunks[5].buf.toString('utf8')
+      const metadata = JSON.parse(metadataString)
+      const state = {
+        kind: 'code',
+        props: {
+          deps: {},
+          location: '_o1',
+          nonce: 1,
+          origin: '_o1',
+          owner: run.owner.address,
+          satoshis: 0
+        },
+        src: 'class A { }',
+        version: '04'
+      }
+      const stateBuffer = bsv.deps.Buffer.from(JSON.stringify(state), 'utf8')
+      const stateHash = bsv.crypto.Hash.sha256(stateBuffer).toString('hex')
+      expect(metadata).to.deep.equal({
+        in: 0,
+        ref: [],
+        out: [stateHash],
+        del: [],
+        cre: [run.owner.address],
+        exec: [{ op: 'DEPLOY', data: ['class A { }', { deps: { } }] }]
+      })
     })
 
     // ------------------------------------------------------------------------
