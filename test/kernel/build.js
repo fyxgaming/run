@@ -8,6 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
+const asm = require('../../lib/extra/asm')
 const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -56,8 +57,21 @@ describe('Build', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('custom scripts for custom locks', () => {
-    // TODO - jig
+    it('custom scripts for custom locks', async () => {
+      const run = new Run()
+      class A extends Jig { static send (owner) { this.owner = owner } }
+      class L {
+        script () { return asm('OP_1 abcd') }
+        domain () { return 100 }
+      }
+      L.deps = { asm: Run.extra.asm }
+      const CA = run.deploy(A)
+      await CA.sync()
+      const tx = new Run.Transaction()
+      tx.update(() => CA.send(new L()))
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      expect(bsvtx.outputs[1].script.toHex()).to.equal(bsv.Script.fromASM('OP_1 abcd').toHex())
     })
   })
 
