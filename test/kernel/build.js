@@ -266,8 +266,40 @@ describe('Build', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('instantiate from ref', () => {
-      // TODO
+    it('instantiate from ref', async () => {
+      const run = new Run()
+      const tx = new Run.Transaction()
+      class A extends Jig { }
+      run.deploy(A)
+      await run.sync()
+      tx.update(() => new A())
+      const rawtx = await tx.export()
+      await tx.cache()
+      const bsvtx = new bsv.Transaction(rawtx)
+      const metadataString = bsvtx.outputs[0].script.chunks[5].buf.toString('utf8')
+      const metadata = JSON.parse(metadataString)
+      const state = {
+        cls: { $jig: A.location },
+        kind: 'jig',
+        props: {
+          location: '_o1',
+          nonce: 1,
+          origin: '_o1',
+          owner: run.owner.address,
+          satoshis: 0
+        },
+        version: '04'
+      }
+      const stateBuffer = bsv.deps.Buffer.from(JSON.stringify(state), 'utf8')
+      const stateHash = bsv.crypto.Hash.sha256(stateBuffer).toString('hex')
+      expect(metadata).to.deep.equal({
+        in: 0,
+        ref: [A.location],
+        out: [stateHash],
+        del: [],
+        cre: [run.owner.address],
+        exec: [{ op: 'NEW', data: [{ $jig: 0 }, []] }]
+      })
     })
 
     // ------------------------------------------------------------------------
