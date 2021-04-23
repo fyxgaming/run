@@ -385,8 +385,40 @@ describe('Build', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('auth jig', () => {
-      // TODO
+    it('auth jig', async () => {
+      const run = new Run()
+      const tx = new Run.Transaction()
+      class A extends Jig { }
+      const a = new A()
+      await run.sync()
+      tx.update(() => a.auth())
+      const rawtx = await tx.export()
+      await tx.cache()
+      const bsvtx = new bsv.Transaction(rawtx)
+      const metadataString = bsvtx.outputs[0].script.chunks[5].buf.toString('utf8')
+      const metadata = JSON.parse(metadataString)
+      const state = {
+        cls: { $jig: A.location },
+        kind: 'jig',
+        props: {
+          location: '_o1',
+          nonce: 2,
+          origin: a.origin,
+          owner: run.owner.address,
+          satoshis: 0
+        },
+        version: '04'
+      }
+      const stateBuffer = bsv.deps.Buffer.from(JSON.stringify(state), 'utf8')
+      const stateHash = bsv.crypto.Hash.sha256(stateBuffer).toString('hex')
+      expect(metadata).to.deep.equal({
+        in: 1,
+        ref: [],
+        out: [stateHash],
+        del: [],
+        cre: [],
+        exec: [{ op: 'CALL', data: [{ $jig: 0 }, 'auth', []] }]
+      })
     })
 
     // ------------------------------------------------------------------------
