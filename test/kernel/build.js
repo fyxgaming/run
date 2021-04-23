@@ -4,7 +4,7 @@
  * Tests that check properties of the transactions RUN builds
  */
 
-const { describe, it } = require('mocha')
+const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
@@ -18,11 +18,16 @@ const { _calculateDust } = unmangle(unmangle(Run)._bsv)
 // ------------------------------------------------------------------------------------------------
 
 describe('Build', () => {
+  // Wait for every test to finish. This makes debugging easier.
+  afterEach(() => Run.instance && Run.instance.sync())
+  // Deactivate the current run instance. This stops leaks across tests.
+  afterEach(() => Run.instance && Run.instance.deactivate())
+
   // --------------------------------------------------------------------------
   // scripts
   // --------------------------------------------------------------------------
 
-  describe('output scripts', () => {
+  describe('scripts', () => {
     it('p2pkh scripts for address owners', async () => {
       const run = new Run()
       const address1 = run.owner.address
