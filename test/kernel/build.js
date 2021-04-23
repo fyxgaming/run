@@ -182,7 +182,6 @@ describe('Build', () => {
       tx.update(() => run.deploy(class A {}))
       const rawtx = await tx.export()
       const bsvtx = new bsv.Transaction(rawtx)
-      console.log(bsvtx.outputs[0].script.chunks.length)
       expect(bsvtx.outputs[0].script.chunks[4].buf.toString('utf8')).to.equal(run.app)
     })
 
@@ -205,8 +204,13 @@ describe('Build', () => {
   // --------------------------------------------------------------------------
 
   describe('prefix', () => {
-    it.skip('has run tag', () => {
-      // TODO
+    it('has run tag', async () => {
+      const run = new Run()
+      const tx = new Run.Transaction()
+      tx.update(() => run.deploy(class A {}))
+      const rawtx = await tx.export()
+      const bsvtx = new bsv.Transaction(rawtx)
+      expect(bsvtx.outputs[0].script.chunks[2].buf.toString('utf8')).to.equal('run')
     })
 
     // ------------------------------------------------------------------------
