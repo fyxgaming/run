@@ -4,24 +4,26 @@
  * Tests to ensure that invalid transactions are not loaded
  */
 
-const { describe } = require('mocha')
+const { describe, it } = require('mocha')
+require('chai').use(require('chai-as-promised'))
+const { expect } = require('chai')
+const bsv = require('bsv')
+const Run = require('../env/run')
 
 // ------------------------------------------------------------------------------------------------
 // Invalid
 // ------------------------------------------------------------------------------------------------
 
 describe('Invalid', () => {
+  it('throws if no metadata', async () => {
+    const run = new Run()
+    const bsvtx = new bsv.Transaction()
+    await expect(run.import(bsvtx)).to.be.rejectedWith('Not a run transaction: invalid op_return protocol')
+  })
+
   // TODO
 
   /*
-  it('should throw if no data', async () => {
-    const run = new Run()
-    const tx = await payFor(new bsv.Transaction(), run)
-    await run.blockchain.broadcast(tx)
-    await expect(run.load(tx.hash + '_o0')).to.be.rejectedWith(`Not a token: ${tx.hash}`)
-    await expect(run.load(tx.hash + '_o1')).to.be.rejectedWith(`Not a token: ${tx.hash}`)
-  })
-
   it('should throw if bad output target', async () => {
     const run = new Run()
     class A extends Jig { f () { } }
