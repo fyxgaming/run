@@ -433,8 +433,12 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid native ref', async () => {
-      // TODO
+    it('throws if invalid native ref', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.ref = ['native://jig']
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Native code not found: jig')
     })
 
     // ------------------------------------------------------------------------
