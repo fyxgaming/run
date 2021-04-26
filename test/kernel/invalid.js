@@ -776,8 +776,22 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if missing class prop ref', () => {
+    it('throws if missing class prop ref', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.exec[0].data[1].deps.Jig.$jig = 2
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Invalid local jig reference: 2')
+    })
 
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if self class prop ref', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.exec[0].data[1].deps.Jig.$jig = 1
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('error message here...')
     })
   })
 
