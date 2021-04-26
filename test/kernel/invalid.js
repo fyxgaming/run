@@ -9,6 +9,8 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
+const unmangle = require('../env/unmangle')
+const { _calculateDust } = unmangle(unmangle(Run)._bsv)
 
 // ------------------------------------------------------------------------------------------------
 // Invalid
@@ -57,6 +59,29 @@ describe('Invalid', () => {
     const txid = new bsv.Transaction(rawtx).hash
     run.blockchain.fetch = txid => rawtx
     await expect(run.load(`${txid}_o2`)).to.be.rejectedWith('Jig not found')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('throws if invalid output script', async () => {
+    const run = new Run()
+    const config = buildDeployConfig()
+    config.outputs[0].script = ''
+    const rawtx = createRunTransaction(config)
+    await expect(run.import(rawtx)).to.be.rejectedWith('Script mismatch on output 1')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('throws if invalid satoshis', async () => {
+    /*
+    const run = new Run()
+    const config = buildDeployConfig()
+    config.metadata.exec[0].data[1].satoshis = 100
+    config.outputs[0].satoshis = 99
+    const rawtx = createRunTransaction(config)
+    await run.import(rawtx)
+    */
   })
 
   // TODO
@@ -412,6 +437,7 @@ function buildDeployConfig () {
   const hash = new bsv.Address(address).hashBuffer.toString('hex')
   const asm = `OP_DUP OP_HASH160 ${hash} OP_EQUALVERIFY OP_CHECKSIG`
   const script = bsv.Script.fromASM(asm).toHex()
+  const dust = _calculateDust(script.length / 2, bsv.Transaction.FEE_PER_KB)
   const state = {
     kind: 'code',
     props: {
@@ -437,7 +463,7 @@ function buildDeployConfig () {
       exec: [{ op: 'DEPLOY', data: ['class A { }', { deps: { } }] }]
     },
     outputs: [
-      { script, satoshis: 1000 }
+      { script, satoshis: dust }
     ]
   }
   return options
