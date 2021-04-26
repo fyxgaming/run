@@ -699,8 +699,11 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if multiple deploys in src', () => {
-      // TODO
+    it.skip('throws if multiple deploys in src', async () => {
+      const run = new Run()
+      const config = buildDeployConfig('class A { }; class B { }')
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Must only deploy one class or function')
     })
 
     // ------------------------------------------------------------------------
