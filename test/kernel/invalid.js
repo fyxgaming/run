@@ -75,6 +75,16 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if exec statement contains extra data', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.exec[0].name = 'alice'
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Invalid exec')
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('throws if unknown exec op', () => {
       // TODO
     })
