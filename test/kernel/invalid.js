@@ -139,8 +139,12 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if extra data', () => {
-      // TODO
+    it('throws if extra data', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.extraData = 'abc'
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid op_return protocol')
     })
   })
 
@@ -644,6 +648,7 @@ describe('Invalid', () => {
  * @param {?string} options.version Version hex string
  * @param {?string} options.app App string
  * @param {?string} options.base Raw transaction base
+ * @param {?string} options.extraData Extra data to the append to the end of the op_return
  * @param {?Array<{script,satoshis}>} options.outputs Outputs after the metadata
  * @param {?Array<{txid,vout}>} options.inputs Inputs spent
  * @returns {string} Raw transaction
@@ -654,7 +659,9 @@ function createRunTransaction (options) {
   const ver = Buffer.from([options.version || 0x05])
   const app = Buffer.from(options.app || '', 'utf8')
   const json = Buffer.from(JSON.stringify(options.metadata), 'utf8')
-  const script = bsv.Script.buildSafeDataOut([prefix, ver, app, json])
+  const opreturnData = [prefix, ver, app, json]
+  if (options.extraData) opreturnData.push(Buffer.from(options.extraData, 'utf8'))
+  const script = bsv.Script.buildSafeDataOut(opreturnData)
   const opreturn = new bsv.Transaction.Output({ script, satoshis: 0 })
   const bsvtx = options.base ? new bsv.Transaction(options.base) : new bsv.Transaction()
   bsvtx.addOutput(opreturn)
