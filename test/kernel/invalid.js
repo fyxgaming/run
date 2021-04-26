@@ -39,12 +39,28 @@ describe('Invalid', () => {
 
   // --------------------------------------------------------------------------
 
+  it('throws if no exec statements', async () => {
+    const run = new Run()
+    const rawtx = createRunTransaction({
+      metadata: { in: 0, ref: [], out: [], del: [], cre: [], exec: [] },
+      outputs: [{ script: '', satoshis: 1000 }]
+    })
+    await expect(run.import(rawtx)).to.be.rejectedWith('Invalid metadata: no commit generated')
+  })
+
+  // --------------------------------------------------------------------------
+
   it.skip('throws if load payment output', async () => {
-    // const run = new Run()
-    // const rawtx = createRunTransaction({ metadata: {} })
-    // const txid = new bsv.Transaction(rawtx).hash
-    // run.blockchain.fetch = txid => rawtx
-    // await run.load(`${txid}_o2`)
+    /*
+    const run = new Run()
+    const rawtx = createRunTransaction({
+      metadata: { in: 0, ref: [], out: [], del: [], cre: [], exec: [] },
+      outputs: [{ script: '', satoshis: 1000 }]
+    })
+    const txid = new bsv.Transaction(rawtx).hash
+    run.blockchain.fetch = txid => rawtx
+    await run.load(`${txid}_o1`)
+    */
   })
 
   // TODO
