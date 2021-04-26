@@ -57,7 +57,13 @@ describe('Misc', () => {
     // ------------------------------------------------------------------------
 
     it('fail', () => {
-      expect(() => _assert(false)).to.throw()
+      expect(() => _assert(false)).to.throw('assert failed')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('fail with custom message', () => {
+      expect(() => _assert(false, 'custom error')).to.throw('custom error')
     })
   })
 
