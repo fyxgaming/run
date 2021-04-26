@@ -295,8 +295,18 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if owner mismatch', () => {
-      // TODO
+    it('throws if owner mismatch', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const address = new bsv.PrivateKey().toAddress().toString()
+      const instantiateConfig = buildInstantiateConfig(deployRawtx, 0, address)
+      expect(instantiateConfig.metadata.cre[0]).to.equal(address)
+      instantiateConfig.metadata.cre[0] = new bsv.PrivateKey().toAddress().toString()
+      const instantiateRawtx = createRunTransaction(instantiateConfig)
+      await expect(run.import(instantiateRawtx)).to.be.rejectedWith('Metadata mismatch')
     })
   })
 
@@ -701,7 +711,7 @@ function createRunTransaction (options) {
 
 function buildDeployConfig () {
   const src = `class A extends Jig {
-    init(satoshis = 0) { this.satoshis = satoshis }
+    init(satoshis = 0, owner = null) { this.satoshis = satoshis; if (owner) this.owner = owner }
     static set(n) { this.n = n }
     static err() { throw new Error() }
   }`
@@ -800,9 +810,9 @@ function buildDeployWithCustomLockConfig () {
 
 // ------------------------------------------------------------------------------------------------
 
-function buildInstantiateConfig (deployRawtx, satoshis = 0) {
+function buildInstantiateConfig (deployRawtx, satoshis = 0, owner = null) {
   const deployTxid = new bsv.Transaction(deployRawtx).hash
-  const address = new bsv.PrivateKey().toAddress().toString()
+  const address = owner || new bsv.PrivateKey().toAddress().toString()
   const hash = new bsv.Address(address).hashBuffer.toString('hex')
   const asm = `OP_DUP OP_HASH160 ${hash} OP_EQUALVERIFY OP_CHECKSIG`
   const script = bsv.Script.fromASM(asm).toHex()
@@ -828,7 +838,7 @@ function buildInstantiateConfig (deployRawtx, satoshis = 0) {
       out: [stateHash],
       del: [],
       cre: [address],
-      exec: [{ op: 'NEW', data: [{ $jig: 0 }, [satoshis]] }]
+      exec: [{ op: 'NEW', data: [{ $jig: 0 }, [satoshis, owner]] }]
     },
     outputs: [
       { script, satoshis: Math.max(dust, satoshis) }
