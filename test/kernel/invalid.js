@@ -235,6 +235,20 @@ describe('Invalid', () => {
     await expect(run.import(destroyRawtx)).to.be.rejectedWith('Metadata mismatch')
   })
 
+  // --------------------------------------------------------------------------
+
+  it('throws if invalid del hash', async () => {
+    const run = new Run()
+    const deployConfig = buildDeployConfig()
+    const deployRawtx = createRunTransaction(deployConfig)
+    const deployTxid = new bsv.Transaction(deployRawtx).hash
+    run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+    const destroyConfig = buildDestroyConfig(deployRawtx)
+    destroyConfig.metadata.del = [{}]
+    const destroyRawtx = createRunTransaction(destroyConfig)
+    await expect(run.import(destroyRawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
+  })
+
   // TODO
 
   // Tests
