@@ -746,6 +746,16 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if deploy data is not an array', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.exec[0].data = { }
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('DEPLOY data must be an array')
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('throws if invalid class props', () => {
       // TODO
     })
