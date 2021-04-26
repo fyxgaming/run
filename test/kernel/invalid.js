@@ -102,6 +102,16 @@ describe('Invalid', () => {
       const rawtx = createRunTransaction(config)
       await expect(run.import(rawtx)).to.be.rejectedWith('Unknown op: deploy')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if extra fields', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.author = 'alice'
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
+    })
   })
 
   // --------------------------------------------------------------------------
