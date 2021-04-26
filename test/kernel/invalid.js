@@ -736,8 +736,12 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if extra deploy data', () => {
-      // TODO
+    it('throws if extra deploy data', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.exec[0].data.push(null)
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Invalid DEPLOY data length')
     })
 
     // ------------------------------------------------------------------------
