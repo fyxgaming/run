@@ -163,8 +163,12 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid output script for custom lock', async () => {
-      // TODO
+    it('throws if invalid output script for custom lock', async () => {
+      const run = new Run()
+      const config = buildDeployWithCustomLockConfig()
+      config.outputs[0].script = 'bb'
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Script mismatch on output 1')
     })
 
     // ------------------------------------------------------------------------
@@ -709,6 +713,63 @@ function buildDeployConfig () {
       exec: [{ op: 'DEPLOY', data: [src, { deps: { Jig: { $jig: 0 } } }] }]
     },
     outputs: [
+      { script, satoshis: dust }
+    ]
+  }
+  return options
+}
+
+// ------------------------------------------------------------------------------------------------
+
+function buildDeployWithCustomLockConfig () {
+  const locksrc = 'class L { script() { return \'aa\' } domain() { return 0 } }'
+  const clssrc = 'class A { }'
+  const script = 'aa'
+  const dust = _calculateDust(script.length / 2, bsv.Transaction.FEE_PER_KB)
+  const lockstate = {
+    kind: 'code',
+    props: {
+      deps: { },
+      location: '_o1',
+      nonce: 1,
+      origin: '_o1',
+      owner: { $arb: {}, T: { $jig: '_o1' } },
+      satoshis: 0
+    },
+    src: locksrc,
+    version: '04'
+  }
+  const lockStateBuffer = bsv.deps.Buffer.from(JSON.stringify(lockstate), 'utf8')
+  const lockStateHash = bsv.crypto.Hash.sha256(lockStateBuffer).toString('hex')
+  const clstate = {
+    kind: 'code',
+    props: {
+      deps: { },
+      location: '_o2',
+      nonce: 1,
+      origin: '_o2',
+      owner: { $arb: {}, T: { $jig: '_o1' } },
+      satoshis: 0
+    },
+    src: clssrc,
+    version: '04'
+  }
+  const clsStateBuffer = bsv.deps.Buffer.from(JSON.stringify(clstate), 'utf8')
+  const clsStateHash = bsv.crypto.Hash.sha256(clsStateBuffer).toString('hex')
+  const options = {
+    metadata: {
+      in: 0,
+      ref: [],
+      out: [lockStateHash, clsStateHash],
+      del: [],
+      cre: [{ $arb: {}, T: { $jig: 0 } }, { $arb: {}, T: { $jig: 0 } }],
+      exec: [
+        { op: 'DEPLOY', data: [locksrc, { deps: { } }] },
+        { op: 'DEPLOY', data: [clssrc, { deps: { } }] }
+      ]
+    },
+    outputs: [
+      { script, satoshis: dust },
       { script, satoshis: dust }
     ]
   }
