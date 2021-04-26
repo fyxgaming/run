@@ -159,8 +159,12 @@ describe('Invalid', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('throws if missing output new target', () => {
-    // TODO
+  it('throws if missing output new target', async () => {
+    const run = new Run()
+    const config = buildDeployAndInstantiateConfig()
+    config.metadata.exec[1].data[0].$jig = 2
+    const rawtx = createRunTransaction(config)
+    await expect(run.import(rawtx)).to.be.rejectedWith('Cannot decode "{"$jig":2}"')
   })
 
   // TODO
@@ -171,26 +175,6 @@ describe('Invalid', () => {
   //  -Invalid inputs
 
   /*
-  it('should throw if nonexistant target', async () => {
-    const run = new Run()
-    class A extends Jig { f () { } }
-    const a = new A()
-    await a.sync()
-    const actions = [{ target: 'abc_o1', method: 'f', args: [] }]
-    const txid = await build(run, [], actions, [a.location], null, 1)
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith() // TODO: check error
-  })
-
-  it('should throw if bad method', async () => {
-    const run = new Run()
-    class A extends Jig { }
-    const a = new A()
-    await a.sync()
-    const actions = [{ target: '_i0', method: 'f', args: [] }]
-    const txid = await build(run, [], actions, [a.location], null, 1)
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith() // TODO: check error
-  })
-
   it('should throw if bad json args', async () => {
     const run = new Run()
     class A extends Jig { f () { } }
@@ -607,6 +591,64 @@ function buildCallConfig (deployRawtx) {
       { txid: deployTxid, vout: 1, script, satoshis: dust }
     ],
     outputs: [
+      { script, satoshis: dust }
+    ]
+  }
+  return options
+}
+
+// ------------------------------------------------------------------------------------------------
+
+function buildDeployAndInstantiateConfig () {
+  const src = 'class A extends Jig { }'
+  const address = new bsv.PrivateKey().toAddress().toString()
+  const hash = new bsv.Address(address).hashBuffer.toString('hex')
+  const asm = `OP_DUP OP_HASH160 ${hash} OP_EQUALVERIFY OP_CHECKSIG`
+  const script = bsv.Script.fromASM(asm).toHex()
+  const dust = _calculateDust(script.length / 2, bsv.Transaction.FEE_PER_KB)
+  const codeState = {
+    kind: 'code',
+    props: {
+      deps: { Jig: { $jig: 'native://Jig' } },
+      location: '_o1',
+      nonce: 1,
+      origin: '_o1',
+      owner: address,
+      satoshis: 0
+    },
+    src,
+    version: '04'
+  }
+  const codeStateBuffer = bsv.deps.Buffer.from(JSON.stringify(codeState), 'utf8')
+  const codeStateHash = bsv.crypto.Hash.sha256(codeStateBuffer).toString('hex')
+  const jigState = {
+    cls: { $jig: '_o1' },
+    kind: 'jig',
+    props: {
+      location: '_o2',
+      nonce: 1,
+      origin: '_o2',
+      owner: address,
+      satoshis: 0
+    },
+    version: '04'
+  }
+  const jigStateBuffer = bsv.deps.Buffer.from(JSON.stringify(jigState), 'utf8')
+  const jigStateHash = bsv.crypto.Hash.sha256(jigStateBuffer).toString('hex')
+  const options = {
+    metadata: {
+      in: 0,
+      ref: ['native://Jig'],
+      out: [codeStateHash, jigStateHash],
+      del: [],
+      cre: [address, address],
+      exec: [
+        { op: 'DEPLOY', data: [src, { deps: { Jig: { $jig: 0 } } }] },
+        { op: 'NEW', data: [{ $jig: 1 }, []] }
+      ]
+    },
+    outputs: [
+      { script, satoshis: dust },
       { script, satoshis: dust }
     ]
   }
