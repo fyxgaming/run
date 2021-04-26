@@ -405,8 +405,16 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if duplicate class ref', async () => {
-      // TODO
+    it('throws if duplicate class ref', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const instantiateConfig = buildInstantiateConfig(deployRawtx)
+      instantiateConfig.metadata.ref.push(instantiateConfig.metadata.ref[0])
+      const instantiateRawtx = createRunTransaction(instantiateConfig)
+      await expect(run.import(instantiateRawtx)).to.be.rejectedWith('Inconsistent reference: A')
     })
 
     // ------------------------------------------------------------------------
