@@ -119,8 +119,12 @@ describe('Invalid', () => {
   // --------------------------------------------------------------------------
 
   describe('op_return', () => {
-    it.skip('throws if not a run prefix', () => {
-      // TODO
+    it('throws if not a run prefix', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.prefix = 'slp'
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid op_return protocol')
     })
 
     // ------------------------------------------------------------------------
