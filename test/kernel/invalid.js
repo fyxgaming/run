@@ -189,8 +189,12 @@ describe('Invalid', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('throws if missing out hash', async () => {
-
+  it('throws if missing out hash', async () => {
+    const run = new Run()
+    const config = buildDeployConfig()
+    config.metadata.out = []
+    const rawtx = createRunTransaction(config)
+    await expect(run.import(rawtx)).to.be.rejectedWith('Metadata mismatch')
   })
 
   // --------------------------------------------------------------------------
