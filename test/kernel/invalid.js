@@ -516,8 +516,15 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if NEW on sidekick class', () => {
-      // TODO
+    it('throws if NEW on sidekick class', async () => {
+      const run = new Run()
+      const deployConfig = buildDeploySidekickConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const instantiateConfig = buildInstantiateConfig(deployRawtx)
+      const instantiateRawtx = createRunTransaction(instantiateConfig)
+      await expect(run.import(instantiateRawtx)).to.be.rejectedWith('Must only execute NEW on a jig class')
     })
 
     // ------------------------------------------------------------------------
@@ -818,6 +825,46 @@ function buildDeployConfig () {
       del: [],
       cre: [address],
       exec: [{ op: 'DEPLOY', data: [src, { deps: { Jig: { $jig: 0 } } }] }]
+    },
+    outputs: [
+      { script, satoshis: dust }
+    ]
+  }
+  return options
+}
+
+// ------------------------------------------------------------------------------------------------
+
+function buildDeploySidekickConfig () {
+  const src = 'class A { }'
+  const address = new bsv.PrivateKey().toAddress().toString()
+  const hash = new bsv.Address(address).hashBuffer.toString('hex')
+  const asm = `OP_DUP OP_HASH160 ${hash} OP_EQUALVERIFY OP_CHECKSIG`
+  const script = bsv.Script.fromASM(asm).toHex()
+  const dust = _calculateDust(script.length / 2, bsv.Transaction.FEE_PER_KB)
+  const state = {
+    kind: 'code',
+    props: {
+      deps: { },
+      location: '_o1',
+      nonce: 1,
+      origin: '_o1',
+      owner: address,
+      satoshis: 0
+    },
+    src,
+    version: '04'
+  }
+  const stateBuffer = bsv.deps.Buffer.from(JSON.stringify(state), 'utf8')
+  const stateHash = bsv.crypto.Hash.sha256(stateBuffer).toString('hex')
+  const options = {
+    metadata: {
+      in: 0,
+      ref: [],
+      out: [stateHash],
+      del: [],
+      cre: [address],
+      exec: [{ op: 'DEPLOY', data: [src, { deps: { } }] }]
     },
     outputs: [
       { script, satoshis: dust }
