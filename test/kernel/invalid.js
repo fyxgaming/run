@@ -105,6 +105,16 @@ describe('Invalid', () => {
     await expect(run.import(rawtx)).to.be.rejectedWith('Invalid owner: 123')
   })
 
+  // --------------------------------------------------------------------------
+
+  it('throws if missing output', async () => {
+    const run = new Run()
+    const config = buildDeployConfig()
+    config.outputs = []
+    const rawtx = createRunTransaction(config)
+    await expect(run.import(rawtx)).to.be.rejectedWith('Jig output missing for _o1')
+  })
+
   // TODO
 
   // Tests
