@@ -117,7 +117,7 @@ describe('Invalid', () => {
 
   // --------------------------------------------------------------------------
 
-  it('throws if bad call target', async () => {
+  it('throws if call missing method', async () => {
     const run = new Run()
     const deployConfig = buildDeployConfig()
     const deployRawtx = createRunTransaction(deployConfig)
