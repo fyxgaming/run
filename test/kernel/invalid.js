@@ -690,8 +690,11 @@ describe('Invalid', () => {
   // --------------------------------------------------------------------------
 
   describe('deploy', () => {
-    it.skip('throws is bad deploy code', () => {
-      // TODO
+    it('throws if bad deploy code', async () => {
+      const run = new Run()
+      const config = buildDeployConfig('1 + 2 + 3')
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('DEPLOY src not supported: 1 + 2 + 3')
     })
 
     // ------------------------------------------------------------------------
@@ -852,8 +855,8 @@ function createRunTransaction (options) {
 
 // ------------------------------------------------------------------------------------------------
 
-function buildDeployConfig () {
-  const src = `class A extends Jig {
+function buildDeployConfig (src = null) {
+  src = src || `class A extends Jig {
     init(satoshis = 0, owner = null) { this.satoshis = satoshis; if (owner) this.owner = owner }
     static set(n) { this.n = n }
     static err() { throw new Error() }
