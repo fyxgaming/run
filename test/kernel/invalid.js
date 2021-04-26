@@ -617,14 +617,16 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid method args', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if missing method arg ref', () => {
-      // TDOO
+    it('throws if invalid method args', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const callConfig = buildCallConfig(deployRawtx)
+      callConfig.metadata.exec[0].data[2] = null
+      const callRawtx = createRunTransaction(callConfig)
+      await expect(run.import(callRawtx)).to.be.rejectedWith('CALL args must be an array')
     })
 
     // ------------------------------------------------------------------------
@@ -637,6 +639,18 @@ describe('Invalid', () => {
 
     it.skip('throws if missing method name data', () => {
       // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if target is a sidekick', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if missing method arg ref', () => {
+      // TDOO
     })
   })
 
