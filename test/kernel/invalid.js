@@ -800,8 +800,16 @@ describe('Invalid', () => {
   // --------------------------------------------------------------------------
 
   describe('upgrade', () => {
-    it.skip('throws if missing input upgrade target', async () => {
-      // TODO
+    it('throws if missing input upgrade target', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const upgradeConfig = buildUpgradeConfig(deployRawtx)
+      upgradeConfig.metadata.in = 0
+      const upgradeRawtx = createRunTransaction(upgradeConfig)
+      await expect(run.import(upgradeRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":1}"')
     })
 
     // ------------------------------------------------------------------------
@@ -843,7 +851,13 @@ describe('Invalid', () => {
     // ------------------------------------------------------------------------
 
     it.skip('throws if missing class prop ref', () => {
+      // TODO
+    })
 
+    // ------------------------------------------------------------------------
+
+    it.skip('update with self reference', () => {
+      // TODO - move to upgrade.js
     })
   })
 
@@ -1135,6 +1149,51 @@ function buildCallConfig (deployRawtx) {
       del: [],
       cre: [],
       exec: [{ op: 'CALL', data: [{ $jig: 0 }, 'set', [1]] }]
+    },
+    inputs: [
+      { txid: deployTxid, vout: 1, script, satoshis: dust }
+    ],
+    outputs: [
+      { script, satoshis: dust }
+    ]
+  }
+  return options
+}
+
+// ------------------------------------------------------------------------------------------------
+
+function buildUpgradeConfig (deployRawtx) {
+  const src = 'class B extends Jig { }'
+  const deployMetadata = Run.util.metadata(deployRawtx)
+  const deployTxid = new bsv.Transaction(deployRawtx).hash
+  const address = deployMetadata.cre[0]
+  const hash = new bsv.Address(address).hashBuffer.toString('hex')
+  const asm = `OP_DUP OP_HASH160 ${hash} OP_EQUALVERIFY OP_CHECKSIG`
+  const script = bsv.Script.fromASM(asm).toHex()
+  const dust = _calculateDust(script.length / 2, bsv.Transaction.FEE_PER_KB)
+  const state = {
+    kind: 'code',
+    props: {
+      deps: { Jig: { $jig: 'native://Jig' } },
+      location: '_o1',
+      nonce: 2,
+      origin: `${deployTxid}_o1`,
+      owner: address,
+      satoshis: 0
+    },
+    src,
+    version: '04'
+  }
+  const stateBuffer = bsv.deps.Buffer.from(JSON.stringify(state), 'utf8')
+  const stateHash = bsv.crypto.Hash.sha256(stateBuffer).toString('hex')
+  const options = {
+    metadata: {
+      in: 1,
+      ref: ['native://Jig'],
+      out: [stateHash],
+      del: [],
+      cre: [],
+      exec: [{ op: 'UPGRADE', data: [{ $jig: 0 }, src, { deps: { Jig: { $jig: 1 } } }] }]
     },
     inputs: [
       { txid: deployTxid, vout: 1, script, satoshis: dust }

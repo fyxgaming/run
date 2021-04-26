@@ -1303,7 +1303,7 @@ describe('Upgrade', () => {
       const run = new Run()
       class A extends Jig { }
       const CA = run.deploy(A)
-      const error = 'Cannot change staticness of code in upgrade'
+      const error = 'Cannot change jigs to sidekicks, or vice versa'
       expect(() => CA.upgrade(class B { })).to.throw(error)
     })
 
@@ -1313,7 +1313,7 @@ describe('Upgrade', () => {
       const run = new Run()
       class A { }
       const CA = run.deploy(A)
-      const error = 'Cannot change staticness of code in upgrade'
+      const error = 'Cannot change jigs to sidekicks, or vice versa'
       expect(() => CA.upgrade(class B extends Jig { })).to.throw(error)
     })
 
@@ -1511,7 +1511,7 @@ describe('Upgrade', () => {
       class A extends Jig { }
       class B extends Berry { }
       const CA = run.deploy(A)
-      const error = 'Cannot change staticness of code in upgrade'
+      const error = 'Cannot change jigs to sidekicks, or vice versa'
       expect(() => CA.upgrade(B)).to.throw(error)
       await CA.sync()
       expect(() => CA.upgrade(B)).to.throw(error)
