@@ -631,8 +631,16 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if missing method arg data', () => {
-      // TODO
+    it('throws if missing method arg data', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const callConfig = buildCallConfig(deployRawtx)
+      callConfig.metadata.exec[0].data.length = 2
+      const callRawtx = createRunTransaction(callConfig)
+      await expect(run.import(callRawtx)).to.be.rejectedWith('Invalid CALL data length')
     })
 
     // ------------------------------------------------------------------------
