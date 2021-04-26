@@ -131,7 +131,7 @@ describe('Invalid', () => {
 
   // --------------------------------------------------------------------------
 
-  it('throws if bad call target', async () => {
+  it('throws if missing input call target', async () => {
     const run = new Run()
     const deployConfig = buildDeployConfig()
     const deployRawtx = createRunTransaction(deployConfig)
@@ -143,6 +143,26 @@ describe('Invalid', () => {
     await expect(run.import(callRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":1}"')
   })
 
+  // --------------------------------------------------------------------------
+
+  it('throws if invalid input call target', async () => {
+    const run = new Run()
+    const deployConfig = buildDeployConfig()
+    const deployRawtx = createRunTransaction(deployConfig)
+    const deployTxid = new bsv.Transaction(deployRawtx).hash
+    run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+    const callConfig = buildCallConfig(deployRawtx)
+    callConfig.metadata.exec[0].data[0].$jig = null
+    const callRawtx = createRunTransaction(callConfig)
+    await expect(run.import(callRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":null}"')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('throws if missing output new target', () => {
+    // TODO
+  })
+
   // TODO
 
   // Tests
@@ -151,29 +171,6 @@ describe('Invalid', () => {
   //  -Invalid inputs
 
   /*
-  it('should throw if bad output target', async () => {
-    const run = new Run()
-    class A extends Jig { f () { } }
-    const a = new A()
-    await a.sync()
-    const actions = [{ target: '_o1', method: 'f', args: [] }]
-    const txid = await build(run, [], actions, [a.location], null, 1)
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith('target _o1 missing')
-  })
-
-  it('should throw if bad input target', async () => {
-    const run = new Run()
-    class A extends Jig { f () { } }
-    const a = new A()
-    await a.sync()
-    const actions = [{ target: '_i1', method: 'f', args: [] }]
-    const txid = await build(run, [], actions, [a.location], null, 1)
-    const tx = await run.blockchain.fetch(txid)
-    const purseOutput = tx.inputs[1].prevTxId.toString('hex') + '_o' + tx.inputs[1].outputIndex
-    const error = `Error loading ref _i1 at ${purseOutput}`
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith(error)
-  })
-
   it('should throw if nonexistant target', async () => {
     const run = new Run()
     class A extends Jig { f () { } }
