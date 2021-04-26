@@ -4,7 +4,7 @@
  * Tests to ensure that invalid transactions are not loaded
  */
 
-const { describe, it } = require('mocha')
+const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const bsv = require('bsv')
@@ -15,13 +15,45 @@ const Run = require('../env/run')
 // ------------------------------------------------------------------------------------------------
 
 describe('Invalid', () => {
+  // Wait for every test to finish. This makes debugging easier.
+  afterEach(() => Run.instance && Run.instance.sync())
+  // Deactivate the current run instance. This stops leaks across tests.
+  afterEach(() => Run.instance && Run.instance.deactivate())
+
+  // --------------------------------------------------------------------------
+
   it('throws if no metadata', async () => {
     const run = new Run()
     const bsvtx = new bsv.Transaction()
-    await expect(run.import(bsvtx)).to.be.rejectedWith('Not a run transaction: invalid op_return protocol')
+    const rawtx = bsvtx.toString('hex')
+    await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid op_return protocol')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('throws if empty metadata', async () => {
+    const run = new Run()
+    const rawtx = createRunTransaction({ metadata: {} })
+    await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('throws if load payment output', async () => {
+    // const run = new Run()
+    // const rawtx = createRunTransaction({ metadata: {} })
+    // const txid = new bsv.Transaction(rawtx).hash
+    // run.blockchain.fetch = txid => rawtx
+    // await run.load(`${txid}_o2`)
   })
 
   // TODO
+
+  // Tests
+  //  -Bad metadata structure
+  //  -Not enough outputs
+  //  -Not enough inputs
+  //  -Invalid inputs
 
   /*
   it('should throw if bad output target', async () => {
@@ -330,5 +362,35 @@ describe('Invalid', () => {
   })
   */
 })
+
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Manually creates a run transaction
+ * @param {object} options Options object
+ * @param {object} options.metadata Metadata JSON
+ * @param {?string} options.prefix OP_RETURN prefix
+ * @param {?string} options.version Version hex string
+ * @param {?string} options.app App string
+ * @param {?string} options.base Raw transaction base
+ * @param {?Array<{script,satoshis}>} options.outputs Outputs after the metadata
+ * @param {?Array<{txid,vout}>} options.inputs Inputs spent
+ * @returns {string} Raw transaction
+ */
+function createRunTransaction (options) {
+  const Buffer = bsv.deps.Buffer
+  const prefix = Buffer.from(options.prefix || 'run', 'utf8')
+  const ver = Buffer.from([options.version || 0x05])
+  const app = Buffer.from(options.app || '', 'utf8')
+  const json = Buffer.from(JSON.stringify(options.metadata), 'utf8')
+  const script = bsv.Script.buildSafeDataOut([prefix, ver, app, json])
+  const opreturn = new bsv.Transaction.Output({ script, satoshis: 0 })
+  const bsvtx = options.base ? new bsv.Transaction(options.base) : new bsv.Transaction()
+  bsvtx.addOutput(opreturn)
+  if (options.outputs) options.outputs.forEach(output => bsvtx.addOutput(new bsv.Transaction.Output(output)))
+  if (options.inputs) options.inputs.forEach(input => bsvtx.addInput(new bsv.Transaction.Input(input)))
+  const rawtx = bsvtx.toString('hex')
+  return rawtx
+}
 
 // ------------------------------------------------------------------------------------------------
