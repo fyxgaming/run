@@ -433,14 +433,22 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid native ref', () => {
+    it.skip('throws if invalid native ref', async () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid class ref', () => {
-      // TODO
+    it('throws if invalid class ref', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const instantiateConfig = buildInstantiateConfig(deployRawtx)
+      instantiateConfig.metadata.ref = ['abc']
+      const instantiateRawtx = createRunTransaction(instantiateConfig)
+      await expect(run.import(instantiateRawtx)).to.be.rejectedWith('Bad location: "abc"')
     })
   })
 
