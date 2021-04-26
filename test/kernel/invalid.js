@@ -179,7 +179,7 @@ describe('Invalid', () => {
 
   // --------------------------------------------------------------------------
 
-  it('throws if invalid out hash', async () => {
+  it('throws if incorrect out hash', async () => {
     const run = new Run()
     const config = buildDeployConfig()
     config.metadata.out = ['0000000000000000000000000000000000000000000000000000000000000000']
@@ -199,7 +199,17 @@ describe('Invalid', () => {
 
   // --------------------------------------------------------------------------
 
-  it('throws if invalid del hash', async () => {
+  it('throws if invalid out hash', async () => {
+    const run = new Run()
+    const config = buildDeployConfig()
+    config.metadata.out = [null]
+    const rawtx = createRunTransaction(config)
+    await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('throws if incorrect del hash', async () => {
     const run = new Run()
     const deployConfig = buildDeployConfig()
     const deployRawtx = createRunTransaction(deployConfig)
