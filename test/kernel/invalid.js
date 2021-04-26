@@ -73,6 +73,26 @@ describe('Invalid', () => {
 
   // --------------------------------------------------------------------------
 
+  it('throws if cre owner too short', async () => {
+    const run = new Run()
+    const config = buildDeployConfig()
+    config.metadata.cre[0] = 'abc'
+    const rawtx = createRunTransaction(config)
+    await expect(run.import(rawtx)).to.be.rejectedWith('Address too short: abc')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('throws if cre owner is number', async () => {
+    const run = new Run()
+    const config = buildDeployConfig()
+    config.metadata.cre[0] = 123
+    const rawtx = createRunTransaction(config)
+    await expect(run.import(rawtx)).to.be.rejectedWith('Invalid owner: 123')
+  })
+
+  // --------------------------------------------------------------------------
+
   it.skip('throws if invalid satoshis', async () => {
     /*
     const run = new Run()
