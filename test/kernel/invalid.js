@@ -167,6 +167,16 @@ describe('Invalid', () => {
     await expect(run.import(rawtx)).to.be.rejectedWith('Cannot decode "{"$jig":2}"')
   })
 
+  // --------------------------------------------------------------------------
+
+  it('throws if missing cre entry', async () => {
+    const run = new Run()
+    const config = buildDeployAndInstantiateConfig()
+    config.metadata.cre.length = 1
+    const rawtx = createRunTransaction(config)
+    await expect(run.import(rawtx)).to.be.rejectedWith('Invalid number of cre entries')
+  })
+
   // TODO
 
   // Tests
