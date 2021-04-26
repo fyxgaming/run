@@ -55,8 +55,12 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if exec statement missing op', () => {
-      // TODO
+    it('throws if exec statement missing op', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      delete config.metadata.exec[0].op
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Invalid exec')
     })
 
     // ------------------------------------------------------------------------
