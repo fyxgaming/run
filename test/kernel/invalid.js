@@ -395,7 +395,17 @@ describe('Invalid', () => {
   // --------------------------------------------------------------------------
 
   describe('ref', () => {
-    it.skip('throws if duplicate ref', () => {
+    it('throws if duplicate native ref', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.ref = ['native://Jig', 'native://Jig']
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Inconsistent reference: Jig')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if duplicate class ref', async () => {
       // TODO
     })
 
