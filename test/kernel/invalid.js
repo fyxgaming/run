@@ -233,8 +233,16 @@ describe('Invalid', () => {
   // --------------------------------------------------------------------------
 
   describe('in', () => {
-    it.skip('throws if invalid in', () => {
-      // TODO
+    it('throws if invalid in', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const callConfig = buildCallConfig(deployRawtx)
+      callConfig.metadata.in = [1]
+      const callRawtx = createRunTransaction(callConfig)
+      await expect(run.import(callRawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
     })
   })
 
