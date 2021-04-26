@@ -129,8 +129,12 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if unsupported version', () => {
-      // TODO
+    it('throws if unsupported version', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.version = '04'
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Unsupported metadata version: 04')
     })
 
     // ------------------------------------------------------------------------
