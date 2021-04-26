@@ -485,7 +485,27 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid new args', () => {
+    it('throws if invalid new args', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const instantiateConfig = buildInstantiateConfig(deployRawtx)
+      instantiateConfig.metadata.exec[0].data[1] = {}
+      const instantiateRawtx = createRunTransaction(instantiateConfig)
+      await expect(run.import(instantiateRawtx)).to.be.rejectedWith('NEW args must be an array')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if NEW on jig', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if NEW on sidekick class', () => {
       // TODO
     })
 
