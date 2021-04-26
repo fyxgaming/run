@@ -206,15 +206,23 @@ describe('Invalid', () => {
     const deployTxid = new bsv.Transaction(deployRawtx).hash
     run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
     const destroyConfig = buildDestroyConfig(deployRawtx)
-    destroyConfig.metadata.del = ['0000000000000000000000000000000000000000000000000000000000000000']
+    destroyConfig.metadata.del = ['1111111111111111111111111111111111111111111111111111111111111111']
     const destroyRawtx = createRunTransaction(destroyConfig)
     await expect(run.import(destroyRawtx)).to.be.rejectedWith('Metadata mismatch')
   })
 
   // --------------------------------------------------------------------------
 
-  it.skip('throws if missing del hash', async () => {
-
+  it('throws if missing del hash', async () => {
+    const run = new Run()
+    const deployConfig = buildDeployConfig()
+    const deployRawtx = createRunTransaction(deployConfig)
+    const deployTxid = new bsv.Transaction(deployRawtx).hash
+    run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+    const destroyConfig = buildDestroyConfig(deployRawtx)
+    destroyConfig.metadata.del = []
+    const destroyRawtx = createRunTransaction(destroyConfig)
+    await expect(run.import(destroyRawtx)).to.be.rejectedWith('Metadata mismatch')
   })
 
   // TODO
