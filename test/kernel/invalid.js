@@ -699,11 +699,29 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if deploy anonymous function', async () => {
+      const run = new Run()
+      const config = buildDeployConfig('() => {}')
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Anonymous types not supported')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if deploy object then class', async () => {
+      const run = new Run()
+      const config = buildDeployConfig('({}, class A { })')
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Must deploy a class or function')
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('throws if multiple deploys in src', async () => {
       const run = new Run()
       const config = buildDeployConfig('class A { }; class B { }')
       const rawtx = createRunTransaction(config)
-      await expect(run.import(rawtx)).to.be.rejectedWith('Must only deploy one class or function')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Must deploy a class or function')
     })
 
     // ------------------------------------------------------------------------
