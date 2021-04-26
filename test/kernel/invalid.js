@@ -23,230 +23,262 @@ describe('Invalid', () => {
   afterEach(() => Run.instance && Run.instance.deactivate())
 
   // --------------------------------------------------------------------------
-
-  it('throws if no metadata', async () => {
-    const run = new Run()
-    const bsvtx = new bsv.Transaction()
-    const rawtx = bsvtx.toString('hex')
-    await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid op_return protocol')
-  })
-
+  // metadata
   // --------------------------------------------------------------------------
 
-  it('throws if empty metadata', async () => {
-    const run = new Run()
-    const rawtx = createRunTransaction({ metadata: {} })
-    await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('throws if no exec statements', async () => {
-    const run = new Run()
-    const rawtx = createRunTransaction({
-      metadata: { in: 0, ref: [], out: [], del: [], cre: [], exec: [] },
-      outputs: [{ script: '', satoshis: 1000 }]
+  describe('metadata', () => {
+    it('throws if no metadata', async () => {
+      const run = new Run()
+      const bsvtx = new bsv.Transaction()
+      const rawtx = bsvtx.toString('hex')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid op_return protocol')
     })
-    await expect(run.import(rawtx)).to.be.rejectedWith('Invalid metadata: no commit generated')
+
+    // ------------------------------------------------------------------------
+
+    it('throws if empty metadata', async () => {
+      const run = new Run()
+      const rawtx = createRunTransaction({ metadata: {} })
+      await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if no exec statements', async () => {
+      const run = new Run()
+      const rawtx = createRunTransaction({
+        metadata: { in: 0, ref: [], out: [], del: [], cre: [], exec: [] },
+        outputs: [{ script: '', satoshis: 1000 }]
+      })
+      await expect(run.import(rawtx)).to.be.rejectedWith('Invalid metadata: no commit generated')
+    })
   })
 
   // --------------------------------------------------------------------------
+  // transaction
+  // --------------------------------------------------------------------------
 
-  it('throws if load payment output', async () => {
-    const run = new Run()
-    const config = buildDeployConfig()
-    const rawtx = createRunTransaction(config)
-    const txid = new bsv.Transaction(rawtx).hash
-    run.blockchain.fetch = txid => rawtx
-    await expect(run.load(`${txid}_o2`)).to.be.rejectedWith('Jig not found')
+  describe('transaction', () => {
+    it('throws if invalid output script', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.outputs[0].script = ''
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Script mismatch on output 1')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid output satoshis', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const instantiateConfig = buildInstantiateConfig(deployRawtx, 1000)
+      instantiateConfig.outputs[0].satoshis = 999
+      const instantiateRawtx = createRunTransaction(instantiateConfig)
+      await expect(run.import(instantiateRawtx)).to.be.rejectedWith('Satoshis mismatch on output 1')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if missing output', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.outputs = []
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Jig output missing for _o1')
+    })
   })
 
   // --------------------------------------------------------------------------
+  // cre
+  // --------------------------------------------------------------------------
 
-  it('throws if invalid output script', async () => {
-    const run = new Run()
-    const config = buildDeployConfig()
-    config.outputs[0].script = ''
-    const rawtx = createRunTransaction(config)
-    await expect(run.import(rawtx)).to.be.rejectedWith('Script mismatch on output 1')
+  describe('cre', () => {
+    it('throws if missing cre entry', async () => {
+      const run = new Run()
+      const config = buildDeployAndInstantiateConfig()
+      config.metadata.cre.length = 1
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Invalid number of cre entries')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if cre owner too short', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.cre[0] = 'abc'
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Address too short: abc')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if cre owner is number', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.cre[0] = 123
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Invalid owner: 123')
+    })
   })
 
   // --------------------------------------------------------------------------
+  // out
+  // --------------------------------------------------------------------------
 
-  it('throws if invalid output satoshis', async () => {
-    const run = new Run()
-    const deployConfig = buildDeployConfig()
-    const deployRawtx = createRunTransaction(deployConfig)
-    const deployTxid = new bsv.Transaction(deployRawtx).hash
-    run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
-    const instantiateConfig = buildInstantiateConfig(deployRawtx, 1000)
-    instantiateConfig.outputs[0].satoshis = 999
-    const instantiateRawtx = createRunTransaction(instantiateConfig)
-    await expect(run.import(instantiateRawtx)).to.be.rejectedWith('Satoshis mismatch on output 1')
+  describe('out', () => {
+    it('throws if incorrect out hash', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.out = ['0000000000000000000000000000000000000000000000000000000000000000']
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Metadata mismatch')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if missing out hash', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.out = []
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Metadata mismatch')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid out hash', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.out = [null]
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
+    })
   })
 
   // --------------------------------------------------------------------------
+  // del
+  // --------------------------------------------------------------------------
 
-  it('throws if cre owner too short', async () => {
-    const run = new Run()
-    const config = buildDeployConfig()
-    config.metadata.cre[0] = 'abc'
-    const rawtx = createRunTransaction(config)
-    await expect(run.import(rawtx)).to.be.rejectedWith('Address too short: abc')
+  describe('del', () => {
+    it('throws if incorrect del hash', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const destroyConfig = buildDestroyConfig(deployRawtx)
+      destroyConfig.metadata.del = ['1111111111111111111111111111111111111111111111111111111111111111']
+      const destroyRawtx = createRunTransaction(destroyConfig)
+      await expect(run.import(destroyRawtx)).to.be.rejectedWith('Metadata mismatch')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if missing del hash', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const destroyConfig = buildDestroyConfig(deployRawtx)
+      destroyConfig.metadata.del = []
+      const destroyRawtx = createRunTransaction(destroyConfig)
+      await expect(run.import(destroyRawtx)).to.be.rejectedWith('Metadata mismatch')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid del hash', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const destroyConfig = buildDestroyConfig(deployRawtx)
+      destroyConfig.metadata.del = [{}]
+      const destroyRawtx = createRunTransaction(destroyConfig)
+      await expect(run.import(destroyRawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
+    })
   })
 
   // --------------------------------------------------------------------------
+  // target
+  // --------------------------------------------------------------------------
 
-  it('throws if cre owner is number', async () => {
-    const run = new Run()
-    const config = buildDeployConfig()
-    config.metadata.cre[0] = 123
-    const rawtx = createRunTransaction(config)
-    await expect(run.import(rawtx)).to.be.rejectedWith('Invalid owner: 123')
+  describe('target', () => {
+    it('throws if missing input call target', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const callConfig = buildCallConfig(deployRawtx)
+      callConfig.metadata.exec[0].data[0].$jig = 1
+      const callRawtx = createRunTransaction(callConfig)
+      await expect(run.import(callRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":1}"')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid input call target', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const callConfig = buildCallConfig(deployRawtx)
+      callConfig.metadata.exec[0].data[0].$jig = null
+      const callRawtx = createRunTransaction(callConfig)
+      await expect(run.import(callRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":null}"')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if missing output new target', async () => {
+      const run = new Run()
+      const config = buildDeployAndInstantiateConfig()
+      config.metadata.exec[1].data[0].$jig = 2
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Cannot decode "{"$jig":2}"')
+    })
   })
 
   // --------------------------------------------------------------------------
+  // method
+  // --------------------------------------------------------------------------
 
-  it('throws if missing output', async () => {
-    const run = new Run()
-    const config = buildDeployConfig()
-    config.outputs = []
-    const rawtx = createRunTransaction(config)
-    await expect(run.import(rawtx)).to.be.rejectedWith('Jig output missing for _o1')
+  describe('method', () => {
+    it('throws if call missing method', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const callConfig = buildCallConfig(deployRawtx)
+      callConfig.metadata.exec[0].data[1] = 'g'
+      const callRawtx = createRunTransaction(callConfig)
+      await expect(run.import(callRawtx)).to.be.rejectedWith('Cannot call A.g()')
+    })
   })
 
   // --------------------------------------------------------------------------
-
-  it('throws if call missing method', async () => {
-    const run = new Run()
-    const deployConfig = buildDeployConfig()
-    const deployRawtx = createRunTransaction(deployConfig)
-    const deployTxid = new bsv.Transaction(deployRawtx).hash
-    run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
-    const callConfig = buildCallConfig(deployRawtx)
-    callConfig.metadata.exec[0].data[1] = 'g'
-    const callRawtx = createRunTransaction(callConfig)
-    await expect(run.import(callRawtx)).to.be.rejectedWith('Cannot call A.g()')
-  })
-
+  // misc
   // --------------------------------------------------------------------------
 
-  it('throws if missing input call target', async () => {
-    const run = new Run()
-    const deployConfig = buildDeployConfig()
-    const deployRawtx = createRunTransaction(deployConfig)
-    const deployTxid = new bsv.Transaction(deployRawtx).hash
-    run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
-    const callConfig = buildCallConfig(deployRawtx)
-    callConfig.metadata.exec[0].data[0].$jig = 1
-    const callRawtx = createRunTransaction(callConfig)
-    await expect(run.import(callRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":1}"')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('throws if invalid input call target', async () => {
-    const run = new Run()
-    const deployConfig = buildDeployConfig()
-    const deployRawtx = createRunTransaction(deployConfig)
-    const deployTxid = new bsv.Transaction(deployRawtx).hash
-    run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
-    const callConfig = buildCallConfig(deployRawtx)
-    callConfig.metadata.exec[0].data[0].$jig = null
-    const callRawtx = createRunTransaction(callConfig)
-    await expect(run.import(callRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":null}"')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('throws if missing output new target', async () => {
-    const run = new Run()
-    const config = buildDeployAndInstantiateConfig()
-    config.metadata.exec[1].data[0].$jig = 2
-    const rawtx = createRunTransaction(config)
-    await expect(run.import(rawtx)).to.be.rejectedWith('Cannot decode "{"$jig":2}"')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('throws if missing cre entry', async () => {
-    const run = new Run()
-    const config = buildDeployAndInstantiateConfig()
-    config.metadata.cre.length = 1
-    const rawtx = createRunTransaction(config)
-    await expect(run.import(rawtx)).to.be.rejectedWith('Invalid number of cre entries')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('throws if incorrect out hash', async () => {
-    const run = new Run()
-    const config = buildDeployConfig()
-    config.metadata.out = ['0000000000000000000000000000000000000000000000000000000000000000']
-    const rawtx = createRunTransaction(config)
-    await expect(run.import(rawtx)).to.be.rejectedWith('Metadata mismatch')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('throws if missing out hash', async () => {
-    const run = new Run()
-    const config = buildDeployConfig()
-    config.metadata.out = []
-    const rawtx = createRunTransaction(config)
-    await expect(run.import(rawtx)).to.be.rejectedWith('Metadata mismatch')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('throws if invalid out hash', async () => {
-    const run = new Run()
-    const config = buildDeployConfig()
-    config.metadata.out = [null]
-    const rawtx = createRunTransaction(config)
-    await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('throws if incorrect del hash', async () => {
-    const run = new Run()
-    const deployConfig = buildDeployConfig()
-    const deployRawtx = createRunTransaction(deployConfig)
-    const deployTxid = new bsv.Transaction(deployRawtx).hash
-    run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
-    const destroyConfig = buildDestroyConfig(deployRawtx)
-    destroyConfig.metadata.del = ['1111111111111111111111111111111111111111111111111111111111111111']
-    const destroyRawtx = createRunTransaction(destroyConfig)
-    await expect(run.import(destroyRawtx)).to.be.rejectedWith('Metadata mismatch')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('throws if missing del hash', async () => {
-    const run = new Run()
-    const deployConfig = buildDeployConfig()
-    const deployRawtx = createRunTransaction(deployConfig)
-    const deployTxid = new bsv.Transaction(deployRawtx).hash
-    run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
-    const destroyConfig = buildDestroyConfig(deployRawtx)
-    destroyConfig.metadata.del = []
-    const destroyRawtx = createRunTransaction(destroyConfig)
-    await expect(run.import(destroyRawtx)).to.be.rejectedWith('Metadata mismatch')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('throws if invalid del hash', async () => {
-    const run = new Run()
-    const deployConfig = buildDeployConfig()
-    const deployRawtx = createRunTransaction(deployConfig)
-    const deployTxid = new bsv.Transaction(deployRawtx).hash
-    run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
-    const destroyConfig = buildDestroyConfig(deployRawtx)
-    destroyConfig.metadata.del = [{}]
-    const destroyRawtx = createRunTransaction(destroyConfig)
-    await expect(run.import(destroyRawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
+  describe('misc', () => {
+    it('throws if load payment output', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      const rawtx = createRunTransaction(config)
+      const txid = new bsv.Transaction(rawtx).hash
+      run.blockchain.fetch = txid => rawtx
+      await expect(run.load(`${txid}_o2`)).to.be.rejectedWith('Jig not found')
+    })
   })
 
   // TODO
