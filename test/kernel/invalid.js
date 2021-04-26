@@ -264,6 +264,20 @@ describe('Invalid', () => {
       const callRawtx = createRunTransaction(callConfig)
       await expect(run.import(callRawtx)).to.be.rejectedWith('Cannot call A.g()')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if method throws', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const callConfig = buildCallConfig(deployRawtx)
+      callConfig.metadata.exec[0].data[1] = 'err'
+      const callRawtx = createRunTransaction(callConfig)
+      await expect(run.import(callRawtx)).to.be.rejected
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -589,6 +603,7 @@ function buildDeployConfig () {
   const src = `class A extends Jig {
     init(satoshis = 0) { this.satoshis = satoshis }
     static set(n) { this.n = n }
+    static err() { throw new Error() }
   }`
   const address = new bsv.PrivateKey().toAddress().toString()
   const hash = new bsv.Address(address).hashBuffer.toString('hex')
