@@ -499,8 +499,19 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if NEW on jig', () => {
-      // TODO
+    it('throws if NEW on jig', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const instantiateConfig = buildInstantiateConfig(deployRawtx)
+      const instantiateRawtx = createRunTransaction(instantiateConfig)
+      const instantiateTxid = new bsv.Transaction(instantiateRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : txid === instantiateTxid ? instantiateRawtx : undefined
+      const instantiateConfig2 = buildInstantiateConfig(instantiateRawtx)
+      const instantiateRawtx2 = createRunTransaction(instantiateConfig2)
+      await expect(run.import(instantiateRawtx2)).to.be.rejectedWith('Must only execute NEW on code')
     })
 
     // ------------------------------------------------------------------------
