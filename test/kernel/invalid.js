@@ -108,6 +108,20 @@ describe('Invalid', () => {
       const callRawtx = createRunTransaction(callConfig)
       await expect(run.import(callRawtx)).to.be.rejectedWith('Jig input missing for _i0')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid input', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const callConfig = buildCallConfig(deployRawtx)
+      callConfig.inputs[0].vout = 0
+      const callRawtx = createRunTransaction(callConfig)
+      await expect(run.import(callRawtx)).to.be.rejectedWith('Jig not found')
+    })
   })
 
   // --------------------------------------------------------------------------
