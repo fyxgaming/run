@@ -554,12 +554,6 @@ describe('Invalid', () => {
       const instantiateRawtx = createRunTransaction(instantiateConfig)
       await expect(run.import(instantiateRawtx)).to.be.rejectedWith('Invalid NEW data length')
     })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if missing method name data', () => {
-      // TODO
-    })
   })
 
   // --------------------------------------------------------------------------
@@ -636,6 +630,12 @@ describe('Invalid', () => {
     // ------------------------------------------------------------------------
 
     it.skip('throws if missing method arg data', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if missing method name data', () => {
       // TODO
     })
   })
