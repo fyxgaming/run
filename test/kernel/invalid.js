@@ -659,8 +659,15 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if target is a sidekick', () => {
-      // TODO
+    it('throws if target is a sidekick', async () => {
+      const run = new Run()
+      const deployConfig = buildDeploySidekickConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const callConfig = buildCallConfig(deployRawtx)
+      const callRawtx = createRunTransaction(callConfig)
+      await expect(run.import(callRawtx)).to.be.rejectedWith('Must only execute CALL on jigs')
     })
 
     // ------------------------------------------------------------------------
