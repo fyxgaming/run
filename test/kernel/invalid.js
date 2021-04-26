@@ -756,6 +756,16 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if invalid src code', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.exec[0].data[0] = null
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('DEPLOY src must be a string')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if invalid class props', async () => {
       const run = new Run()
       const config = buildDeployConfig()
