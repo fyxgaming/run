@@ -814,8 +814,16 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid input upgrade target', async () => {
-      // TODO
+    it('throws if invalid input upgrade target', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const upgradeConfig = buildUpgradeConfig(deployRawtx)
+      upgradeConfig.metadata.exec[0].data[0].$jig = '_o1'
+      const upgradeRawtx = createRunTransaction(upgradeConfig)
+      await expect(run.import(upgradeRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":"_o1"}"')
     })
 
     // ------------------------------------------------------------------------
