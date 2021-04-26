@@ -529,8 +529,16 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if missing new args ref', () => {
-      // TODO
+    it('throws if missing new args ref', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const instantiateConfig = buildInstantiateConfig(deployRawtx)
+      instantiateConfig.metadata.exec[0].data[1] = [0, null, { $jig: 1 }]
+      const instantiateRawtx = createRunTransaction(instantiateConfig)
+      await expect(run.import(instantiateRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":1}"')
     })
 
     // ------------------------------------------------------------------------
