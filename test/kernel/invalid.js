@@ -73,6 +73,20 @@ describe('Invalid', () => {
 
   // --------------------------------------------------------------------------
 
+  it('throws if invalid output satoshis', async () => {
+    const run = new Run()
+    const deployConfig = buildDeployConfig()
+    const deployRawtx = createRunTransaction(deployConfig)
+    const deployTxid = new bsv.Transaction(deployRawtx).hash
+    run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+    const instantiateConfig = buildInstantiateConfig(deployTxid, 1000)
+    instantiateConfig.outputs[0].satoshis = 999
+    const instantiateRawtx = createRunTransaction(instantiateConfig)
+    await expect(run.import(instantiateRawtx)).to.be.rejectedWith('Satoshis mismatch on output 1')
+  })
+
+  // --------------------------------------------------------------------------
+
   it('throws if cre owner too short', async () => {
     const run = new Run()
     const config = buildDeployConfig()
@@ -89,19 +103,6 @@ describe('Invalid', () => {
     config.metadata.cre[0] = 123
     const rawtx = createRunTransaction(config)
     await expect(run.import(rawtx)).to.be.rejectedWith('Invalid owner: 123')
-  })
-
-  // --------------------------------------------------------------------------
-
-  it.skip('throws if invalid satoshis', async () => {
-    /*
-    const run = new Run()
-    const config = buildDeployConfig()
-    config.metadata.exec[0].data[1].satoshis = 100
-    config.outputs[0].satoshis = 99
-    const rawtx = createRunTransaction(config)
-    await run.import(rawtx)
-    */
   })
 
   // TODO
@@ -453,6 +454,7 @@ function createRunTransaction (options) {
 // ------------------------------------------------------------------------------------------------
 
 function buildDeployConfig () {
+  const src = 'class A extends Jig { init(satoshis = 0) { this.satoshis = satoshis } }'
   const address = new bsv.PrivateKey().toAddress().toString()
   const hash = new bsv.Address(address).hashBuffer.toString('hex')
   const asm = `OP_DUP OP_HASH160 ${hash} OP_EQUALVERIFY OP_CHECKSIG`
@@ -461,14 +463,14 @@ function buildDeployConfig () {
   const state = {
     kind: 'code',
     props: {
-      deps: {},
+      deps: { Jig: { $jig: 'native://Jig' } },
       location: '_o1',
       nonce: 1,
       origin: '_o1',
       owner: address,
       satoshis: 0
     },
-    src: 'class A { }',
+    src,
     version: '04'
   }
   const stateBuffer = bsv.deps.Buffer.from(JSON.stringify(state), 'utf8')
@@ -476,14 +478,52 @@ function buildDeployConfig () {
   const options = {
     metadata: {
       in: 0,
-      ref: [],
+      ref: ['native://Jig'],
       out: [stateHash],
       del: [],
       cre: [address],
-      exec: [{ op: 'DEPLOY', data: ['class A { }', { deps: { } }] }]
+      exec: [{ op: 'DEPLOY', data: [src, { deps: { Jig: { $jig: 0 } } }] }]
     },
     outputs: [
       { script, satoshis: dust }
+    ]
+  }
+  return options
+}
+
+// ------------------------------------------------------------------------------------------------
+
+function buildInstantiateConfig (deployTxid, satoshis = 0) {
+  const address = new bsv.PrivateKey().toAddress().toString()
+  const hash = new bsv.Address(address).hashBuffer.toString('hex')
+  const asm = `OP_DUP OP_HASH160 ${hash} OP_EQUALVERIFY OP_CHECKSIG`
+  const script = bsv.Script.fromASM(asm).toHex()
+  const dust = _calculateDust(script.length / 2, bsv.Transaction.FEE_PER_KB)
+  const state = {
+    cls: { $jig: `${deployTxid}_o1` },
+    kind: 'jig',
+    props: {
+      location: '_o1',
+      nonce: 1,
+      origin: '_o1',
+      owner: address,
+      satoshis
+    },
+    version: '04'
+  }
+  const stateBuffer = bsv.deps.Buffer.from(JSON.stringify(state), 'utf8')
+  const stateHash = bsv.crypto.Hash.sha256(stateBuffer).toString('hex')
+  const options = {
+    metadata: {
+      in: 0,
+      ref: [`${deployTxid}_o1`],
+      out: [stateHash],
+      del: [],
+      cre: [address],
+      exec: [{ op: 'NEW', data: [{ $jig: 0 }, [satoshis]] }]
+    },
+    outputs: [
+      { script, satoshis: Math.max(dust, satoshis) }
     ]
   }
   return options
