@@ -246,6 +246,20 @@ describe('Invalid', () => {
       const rawtx = createRunTransaction(config)
       await expect(run.import(rawtx)).to.be.rejectedWith('Cannot decode "{"$jig":2}"')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if missing ref new target', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const instantiateConfig = buildInstantiateConfig(deployRawtx)
+      instantiateConfig.metadata.ref = []
+      const instantiateRawtx = createRunTransaction(instantiateConfig)
+      await expect(run.import(instantiateRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":0}"')
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -400,16 +414,6 @@ describe('Invalid', () => {
     await expect(run.load(txid + '_o2')).to.be.rejectedWith() // TODO: check error
   })
 
-  it('should throw if method throws', async () => {
-    const run = new Run()
-    class A extends Jig { f () { throw new Error() } }
-    const a = new A()
-    await a.sync()
-    const actions = [{ target: '_i0', method: 'f', args: [] }]
-    const txid = await build(run, [], actions, [a.location], null, 1)
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith('unexpected exception in f')
-  })
-
   it('should throw if missing input in batch', async () => {
     const run = new Run()
     const creator = run.owner.address
@@ -456,13 +460,6 @@ describe('Invalid', () => {
     const actions = [{ target: '_i0', method: 'send', args: [`${privkey1.publicKey.toString()}`] }]
     const txid = await build(run, [], actions, [a.location], privkey2.toAddress().toString(), 1)
     await expect(run.load(txid + '_o1')).to.be.rejectedWith('Owner mismatch on output 1')
-  })
-
-  it('should throw if missing target', async () => {
-    const run = new Run()
-    const actions = [{ target: '_o1`', method: 'init', args: '[]', creator: run.owner.address }]
-    const txid = await build(run, [], actions, [], null, 1)
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith('missing target _o1')
   })
 
   it('should throw if satoshis amount is incorrect', async () => {
