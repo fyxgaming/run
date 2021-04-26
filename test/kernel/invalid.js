@@ -756,8 +756,12 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid class props', () => {
-      // TODO
+    it('throws if invalid class props', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.exec[0].data[1] = [1, 2, 3]
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('DEPLOY props must be an object')
     })
 
     // ------------------------------------------------------------------------
