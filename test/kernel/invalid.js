@@ -55,10 +55,10 @@ describe('Invalid', () => {
   })
 
   // --------------------------------------------------------------------------
-  // transaction
+  // output
   // --------------------------------------------------------------------------
 
-  describe('transaction', () => {
+  describe('outputs', () => {
     it('throws if invalid output script', async () => {
       const run = new Run()
       const config = buildDeployConfig()
@@ -89,6 +89,24 @@ describe('Invalid', () => {
       config.outputs = []
       const rawtx = createRunTransaction(config)
       await expect(run.import(rawtx)).to.be.rejectedWith('Jig output missing for _o1')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // inputs
+  // --------------------------------------------------------------------------
+
+  describe('inputs', () => {
+    it('throws if missing input', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const callConfig = buildCallConfig(deployRawtx)
+      callConfig.inputs = []
+      const callRawtx = createRunTransaction(callConfig)
+      await expect(run.import(callRawtx)).to.be.rejectedWith('Jig input missing for _i0')
     })
   })
 
@@ -313,7 +331,6 @@ describe('Invalid', () => {
 
   // Tests
   //  -Bad metadata structure
-  //  -Not enough inputs
   //  -Invalid inputs
 
   /*
