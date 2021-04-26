@@ -75,7 +75,7 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if exec statement contains extra data', async () => {
+    it('throws if exec statement contains extra fields', async () => {
       const run = new Run()
       const config = buildDeployConfig()
       config.metadata.exec[0].name = 'alice'
@@ -85,8 +85,22 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if unknown exec op', () => {
-      // TODO
+    it('throws if unknown exec op', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.exec[0].op = 'SHUTDOWN'
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Unknown op: SHUTDOWN')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if exec op has bad format', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.exec[0].op = 'deploy'
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Unknown op: deploy')
     })
   })
 
