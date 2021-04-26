@@ -726,8 +726,12 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if missing class props', () => {
-      // TODO
+    it('throws if missing class props', async () => {
+      const run = new Run()
+      const config = buildDeployConfig()
+      config.metadata.exec[0].data.length = 1
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Invalid DEPLOY data length')
     })
 
     // ------------------------------------------------------------------------
