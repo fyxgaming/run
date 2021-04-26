@@ -244,6 +244,20 @@ describe('Invalid', () => {
       const callRawtx = createRunTransaction(callConfig)
       await expect(run.import(callRawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if in too low', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const callConfig = buildCallConfig(deployRawtx)
+      callConfig.metadata.in = 0
+      const callRawtx = createRunTransaction(callConfig)
+      await expect(run.import(callRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":0}"')
+    })
   })
 
   // --------------------------------------------------------------------------
