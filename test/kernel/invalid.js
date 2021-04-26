@@ -52,6 +52,46 @@ describe('Invalid', () => {
       })
       await expect(run.import(rawtx)).to.be.rejectedWith('Invalid metadata: no commit generated')
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if exec statement missing op', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if exec statement missing data', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if unknown exec op', () => {
+      // TODO
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // op_return
+  // --------------------------------------------------------------------------
+
+  describe('op_return', () => {
+    it.skip('throws if not a run prefix', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if unsupported version', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if extra data', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -59,12 +99,18 @@ describe('Invalid', () => {
   // --------------------------------------------------------------------------
 
   describe('outputs', () => {
-    it('throws if invalid output script', async () => {
+    it('throws if invalid output script for address', async () => {
       const run = new Run()
       const config = buildDeployConfig()
       config.outputs[0].script = ''
       const rawtx = createRunTransaction(config)
       await expect(run.import(rawtx)).to.be.rejectedWith('Script mismatch on output 1')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid output script for custom lock', async () => {
+      // TODO
     })
 
     // ------------------------------------------------------------------------
@@ -125,6 +171,16 @@ describe('Invalid', () => {
   })
 
   // --------------------------------------------------------------------------
+  // in
+  // --------------------------------------------------------------------------
+
+  describe('in', () => {
+    it.skip('throws if invalid in', () => {
+      // TODO
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // cre
   // --------------------------------------------------------------------------
 
@@ -155,6 +211,12 @@ describe('Invalid', () => {
       config.metadata.cre[0] = 123
       const rawtx = createRunTransaction(config)
       await expect(run.import(rawtx)).to.be.rejectedWith('Invalid owner: 123')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if owner mismatch', () => {
+      // TODO
     })
   })
 
@@ -239,10 +301,84 @@ describe('Invalid', () => {
   })
 
   // --------------------------------------------------------------------------
-  // target
+  // ref
   // --------------------------------------------------------------------------
 
-  describe('target', () => {
+  describe('ref', () => {
+    it.skip('throws if duplicate ref', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if ref same as input', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid refs', () => {
+      // TODO
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // new
+  // --------------------------------------------------------------------------
+
+  describe('new', () => {
+    it('throws if missing output new target', async () => {
+      const run = new Run()
+      const config = buildDeployAndInstantiateConfig()
+      config.metadata.exec[1].data[0].$jig = 2
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Cannot decode "{"$jig":2}"')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if missing ref new target', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const instantiateConfig = buildInstantiateConfig(deployRawtx)
+      instantiateConfig.metadata.ref = []
+      const instantiateRawtx = createRunTransaction(instantiateConfig)
+      await expect(run.import(instantiateRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":0}"')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid new args', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if missing new args ref', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if missing arg data', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if missing method name data', () => {
+      // TODO
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // method
+  // --------------------------------------------------------------------------
+
+  describe('call', () => {
     it('throws if missing input call target', async () => {
       const run = new Run()
       const deployConfig = buildDeployConfig()
@@ -271,34 +407,6 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if missing output new target', async () => {
-      const run = new Run()
-      const config = buildDeployAndInstantiateConfig()
-      config.metadata.exec[1].data[0].$jig = 2
-      const rawtx = createRunTransaction(config)
-      await expect(run.import(rawtx)).to.be.rejectedWith('Cannot decode "{"$jig":2}"')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if missing ref new target', async () => {
-      const run = new Run()
-      const deployConfig = buildDeployConfig()
-      const deployRawtx = createRunTransaction(deployConfig)
-      const deployTxid = new bsv.Transaction(deployRawtx).hash
-      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
-      const instantiateConfig = buildInstantiateConfig(deployRawtx)
-      instantiateConfig.metadata.ref = []
-      const instantiateRawtx = createRunTransaction(instantiateConfig)
-      await expect(run.import(instantiateRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":0}"')
-    })
-  })
-
-  // --------------------------------------------------------------------------
-  // method
-  // --------------------------------------------------------------------------
-
-  describe('method', () => {
     it('throws if call missing method', async () => {
       const run = new Run()
       const deployConfig = buildDeployConfig()
@@ -324,13 +432,145 @@ describe('Invalid', () => {
       const callRawtx = createRunTransaction(callConfig)
       await expect(run.import(callRawtx)).to.be.rejected
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid method args', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if missing method arg ref', () => {
+      // TDOO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if missing method arg data', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
-  // misc
+  // deploy
   // --------------------------------------------------------------------------
 
-  describe('misc', () => {
+  describe('deploy', () => {
+    it.skip('throws is bad deploy code', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if multiple deploys in src', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if missing class props', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if extra deploy data', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid class props', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if missing class prop ref', () => {
+
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // upgrade
+  // --------------------------------------------------------------------------
+
+  describe('upgrade', () => {
+    it.skip('throws if missing input upgrade target', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid input upgrade target', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid upgrade src', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if multiple upgrades in src', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if missing class props', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if extra upgrade data', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid class props', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if missing class prop ref', () => {
+
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // inconsistent worldview
+  // --------------------------------------------------------------------------
+
+  describe('inconsistent worldview', () => {
+    it.skip('throws if inconsistent worldview for refs', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if inconsistent worldview between inputs', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if inconsistent worldview between ref and input', () => {
+      // TODO
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // load
+  // --------------------------------------------------------------------------
+
+  describe('load', () => {
     it('throws if load payment output', async () => {
       const run = new Run()
       const config = buildDeployConfig()
@@ -340,261 +580,10 @@ describe('Invalid', () => {
       await expect(run.load(`${txid}_o2`)).to.be.rejectedWith('Jig not found')
     })
   })
-
-  // TODO
-
-  // Tests
-  //  -Bad metadata structure
-  //  -Invalid inputs
-
-  /*
-  it('should throw if bad json args', async () => {
-    const run = new Run()
-    class A extends Jig { f () { } }
-    const a = new A()
-    await a.sync()
-    const actions = [{ target: '_i0', method: 'f', args: 0 }]
-    const txid = await build(run, [], actions, [a.location], null, 1)
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith() // TODO: check error
-  })
-
-  it('should throw if bad class arg', async () => {
-    const run = new Run()
-    class A extends Jig { f (n) { this.n = n } }
-    const a = new A()
-    await a.sync()
-    const actions = [{ target: '_i0', method: 'f', args: [{ $class: 'Map' }] }]
-    const txid = await build(run, [], actions, [a.location], null, 1)
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith('Cannot deserialize [object Object')
-  })
-
-  it('should throw if nonexistant jig arg', async () => {
-    const run = new Run()
-    class A extends Jig { f (a) { this.a = a } }
-    const a = new A()
-    await a.sync()
-    const nonexistant = { $ref: 'abc_o2' }
-    const actions = [{ target: '_i0', method: 'f', args: [nonexistant] }]
-    const txid = await build(run, [], actions, [a.location], null, 1)
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith() // TODO: check error
-  })
-
-  it('bad number of jigs', async () => {
-    const run = new Run()
-    class A extends Jig { f () { this.n = 1 } }
-    const a = new A()
-    await a.sync()
-    const actions = [{ target: '_i0', method: 'f', args: [] }]
-    const txid = await build(run, [], actions, [a.location], null, 0)
-    await expect(run.load(txid + '_o1')).to.be.rejected
-  })
-
-  it('should throw if missing read input', async () => {
-    const run = new Run()
-    const creator = run.owner.address
-    class B extends Jig { }
-    class A extends Jig { init (b) { this.n = b.n } }
-    const b = new B()
-    await b.sync()
-    const code = [{ text: A.toString(), owner: creator }]
-    const args = [{ $ref: `${b.location}` }]
-    const actions = [{ target: '_o1', method: 'init', args, creator }]
-    const txid = await build(run, code, actions, [], null, 2)
-    await expect(run.load(txid + '_o3')).to.be.rejectedWith() // TODO: check error
-  })
-
-  it('should throw if missing write input', async () => {
-    const run = new Run()
-    class B extends Jig { f () { this.n = 1 } }
-    class A extends Jig { f (b) { b.f() } }
-    const b = new B()
-    await b.sync()
-    const a = new A()
-    await a.sync()
-    const args = [{ $ref: `${b.location}` }]
-    const actions = [{ target: '_i1', method: 'f', args }]
-    const txid = await build(run, [], actions, [a.location], null, 2)
-    await expect(run.load(txid + '_o2')).to.be.rejectedWith() // TODO: check error
-  })
-
-  it('should throw if missing read output', async () => {
-    const run = new Run()
-    const creator = run.owner.address
-    class B extends Jig { }
-    class A extends Jig { init (b) { this.n = b.n } }
-    const b = new B()
-    await b.sync()
-    const code = [{ text: A.toString(), owner: creator }]
-    const args = [{ $ref: '_i0' }]
-    const actions = [{ target: '_o1', method: 'init', args, creator }]
-    const txid = await build(run, code, actions, [b.location], null, 2, [], 2)
-    await expect(run.load(txid + '_o2')).to.be.rejectedWith() // TODO: check error
-  })
-
-  it('should throw if missing write output', async () => {
-    const run = new Run()
-    class B extends Jig { f () { this.n = 1 } }
-    class A extends Jig { f (b) { b.f() } }
-    const b = new B()
-    await b.sync()
-    const a = new A()
-    await a.sync()
-    const args = [{ $ref: '_i0' }]
-    const actions = [{ target: '_i1', method: 'f', args }]
-    const txid = await build(run, [], actions, [b.location, a.location], null, 2, [], 1)
-    await expect(run.load(txid + '_o2')).to.be.rejectedWith() // TODO: check error
-  })
-
-  it('should throw if missing input in batch', async () => {
-    const run = new Run()
-    const creator = run.owner.address
-    class A extends Jig { f (b) { this.n = b.n + 1 } }
-    const code = [{ text: A.toString(), creator }]
-    const action1 = { target: '_o1', method: 'init', args: [], creator }
-    const args = [{ $ref: '_i0' }]
-    const actions = [action1, { target: '_i1', method: 'f', args }]
-    const txid = await build(run, code, actions, [], null, 2)
-    await expect(run.load(txid + '_o3')).to.be.rejectedWith() // TODO: check error
-  })
-
-  it('should throw if missing output in batch', async () => {
-    const run = new Run()
-    const creator = run.owner.address
-    class B extends Jig { }
-    class A extends Jig { init (b) { this.n = b.n } }
-    const code = [{ text: B.toString(), owner: creator }, { text: A.toString(), owner: creator }]
-    const action1 = { target: '_o1', method: 'init', args: [], creator }
-    const args = [{ $ref: '_o3' }]
-    const actions = [action1, { target: '_o2', method: 'init', args, creator }]
-    const txid = await build(run, code, actions, [], null, 1, 2)
-    await expect(run.load(txid + '_o4')).to.be.rejectedWith() // TODO: check error
-  })
-
-  it('should throw if initial jig owner does not match pk script', async () => {
-    const run = new Run()
-    const creator = run.owner.address
-    class A extends Jig { }
-    const code = [{ text: A.toString(), owner: creator }]
-    const anotherOwner = new bsv.PrivateKey('testnet').publicKey.toString()
-    const actions = [{ target: '_o1', method: 'init', args: [], creator: anotherOwner }]
-    const txid = await build(run, code, actions, [], null, 1)
-    await expect(run.load(txid + '_o2')).to.be.rejectedWith('Owner mismatch on output 2')
-  })
-
-  it('should throw if updated jig owner does not match pk script', async () => {
-    const run = new Run()
-    class A extends Jig { send (to) { this.owner = to } }
-    const a = new A()
-    await a.sync()
-    const privkey1 = new bsv.PrivateKey('testnet')
-    const privkey2 = new bsv.PrivateKey('testnet')
-    const actions = [{ target: '_i0', method: 'send', args: [`${privkey1.publicKey.toString()}`] }]
-    const txid = await build(run, [], actions, [a.location], privkey2.toAddress().toString(), 1)
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith('Owner mismatch on output 1')
-  })
-
-  it('should throw if satoshis amount is incorrect', async () => {
-    const run = new Run()
-    class A extends Jig { f (satoshis) { this.satoshis = satoshis } }
-    const a = new A()
-    await a.sync()
-    const actions = [{ target: '_i0', method: 'f', args: [1000] }]
-    const txid = await build(run, [], actions, [a.location], null, 1, [], 1, [bsv.Transaction.DUST_AMOUNT])
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith('bad satoshis on output 1')
-  })
-
-  it('should throw if bad class props', async () => {
-    const run = new Run()
-    const creator = run.owner.address
-    class A extends Jig { }
-    const code = [{ text: A.toString(), props: { n: { $class: 'Set' } }, owner: creator }]
-    const txid = await build(run, code, [], [], null, 0)
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith('Cannot deserialize [object Object]')
-    const code2 = [{ text: A.toString(), props: { n: { $ref: 123 } }, owner: creator }]
-    const txid2 = await build(run, code2, [], [], null, 0)
-    await expect(run.load(txid2 + '_o1')).to.be.rejected
-  })
-
-  it('should throw if non-existant ref', async () => {
-    const run = new Run()
-    class A extends Jig { init (n) { this.n = n } }
-    class B extends Jig { apply (a) { this.n = a.n } }
-    const a = new A(1)
-    const b = new B()
-    await run.sync()
-    const actions = [{ target: '_i0', method: 'apply', args: [{ $ref: '_r1' }] }]
-    const txid = await build(run, [], actions, [b.location], null, 1, [a.location])
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith('Unexpected ref _r1')
-  })
-
-  it('should throw if same jig used with different locations', async () => {
-    const run = new Run()
-    class A extends Jig { set (n) { this.n = n } }
-    class B extends Jig { apply (a, a2) { this.n = a.n + a2.n } }
-    const a = new A()
-    const b = new B()
-    a.set(1)
-    await run.sync()
-    const a2 = await run.load(a.location)
-    a2.set(2)
-    await run.sync()
-    const args = [{ $ref: '_r0' }, { $ref: '_r1' }]
-    const actions = [{ target: '_i0', method: 'apply', args }]
-    const txid = await build(run, [], actions, [b.location], null, 1, [a.location, a2.location])
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith('Inconsistent worldview')
-  })
-
-  it('should throw if same ref has different locations', async () => {
-    const run = new Run()
-    class A extends Jig { set (n) { this.n = n } }
-    class B extends Jig { apply (a, a2) { this.n = a.n + a2.n } }
-    const a = new A()
-    const b = new B()
-    a.set(1)
-    await run.sync()
-    const a2 = await run.load(a.location)
-    a2.set(2)
-    await run.sync()
-    const args = [{ $ref: `${a.location}` }, { $ref: `${a2.location}` }]
-    const actions = [{ target: '_i0', method: 'apply', args }]
-    const txid = await build(run, [], actions, [b.location], null, 1)
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith('Inconsistent worldview')
-  })
-
-  it('should throw if bad refs array', async () => {
-    const run = new Run()
-    class A extends Jig { set (n) { this.n = n } }
-    class B extends Jig { apply (a, a2) { this.n = a.n + a2.n } }
-    const a = new A()
-    const b = new B()
-    a.set(1)
-    await run.sync()
-    const a2 = await run.load(a.location)
-    a2.set(2)
-    await run.sync()
-    const args = [{ $ref: '_r0' }, { $ref: '_r1' }]
-    const actions = [{ target: '_i0', method: 'apply', args }]
-    const txid = await build(run, [], actions, [b.location], null, 1, args)
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith() // TODO: check error
-  })
-
-  it('should throw if bad class owner', async () => {
-    const run = new Run()
-    class A extends Jig { }
-    const differentOwner = new bsv.PrivateKey().publicKey.toString()
-    const code = [{ text: A.toString(), owner: differentOwner }]
-    const txid = await build(run, code, [], [], null, 0)
-    await expect(run.load(txid + '_o1')).to.be.rejectedWith(`bad def owner: ${txid}_o1`)
-  })
-
-  it('should not load old protocol', async () => {
-    const loc = '04b294f5d30daf37f075869c864a40a03946fc2b764d75c47f276908445b3bf4_o2'
-    const run = new Run({ network: 'test' })
-    await expect(run.load(loc)).to.be.rejected
-  })
-  */
 })
 
+// ------------------------------------------------------------------------------------------------
+// Helpers
 // ------------------------------------------------------------------------------------------------
 
 /**
