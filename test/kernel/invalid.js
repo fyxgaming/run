@@ -177,6 +177,34 @@ describe('Invalid', () => {
     await expect(run.import(rawtx)).to.be.rejectedWith('Invalid number of cre entries')
   })
 
+  // --------------------------------------------------------------------------
+
+  it('throws if invalid out hash', async () => {
+    const run = new Run()
+    const config = buildDeployConfig()
+    config.metadata.out = ['0000000000000000000000000000000000000000000000000000000000000000']
+    const rawtx = createRunTransaction(config)
+    await expect(run.import(rawtx)).to.be.rejectedWith('Metadata mismatch')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('throws if missing out hash', async () => {
+
+  })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('throws if invalid del hash', async () => {
+
+  })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('throws if missing del hash', async () => {
+
+  })
+
   // TODO
 
   // Tests
