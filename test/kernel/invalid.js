@@ -199,8 +199,16 @@ describe('Invalid', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('throws if invalid del hash', async () => {
-
+  it('throws if invalid del hash', async () => {
+    const run = new Run()
+    const deployConfig = buildDeployConfig()
+    const deployRawtx = createRunTransaction(deployConfig)
+    const deployTxid = new bsv.Transaction(deployRawtx).hash
+    run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+    const destroyConfig = buildDestroyConfig(deployRawtx)
+    destroyConfig.metadata.del = ['0000000000000000000000000000000000000000000000000000000000000000']
+    const destroyRawtx = createRunTransaction(destroyConfig)
+    await expect(run.import(destroyRawtx)).to.be.rejectedWith('Metadata mismatch')
   })
 
   // --------------------------------------------------------------------------
@@ -691,6 +699,51 @@ function buildDeployAndInstantiateConfig () {
     },
     outputs: [
       { script, satoshis: dust },
+      { script, satoshis: dust }
+    ]
+  }
+  return options
+}
+
+// ------------------------------------------------------------------------------------------------
+
+function buildDestroyConfig (deployRawtx) {
+  const deployMetadata = Run.util.metadata(deployRawtx)
+  const deployTxid = new bsv.Transaction(deployRawtx).hash
+  const address = deployMetadata.cre[0]
+  const src = deployMetadata.exec[0].data[0]
+  const hash = new bsv.Address(address).hashBuffer.toString('hex')
+  const asm = `OP_DUP OP_HASH160 ${hash} OP_EQUALVERIFY OP_CHECKSIG`
+  const script = bsv.Script.fromASM(asm).toHex()
+  const dust = _calculateDust(script.length / 2, bsv.Transaction.FEE_PER_KB)
+  const state = {
+    kind: 'code',
+    props: {
+      deps: { Jig: { $jig: 'native://Jig' } },
+      location: '_d0',
+      nonce: 2,
+      origin: `${deployTxid}_o1`,
+      owner: null,
+      satoshis: 0
+    },
+    src,
+    version: '04'
+  }
+  const stateBuffer = bsv.deps.Buffer.from(JSON.stringify(state), 'utf8')
+  const stateHash = bsv.crypto.Hash.sha256(stateBuffer).toString('hex')
+  const options = {
+    metadata: {
+      in: 1,
+      ref: [],
+      out: [],
+      del: [stateHash],
+      cre: [],
+      exec: [{ op: 'CALL', data: [{ $jig: 0 }, 'destroy', []] }]
+    },
+    inputs: [
+      { txid: deployTxid, vout: 1, script, satoshis: dust }
+    ],
+    outputs: [
       { script, satoshis: dust }
     ]
   }
