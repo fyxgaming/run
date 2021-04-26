@@ -52,39 +52,8 @@ describe('Invalid', () => {
 
   it('throws if load payment output', async () => {
     const run = new Run()
-    const address = new bsv.PrivateKey().toAddress().toString()
-    const hash = new bsv.Address(address).hashBuffer.toString('hex')
-    const asm = `OP_DUP OP_HASH160 ${hash} OP_EQUALVERIFY OP_CHECKSIG`
-    const script = bsv.Script.fromASM(asm).toHex()
-    const state = {
-      kind: 'code',
-      props: {
-        deps: {},
-        location: '_o1',
-        nonce: 1,
-        origin: '_o1',
-        owner: address,
-        satoshis: 0
-      },
-      src: 'class A { }',
-      version: '04'
-    }
-    const stateBuffer = bsv.deps.Buffer.from(JSON.stringify(state), 'utf8')
-    const stateHash = bsv.crypto.Hash.sha256(stateBuffer).toString('hex')
-    const rawtx = createRunTransaction({
-      metadata: {
-        in: 0,
-        ref: [],
-        out: [stateHash],
-        del: [],
-        cre: [address],
-        exec: [{ op: 'DEPLOY', data: ['class A { }', { deps: { } }] }]
-      },
-      outputs: [
-        { script, satoshis: 1000 },
-        { script: '', satoshis: 1000 }
-      ]
-    })
+    const config = buildDeployConfig()
+    const rawtx = createRunTransaction(config)
     const txid = new bsv.Transaction(rawtx).hash
     run.blockchain.fetch = txid => rawtx
     await expect(run.load(`${txid}_o2`)).to.be.rejectedWith('Jig not found')
@@ -434,6 +403,44 @@ function createRunTransaction (options) {
   if (options.inputs) options.inputs.forEach(input => bsvtx.addInput(new bsv.Transaction.Input(input)))
   const rawtx = bsvtx.toString('hex')
   return rawtx
+}
+
+// ------------------------------------------------------------------------------------------------
+
+function buildDeployConfig () {
+  const address = new bsv.PrivateKey().toAddress().toString()
+  const hash = new bsv.Address(address).hashBuffer.toString('hex')
+  const asm = `OP_DUP OP_HASH160 ${hash} OP_EQUALVERIFY OP_CHECKSIG`
+  const script = bsv.Script.fromASM(asm).toHex()
+  const state = {
+    kind: 'code',
+    props: {
+      deps: {},
+      location: '_o1',
+      nonce: 1,
+      origin: '_o1',
+      owner: address,
+      satoshis: 0
+    },
+    src: 'class A { }',
+    version: '04'
+  }
+  const stateBuffer = bsv.deps.Buffer.from(JSON.stringify(state), 'utf8')
+  const stateHash = bsv.crypto.Hash.sha256(stateBuffer).toString('hex')
+  const options = {
+    metadata: {
+      in: 0,
+      ref: [],
+      out: [stateHash],
+      del: [],
+      cre: [address],
+      exec: [{ op: 'DEPLOY', data: ['class A { }', { deps: { } }] }]
+    },
+    outputs: [
+      { script, satoshis: 1000 }
+    ]
+  }
+  return options
 }
 
 // ------------------------------------------------------------------------------------------------
