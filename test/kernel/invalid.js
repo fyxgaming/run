@@ -1009,7 +1009,7 @@ function buildDeployConfig (src = null) {
 // ------------------------------------------------------------------------------------------------
 
 function buildDeploySidekickConfig () {
-  const src = 'class A { }'
+  const src = 'class A { static set() { } }'
   const address = new bsv.PrivateKey().toAddress().toString()
   const hash = new bsv.Address(address).hashBuffer.toString('hex')
   const asm = `OP_DUP OP_HASH160 ${hash} OP_EQUALVERIFY OP_CHECKSIG`
