@@ -683,6 +683,12 @@ describe('Invalid', () => {
       const callRawtx = createRunTransaction(callConfig)
       await expect(run.import(callRawtx)).to.be.rejectedWith('Cannot decode "{"$jig":10}"')
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if method produces no changes', async () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
