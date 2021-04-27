@@ -686,12 +686,6 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if method produces no changes', async () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
     it.skip('throws if call upgrade', () => {
       // TODO
     })
@@ -953,7 +947,7 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('update with self reference', () => {
+    it.skip('upgrade with self reference', () => {
       // TODO - move to upgrade.js
     })
   })
@@ -1019,10 +1013,10 @@ describe('Invalid', () => {
   })
 
   // --------------------------------------------------------------------------
-  // load
+  // misc
   // --------------------------------------------------------------------------
 
-  describe('load', () => {
+  describe('misc', () => {
     it('throws if load payment output', async () => {
       const run = new Run()
       const config = buildDeployConfig()
@@ -1030,6 +1024,19 @@ describe('Invalid', () => {
       const txid = new bsv.Transaction(rawtx).hash
       run.blockchain.fetch = txid => rawtx
       await expect(run.load(`${txid}_o2`)).to.be.rejectedWith('Jig not found')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('method that produces no changes is ok', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const callConfig = buildCallConfig(deployRawtx, 'noop')
+      const callRawtx = createRunTransaction(callConfig)
+      await run.import(callRawtx)
     })
   })
 })
@@ -1075,6 +1082,7 @@ function buildDeployConfig (src = null) {
   src = src || `class A extends Jig {
     init(satoshis = 0, owner = null) { this.satoshis = satoshis; if (owner) this.owner = owner }
     static set(n) { this.n = n }
+    static noop() { }
     static err() { throw new Error() }
   }`
   const address = new bsv.PrivateKey().toAddress().toString()
@@ -1251,7 +1259,7 @@ function buildInstantiateConfig (deployRawtx, satoshis = 0, owner = null) {
 
 // ------------------------------------------------------------------------------------------------
 
-function buildCallConfig (deployRawtx) {
+function buildCallConfig (deployRawtx, method = 'set') {
   const deployMetadata = Run.util.metadata(deployRawtx)
   const deployTxid = new bsv.Transaction(deployRawtx).hash
   const address = deployMetadata.cre[0]
@@ -1265,7 +1273,6 @@ function buildCallConfig (deployRawtx) {
     props: {
       deps: { Jig: { $jig: 'native://Jig' } },
       location: '_o1',
-      n: 1,
       nonce: 2,
       origin: `${deployTxid}_o1`,
       owner: address,
@@ -1274,6 +1281,7 @@ function buildCallConfig (deployRawtx) {
     src,
     version: '04'
   }
+  if (method === 'set') state.props.n = 1
   const stateBuffer = bsv.deps.Buffer.from(JSON.stringify(state), 'utf8')
   const stateHash = bsv.crypto.Hash.sha256(stateBuffer).toString('hex')
   const options = {
@@ -1283,7 +1291,7 @@ function buildCallConfig (deployRawtx) {
       out: [stateHash],
       del: [],
       cre: [],
-      exec: [{ op: 'CALL', data: [{ $jig: 0 }, 'set', [1]] }]
+      exec: [{ op: 'CALL', data: [{ $jig: 0 }, method, [1]] }]
     },
     inputs: [
       { txid: deployTxid, vout: 1, script, satoshis: dust }
