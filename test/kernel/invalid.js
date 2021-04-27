@@ -911,8 +911,16 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if missing class props', () => {
-      // TODO
+    it('throws if missing class props', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const upgradeConfig = buildUpgradeConfig(deployRawtx)
+      upgradeConfig.metadata.exec[0].data.length = 2
+      const upgradeRawtx = createRunTransaction(upgradeConfig)
+      await expect(run.import(upgradeRawtx)).to.be.rejectedWith('Invalid UPGRADE data length')
     })
 
     // ------------------------------------------------------------------------
