@@ -906,7 +906,7 @@ describe('Invalid', () => {
   // --------------------------------------------------------------------------
 
   describe('inconsistent worldview', () => {
-    it('throws if inconsistent worldview for refs', async () => {
+    it('throws if inconsistent refs', async () => {
       const run = new Run()
       const deployConfig = buildDeployConfig()
       const deployRawtx = createRunTransaction(deployConfig)
@@ -924,13 +924,13 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if inconsistent worldview between inputs', () => {
+    it.skip('throws if inconsistent inputs', () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if inconsistent worldview between ref and input', () => {
+    it.skip('throws if inconsistent ref and input', () => {
       // TODO
     })
   })
