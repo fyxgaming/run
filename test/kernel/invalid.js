@@ -936,8 +936,20 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if inconsistent ref and input', () => {
-      // TODO
+    it('throws if inconsistent ref and input', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const authConfig = buildAuthConfig(deployRawtx)
+      const authRawtx = createRunTransaction(authConfig)
+      const authTxid = new bsv.Transaction(authRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : txid === authTxid ? authRawtx : undefined
+      const authConfig2 = buildAuthConfig(deployRawtx)
+      authConfig2.metadata.ref.push(`${authTxid}_o1`)
+      const authRawtx2 = createRunTransaction(authConfig2)
+      await expect(run.import(authRawtx2)).to.be.rejectedWith('Inconsistent reference: A')
     })
   })
 
