@@ -894,8 +894,19 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if upgrade jig', () => {
-      // TODO
+    it('throws if upgrade jig', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const instantiateConfig = buildInstantiateConfig(deployRawtx)
+      const instantiateRawtx = createRunTransaction(instantiateConfig)
+      const instantiateTxid = new bsv.Transaction(instantiateRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : txid === instantiateTxid ? instantiateRawtx : undefined
+      const upgradeConfig = buildUpgradeConfig(instantiateRawtx)
+      const upgradeRawtx = createRunTransaction(upgradeConfig)
+      await expect(run.import(upgradeRawtx)).to.be.rejectedWith('Must only upgrade code')
     })
 
     // ------------------------------------------------------------------------
