@@ -686,8 +686,15 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if call upgrade', () => {
-      // TODO
+    it('throws if call upgrade', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const callConfig = buildCallConfig(deployRawtx, 'upgrade', { $jig: 0 })
+      const callRawtx = createRunTransaction(callConfig)
+      await expect(run.import(callRawtx)).to.be.rejectedWith('Cannot execute upgrade() with CALL')
     })
   })
 
@@ -1259,7 +1266,7 @@ function buildInstantiateConfig (deployRawtx, satoshis = 0, owner = null) {
 
 // ------------------------------------------------------------------------------------------------
 
-function buildCallConfig (deployRawtx, method = 'set') {
+function buildCallConfig (deployRawtx, method = 'set', arg = 1) {
   const deployMetadata = Run.util.metadata(deployRawtx)
   const deployTxid = new bsv.Transaction(deployRawtx).hash
   const address = deployMetadata.cre[0]
@@ -1291,7 +1298,7 @@ function buildCallConfig (deployRawtx, method = 'set') {
       out: [stateHash],
       del: [],
       cre: [],
-      exec: [{ op: 'CALL', data: [{ $jig: 0 }, method, [1]] }]
+      exec: [{ op: 'CALL', data: [{ $jig: 0 }, method, [arg]] }]
     },
     inputs: [
       { txid: deployTxid, vout: 1, script, satoshis: dust }
