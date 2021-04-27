@@ -906,8 +906,16 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid class props', () => {
-      // TODO
+    it('throws if invalid class props', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const upgradeConfig = buildUpgradeConfig(deployRawtx)
+      upgradeConfig.metadata.exec[0].data[2] = null
+      const upgradeRawtx = createRunTransaction(upgradeConfig)
+      await expect(run.import(upgradeRawtx)).to.be.rejectedWith('UPGRADE props must be an object')
     })
 
     // ------------------------------------------------------------------------
