@@ -805,6 +805,12 @@ describe('Invalid', () => {
       const rawtx = createRunTransaction(config)
       await expect(run.import(rawtx)).to.be.rejectedWith('error message here...')
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if deploy code with reserved method', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
