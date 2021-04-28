@@ -870,6 +870,12 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
+    it.skip('throws if upgrade object then class', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if invalid upgrade data', async () => {
       const run = new Run()
       const deployConfig = buildDeployConfig()
