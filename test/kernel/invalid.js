@@ -877,8 +877,15 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if multiple upgrades in src', () => {
-      // TODO
+    it('throws if multiple types in upgrade src', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const upgradeConfig = buildUpgradeConfig(deployRawtx, 'function f() { }; class A { }')
+      const upgradeRawtx = createRunTransaction(upgradeConfig)
+      await expect(run.import(upgradeRawtx)).to.be.rejectedWith('Multiple types not permitted in source code')
     })
 
     // ------------------------------------------------------------------------
