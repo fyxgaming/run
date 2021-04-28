@@ -707,7 +707,7 @@ describe('Invalid', () => {
       const run = new Run()
       const config = buildDeployConfig('1 + 2 + 3')
       const rawtx = createRunTransaction(config)
-      await expect(run.import(rawtx)).to.be.rejectedWith('DEPLOY src not supported: 1 + 2 + 3')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Bad source code')
     })
 
     // ------------------------------------------------------------------------
@@ -716,16 +716,16 @@ describe('Invalid', () => {
       const run = new Run()
       const config = buildDeployConfig('() => {}')
       const rawtx = createRunTransaction(config)
-      await expect(run.import(rawtx)).to.be.rejectedWith('Anonymous types not supported')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Bad source code')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if deploy object then class', async () => {
+    it('throws if deploy object then class', async () => {
       const run = new Run()
       const config = buildDeployConfig('({}, class A { })')
       const rawtx = createRunTransaction(config)
-      await expect(run.import(rawtx)).to.be.rejectedWith('Must deploy a class or function')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Bad source code')
     })
 
     // ------------------------------------------------------------------------
