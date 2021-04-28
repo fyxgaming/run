@@ -730,7 +730,7 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if multiple deploys in src', async () => {
+    it.skip('throws if multiple types in deploy src', async () => {
       const run = new Run()
       const config = buildDeployConfig('class A { }; class B extends A { }')
       const rawtx = createRunTransaction(config)
@@ -877,7 +877,7 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if multiple types in upgrade src', async () => {
+    it.skip('throws if multiple types in upgrade src', async () => {
       const run = new Run()
       const deployConfig = buildDeployConfig()
       const deployRawtx = createRunTransaction(deployConfig)
