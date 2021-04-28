@@ -809,8 +809,11 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if deploy code with reserved method', () => {
-      // TODO
+    it('throws if deploy code with reserved method', async () => {
+      const run = new Run()
+      const config = buildDeployConfig('class A { static auth() { } }')
+      const rawtx = createRunTransaction(config)
+      await expect(run.import(rawtx)).to.be.rejectedWith('Must not have any reserved words: auth')
     })
   })
 
