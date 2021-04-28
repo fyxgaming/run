@@ -730,11 +730,11 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if multiple deploys in src', async () => {
+    it('throws if multiple deploys in src', async () => {
       const run = new Run()
-      const config = buildDeployConfig('class A { }; class B { }')
+      const config = buildDeployConfig('class A { }; class B extends A { }')
       const rawtx = createRunTransaction(config)
-      await expect(run.import(rawtx)).to.be.rejectedWith('Must deploy a class or function')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Multiple types not permitted in source code')
     })
 
     // ------------------------------------------------------------------------
