@@ -864,13 +864,20 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if multiple upgrades in src', () => {
-      // TODO
+    it('throws if upgrade object then class', async () => {
+      const run = new Run()
+      const deployConfig = buildDeployConfig()
+      const deployRawtx = createRunTransaction(deployConfig)
+      const deployTxid = new bsv.Transaction(deployRawtx).hash
+      run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
+      const upgradeConfig = buildUpgradeConfig(deployRawtx, '({}, class A { })')
+      const upgradeRawtx = createRunTransaction(upgradeConfig)
+      await expect(run.import(upgradeRawtx)).to.be.rejectedWith('Bad source code')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if upgrade object then class', async () => {
+    it.skip('throws if multiple upgrades in src', () => {
       // TODO
     })
 
@@ -1329,8 +1336,8 @@ function buildCallConfig (deployRawtx, method = 'set', arg = 1) {
 
 // ------------------------------------------------------------------------------------------------
 
-function buildUpgradeConfig (deployRawtx) {
-  const src = 'class B extends Jig { }'
+function buildUpgradeConfig (deployRawtx, src) {
+  src = src || 'class B extends Jig { }'
   const deployMetadata = Run.util.metadata(deployRawtx)
   const deployTxid = new bsv.Transaction(deployRawtx).hash
   const address = deployMetadata.cre[0]
