@@ -159,8 +159,31 @@ describe('Source', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if not a definition', () => {
-      // TODO
+    it('throws if not a definition', () => {
+      const bad = src => expect(() => _check(src)).to.throw(`Bad source code: ${src}`)
+      bad('1')
+      bad('1 + 2')
+      bad('')
+      bad('null')
+      bad('{}')
+      bad('"1 2 3"')
+      bad('`class A { }`')
+      bad('while(true){}')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid definition', () => {
+      const bad = src => expect(() => _check(src)).to.throw(`Bad source code: ${src}`)
+      bad('function() { }')
+      bad('class { }')
+      bad('class A {')
+      bad('function f() }')
+      bad('function f {}')
+      bad('class A ex B { }')
+      bad('(class A{})')
+      bad('[function f(){}]')
+      bad('{}; class A {}')
     })
 
     // ------------------------------------------------------------------------
