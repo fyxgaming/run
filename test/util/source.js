@@ -9,6 +9,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const { _sandbox, _anonymize, _deanonymize, _check } = unmangle(unmangle(Run)._source)
+const { COVER } = require('../env/config')
 
 // ----------------------------------------------------------------------------------------------
 // Source
@@ -123,6 +124,14 @@ describe('Source', () => {
       expect(() => _deanonymize('() => { }', '')).to.throw('Bad source code')
       expect(() => _deanonymize('class{}', '')).to.throw('Bad source code')
     })
+
+    // ------------------------------------------------------------------------
+
+    if (COVER) {
+      it('does not deanonymize if under coverage', () => {
+        expect(_deanonymize('class Token { }', 'Token')).to.equal('class Token { }')
+      })
+    }
   })
 
   // ----------------------------------------------------------------------------------------------
