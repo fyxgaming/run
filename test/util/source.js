@@ -173,6 +173,9 @@ describe('Source', () => {
       _check('class A { \'}; class B {*\' }')
       _check('function f() {"//}function g() {"}')
       _check('class A extends B{\n`};\nclass C{}`}')
+    //   _check('class A { \'}\' }')
+    //   _check('class A { "{" }')
+    //   _check('class A { \'}\' }')
     })
 
     // ------------------------------------------------------------------------
