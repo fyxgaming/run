@@ -169,6 +169,14 @@ describe('Source', () => {
 
     // ------------------------------------------------------------------------
 
+    it('strings', () => {
+      _check('class A { \'}; class B {*\' }')
+      _check('function f() {"//}function g() {"}')
+      _check('class A extends B{\n`};\nclass C{}`}')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('throws if comments in declaration', () => {
       const bad = src => expect(() => _check(src)).to.throw(`Bad source code: ${src}`)
       bad('class A // dwokfnwofkn\n{}')

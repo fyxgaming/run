@@ -30,7 +30,7 @@ describe('Protocol', () => {
   it('Unit', function () { this.timeout(1000000); return runProtocolTest(require('./data/unit.json')) })
   it('Relay', function () { this.timeout(1000000); return runProtocolTest(require('./data/relay.json')) })
   it('Zhell', function () { this.timeout(1000000); return runProtocolTest(require('./data/zhell.json')) })
-  it('Kronoverse', function () { this.timeout(1000000); return runProtocolTest(require('./data/kronoverse.json')) })
+  it.only('Kronoverse', function () { this.timeout(1000000); return runProtocolTest(require('./data/kronoverse.json')) })
 })
 
 // ------------------------------------------------------------------------------------------------
