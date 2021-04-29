@@ -130,14 +130,30 @@ describe('Source', () => {
   // ----------------------------------------------------------------------------------------------
 
   describe('_check', () => {
-    it.skip('valid code', () => {
-      // TODO
-      console.log(_check)
+    it('simple types', () => {
+      _check('class A{}')
+      _check('class A extends B{}')
+      _check('function f(){}')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('inner definitions are ok', () => {
+    it('spacing and new lines', () => {
+      _check('   \nclass \nA \n{\n }\n  \n')
+      _check('class   A extends B{\nset(x) { this.n = 1 } }')
+      _check('\nfunction\nf(   a \n ,   \n b, \b ){ \n}\n')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('inner definitions', () => {
+      _check('class A { init() { class B { } } }')
+      _check('function f() { function g() { } function h() { } }')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('comments', () => {
       // TODO
     })
 
