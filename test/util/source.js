@@ -162,8 +162,11 @@ describe('Source', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('comments', () => {
-      // TODO
+    it('comments', () => {
+      _check('class A // dwokfnwofkn\n{}')
+      _check('class A extends /*C*/ B { }')
+      _check('class A /*class B {}*/ { }')
+      _check('class \nA \n/*class \nB {}\n*/ { }')
     })
 
     // ------------------------------------------------------------------------
