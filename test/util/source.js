@@ -184,12 +184,16 @@ describe('Source', () => {
       bad('(class A{})')
       bad('[function f(){}]')
       bad('{}; class A {}')
+      bad('class A extends B extends C {}')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if multiple definitions', () => {
-      // TODO
+    it('throws if multiple definitions', () => {
+      const bad = src => expect(() => _check(src)).to.throw(`Multiple definitions not permitted: ${src}`)
+      bad('class A{}; class B{}')
+      bad('class A{}\nclass B{}\nclass C{}')
+      bad('function f(){}; function g(){}')
     })
   })
 })
