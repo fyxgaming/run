@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { _sandbox, _anonymize, _deanonymize } = unmangle(unmangle(Run)._source)
+const { _sandbox, _anonymize, _deanonymize, _check } = unmangle(unmangle(Run)._source)
 
 // ----------------------------------------------------------------------------------------------
 // Source
@@ -122,6 +122,35 @@ describe('Source', () => {
       expect(() => _deanonymize('hello world', '')).to.throw('Bad source code')
       expect(() => _deanonymize('() => { }', '')).to.throw('Bad source code')
       expect(() => _deanonymize('class{}', '')).to.throw('Bad source code')
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _check
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_check', () => {
+    it.skip('valid code', () => {
+      // TODO
+      console.log(_check)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('inner definitions are ok', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if not a definition', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if multiple definitions', () => {
+      // TODO
     })
   })
 })
