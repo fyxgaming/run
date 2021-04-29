@@ -12,9 +12,9 @@ const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const Sandbox = unmangle(Run)._Sandbox
 const {
-  _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
-  _basicObject, _basicArray, _basicSet, _basicMap, _basicUint8Array, _arbitraryObject,
-  _defined, _intrinsic, _serializable, _protoLen, _anonymous, _getOwnProperty, _hasOwnProperty,
+  _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _basicObject,
+  _basicArray, _basicSet, _basicMap, _basicUint8Array, _arbitraryObject, _defined,
+  _intrinsic, _serializable, _protoLen, _anonymous, _getOwnProperty, _hasOwnProperty,
   _setOwnProperty, _ownGetters, _ownMethods, _limit, _Timeout, _deterministicJSONStringify,
   _deterministicCompareKeys, _negativeZero, _filterInPlace
 } = unmangle(unmangle(Run)._misc)
@@ -222,59 +222,6 @@ describe('Misc', () => {
       expect(_text((x, y) => { })).to.equal('[anonymous function]')
       expect(_text(_$xX123 => _$xX123)).to.equal('[anonymous function]')
       expect(_text(class { })).to.equal('[anonymous class]')
-    })
-  })
-
-  // ----------------------------------------------------------------------------------------------
-  // _sandboxSourceCode
-  // ----------------------------------------------------------------------------------------------
-
-  describe('_sandboxSourceCode', () => {
-    // Node 8 and Node 12 have slightly different spacing for getNormalizedSourceCode('function () { return 1 }')
-    // We don't need the normalized code to always be exactly the same, as long as it functions the same.
-    // Compiled build also add semicolons, so we normlize that too.
-
-    function expectNormalizedSourceCode (T, src) {
-      const normalize = s => s.replace(/\s+/g, '').replace(/;/g, '')
-      const sandboxSrc = _sandboxSourceCode(T.toString(), T)
-      expect(normalize(sandboxSrc)).to.equal(normalize(src))
-    }
-
-    // ------------------------------------------------------------------------
-
-    it('basic class', () => {
-      class A {}
-      expectNormalizedSourceCode(A, 'class A {}')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('basic function', () => {
-      function f () { return 1 }
-      expectNormalizedSourceCode(f, 'function f() { return 1 }')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('class that extends another class', () => {
-      const SomeLibrary = { B: class B { } }
-      class A extends SomeLibrary.B {}
-      expectNormalizedSourceCode(A, 'class A extends B {}')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('single-line class', () => {
-      class B { }
-      class A extends B { f () {} }
-      expectNormalizedSourceCode(A, 'class A extends B { f () {} }')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('method', () => {
-      class B { f () { } }
-      expectNormalizedSourceCode(B.prototype.f, 'function f () { }')
     })
   })
 

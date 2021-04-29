@@ -8,13 +8,66 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { _anonymize, _deanonymize } = unmangle(unmangle(Run)._source)
+const { _sandbox, _anonymize, _deanonymize } = unmangle(unmangle(Run)._source)
 
 // ----------------------------------------------------------------------------------------------
 // Source
 // ----------------------------------------------------------------------------------------------
 
 describe('Source', () => {
+  // ----------------------------------------------------------------------------------------------
+  // _sandbox
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_sandbox', () => {
+    // Node 8 and Node 12 have slightly different spacing for getNormalizedSourceCode('function () { return 1 }')
+    // We don't need the normalized code to always be exactly the same, as long as it functions the same.
+    // Compiled build also add semicolons, so we normlize that too.
+
+    function expectNormalizedSourceCode (T, src) {
+      const normalize = s => s.replace(/\s+/g, '').replace(/;/g, '')
+      const sandboxSrc = _sandbox(T.toString(), T)
+      expect(normalize(sandboxSrc)).to.equal(normalize(src))
+    }
+
+    // ------------------------------------------------------------------------
+
+    it('basic class', () => {
+      class A {}
+      expectNormalizedSourceCode(A, 'class A {}')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('basic function', () => {
+      function f () { return 1 }
+      expectNormalizedSourceCode(f, 'function f() { return 1 }')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('class that extends another class', () => {
+      const SomeLibrary = { B: class B { } }
+      class A extends SomeLibrary.B {}
+      expectNormalizedSourceCode(A, 'class A extends B {}')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('single-line class', () => {
+      class B { }
+      class A extends B { f () {} }
+      expectNormalizedSourceCode(A, 'class A extends B { f () {} }')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('method', () => {
+      class B { f () { } }
+      expectNormalizedSourceCode(B.prototype.f, 'function f () { }')
+    })
+  })
+
   // ----------------------------------------------------------------------------------------------
   // _anonymize
   // ----------------------------------------------------------------------------------------------
