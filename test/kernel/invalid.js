@@ -730,11 +730,11 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if multiple types in deploy src', async () => {
+    it('throws if multiple types in deploy src', async () => {
       const run = new Run()
       const config = buildDeployConfig('class A { }; class B extends A { }')
       const rawtx = createRunTransaction(config)
-      await expect(run.import(rawtx)).to.be.rejectedWith('Multiple types not permitted in source code')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Multiple definitions not permitted')
     })
 
     // ------------------------------------------------------------------------
@@ -877,7 +877,7 @@ describe('Invalid', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if multiple types in upgrade src', async () => {
+    it('throws if multiple types in upgrade src', async () => {
       const run = new Run()
       const deployConfig = buildDeployConfig()
       const deployRawtx = createRunTransaction(deployConfig)
@@ -885,7 +885,7 @@ describe('Invalid', () => {
       run.blockchain.fetch = txid => txid === deployTxid ? deployRawtx : undefined
       const upgradeConfig = buildUpgradeConfig(deployRawtx, 'function f() { }; class A { }')
       const upgradeRawtx = createRunTransaction(upgradeConfig)
-      await expect(run.import(upgradeRawtx)).to.be.rejectedWith('Multiple types not permitted in source code')
+      await expect(run.import(upgradeRawtx)).to.be.rejectedWith('Multiple definitions not permitted')
     })
 
     // ------------------------------------------------------------------------

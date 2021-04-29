@@ -14,10 +14,9 @@ const Sandbox = unmangle(Run)._Sandbox
 const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _sandboxSourceCode,
   _basicObject, _basicArray, _basicSet, _basicMap, _basicUint8Array, _arbitraryObject,
-  _defined, _intrinsic, _serializable, _protoLen, _anonymizeSourceCode,
-  _deanonymizeSourceCode, _anonymous, _getOwnProperty, _hasOwnProperty, _setOwnProperty,
-  _ownGetters, _ownMethods, _limit, _Timeout,
-  _deterministicJSONStringify, _deterministicCompareKeys, _negativeZero, _filterInPlace
+  _defined, _intrinsic, _serializable, _protoLen, _anonymous, _getOwnProperty, _hasOwnProperty,
+  _setOwnProperty, _ownGetters, _ownMethods, _limit, _Timeout, _deterministicJSONStringify,
+  _deterministicCompareKeys, _negativeZero, _filterInPlace
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -276,63 +275,6 @@ describe('Misc', () => {
     it('method', () => {
       class B { f () { } }
       expectNormalizedSourceCode(B.prototype.f, 'function f () { }')
-    })
-  })
-
-  // ----------------------------------------------------------------------------------------------
-  // _anonymizeSourceCode
-  // ----------------------------------------------------------------------------------------------
-
-  describe('_anonymizeSourceCode', () => {
-    it('anonymizes', () => {
-      expect(_anonymizeSourceCode('class A { }')).to.equal('class  { }')
-      expect(_anonymizeSourceCode('class A{f(){}}')).to.equal('class {f(){}}')
-      expect(_anonymizeSourceCode('class A extends B { }')).to.equal('class  extends B { }')
-      expect(_anonymizeSourceCode('function f() { }')).to.equal('function () { }')
-      expect(_anonymizeSourceCode('function f    () {\n}')).to.equal('function     () {\n}')
-      expect(_anonymizeSourceCode('class A extends SomeLibrary.B { }')).to.equal('class  extends SomeLibrary.B { }')
-      expect(_anonymizeSourceCode('class A extends C["B"] { }')).to.equal('class  extends C["B"] { }')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if bad source', () => {
-      expect(() => _anonymizeSourceCode('hello world')).to.throw('Bad source code')
-      expect(() => _anonymizeSourceCode('() => { }')).to.throw('Bad source code')
-    })
-  })
-
-  // ----------------------------------------------------------------------------------------------
-  // _deanonymizeSourceCode
-  // ----------------------------------------------------------------------------------------------
-
-  describe('_deanonymizeSourceCode', () => {
-    it('deanonymizes', () => {
-      expect(_deanonymizeSourceCode('class { }', 'A')).to.equal('class A{ }')
-      expect(_deanonymizeSourceCode('class  extends B{ }', 'A')).to.equal('class A extends B{ }')
-      expect(_deanonymizeSourceCode('function () { }', 'f')).to.equal('function f() { }')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('same after anonymize and deanonymize', () => {
-      function test (x, n) { expect(_deanonymizeSourceCode(_anonymizeSourceCode(x), n)).to.equal(x) }
-      test('class A { }', 'A')
-      test('class A{ }', 'A')
-      test('class A extends C { }', 'A')
-      test('class A extends C\n{ }', 'A')
-      test('class A extends C{ }', 'A')
-      test('function f() { }', 'f')
-      test('function f () { }', 'f')
-      test('function f () {\n}', 'f')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if bad source', () => {
-      expect(() => _deanonymizeSourceCode('hello world', '')).to.throw('Bad source code')
-      expect(() => _deanonymizeSourceCode('() => { }', '')).to.throw('Bad source code')
-      expect(() => _deanonymizeSourceCode('class{}', '')).to.throw('Bad source code')
     })
   })
 
