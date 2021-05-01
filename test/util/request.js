@@ -7,11 +7,12 @@
 const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
+const { stub } = require('sinon')
 const Run = require('../env/run')
 const { TimeoutError, RequestError } = Run.errors
 const unmangle = require('../env/unmangle')
 const request = unmangle(Run)._request
-const { _dedup, _cache } = unmangle(request)
+const { _retry, _dedup, _cache } = unmangle(request)
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -72,6 +73,46 @@ describe('request', () => {
       const headers = { Date: (new Date()).toUTCString() }
       const response = await request('https://httpbin.org/get', { timeout, headers })
       expect(response.headers.Date).to.equal(headers.Date)
+    })
+  })
+
+  // ----------------------------------------------------------------------------------------------
+  // _retry
+  // ----------------------------------------------------------------------------------------------
+
+  describe('_retry', () => {
+    it('retries then succeeds', async () => {
+      const f = stub()
+      f.onCall(0).throws(new Error('timeout'))
+      f.onCall(1).returns('hello')
+      expect(await _retry(3, '', f)).to.equal('hello')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('retries then fails', async () => {
+      const f = stub()
+      f.onCall(0).throws(new Error('timeout1'))
+      f.onCall(1).throws(new Error('timeout2'))
+      f.onCall(2).throws(new Error('timeout3'))
+      f.onCall(3).throws(new Error('timeout4'))
+      await expect(_retry(3, '', f)).to.be.rejectedWith('timeout4')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('no timeout succeeds', async () => {
+      const f = stub()
+      f.onCall(0).returns('hello')
+      expect(await _retry(0, '', f)).to.equal('hello')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('no timeout fails', async () => {
+      const f = stub()
+      f.onCall(0).throws(new Error('timeout'))
+      await expect(_retry(0, '', f)).to.be.rejectedWith('timeout')
     })
   })
 
