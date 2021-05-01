@@ -74,6 +74,16 @@ describe('request', () => {
       const response = await request('https://httpbin.org/get', { timeout, headers })
       expect(response.headers.Date).to.equal(headers.Date)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('response handler', async function () {
+      this.timeout(timeout)
+      const options = { timeout, cache: 1000, onresponse: stub() }
+      await request('https://api.run.network/v1/test/status', options)
+      await request('https://api.run.network/v1/test/status', options)
+      expect(options.onresponse.callCount).to.equal(1)
+    })
   })
 
   // ----------------------------------------------------------------------------------------------
