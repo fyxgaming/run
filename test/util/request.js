@@ -1,7 +1,7 @@
 /**
- * rest.js
+ * request.js
  *
- * Tests for lib/util/rest.js
+ * Tests for lib/util/request.js
  */
 
 const { describe, it } = require('mocha')
@@ -10,7 +10,8 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { TimeoutError, RequestError } = Run.errors
 const unmangle = require('../env/unmangle')
-const REST = unmangle(unmangle(Run)._REST)
+const request = unmangle(Run)._request
+const { _dedup, _cache } = unmangle(request)
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -19,18 +20,18 @@ const REST = unmangle(unmangle(Run)._REST)
 const timeout = 10000
 
 // ------------------------------------------------------------------------------------------------
-// REST
+// request
 // ------------------------------------------------------------------------------------------------
 
-describe('REST', () => {
+describe('request', () => {
   // --------------------------------------------------------------------------
-  // _request
+  // request
   // --------------------------------------------------------------------------
 
-  describe('_request', () => {
+  describe('request', () => {
     it('get returns json', async function () {
       this.timeout(timeout)
-      const status = await REST._request('https://api.run.network/v1/test/status', { timeout })
+      const status = await request('https://api.run.network/v1/test/status', { timeout })
       expect(status.version > 0).to.equal(true)
     })
 
@@ -39,7 +40,7 @@ describe('REST', () => {
     it('posts json', async function () {
       this.timeout(timeout)
       const options = { method: 'POST', body: 'hello', timeout }
-      const response = await REST._request('https://httpbin.org/post', options)
+      const response = await request('https://httpbin.org/post', options)
       expect(response.data).to.equal('"hello"')
     })
 
@@ -47,21 +48,21 @@ describe('REST', () => {
 
     it('timeout', async function () {
       this.timeout(timeout)
-      await expect(REST._request('https://www.google.com:81', { timeout: 100 })).to.be.rejectedWith(TimeoutError)
+      await expect(request('https://www.google.com:81', { timeout: 100 })).to.be.rejectedWith(TimeoutError)
     })
 
     // ------------------------------------------------------------------------
 
     it('client error', async function () {
       this.timeout(timeout)
-      await expect(REST._request('123', { timeout })).to.be.rejected
+      await expect(request('123', { timeout })).to.be.rejected
     })
 
     // ------------------------------------------------------------------------
 
     it('server error', async function () {
       this.timeout(timeout)
-      await expect(REST._request('https://api.run.network/badurl', { timeout })).to.be.rejectedWith(RequestError)
+      await expect(request('https://api.run.network/badurl', { timeout })).to.be.rejectedWith(RequestError)
     })
 
     // ------------------------------------------------------------------------
@@ -69,7 +70,7 @@ describe('REST', () => {
     it('custom headers', async function () {
       this.timeout(timeout)
       const headers = { Date: (new Date()).toUTCString() }
-      const response = await REST._request('https://httpbin.org/get', { timeout, headers })
+      const response = await request('https://httpbin.org/get', { timeout, headers })
       expect(response.headers.Date).to.equal(headers.Date)
     })
   })
@@ -86,9 +87,9 @@ describe('REST', () => {
       const f = () => new Promise((resolve, reject) => { count++; resolver = resolve })
       const key = '123'
       const result = 'abc'
-      const promise1 = REST._dedup(cache, key, f)
+      const promise1 = _dedup(cache, key, f)
       expect(key in cache).to.equal(true)
-      const promise2 = REST._dedup(cache, key, f)
+      const promise2 = _dedup(cache, key, f)
       resolver(result)
       expect(count).to.equal(1)
       expect(await promise1).to.equal(result)
@@ -105,9 +106,9 @@ describe('REST', () => {
       const error = new Error('abc')
       const f = () => new Promise((resolve, reject) => { count++; rejecter = reject })
       const key = '123'
-      const promise1 = REST._dedup(cache, key, f)
+      const promise1 = _dedup(cache, key, f)
       expect(key in cache).to.equal(true)
-      const promise2 = REST._dedup(cache, key, f)
+      const promise2 = _dedup(cache, key, f)
       rejecter(error)
       expect(count).to.equal(1)
       await expect(promise1).to.be.rejectedWith(error)
@@ -123,10 +124,10 @@ describe('REST', () => {
       let count = 0
       const f = () => new Promise((resolve, reject) => { count++; resolver = resolve })
       const key = '123'
-      const promise1 = REST._dedup(cache, key, f)
+      const promise1 = _dedup(cache, key, f)
       resolver('abc')
       expect(await promise1).to.equal('abc')
-      const promise2 = REST._dedup(cache, key, f)
+      const promise2 = _dedup(cache, key, f)
       resolver('def')
       expect(await promise2).to.equal('def')
       expect(count).to.equal(2)
@@ -142,8 +143,8 @@ describe('REST', () => {
       const cache = {}
       let count = 0
       const f = async () => { count++; return 'abc' }
-      expect(await REST._cache(cache, '123', 10, f)).to.equal('abc')
-      expect(await REST._cache(cache, '123', 10, f)).to.equal('abc')
+      expect(await _cache(cache, '123', 10, f)).to.equal('abc')
+      expect(await _cache(cache, '123', 10, f)).to.equal('abc')
       expect(count).to.equal(1)
     })
 
@@ -154,8 +155,8 @@ describe('REST', () => {
       let count = 0
       const error = new Error('abc')
       const f = async () => { count++; throw error }
-      await expect(REST._cache(cache, '123', 10, f)).to.be.rejectedWith(error)
-      await expect(REST._cache(cache, '123', 10, f)).to.be.rejectedWith(error)
+      await expect(_cache(cache, '123', 10, f)).to.be.rejectedWith(error)
+      await expect(_cache(cache, '123', 10, f)).to.be.rejectedWith(error)
       expect(count).to.equal(1)
     })
 
@@ -165,9 +166,9 @@ describe('REST', () => {
       const cache = {}
       let count = 0
       const f = async () => { count++; return 'abc' }
-      expect(await REST._cache(cache, '123', 1, f)).to.equal('abc')
+      expect(await _cache(cache, '123', 1, f)).to.equal('abc')
       await new Promise((resolve, reject) => setTimeout(resolve, 10))
-      expect(await REST._cache(cache, '123', 1, f)).to.equal('abc')
+      expect(await _cache(cache, '123', 1, f)).to.equal('abc')
       expect(count).to.equal(2)
     })
 
@@ -178,9 +179,9 @@ describe('REST', () => {
       let count = 0
       const error = new Error('abc')
       const f = async () => { count++; throw error }
-      await expect(REST._cache(cache, '123', 1, f)).to.be.rejectedWith(error)
+      await expect(_cache(cache, '123', 1, f)).to.be.rejectedWith(error)
       await new Promise((resolve, reject) => setTimeout(resolve, 10))
-      await expect(REST._cache(cache, '123', 1, f)).to.be.rejectedWith(error)
+      await expect(_cache(cache, '123', 1, f)).to.be.rejectedWith(error)
       expect(count).to.equal(2)
     })
   })
