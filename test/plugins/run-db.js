@@ -54,6 +54,18 @@ describe.skip('RunDB', () => {
     expect(run.inventory.jigs.length > 0).to.equal(true)
     expect(run.inventory.code.length > 0).to.equal(true)
   })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('handles duplicate requests cached', async () => {
+    // TODO
+  })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('handles duplicate requests uncached', async () => {
+    // TODO
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
