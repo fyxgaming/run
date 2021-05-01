@@ -79,10 +79,10 @@ describe('request', () => {
 
     it('response handler', async function () {
       this.timeout(timeout)
-      const options = { timeout, cache: 1000, onresponse: stub() }
-      await request('https://api.run.network/v1/test/status', options)
-      await request('https://api.run.network/v1/test/status', options)
-      expect(options.onresponse.callCount).to.equal(1)
+      const options = { timeout, cache: 1000, response: stub().returns(100) }
+      expect(await request('https://api.run.network/v1/test/status', options)).to.equal(100)
+      expect(await request('https://api.run.network/v1/test/status', options)).to.equal(100)
+      expect(options.response.callCount).to.equal(1)
     })
   })
 
