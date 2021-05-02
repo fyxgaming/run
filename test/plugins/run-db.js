@@ -30,14 +30,18 @@ describe('RunDB', () => {
   describe('get', () => {
     it('tx', async () => {
       const rundb = new RunDB(HOST)
-      rundb.request = () => 'def'
+      rundb.request = stub().returns('def')
       expect(await rundb.get('tx://abc')).to.equal('def')
+      expect(rundb.request.firstCall.firstArg).to.equal(`${HOST}/tx/abc`)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('jig', async () => {
-      // TODO
+    it('jig', async () => {
+      const rundb = new RunDB(HOST)
+      rundb.request = stub().returns('def')
+      expect(await rundb.get('jig://abc')).to.equal('def')
+      expect(rundb.request.firstCall.firstArg).to.equal(`${HOST}/jig/abc`)
     })
 
     // ------------------------------------------------------------------------
