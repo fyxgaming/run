@@ -26,7 +26,7 @@ describe('RunDB', () => {
   // --------------------------------------------------------------------------
 
   describe('mock', () => {
-    it('load code from cache', async () => {
+    it('load code', async () => {
       const rundb = new RunDB(HOST)
       const responses = { }
       responses[`${HOST}/jig/5b399a7a29442ed99ba43c1679be0f6c66c7bb7981a41c94484bdac416a12e74_o1`] = { kind: 'code', props: { deps: { Jig: { $jig: 'native://Jig' } }, location: '_o1', metadata: { emoji: '🐉' }, nonce: 1, origin: '_o1', owner: '14aJe8iM3HopTwa44Ed5ZQq2UxdDvrEMXo', satoshis: 0 }, src: 'class Dragon extends Jig {\n    init(name, age) {\n        this.name = name\n        this.age = age\n    }\n}', version: '04' }
@@ -38,7 +38,7 @@ describe('RunDB', () => {
 
     // ------------------------------------------------------------------------
 
-    it('load jig from cache', async () => {
+    it('load jig', async () => {
       const rundb = new RunDB(HOST)
       const responses = { }
       responses[`${HOST}/jig/5b399a7a29442ed99ba43c1679be0f6c66c7bb7981a41c94484bdac416a12e74_o1`] = { kind: 'code', props: { deps: { Jig: { $jig: 'native://Jig' } }, location: '_o1', metadata: { emoji: '🐉' }, nonce: 1, origin: '_o1', owner: '14aJe8iM3HopTwa44Ed5ZQq2UxdDvrEMXo', satoshis: 0 }, src: 'class Dragon extends Jig {\n    init(name, age) {\n        this.name = name\n        this.age = age\n    }\n}', version: '04' }
@@ -47,6 +47,16 @@ describe('RunDB', () => {
       const run = new Run({ cache: rundb, client: true, network: 'main', trust: 'cache' })
       const C = await run.load('f97197db9e78d30403d967c3e10a95a31d61ac3cb4925ca5884e49338b3f1bbb_o1')
       expect(C instanceof Run.Jig).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('loads code cached', async () => {
+      const rundb = new RunDB(HOST)
+      await rundb.localCache.set('jig://5b399a7a29442ed99ba43c1679be0f6c66c7bb7981a41c94484bdac416a12e74_o1', { kind: 'code', props: { deps: { Jig: { $jig: 'native://Jig' } }, location: '_o1', metadata: { emoji: '🐉' }, nonce: 1, origin: '_o1', owner: '14aJe8iM3HopTwa44Ed5ZQq2UxdDvrEMXo', satoshis: 0 }, src: 'class Dragon extends Jig {\n    init(name, age) {\n        this.name = name\n        this.age = age\n    }\n}', version: '04' })
+      const run = new Run({ cache: rundb, client: true, network: 'main', trust: 'cache' })
+      const C = await run.load('5b399a7a29442ed99ba43c1679be0f6c66c7bb7981a41c94484bdac416a12e74_o1')
+      expect(C instanceof Run.Code).to.equal(true)
     })
   })
 
