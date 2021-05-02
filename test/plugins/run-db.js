@@ -28,8 +28,10 @@ describe('RunDB', () => {
   // --------------------------------------------------------------------------
 
   describe('get', () => {
-    it.skip('tx', async () => {
-      // TODO
+    it('tx', async () => {
+      const rundb = new RunDB(HOST)
+      rundb.request = () => 'def'
+      expect(await rundb.get('tx://abc')).to.equal('def')
     })
 
     // ------------------------------------------------------------------------
