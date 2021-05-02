@@ -64,8 +64,11 @@ describe('RunDB', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('time', async () => {
-      // TODO
+    it('time', async () => {
+      const rundb = new RunDB(HOST)
+      rundb.request = stub().returns('def')
+      expect(await rundb.get('time://abc')).to.equal('def')
+      expect(rundb.request.firstCall.firstArg).to.equal(`${HOST}/time/abc`)
     })
 
     // ------------------------------------------------------------------------
