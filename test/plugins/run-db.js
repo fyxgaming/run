@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const { stub } = require('sinon')
 const Run = require('../env/run')
 const { RequestError, TimeoutError } = Run.errors
-const { RunDB } = Run.plugins
+const { LocalCache, RunDB } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -121,7 +121,7 @@ describe('RunDB', () => {
     // ------------------------------------------------------------------------
 
     it('returns undefined if 404', async () => {
-      const rundb = new RunDB(HOST)
+      const rundb = new RunDB(HOST, new LocalCache())
       rundb.request = () => { throw new RequestError('Missing', 404) }
       const value = await rundb.get('jig://5b399a7a29442ed99ba43c1679be0f6c66c7bb7981a41c94484bdac416a12e74_o1')
       expect(typeof value).to.equal('undefined')
@@ -130,7 +130,7 @@ describe('RunDB', () => {
     // ------------------------------------------------------------------------
 
     it('throws if timeout', async () => {
-      const rundb = new RunDB(HOST)
+      const rundb = new RunDB(HOST, new LocalCache())
       rundb.request = () => { throw new TimeoutError() }
       await expect(rundb.get('jig://abc')).to.be.rejected
     })
