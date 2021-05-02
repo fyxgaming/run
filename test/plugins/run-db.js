@@ -7,6 +7,7 @@
 const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
+const { stub } = require('sinon')
 const Run = require('../env/run')
 const { RequestError, TimeoutError } = Run.errors
 const { RunDB } = Run.plugins
@@ -80,7 +81,13 @@ describe('RunDB', () => {
   // --------------------------------------------------------------------------
 
   describe('unspent', () => {
-    // TODO
+    it('requests utxos', async () => {
+      const rundb = new RunDB(HOST)
+      rundb.request = stub()
+      await rundb.unspent('abc')
+      expect(rundb.request.callCount).to.equal(1)
+      expect(rundb.request.firstCall.firstArg).to.deep.equal(`${HOST}/unspent?scripthash=abc`)
+    })
   })
 
   // --------------------------------------------------------------------------
