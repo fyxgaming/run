@@ -82,8 +82,11 @@ describe('RunDB', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('ban not called', async () => {
-      // TODO
+    it('ban not called', async () => {
+      const rundb = new RunDB(HOST)
+      rundb.request = stub().returns('def')
+      expect(await rundb.get('ban://abc')).to.equal(undefined)
+      expect(rundb.request.firstCall).to.equal(null)
     })
 
     // ------------------------------------------------------------------------
