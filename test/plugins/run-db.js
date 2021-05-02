@@ -57,8 +57,8 @@ describe('RunDB', () => {
 
     it('spend', async () => {
       const rundb = new RunDB(HOST)
-      rundb.request = stub().returns('def')
-      expect(await rundb.get('spend://abc')).to.equal('def')
+      rundb.request = stub().returns(123)
+      expect(await rundb.get('spend://abc')).to.equal(123)
       expect(rundb.request.firstCall.firstArg).to.equal(`${HOST}/spends/abc`)
     })
 
@@ -73,8 +73,11 @@ describe('RunDB', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('trust', async () => {
-      // TODO
+    it('trust', async () => {
+      const rundb = new RunDB(HOST)
+      rundb.request = stub().returns(true)
+      expect(await rundb.get('trust://abc')).to.equal(true)
+      expect(rundb.request.firstCall.firstArg).to.equal(`${HOST}/trust/abc`)
     })
 
     // ------------------------------------------------------------------------
