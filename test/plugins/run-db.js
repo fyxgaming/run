@@ -60,7 +60,11 @@ describe('RunDB', () => {
   // --------------------------------------------------------------------------
 
   describe('set', () => {
-    // TODO
+    it('sets in local cache', async () => {
+      const rundb = new RunDB(HOST)
+      await rundb.set('abc', 'def')
+      expect(await rundb.localCache.get('abc')).to.equal('def')
+    })
   })
 
   // --------------------------------------------------------------------------
