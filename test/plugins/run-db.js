@@ -91,8 +91,11 @@ describe('RunDB', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('config not called', async () => {
-      // TODO
+    it('config not called', async () => {
+      const rundb = new RunDB(HOST)
+      rundb.request = stub().returns('def')
+      expect(await rundb.get('config://abc')).to.equal(undefined)
+      expect(rundb.request.firstCall).to.equal(null)
     })
 
     // ------------------------------------------------------------------------
