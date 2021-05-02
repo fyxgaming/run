@@ -8,6 +8,7 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { RequestError } = require('../../lib/util/errors')
 const { RunDB } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
@@ -42,6 +43,15 @@ describe('RunDB', () => {
       await rundb.localCache.set('jig://5b399a7a29442ed99ba43c1679be0f6c66c7bb7981a41c94484bdac416a12e74_o1', { kind: 'code', props: { deps: { Jig: { $jig: 'native://Jig' } }, location: '_o1', metadata: { emoji: '🐉' }, nonce: 1, origin: '_o1', owner: '14aJe8iM3HopTwa44Ed5ZQq2UxdDvrEMXo', satoshis: 0 }, src: 'class Dragon extends Jig {\n    init(name, age) {\n        this.name = name\n        this.age = age\n    }\n}', version: '04' })
       const value = await rundb.get('jig://5b399a7a29442ed99ba43c1679be0f6c66c7bb7981a41c94484bdac416a12e74_o1')
       expect(typeof value).to.equal('object')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns undefined if 404', async () => {
+      const rundb = new RunDB(HOST)
+      rundb.request = () => { throw new RequestError('Missing', 404) }
+      const value = await rundb.get('jig://5b399a7a29442ed99ba43c1679be0f6c66c7bb7981a41c94484bdac416a12e74_o1')
+      expect(typeof value).to.equal('undefined')
     })
   })
 
