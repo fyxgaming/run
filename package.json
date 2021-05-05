@@ -22,7 +22,7 @@
     "bump": "npm version patch && git push --follow-tags && npm publish"
   },
   "dependencies": {
-    "bsv": "^1.5.4"
+    "bsv": "^1.5.5"
   },
   "mocha": {
     "timeout": 30000
