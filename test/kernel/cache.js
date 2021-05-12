@@ -65,6 +65,7 @@ describe('Cache', () => {
     })
   })
 
+  // TODO
   /*
   describe('set', () => {
     it('should call set for each update after sync', async () => {
