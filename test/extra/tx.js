@@ -7,6 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
+const bsv = require('bsv')
 const { Tx } = Run.extra
 
 // ------------------------------------------------------------------------------------------------
@@ -31,6 +32,18 @@ describe('Tx', () => {
     expect(tx.outputs[2].satoshis).to.equal(8141)
     expect(tx.outputs[2].script).to.equal('76a9140710fe5e246c1f1b2e31aa10bbc6ff041a1e1e8088ac')
     expect(tx.nLockTime).to.equal(0)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('parses OP_PUSHDATA2', () => {
+    const bsvtx = new bsv.Transaction()
+    const data = Buffer.from(new Array(100000).fill(1)).toString('hex')
+    const script = bsv.Script.fromASM(`${data}`)
+    bsvtx.addOutput(new bsv.Transaction.Output({ script, satoshis: 10000 }))
+    const rawtx = bsvtx.toString('hex')
+    const tx = new Tx(rawtx)
+    expect(tx.outputs[0].script).to.equal(script.toHex())
   })
 
   // TODO: Compare with bsv library? Pick sample set of transactions?
