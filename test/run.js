@@ -108,6 +108,21 @@ describe('Run', () => {
   })
 
   // --------------------------------------------------------------------------
+  // logger
+  // --------------------------------------------------------------------------
+
+  describe('logger', () => {
+    it('change', () => {
+      const run = new Run()
+      const originalLogger = run.logger
+      const logger = {}
+      run.logger = logger
+      expect(run.logger).to.equal(logger)
+      expect(run.logger).not.to.equal(originalLogger)
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // network
   // --------------------------------------------------------------------------
 
