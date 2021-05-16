@@ -20,11 +20,39 @@ describe('MatterCloud', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('creates with defaults', () => {
+    it('with defaults', () => {
       const connect = new MatterCloud()
       expect(connect.network).to.equal('main')
       expect(connect.cache instanceof Cache).to.equal(true)
       expect(connect.api).to.equal('mattercloud')
+    })
+
+    // --------------------------------------------------------------------------------------------
+
+    it('with custom cache', () => {
+      class CustomCache {
+        async set (key, value) { }
+        async get (key) { }
+      }
+      const cache = new CustomCache()
+      const connect = new MatterCloud({ cache })
+      expect(connect.cache).to.equal(cache)
+    })
+
+    // --------------------------------------------------------------------------------------------
+
+    it('with API key', () => {
+      expect(new MatterCloud({ apiKey: 'abc' }).apiKey).to.equal('abc')
+      expect(new MatterCloud({ apiKey: '' }).apiKey).to.equal('')
+      expect(new MatterCloud({ apiKey: undefined }).apiKey).to.equal(undefined)
+    })
+
+    // --------------------------------------------------------------------------------------------
+
+    it('throws if invalid API key', () => {
+      expect(() => new MatterCloud({ apiKey: null })).to.throw('Invalid API key: null')
+      expect(() => new MatterCloud({ apiKey: 0 })).to.throw('Invalid API key: 0')
+      expect(() => new MatterCloud({ apiKey: {} })).to.throw('Invalid API key: [object Object')
     })
 
     // --------------------------------------------------------------------------------------------
@@ -40,18 +68,6 @@ describe('MatterCloud', () => {
     it('throws if invalid network', () => {
       expect(() => new MatterCloud({ network: null })).to.throw('Invalid network: null')
       expect(() => new MatterCloud({ network: 0 })).to.throw('Invalid network: 0')
-    })
-
-    // --------------------------------------------------------------------------------------------
-
-    it('creates with custom cache', () => {
-      class CustomCache {
-        async set (key, value) { }
-        async get (key) { }
-      }
-      const cache = new CustomCache()
-      const connect = new MatterCloud({ cache })
-      expect(connect.cache).to.equal(cache)
     })
 
     // --------------------------------------------------------------------------------------------

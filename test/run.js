@@ -30,7 +30,7 @@ describe('Run', () => {
     // ------------------------------------------------------------------------
 
     describe('api', () => {
-      it('defaults to default api', () => {
+      it('defaults to default', () => {
         expect(new Run().api).to.equal(Run.defaults.api)
       })
 
@@ -72,11 +72,33 @@ describe('Run', () => {
     })
 
     // ------------------------------------------------------------------------
+    // apiKey
+    // ------------------------------------------------------------------------
+
+    describe('apiKey', () => {
+      it('defaults to default', () => {
+        expect(new Run().apiKey).to.equal(Run.defaults.apiKey)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('assigns api key for run', () => {
+        expect(new Run({ network: 'main', api: 'mattercloud', apiKey: 'abc' }).apiKey).to.equal('abc')
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        expect(() => new Run({ network: 'main', api: 'whatsonchain', apiKey: null })).to.throw('Invalid API key: null')
+      })
+    })
+
+    // ------------------------------------------------------------------------
     // logger
     // ------------------------------------------------------------------------
 
     describe('logger', () => {
-      it('defaults to default logger', () => {
+      it('defaults to default', () => {
         expect(new Run().logger).to.equal(Run.defaults.logger)
       })
 

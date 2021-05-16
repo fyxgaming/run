@@ -20,7 +20,7 @@ describe('WhatsOnChain', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('creates with defaults', () => {
+    it('with defaults', () => {
       const connect = new WhatsOnChain()
       expect(connect.network).to.equal('main')
       expect(connect.cache instanceof Cache).to.equal(true)
@@ -29,13 +29,41 @@ describe('WhatsOnChain', () => {
 
     // --------------------------------------------------------------------------------------------
 
-    it('create on supported network', () => {
+    it('with supported network', () => {
       const mainnet = new WhatsOnChain({ network: 'main' })
       expect(mainnet.network).to.equal('main')
       const testnet = new WhatsOnChain({ network: 'test' })
       expect(testnet.network).to.equal('test')
       const stn = new WhatsOnChain({ network: 'stn' })
       expect(stn.network).to.equal('stn')
+    })
+
+    // --------------------------------------------------------------------------------------------
+
+    it('with custom cache', () => {
+      class CustomCache {
+        async set (key, value) { }
+        async get (key) { }
+      }
+      const cache = new CustomCache()
+      const connect = new WhatsOnChain({ cache })
+      expect(connect.cache).to.equal(cache)
+    })
+
+    // --------------------------------------------------------------------------------------------
+
+    it('with API key', () => {
+      expect(new WhatsOnChain({ apiKey: 'abc' }).apiKey).to.equal('abc')
+      expect(new WhatsOnChain({ apiKey: '' }).apiKey).to.equal('')
+      expect(new WhatsOnChain({ apiKey: undefined }).apiKey).to.equal(undefined)
+    })
+
+    // --------------------------------------------------------------------------------------------
+
+    it('throws if invalid API key', () => {
+      expect(() => new WhatsOnChain({ apiKey: null })).to.throw('Invalid API key: null')
+      expect(() => new WhatsOnChain({ apiKey: 0 })).to.throw('Invalid API key: 0')
+      expect(() => new WhatsOnChain({ apiKey: {} })).to.throw('Invalid API key: [object Object')
     })
 
     // --------------------------------------------------------------------------------------------
@@ -54,19 +82,7 @@ describe('WhatsOnChain', () => {
 
     // --------------------------------------------------------------------------------------------
 
-    it('creates with custom cache', () => {
-      class CustomCache {
-        async set (key, value) { }
-        async get (key) { }
-      }
-      const cache = new CustomCache()
-      const connect = new WhatsOnChain({ cache })
-      expect(connect.cache).to.equal(cache)
-    })
-
-    // --------------------------------------------------------------------------------------------
-
-    it('throws if create with invalid cache', () => {
+    it('throws if invalid cache', () => {
       expect(() => new WhatsOnChain({ cache: '' })).to.throw('Unsupported cache: ')
       expect(() => new WhatsOnChain({ cache: null })).to.throw('Unsupported cache: null')
       expect(() => new WhatsOnChain({ cache: {} })).to.throw('Unsupported cache: [object Object]')
