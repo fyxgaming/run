@@ -199,6 +199,35 @@ describe('Run', () => {
         expect(fetched).to.equal(true)
         expect(run.blockchain).to.equal(blockchain)
       })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        expect(() => new Run({ blockchain: null })).to.throw('Invalid blockchain: null')
+        expect(() => new Run({ blockchain: 123 })).to.throw('Invalid blockchain: 123')
+        expect(() => new Run({ blockchain: false })).to.throw('Invalid blockchain: false')
+        expect(() => new Run({ blockchain: () => {} })).to.throw('Invalid blockchain: [anonymous function]')
+        const blockchain = {
+          network: 'main',
+          broadcast: async () => {},
+          fetch: async () => { },
+          time: async () => 0,
+          spends: async () => null
+        }
+        expect(() => new Run({ blockchain })).to.throw('Invalid blockchain: [object Object]')
+      })
+
+      // TODO
+      /*
+      it('throws if unsupported with other settings', () => {
+      })
+
+      it('should reuse blockchains', () => {
+        const run1 = new Run()
+        const run2 = new Run()
+        expect(run1.blockchain).to.equal(run2.blockchain)
+      })
+      */
     })
 
     // ------------------------------------------------------------------------
@@ -496,24 +525,6 @@ describe('Run', () => {
   // TODO
   /*
   describe('constructor', () => {
-    describe('blockchain', () => {
-      it('should accept custom blockchain', () => {
-      })
-
-      it('should throw for invalid blockchain', () => {
-        expect(() => new Run({ blockchain: null })).to.throw('Invalid blockchain')
-        expect(() => new Run({ blockchain: 123 })).to.throw('Invalid blockchain: 123')
-        expect(() => new Run({ blockchain: false })).to.throw('Invalid blockchain: false')
-        expect(() => new Run({ blockchain: () => {} })).to.throw('Invalid blockchain: [anonymous function]')
-      })
-
-      it('should reuse blockchains', () => {
-        const run1 = new Run()
-        const run2 = new Run()
-        expect(run1.blockchain).to.equal(run2.blockchain)
-      })
-    })
-
     describe('cache', () => {
       it('should default to local cache', () => {
         expect(new Run().cache instanceof LocalCache).to.equal(true)
