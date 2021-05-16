@@ -178,12 +178,54 @@ describe('Run', () => {
   // --------------------------------------------------------------------------
 
   describe('api', () => {
-    it('change', () => {
-      const run = new Run({ api: 'run', apiKey: '123', network: 'test' })
+    it('run', () => {
+      const run = new Run({ api: 'mattercloud', network: 'main' })
+      run.api = 'run'
+      expect(run.api).to.equal('run')
+      expect(run.blockchain instanceof RunConnect).to.equal(true)
+      expect(run.network).to.equal('main')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('mattercloud', () => {
+      const run = new Run({ api: 'run', network: 'main' })
+      run.api = 'mattercloud'
+      expect(run.api).to.equal('mattercloud')
+      expect(run.blockchain instanceof MatterCloud).to.equal(true)
+      expect(run.network).to.equal('main')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('whatsonchain', () => {
+      const run = new Run({ api: 'run', network: 'test' })
       run.api = 'whatsonchain'
-      expect(run.api).to.equal(run.blockchain.api)
       expect(run.api).to.equal('whatsonchain')
       expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
+      expect(run.network).to.equal('test')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if unsupported', () => {
+      const run = new Run({ api: 'run', network: 'test' })
+      expect(() => { run.api = 'mattercloud' }).to.throw('MatterCloud API does not support the "test" network')
+      expect(run.api).to.equal('run')
+      expect(run.blockchain instanceof RunConnect).to.equal(true)
+      expect(run.network).to.equal('test')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      const run = new Run({ api: 'run', network: 'test' })
+      expect(() => { run.api = 'mock' }).to.throw('Invalid API: mock')
+      expect(() => { run.api = 'bad' }).to.throw('Invalid API: bad')
+      expect(() => { run.api = null }).to.throw('Invalid API: null')
+      expect(() => { run.api = 123 }).to.throw('Invalid API: 123')
+      expect(run.api).to.equal('run')
+      expect(run.blockchain instanceof RunConnect).to.equal(true)
       expect(run.network).to.equal('test')
     })
   })
