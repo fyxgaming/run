@@ -475,6 +475,17 @@ describe('Run', () => {
       expect(run.apiKey).to.equal(undefined)
       expect(run.network).to.equal('mock')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      const run = new Run()
+      const blockchain = run.blockchain
+      expect(() => { run.blockchain = null }).to.throw('Invalid blockchain: null')
+      expect(() => { run.blockchain = {} }).to.throw('Invalid blockchain: [object Object]')
+      expect(() => { run.blockchain = true }).to.throw('Invalid blockchain: true')
+      expect(run.blockchain).to.equal(blockchain)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -810,6 +821,8 @@ describe('Run', () => {
       expect(() => a2.set(a1)).to.throw('Different code instances')
     })
   })
+
+  // TODO: Change Blockchain during publish throws?
   */
 })
 
