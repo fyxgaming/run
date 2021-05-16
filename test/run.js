@@ -210,6 +210,14 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
+      it('resuses blockchain if same api, apiKey, and network', () => {
+        const run = new Run({ api: 'whatsonchain', apiKey: 'abc', network: 'test' })
+        const run2 = new Run({ api: 'whatsonchain', apiKey: 'abc', network: 'test' })
+        expect(run.blockchain).to.equal(run2.blockchain)
+      })
+
+      // ------------------------------------------------------------------------
+
       it('throws if invalid', () => {
         expect(() => new Run({ blockchain: null })).to.throw('Invalid blockchain: null')
         expect(() => new Run({ blockchain: 123 })).to.throw('Invalid blockchain: 123')
