@@ -25,69 +25,116 @@ describe('Run', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('RunConnect used for main network', () => {
-      const run = new Run({ network: 'main' })
-      expect(run.blockchain instanceof RunConnect).to.equal(true)
-      expect(run.cache instanceof RunConnect).to.equal(true)
-      expect(run.api).to.equal('run')
+    // ------------------------------------------------------------------------
+    // api
+    // ------------------------------------------------------------------------
+
+    describe('api', () => {
+      it('throws for bad api', () => {
+        expect(() => new Run({ api: 'bad' })).to.throw('Invalid API: bad')
+        expect(() => new Run({ api: null })).to.throw('Invalid API: null')
+        expect(() => new Run({ api: 123 })).to.throw('Invalid API: 123')
+      })
     })
 
     // ------------------------------------------------------------------------
+    // logger
+    // ------------------------------------------------------------------------
 
-    it('RunConnect used for test network', () => {
-      const run = new Run({ network: 'test', purse: undefined, owner: undefined })
-      expect(run.blockchain instanceof RunConnect).to.equal(true)
-      expect(run.cache instanceof RunConnect).to.equal(false)
-      expect(run.api).to.equal('run')
+    describe('logger', () => {
+      it('defaults to default logger', () => {
+        expect(new Run().logger).to.equal(Run.defaults.logger)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('null', () => {
+        expect(new Run({ logger: null }).logger).to.equal(null)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('console', () => {
+        expect(new Run({ logger: console }).logger).to.equal(console)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('custom logger', () => {
+        expect(() => new Run({ logger: {} })).not.to.throw()
+
+        // Create a basic info logger as an object
+        let loggedInfo = false
+        const run = new Run({ logger: { info: () => { loggedInfo = true } } })
+        run.logger.info('test')
+        expect(loggedInfo).to.equal(true)
+
+        // Create a basic error logger as a function object
+        let loggedError = false
+        const functionLogger = function () { }
+        functionLogger.error = () => { loggedError = true }
+        const run2 = new Run({ logger: functionLogger })
+        run2.logger.error('test')
+        expect(loggedError).to.equal(true)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        expect(() => new Run({ logger: 1 })).to.throw('Invalid logger: 1')
+        expect(() => new Run({ logger: false })).to.throw('Invalid logger: false')
+        expect(() => new Run({ logger: 'none' })).to.throw('Invalid logger: "none"')
+      })
     })
 
     // ------------------------------------------------------------------------
-
-    it('WhatsOnChain used for stn network', () => {
-      const run = new Run({ network: 'stn', purse: undefined, owner: undefined })
-      expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
-      expect(run.cache instanceof RunConnect).to.equal(false)
-      expect(run.api).to.equal('whatsonchain')
-    })
-
+    // network
     // ------------------------------------------------------------------------
 
-    it('Mockchain used for mock network', () => {
-      const run = new Run({ network: 'mock', purse: undefined, owner: undefined })
-      expect(run.blockchain instanceof Mockchain).to.equal(true)
-      expect(run.cache instanceof RunConnect).to.equal(false)
-      expect(run.api).to.equal(undefined)
-    })
+    describe('network', () => {
+      it('RunConnect used for main network', () => {
+        const run = new Run({ network: 'main' })
+        expect(run.blockchain instanceof RunConnect).to.equal(true)
+        expect(run.cache instanceof RunConnect).to.equal(true)
+        expect(run.api).to.equal('run')
+      })
 
-    // ------------------------------------------------------------------------
+      // ------------------------------------------------------------------------
 
-    it('throws for invalid network', () => {
-      expect(() => new Run({ network: '' })).to.throw('Unsupported network')
-      expect(() => new Run({ network: 'mainnet' })).to.throw('Unsupported network')
-      expect(() => new Run({ network: 'tester' })).to.throw('Unsupported network')
-      expect(() => new Run({ network: 'mocknet' })).to.throw('Unsupported network')
-      expect(() => new Run({ network: null })).to.throw('Unsupported network')
-    })
+      it('RunConnect used for test network', () => {
+        const run = new Run({ network: 'test', purse: undefined, owner: undefined })
+        expect(run.blockchain instanceof RunConnect).to.equal(true)
+        expect(run.cache instanceof RunConnect).to.equal(false)
+        expect(run.api).to.equal('run')
+      })
 
-    // ------------------------------------------------------------------------
+      // ------------------------------------------------------------------------
 
-    it('throws for bad api', () => {
-      expect(() => new Run({ api: 'bad' })).to.throw('Invalid API: bad')
-      expect(() => new Run({ api: null })).to.throw('Invalid API: null')
-      expect(() => new Run({ api: 123 })).to.throw('Invalid API: 123')
-    })
+      it('WhatsOnChain used for stn network', () => {
+        const run = new Run({ network: 'stn', purse: undefined, owner: undefined })
+        expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
+        expect(run.cache instanceof RunConnect).to.equal(false)
+        expect(run.api).to.equal('whatsonchain')
+      })
 
-    // ------------------------------------------------------------------------
+      // ------------------------------------------------------------------------
 
-    it('sets to default logger', () => {
-      expect(new Run().logger).to.equal(Run.defaults.logger)
-    })
+      it('Mockchain used for mock network', () => {
+        const run = new Run({ network: 'mock', purse: undefined, owner: undefined })
+        expect(run.blockchain instanceof Mockchain).to.equal(true)
+        expect(run.cache instanceof RunConnect).to.equal(false)
+        expect(run.api).to.equal(undefined)
+      })
 
-    // ------------------------------------------------------------------------
+      // ------------------------------------------------------------------------
 
-    it('null logger', () => {
-      const run = new Run({ logger: null })
-      expect(run.logger).to.equal(null)
+      it('throws for invalid network', () => {
+        expect(() => new Run({ network: '' })).to.throw('Unsupported network')
+        expect(() => new Run({ network: 'mainnet' })).to.throw('Unsupported network')
+        expect(() => new Run({ network: 'tester' })).to.throw('Unsupported network')
+        expect(() => new Run({ network: 'mocknet' })).to.throw('Unsupported network')
+        expect(() => new Run({ network: null })).to.throw('Unsupported network')
+      })
     })
   })
 
@@ -193,29 +240,6 @@ describe('Run', () => {
   /*
   describe('constructor', () => {
     describe('logger', () => {
-      it('should throw for invalid logger', () => {
-        expect(() => new Run({ logger: 1 })).to.throw('Invalid logger: 1')
-        expect(() => new Run({ logger: false })).to.throw('Invalid logger: false')
-        expect(() => new Run({ logger: 'none' })).to.throw('Invalid logger: "none"')
-      })
-
-      it('should accept custom logger', () => {
-        expect(() => new Run({ logger: {} })).not.to.throw()
-
-        // Create a basic info logger as an object
-        let loggedInfo = false
-        const run = new Run({ logger: { info: () => { loggedInfo = true } } })
-        run.logger.info('test')
-        expect(loggedInfo).to.equal(true)
-
-        // Create a basic error logger as a function object
-        let loggedError = false
-        const functionLogger = function () { }
-        functionLogger.error = () => { loggedError = true }
-        const run2 = new Run({ logger: functionLogger })
-        run2.logger.error('test')
-        expect(loggedError).to.equal(true)
-      })
     })
 
     describe('blockchain', () => {
