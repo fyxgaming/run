@@ -93,6 +93,32 @@ describe('Run', () => {
       })
     })
 
+    // --------------------------------------------------------------------------
+    // app
+    // --------------------------------------------------------------------------
+
+    describe('app', () => {
+      it('defaults to default', () => {
+        expect(new Run().app).to.equal(Run.defaults.app)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('custom app', () => {
+        expect(new Run({ app: '' }).app).to.equal('')
+        expect(new Run({ app: '123abc' }).app).to.equal('123abc')
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        expect(() => new Run({ app: undefined }).app).to.throw('Invalid app: undefined')
+        expect(() => new Run({ app: null }).app).to.throw('Invalid app: null')
+        expect(() => new Run({ app: 123 }).app).to.throw('Invalid app: 123')
+        expect(() => new Run({ app: new Map() }).app).to.throw('Invalid app: [object Map]')
+      })
+    })
+
     // ------------------------------------------------------------------------
     // logger
     // ------------------------------------------------------------------------
@@ -274,6 +300,17 @@ describe('Run', () => {
     it('change', () => {
       const run = new Run()
       run.app = 'abc'
+      expect(run.app).to.equal('abc')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      const run = new Run({ app: 'abc' })
+      expect(() => { run.app = undefined }).to.throw('Invalid app: undefined')
+      expect(() => { run.app = null }).to.throw('Invalid app: null')
+      expect(() => { run.app = false }).to.throw('Invalid app: false')
+      expect(() => { run.app = {} }).to.throw('Invalid app: [object Object]')
       expect(run.app).to.equal('abc')
     })
   })
