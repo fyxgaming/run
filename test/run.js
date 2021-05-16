@@ -60,7 +60,7 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it('custom logger', () => {
+      it('custom', () => {
         expect(() => new Run({ logger: {} })).not.to.throw()
 
         // Create a basic info logger as an object
@@ -173,13 +173,39 @@ describe('Run', () => {
   // --------------------------------------------------------------------------
 
   describe('logger', () => {
-    it('change', () => {
+    it('custom', () => {
       const run = new Run()
       const originalLogger = run.logger
       const logger = {}
       run.logger = logger
       expect(run.logger).to.equal(logger)
       expect(run.logger).not.to.equal(originalLogger)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('null', () => {
+      const run = new Run()
+      run.logger = null
+      expect(run.logger).to.equal(null)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('console', () => {
+      const run = new Run()
+      run.logger = console
+      expect(run.logger).to.equal(console)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      const run = new Run()
+      expect(() => { run.logger = 0 }).to.throw('Invalid logger: 0')
+      expect(() => { run.logger = true }).to.throw('Invalid logger: true')
+      expect(() => { run.logger = [] }).to.throw('Invalid logger: [object Array]')
+      expect(() => { run.logger = undefined }).to.throw('Invalid logger: undefined')
     })
   })
 
