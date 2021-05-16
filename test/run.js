@@ -84,6 +84,7 @@ describe('Run', () => {
         expect(() => new Run({ logger: 1 })).to.throw('Invalid logger: 1')
         expect(() => new Run({ logger: false })).to.throw('Invalid logger: false')
         expect(() => new Run({ logger: 'none' })).to.throw('Invalid logger: "none"')
+        expect(() => new Run({ logger: undefined })).to.throw('Invalid logger: undefined')
       })
     })
 
