@@ -181,6 +181,24 @@ describe('Run', () => {
         expect(run.api).to.equal('whatsonchain')
         expect(run.apiKey).to.equal('123')
       })
+
+      // ------------------------------------------------------------------------
+
+      it('custom', () => {
+        let fetched = false
+        const blockchain = {
+          network: 'main',
+          broadcast: async () => {},
+          fetch: async () => { fetched = true },
+          utxos: async () => {},
+          time: async () => 0,
+          spends: async () => null
+        }
+        const run = new Run({ blockchain })
+        run.blockchain.fetch()
+        expect(fetched).to.equal(true)
+        expect(run.blockchain).to.equal(blockchain)
+      })
     })
 
     // ------------------------------------------------------------------------
@@ -479,47 +497,14 @@ describe('Run', () => {
   /*
   describe('constructor', () => {
     describe('blockchain', () => {
-      it('should support setting blockchain api', () => {
-        const run = new Run({ api: 'whatsonchain', network: 'test' })
-        expect(run.blockchain instanceof RemoteBlockchain).to.equal(true)
-        expect(run.blockchain.api).to.equal('whatsonchain')
-        expect(run.blockchain.network).to.equal('test')
-      })
-
       it('should accept custom blockchain', () => {
-        let fetched = false
-        const blockchain = {
-          network: 'main',
-          broadcast: async () => {},
-          fetch: async () => { fetched = true },
-          utxos: async () => {},
-          time: async () => 0,
-          spends: async () => null
-        }
-        const run = new Run({ blockchain })
-        run.blockchain.fetch()
-        expect(fetched).to.equal(true)
-      })
-
-      it('should throw for null blockchain', () => {
-        expect(() => new Run({ blockchain: null })).to.throw('Invalid blockchain')
       })
 
       it('should throw for invalid blockchain', () => {
+        expect(() => new Run({ blockchain: null })).to.throw('Invalid blockchain')
         expect(() => new Run({ blockchain: 123 })).to.throw('Invalid blockchain: 123')
         expect(() => new Run({ blockchain: false })).to.throw('Invalid blockchain: false')
         expect(() => new Run({ blockchain: () => {} })).to.throw('Invalid blockchain: [anonymous function]')
-      })
-
-      it('should create blockchain for supported networks', () => {
-        const networks = ['main', 'test', 'mock', 'stn']
-        networks.forEach(network => {
-          expect(new Run({ network }).blockchain.network).to.equal(network)
-        })
-      })
-
-      it('should throw for unsupported networks', () => {
-        expect(() => new Run({ network: 'blah' })).to.throw('Unsupported network: blah')
       })
 
       it('should reuse blockchains', () => {
