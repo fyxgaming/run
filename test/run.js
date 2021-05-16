@@ -217,10 +217,17 @@ describe('Run', () => {
         expect(() => new Run({ blockchain })).to.throw('Invalid blockchain: [object Object]')
       })
 
+      // ------------------------------------------------------------------------
+
+      it('throws if incompatible settings', () => {
+        expect(() => new Run({ blockchain: new Mockchain(), api: 'run' })).to.throw('Blockchain mismatch with "run" api')
+        expect(() => new Run({ blockchain: new Mockchain(), network: 'main' })).to.throw('Blockchain mismatch with "main" network')
+        expect(() => new Run({ blockchain: new RunConnect(), network: 'mock' })).to.throw('Blockchain mismatch with "mock" network')
+        expect(() => new Run({ blockchain: new WhatsOnChain(), api: 'run' })).to.throw('Blockchain mismatch with "run" api')
+      })
+
       // TODO
       /*
-      it('throws if unsupported with other settings', () => {
-      })
 
       it('should reuse blockchains', () => {
         const run1 = new Run()
