@@ -218,6 +218,14 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
+      it('does not reuse blockchain if different apis', () => {
+        const run = new Run({ api: 'mattercloud', apiKey: 'abc', network: 'main' })
+        const run2 = new Run({ api: 'whatsonchain', apiKey: 'abc', network: 'main' })
+        expect(run.blockchain).not.to.equal(run2.blockchain)
+      })
+
+      // ------------------------------------------------------------------------
+
       it('throws if invalid', () => {
         expect(() => new Run({ blockchain: null })).to.throw('Invalid blockchain: null')
         expect(() => new Run({ blockchain: 123 })).to.throw('Invalid blockchain: 123')
