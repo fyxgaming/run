@@ -76,6 +76,19 @@ describe('Run', () => {
       expect(() => new Run({ api: null })).to.throw('Invalid API: null')
       expect(() => new Run({ api: 123 })).to.throw('Invalid API: 123')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('sets to default logger', () => {
+      expect(new Run().logger).to.equal(Run.defaults.logger)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('null logger', () => {
+      const run = new Run({ logger: null })
+      expect(run.logger).to.equal(null)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -180,14 +193,6 @@ describe('Run', () => {
   /*
   describe('constructor', () => {
     describe('logger', () => {
-      it('should create default logger', () => {
-        expect(!!new Run().logger).to.equal(true)
-      })
-
-      it('should accept null logger', () => {
-        expect(() => new Run({ logger: null })).not.to.throw()
-      })
-
       it('should throw for invalid logger', () => {
         expect(() => new Run({ logger: 1 })).to.throw('Invalid logger: 1')
         expect(() => new Run({ logger: false })).to.throw('Invalid logger: false')
