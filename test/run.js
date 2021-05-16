@@ -8,7 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('./env/run')
-const { RunConnect, WhatsOnChain, Mockchain } = Run.plugins
+const { RunConnect, MatterCloud, WhatsOnChain, Mockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Run
@@ -30,10 +30,44 @@ describe('Run', () => {
     // ------------------------------------------------------------------------
 
     describe('api', () => {
-      it('throws for bad api', () => {
+      it('defaults to default api', () => {
+        expect(new Run().api).to.equal(Run.defaults.api)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('run', () => {
+        expect(new Run({ api: 'run', network: 'main' }).blockchain instanceof RunConnect).to.equal(true)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('mattercloud', () => {
+        expect(new Run({ api: 'mattercloud', network: 'main' }).blockchain instanceof MatterCloud).to.equal(true)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('whatsonchain', () => {
+        expect(new Run({ api: 'whatsonchain', network: 'test' }).blockchain instanceof WhatsOnChain).to.equal(true)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if unsupported', () => {
+        expect(() => new Run({ api: 'run', network: 'mock' })).to.throw('"mock" network is not compatible with the "run" api')
+        expect(() => new Run({ api: 'run', network: 'stn' })).to.throw('RunConnect API does not support the "stn" network')
+        expect(() => new Run({ api: 'mattercloud', network: 'test' })).to.throw('MatterCloud API does not support the "test" network')
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        expect(() => new Run({ api: 'mock' })).to.throw('Invalid API: mock')
         expect(() => new Run({ api: 'bad' })).to.throw('Invalid API: bad')
         expect(() => new Run({ api: null })).to.throw('Invalid API: null')
         expect(() => new Run({ api: 123 })).to.throw('Invalid API: 123')
+        expect(() => new Run({ api: 'WhatsOnChain' })).to.throw('Invalid API: WhatsOnChain')
       })
     })
 

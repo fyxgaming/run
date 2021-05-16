@@ -39,11 +39,16 @@ describe('RunConnect', () => {
 
     // --------------------------------------------------------------------------------------------
 
-    it('throws if create with invalid network', () => {
-      expect(() => new RunConnect({ network: '' })).to.throw('Unsupported network: ')
-      expect(() => new RunConnect({ network: 'stn' })).to.throw('Unsupported network: stn')
-      expect(() => new RunConnect({ network: null })).to.throw('Unsupported network: null')
-      expect(() => new RunConnect({ network: 0 })).to.throw('Unsupported network: 0')
+    it('throws if unsupported network', () => {
+      expect(() => new RunConnect({ network: '' })).to.throw('RunConnect API does not support the "" network')
+      expect(() => new RunConnect({ network: 'stn' })).to.throw('RunConnect API does not support the "stn" network')
+    })
+
+    // --------------------------------------------------------------------------------------------
+
+    it('throws if invalid network', () => {
+      expect(() => new RunConnect({ network: null })).to.throw('Invalid network: null')
+      expect(() => new RunConnect({ network: 0 })).to.throw('Invalid network: 0')
     })
 
     // --------------------------------------------------------------------------------------------

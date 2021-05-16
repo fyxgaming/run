@@ -40,10 +40,16 @@ describe('WhatsOnChain', () => {
 
     // --------------------------------------------------------------------------------------------
 
-    it('throws if create with invalid network', () => {
-      expect(() => new WhatsOnChain({ network: '' })).to.throw('Unsupported network: ')
-      expect(() => new WhatsOnChain({ network: null })).to.throw('Unsupported network: null')
-      expect(() => new WhatsOnChain({ network: 0 })).to.throw('Unsupported network: 0')
+    it('throws if unsupported network', () => {
+      expect(() => new WhatsOnChain({ network: '' })).to.throw('WhatsOnChain API does not support the "" network')
+      expect(() => new WhatsOnChain({ network: 'mock' })).to.throw('WhatsOnChain API does not support the "mock" network')
+    })
+
+    // --------------------------------------------------------------------------------------------
+
+    it('throws if invalid network', () => {
+      expect(() => new WhatsOnChain({ network: null })).to.throw('Invalid network: null')
+      expect(() => new WhatsOnChain({ network: 0 })).to.throw('Invalid network: 0')
     })
 
     // --------------------------------------------------------------------------------------------

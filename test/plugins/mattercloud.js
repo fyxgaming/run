@@ -29,12 +29,17 @@ describe('MatterCloud', () => {
 
     // --------------------------------------------------------------------------------------------
 
-    it('throws if create with invalid network', () => {
-      expect(() => new MatterCloud({ network: '' })).to.throw('Unsupported network: ')
-      expect(() => new MatterCloud({ network: 'test' })).to.throw('Unsupported network: test')
-      expect(() => new MatterCloud({ network: 'stn' })).to.throw('Unsupported network: stn')
-      expect(() => new MatterCloud({ network: null })).to.throw('Unsupported network: null')
-      expect(() => new MatterCloud({ network: 0 })).to.throw('Unsupported network: 0')
+    it('throws if unsupported network', () => {
+      expect(() => new MatterCloud({ network: '' })).to.throw('MatterCloud API does not support the "" network')
+      expect(() => new MatterCloud({ network: 'test' })).to.throw('MatterCloud API does not support the "test" network')
+      expect(() => new MatterCloud({ network: 'stn' })).to.throw('MatterCloud API does not support the "stn" network')
+    })
+
+    // --------------------------------------------------------------------------------------------
+
+    it('throws if invalid network', () => {
+      expect(() => new MatterCloud({ network: null })).to.throw('Invalid network: null')
+      expect(() => new MatterCloud({ network: 0 })).to.throw('Invalid network: 0')
     })
 
     // --------------------------------------------------------------------------------------------
