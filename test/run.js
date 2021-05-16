@@ -159,6 +159,17 @@ describe('Run', () => {
         expect(run.api).to.equal('mattercloud')
         expect(run.apiKey).to.equal('abc')
       })
+
+      // ------------------------------------------------------------------------
+
+      it('whatsonchain', () => {
+        const blockchain = new WhatsOnChain({ network: 'test', apiKey: '123' })
+        const run = new Run({ blockchain })
+        expect(run.blockchain).to.equal(blockchain)
+        expect(run.network).to.equal('test')
+        expect(run.api).to.equal('whatsonchain')
+        expect(run.apiKey).to.equal('123')
+      })
     })
 
     // ------------------------------------------------------------------------
