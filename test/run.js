@@ -277,11 +277,12 @@ describe('Run', () => {
     // ------------------------------------------------------------------------
 
     it('throws if invalid', () => {
-      const run = new Run()
+      const run = new Run({ logger: console })
       expect(() => { run.logger = 0 }).to.throw('Invalid logger: 0')
       expect(() => { run.logger = true }).to.throw('Invalid logger: true')
       expect(() => { run.logger = [] }).to.throw('Invalid logger: [object Array]')
       expect(() => { run.logger = undefined }).to.throw('Invalid logger: undefined')
+      expect(run.logger).to.equal(console)
     })
   })
 
