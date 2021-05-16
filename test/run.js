@@ -464,6 +464,20 @@ describe('Run', () => {
   })
 
   // --------------------------------------------------------------------------
+  // blockchain
+  // --------------------------------------------------------------------------
+
+  describe('blockchain', () => {
+    it('change', () => {
+      const run = new Run({ api: 'whatsonchain', network: 'test', apiKey: 'abc' })
+      run.blockchain = new Mockchain()
+      expect(run.api).to.equal(undefined)
+      expect(run.apiKey).to.equal(undefined)
+      expect(run.network).to.equal('mock')
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // logger
   // --------------------------------------------------------------------------
 
