@@ -137,6 +137,17 @@ describe('Run', () => {
         const run = new Run({ network: 'mock' })
         expect(run.blockchain instanceof Mockchain).to.equal(true)
       })
+
+      // ------------------------------------------------------------------------
+
+      it('mockchain', () => {
+        const blockchain = new Mockchain()
+        const run = new Run({ blockchain })
+        expect(run.blockchain).to.equal(blockchain)
+        expect(run.network).to.equal('mock')
+        expect(run.api).to.equal(undefined)
+        expect(run.apiKey).to.equal(undefined)
+      })
     })
 
     // ------------------------------------------------------------------------
@@ -435,12 +446,6 @@ describe('Run', () => {
   /*
   describe('constructor', () => {
     describe('blockchain', () => {
-      it('should support creating mockchain', () => {
-        const run = new Run({ network: 'mock' })
-        expect(run.blockchain instanceof Mockchain).to.equal(true)
-        expect(run.blockchain.network).to.equal('mock')
-      })
-
       it('should support setting blockchain api', () => {
         const run = new Run({ api: 'whatsonchain', network: 'test' })
         expect(run.blockchain instanceof RemoteBlockchain).to.equal(true)
