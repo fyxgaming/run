@@ -120,6 +120,26 @@ describe('Run', () => {
     })
 
     // ------------------------------------------------------------------------
+    // blockchain
+    // ------------------------------------------------------------------------
+
+    describe('blockchain', () => {
+      it('defaults to api if main', () => {
+        const run = new Run({ api: 'run', network: 'main' })
+        expect(run.blockchain instanceof RunConnect).to.equal(true)
+        expect(run.blockchain.api).to.equal('run')
+        expect(run.blockchain.network).to.equal('main')
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('defaults to mockchain if mock', () => {
+        const run = new Run({ network: 'mock' })
+        expect(run.blockchain instanceof Mockchain).to.equal(true)
+      })
+    })
+
+    // ------------------------------------------------------------------------
     // logger
     // ------------------------------------------------------------------------
 
@@ -415,13 +435,6 @@ describe('Run', () => {
   /*
   describe('constructor', () => {
     describe('blockchain', () => {
-      it('should create default blockchain', () => {
-        const run = new Run({ network: 'main' })
-        expect(run.blockchain instanceof RemoteBlockchain).to.equal(true)
-        expect(run.blockchain.network).to.equal('main')
-        expect(run.blockchain.api).to.equal('run')
-      })
-
       it('should support creating mockchain', () => {
         const run = new Run({ network: 'mock' })
         expect(run.blockchain instanceof Mockchain).to.equal(true)
