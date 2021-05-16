@@ -148,6 +148,17 @@ describe('Run', () => {
         expect(run.api).to.equal(undefined)
         expect(run.apiKey).to.equal(undefined)
       })
+
+      // ------------------------------------------------------------------------
+
+      it('mattercloud', () => {
+        const blockchain = new MatterCloud({ apiKey: 'abc' })
+        const run = new Run({ blockchain })
+        expect(run.blockchain).to.equal(blockchain)
+        expect(run.network).to.equal('main')
+        expect(run.api).to.equal('mattercloud')
+        expect(run.apiKey).to.equal('abc')
+      })
     })
 
     // ------------------------------------------------------------------------
