@@ -414,9 +414,6 @@ describe('Run', () => {
   // TODO
   /*
   describe('constructor', () => {
-    describe('logger', () => {
-    })
-
     describe('blockchain', () => {
       it('should create default blockchain', () => {
         const run = new Run({ network: 'main' })
@@ -478,25 +475,6 @@ describe('Run', () => {
         const run1 = new Run()
         const run2 = new Run()
         expect(run1.blockchain).to.equal(run2.blockchain)
-      })
-    })
-
-    describe('app', () => {
-      it('should default to empty app string', () => {
-        const oldApp = Run.defaults.app
-        Run.defaults.app = undefined
-        expect(new Run().app).to.equal('')
-        Run.defaults.app = oldApp
-      })
-
-      it('should support custom app name', () => {
-        expect(new Run({ app: 'biz' }).app).to.equal('biz')
-      })
-
-      it('should throw if bad app name', () => {
-        expect(() => new Run({ app: 0 })).to.throw('Invalid app: 0')
-        expect(() => new Run({ app: true })).to.throw('Invalid app: true')
-        expect(() => new Run({ app: { name: 'biz' } })).to.throw('Invalid app: [object Object]')
       })
     })
 
