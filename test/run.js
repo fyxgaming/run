@@ -202,6 +202,14 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
+      it('resuses mockchain', () => {
+        const run = new Run({ network: 'mock' })
+        const run2 = new Run({ network: 'mock' })
+        expect(run.blockchain).to.equal(run2.blockchain)
+      })
+
+      // ------------------------------------------------------------------------
+
       it('throws if invalid', () => {
         expect(() => new Run({ blockchain: null })).to.throw('Invalid blockchain: null')
         expect(() => new Run({ blockchain: 123 })).to.throw('Invalid blockchain: 123')
@@ -225,16 +233,6 @@ describe('Run', () => {
         expect(() => new Run({ blockchain: new RunConnect(), network: 'mock' })).to.throw('Blockchain mismatch with "mock" network')
         expect(() => new Run({ blockchain: new WhatsOnChain(), api: 'run' })).to.throw('Blockchain mismatch with "run" api')
       })
-
-      // TODO
-      /*
-
-      it('should reuse blockchains', () => {
-        const run1 = new Run()
-        const run2 = new Run()
-        expect(run1.blockchain).to.equal(run2.blockchain)
-      })
-      */
     })
 
     // ------------------------------------------------------------------------
