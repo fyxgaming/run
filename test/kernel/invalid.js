@@ -280,7 +280,7 @@ describe('Invalid', () => {
       const config = buildDeployConfig()
       config.metadata.cre[0] = 'abc'
       const rawtx = createRunTransaction(config)
-      await expect(run.import(rawtx)).to.be.rejectedWith('Address too short: abc')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Invalid owner: "abc"')
     })
 
     // ------------------------------------------------------------------------
