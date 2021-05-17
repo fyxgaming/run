@@ -6,9 +6,10 @@
 
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
-const { stub} = require('sinon')
+const { stub } = require('sinon')
 const { expect } = require('chai')
 const Run = require('./env/run')
+const { Jig } = Run
 const { RunConnect, MatterCloud, WhatsOnChain, Mockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
@@ -571,7 +572,7 @@ describe('Run', () => {
 
   describe('debug', () => {
     it('enable', async () => {
-      const logger = stub({ info: () => {}, warn: ()=>{}, error: ()=>{}, debug: ()=>{} })
+      const logger = stub({ info: () => {}, warn: () => {}, error: () => {}, debug: () => {} })
       const run = new Run({ logger })
       run.debug = false
       class A extends Jig { }
@@ -583,8 +584,8 @@ describe('Run', () => {
     // ------------------------------------------------------------------------
 
     it('disable', async () => {
-      const logger = stub({ info: () => {}, warn: ()=>{}, error: ()=>{}, debug: ()=>{} })
-      const run = new Run({ debug: true, logger })
+      const logger = stub({ info: () => {}, warn: () => {}, error: () => {}, debug: () => {} })
+      new Run({ debug: true, logger }) // eslint-disable-line
       class A extends Jig { }
       const a = new A()
       await a.sync()
