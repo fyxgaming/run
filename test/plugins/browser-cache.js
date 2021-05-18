@@ -3,13 +3,13 @@
  *
  * Tests for lib/plugins/browser-cache.js
  */
-/* global VARIANT */
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { spy } = require('sinon')
 const unmangle = require('../env/unmangle')
 const Run = require('../env/run')
+const { BROWSER } = require('../env/config')
 const { BrowserCache, LocalCache, IndexedDbCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ describe('BrowserCache', () => {
   // --------------------------------------------------------------------------
 
   // Tests when running in node where IndexedDbCache is not supported
-  if (typeof VARIANT === 'undefined' || VARIANT !== 'browser') {
+  if (!BROWSER) {
     describe('non-browser', () => {
       it('null if not a browser', () => {
         expect(BrowserCache).to.equal(null)

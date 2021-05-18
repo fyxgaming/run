@@ -3,6 +3,7 @@
  *
  * Tests for lib/extra/txo.js
  */
+/* global VARIANT */
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')

@@ -3,12 +3,12 @@
  *
  * Tests for lib/plugins/indexeddb-cache.js
  */
-/* global VARIANT */
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 require('chai').use(require('chai-as-promised'))
 const unmangle = require('../env/unmangle')
+const { BROWSER } = require('../env/config')
 const Run = require('../env/run')
 const { IndexedDbCache } = Run.plugins
 
@@ -22,7 +22,7 @@ describe('IndexedDbCache', () => {
   // --------------------------------------------------------------------------
 
   // Tests when running in node where IndexedDbCache is not supported
-  if (typeof VARIANT === 'undefined' || VARIANT !== 'browser') {
+  if (!BROWSER) {
     describe('non-browser', () => {
       it('null if not a browser', () => {
         expect(IndexedDbCache).to.equal(null)

@@ -4,15 +4,13 @@
  * Captures reference transactions
  */
 
-/* global VARIANT */
-
 const { describe, it, beforeEach, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
-const fs = (typeof VARIANT === 'undefined' || VARIANT === 'node') && require('fs-extra')
+const { COVER, BROWSER } = require('../env/config')
+const fs = !BROWSER && require('fs-extra')
 const bsv = require('bsv')
 const Run = require('../env/run')
 const { Mockchain } = Run.plugins
-const { COVER } = require('../env/config')
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -53,7 +51,7 @@ describe('Capture', () => {
 
 function enableUnitCaptureMode () {
   // Browsers cannot save to disk
-  if (typeof VARIANT !== 'undefined' && VARIANT === 'browser') throw new Error('Not supported')
+  if (BROWSER) throw new Error('Not supported')
 
   process.on('exit', async () => {
     const tests = []

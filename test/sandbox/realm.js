@@ -4,13 +4,12 @@
  * Master list of tests
  */
 
-/* global VARIANT */
-
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const DeterministicRealm = unmangle(Run)._DeterministicRealm
+const { BROWSER } = require('../env/config')
 const { Jig } = Run
 
 // ------------------------------------------------------------------------------------------------
@@ -373,7 +372,7 @@ describe('DeterministicRealm', () => {
   // browser
   // --------------------------------------------------------------------------
 
-  if (typeof VARIANT !== 'undefined' && VARIANT === 'browser') {
+  if (BROWSER) {
     const { JSDOM } = require('jsdom')
 
     describe('browser', () => {

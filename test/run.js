@@ -10,7 +10,8 @@ const { stub } = require('sinon')
 const { expect } = require('chai')
 const Run = require('./env/run')
 const { Jig } = Run
-const { RunConnect, MatterCloud, WhatsOnChain, Mockchain } = Run.plugins
+const { RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, BrowserCache } = Run.plugins
+const { BROWSER } = require('./env/config')
 
 // ------------------------------------------------------------------------------------------------
 // Run
@@ -135,7 +136,7 @@ describe('Run', () => {
       it('true', async () => {
         const run = new Run({ autofund: true, network: 'mock' })
         expect(run.autofund).to.equal(true)
-        expect ((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
+        expect((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
       })
 
       // ------------------------------------------------------------------------
@@ -143,7 +144,7 @@ describe('Run', () => {
       it('false', async () => {
         const run = new Run({ autofund: false, network: 'mock' })
         expect(run.autofund).to.equal(false)
-        expect ((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(false)
+        expect((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(false)
       })
 
       // ------------------------------------------------------------------------
@@ -302,6 +303,23 @@ describe('Run', () => {
         expect(() => new Run({ blockchain: new RunConnect(), network: 'mock' })).to.throw('Blockchain mismatch with "mock" network')
         expect(() => new Run({ blockchain: new WhatsOnChain(), api: 'run' })).to.throw('Blockchain mismatch with "run" api')
       })
+    })
+
+    // --------------------------------------------------------------------------
+    // cache
+    // --------------------------------------------------------------------------
+
+    describe('cache', () => {
+      if (BROWSER) {
+        it('defaults to BrowserCache if browser', () => {
+          expect(new Run().cache instanceof BrowserCache).to.equal(true)
+          expect(new Run().cache.localCache instanceof LocalCache).to.equal(true)
+        })
+      } else {
+        it('defaults to LocalCache if node', () => {
+          expect(new Run().cache instanceof LocalCache).to.equal(true)
+        })
+      }
     })
 
     // --------------------------------------------------------------------------
@@ -561,16 +579,16 @@ describe('Run', () => {
       const run = new Run({ network: 'mock', autofund: false })
       run.autofund = true
       expect(run.autofund).to.equal(true)
-      expect ((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
+      expect((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
-    
+
     it('disable', async () => {
       const run = new Run({ network: 'mock', autofund: true })
       run.autofund = false
       expect(run.autofund).to.equal(false)
-      expect ((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
+      expect((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
