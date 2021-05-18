@@ -350,6 +350,8 @@ describe('Run', () => {
         expect(() => new Run({ cache: new Set() })).to.throw('Invalid cache: [object Set]')
         expect(() => new Run({ cache: { get: () => { } } })).to.throw('Invalid cache: [object Object]')
         expect(() => new Run({ cache: { set: () => { } } })).to.throw('Invalid cache: [object Object]')
+        expect(() => new Run({ cache: { get: () => { }, set: 1 } })).to.throw('Invalid cache: [object Object]')
+        expect(() => new Run({ cache: { get: null, set: () => {} } })).to.throw('Invalid cache: [object Object]')
       })
     })
 
@@ -656,6 +658,31 @@ describe('Run', () => {
       expect(() => { run.blockchain = {} }).to.throw('Invalid blockchain: [object Object]')
       expect(() => { run.blockchain = true }).to.throw('Invalid blockchain: true')
       expect(run.blockchain).to.equal(blockchain)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // cache
+  // --------------------------------------------------------------------------
+
+  describe('cache', () => {
+    it('change', () => {
+      const run = new Run()
+      const cache = new Map()
+      run.cache = cache
+      expect(run.cache === cache).to.equal(true)
+      expect(cache.size).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      const run = new Run()
+      const cache = run.cache
+      expect(() => { run.cache = null }).to.throw('Invalid cache: null')
+      expect(() => { run.cache = { get: () => { } } }).to.throw('Invalid cache: [object Object]')
+      expect(() => { run.cache = false }).to.throw('Invalid cache: false')
+      expect(run.cache).to.equal(cache)
     })
   })
 
