@@ -330,9 +330,26 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
+      it('map', () => {
+        const cache = new Map()
+        expect(new Run({ cache }).cache).to.equal(cache)
+      })
+
+      // ------------------------------------------------------------------------
+
       it('custom', () => {
         const cache = { get: () => { }, set: () => { } }
         expect(new Run({ cache }).cache).to.equal(cache)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        expect(() => new Run({ cache: null })).to.throw('Invalid cache: null')
+        expect(() => new Run({ cache: {} })).to.throw('Invalid cache: [object Object]')
+        expect(() => new Run({ cache: new Set() })).to.throw('Invalid cache: [object Set]')
+        expect(() => new Run({ cache: { get: () => { } } })).to.throw('Invalid cache: [object Object]')
+        expect(() => new Run({ cache: { set: () => { } } })).to.throw('Invalid cache: [object Object]')
       })
     })
 
