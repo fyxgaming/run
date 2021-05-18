@@ -327,6 +327,13 @@ describe('Run', () => {
         const cache = new LocalCache()
         expect(new Run({ cache }).cache).to.equal(cache)
       })
+
+      // ------------------------------------------------------------------------
+
+      it('custom', () => {
+        const cache = { get: () => { }, set: () => { } }
+        expect(new Run({ cache }).cache).to.equal(cache)
+      })
     })
 
     // --------------------------------------------------------------------------
