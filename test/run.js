@@ -281,6 +281,7 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('throws if invalid', () => {
+        expect(() => new Run({ blockchain: undefined })).to.throw('Invalid blockchain: undefined')
         expect(() => new Run({ blockchain: null })).to.throw('Invalid blockchain: null')
         expect(() => new Run({ blockchain: 123 })).to.throw('Invalid blockchain: 123')
         expect(() => new Run({ blockchain: false })).to.throw('Invalid blockchain: false')
@@ -345,6 +346,7 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('throws if invalid', () => {
+        expect(() => new Run({ cache: undefined })).to.throw('Invalid cache: undefined')
         expect(() => new Run({ cache: null })).to.throw('Invalid cache: null')
         expect(() => new Run({ cache: {} })).to.throw('Invalid cache: [object Object]')
         expect(() => new Run({ cache: new Set() })).to.throw('Invalid cache: [object Set]')
@@ -654,6 +656,7 @@ describe('Run', () => {
     it('throws if invalid', () => {
       const run = new Run()
       const blockchain = run.blockchain
+      expect(() => { run.blockchain = undefined }).to.throw('Invalid blockchain: undefined')
       expect(() => { run.blockchain = null }).to.throw('Invalid blockchain: null')
       expect(() => { run.blockchain = {} }).to.throw('Invalid blockchain: [object Object]')
       expect(() => { run.blockchain = true }).to.throw('Invalid blockchain: true')
@@ -679,6 +682,7 @@ describe('Run', () => {
     it('throws if invalid', () => {
       const run = new Run()
       const cache = run.cache
+      expect(() => { run.cache = undefined }).to.throw('Invalid cache: undefined')
       expect(() => { run.cache = null }).to.throw('Invalid cache: null')
       expect(() => { run.cache = { get: () => { } } }).to.throw('Invalid cache: [object Object]')
       expect(() => { run.cache = false }).to.throw('Invalid cache: false')
