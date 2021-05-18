@@ -320,6 +320,13 @@ describe('Run', () => {
           expect(new Run().cache instanceof LocalCache).to.equal(true)
         })
       }
+
+      // ------------------------------------------------------------------------
+
+      it('local cache', () => {
+        const cache = new LocalCache()
+        expect(new Run({ cache }).cache).to.equal(cache)
+      })
     })
 
     // --------------------------------------------------------------------------
