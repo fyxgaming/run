@@ -78,12 +78,14 @@ describe('_check', () => {
 
     // ----------------------------------------------------------------------
 
-    it('node 10-14 supported', () => {
+    it('node 10-16 supported', () => {
       testNodeVersion('v10.15.3')
       testNodeVersion('v11.15.0')
       testNodeVersion('v12.3.1')
       testNodeVersion('v13.11.0')
       testNodeVersion('v14.15.1')
+      testNodeVersion('v15.3.0')
+      testNodeVersion('v16.1.0')
     })
 
     // ----------------------------------------------------------------------
