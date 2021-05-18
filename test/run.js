@@ -121,6 +121,41 @@ describe('Run', () => {
       })
     })
 
+    // --------------------------------------------------------------------------
+    // autofund
+    // --------------------------------------------------------------------------
+
+    describe('autofund', () => {
+      it('defaults to default', () => {
+        expect(new Run().autofund).to.equal(Run.defaults.autofund)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('true', async () => {
+        const run = new Run({ autofund: true, network: 'mock' })
+        expect(run.autofund).to.equal(true)
+        expect ((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('false', async () => {
+        const run = new Run({ autofund: false, network: 'mock' })
+        expect(run.autofund).to.equal(false)
+        expect ((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(false)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        expect(() => new Run({ autofund: undefined })).to.throw('Invalid autofund: undefined')
+        expect(() => new Run({ autofund: null })).to.throw('Invalid autofund: null')
+        expect(() => new Run({ autofund: -1 })).to.throw('Invalid autofund: -1')
+        expect(() => new Run({ autofund: new Set() })).to.throw('Invalid autofund: [object Set]')
+      })
+    })
+
     // ------------------------------------------------------------------------
     // blockchain
     // ------------------------------------------------------------------------
@@ -514,6 +549,39 @@ describe('Run', () => {
       expect(() => { run.app = false }).to.throw('Invalid app: false')
       expect(() => { run.app = {} }).to.throw('Invalid app: [object Object]')
       expect(run.app).to.equal('abc')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // autofund
+  // --------------------------------------------------------------------------
+
+  describe('autofund', () => {
+    it('enable', async () => {
+      const run = new Run({ network: 'mock', autofund: false })
+      run.autofund = true
+      expect(run.autofund).to.equal(true)
+      expect ((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+    
+    it('disable', async () => {
+      const run = new Run({ network: 'mock', autofund: true })
+      run.autofund = false
+      expect(run.autofund).to.equal(false)
+      expect ((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      const run = new Run({ autofund: true })
+      expect(() => { run.autofund = undefined }).to.throw('Invalid autofund: undefined')
+      expect(() => { run.autofund = null }).to.throw('Invalid autofund: null')
+      expect(() => { run.autofund = 'abc' }).to.throw('Invalid autofund: abc')
+      expect(() => { run.autofund = NaN }).to.throw('Invalid autofund: NaN')
+      expect(run.autofund).to.equal(true)
     })
   })
 
