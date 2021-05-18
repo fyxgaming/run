@@ -36,7 +36,7 @@ describe('Tx', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('parses OP_PUSHDATA2', () => {
+  it('parses OP_PUSHDATA2', () => {
     const bsvtx = new bsv.Transaction()
     const data = Buffer.from(new Array(100000).fill(1)).toString('hex')
     const script = bsv.Script.fromASM(`${data}`)
