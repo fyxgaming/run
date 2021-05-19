@@ -381,6 +381,15 @@ describe('Sync', () => {
       await CA.sync()
       expect(CA.location.length).to.equal(67)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if called inside', () => {
+      const run = new Run()
+      class A extends Jig { static f () { this.sync() } }
+      const CA = run.deploy(A)
+      expect(() => CA.f()).to.throw('sync cannot be called internally')
+    })
   })
 
   // --------------------------------------------------------------------------
