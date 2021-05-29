@@ -2164,6 +2164,25 @@ describe('Deploy', () => {
 
       expect(() => run.deploy(B)).to.throw('A must have presets')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if presets have origin and location are same but nonce is greater than 1', () => {
+      const run = new Run()
+      const network = run.blockchain.network
+      class A { }
+      const location = randomLocation()
+      A.presets = {
+        [network]: {
+          location: location,
+          origin: location,
+          nonce: 2,
+          owner: randomOwner(),
+          satoshis: 0
+        }
+      }
+      expect(() => run.deploy(A)).to.throw('Bad nonce or location')
+    })
   })
 
   // --------------------------------------------------------------------------
