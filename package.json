@@ -6,8 +6,7 @@
   "main": "dist/run.node.min.js",
   "browser": "dist/run.browser.min.js",
   "files": [
-    "dist/**.min.js",
-    "examples"
+    "dist/**.min.js"
   ],
   "repository": "git://github.com/runonbitcoin/run.git",
   "scripts": {
@@ -30,9 +29,6 @@
   "standard": {
     "globals": [
       "caller"
-    ],
-    "ignore": [
-      "examples/**"
     ]
   },
   "devDependencies": {
