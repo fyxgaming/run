@@ -12,6 +12,7 @@ const Run = require('./env/run')
 const { Jig } = Run
 const { RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, BrowserCache, Inventory } = Run.plugins
 const { BROWSER } = require('./env/config')
+const PrivateKey = require('bsv/lib/privatekey')
 
 // ------------------------------------------------------------------------------------------------
 // Run
@@ -831,6 +832,41 @@ describe('Run', () => {
       expect(() => { run.debug = 'abc' }).to.throw('Invalid debug: abc')
       expect(() => { run.debug = {} }).to.throw('Invalid debug: [object Object]')
       expect(run.debug).to.equal(true)
+    })
+  })
+
+  // ------------------------------------------------------------------------
+  // inventory
+  // ------------------------------------------------------------------------
+
+  describe('inventory', () => {
+    it('set inventory', () => {
+      const inventory = new Inventory()
+      const run = new Run()
+      run.inventory = inventory
+      expect(run.inventory).to.equal(inventory)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      const run = new Run()
+      const inventory = run.inventory
+      expect(() => { run.inventory = undefined }).to.throw('Invalid inventory: undefined')
+      expect(() => { run.inventory = null }).to.throw('Invalid inventory: null')
+      expect(() => { run.inventory = true }).to.throw('Invalid inventory: true')
+      expect(() => { run.inventory = [] }).to.throw('Invalid inventory: [object Array]')
+      expect(() => { run.inventory = 'abc' }).to.throw('Invalid inventory: "abc"')
+      expect(run.inventory).to.equal(inventory)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('changes when change owner', () => {
+      const run = new Run()
+      const inventory = run.inventory
+      run.owner = new PrivateKey().toString()
+      expect(run.inventory).not.to.equal(inventory)
     })
   })
 
