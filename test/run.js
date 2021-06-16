@@ -66,11 +66,11 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('throws if invalid', () => {
-        expect(() => new Run({ api: 'mock' })).to.throw('Invalid API: mock')
-        expect(() => new Run({ api: 'bad' })).to.throw('Invalid API: bad')
-        expect(() => new Run({ api: null })).to.throw('Invalid API: null')
-        expect(() => new Run({ api: 123 })).to.throw('Invalid API: 123')
-        expect(() => new Run({ api: 'WhatsOnChain' })).to.throw('Invalid API: WhatsOnChain')
+        expect(() => new Run({ api: 'mock' })).to.throw('Invalid api: mock')
+        expect(() => new Run({ api: 'bad' })).to.throw('Invalid api: bad')
+        expect(() => new Run({ api: null })).to.throw('Invalid api: null')
+        expect(() => new Run({ api: 123 })).to.throw('Invalid api: 123')
+        expect(() => new Run({ api: 'WhatsOnChain' })).to.throw('Invalid api: WhatsOnChain')
       })
     })
 
@@ -92,7 +92,7 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('throws if invalid', () => {
-        expect(() => new Run({ network: 'main', api: 'whatsonchain', apiKey: null })).to.throw('Invalid API key: null')
+        expect(() => new Run({ network: 'main', api: 'whatsonchain', apiKey: null })).to.throw('Invalid apiKey: null')
       })
     })
 
@@ -194,8 +194,10 @@ describe('Run', () => {
         const run = new Run({ blockchain })
         expect(run.blockchain).to.equal(blockchain)
         expect(run.network).to.equal('main')
-        expect(run.api).to.equal('run')
+        expect(run.api).to.equal(undefined)
         expect(run.apiKey).to.equal(undefined)
+        expect(run.blockchain.api).to.equal('run')
+        expect(run.blockchain.apiKey).to.equal(undefined)
       })
 
       // ------------------------------------------------------------------------
@@ -205,8 +207,10 @@ describe('Run', () => {
         const run = new Run({ blockchain })
         expect(run.blockchain).to.equal(blockchain)
         expect(run.network).to.equal('main')
-        expect(run.api).to.equal('mattercloud')
-        expect(run.apiKey).to.equal('abc')
+        expect(run.api).to.equal(undefined)
+        expect(run.apiKey).to.equal(undefined)
+        expect(run.blockchain.api).to.equal('mattercloud')
+        expect(run.blockchain.apiKey).to.equal('abc')
       })
 
       // ------------------------------------------------------------------------
@@ -216,8 +220,10 @@ describe('Run', () => {
         const run = new Run({ blockchain })
         expect(run.blockchain).to.equal(blockchain)
         expect(run.network).to.equal('test')
-        expect(run.api).to.equal('whatsonchain')
-        expect(run.apiKey).to.equal('123')
+        expect(run.api).to.equal(undefined)
+        expect(run.apiKey).to.equal(undefined)
+        expect(run.blockchain.api).to.equal('whatsonchain')
+        expect(run.blockchain.apiKey).to.equal('123')
       })
 
       // ------------------------------------------------------------------------
@@ -559,13 +565,25 @@ describe('Run', () => {
 
     it('throws if invalid', () => {
       const run = new Run({ api: 'run', network: 'test' })
-      expect(() => { run.api = 'mock' }).to.throw('Invalid API: mock')
-      expect(() => { run.api = 'bad' }).to.throw('Invalid API: bad')
-      expect(() => { run.api = null }).to.throw('Invalid API: null')
-      expect(() => { run.api = 123 }).to.throw('Invalid API: 123')
+      expect(() => { run.api = 'mock' }).to.throw('Invalid api: mock')
+      expect(() => { run.api = 'bad' }).to.throw('Invalid api: bad')
+      expect(() => { run.api = null }).to.throw('Invalid api: null')
+      expect(() => { run.api = 123 }).to.throw('Invalid api: 123')
       expect(run.api).to.equal('run')
       expect(run.blockchain instanceof RunConnect).to.equal(true)
       expect(run.network).to.equal('test')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('change blockchain', () => {
+      const run = new Run({ api: 'run', network: 'main' })
+      run.blockchain = new Run.plugins.WhatsOnChain()
+      expect(run.api).to.equal(undefined)
+      run.blockchain = new Run.plugins.RunConnect()
+      expect(run.api).to.equal(undefined)
+      run.blockchain = new Run.plugins.Mockchain()
+      expect(run.api).to.equal(undefined)
     })
   })
 
