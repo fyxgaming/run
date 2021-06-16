@@ -528,6 +528,7 @@ describe('Run', () => {
       run.api = 'run'
       expect(run.api).to.equal('run')
       expect(run.blockchain instanceof RunConnect).to.equal(true)
+      expect(run.cache instanceof RunConnect).to.equal(true)
       expect(run.network).to.equal('main')
     })
 
@@ -538,6 +539,7 @@ describe('Run', () => {
       run.api = 'mattercloud'
       expect(run.api).to.equal('mattercloud')
       expect(run.blockchain instanceof MatterCloud).to.equal(true)
+      expect(run.cache instanceof RunConnect).to.equal(false)
       expect(run.network).to.equal('main')
     })
 
@@ -548,6 +550,7 @@ describe('Run', () => {
       run.api = 'whatsonchain'
       expect(run.api).to.equal('whatsonchain')
       expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
+      expect(run.cache instanceof RunConnect).to.equal(false)
       expect(run.network).to.equal('test')
     })
 
