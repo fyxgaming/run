@@ -10,7 +10,7 @@ const { stub } = require('sinon')
 const { expect } = require('chai')
 const Run = require('./env/run')
 const { Jig } = Run
-const { RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, BrowserCache } = Run.plugins
+const { RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, BrowserCache, Inventory } = Run.plugins
 const { BROWSER } = require('./env/config')
 
 // ------------------------------------------------------------------------------------------------
@@ -429,6 +429,41 @@ describe('Run', () => {
         expect(() => new Run({ debug: null })).to.throw('Invalid debug: null')
         expect(() => new Run({ debug: 1 })).to.throw('Invalid debug: 1')
         expect(() => new Run({ debug: () => {} })).to.throw('Invalid debug: () => {}')
+      })
+    })
+
+    // ------------------------------------------------------------------------
+    // inventory
+    // ------------------------------------------------------------------------
+
+    describe('inventory', () => {
+      it('defaults to new inventory', () => {
+        expect(new Run().inventory instanceof Inventory).to.equal(true)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('may pass existing inventory', () => {
+        const inventory = new Inventory()
+        expect(new Run({ inventory }).inventory).to.equal(inventory)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        expect(() => new Run({ inventory: undefined })).to.throw('Invalid inventory: undefined')
+        expect(() => new Run({ inventory: null })).to.throw('Invalid inventory: null')
+        expect(() => new Run({ inventory: true })).to.throw('Invalid inventory: true')
+        expect(() => new Run({ inventory: {} })).to.throw('Invalid inventory: [object Object]')
+        expect(() => new Run({ inventory: 123 })).to.throw('Invalid inventory: 123')
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('does not reuse across run instances', () => {
+        const run = new Run()
+        const run2 = new Run()
+        expect(run.inventory).not.to.equal(run2.inventory)
       })
     })
 
