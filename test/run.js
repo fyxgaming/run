@@ -67,11 +67,11 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('throws if invalid', () => {
-        expect(() => new Run({ api: 'mock' })).to.throw('Invalid api: mock')
-        expect(() => new Run({ api: 'bad' })).to.throw('Invalid api: bad')
+        expect(() => new Run({ api: 'mock' })).to.throw('Invalid api: "mock"')
+        expect(() => new Run({ api: 'bad' })).to.throw('Invalid api: "bad"')
         expect(() => new Run({ api: null })).to.throw('Invalid api: null')
         expect(() => new Run({ api: 123 })).to.throw('Invalid api: 123')
-        expect(() => new Run({ api: 'WhatsOnChain' })).to.throw('Invalid api: WhatsOnChain')
+        expect(() => new Run({ api: 'WhatsOnChain' })).to.throw('Invalid api: "WhatsOnChain"')
       })
     })
 
@@ -429,7 +429,7 @@ describe('Run', () => {
         expect(() => new Run({ debug: undefined })).to.throw('Invalid debug: undefined')
         expect(() => new Run({ debug: null })).to.throw('Invalid debug: null')
         expect(() => new Run({ debug: 1 })).to.throw('Invalid debug: 1')
-        expect(() => new Run({ debug: () => {} })).to.throw('Invalid debug: () => {}')
+        expect(() => new Run({ debug: () => {} })).to.throw('Invalid debug: [anonymous function]')
       })
     })
 
@@ -620,8 +620,8 @@ describe('Run', () => {
 
     it('throws if invalid', () => {
       const run = new Run({ api: 'run', network: 'test' })
-      expect(() => { run.api = 'mock' }).to.throw('Invalid api: mock')
-      expect(() => { run.api = 'bad' }).to.throw('Invalid api: bad')
+      expect(() => { run.api = 'mock' }).to.throw('Invalid api: "mock"')
+      expect(() => { run.api = 'bad' }).to.throw('Invalid api: "bad"')
       expect(() => { run.api = null }).to.throw('Invalid api: null')
       expect(() => { run.api = 123 }).to.throw('Invalid api: 123')
       expect(run.api).to.equal('run')
@@ -706,7 +706,7 @@ describe('Run', () => {
       const run = new Run({ autofund: true })
       expect(() => { run.autofund = undefined }).to.throw('Invalid autofund: undefined')
       expect(() => { run.autofund = null }).to.throw('Invalid autofund: null')
-      expect(() => { run.autofund = 'abc' }).to.throw('Invalid autofund: abc')
+      expect(() => { run.autofund = 'abc' }).to.throw('Invalid autofund: "abc"')
       expect(() => { run.autofund = NaN }).to.throw('Invalid autofund: NaN')
       expect(run.autofund).to.equal(true)
     })
@@ -782,7 +782,7 @@ describe('Run', () => {
       const run = new Run({ client: true })
       expect(() => { run.client = undefined }).to.throw('Invalid client: undefined')
       expect(() => { run.client = null }).to.throw('Invalid client: null')
-      expect(() => { run.client = 'abc' }).to.throw('Invalid client: abc')
+      expect(() => { run.client = 'abc' }).to.throw('Invalid client: "abc"')
       expect(() => { run.client = {} }).to.throw('Invalid client: [object Object]')
       expect(run.client).to.equal(true)
     })
@@ -829,7 +829,7 @@ describe('Run', () => {
       const run = new Run({ debug: true })
       expect(() => { run.debug = undefined }).to.throw('Invalid debug: undefined')
       expect(() => { run.debug = null }).to.throw('Invalid debug: null')
-      expect(() => { run.debug = 'abc' }).to.throw('Invalid debug: abc')
+      expect(() => { run.debug = 'abc' }).to.throw('Invalid debug: "abc"')
       expect(() => { run.debug = {} }).to.throw('Invalid debug: [object Object]')
       expect(run.debug).to.equal(true)
     })
