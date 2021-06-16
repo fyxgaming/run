@@ -352,6 +352,22 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
+      it('reuses cache if same network', () => {
+        const run = new Run()
+        const run2 = new Run()
+        expect(run.cache).to.equal(run2.cache)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('does not reuse cache if different networks', () => {
+        const run = new Run({ network: 'main' })
+        const run2 = new Run({ network: 'mock' })
+        expect(run.cache).not.to.equal(run2.cache)
+      })
+
+      // ------------------------------------------------------------------------
+
       it('throws if invalid', () => {
         expect(() => new Run({ cache: undefined })).to.throw('Invalid cache: undefined')
         expect(() => new Run({ cache: null })).to.throw('Invalid cache: null')
