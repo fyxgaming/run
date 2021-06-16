@@ -8,11 +8,11 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { stub } = require('sinon')
 const { expect } = require('chai')
+const bsv = require('bsv')
 const Run = require('./env/run')
 const { Jig } = Run
 const { RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, BrowserCache, Inventory } = Run.plugins
 const { BROWSER } = require('./env/config')
-const PrivateKey = require('bsv/lib/privatekey')
 
 // ------------------------------------------------------------------------------------------------
 // Run
@@ -865,7 +865,7 @@ describe('Run', () => {
     it('changes when change owner', () => {
       const run = new Run()
       const inventory = run.inventory
-      run.owner = new PrivateKey().toString()
+      run.owner = new bsv.PrivateKey().toString()
       expect(run.inventory).not.to.equal(inventory)
     })
   })
