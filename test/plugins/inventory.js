@@ -495,6 +495,37 @@ describe('Inventory', () => {
       const run = new Run({ owner })
       await run.inventory.sync()
     })
+
+    // ------------------------------------------------------------------------
+
+    it('bans locations that failed to load', async () => {
+      const run = new Run()
+      class A { }
+      const C = run.deploy(A)
+      await run.sync()
+      const run2 = new Run({ trust: [], owner: run.owner.privkey })
+      await run2.inventory.sync()
+      const value = await run2.cache.get(`ban://${C.location}`)
+      expect(value).not.to.equal(undefined)
+      expect(value.untrusted).to.equal(C.location.slice(0, 64))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('reloads and unbans banned locations if they are retrusted', async () => {
+      const run = new Run()
+      class A { }
+      const C = run.deploy(A)
+      await run.sync()
+      const run2 = new Run({ trust: [], owner: run.owner.privkey })
+      await run2.inventory.sync()
+      run2.trust(C.origin.slice(0, 64))
+      await run2.inventory.sync()
+      expect(run2.inventory.code.length).to.equal(1)
+      expect(run2.inventory.code[0].location).to.equal(C.location)
+      const value = await run2.cache.get(`ban://${C.location}`)
+      expect(value).to.equal(undefined)
+    })
   })
 })
 
