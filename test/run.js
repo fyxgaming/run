@@ -300,6 +300,7 @@ describe('Run', () => {
 
       it('throws if incompatible settings', () => {
         expect(() => new Run({ blockchain: new Mockchain(), api: 'run' })).to.throw('Blockchain mismatch with "run" api')
+        expect(() => new Run({ blockchain: new Mockchain(), apiKey: 'abc' })).to.throw('Blockchain mismatch with "abc" apiKey')
         expect(() => new Run({ blockchain: new Mockchain(), network: 'main' })).to.throw('Blockchain mismatch with "main" network')
         expect(() => new Run({ blockchain: new RunConnect(), network: 'mock' })).to.throw('Blockchain mismatch with "mock" network')
         expect(() => new Run({ blockchain: new WhatsOnChain(), api: 'run' })).to.throw('Blockchain mismatch with "run" api')
