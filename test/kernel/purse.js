@@ -1,3 +1,46 @@
+/**
+ * purse.js
+ *
+ * Test for universal purse functionality in relation to the kernel
+ */
+
+const { describe, it } = require('mocha')
+const { expect } = require('chai')
+require('chai').use(require('chai-as-promised'))
+const bsv = require('bsv')
+const Run = require('../env/run')
+
+// ------------------------------------------------------------------------------------------------
+// Purse
+// ------------------------------------------------------------------------------------------------
+
+describe('Purse', () => {
+  describe('broadcast', () => {
+    it('notifies with tx', async () => {
+      const run = new Run()
+      let broadcasted = null
+      run.purse.broadcast = async rawtx => { broadcasted = rawtx }
+      class A { }
+      run.deploy(A)
+      await run.sync()
+      expect(new bsv.Transaction(broadcasted).hash).to.equal(A.location.slice(0, 64))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throw will stop publish', async () => {
+      const run = new Run()
+      run.purse.broadcast = async rawtx => { throw new Error('abc') }
+      class A { }
+      const C = run.deploy(A)
+      await expect(run.sync()).to.be.rejectedWith('abc')
+      expect(() => C.nonce).to.throw('Deploy failed')
+    })
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+
 // TODO
 
 /*
