@@ -223,8 +223,9 @@ describe('RunDB', () => {
       rundb.request = async () => {
         calledTimes = calledTimes + 1
       }
-      await rundb.set('jig://_jigtxid', originalData)
-      await rundb.set('jig://_jigtxid', originalData)
+      const key = `jig://_jigtxid_${Math.random()}`
+      await rundb.set(key, originalData)
+      await rundb.set(key, originalData)
       expect(calledTimes).to.eq(1)
     })
   })
