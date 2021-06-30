@@ -146,6 +146,87 @@ describe('RunDB', () => {
       await rundb.set('abc', 'def')
       expect(await rundb.localCache.get('abc')).to.equal('def')
     })
+
+    it('sends data to RUN-db when key is jig', async () => {
+      const rundb = new RunDB(HOST)
+      const originalData = 'jighextx'
+      let called = false
+      rundb.request = async (url, method, body) => {
+        expect(url).to.eq(`${HOST}/tx/_jigtxid`)
+        expect(method).to.eq('POST')
+        expect(body).to.eq(originalData)
+        called = true
+      }
+      await rundb.set('jig://_jigtxid', originalData)
+      expect(called).to.eq(true)
+    })
+
+    it('sends data to RUN-db when key is berry', async () => {
+      const rundb = new RunDB(HOST)
+      const originalData = 'berryhextx'
+      let called = false
+      rundb.request = async (url, method, body) => {
+        expect(url).to.eq(`${HOST}/tx/_berrytxid`)
+        expect(method).to.eq('POST')
+        expect(body).to.eq(originalData)
+        called = true
+      }
+      await rundb.set('berry://_berrytxid', originalData)
+      expect(called).to.eq(true)
+    })
+
+    it('sends data to RUN-db when key is tx', async () => {
+      const rundb = new RunDB(HOST)
+      const originalData = 'txhextx'
+      let called = false
+      rundb.request = async (url, method, body) => {
+        expect(url).to.eq(`${HOST}/tx/_txtxid`)
+        expect(method).to.eq('POST')
+        expect(body).to.eq(originalData)
+        called = true
+      }
+      await rundb.set('tx://_txtxid', originalData)
+      expect(called).to.eq(true)
+    })
+
+    it('does not send data to RUN-db when key is trust', async () => {
+      const rundb = new RunDB(HOST)
+      const originalData = 'trustvalue'
+      rundb.request = async () => {
+        expect.fail('should not had been called')
+      }
+      await rundb.set('trust://_txid', originalData)
+    })
+
+    it('does not send data to RUN-db when key is spend', async () => {
+      const rundb = new RunDB(HOST)
+      const originalData = 'trustvalue'
+      rundb.request = async () => {
+        expect.fail('should not had been called')
+      }
+      await rundb.set('trust://_txid', originalData)
+    })
+
+    it('does not send data to RUN-db when key is spend', async () => {
+      const rundb = new RunDB(HOST)
+      const originalData = 'timevalue'
+      rundb.request = async () => {
+        expect.fail('should not had been called')
+      }
+      await rundb.set('time://_txid', originalData)
+    })
+
+    it('does not send twice the same data', async () => {
+      const rundb = new RunDB(HOST)
+      const originalData = 'jighextx'
+      let calledTimes = 0
+      rundb.request = async () => {
+        calledTimes = calledTimes + 1
+      }
+      await rundb.set('jig://_jigtxid', originalData)
+      await rundb.set('jig://_jigtxid', originalData)
+      expect(calledTimes).to.eq(1)
+    })
   })
 
   // --------------------------------------------------------------------------
