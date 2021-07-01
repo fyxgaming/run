@@ -140,39 +140,29 @@ describe('RunDB', () => {
   // set
   // --------------------------------------------------------------------------
 
-  describe('set', () => {
+  describe.only('set', () => {
     it('sets in local cache', async () => {
       const rundb = new RunDB(HOST)
       await rundb.set('abc', 'def')
       expect(await rundb.localCache.get('abc')).to.equal('def')
     })
 
-    it('sends data to RUN-db when key is jig', async () => {
+    it('does not send data to RUN-db when key is jig', async () => {
       const rundb = new RunDB(HOST)
       const originalData = 'jighextx'
-      let called = false
-      rundb.request = async (url, method, body) => {
-        expect(url).to.eq(`${HOST}/tx/_jigtxid`)
-        expect(method).to.eq('POST')
-        expect(body).to.eq(originalData)
-        called = true
+      rundb.request = async () => {
+        expect.fail('should not be called')
       }
       await rundb.set('jig://_jigtxid', originalData)
-      expect(called).to.eq(true)
     })
 
     it('sends data to RUN-db when key is berry', async () => {
       const rundb = new RunDB(HOST)
       const originalData = 'berryhextx'
-      let called = false
-      rundb.request = async (url, method, body) => {
-        expect(url).to.eq(`${HOST}/tx/_berrytxid`)
-        expect(method).to.eq('POST')
-        expect(body).to.eq(originalData)
-        called = true
+      rundb.request = async () => {
+        expect.fail('should not be called')
       }
       await rundb.set('berry://_berrytxid', originalData)
-      expect(called).to.eq(true)
     })
 
     it('sends data to RUN-db when key is tx', async () => {
@@ -218,12 +208,12 @@ describe('RunDB', () => {
 
     it('does not send twice the same data', async () => {
       const rundb = new RunDB(HOST)
-      const originalData = 'jighextx'
+      const originalData = 'txhex'
       let calledTimes = 0
       rundb.request = async () => {
         calledTimes = calledTimes + 1
       }
-      const key = `jig://_jigtxid_${Math.random()}`
+      const key = `tx://_txid_${Math.random()}`
       await rundb.set(key, originalData)
       await rundb.set(key, originalData)
       expect(calledTimes).to.eq(1)
