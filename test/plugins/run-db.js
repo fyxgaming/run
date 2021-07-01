@@ -140,7 +140,7 @@ describe('RunDB', () => {
   // set
   // --------------------------------------------------------------------------
 
-  describe.only('set', () => {
+  describe('set', () => {
     it('sets in local cache', async () => {
       const rundb = new RunDB(HOST)
       await rundb.set('abc', 'def')
@@ -169,10 +169,11 @@ describe('RunDB', () => {
       const rundb = new RunDB(HOST)
       const originalData = 'txhextx'
       let called = false
-      rundb.request = async (url, method, body) => {
+      rundb.request = async (url, options) => {
         expect(url).to.eq(`${HOST}/tx/_txtxid`)
-        expect(method).to.eq('POST')
-        expect(body).to.eq(originalData)
+        expect(options.method).to.eq('POST')
+        expect(options.body).to.eq(originalData)
+        expect(options.headers['content-type']).to.eq('text/plain')
         called = true
       }
       await rundb.set('tx://_txtxid', originalData)
