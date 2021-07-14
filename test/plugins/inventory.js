@@ -525,7 +525,7 @@ describe('Inventory', () => {
       expect(run2.inventory.code.length).to.equal(1)
       expect(run2.inventory.code[0].location).to.equal(C.location)
       const value = await run2.cache.get(`ban://${C.location}`)
-      expect(value).to.equal(undefined)
+      expect(value).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
