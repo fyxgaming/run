@@ -506,7 +506,7 @@ describe('Inventory', () => {
       const run2 = new Run({ trust: [], owner: run.owner.privkey })
       await run2.inventory.sync()
       const value = await run2.cache.get(`ban://${C.location}`)
-      expect(value).not.to.equal(undefined)
+      expect(typeof value).to.equal('object')
       expect(value.untrusted).to.equal(C.location.slice(0, 64))
       expect(typeof value.reason).to.equal('string')
     })
@@ -526,21 +526,6 @@ describe('Inventory', () => {
       expect(run2.inventory.code[0].location).to.equal(C.location)
       const value = await run2.cache.get(`ban://${C.location}`)
       expect(value).to.equal(false)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('loads banned jig from old format', async () => {
-      const run = new Run()
-      class A { }
-      const C = run.deploy(A)
-      await run.sync()
-      const run2 = new Run({ owner: run.owner.privkey })
-      await run2.cache.set(`ban://${C.location}`, 1)
-      run.trust(C.location.slice(0, 64))
-      await run2.inventory.sync()
-      expect(run2.inventory.code.length).to.equal(1)
-      expect(run2.inventory.code[0].location).to.equal(C.location)
     })
   })
 })

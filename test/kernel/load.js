@@ -51,6 +51,63 @@ describe('Load', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
+// Ban
+// ------------------------------------------------------------------------------------------------
+
+describe('Ban', () => {
+  it('does not load banned locations', async () => {
+    const run = new Run()
+    class A { }
+    const C = run.deploy(A)
+    await run.sync()
+    await run.cache.set(`ban://${C.location}`, { reason: '' })
+    await expect(run.load(C.location)).to.be.rejectedWith('Failed to load banned location')
+  })
+
+  // ------------------------------------------------------------------------
+  it('bans locations that failed to load', async () => {
+    const run = new Run()
+    class A { }
+    const C = run.deploy(A)
+    await run.sync()
+    const run2 = new Run({ trust: [], owner: run.owner.privkey })
+    await expect(run2.load(C.location)).to.be.rejected
+    const value = await run2.cache.get(`ban://${C.location}`)
+    expect(typeof value).to.equal('object')
+    expect(value.untrusted).to.equal(C.location.slice(0, 64))
+    expect(typeof value.reason).to.equal('string')
+  })
+
+  // ------------------------------------------------------------------------
+
+  it('reloads and unbans banned locations if they are retrusted', async () => {
+    const run = new Run()
+    class A { }
+    const C = run.deploy(A)
+    await run.sync()
+    const run2 = new Run({ trust: [], owner: run.owner.privkey })
+    await expect(run2.load(C.location)).to.be.rejected
+    run2.trust(C.origin.slice(0, 64))
+    expect((await run2.load(C.location)).location).to.equal(C.location)
+    const value = await run2.cache.get(`ban://${C.location}`)
+    expect(value).to.equal(false)
+  })
+
+  // ------------------------------------------------------------------------
+
+  it('loads banned jig from old format', async () => {
+    const run = new Run()
+    class A { }
+    const C = run.deploy(A)
+    await run.sync()
+    const run2 = new Run({ owner: run.owner.privkey })
+    await run2.cache.set(`ban://${C.location}`, 1)
+    run.trust(C.location.slice(0, 64))
+    expect((await run2.load(C.location)).location).to.equal(C.location)
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
 // Client mode
 // ------------------------------------------------------------------------------------------------
 
