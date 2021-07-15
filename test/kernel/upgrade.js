@@ -370,10 +370,60 @@ describe('Upgrade', () => {
   })
 
   // --------------------------------------------------------------------------
-  // Parents
+  // Extensions
   // --------------------------------------------------------------------------
 
-  describe('parents', () => {
+  describe('extensions', () => {
+    it('change child class', async () => {
+      const run = new Run()
+
+      class P extends Jig { }
+      P.sealed = false
+      const CP = run.deploy(P)
+      await CP.sync()
+
+      class C extends CP { }
+      const CC = run.deploy(C)
+      await CC.sync()
+
+      function test (CC) {
+        expect(CC.toString()).to.equal('class C2 extends P { }')
+        expect(Object.getPrototypeOf(CC).name).to.equal('P')
+      }
+
+      expectTx({
+        nin: 1,
+        nref: 1,
+        nout: 1,
+        ndel: 0,
+        ncre: 0,
+        exec: [
+          {
+            op: 'UPGRADE',
+            data: [
+              { $jig: 0 },
+              'class C2 extends P { }',
+              { deps: { P: { $jig: 1 } } }
+            ]
+          }
+        ]
+      })
+
+      class C2 extends CP { }
+      CC.upgrade(C2)
+      await CC.sync()
+      test(CC)
+
+      const CC2 = await run.load(CC.location)
+      test(CC2)
+
+      run.cache = new LocalCache()
+      const CC3 = await run.load(CC.location)
+      test(CC3)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('deploys new parent chain', async () => {
       const run = new Run()
 
