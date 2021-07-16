@@ -83,6 +83,7 @@ describe('request', () => {
       const options = { method: 'POST', body: 'hello', headers, timeout }
       const response = await request('https://httpbin.org/post', options)
       expect(response.data).to.equal('hello')
+      expect(headers).to.deep.equal({ 'content-type': 'application/text' })
     })
 
     // ------------------------------------------------------------------------
