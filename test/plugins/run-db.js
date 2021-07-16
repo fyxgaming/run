@@ -147,7 +147,9 @@ describe('RunDB', () => {
       expect(await rundb.localCache.get('abc')).to.equal('def')
     })
 
-    it('does not send data to RUN-db when key is jig', async () => {
+    // ------------------------------------------------------------------------
+
+    it('does not send data to run-db when key is jig', async () => {
       const rundb = new RunDB(HOST)
       const originalData = 'jighextx'
       rundb.request = async () => {
@@ -156,7 +158,9 @@ describe('RunDB', () => {
       await rundb.set('jig://_jigtxid', originalData)
     })
 
-    it('sends data to RUN-db when key is berry', async () => {
+    // ------------------------------------------------------------------------
+
+    it('sends data to run-db when key is berry', async () => {
       const rundb = new RunDB(HOST)
       const originalData = 'berryhextx'
       rundb.request = async () => {
@@ -165,7 +169,9 @@ describe('RunDB', () => {
       await rundb.set('berry://_berrytxid', originalData)
     })
 
-    it('sends data to RUN-db when key is tx', async () => {
+    // ------------------------------------------------------------------------
+
+    it('sends data to run-db when key is tx', async () => {
       const rundb = new RunDB(HOST)
       const originalData = 'txhextx'
       let called = false
@@ -180,7 +186,9 @@ describe('RunDB', () => {
       expect(called).to.eq(true)
     })
 
-    it('does not send data to RUN-db when key is trust', async () => {
+    // ------------------------------------------------------------------------
+
+    it('does not send data to run-db when key is trust', async () => {
       const rundb = new RunDB(HOST)
       const originalData = 'trustvalue'
       rundb.request = async () => {
@@ -189,7 +197,9 @@ describe('RunDB', () => {
       await rundb.set('trust://_txid', originalData)
     })
 
-    it('does not send data to RUN-db when key is spend', async () => {
+    // ------------------------------------------------------------------------
+
+    it('does not send data to run-db when key is spend', async () => {
       const rundb = new RunDB(HOST)
       const originalData = 'trustvalue'
       rundb.request = async () => {
@@ -198,7 +208,9 @@ describe('RunDB', () => {
       await rundb.set('trust://_txid', originalData)
     })
 
-    it('does not send data to RUN-db when key is spend', async () => {
+    // ------------------------------------------------------------------------
+
+    it('does not send data to run-db when key is spend', async () => {
       const rundb = new RunDB(HOST)
       const originalData = 'timevalue'
       rundb.request = async () => {
@@ -206,6 +218,8 @@ describe('RunDB', () => {
       }
       await rundb.set('time://_txid', originalData)
     })
+
+    // ------------------------------------------------------------------------
 
     it('does not send twice the same data', async () => {
       const rundb = new RunDB(HOST)
