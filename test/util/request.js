@@ -77,6 +77,16 @@ describe('request', () => {
 
     // ------------------------------------------------------------------------
 
+    it('custom content-type', async function () {
+      this.timeout(timeout)
+      const headers = { 'content-type': 'application/text' }
+      const options = { method: 'POST', body: 'hello', headers, timeout }
+      const response = await request('https://httpbin.org/post', options)
+      expect(response.data).to.equal('hello')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('response handler', async function () {
       this.timeout(timeout)
       const options = { timeout, cache: 1000, response: stub().returns(100) }
