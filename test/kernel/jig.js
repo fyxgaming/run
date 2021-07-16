@@ -1932,7 +1932,7 @@ describe('Jig', () => {
 
     // ------------------------------------------------------------------------
 
-    it('detect uncaught errors', async () => {
+    it('uncaught errors disable jig', async () => {
       const run = new Run()
       class A extends Jig { f () { this.n = 1 } }
       const a = new A()
@@ -1954,7 +1954,7 @@ describe('Jig', () => {
             expect(() => a.f()).to.throw(error)
             resolve()
           }
-        }, 0)
+        }, 100)
       })
     })
 
