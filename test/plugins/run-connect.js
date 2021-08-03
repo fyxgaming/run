@@ -6,6 +6,8 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+require('chai').use(require('chai-as-promised'))
+const { stub } = require('sinon')
 const Run = require('../env/run')
 const { NETWORK } = require('../env/config')
 const { RunConnect } = Run.plugins
@@ -123,6 +125,15 @@ describe('RunConnect', () => {
       expect(typeof state).to.equal('undefined')
       const rawtx = await connect.cache.get(`tx://${berryTxid}`)
       expect(typeof rawtx).to.equal('string')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns error if connection down', async () => {
+      const connect = new RunConnect()
+      stub(connect, 'request').throws(new Error('Bad request'))
+      const key = 'jig://3b7ef411185bbe3d01caeadbe6f115b0103a546c4ef0ac7474aa6fbb71aff208_o1'
+      await expect(connect.get(key)).to.be.rejectedWith('Bad request')
     })
   })
 
