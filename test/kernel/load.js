@@ -116,7 +116,16 @@ describe('Ban', () => {
 
   // ------------------------------------------------------------------------
 
-  it.skip('does not ban locations for non-deterministic errors', async () => {
+  it('does not ban locations for non-deterministic errors', async () => {
+    const run = new Run()
+    class A {}
+    run.deploy(A)
+    await run.sync()
+    run.cache = new LocalCache()
+    run.blockchain.fetch = () => { throw new Error('Not found') }
+    await expect(run.load(A.location)).to.be.rejected
+    const value = await run.cache.get(A.location)
+    expect(value).to.equal(undefined)
   })
 
   // ------------------------------------------------------------------------
