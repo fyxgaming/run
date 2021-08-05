@@ -54,160 +54,160 @@ describe('Load', () => {
     const HASH = '0000000000000000000000000000000000000000000000000000000000000000'
     await expect(run.load(`${A.location}?hash=${HASH}`)).to.be.rejectedWith('Bad location')
   })
-})
 
-// ------------------------------------------------------------------------------------------------
-// Ban
-// ------------------------------------------------------------------------------------------------
+  // ------------------------------------------------------------------------------------------------
+  // Ban
+  // ------------------------------------------------------------------------------------------------
 
-describe('Ban', () => {
-  it('does not load banned locations', async () => {
-    const run = new Run()
-    class A { }
-    const C = run.deploy(A)
-    await run.sync()
-    await run.cache.set(`ban://${C.location}`, { reason: '' })
-    await expect(run.load(C.location)).to.be.rejectedWith('Failed to load banned location')
+  describe('Ban', () => {
+    it('does not load banned locations', async () => {
+      const run = new Run()
+      class A { }
+      const C = run.deploy(A)
+      await run.sync()
+      await run.cache.set(`ban://${C.location}`, { reason: '' })
+      await expect(run.load(C.location)).to.be.rejectedWith('Failed to load banned location')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('bans locations that failed to load due to trust', async () => {
+      const run = new Run()
+      class A { }
+      const C = run.deploy(A)
+      await run.sync()
+      const run2 = new Run({ trust: [], owner: run.owner.privkey })
+      await expect(run2.load(C.location)).to.be.rejected
+      const value = await run2.cache.get(`ban://${C.location}`)
+      expect(typeof value).to.equal('object')
+      expect(value.untrusted).to.equal(C.location.slice(0, 64))
+      expect(typeof value.reason).to.equal('string')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('bans locations that failed to load due to non-run tx', async () => {
+      const run = new Run()
+      const bsvtx = new bsv.Transaction()
+      let rawtx = bsvtx.toString('hex')
+      rawtx = await run.purse.pay(rawtx, [])
+      const txid = await run.blockchain.broadcast(rawtx)
+      const location = `${txid}_o0`
+      await expect(run.load(location)).to.be.rejected
+      const value = await run.cache.get(`ban://${location}`)
+      expect(value).to.deep.equal({ reason: 'ExecutionError: Not a run transaction: invalid op_return protocol' })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('bans locations that failed to load due to bad metadata', async () => {
+      const run = new Run()
+      class A {}
+      run.deploy(A)
+      await run.sync()
+      const rawtx = await run.blockchain.fetch(A.location.slice(0, 64))
+      const bsvtx = new bsv.Transaction(rawtx)
+      bsvtx.inputs.splice(0, 1)
+      bsvtx.outputs.splice(1, 2)
+      let rawtx2 = bsvtx.toString()
+      rawtx2 = await run.purse.pay(rawtx2, [])
+      const txid = await run.blockchain.broadcast(rawtx2)
+      const location = `${txid}_o1`
+      await expect(run.load(location)).to.be.rejected
+      const value = await run.cache.get(`ban://${location}`)
+      expect(value).to.deep.equal({ reason: 'ExecutionError: Script mismatch on output 1' })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('does not ban locations for non-deterministic errors', async () => {
+      const run = new Run()
+      class A {}
+      run.deploy(A)
+      await run.sync()
+      run.cache = new LocalCache()
+      run.blockchain.fetch = () => { throw new Error('Not found') }
+      await expect(run.load(A.location)).to.be.rejected
+      const value = await run.cache.get(A.location)
+      expect(value).to.equal(undefined)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('reloads and unbans banned locations if they are retrusted', async () => {
+      const run = new Run()
+      class A { }
+      const C = run.deploy(A)
+      await run.sync()
+      const run2 = new Run({ trust: [], owner: run.owner.privkey })
+      await expect(run2.load(C.location)).to.be.rejected
+      run2.trust(C.origin.slice(0, 64))
+      expect((await run2.load(C.location)).location).to.equal(C.location)
+      const value = await run2.cache.get(`ban://${C.location}`)
+      expect(value).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('loads banned jig from old format', async () => {
+      const run = new Run()
+      class A { }
+      const C = run.deploy(A)
+      await run.sync()
+      const run2 = new Run({ owner: run.owner.privkey })
+      await run2.cache.set(`ban://${C.location}`, 1)
+      run.trust(C.location.slice(0, 64))
+      expect((await run2.load(C.location)).location).to.equal(C.location)
+    })
   })
 
-  // ------------------------------------------------------------------------
+  // ------------------------------------------------------------------------------------------------
+  // Client mode
+  // ------------------------------------------------------------------------------------------------
 
-  it('bans locations that failed to load due to trust', async () => {
-    const run = new Run()
-    class A { }
-    const C = run.deploy(A)
-    await run.sync()
-    const run2 = new Run({ trust: [], owner: run.owner.privkey })
-    await expect(run2.load(C.location)).to.be.rejected
-    const value = await run2.cache.get(`ban://${C.location}`)
-    expect(typeof value).to.equal('object')
-    expect(value.untrusted).to.equal(C.location.slice(0, 64))
-    expect(typeof value.reason).to.equal('string')
-  })
+  describe('Client mode', () => {
+    it('loads from state cache', async () => {
+      const run = new Run()
+      run.client = false
+      class A extends Jig { }
+      class B extends A { }
+      class C { }
+      const b = new B(C)
+      await run.sync()
+      run.client = true
+      await run.load(b.location)
+    })
 
-  // ------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
-  it('bans locations that failed to load due to non-run tx', async () => {
-    const run = new Run()
-    const bsvtx = new bsv.Transaction()
-    let rawtx = bsvtx.toString('hex')
-    rawtx = await run.purse.pay(rawtx, [])
-    const txid = await run.blockchain.broadcast(rawtx)
-    const location = `${txid}_o0`
-    await expect(run.load(location)).to.be.rejected
-    const value = await run.cache.get(`ban://${location}`)
-    expect(value).to.deep.equal({ reason: 'ExecutionError: Not a run transaction: invalid op_return protocol' })
-  })
+    it('throws if not in state cache', async () => {
+      const run = new Run()
+      run.client = false
+      class A extends Jig { }
+      class B extends A { }
+      class C { }
+      const b = new B(C)
+      await run.sync()
+      run.client = true
+      run.cache = new LocalCache()
+      await expect(run.load(b.location)).to.be.rejected
+    })
 
-  // ------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
-  it('bans locations that failed to load due to bad metadata', async () => {
-    const run = new Run()
-    class A {}
-    run.deploy(A)
-    await run.sync()
-    const rawtx = await run.blockchain.fetch(A.location.slice(0, 64))
-    const bsvtx = new bsv.Transaction(rawtx)
-    bsvtx.inputs.splice(0, 1)
-    bsvtx.outputs.splice(1, 2)
-    let rawtx2 = bsvtx.toString()
-    rawtx2 = await run.purse.pay(rawtx2, [])
-    const txid = await run.blockchain.broadcast(rawtx2)
-    const location = `${txid}_o1`
-    await expect(run.load(location)).to.be.rejected
-    const value = await run.cache.get(`ban://${location}`)
-    expect(value).to.deep.equal({ reason: 'ExecutionError: Script mismatch on output 1' })
-  })
-
-  // ------------------------------------------------------------------------
-
-  it('does not ban locations for non-deterministic errors', async () => {
-    const run = new Run()
-    class A {}
-    run.deploy(A)
-    await run.sync()
-    run.cache = new LocalCache()
-    run.blockchain.fetch = () => { throw new Error('Not found') }
-    await expect(run.load(A.location)).to.be.rejected
-    const value = await run.cache.get(A.location)
-    expect(value).to.equal(undefined)
-  })
-
-  // ------------------------------------------------------------------------
-
-  it('reloads and unbans banned locations if they are retrusted', async () => {
-    const run = new Run()
-    class A { }
-    const C = run.deploy(A)
-    await run.sync()
-    const run2 = new Run({ trust: [], owner: run.owner.privkey })
-    await expect(run2.load(C.location)).to.be.rejected
-    run2.trust(C.origin.slice(0, 64))
-    expect((await run2.load(C.location)).location).to.equal(C.location)
-    const value = await run2.cache.get(`ban://${C.location}`)
-    expect(value).to.equal(false)
-  })
-
-  // ------------------------------------------------------------------------
-
-  it('loads banned jig from old format', async () => {
-    const run = new Run()
-    class A { }
-    const C = run.deploy(A)
-    await run.sync()
-    const run2 = new Run({ owner: run.owner.privkey })
-    await run2.cache.set(`ban://${C.location}`, 1)
-    run.trust(C.location.slice(0, 64))
-    expect((await run2.load(C.location)).location).to.equal(C.location)
-  })
-})
-
-// ------------------------------------------------------------------------------------------------
-// Client mode
-// ------------------------------------------------------------------------------------------------
-
-describe('Client mode', () => {
-  it('loads from state cache', async () => {
-    const run = new Run()
-    run.client = false
-    class A extends Jig { }
-    class B extends A { }
-    class C { }
-    const b = new B(C)
-    await run.sync()
-    run.client = true
-    await run.load(b.location)
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('throws if not in state cache', async () => {
-    const run = new Run()
-    run.client = false
-    class A extends Jig { }
-    class B extends A { }
-    class C { }
-    const b = new B(C)
-    await run.sync()
-    run.client = true
-    run.cache = new LocalCache()
-    await expect(run.load(b.location)).to.be.rejected
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('manual import is ok', async () => {
-    const run = new Run()
-    run.client = false
-    class A extends Jig { }
-    class B extends A { }
-    class C { }
-    const b = new B(C)
-    await run.sync()
-    run.client = true
-    run.cache = new LocalCache()
-    const rawtx = await run.blockchain.fetch(b.location.slice(0, 64))
-    await run.import(rawtx)
+    it('manual import is ok', async () => {
+      const run = new Run()
+      run.client = false
+      class A extends Jig { }
+      class B extends A { }
+      class C { }
+      const b = new B(C)
+      await run.sync()
+      run.client = true
+      run.cache = new LocalCache()
+      const rawtx = await run.blockchain.fetch(b.location.slice(0, 64))
+      await run.import(rawtx)
+    })
   })
 })
 
