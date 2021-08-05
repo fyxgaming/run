@@ -96,7 +96,22 @@ describe('Ban', () => {
 
   // ------------------------------------------------------------------------
 
-  it.skip('bans locations that failed to load due to bad state hash', async () => {
+  it('bans locations that failed to load due to bad metadata', async () => {
+    const run = new Run()
+    class A {}
+    run.deploy(A)
+    await run.sync()
+    const rawtx = await run.blockchain.fetch(A.location.slice(0, 64))
+    const bsvtx = new bsv.Transaction(rawtx)
+    bsvtx.inputs.splice(0, 1)
+    bsvtx.outputs.splice(1, 2)
+    let rawtx2 = bsvtx.toString()
+    rawtx2 = await run.purse.pay(rawtx2, [])
+    const txid = await run.blockchain.broadcast(rawtx2)
+    const location = `${txid}_o1`
+    await expect(run.load(location)).to.be.rejected
+    const value = await run.cache.get(`ban://${location}`)
+    expect(value).to.deep.equal({ reason: 'ExecutionError: Script mismatch on output 1' })
   })
 
   // ------------------------------------------------------------------------
