@@ -8,6 +8,7 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
+const bsv = require('bsv')
 const { Jig } = Run
 const { LocalCache } = Run.plugins
 
@@ -81,7 +82,16 @@ describe('Ban', () => {
 
   // ------------------------------------------------------------------------
 
-  it.skip('bans locations that failed to load due to non-run tx', async () => {
+  it('bans locations that failed to load due to non-run tx', async () => {
+    const run = new Run()
+    const bsvtx = new bsv.Transaction()
+    let rawtx = bsvtx.toString('hex')
+    rawtx = await run.purse.pay(rawtx, [])
+    const txid = await run.blockchain.broadcast(rawtx)
+    const location = `${txid}_o0`
+    await expect(run.load(location)).to.be.rejected
+    const value = await run.cache.get(`ban://${location}`)
+    expect(value).to.deep.equal({ reason: 'ExecutionError: Not a run transaction: invalid op_return protocol' })
   })
 
   // ------------------------------------------------------------------------
