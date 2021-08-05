@@ -65,7 +65,8 @@ describe('Ban', () => {
   })
 
   // ------------------------------------------------------------------------
-  it('bans locations that failed to load', async () => {
+
+  it('bans locations that failed to load due to trust', async () => {
     const run = new Run()
     class A { }
     const C = run.deploy(A)
@@ -76,6 +77,21 @@ describe('Ban', () => {
     expect(typeof value).to.equal('object')
     expect(value.untrusted).to.equal(C.location.slice(0, 64))
     expect(typeof value.reason).to.equal('string')
+  })
+
+  // ------------------------------------------------------------------------
+
+  it.skip('bans locations that failed to load due to non-run tx', async () => {
+  })
+
+  // ------------------------------------------------------------------------
+
+  it.skip('bans locations that failed to load due to bad state hash', async () => {
+  })
+
+  // ------------------------------------------------------------------------
+
+  it.skip('does not ban locations for non-deterministic errors', async () => {
   })
 
   // ------------------------------------------------------------------------
