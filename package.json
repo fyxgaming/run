@@ -16,7 +16,6 @@
     "test:cover": "env LIB=lib env COVER=1 nyc --clean=${CLEAN:=true} -r=text -r=lcovonly -x=test/** -x=**/determinism.js -x=**/stringify.js mocha",
     "test:node": "webpack && env LIB=dist/run.node.min.js env MANGLED=1 mocha",
     "test:browser": "node test/env/browser",
-    "deploy": "deploy -mt lib/extra/*.js",
     "version": "standard && webpack && npm run test:node",
     "bump": "npm version patch && git push --follow-tags && npm publish"
   },
@@ -32,7 +31,6 @@
     ]
   },
   "devDependencies": {
-    "@runonbitcoin/deploy": "^0.5.61",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "dotenv": "^8.2.0",
