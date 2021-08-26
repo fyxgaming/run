@@ -29,6 +29,27 @@ describe('Sync', () => {
   // --------------------------------------------------------------------------
 
   describe('Sync', () => {
+    it('sync with already updated inner jig', async () => {
+      const run = new Run()
+      class A {}
+      class B {}
+      B.A = A
+      A.B = B
+      const tx = new Run.Transaction()
+      const CA = tx.update(() => run.deploy(A))
+      const CB = tx.update(() => run.deploy(B))
+      await tx.publish()
+      CA.auth()
+      CB.auth()
+      await CA.sync()
+      await CB.sync()
+      const CB2 = await run.load(CB.location)
+      await CB2.A.sync()
+      await CB2.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('sync with warning when UTXO is incorrectly spent', async () => {
       const run = new Run()
 
