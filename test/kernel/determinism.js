@@ -1,7 +1,7 @@
 /**
  * determinism.js
  *
- * Tests for lib/sandbox/determinism.js
+ * Tests for lib/kernel/determinism.js
  */
 
 const { describe, it } = require('mocha')

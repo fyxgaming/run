@@ -1,7 +1,7 @@
 /**
- * index.js
+ * realm.js
  *
- * Master list of tests
+ * Tests for lib/kernel/realm.js
  */
 
 const { describe, it } = require('mocha')

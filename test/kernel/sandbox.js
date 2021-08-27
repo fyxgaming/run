@@ -1,7 +1,7 @@
 /**
  * sandbox.js
  *
- * Tests for the sandbox
+ * Tests for lib/kernel/sandbox.js
  */
 
 const { describe, it } = require('mocha')
