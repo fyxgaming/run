@@ -38,7 +38,7 @@ describe('Sandbox', () => {
   // --------------------------------------------------------------------------
 
   it('configuration objects not present', () => {
-    expect(Sandbox._evaluate('typeof makeDeterministic')[0]).to.equal('undefined')
+    expect(Sandbox._evaluate('typeof _makeDeterministic')[0]).to.equal('undefined')
     expect(Sandbox._evaluate('typeof SES')[0]).to.equal('undefined')
     expect(Sandbox._evaluate('typeof Compartment')[0]).to.equal('undefined')
     expect(Sandbox._evaluate('typeof m')[0]).to.equal('undefined')

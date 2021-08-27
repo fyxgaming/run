@@ -82,6 +82,7 @@ require('./plugins/run-db')
 require('./plugins/viewer')
 require('./plugins/whatsonchain')
 
+require('./sandbox/determinism')
 require('./sandbox/realm')
 require('./sandbox/sandbox')
 

@@ -15,8 +15,7 @@ const {
   _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _basicObject,
   _basicArray, _basicSet, _basicMap, _basicUint8Array, _arbitraryObject, _defined,
   _intrinsic, _serializable, _protoLen, _anonymous, _getOwnProperty, _hasOwnProperty,
-  _setOwnProperty, _ownGetters, _ownMethods, _limit, _Timeout, _deterministicJSONStringify,
-  _deterministicCompareKeys, _negativeZero, _filterInPlace
+  _setOwnProperty, _ownGetters, _ownMethods, _limit, _Timeout, _negativeZero, _filterInPlace
 } = unmangle(unmangle(Run)._misc)
 const SI = unmangle(Sandbox)._intrinsics
 
@@ -683,42 +682,6 @@ describe('Misc', () => {
       await new Promise((resolve, reject) => setTimeout(resolve, 10))
       expect(() => unmangle(timeout)._check()).to.throw('hello timeout')
       expect(() => unmangle(timeout)._check()).to.throw('hello timeout')
-    })
-  })
-
-  // ---------------------------------------------------------------------------------------------
-  // _deterministicJSONStringify
-  // ----------------------------------------------------------------------------------------------
-
-  describe('_deterministicJSONStringify', () => {
-    it('stringifies', () => {
-      expect(_deterministicJSONStringify({ a: [{ b: 2 }, '3'] })).to.equal('{"a":[{"b":2},"3"]}')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('orders keys alphabetically', () => {
-      expect(_deterministicJSONStringify({ 3: 3, b: 2, 1: 1 })).to.equal('{"1":1,"3":3,"b":2}')
-    })
-  })
-
-  // ----------------------------------------------------------------------------------------------
-  // _deterministicCompareKeys
-  // ----------------------------------------------------------------------------------------------
-
-  describe('_deterministicCompareKeys', () => {
-    it('sorts strings before symbols', () => {
-      const x = [Symbol.iterator, 'b', 'a', 'a', '1', '0', Symbol.hasInstance]
-      const y = x.sort(_deterministicCompareKeys)
-      expect(y).to.deep.equal(['0', '1', 'a', 'a', 'b', Symbol.hasInstance, Symbol.iterator])
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('sorts integer keys before string keys', () => {
-      const x = ['b', 'a', '0', '01', '10', '11', '1', '2', '011']
-      const y = x.sort(_deterministicCompareKeys)
-      expect(y).to.deep.equal(['0', '1', '2', '10', '11', '01', '011', 'a', 'b'])
     })
   })
 
