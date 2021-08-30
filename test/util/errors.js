@@ -47,19 +47,6 @@ describe('Errors', () => {
 
   // --------------------------------------------------------------------------
 
-  it('RequestError', () => {
-    const error = new Run.errors.RequestError('Wifi off', 100, 'No connection', 'GET', 'http://localhost:8000/status')
-    expect(error.name).to.equal('RequestError')
-    expect(error.message).to.equal('100 No connection\n\nGET http://localhost:8000/status\n\nWifi off')
-    expect(error.reason).to.equal('Wifi off')
-    expect(error.status).to.equal(100)
-    expect(error.statusText).to.equal('No connection')
-    expect(error.method).to.equal('GET')
-    expect(error.url).to.equal('http://localhost:8000/status')
-  })
-
-  // --------------------------------------------------------------------------
-
   it('TimeoutError', () => {
     const error = new Run.errors.TimeoutError('hello')
     expect(error.name).to.equal('TimeoutError')
