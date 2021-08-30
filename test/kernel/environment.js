@@ -1,7 +1,7 @@
 /**
  * environment.js
  *
- * Tests for lib/util/environment.js
+ * Tests for lib/kernel/environment.js
  */
 
 const bsv = require('bsv')
