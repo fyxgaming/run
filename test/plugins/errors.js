@@ -1,7 +1,7 @@
 /**
  * errors.js
  *
- * Tests for lib/util/errors.js
+ * Tests for lib/kernel/errors.js
  */
 
 const { describe, it } = require('mocha')

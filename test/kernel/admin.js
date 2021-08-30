@@ -1,7 +1,7 @@
 /**
  * admin.js
  *
- * Tests for lib/util/admin.js
+ * Tests for lib/kernel/admin.js
  */
 
 const { describe, it } = require('mocha')

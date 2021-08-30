@@ -1,7 +1,7 @@
 /**
  * misc.js
  *
- * Tests for lib/util/misc.js
+ * Tests for lib/kernel/misc.js
  */
 
 const { describe, it } = require('mocha')

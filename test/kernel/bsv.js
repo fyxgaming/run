@@ -1,7 +1,7 @@
 /**
  * bsv.js
  *
- * Tests for lib/util/bsv.js
+ * Tests for lib/kernel/bsv.js
  */
 
 const bsv = require('bsv')

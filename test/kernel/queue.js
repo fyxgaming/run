@@ -1,7 +1,7 @@
 /**
  * queue.js
  *
- * Tests for lib/util/queue.js
+ * Tests for lib/kernel/queue.js
  */
 
 const { describe, it } = require('mocha')

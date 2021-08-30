@@ -1,7 +1,7 @@
 /**
  * recent-broadcasts.js
  *
- * Tests for lib/util/recent-broadcasts.js
+ * Tests for lib/plugins/recent-broadcasts.js
  */
 
 const { describe, it } = require('mocha')

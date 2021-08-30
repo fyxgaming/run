@@ -1,7 +1,7 @@
 /**
  * snapshot.js
  *
- * Tests for lib/util/snapshot.js
+ * Tests for lib/kernel/snapshot.js
  */
 
 const { describe, it } = require('mocha')

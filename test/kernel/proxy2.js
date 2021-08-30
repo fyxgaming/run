@@ -1,7 +1,7 @@
 /**
  * proxy2.js
  *
- * Tests for lib/util/proxy2.js
+ * Tests for lib/kernel/proxy2.js
  */
 
 const { describe, it } = require('mocha')

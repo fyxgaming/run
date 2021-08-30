@@ -1,7 +1,7 @@
 /**
  * source.js
  *
- * Tests for lib/util/source.js
+ * Tests for lib/kernel/source.js
  */
 
 const { describe, it } = require('mocha')

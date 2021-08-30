@@ -1,7 +1,7 @@
 /**
  * dynamic.js
  *
- * Tests for lib/util/dynamic.js
+ * Tests for lib/kernel/dynamic.js
  */
 
 const { describe, it } = require('mocha')

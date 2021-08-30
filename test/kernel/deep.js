@@ -1,7 +1,7 @@
 /**
  * deep.js
  *
- * Tests for lib/util/deep.js
+ * Tests for lib/kernel/deep.js
  */
 
 const { describe, it } = require('mocha')

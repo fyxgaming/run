@@ -1,7 +1,7 @@
 /**
  * request.js
  *
- * Tests for lib/util/request.js
+ * Tests for lib/plugins/request.js
  */
 
 const { describe, it } = require('mocha')

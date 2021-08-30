@@ -1,7 +1,7 @@
 /**
  * version.js
  *
- * Tests for test/util/version.js
+ * Tests for test/kernel/version.js
  */
 
 const { describe, it } = require('mocha')

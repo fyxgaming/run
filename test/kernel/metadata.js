@@ -1,7 +1,7 @@
 /**
  * metadata.js
  *
- * Tests for lib/util/metadata.js
+ * Tests for lib/kernel/metadata.js
  */
 
 const { describe, it } = require('mocha')

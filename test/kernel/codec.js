@@ -1,7 +1,7 @@
 /**
  * codec.js
  *
- * Tests for lib/util/codec.js
+ * Tests for lib/kernel/codec.js
  */
 
 const { describe, it } = require('mocha')

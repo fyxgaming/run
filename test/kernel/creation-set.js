@@ -1,7 +1,7 @@
 /**
  * creation-set.js
  *
- * Tests for lib/util/creation-set.js
+ * Tests for lib/kernel/creation-set.js
  */
 
 const { describe, it } = require('mocha')
