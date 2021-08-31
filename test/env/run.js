@@ -6,7 +6,7 @@
 
 require('dotenv').config()
 const path = require('path')
-const { COVER } = require('./config')
+const { BROWSER, COVER } = require('./config')
 
 // ------------------------------------------------------------------------------------------------
 // Load Run
