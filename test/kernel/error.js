@@ -1,7 +1,7 @@
 /**
- * errors.js
+ * error.js
  *
- * Tests for lib/kernel/errors.js
+ * Tests for lib/kernel/error.js
  */
 
 const { describe, it } = require('mocha')
@@ -12,7 +12,7 @@ const Run = require('../env/run')
 // Errors
 // ------------------------------------------------------------------------------------------------
 
-describe('Errors', () => {
+describe('Error', () => {
   it('ArgumentError', () => {
     const error = new Run.errors.ArgumentError('hello')
     expect(error.name).to.equal('ArgumentError')
