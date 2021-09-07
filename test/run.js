@@ -11,7 +11,7 @@ const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('./env/run')
 const { Jig } = Run
-const { RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, BrowserCache, Inventory } = Run.plugins
+const { RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, BrowserCache, NodeCache, Inventory } = Run.plugins
 const { BROWSER } = require('./env/config')
 
 // ------------------------------------------------------------------------------------------------
@@ -325,8 +325,8 @@ describe('Run', () => {
           expect(new Run().cache.localCache instanceof LocalCache).to.equal(true)
         })
       } else {
-        it('defaults to LocalCache if node', () => {
-          expect(new Run().cache instanceof LocalCache).to.equal(true)
+        it('defaults to NodeCache if node', () => {
+          expect(new Run().cache instanceof NodeCache).to.equal(true)
         })
       }
 
