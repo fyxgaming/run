@@ -575,7 +575,7 @@ describe('Run', () => {
     // state
     // --------------------------------------------------------------------------
 
-    describe.only('state', () => {
+    describe('state', () => {
       it('defaults to RunConnect on mainnet', () => {
         const run = new Run({ network: 'main' })
         expect(run.state instanceof RunConnect).to.equal(true)
@@ -651,32 +651,14 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('throws if invalid', () => {
-        // TODO
+        expect(() => new Run({ state: undefined })).to.throw('Invalid state: undefined')
+        expect(() => new Run({ state: null })).to.throw('Invalid state: null')
+        expect(() => new Run({ state: {} })).to.throw('Invalid state: [object Object]')
+        expect(() => new Run({ state: new Set() })).to.throw('Invalid state: [object Set]')
+        expect(() => new Run({ state: { get: () => { } } })).to.throw('Invalid state: [object Object]')
+        expect(() => new Run({ state: { state: 1 } })).to.throw('Invalid state: [object Object]')
+        expect(() => new Run({ state: { state: null } })).to.throw('Invalid state: [object Object]')
       })
-
-      /*
-      // ------------------------------------------------------------------------
-
-      it('does not reuse cache if different networks', () => {
-        const run = new Run({ network: 'main' })
-        const run2 = new Run({ network: 'mock' })
-        expect(run.cache).not.to.equal(run2.cache)
-      })
-
-      // ------------------------------------------------------------------------
-
-      it('throws if invalid', () => {
-        expect(() => new Run({ cache: undefined })).to.throw('Invalid cache: undefined')
-        expect(() => new Run({ cache: null })).to.throw('Invalid cache: null')
-        expect(() => new Run({ cache: {} })).to.throw('Invalid cache: [object Object]')
-        expect(() => new Run({ cache: new Set() })).to.throw('Invalid cache: [object Set]')
-        expect(() => new Run({ cache: { get: () => { } } })).to.throw('Invalid cache: [object Object]')
-        expect(() => new Run({ cache: { set: () => { } } })).to.throw('Invalid cache: [object Object]')
-        expect(() => new Run({ cache: { get: () => { }, set: 1 } })).to.throw('Invalid cache: [object Object]')
-        expect(() => new Run({ cache: { get: null, set: () => {} } })).to.throw('Invalid cache: [object Object]')
-      })
-    })
-    */
     })
   })
 
