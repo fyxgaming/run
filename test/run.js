@@ -929,6 +929,31 @@ describe('Run', () => {
   })
 
   // --------------------------------------------------------------------------
+  // state
+  // --------------------------------------------------------------------------
+
+  describe('state', () => {
+    it('change', () => {
+      const run = new Run()
+      const state = { state: () => { } }
+      run.state = state
+      expect(run.state).to.equal(state)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      const run = new Run()
+      const state = run.state
+      expect(() => { run.state = undefined }).to.throw('Invalid state: undefined')
+      expect(() => { run.state = null }).to.throw('Invalid state: null')
+      expect(() => { run.state = { state: new Map() } }).to.throw('Invalid state: [object Object]')
+      expect(() => { run.state = false }).to.throw('Invalid state: false')
+      expect(run.state).to.equal(state)
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // trust
   // --------------------------------------------------------------------------
 
