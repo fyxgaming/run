@@ -353,6 +353,15 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
+      it('defaults to default', () => {
+        const defaultCache = Run.defaults.cache
+        Run.defaults.cache = new LocalCache()
+        expect(new Run().cache).to.equal(Run.defaults.cache)
+        Run.defaults.cache = defaultCache
+      })
+
+      // ------------------------------------------------------------------------
+
       it('reuses cache if same network', () => {
         const run = new Run()
         const run2 = new Run()
@@ -597,7 +606,7 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it('defaults to Run.defaults.state when not specified', () => {
+      it('defaults to default', () => {
         const stateBefore = Run.defaults.state
         Run.defaults.state = { state: () => { } }
         const run = new Run({ network: 'main', api: 'mattercloud' })
