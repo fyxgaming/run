@@ -591,7 +591,8 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('defaults to undefined on non-run api', () => {
-        // TODO
+        const run = new Run({ network: 'main', api: 'mattercloud' })
+        expect(run.state).to.equal(undefined)
       })
 
       // ------------------------------------------------------------------------
