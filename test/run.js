@@ -582,7 +582,8 @@ describe('Run', () => {
       run.api = 'run'
       expect(run.api).to.equal('run')
       expect(run.blockchain instanceof RunConnect).to.equal(true)
-      expect(run.cache instanceof RunConnect).to.equal(true)
+      expect(run.state instanceof RunConnect).to.equal(true)
+      expect(run.cache instanceof RunConnect).to.equal(false)
       expect(run.network).to.equal('main')
     })
 
