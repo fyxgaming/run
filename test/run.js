@@ -570,6 +570,88 @@ describe('Run', () => {
         expect(() => new Run({ network: null })).to.throw('Unsupported network')
       })
     })
+
+    // --------------------------------------------------------------------------
+    // state
+    // --------------------------------------------------------------------------
+
+    describe.only('state', () => {
+      it('defaults to RunConnect on mainnet', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('defaults to undefined on testnet', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('defaults to undefined on non-run api', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('defaults to Run.defaults.state when not specified', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('custom state', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('specify RunConnect with other API', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('reuses state if same network', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('does not reuse state if different networks', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        // TODO
+      })
+
+      /*
+      // ------------------------------------------------------------------------
+
+      it('does not reuse cache if different networks', () => {
+        const run = new Run({ network: 'main' })
+        const run2 = new Run({ network: 'mock' })
+        expect(run.cache).not.to.equal(run2.cache)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        expect(() => new Run({ cache: undefined })).to.throw('Invalid cache: undefined')
+        expect(() => new Run({ cache: null })).to.throw('Invalid cache: null')
+        expect(() => new Run({ cache: {} })).to.throw('Invalid cache: [object Object]')
+        expect(() => new Run({ cache: new Set() })).to.throw('Invalid cache: [object Set]')
+        expect(() => new Run({ cache: { get: () => { } } })).to.throw('Invalid cache: [object Object]')
+        expect(() => new Run({ cache: { set: () => { } } })).to.throw('Invalid cache: [object Object]')
+        expect(() => new Run({ cache: { get: () => { }, set: 1 } })).to.throw('Invalid cache: [object Object]')
+        expect(() => new Run({ cache: { get: null, set: () => {} } })).to.throw('Invalid cache: [object Object]')
+      })
+    })
+    */
+    })
   })
 
   // --------------------------------------------------------------------------
