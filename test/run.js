@@ -615,7 +615,7 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it('specify RunConnect with other API', () => {
+      it('specify RunConnect with other api', () => {
         const state = new RunConnect()
         const run = new Run({ api: 'mattercloud', network: 'main', state })
         expect(run.state).to.equal(state)
@@ -623,8 +623,11 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it('reuses state if same network', () => {
-        // TODO
+      it('reuses state if same network and api', () => {
+        const state = { state: () => { } }
+        new Run({ state }) // eslint-disable-line
+        const run2 = new Run()
+        expect(run2.state).to.equal(state)
       })
 
       // ------------------------------------------------------------------------
