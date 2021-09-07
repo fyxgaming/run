@@ -577,7 +577,8 @@ describe('Run', () => {
 
     describe.only('state', () => {
       it('defaults to RunConnect on mainnet', () => {
-        // TODO
+        const run = new Run({ network: 'main' })
+        expect(run.state instanceof RunConnect).to.equal(true)
       })
 
       // ------------------------------------------------------------------------
