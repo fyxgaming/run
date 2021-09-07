@@ -584,7 +584,8 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('defaults to undefined on testnet', () => {
-        // TODO
+        const run = new Run({ network: 'test' })
+        expect(run.state).to.equal(undefined)
       })
 
       // ------------------------------------------------------------------------
