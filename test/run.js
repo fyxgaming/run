@@ -633,7 +633,10 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('does not reuse state if different networks', () => {
-        // TODO
+        const state = { state: () => { } }
+        new Run({ state }) // eslint-disable-line
+        const run2 = new Run({ network: 'test' })
+        expect(run2.state).not.to.equal(state)
       })
 
       // ------------------------------------------------------------------------
