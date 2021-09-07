@@ -527,7 +527,8 @@ describe('Run', () => {
       it('RunConnect used for main network', () => {
         const run = new Run({ network: 'main' })
         expect(run.blockchain instanceof RunConnect).to.equal(true)
-        expect(run.cache instanceof RunConnect).to.equal(true)
+        expect(run.state instanceof RunConnect).to.equal(true)
+        expect(run.cache instanceof RunConnect).to.equal(false)
         expect(run.api).to.equal('run')
       })
 
@@ -536,6 +537,7 @@ describe('Run', () => {
       it('RunConnect used for test network', () => {
         const run = new Run({ network: 'test', purse: undefined, owner: undefined })
         expect(run.blockchain instanceof RunConnect).to.equal(true)
+        expect(run.state instanceof RunConnect).to.equal(false)
         expect(run.cache instanceof RunConnect).to.equal(false)
         expect(run.api).to.equal('run')
       })
