@@ -616,7 +616,9 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('specify RunConnect with other API', () => {
-        // TODO
+        const state = new RunConnect()
+        const run = new Run({ api: 'mattercloud', network: 'main', state })
+        expect(run.state).to.equal(state)
       })
 
       // ------------------------------------------------------------------------
