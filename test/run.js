@@ -632,10 +632,19 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it('does not reuse state if different networks', () => {
+      it('does not reuse state if different network', () => {
         const state = { state: () => { } }
-        new Run({ state }) // eslint-disable-line
+        new Run({ state, network: 'main' }) // eslint-disable-line
         const run2 = new Run({ network: 'test' })
+        expect(run2.state).not.to.equal(state)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('does not reuse state if different api', () => {
+        const state = { state: () => { } }
+        new Run({ state, network: 'main' }) // eslint-disable-line
+        const run2 = new Run({ api: 'mattercloud', network: 'main' })
         expect(run2.state).not.to.equal(state)
       })
 
