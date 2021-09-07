@@ -598,7 +598,11 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('defaults to Run.defaults.state when not specified', () => {
-        // TODO
+        const stateBefore = Run.defaults.state
+        Run.defaults.state = { state: () => { } }
+        const run = new Run({ network: 'main', api: 'mattercloud' })
+        expect(run.state).to.equal(Run.defaults.state)
+        Run.defaults.state = stateBefore
       })
 
       // ------------------------------------------------------------------------
