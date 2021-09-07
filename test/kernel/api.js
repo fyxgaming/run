@@ -316,8 +316,10 @@ describe('Lock API', () => {
     // ------------------------------------------------------------------------
 
     it('returns false if script is not a hex string', () => {
-      class CustomLock { script () { return [1, 2, 3] } }
-      expect(new CustomLock() instanceof Lock).to.equal(false)
+      class CustomLock1 { script () { return [1, 2, 3] } }
+      class CustomLock2 { script () { return 'xy' } }
+      expect(new CustomLock1() instanceof Lock).to.equal(false)
+      expect(new CustomLock2() instanceof Lock).to.equal(false)
     })
 
     // ------------------------------------------------------------------------
@@ -385,6 +387,7 @@ describe('Logger API', () => {
     // ------------------------------------------------------------------------
 
     it('returns false for non-objects', () => {
+      expect([] instanceof Logger).to.equal(false)
       expect(0 instanceof Logger).to.equal(false)
       expect(true instanceof Logger).to.equal(false)
       expect('blockchain' instanceof Logger).to.equal(false)
