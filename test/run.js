@@ -247,6 +247,15 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
+      it('defaults to default', () => {
+        const defaultBlockchain = Run.defaults.blockchain
+        Run.defaults.blockchain = new MatterCloud()
+        expect(new Run().blockchain).to.equal(Run.defaults.blockchain)
+        Run.defaults.blockchain = defaultBlockchain
+      })
+
+      // ------------------------------------------------------------------------
+
       it('resuses mockchain', () => {
         const run = new Run({ network: 'mock' })
         const run2 = new Run({ network: 'mock' })
