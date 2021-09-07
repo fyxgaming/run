@@ -9,7 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { NotImplementedError } = Run.errors
-const { Blockchain, Purse, Logger, Cache, Lock, Owner } = Run.api
+const { Blockchain, Purse, Logger, Cache, Lock, Owner, State } = Run.api
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain API
@@ -497,6 +497,48 @@ describe('Purse API ', () => {
       expect(null instanceof Purse).to.equal(false)
       expect(undefined instanceof Purse).to.equal(false)
       expect(Symbol.hasInstance instanceof Purse).to.equal(false)
+    })
+  })
+})
+
+// ------------------------------------------------------------------------------------------------
+// State API
+// ------------------------------------------------------------------------------------------------
+
+describe('State API ', () => {
+  describe('state', () => {
+    it('throws NotImplementedError by default', async () => {
+      await expect(new State().state()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+
+  describe('instanceof', () => {
+    it('returns true if state method is present', () => {
+      const state = { state: () => {} }
+      expect(state instanceof State).to.equal(true)
+      expect(Object.assign(function () {}, state) instanceof State).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns false if state method is missing or invalid', () => {
+      expect(({}) instanceof State).to.equal(false)
+      expect((() => {}) instanceof State).to.equal(false)
+      expect(({ pay: null }) instanceof State).to.equal(false)
+      expect(({ pay: new Set() }) instanceof State).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns false for non-objects', () => {
+      expect(0 instanceof State).to.equal(false)
+      expect(true instanceof State).to.equal(false)
+      expect('blockchain' instanceof State).to.equal(false)
+      expect(null instanceof State).to.equal(false)
+      expect(undefined instanceof State).to.equal(false)
+      expect(Symbol.hasInstance instanceof State).to.equal(false)
     })
   })
 })
