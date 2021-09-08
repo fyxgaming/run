@@ -1495,6 +1495,20 @@ describe('Run', () => {
     })
 
     // ------------------------------------------------------------------------
+    // purse
+    // ------------------------------------------------------------------------
+
+    describe('purse', () => {
+      it('change', () => {
+        const run = new Run()
+        const privkey = new bsv.PrivateKey().toString()
+        run.purse = privkey
+        expect(run.purse instanceof LocalPurse).to.equal(true)
+        expect(run.purse.privkey).to.equal(privkey)
+      })
+    })
+
+    // ------------------------------------------------------------------------
     // state
     // ------------------------------------------------------------------------
 
