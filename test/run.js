@@ -559,7 +559,7 @@ describe('Run', () => {
       // ----------------------------------------------------------------------
 
       it('RunConnect used for test network', () => {
-        const run = new Run({ network: 'test', purse: undefined })
+        const run = new Run({ network: 'test' })
         expect(run.blockchain instanceof RunConnect).to.equal(true)
         expect(run.state instanceof RunConnect).to.equal(false)
         expect(run.cache instanceof RunConnect).to.equal(false)
@@ -569,7 +569,7 @@ describe('Run', () => {
       // ----------------------------------------------------------------------
 
       it('WhatsOnChain used for stn network', () => {
-        const run = new Run({ network: 'stn', purse: undefined })
+        const run = new Run({ network: 'stn' })
         expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
         expect(run.cache instanceof RunConnect).to.equal(false)
         expect(run.api).to.equal('whatsonchain')
@@ -578,7 +578,7 @@ describe('Run', () => {
       // ----------------------------------------------------------------------
 
       it('Mockchain used for mock network', () => {
-        const run = new Run({ network: 'mock', purse: undefined })
+        const run = new Run({ network: 'mock' })
         expect(run.blockchain instanceof Mockchain).to.equal(true)
         expect(run.cache instanceof RunConnect).to.equal(false)
         expect(run.api).to.equal(undefined)
@@ -847,7 +847,7 @@ describe('Run', () => {
     // ------------------------------------------------------------------------
 
     describe('purse', () => {
-      it('should default to random purse', () => {
+      it('defaults to new random local purse', () => {
         const run = new Run()
         expect(run.purse instanceof LocalPurse).to.equal(true)
         const run2 = new Run()
@@ -857,14 +857,13 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it.skip('should throw for invalid purse', () => {
-        expect(() => new Run({ purse: undefined })).to.throw('Invalid purse: [object Object]')
-        expect(() => new Run({ purse: null })).to.throw('Invalid purse: [object Object]')
+      it('throws if invalid', () => {
+        expect(() => new Run({ purse: undefined })).to.throw('Invalid purse: undefined')
+        expect(() => new Run({ purse: null })).to.throw('Invalid purse: null')
         expect(() => new Run({ purse: {} })).to.throw('Invalid purse: [object Object]')
         expect(() => new Run({ purse: { pay: false } })).to.throw('Invalid purse: [object Object]')
         expect(() => new Run({ purse: 123 })).to.throw('Invalid purse: 123')
         expect(() => new Run({ purse: true })).to.throw('Invalid purse: true')
-        expect(() => new Run({ purse: null }).purse).to.throw('Invalid purse: null')
       })
     })
 
