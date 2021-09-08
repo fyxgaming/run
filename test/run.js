@@ -857,12 +857,22 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
+      it('local purse', () => {
+        const blockchain = new Mockchain()
+        const purse = new LocalPurse({ blockchain })
+        const run = new Run({ purse, blockchain })
+        expect(run.purse).to.equal(purse)
+      })
+
+      // ----------------------------------------------------------------------
+
       it('throws if invalid', () => {
         expect(() => new Run({ purse: undefined })).to.throw('Invalid purse: undefined')
         expect(() => new Run({ purse: null })).to.throw('Invalid purse: null')
         expect(() => new Run({ purse: {} })).to.throw('Invalid purse: [object Object]')
         expect(() => new Run({ purse: { pay: false } })).to.throw('Invalid purse: [object Object]')
         expect(() => new Run({ purse: 123 })).to.throw('Invalid purse: 123')
+        expect(() => new Run({ purse: 'xyz' })).to.throw('Invalid purse: "xyz"')
         expect(() => new Run({ purse: true })).to.throw('Invalid purse: true')
       })
     })
