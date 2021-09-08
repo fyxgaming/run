@@ -10,9 +10,11 @@ const { stub } = require('sinon')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('./env/run')
+const unmangle = require('./env/unmangle')
 const { Jig } = Run
 const { RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, BrowserCache, NodeCache, Inventory } = Run.plugins
 const { BROWSER } = require('./env/config')
+const request = unmangle(Run)._request
 
 // ------------------------------------------------------------------------------------------------
 // Run
@@ -590,6 +592,43 @@ describe('Run', () => {
     })
 
     // --------------------------------------------------------------------------
+    // networkRetries
+    // --------------------------------------------------------------------------
+
+    describe('networkRetries', () => {
+      it('defaults to default', () => {
+        const previousDefault = Run.defaults.networkRetries
+        Run.defaults.networkRetries = 10
+        expect(new Run().networkRetries).to.equal(Run.defaults.networkRetries)
+        Run.defaults.networkRetries = previousDefault
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('non-negative integer', () => {
+        expect(new Run({ networkRetries: 0 }).networkRetries).to.equal(0)
+        expect(new Run({ networkRetries: 1 }).networkRetries).to.equal(1)
+        expect(new Run({ networkRetries: 10 }).networkRetries).to.equal(10)
+        expect(new Run({ networkRetries: Number.MAX_SAFE_INTEGER }).networkRetries).to.equal(Number.MAX_SAFE_INTEGER)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        expect(() => new Run({ networkRetries: undefined })).to.throw('Invalid network retries: undefined')
+        expect(() => new Run({ networkRetries: null })).to.throw('Invalid network retries: null')
+        expect(() => new Run({ networkRetries: {} })).to.throw('Invalid network retries: [object Object]')
+        expect(() => new Run({ networkRetries: () => {} })).to.throw('Invalid network retries: [anonymous function]')
+        expect(() => new Run({ networkRetries: -1 })).to.throw('Invalid network retries: -1')
+        expect(() => new Run({ networkRetries: Number.MAX_VALUE })).to.throw(`Invalid network retries: ${Number.MAX_VALUE}`)
+        expect(() => new Run({ networkRetries: NaN })).to.throw('Invalid network retries: NaN')
+        expect(() => new Run({ networkRetries: Infinity })).to.throw('Invalid network retries: Infinity')
+        expect(() => new Run({ networkRetries: 1.5 })).to.throw('Invalid network retries: 1.5')
+        expect(() => new Run({ networkRetries: -1.5 })).to.throw('Invalid network retries: -1.5')
+      })
+    })
+
+    // --------------------------------------------------------------------------
     // state
     // --------------------------------------------------------------------------
 
@@ -1033,6 +1072,33 @@ describe('Run', () => {
       run.network = 'main'
       expect(run.network).to.equal(run.blockchain.network)
       expect(run.network).to.equal('main')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // networkRetries
+  // --------------------------------------------------------------------------
+
+  describe('networkRetries', () => {
+    it('change', () => {
+      const run = new Run()
+      run.networkRetries = 10
+      expect(run.networkRetries).to.equal(10)
+      expect(request.defaults.retries).to.equal(10)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      const run = new Run()
+      expect(() => { run.networkRetries = undefined }).to.throw('Invalid network retries: undefined')
+      expect(() => { run.networkRetries = null }).to.throw('Invalid network retries: null')
+      expect(() => { run.networkRetries = 100.1 }).to.throw('Invalid network retries: 100.1')
+      expect(() => { run.networkRetries = -1 }).to.throw('Invalid network retries: -1')
+      expect(() => { run.networkRetries = true }).to.throw('Invalid network retries: true')
+      expect(() => { run.networkRetries = 'abc' }).to.throw('Invalid network retries: "abc"')
+      expect(run.networkRetries).to.equal(Run.defaults.networkRetries)
+      expect(request.defaults.retries).to.equal(Run.defaults.networkRetries)
     })
   })
 
