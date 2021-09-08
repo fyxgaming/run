@@ -785,8 +785,9 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it.skip('throws if testnet address bsv object on mainnet', () => {
-        // TODO
+      it('throws if testnet address bsv object on mainnet', () => {
+        const owner = new bsv.PrivateKey('testnet').toAddress()
+        expect(() => new Run({ owner, network: 'main' })).to.throw('Invalid owner')
       })
 
       // ------------------------------------------------------------------------
