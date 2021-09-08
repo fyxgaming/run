@@ -1713,6 +1713,31 @@ describe('Run', () => {
         expect(run.state).to.equal(state)
       })
     })
+
+    // ------------------------------------------------------------------------
+    // timeout
+    // ------------------------------------------------------------------------
+
+    describe('timeout', () => {
+      it('change', () => {
+        const run = new Run()
+        run.timeout = 12345
+        expect(run.timeout).to.equal(12345)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const run = new Run()
+        expect(() => { run.timeout = undefined }).to.throw('Invalid timeout: undefined')
+        expect(() => { run.timeout = null }).to.throw('Invalid timeout: null')
+        expect(() => { run.timeout = Infinity }).to.throw('Invalid timeout: Infinity')
+        expect(() => { run.timeout = -1 }).to.throw('Invalid timeout: -1')
+        expect(() => { run.timeout = true }).to.throw('Invalid timeout: true')
+        expect(() => { run.timeout = 'abc' }).to.throw('Invalid timeout: "abc"')
+        expect(run.timeout).to.equal(Run.defaults.timeout)
+      })
+    })
   })
 
   // --------------------------------------------------------------------------
