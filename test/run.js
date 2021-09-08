@@ -895,6 +895,17 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
+      it('defaults to default', () => {
+        const defaultPurse = Run.defaults.purse
+        const blockchain = new Mockchain()
+        Run.defaults.purse = new LocalPurse({ blockchain })
+        const run = new Run({ blockchain })
+        expect(run.purse).to.equal(Run.defaults.purse)
+        Run.defaults.purse = defaultPurse
+      })
+
+      // ----------------------------------------------------------------------
+
       it('throws if invalid', () => {
         expect(() => new Run({ purse: undefined })).to.throw('Invalid purse: undefined')
         expect(() => new Run({ purse: null })).to.throw('Invalid purse: null')
