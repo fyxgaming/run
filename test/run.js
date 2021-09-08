@@ -715,7 +715,7 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it.only('public key string', () => {
+      it('public key string', () => {
         const owner = new bsv.PrivateKey().publicKey.toString()
         const run = new Run({ owner })
         expect(run.owner instanceof Viewer).to.equal(true)
@@ -724,8 +724,11 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it.skip('private key bsv object', () => {
-        // TODO
+      it('private key bsv object', () => {
+        const owner = new bsv.PrivateKey()
+        const run = new Run({ owner })
+        expect(run.owner instanceof LocalOwner).to.equal(true)
+        expect(run.owner.privkey).to.equal(owner.toString())
       })
 
       // ------------------------------------------------------------------------
