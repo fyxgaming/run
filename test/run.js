@@ -698,9 +698,10 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it.skip('local owner', () => {
-        // const cache = new LocalCache()
-        // expect(new Run({ cache }).cache).to.equal(cache)
+      it('local owner', () => {
+        const owner = new LocalOwner()
+        const run = new Run({ owner })
+        expect(run.owner).to.equal(owner)
       })
 
       // ------------------------------------------------------------------------
