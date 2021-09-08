@@ -1588,6 +1588,37 @@ describe('Run', () => {
     })
 
     // ------------------------------------------------------------------------
+    // rollbacks
+    // ------------------------------------------------------------------------
+
+    describe('rollbacks', () => {
+      it('enable', async () => {
+        const run = new Run({ rollbacks: false })
+        run.rollbacks = true
+        expect(run.rollbacks).to.equal(true)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('disable', async () => {
+        const run = new Run({ rollbacks: true })
+        run.rollbacks = false
+        expect(run.rollbacks).to.equal(false)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const run = new Run({ rollbacks: true })
+        expect(() => { run.rollbacks = undefined }).to.throw('Invalid rollbacks: undefined')
+        expect(() => { run.rollbacks = null }).to.throw('Invalid rollbacks: null')
+        expect(() => { run.rollbacks = 'abc' }).to.throw('Invalid rollbacks: "abc"')
+        expect(() => { run.rollbacks = NaN }).to.throw('Invalid rollbacks: NaN')
+        expect(run.rollbacks).to.equal(true)
+      })
+    })
+
+    // ------------------------------------------------------------------------
     // state
     // ------------------------------------------------------------------------
 
