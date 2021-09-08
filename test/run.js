@@ -636,6 +636,50 @@ describe('Run', () => {
     })
 
     // --------------------------------------------------------------------------
+    // networkTimeout
+    // --------------------------------------------------------------------------
+
+    describe('networkTimeout', () => {
+      it('defaults to default', () => {
+        const previousDefault = Run.defaults.networkTimeout
+        Run.defaults.networkTimeout = 18000
+        expect(new Run().networkTimeout).to.equal(Run.defaults.networkTimeout)
+        expect(request.defaults.timeout).to.equal(Run.defaults.networkTimeout)
+        Run.defaults.networkRetries = previousDefault
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('non-negative number', () => {
+        const test = (x) => {
+          expect(new Run({ networkTimeout: x }).networkTimeout).to.equal(x)
+          expect(request.defaults.timeout).to.equal(x)
+        }
+        test(0)
+        test(1)
+        test(10)
+        test(1000000.5)
+        test(Number.MAX_SAFE_INTEGER)
+        test(Number.MAX_VALUE)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const timeoutBefore = request.defaults.timeout
+        expect(() => new Run({ networkTimeout: undefined })).to.throw('Invalid network timeout: undefined')
+        expect(() => new Run({ networkTimeout: null })).to.throw('Invalid network timeout: null')
+        expect(() => new Run({ networkTimeout: {} })).to.throw('Invalid network timeout: [object Object]')
+        expect(() => new Run({ networkTimeout: () => {} })).to.throw('Invalid network timeout: [anonymous function]')
+        expect(() => new Run({ networkTimeout: -1 })).to.throw('Invalid network timeout: -1')
+        expect(() => new Run({ networkTimeout: NaN })).to.throw('Invalid network timeout: NaN')
+        expect(() => new Run({ networkTimeout: Infinity })).to.throw('Invalid network timeout: Infinity')
+        expect(() => new Run({ networkTimeout: -1.5 })).to.throw('Invalid network timeout: -1.5')
+        expect(request.defaults.timeout).to.equal(timeoutBefore)
+      })
+    })
+
+    // --------------------------------------------------------------------------
     // state
     // --------------------------------------------------------------------------
 
