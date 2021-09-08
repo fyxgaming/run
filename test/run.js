@@ -1397,16 +1397,17 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it.skip('throws if invalid', () => {
-        /*
+      it('throws if invalid', () => {
         const run = new Run()
-        const cache = run.cache
-        expect(() => { run.cache = undefined }).to.throw('Invalid cache: undefined')
-        expect(() => { run.cache = null }).to.throw('Invalid cache: null')
-        expect(() => { run.cache = { get: () => { } } }).to.throw('Invalid cache: [object Object]')
-        expect(() => { run.cache = false }).to.throw('Invalid cache: false')
-        expect(run.cache).to.equal(cache)
-        */
+        const owner = run.owner
+        expect(() => { run.owner = undefined }).to.throw('Invalid owner: undefined')
+        expect(() => { run.owner = null }).to.throw('Invalid owner: null')
+        expect(() => { run.owner = { sign: () => { } } }).to.throw('Invalid owner: [object Object]')
+        expect(() => { run.owner = { nextOwner: () => { } } }).to.throw('Invalid owner: [object Object]')
+        expect(() => { run.owner = { sign: 'abc', nextOwner: () => { } } }).to.throw('Invalid owner: [object Object]')
+        expect(() => { run.owner = false }).to.throw('Invalid owner: false')
+        expect(() => { run.owner = 'abc' }).to.throw('Invalid owner: "abc"')
+        expect(run.owner).to.equal(owner)
       })
     })
 
