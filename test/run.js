@@ -1664,19 +1664,6 @@ describe('Run', () => {
     })
   })
 
-  describe('purse', () => {
-    it('throw accept setting valid purse', () => {
-      const run = new Run()
-      run.purse = new PrivateKey()
-      expect(run.purse instanceof LocalPurse).to.equal(true)
-    })
-
-    it('throw throw if set invalid purse', () => {
-      const run = new Run()
-      expect(() => { run.purse = 123 }).to.throw('Invalid purse: 123')
-    })
-  })
-
   describe('static properties', () => {
     it('version should match package.json', () => {
       expect(Run.version).to.equal(packageInfo.version)
