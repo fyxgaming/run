@@ -13,8 +13,8 @@ const Run = require('./env/run')
 const unmangle = require('./env/unmangle')
 const { Jig } = Run
 const {
-  RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, LocalOwner, BrowserCache,
-  NodeCache, Inventory, Viewer
+  RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, LocalOwner, LocalPurse,
+  BrowserCache, NodeCache, Inventory, Viewer
 } = Run.plugins
 const { BROWSER } = require('./env/config')
 const request = unmangle(Run)._request
@@ -559,7 +559,7 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('RunConnect used for test network', () => {
-        const run = new Run({ network: 'test', purse: undefined, owner: undefined })
+        const run = new Run({ network: 'test', purse: undefined })
         expect(run.blockchain instanceof RunConnect).to.equal(true)
         expect(run.state instanceof RunConnect).to.equal(false)
         expect(run.cache instanceof RunConnect).to.equal(false)
@@ -569,7 +569,7 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('WhatsOnChain used for stn network', () => {
-        const run = new Run({ network: 'stn', purse: undefined, owner: undefined })
+        const run = new Run({ network: 'stn', purse: undefined })
         expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
         expect(run.cache instanceof RunConnect).to.equal(false)
         expect(run.api).to.equal('whatsonchain')
@@ -578,7 +578,7 @@ describe('Run', () => {
       // ------------------------------------------------------------------------
 
       it('Mockchain used for mock network', () => {
-        const run = new Run({ network: 'mock', purse: undefined, owner: undefined })
+        const run = new Run({ network: 'mock', purse: undefined })
         expect(run.blockchain instanceof Mockchain).to.equal(true)
         expect(run.cache instanceof RunConnect).to.equal(false)
         expect(run.api).to.equal(undefined)
@@ -826,15 +826,19 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it.skip('throws if invalid', () => {
-        // expect(() => new Run({ cache: undefined })).to.throw('Invalid cache: undefined')
-        // expect(() => new Run({ cache: null })).to.throw('Invalid cache: null')
-        // expect(() => new Run({ cache: {} })).to.throw('Invalid cache: [object Object]')
-        // expect(() => new Run({ cache: new Set() })).to.throw('Invalid cache: [object Set]')
-        // expect(() => new Run({ cache: { get: () => { } } })).to.throw('Invalid cache: [object Object]')
-        // expect(() => new Run({ cache: { set: () => { } } })).to.throw('Invalid cache: [object Object]')
-        // expect(() => new Run({ cache: { get: () => { }, set: 1 } })).to.throw('Invalid cache: [object Object]')
-        // expect(() => new Run({ cache: { get: null, set: () => {} } })).to.throw('Invalid cache: [object Object]')
+      it('throws if invalid', () => {
+        expect(() => new Run({ owner: undefined })).to.throw('Invalid owner: undefined')
+        expect(() => new Run({ owner: null })).to.throw('Invalid owner: null')
+        expect(() => new Run({ owner: {} })).to.throw('Invalid owner: [object Object]')
+        expect(() => new Run({ owner: true })).to.throw('Invalid owner: true')
+        expect(() => new Run({ owner: '' })).to.throw('Invalid owner: ""')
+        expect(() => new Run({ owner: 'abc' })).to.throw('Invalid owner: "abc"')
+        expect(() => new Run({ owner: 0 })).to.throw('Invalid owner: 0')
+        expect(() => new Run({ owner: new LocalPurse({ blockchain: new Mockchain() }) })).to.throw('Invalid owner: [object LocalPurse]')
+        expect(() => new Run({ owner: { sign: () => { } } })).to.throw('Invalid owner: [object Object]')
+        expect(() => new Run({ owner: { nextOwner: () => { } } })).to.throw('Invalid owner: [object Object]')
+        expect(() => new Run({ owner: { sign: () => { }, nextOwner: 1 } })).to.throw('Invalid owner: [object Object]')
+        expect(() => new Run({ owner: { sign: null, nextOwner: () => {} } })).to.throw('Invalid owner: [object Object]')
       })
     })
 
