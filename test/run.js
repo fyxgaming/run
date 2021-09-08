@@ -1262,30 +1262,6 @@ describe('Run', () => {
   // TODO
   /*
   describe('constructor', () => {
-    describe('cache', () => {
-      it('should default to local cache', () => {
-        expect(new Run().cache instanceof LocalCache).to.equal(true)
-      })
-
-      it('should support custom cache', () => {
-        const cache = new LocalCache()
-        expect(new Run({ cache }).cache).to.deep.equal(cache)
-      })
-
-      it('should throw if invalid cache', () => {
-        expect(() => new Run({ cache: { get: () => {} } })).to.throw('Invalid cache: [object Object]')
-        expect(() => new Run({ cache: { set: () => {} } })).to.throw('Invalid cache: [object Object]')
-        expect(() => new Run({ cache: null })).to.throw('Invalid cache: null')
-        expect(() => new Run({ cache: false })).to.throw('Invalid cache: false')
-      })
-
-      it('should copy previous cache', () => {
-        const run1 = new Run()
-        const run2 = new Run()
-        expect(run2.cache).to.deep.equal(run1.cache)
-      })
-    })
-
     describe('owner', () => {
       it('should default to random owner', () => {
         const run = new Run()
