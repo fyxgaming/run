@@ -1225,7 +1225,7 @@ describe('Run', () => {
   // activate
   // --------------------------------------------------------------------------
 
-  describe.only('activate', () => {
+  describe('activate', () => {
     it('assigns instance', () => {
       const run = new Run({ debug: false })
       new Run({ debug: true }) // eslint-disable-line
@@ -1263,7 +1263,10 @@ describe('Run', () => {
     // ------------------------------------------------------------------------
 
     it('assigns network timeout to request', () => {
-      // TODO
+      const run = new Run({ networkTimeout: 1200 })
+      new Run({ networkTimeout: 1100 }) // eslint-disable-line
+      run.activate()
+      expect(request.defaults.timeout).to.equal(1200)
     })
   })
 
