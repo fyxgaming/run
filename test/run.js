@@ -1167,6 +1167,33 @@ describe('Run', () => {
   })
 
   // --------------------------------------------------------------------------
+  // networkTimeout
+  // --------------------------------------------------------------------------
+
+  describe('networkTimeout', () => {
+    it('change', () => {
+      const run = new Run()
+      run.networkTimeout = 12345
+      expect(run.networkTimeout).to.equal(12345)
+      expect(request.defaults.timeout).to.equal(12345)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      const run = new Run()
+      expect(() => { run.networkTimeout = undefined }).to.throw('Invalid network timeout: undefined')
+      expect(() => { run.networkTimeout = null }).to.throw('Invalid network timeout: null')
+      expect(() => { run.networkTimeout = Infinity }).to.throw('Invalid network timeout: Infinity')
+      expect(() => { run.networkTimeout = -1 }).to.throw('Invalid network timeout: -1')
+      expect(() => { run.networkTimeout = true }).to.throw('Invalid network timeout: true')
+      expect(() => { run.networkTimeout = 'abc' }).to.throw('Invalid network timeout: "abc"')
+      expect(run.networkTimeout).to.equal(Run.defaults.networkTimeout)
+      expect(request.defaults.timeout).to.equal(Run.defaults.networkTimeout)
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // state
   // --------------------------------------------------------------------------
 
