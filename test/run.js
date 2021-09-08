@@ -818,10 +818,10 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it.skip('does not reuse owner', () => {
-        // const run = new Run({ network: 'main' })
-        // const run2 = new Run({ network: 'mock' })
-        // expect(run.cache).not.to.equal(run2.cache)
+      it('does not reuse owner', () => {
+        const run = new Run({ network: 'main' })
+        const run2 = new Run({ network: 'main' })
+        expect(run.owner).not.to.equal(run2.owner)
       })
 
       // ------------------------------------------------------------------------
