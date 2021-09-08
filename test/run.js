@@ -15,6 +15,7 @@ const { Jig } = Run
 const { RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, BrowserCache, NodeCache, Inventory } = Run.plugins
 const { BROWSER } = require('./env/config')
 const request = unmangle(Run)._request
+const Log = unmangle(unmangle(Run)._Log)
 
 // ------------------------------------------------------------------------------------------------
 // Run
@@ -1217,6 +1218,43 @@ describe('Run', () => {
         expect(() => { run.state = false }).to.throw('Invalid state: false')
         expect(run.state).to.equal(state)
       })
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // activate
+  // --------------------------------------------------------------------------
+
+  describe.only('activate', () => {
+    it('assigns instance', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('assigns debug to log', () => {
+      const run = new Run({ debug: false })
+      new Run({ debug: true }) // eslint-disable-line
+      run.activate()
+      expect(Log._enableDebug).to.equal(false)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('assigns logger to log', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('assigns network retries to request', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('assigns network timeout to request', () => {
+      // TODO
     })
   })
 
