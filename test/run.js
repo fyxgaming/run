@@ -12,7 +12,10 @@ const bsv = require('bsv')
 const Run = require('./env/run')
 const unmangle = require('./env/unmangle')
 const { Jig } = Run
-const { RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, BrowserCache, NodeCache, Inventory } = Run.plugins
+const {
+  RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, LocalOwner, BrowserCache,
+  NodeCache, Inventory
+} = Run.plugins
 const { BROWSER } = require('./env/config')
 const request = unmangle(Run)._request
 const Log = unmangle(unmangle(Run)._Log)
@@ -685,8 +688,12 @@ describe('Run', () => {
     // --------------------------------------------------------------------------
 
     describe('owner', () => {
-      it.skip('defaults to new random local owner', () => {
-        // TODO
+      it('defaults to new random local owner', () => {
+        const run = new Run()
+        expect(run.owner instanceof LocalOwner).to.equal(true)
+        const run2 = new Run()
+        expect(run2.owner instanceof LocalOwner).to.equal(true)
+        expect(run.owner.privkey).not.to.equal(run2.owner.privkey)
       })
 
       // ------------------------------------------------------------------------
