@@ -44,25 +44,25 @@ describe('Run', () => {
         expect(new Run().api).to.equal(Run.defaults.api)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('run', () => {
         expect(new Run({ api: 'run', network: 'main' }).blockchain instanceof RunConnect).to.equal(true)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('mattercloud', () => {
         expect(new Run({ api: 'mattercloud', network: 'main' }).blockchain instanceof MatterCloud).to.equal(true)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('whatsonchain', () => {
         expect(new Run({ api: 'whatsonchain', network: 'test' }).blockchain instanceof WhatsOnChain).to.equal(true)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if unsupported', () => {
         expect(() => new Run({ api: 'run', network: 'mock' })).to.throw('"mock" network is not compatible with the "run" api')
@@ -70,7 +70,7 @@ describe('Run', () => {
         expect(() => new Run({ api: 'mattercloud', network: 'test' })).to.throw('MatterCloud API does not support the "test" network')
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         expect(() => new Run({ api: 'mock' })).to.throw('Invalid api: "mock"')
@@ -90,36 +90,36 @@ describe('Run', () => {
         expect(new Run().apiKey).to.equal(Run.defaults.apiKey)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('assigns api key for run', () => {
         expect(new Run({ network: 'main', api: 'mattercloud', apiKey: 'abc' }).apiKey).to.equal('abc')
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         expect(() => new Run({ network: 'main', api: 'whatsonchain', apiKey: null })).to.throw('Invalid apiKey: null')
       })
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // app
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     describe('app', () => {
       it('defaults to default', () => {
         expect(new Run().app).to.equal(Run.defaults.app)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('custom app', () => {
         expect(new Run({ app: '' }).app).to.equal('')
         expect(new Run({ app: '123abc' }).app).to.equal('123abc')
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         expect(() => new Run({ app: undefined })).to.throw('Invalid app: undefined')
@@ -129,16 +129,16 @@ describe('Run', () => {
       })
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // autofund
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     describe('autofund', () => {
       it('defaults to default', () => {
         expect(new Run().autofund).to.equal(Run.defaults.autofund)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('true', async () => {
         const run = new Run({ autofund: true, network: 'mock' })
@@ -146,7 +146,7 @@ describe('Run', () => {
         expect((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('false', async () => {
         const run = new Run({ autofund: false, network: 'mock' })
@@ -154,7 +154,7 @@ describe('Run', () => {
         expect((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(false)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         expect(() => new Run({ autofund: undefined })).to.throw('Invalid autofund: undefined')
@@ -176,14 +176,14 @@ describe('Run', () => {
         expect(run.blockchain.network).to.equal('main')
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('defaults to mockchain if mock', () => {
         const run = new Run({ network: 'mock' })
         expect(run.blockchain instanceof Mockchain).to.equal(true)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('mockchain', () => {
         const blockchain = new Mockchain()
@@ -194,7 +194,7 @@ describe('Run', () => {
         expect(run.apiKey).to.equal(undefined)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('run', () => {
         const blockchain = new RunConnect()
@@ -207,7 +207,7 @@ describe('Run', () => {
         expect(run.blockchain.apiKey).to.equal(undefined)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('mattercloud', () => {
         const blockchain = new MatterCloud({ apiKey: 'abc' })
@@ -220,7 +220,7 @@ describe('Run', () => {
         expect(run.blockchain.apiKey).to.equal('abc')
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('whatsonchain', () => {
         const blockchain = new WhatsOnChain({ network: 'test', apiKey: '123' })
@@ -233,7 +233,7 @@ describe('Run', () => {
         expect(run.blockchain.apiKey).to.equal('123')
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('custom', () => {
         let fetched = false
@@ -251,7 +251,7 @@ describe('Run', () => {
         expect(run.blockchain).to.equal(blockchain)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('defaults to default', () => {
         const defaultBlockchain = Run.defaults.blockchain
@@ -260,7 +260,7 @@ describe('Run', () => {
         Run.defaults.blockchain = defaultBlockchain
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('resuses mockchain', () => {
         const run = new Run({ network: 'mock' })
@@ -268,7 +268,7 @@ describe('Run', () => {
         expect(run.blockchain).to.equal(run2.blockchain)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('resuses blockchain if same api, apiKey, and network', () => {
         const run = new Run({ api: 'whatsonchain', apiKey: 'abc', network: 'test' })
@@ -276,7 +276,7 @@ describe('Run', () => {
         expect(run.blockchain).to.equal(run2.blockchain)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('does not reuse blockchain if different apis', () => {
         const run = new Run({ api: 'mattercloud', apiKey: 'abc', network: 'main' })
@@ -284,7 +284,7 @@ describe('Run', () => {
         expect(run.blockchain).not.to.equal(run2.blockchain)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('does not reuse blockchain if different api keys', () => {
         const run = new Run({ api: 'mattercloud', apiKey: 'abc', network: 'main' })
@@ -292,7 +292,7 @@ describe('Run', () => {
         expect(run.blockchain).not.to.equal(run2.blockchain)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('does not reuse blockchain if different networks', () => {
         const run = new Run({ api: 'run', network: 'main' })
@@ -300,7 +300,7 @@ describe('Run', () => {
         expect(run.blockchain).not.to.equal(run2.blockchain)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         expect(() => new Run({ blockchain: undefined })).to.throw('Invalid blockchain: undefined')
@@ -318,7 +318,7 @@ describe('Run', () => {
         expect(() => new Run({ blockchain })).to.throw('Invalid blockchain: [object Object]')
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if incompatible settings', () => {
         expect(() => new Run({ blockchain: new Mockchain(), api: 'run' })).to.throw('Blockchain mismatch with "run" api')
@@ -329,9 +329,9 @@ describe('Run', () => {
       })
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // cache
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     describe('cache', () => {
       if (BROWSER) {
@@ -345,28 +345,28 @@ describe('Run', () => {
         })
       }
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('local cache', () => {
         const cache = new LocalCache()
         expect(new Run({ cache }).cache).to.equal(cache)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('map', () => {
         const cache = new Map()
         expect(new Run({ cache }).cache).to.equal(cache)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('custom', () => {
         const cache = { get: () => { }, set: () => { } }
         expect(new Run({ cache }).cache).to.equal(cache)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('defaults to default', () => {
         const defaultCache = Run.defaults.cache
@@ -375,7 +375,7 @@ describe('Run', () => {
         Run.defaults.cache = defaultCache
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('reuses cache if same network', () => {
         const run = new Run()
@@ -383,7 +383,7 @@ describe('Run', () => {
         expect(run.cache).to.equal(run2.cache)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('does not reuse cache if different networks', () => {
         const run = new Run({ network: 'main' })
@@ -391,7 +391,7 @@ describe('Run', () => {
         expect(run.cache).not.to.equal(run2.cache)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         expect(() => new Run({ cache: undefined })).to.throw('Invalid cache: undefined')
@@ -405,23 +405,23 @@ describe('Run', () => {
       })
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // client
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     describe('client', () => {
       it('defaults to default', () => {
         expect(new Run().client).to.equal(Run.defaults.client)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('boolean', () => {
         expect(new Run({ client: true }).client).to.equal(true)
         expect(new Run({ client: false }).client).to.equal(false)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         expect(() => new Run({ client: undefined })).to.throw('Invalid client: undefined')
@@ -431,23 +431,23 @@ describe('Run', () => {
       })
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // debug
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     describe('debug', () => {
       it('defaults to default', () => {
         expect(new Run().debug).to.equal(Run.defaults.debug)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('boolean', () => {
         expect(new Run({ debug: true }).debug).to.equal(true)
         expect(new Run({ debug: false }).debug).to.equal(false)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         expect(() => new Run({ debug: undefined })).to.throw('Invalid debug: undefined')
@@ -466,14 +466,14 @@ describe('Run', () => {
         expect(new Run().inventory instanceof Inventory).to.equal(true)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('may pass existing inventory', () => {
         const inventory = new Inventory()
         expect(new Run({ inventory }).inventory).to.equal(inventory)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         expect(() => new Run({ inventory: undefined })).to.throw('Invalid inventory: undefined')
@@ -483,7 +483,7 @@ describe('Run', () => {
         expect(() => new Run({ inventory: 123 })).to.throw('Invalid inventory: 123')
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('does not reuse across run instances', () => {
         const run = new Run()
@@ -501,13 +501,13 @@ describe('Run', () => {
         expect(new Run().logger).to.equal(Run.defaults.logger)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('null', () => {
         expect(new Run({ logger: null }).logger).to.equal(null)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('console', () => {
         expect(new Run({ logger: console }).logger).to.equal(console)
@@ -533,7 +533,7 @@ describe('Run', () => {
         expect(loggedError).to.equal(true)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         expect(() => new Run({ logger: 1 })).to.throw('Invalid logger: 1')
@@ -556,7 +556,7 @@ describe('Run', () => {
         expect(run.api).to.equal('run')
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('RunConnect used for test network', () => {
         const run = new Run({ network: 'test', purse: undefined })
@@ -566,7 +566,7 @@ describe('Run', () => {
         expect(run.api).to.equal('run')
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('WhatsOnChain used for stn network', () => {
         const run = new Run({ network: 'stn', purse: undefined })
@@ -575,7 +575,7 @@ describe('Run', () => {
         expect(run.api).to.equal('whatsonchain')
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('Mockchain used for mock network', () => {
         const run = new Run({ network: 'mock', purse: undefined })
@@ -584,7 +584,7 @@ describe('Run', () => {
         expect(run.api).to.equal(undefined)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         expect(() => new Run({ network: '' })).to.throw('Unsupported network')
@@ -595,9 +595,9 @@ describe('Run', () => {
       })
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // networkRetries
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     describe('networkRetries', () => {
       it('defaults to default', () => {
@@ -608,7 +608,7 @@ describe('Run', () => {
         Run.defaults.networkRetries = previousDefault
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('non-negative integer', () => {
         const test = (x) => {
@@ -621,7 +621,7 @@ describe('Run', () => {
         test(Number.MAX_SAFE_INTEGER)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         const retriesBefore = request.defaults.retries
@@ -639,9 +639,9 @@ describe('Run', () => {
       })
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // networkTimeout
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     describe('networkTimeout', () => {
       it('defaults to default', () => {
@@ -652,7 +652,7 @@ describe('Run', () => {
         Run.defaults.networkRetries = previousDefault
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('non-negative number', () => {
         const test = (x) => {
@@ -667,7 +667,7 @@ describe('Run', () => {
         test(Number.MAX_VALUE)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         const timeoutBefore = request.defaults.timeout
@@ -683,9 +683,9 @@ describe('Run', () => {
       })
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // owner
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     describe('owner', () => {
       it('defaults to new random local owner', () => {
@@ -696,7 +696,7 @@ describe('Run', () => {
         expect(run.owner.privkey).not.to.equal(run2.owner.privkey)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('local owner', () => {
         const owner = new LocalOwner()
@@ -704,7 +704,7 @@ describe('Run', () => {
         expect(run.owner).to.equal(owner)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('private key string', () => {
         const owner = new bsv.PrivateKey().toString()
@@ -713,7 +713,7 @@ describe('Run', () => {
         expect(run.owner.privkey).to.equal(owner)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('public key string', () => {
         const owner = new bsv.PrivateKey().publicKey.toString()
@@ -722,7 +722,7 @@ describe('Run', () => {
         expect(run.owner.owner).to.equal(owner)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('private key bsv object', () => {
         const owner = new bsv.PrivateKey()
@@ -731,7 +731,7 @@ describe('Run', () => {
         expect(run.owner.privkey).to.equal(owner.toString())
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('public key bsv object', () => {
         const owner = new bsv.PrivateKey().publicKey
@@ -740,7 +740,7 @@ describe('Run', () => {
         expect(run.owner.owner).to.equal(owner.toString())
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('address string mainnet', () => {
         const owner = new bsv.PrivateKey('mainnet').toAddress().toString()
@@ -749,7 +749,7 @@ describe('Run', () => {
         expect(run.owner.owner).to.equal(owner)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('address string testnet', () => {
         const owner = new bsv.PrivateKey('testnet').toAddress().toString()
@@ -758,7 +758,7 @@ describe('Run', () => {
         expect(run.owner.owner).to.equal(owner)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('address bsv object mainnet', () => {
         const owner = new bsv.PrivateKey('mainnet').toAddress()
@@ -767,7 +767,7 @@ describe('Run', () => {
         expect(run.owner.owner).to.equal(owner.toString())
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('address bsv object testnet', () => {
         const owner = new bsv.PrivateKey('testnet').toAddress()
@@ -776,21 +776,21 @@ describe('Run', () => {
         expect(run.owner.owner).to.equal(owner.toString())
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if mainnet address string on testnet', () => {
         const owner = new bsv.PrivateKey('mainnet').toAddress().toString()
         expect(() => new Run({ owner, network: 'test' })).to.throw('Invalid owner')
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if testnet address bsv object on mainnet', () => {
         const owner = new bsv.PrivateKey('testnet').toAddress()
         expect(() => new Run({ owner, network: 'main' })).to.throw('Invalid owner')
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('custom owner', () => {
         const owner = { sign: () => { }, nextOwner: () => { } }
@@ -798,7 +798,7 @@ describe('Run', () => {
         expect(run.owner).to.equal(owner)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('viewer', () => {
         const owner = new Viewer(new bsv.PrivateKey().publicKey.toString())
@@ -806,7 +806,7 @@ describe('Run', () => {
         expect(run.owner).to.equal(owner)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('defaults to default', () => {
         const defaultOwner = Run.defaults.owner
@@ -816,7 +816,7 @@ describe('Run', () => {
         Run.defaults.owner = defaultOwner
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('does not reuse owner', () => {
         const run = new Run({ network: 'main' })
@@ -824,7 +824,7 @@ describe('Run', () => {
         expect(run.owner).not.to.equal(run2.owner)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         expect(() => new Run({ owner: undefined })).to.throw('Invalid owner: undefined')
@@ -842,9 +842,9 @@ describe('Run', () => {
       })
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // state
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     describe('state', () => {
       it('defaults to RunConnect on mainnet', () => {
@@ -852,21 +852,21 @@ describe('Run', () => {
         expect(run.state instanceof RunConnect).to.equal(true)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('defaults to undefined on testnet', () => {
         const run = new Run({ network: 'test' })
         expect(run.state).to.equal(undefined)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('defaults to undefined on non-run api', () => {
         const run = new Run({ network: 'main', api: 'mattercloud' })
         expect(run.state).to.equal(undefined)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('defaults to default', () => {
         const stateBefore = Run.defaults.state
@@ -876,7 +876,7 @@ describe('Run', () => {
         Run.defaults.state = stateBefore
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('custom state', () => {
         const state = { state: () => { } }
@@ -884,7 +884,7 @@ describe('Run', () => {
         expect(run.state).to.equal(state)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('specify RunConnect with other api', () => {
         const state = new RunConnect()
@@ -892,7 +892,7 @@ describe('Run', () => {
         expect(run.state).to.equal(state)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('reuses state if same network and api', () => {
         const state = { state: () => { } }
@@ -901,7 +901,7 @@ describe('Run', () => {
         expect(run2.state).to.equal(state)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('does not reuse state if different network', () => {
         const state = { state: () => { } }
@@ -910,7 +910,7 @@ describe('Run', () => {
         expect(run2.state).not.to.equal(state)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('does not reuse state if different api', () => {
         const state = { state: () => { } }
@@ -919,7 +919,7 @@ describe('Run', () => {
         expect(run2.state).not.to.equal(state)
       })
 
-      // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
         expect(() => new Run({ state: undefined })).to.throw('Invalid state: undefined')
