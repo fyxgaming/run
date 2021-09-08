@@ -1528,6 +1528,37 @@ describe('Run', () => {
     })
 
     // ------------------------------------------------------------------------
+    // preverify
+    // ------------------------------------------------------------------------
+
+    describe('preverify', () => {
+      it('enable', async () => {
+        const run = new Run({ preverify: false })
+        run.preverify = true
+        expect(run.preverify).to.equal(true)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('disable', async () => {
+        const run = new Run({ preverify: true })
+        run.preverify = false
+        expect(run.preverify).to.equal(false)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const run = new Run({ preverify: true })
+        expect(() => { run.preverify = undefined }).to.throw('Invalid preverify: undefined')
+        expect(() => { run.preverify = null }).to.throw('Invalid preverify: null')
+        expect(() => { run.preverify = 'abc' }).to.throw('Invalid preverify: "abc"')
+        expect(() => { run.preverify = NaN }).to.throw('Invalid preverify: NaN')
+        expect(run.preverify).to.equal(true)
+      })
+    })
+
+    // ------------------------------------------------------------------------
     // purse
     // ------------------------------------------------------------------------
 
