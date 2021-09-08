@@ -792,9 +792,10 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it.skip('custom owner', () => {
-        // const cache = { get: () => { }, set: () => { } }
-        // expect(new Run({ cache }).cache).to.equal(cache)
+      it('custom owner', () => {
+        const owner = { sign: () => { }, nextOwner: () => { } }
+        const run = new Run({ owner })
+        expect(run.owner).to.equal(owner)
       })
 
       // ------------------------------------------------------------------------
