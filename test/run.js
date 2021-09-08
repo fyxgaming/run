@@ -681,6 +681,126 @@ describe('Run', () => {
     })
 
     // --------------------------------------------------------------------------
+    // owner
+    // --------------------------------------------------------------------------
+
+    describe('owner', () => {
+      it.skip('defaults to new random local owner', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('local owner', () => {
+        // const cache = new LocalCache()
+        // expect(new Run({ cache }).cache).to.equal(cache)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('private key string', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('public key string', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('private key bsv object', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('public key bsv object', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('address string mainnet', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('address string testnet', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('address bsv object mainnet', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('address bsv object testnet', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('throws if mainnet address string on testnet', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('throws if testnet address bsv object on mainnet', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('custom owner', () => {
+        // const cache = { get: () => { }, set: () => { } }
+        // expect(new Run({ cache }).cache).to.equal(cache)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('viewer', () => {
+        // TODO
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('defaults to default', () => {
+        // const defaultCache = Run.defaults.cache
+        // Run.defaults.cache = new LocalCache()
+        // expect(new Run().cache).to.equal(Run.defaults.cache)
+        // Run.defaults.cache = defaultCache
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('does not reuse owner', () => {
+        // const run = new Run({ network: 'main' })
+        // const run2 = new Run({ network: 'mock' })
+        // expect(run.cache).not.to.equal(run2.cache)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it.skip('throws if invalid', () => {
+        // expect(() => new Run({ cache: undefined })).to.throw('Invalid cache: undefined')
+        // expect(() => new Run({ cache: null })).to.throw('Invalid cache: null')
+        // expect(() => new Run({ cache: {} })).to.throw('Invalid cache: [object Object]')
+        // expect(() => new Run({ cache: new Set() })).to.throw('Invalid cache: [object Set]')
+        // expect(() => new Run({ cache: { get: () => { } } })).to.throw('Invalid cache: [object Object]')
+        // expect(() => new Run({ cache: { set: () => { } } })).to.throw('Invalid cache: [object Object]')
+        // expect(() => new Run({ cache: { get: () => { }, set: 1 } })).to.throw('Invalid cache: [object Object]')
+        // expect(() => new Run({ cache: { get: null, set: () => {} } })).to.throw('Invalid cache: [object Object]')
+      })
+    })
+
+    // --------------------------------------------------------------------------
     // state
     // --------------------------------------------------------------------------
 
@@ -1200,6 +1320,48 @@ describe('Run', () => {
     })
 
     // ------------------------------------------------------------------------
+    // owner
+    // ------------------------------------------------------------------------
+
+    describe('owner', () => {
+      it.skip('change', () => {
+        /*
+        const run = new Run()
+        const cache = new Map()
+        run.cache = cache
+        expect(run.cache === cache).to.equal(true)
+        expect(cache.size).to.equal(0)
+        */
+      })
+
+      // ----------------------------------------------------------------------
+
+      it.skip('reuses inventory if same owner', () => {
+        // TODO
+      })
+
+      // ----------------------------------------------------------------------
+
+      it.skip('creates new inventory if different owner', () => {
+        // TODO
+      })
+
+      // ----------------------------------------------------------------------
+
+      it.skip('throws if invalid', () => {
+        /*
+        const run = new Run()
+        const cache = run.cache
+        expect(() => { run.cache = undefined }).to.throw('Invalid cache: undefined')
+        expect(() => { run.cache = null }).to.throw('Invalid cache: null')
+        expect(() => { run.cache = { get: () => { } } }).to.throw('Invalid cache: [object Object]')
+        expect(() => { run.cache = false }).to.throw('Invalid cache: false')
+        expect(run.cache).to.equal(cache)
+        */
+      })
+    })
+
+    // ------------------------------------------------------------------------
     // state
     // ------------------------------------------------------------------------
 
@@ -1330,58 +1492,6 @@ describe('Run', () => {
   // TODO
   /*
   describe('constructor', () => {
-    describe('owner', () => {
-      it('should default to random owner', () => {
-        const run = new Run()
-        expect(run.owner instanceof LocalOwner).to.equal(true)
-      })
-
-      it('should throw for invalid owner', () => {
-        expect(() => new Run({ owner: 123 })).to.throw('Invalid owner: 123')
-        expect(() => new Run({ owner: false })).to.throw('Invalid owner: false')
-        expect(() => new Run({ owner: null }).owner).to.throw('Invalid owner: null')
-      })
-
-      // TODO: Test that instance of is correct
-      // Objects and strings
-
-    it('should support creating from bsv public key on mainnet', () => {
-      const pubkey = new PrivateKey('mainnet').publicKey
-      const run = new Run({ network: 'main', owner: pubkey })
-      expect(run.owner.privkey).to.equal(undefined)
-      expect(run.owner.pubkey).to.equal(pubkey.toString())
-      expect(run.owner.address).to.equal(pubkey.toAddress().toString())
-      expect(run.owner.address).to.equal(pubkey.toAddress().toString())
-    })
-
-    it('should support creating from string public key on mocknet', () => {
-      const pubkey = new PrivateKey('testnet').publicKey
-      const run = new Run({ network: 'mock', owner: pubkey.toString() })
-      expect(run.owner.privkey).to.equal(undefined)
-      expect(run.owner.pubkey).to.equal(pubkey.toString())
-      expect(run.owner.address).to.equal(pubkey.toAddress().toString())
-      expect(run.owner.address).to.equal(pubkey.toAddress().toString())
-    })
-
-    it('should support creating from bsv address on testnet', () => {
-      const address = new PrivateKey('testnet').toAddress()
-      const run = new Run({ network: 'test', owner: address })
-      expect(run.owner.privkey).to.equal(undefined)
-      expect(run.owner.pubkey).to.equal(undefined)
-      expect(run.owner.address).to.equal(address.toString())
-      expect(run.owner.address).to.equal(address.toString())
-    })
-
-    it('should support creating from string address on mainnet', () => {
-      const address = new PrivateKey('livenet').toAddress()
-      const run = new Run({ network: 'main', owner: address.toString() })
-      expect(run.owner.privkey).to.equal(undefined)
-      expect(run.owner.pubkey).to.equal(undefined)
-      expect(run.owner.address).to.equal(address.toString())
-      expect(run.owner.address).to.equal(address.toString())
-    })
-    })
-
     describe('purse', () => {
       it('should default to random purse', () => {
         const run = new Run()
