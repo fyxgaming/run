@@ -1254,7 +1254,10 @@ describe('Run', () => {
     // ------------------------------------------------------------------------
 
     it('assigns network retries to request', () => {
-      // TODO
+      const run = new Run({ networkRetries: 10 })
+      new Run({ networkRetries: 11 }) // eslint-disable-line
+      run.activate()
+      expect(request.defaults.retries).to.equal(10)
     })
 
     // ------------------------------------------------------------------------
