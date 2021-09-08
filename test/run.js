@@ -818,7 +818,7 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it('does not reuse owner', () => {
+      it('does not reuse', () => {
         const run = new Run({ network: 'main' })
         const run2 = new Run({ network: 'main' })
         expect(run.owner).not.to.equal(run2.owner)
@@ -902,6 +902,14 @@ describe('Run', () => {
         const run = new Run({ blockchain })
         expect(run.purse).to.equal(Run.defaults.purse)
         Run.defaults.purse = defaultPurse
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('does not reuse', () => {
+        const run = new Run({ network: 'main' })
+        const run2 = new Run({ network: 'main' })
+        expect(run.purse).not.to.equal(run2.purse)
       })
 
       // ----------------------------------------------------------------------
