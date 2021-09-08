@@ -760,8 +760,11 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it.skip('address bsv object mainnet', () => {
-        // TODO
+      it('address bsv object mainnet', () => {
+        const owner = new bsv.PrivateKey('mainnet').toAddress()
+        const run = new Run({ owner, network: 'main' })
+        expect(run.owner instanceof Viewer).to.equal(true)
+        expect(run.owner.owner).to.equal(owner.toString())
       })
 
       // ------------------------------------------------------------------------
