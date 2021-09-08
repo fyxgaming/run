@@ -1245,7 +1245,10 @@ describe('Run', () => {
     // ------------------------------------------------------------------------
 
     it('assigns logger to log', () => {
-      // TODO
+      const run = new Run({ logger: { info: () => { } } })
+      new Run({ logger: { warn: () => { } } }) // eslint-disable-line
+      run.activate()
+      expect(Log._logger).to.equal(run.logger)
     })
 
     // ------------------------------------------------------------------------
