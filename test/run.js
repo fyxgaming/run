@@ -962,6 +962,39 @@ describe('Run', () => {
     // state
     // ------------------------------------------------------------------------
 
+    describe('rollbacks', () => {
+      it('defaults to default', () => {
+        expect(new Run().rollbacks).to.equal(Run.defaults.rollbacks)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('true', async () => {
+        const run = new Run({ rollbacks: true })
+        expect(run.rollbacks).to.equal(true)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('false', async () => {
+        const run = new Run({ rollbacks: false })
+        expect(run.rollbacks).to.equal(false)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        expect(() => new Run({ rollbacks: undefined })).to.throw('Invalid rollbacks: undefined')
+        expect(() => new Run({ rollbacks: null })).to.throw('Invalid rollbacks: null')
+        expect(() => new Run({ rollbacks: -1 })).to.throw('Invalid rollbacks: -1')
+        expect(() => new Run({ rollbacks: new LocalOwner() })).to.throw('Invalid rollbacks: [object LocalOwner]')
+      })
+    })
+
+    // ------------------------------------------------------------------------
+    // state
+    // ------------------------------------------------------------------------
+
     describe('state', () => {
       it('defaults to RunConnect on mainnet', () => {
         const run = new Run({ network: 'main' })
