@@ -808,11 +808,12 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it.skip('defaults to default', () => {
-        // const defaultCache = Run.defaults.cache
-        // Run.defaults.cache = new LocalCache()
-        // expect(new Run().cache).to.equal(Run.defaults.cache)
-        // Run.defaults.cache = defaultCache
+      it('defaults to default', () => {
+        const defaultOwner = Run.defaults.owner
+        Run.defaults.owner = new LocalOwner()
+        const run = new Run()
+        expect(run.owner).to.equal(Run.defaults.owner)
+        Run.defaults.owner = defaultOwner
       })
 
       // ------------------------------------------------------------------------
