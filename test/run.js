@@ -1073,6 +1073,19 @@ describe('Run', () => {
       expect(run.network).to.equal(run.blockchain.network)
       expect(run.network).to.equal('main')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid', () => {
+      const run = new Run()
+      expect(() => { run.network = undefined }).to.throw('Unsupported network: undefined')
+      expect(() => { run.network = null }).to.throw('Unsupported network: null')
+      expect(() => { run.network = ['main'] }).to.throw('Unsupported network: [object Array]')
+      expect(() => { run.network = -1 }).to.throw('Unsupported network: -1')
+      expect(() => { run.network = true }).to.throw('Unsupported network: true')
+      expect(() => { run.network = '' }).to.throw('Unsupported network: ""')
+      expect(run.network).to.equal(Run.defaults.network)
+    })
   })
 
   // --------------------------------------------------------------------------
