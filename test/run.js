@@ -843,6 +843,32 @@ describe('Run', () => {
     })
 
     // ------------------------------------------------------------------------
+    // purse
+    // ------------------------------------------------------------------------
+
+    describe('purse', () => {
+      it('should default to random purse', () => {
+        const run = new Run()
+        expect(run.purse instanceof LocalPurse).to.equal(true)
+        const run2 = new Run()
+        expect(run2.purse instanceof LocalPurse).to.equal(true)
+        expect(run.purse.privkey).not.to.equal(run2.purse.privkey)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it.skip('should throw for invalid purse', () => {
+        expect(() => new Run({ purse: undefined })).to.throw('Invalid purse: [object Object]')
+        expect(() => new Run({ purse: null })).to.throw('Invalid purse: [object Object]')
+        expect(() => new Run({ purse: {} })).to.throw('Invalid purse: [object Object]')
+        expect(() => new Run({ purse: { pay: false } })).to.throw('Invalid purse: [object Object]')
+        expect(() => new Run({ purse: 123 })).to.throw('Invalid purse: 123')
+        expect(() => new Run({ purse: true })).to.throw('Invalid purse: true')
+        expect(() => new Run({ purse: null }).purse).to.throw('Invalid purse: null')
+      })
+    })
+
+    // ------------------------------------------------------------------------
     // state
     // ------------------------------------------------------------------------
 
@@ -1542,20 +1568,6 @@ describe('Run', () => {
   // TODO
   /*
   describe('constructor', () => {
-    describe('purse', () => {
-      it('should default to random purse', () => {
-        const run = new Run()
-        expect(run.purse instanceof LocalPurse).to.equal(true)
-      })
-
-      it('should throw for invalid purse', () => {
-        expect(() => new Run({ purse: {} })).to.throw('Invalid purse: [object Object]')
-        expect(() => new Run({ purse: 123 })).to.throw('Invalid purse: 123')
-        expect(() => new Run({ purse: true })).to.throw('Invalid purse: true')
-        expect(() => new Run({ purse: null }).purse).to.throw('Invalid purse: null')
-      })
-    })
-
     describe('misc', () => {
       it('should set global bsv network', () => {
       new Run({ network: 'main' }) // eslint-disable-line
