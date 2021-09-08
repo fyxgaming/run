@@ -1376,8 +1376,12 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it.skip('reuses inventory if same owner', () => {
-        // TODO
+      it('reuses inventory if same owner', () => {
+        const owner = new LocalOwner()
+        const run = new Run({ owner })
+        const previousInventory = run.inventory
+        run.owner = owner
+        expect(run.inventory).to.equal(previousInventory)
       })
 
       // ----------------------------------------------------------------------
