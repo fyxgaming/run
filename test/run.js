@@ -1366,14 +1366,12 @@ describe('Run', () => {
     // ------------------------------------------------------------------------
 
     describe('owner', () => {
-      it.skip('change', () => {
-        /*
+      it('change', () => {
         const run = new Run()
-        const cache = new Map()
-        run.cache = cache
-        expect(run.cache === cache).to.equal(true)
-        expect(cache.size).to.equal(0)
-        */
+        const privkey = new bsv.PrivateKey().toString()
+        run.owner = privkey
+        expect(run.owner instanceof LocalOwner).to.equal(true)
+        expect(run.owner.privkey).to.equal(privkey)
       })
 
       // ----------------------------------------------------------------------
