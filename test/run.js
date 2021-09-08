@@ -649,7 +649,7 @@ describe('Run', () => {
         Run.defaults.networkTimeout = 18000
         expect(new Run().networkTimeout).to.equal(Run.defaults.networkTimeout)
         expect(request.defaults.timeout).to.equal(Run.defaults.networkTimeout)
-        Run.defaults.networkRetries = previousDefault
+        Run.defaults.networkTimeout = previousDefault
       })
 
       // ----------------------------------------------------------------------
@@ -959,7 +959,7 @@ describe('Run', () => {
     })
 
     // ------------------------------------------------------------------------
-    // state
+    // rollbacks
     // ------------------------------------------------------------------------
 
     describe('rollbacks', () => {
@@ -1078,6 +1078,44 @@ describe('Run', () => {
         expect(() => new Run({ state: { get: () => { } } })).to.throw('Invalid state: [object Object]')
         expect(() => new Run({ state: { state: 1 } })).to.throw('Invalid state: [object Object]')
         expect(() => new Run({ state: { state: null } })).to.throw('Invalid state: [object Object]')
+      })
+    })
+
+    // ------------------------------------------------------------------------
+    // timeout
+    // ------------------------------------------------------------------------
+
+    describe('timeout', () => {
+      it('defaults to default', () => {
+        const previousDefault = Run.defaults.timeout
+        Run.defaults.timeout = 18000
+        expect(new Run().timeout).to.equal(Run.defaults.timeout)
+        Run.defaults.timeout = previousDefault
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('non-negative number', () => {
+        const test = (x) => expect(new Run({ timeout: x }).timeout).to.equal(x)
+        test(0)
+        test(1)
+        test(10)
+        test(1000000.5)
+        test(Number.MAX_SAFE_INTEGER)
+        test(Number.MAX_VALUE)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        expect(() => new Run({ timeout: undefined })).to.throw('Invalid timeout: undefined')
+        expect(() => new Run({ timeout: null })).to.throw('Invalid timeout: null')
+        expect(() => new Run({ timeout: {} })).to.throw('Invalid timeout: [object Object]')
+        expect(() => new Run({ timeout: () => {} })).to.throw('Invalid timeout: [anonymous function]')
+        expect(() => new Run({ timeout: -1 })).to.throw('Invalid timeout: -1')
+        expect(() => new Run({ timeout: NaN })).to.throw('Invalid timeout: NaN')
+        expect(() => new Run({ timeout: Infinity })).to.throw('Invalid timeout: Infinity')
+        expect(() => new Run({ timeout: -1.5 })).to.throw('Invalid timeout: -1.5')
       })
     })
   })
