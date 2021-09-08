@@ -843,6 +843,39 @@ describe('Run', () => {
     })
 
     // ------------------------------------------------------------------------
+    // preverify
+    // ------------------------------------------------------------------------
+
+    describe('preverify', () => {
+      it('defaults to default', () => {
+        expect(new Run().preverify).to.equal(Run.defaults.preverify)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('true', async () => {
+        const run = new Run({ preverify: true })
+        expect(run.preverify).to.equal(true)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('false', async () => {
+        const run = new Run({ preverify: false })
+        expect(run.preverify).to.equal(false)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        expect(() => new Run({ preverify: undefined })).to.throw('Invalid preverify: undefined')
+        expect(() => new Run({ preverify: null })).to.throw('Invalid preverify: null')
+        expect(() => new Run({ preverify: -1 })).to.throw('Invalid preverify: -1')
+        expect(() => new Run({ preverify: new Mockchain() })).to.throw('Invalid preverify: [object Mockchain]')
+      })
+    })
+
+    // ------------------------------------------------------------------------
     // purse
     // ------------------------------------------------------------------------
 
