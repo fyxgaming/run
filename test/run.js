@@ -876,6 +876,16 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
+      it('private key bsv object', () => {
+        const blockchain = new RunConnect()
+        const purse = new bsv.PrivateKey('mainnet')
+        const run = new Run({ purse, blockchain })
+        expect(run.purse instanceof LocalPurse).to.equal(true)
+        expect(run.purse.privkey).to.equal(purse.toString())
+      })
+
+      // ----------------------------------------------------------------------
+
       it('throws if invalid', () => {
         expect(() => new Run({ purse: undefined })).to.throw('Invalid purse: undefined')
         expect(() => new Run({ purse: null })).to.throw('Invalid purse: null')
