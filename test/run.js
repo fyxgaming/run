@@ -886,6 +886,15 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
+      it('custom purse', () => {
+        const blockchain = new Mockchain()
+        const purse = { pay: () => { } }
+        const run = new Run({ purse, blockchain })
+        expect(run.purse).to.equal(purse)
+      })
+
+      // ----------------------------------------------------------------------
+
       it('throws if invalid', () => {
         expect(() => new Run({ purse: undefined })).to.throw('Invalid purse: undefined')
         expect(() => new Run({ purse: null })).to.throw('Invalid purse: null')
