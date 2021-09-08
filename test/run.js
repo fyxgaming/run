@@ -800,8 +800,10 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it.skip('viewer', () => {
-        // TODO
+      it('viewer', () => {
+        const owner = new Viewer(new bsv.PrivateKey().publicKey.toString())
+        const run = new Run({ owner })
+        expect(run.owner).to.equal(owner)
       })
 
       // ------------------------------------------------------------------------
