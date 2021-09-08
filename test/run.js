@@ -1227,7 +1227,10 @@ describe('Run', () => {
 
   describe.only('activate', () => {
     it('assigns instance', () => {
-      // TODO
+      const run = new Run({ debug: false })
+      new Run({ debug: true }) // eslint-disable-line
+      run.activate()
+      expect(Run.instance).to.equal(run)
     })
 
     // ------------------------------------------------------------------------
