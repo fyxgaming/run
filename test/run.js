@@ -14,7 +14,7 @@ const unmangle = require('./env/unmangle')
 const { Jig } = Run
 const {
   RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, LocalOwner, BrowserCache,
-  NodeCache, Inventory
+  NodeCache, Inventory, Viewer
 } = Run.plugins
 const { BROWSER } = require('./env/config')
 const request = unmangle(Run)._request
@@ -715,8 +715,11 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it.skip('public key string', () => {
-        // TODO
+      it.only('public key string', () => {
+        const owner = new bsv.PrivateKey().publicKey.toString()
+        const run = new Run({ owner })
+        expect(run.owner instanceof Viewer).to.equal(true)
+        expect(run.owner.owner).to.equal(owner)
       })
 
       // ------------------------------------------------------------------------
