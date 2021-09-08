@@ -1382,8 +1382,13 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it.skip('creates new inventory if different owner', () => {
-        // TODO
+      it('creates new inventory if different owner', () => {
+        const run = new Run()
+        const previousInventory = run.inventory
+        const privkey = new bsv.PrivateKey().toString()
+        run.owner = privkey
+        expect(run.inventory instanceof Inventory).to.equal(true)
+        expect(run.inventory).not.to.equal(previousInventory)
       })
 
       // ----------------------------------------------------------------------
