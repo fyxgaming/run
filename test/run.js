@@ -600,21 +600,27 @@ describe('Run', () => {
         const previousDefault = Run.defaults.networkRetries
         Run.defaults.networkRetries = 10
         expect(new Run().networkRetries).to.equal(Run.defaults.networkRetries)
+        expect(request.defaults.retries).to.equal(Run.defaults.networkRetries)
         Run.defaults.networkRetries = previousDefault
       })
 
       // ------------------------------------------------------------------------
 
       it('non-negative integer', () => {
-        expect(new Run({ networkRetries: 0 }).networkRetries).to.equal(0)
-        expect(new Run({ networkRetries: 1 }).networkRetries).to.equal(1)
-        expect(new Run({ networkRetries: 10 }).networkRetries).to.equal(10)
-        expect(new Run({ networkRetries: Number.MAX_SAFE_INTEGER }).networkRetries).to.equal(Number.MAX_SAFE_INTEGER)
+        const test = (x) => {
+          expect(new Run({ networkRetries: x }).networkRetries).to.equal(x)
+          expect(request.defaults.retries).to.equal(x)
+        }
+        test(0)
+        test(1)
+        test(10)
+        test(Number.MAX_SAFE_INTEGER)
       })
 
       // ------------------------------------------------------------------------
 
       it('throws if invalid', () => {
+        const retriesBefore = request.defaults.retries
         expect(() => new Run({ networkRetries: undefined })).to.throw('Invalid network retries: undefined')
         expect(() => new Run({ networkRetries: null })).to.throw('Invalid network retries: null')
         expect(() => new Run({ networkRetries: {} })).to.throw('Invalid network retries: [object Object]')
@@ -625,6 +631,7 @@ describe('Run', () => {
         expect(() => new Run({ networkRetries: Infinity })).to.throw('Invalid network retries: Infinity')
         expect(() => new Run({ networkRetries: 1.5 })).to.throw('Invalid network retries: 1.5')
         expect(() => new Run({ networkRetries: -1.5 })).to.throw('Invalid network retries: -1.5')
+        expect(request.defaults.retries).to.equal(retriesBefore)
       })
     })
 
