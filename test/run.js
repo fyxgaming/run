@@ -770,451 +770,453 @@ describe('Run', () => {
     })
   })
 
+  describe('properties', () => {
   // --------------------------------------------------------------------------
   // api
   // --------------------------------------------------------------------------
 
-  describe('api', () => {
-    it('run', () => {
-      const run = new Run({ api: 'mattercloud', network: 'main' })
-      run.api = 'run'
-      expect(run.api).to.equal('run')
-      expect(run.blockchain instanceof RunConnect).to.equal(true)
-      expect(run.state instanceof RunConnect).to.equal(true)
-      expect(run.cache instanceof RunConnect).to.equal(false)
-      expect(run.network).to.equal('main')
+    describe('api', () => {
+      it('run', () => {
+        const run = new Run({ api: 'mattercloud', network: 'main' })
+        run.api = 'run'
+        expect(run.api).to.equal('run')
+        expect(run.blockchain instanceof RunConnect).to.equal(true)
+        expect(run.state instanceof RunConnect).to.equal(true)
+        expect(run.cache instanceof RunConnect).to.equal(false)
+        expect(run.network).to.equal('main')
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('mattercloud', () => {
+        const run = new Run({ api: 'run', network: 'main' })
+        run.api = 'mattercloud'
+        expect(run.api).to.equal('mattercloud')
+        expect(run.blockchain instanceof MatterCloud).to.equal(true)
+        expect(run.cache instanceof RunConnect).to.equal(false)
+        expect(run.network).to.equal('main')
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('whatsonchain', () => {
+        const run = new Run({ api: 'run', network: 'test' })
+        run.api = 'whatsonchain'
+        expect(run.api).to.equal('whatsonchain')
+        expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
+        expect(run.cache instanceof RunConnect).to.equal(false)
+        expect(run.network).to.equal('test')
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if unsupported', () => {
+        const run = new Run({ api: 'run', network: 'test' })
+        expect(() => { run.api = 'mattercloud' }).to.throw('MatterCloud API does not support the "test" network')
+        expect(run.api).to.equal('run')
+        expect(run.blockchain instanceof RunConnect).to.equal(true)
+        expect(run.network).to.equal('test')
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const run = new Run({ api: 'run', network: 'test' })
+        expect(() => { run.api = 'mock' }).to.throw('Invalid api: "mock"')
+        expect(() => { run.api = 'bad' }).to.throw('Invalid api: "bad"')
+        expect(() => { run.api = null }).to.throw('Invalid api: null')
+        expect(() => { run.api = 123 }).to.throw('Invalid api: 123')
+        expect(run.api).to.equal('run')
+        expect(run.blockchain instanceof RunConnect).to.equal(true)
+        expect(run.network).to.equal('test')
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('change blockchain', () => {
+        const run = new Run({ api: 'run', network: 'main' })
+        run.blockchain = new Run.plugins.WhatsOnChain()
+        expect(run.api).to.equal(undefined)
+        run.blockchain = new Run.plugins.RunConnect()
+        expect(run.api).to.equal(undefined)
+        run.blockchain = new Run.plugins.Mockchain()
+        expect(run.api).to.equal(undefined)
+      })
     })
 
-    // ------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
+    // apiKey
+    // --------------------------------------------------------------------------
 
-    it('mattercloud', () => {
-      const run = new Run({ api: 'run', network: 'main' })
-      run.api = 'mattercloud'
-      expect(run.api).to.equal('mattercloud')
-      expect(run.blockchain instanceof MatterCloud).to.equal(true)
-      expect(run.cache instanceof RunConnect).to.equal(false)
-      expect(run.network).to.equal('main')
+    describe('apiKey', () => {
+      it('change', () => {
+        const run = new Run({ api: 'mattercloud', network: 'main' })
+        run.apiKey = '123'
+        expect(run.apiKey).to.equal(run.blockchain.apiKey)
+        expect(run.apiKey).to.equal('123')
+        expect(run.api).to.equal('mattercloud')
+      })
     })
 
-    // ------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
+    // app
+    // --------------------------------------------------------------------------
 
-    it('whatsonchain', () => {
-      const run = new Run({ api: 'run', network: 'test' })
-      run.api = 'whatsonchain'
-      expect(run.api).to.equal('whatsonchain')
-      expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
-      expect(run.cache instanceof RunConnect).to.equal(false)
-      expect(run.network).to.equal('test')
+    describe('app', () => {
+      it('change', () => {
+        const run = new Run()
+        run.app = 'abc'
+        expect(run.app).to.equal('abc')
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const run = new Run({ app: 'abc' })
+        expect(() => { run.app = undefined }).to.throw('Invalid app: undefined')
+        expect(() => { run.app = null }).to.throw('Invalid app: null')
+        expect(() => { run.app = false }).to.throw('Invalid app: false')
+        expect(() => { run.app = {} }).to.throw('Invalid app: [object Object]')
+        expect(run.app).to.equal('abc')
+      })
     })
 
-    // ------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
+    // autofund
+    // --------------------------------------------------------------------------
 
-    it('throws if unsupported', () => {
-      const run = new Run({ api: 'run', network: 'test' })
-      expect(() => { run.api = 'mattercloud' }).to.throw('MatterCloud API does not support the "test" network')
-      expect(run.api).to.equal('run')
-      expect(run.blockchain instanceof RunConnect).to.equal(true)
-      expect(run.network).to.equal('test')
+    describe('autofund', () => {
+      it('enable', async () => {
+        const run = new Run({ network: 'mock', autofund: false })
+        run.autofund = true
+        expect(run.autofund).to.equal(true)
+        expect((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('disable', async () => {
+        const run = new Run({ network: 'mock', autofund: true })
+        run.autofund = false
+        expect(run.autofund).to.equal(false)
+        expect((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const run = new Run({ autofund: true })
+        expect(() => { run.autofund = undefined }).to.throw('Invalid autofund: undefined')
+        expect(() => { run.autofund = null }).to.throw('Invalid autofund: null')
+        expect(() => { run.autofund = 'abc' }).to.throw('Invalid autofund: "abc"')
+        expect(() => { run.autofund = NaN }).to.throw('Invalid autofund: NaN')
+        expect(run.autofund).to.equal(true)
+      })
     })
 
-    // ------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
+    // blockchain
+    // --------------------------------------------------------------------------
 
-    it('throws if invalid', () => {
-      const run = new Run({ api: 'run', network: 'test' })
-      expect(() => { run.api = 'mock' }).to.throw('Invalid api: "mock"')
-      expect(() => { run.api = 'bad' }).to.throw('Invalid api: "bad"')
-      expect(() => { run.api = null }).to.throw('Invalid api: null')
-      expect(() => { run.api = 123 }).to.throw('Invalid api: 123')
-      expect(run.api).to.equal('run')
-      expect(run.blockchain instanceof RunConnect).to.equal(true)
-      expect(run.network).to.equal('test')
+    describe('blockchain', () => {
+      it('change', () => {
+        const run = new Run({ api: 'whatsonchain', network: 'test', apiKey: 'abc' })
+        run.blockchain = new Mockchain()
+        expect(run.api).to.equal(undefined)
+        expect(run.apiKey).to.equal(undefined)
+        expect(run.network).to.equal('mock')
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const run = new Run()
+        const blockchain = run.blockchain
+        expect(() => { run.blockchain = undefined }).to.throw('Invalid blockchain: undefined')
+        expect(() => { run.blockchain = null }).to.throw('Invalid blockchain: null')
+        expect(() => { run.blockchain = {} }).to.throw('Invalid blockchain: [object Object]')
+        expect(() => { run.blockchain = true }).to.throw('Invalid blockchain: true')
+        expect(run.blockchain).to.equal(blockchain)
+      })
     })
 
-    // ------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
+    // cache
+    // --------------------------------------------------------------------------
 
-    it('change blockchain', () => {
-      const run = new Run({ api: 'run', network: 'main' })
-      run.blockchain = new Run.plugins.WhatsOnChain()
-      expect(run.api).to.equal(undefined)
-      run.blockchain = new Run.plugins.RunConnect()
-      expect(run.api).to.equal(undefined)
-      run.blockchain = new Run.plugins.Mockchain()
-      expect(run.api).to.equal(undefined)
-    })
-  })
+    describe('cache', () => {
+      it('change', () => {
+        const run = new Run()
+        const cache = new Map()
+        run.cache = cache
+        expect(run.cache === cache).to.equal(true)
+        expect(cache.size).to.equal(0)
+      })
 
-  // --------------------------------------------------------------------------
-  // apiKey
-  // --------------------------------------------------------------------------
+      // ------------------------------------------------------------------------
 
-  describe('apiKey', () => {
-    it('change', () => {
-      const run = new Run({ api: 'mattercloud', network: 'main' })
-      run.apiKey = '123'
-      expect(run.apiKey).to.equal(run.blockchain.apiKey)
-      expect(run.apiKey).to.equal('123')
-      expect(run.api).to.equal('mattercloud')
-    })
-  })
-
-  // --------------------------------------------------------------------------
-  // app
-  // --------------------------------------------------------------------------
-
-  describe('app', () => {
-    it('change', () => {
-      const run = new Run()
-      run.app = 'abc'
-      expect(run.app).to.equal('abc')
+      it('throws if invalid', () => {
+        const run = new Run()
+        const cache = run.cache
+        expect(() => { run.cache = undefined }).to.throw('Invalid cache: undefined')
+        expect(() => { run.cache = null }).to.throw('Invalid cache: null')
+        expect(() => { run.cache = { get: () => { } } }).to.throw('Invalid cache: [object Object]')
+        expect(() => { run.cache = false }).to.throw('Invalid cache: false')
+        expect(run.cache).to.equal(cache)
+      })
     })
 
-    // ------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
+    // client
+    // --------------------------------------------------------------------------
 
-    it('throws if invalid', () => {
-      const run = new Run({ app: 'abc' })
-      expect(() => { run.app = undefined }).to.throw('Invalid app: undefined')
-      expect(() => { run.app = null }).to.throw('Invalid app: null')
-      expect(() => { run.app = false }).to.throw('Invalid app: false')
-      expect(() => { run.app = {} }).to.throw('Invalid app: [object Object]')
-      expect(run.app).to.equal('abc')
-    })
-  })
+    describe('client', () => {
+      it('change', () => {
+        const run = new Run()
+        const client = run.client
+        run.client = !client
+        expect(run.client).to.equal(!client)
+      })
 
-  // --------------------------------------------------------------------------
-  // autofund
-  // --------------------------------------------------------------------------
+      // ------------------------------------------------------------------------
 
-  describe('autofund', () => {
-    it('enable', async () => {
-      const run = new Run({ network: 'mock', autofund: false })
-      run.autofund = true
-      expect(run.autofund).to.equal(true)
-      expect((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('disable', async () => {
-      const run = new Run({ network: 'mock', autofund: true })
-      run.autofund = false
-      expect(run.autofund).to.equal(false)
-      expect((await run.blockchain.utxos(run.purse.address)).length > 0).to.equal(true)
+      it('throws if invalid', () => {
+        const run = new Run({ client: true })
+        expect(() => { run.client = undefined }).to.throw('Invalid client: undefined')
+        expect(() => { run.client = null }).to.throw('Invalid client: null')
+        expect(() => { run.client = 'abc' }).to.throw('Invalid client: "abc"')
+        expect(() => { run.client = {} }).to.throw('Invalid client: [object Object]')
+        expect(run.client).to.equal(true)
+      })
     })
 
-    // ------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
+    // debug
+    // --------------------------------------------------------------------------
 
-    it('throws if invalid', () => {
-      const run = new Run({ autofund: true })
-      expect(() => { run.autofund = undefined }).to.throw('Invalid autofund: undefined')
-      expect(() => { run.autofund = null }).to.throw('Invalid autofund: null')
-      expect(() => { run.autofund = 'abc' }).to.throw('Invalid autofund: "abc"')
-      expect(() => { run.autofund = NaN }).to.throw('Invalid autofund: NaN')
-      expect(run.autofund).to.equal(true)
-    })
-  })
+    describe('debug', () => {
+      it('enable', async () => {
+        const logger = stub({ info: () => {}, warn: () => {}, error: () => {}, debug: () => {} })
+        const run = new Run({ logger })
+        run.debug = false
+        class A extends Jig { }
+        const a = new A()
+        await a.sync()
+        expect(logger.debug.called).to.equal(false)
+      })
 
-  // --------------------------------------------------------------------------
-  // blockchain
-  // --------------------------------------------------------------------------
+      // ------------------------------------------------------------------------
 
-  describe('blockchain', () => {
-    it('change', () => {
-      const run = new Run({ api: 'whatsonchain', network: 'test', apiKey: 'abc' })
-      run.blockchain = new Mockchain()
-      expect(run.api).to.equal(undefined)
-      expect(run.apiKey).to.equal(undefined)
-      expect(run.network).to.equal('mock')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if invalid', () => {
-      const run = new Run()
-      const blockchain = run.blockchain
-      expect(() => { run.blockchain = undefined }).to.throw('Invalid blockchain: undefined')
-      expect(() => { run.blockchain = null }).to.throw('Invalid blockchain: null')
-      expect(() => { run.blockchain = {} }).to.throw('Invalid blockchain: [object Object]')
-      expect(() => { run.blockchain = true }).to.throw('Invalid blockchain: true')
-      expect(run.blockchain).to.equal(blockchain)
-    })
-  })
-
-  // --------------------------------------------------------------------------
-  // cache
-  // --------------------------------------------------------------------------
-
-  describe('cache', () => {
-    it('change', () => {
-      const run = new Run()
-      const cache = new Map()
-      run.cache = cache
-      expect(run.cache === cache).to.equal(true)
-      expect(cache.size).to.equal(0)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if invalid', () => {
-      const run = new Run()
-      const cache = run.cache
-      expect(() => { run.cache = undefined }).to.throw('Invalid cache: undefined')
-      expect(() => { run.cache = null }).to.throw('Invalid cache: null')
-      expect(() => { run.cache = { get: () => { } } }).to.throw('Invalid cache: [object Object]')
-      expect(() => { run.cache = false }).to.throw('Invalid cache: false')
-      expect(run.cache).to.equal(cache)
-    })
-  })
-
-  // --------------------------------------------------------------------------
-  // client
-  // --------------------------------------------------------------------------
-
-  describe('client', () => {
-    it('change', () => {
-      const run = new Run()
-      const client = run.client
-      run.client = !client
-      expect(run.client).to.equal(!client)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if invalid', () => {
-      const run = new Run({ client: true })
-      expect(() => { run.client = undefined }).to.throw('Invalid client: undefined')
-      expect(() => { run.client = null }).to.throw('Invalid client: null')
-      expect(() => { run.client = 'abc' }).to.throw('Invalid client: "abc"')
-      expect(() => { run.client = {} }).to.throw('Invalid client: [object Object]')
-      expect(run.client).to.equal(true)
-    })
-  })
-
-  // --------------------------------------------------------------------------
-  // debug
-  // --------------------------------------------------------------------------
-
-  describe('debug', () => {
-    it('enable', async () => {
-      const logger = stub({ info: () => {}, warn: () => {}, error: () => {}, debug: () => {} })
-      const run = new Run({ logger })
-      run.debug = false
-      class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      expect(logger.debug.called).to.equal(false)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('disable', async () => {
-      const logger = stub({ info: () => {}, warn: () => {}, error: () => {}, debug: () => {} })
+      it('disable', async () => {
+        const logger = stub({ info: () => {}, warn: () => {}, error: () => {}, debug: () => {} })
       new Run({ debug: true, logger }) // eslint-disable-line
-      class A extends Jig { }
-      const a = new A()
-      await a.sync()
-      expect(logger.debug.called).to.equal(true)
+        class A extends Jig { }
+        const a = new A()
+        await a.sync()
+        expect(logger.debug.called).to.equal(true)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('change', () => {
+        const run = new Run()
+        const debug = run.debug
+        run.debug = !debug
+        expect(run.debug).to.equal(!debug)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const run = new Run({ debug: true })
+        expect(() => { run.debug = undefined }).to.throw('Invalid debug: undefined')
+        expect(() => { run.debug = null }).to.throw('Invalid debug: null')
+        expect(() => { run.debug = 'abc' }).to.throw('Invalid debug: "abc"')
+        expect(() => { run.debug = {} }).to.throw('Invalid debug: [object Object]')
+        expect(run.debug).to.equal(true)
+      })
     })
 
     // ------------------------------------------------------------------------
-
-    it('change', () => {
-      const run = new Run()
-      const debug = run.debug
-      run.debug = !debug
-      expect(run.debug).to.equal(!debug)
-    })
-
+    // inventory
     // ------------------------------------------------------------------------
 
-    it('throws if invalid', () => {
-      const run = new Run({ debug: true })
-      expect(() => { run.debug = undefined }).to.throw('Invalid debug: undefined')
-      expect(() => { run.debug = null }).to.throw('Invalid debug: null')
-      expect(() => { run.debug = 'abc' }).to.throw('Invalid debug: "abc"')
-      expect(() => { run.debug = {} }).to.throw('Invalid debug: [object Object]')
-      expect(run.debug).to.equal(true)
-    })
-  })
+    describe('inventory', () => {
+      it('set inventory', () => {
+        const inventory = new Inventory()
+        const run = new Run()
+        run.inventory = inventory
+        expect(run.inventory).to.equal(inventory)
+      })
 
-  // ------------------------------------------------------------------------
-  // inventory
-  // ------------------------------------------------------------------------
+      // ------------------------------------------------------------------------
 
-  describe('inventory', () => {
-    it('set inventory', () => {
-      const inventory = new Inventory()
-      const run = new Run()
-      run.inventory = inventory
-      expect(run.inventory).to.equal(inventory)
-    })
+      it('throws if invalid', () => {
+        const run = new Run()
+        const inventory = run.inventory
+        expect(() => { run.inventory = undefined }).to.throw('Invalid inventory: undefined')
+        expect(() => { run.inventory = null }).to.throw('Invalid inventory: null')
+        expect(() => { run.inventory = true }).to.throw('Invalid inventory: true')
+        expect(() => { run.inventory = [] }).to.throw('Invalid inventory: [object Array]')
+        expect(() => { run.inventory = 'abc' }).to.throw('Invalid inventory: "abc"')
+        expect(run.inventory).to.equal(inventory)
+      })
 
-    // ------------------------------------------------------------------------
+      // ------------------------------------------------------------------------
 
-    it('throws if invalid', () => {
-      const run = new Run()
-      const inventory = run.inventory
-      expect(() => { run.inventory = undefined }).to.throw('Invalid inventory: undefined')
-      expect(() => { run.inventory = null }).to.throw('Invalid inventory: null')
-      expect(() => { run.inventory = true }).to.throw('Invalid inventory: true')
-      expect(() => { run.inventory = [] }).to.throw('Invalid inventory: [object Array]')
-      expect(() => { run.inventory = 'abc' }).to.throw('Invalid inventory: "abc"')
-      expect(run.inventory).to.equal(inventory)
+      it('changes when change owner', () => {
+        const run = new Run()
+        const inventory = run.inventory
+        run.owner = new bsv.PrivateKey().toString()
+        expect(run.inventory).not.to.equal(inventory)
+      })
     })
 
-    // ------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
+    // logger
+    // --------------------------------------------------------------------------
 
-    it('changes when change owner', () => {
-      const run = new Run()
-      const inventory = run.inventory
-      run.owner = new bsv.PrivateKey().toString()
-      expect(run.inventory).not.to.equal(inventory)
-    })
-  })
+    describe('logger', () => {
+      it('custom', () => {
+        const run = new Run()
+        const originalLogger = run.logger
+        const logger = {}
+        run.logger = logger
+        expect(run.logger).to.equal(logger)
+        expect(run.logger).not.to.equal(originalLogger)
+      })
 
-  // --------------------------------------------------------------------------
-  // logger
-  // --------------------------------------------------------------------------
+      // ------------------------------------------------------------------------
 
-  describe('logger', () => {
-    it('custom', () => {
-      const run = new Run()
-      const originalLogger = run.logger
-      const logger = {}
-      run.logger = logger
-      expect(run.logger).to.equal(logger)
-      expect(run.logger).not.to.equal(originalLogger)
-    })
+      it('null', () => {
+        const run = new Run()
+        run.logger = null
+        expect(run.logger).to.equal(null)
+      })
 
-    // ------------------------------------------------------------------------
+      // ------------------------------------------------------------------------
 
-    it('null', () => {
-      const run = new Run()
-      run.logger = null
-      expect(run.logger).to.equal(null)
-    })
+      it('console', () => {
+        const run = new Run()
+        run.logger = console
+        expect(run.logger).to.equal(console)
+      })
 
-    // ------------------------------------------------------------------------
+      // ------------------------------------------------------------------------
 
-    it('console', () => {
-      const run = new Run()
-      run.logger = console
-      expect(run.logger).to.equal(console)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if invalid', () => {
-      const run = new Run({ logger: console })
-      expect(() => { run.logger = 0 }).to.throw('Invalid logger: 0')
-      expect(() => { run.logger = true }).to.throw('Invalid logger: true')
-      expect(() => { run.logger = [] }).to.throw('Invalid logger: [object Array]')
-      expect(() => { run.logger = undefined }).to.throw('Invalid logger: undefined')
-      expect(run.logger).to.equal(console)
-    })
-  })
-
-  // --------------------------------------------------------------------------
-  // network
-  // --------------------------------------------------------------------------
-
-  describe('network', () => {
-    it('change', () => {
-      const run = new Run()
-      run.network = 'main'
-      expect(run.network).to.equal(run.blockchain.network)
-      expect(run.network).to.equal('main')
+      it('throws if invalid', () => {
+        const run = new Run({ logger: console })
+        expect(() => { run.logger = 0 }).to.throw('Invalid logger: 0')
+        expect(() => { run.logger = true }).to.throw('Invalid logger: true')
+        expect(() => { run.logger = [] }).to.throw('Invalid logger: [object Array]')
+        expect(() => { run.logger = undefined }).to.throw('Invalid logger: undefined')
+        expect(run.logger).to.equal(console)
+      })
     })
 
-    // ------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
+    // network
+    // --------------------------------------------------------------------------
 
-    it('throws if invalid', () => {
-      const run = new Run()
-      expect(() => { run.network = undefined }).to.throw('Unsupported network: undefined')
-      expect(() => { run.network = null }).to.throw('Unsupported network: null')
-      expect(() => { run.network = ['main'] }).to.throw('Unsupported network: [object Array]')
-      expect(() => { run.network = -1 }).to.throw('Unsupported network: -1')
-      expect(() => { run.network = true }).to.throw('Unsupported network: true')
-      expect(() => { run.network = '' }).to.throw('Unsupported network: ""')
-      expect(run.network).to.equal(Run.defaults.network)
-    })
-  })
+    describe('network', () => {
+      it('change', () => {
+        const run = new Run()
+        run.network = 'main'
+        expect(run.network).to.equal(run.blockchain.network)
+        expect(run.network).to.equal('main')
+      })
 
-  // --------------------------------------------------------------------------
-  // networkRetries
-  // --------------------------------------------------------------------------
+      // ------------------------------------------------------------------------
 
-  describe('networkRetries', () => {
-    it('change', () => {
-      const run = new Run()
-      run.networkRetries = 10
-      expect(run.networkRetries).to.equal(10)
-      expect(request.defaults.retries).to.equal(10)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if invalid', () => {
-      const run = new Run()
-      expect(() => { run.networkRetries = undefined }).to.throw('Invalid network retries: undefined')
-      expect(() => { run.networkRetries = null }).to.throw('Invalid network retries: null')
-      expect(() => { run.networkRetries = 100.1 }).to.throw('Invalid network retries: 100.1')
-      expect(() => { run.networkRetries = -1 }).to.throw('Invalid network retries: -1')
-      expect(() => { run.networkRetries = true }).to.throw('Invalid network retries: true')
-      expect(() => { run.networkRetries = 'abc' }).to.throw('Invalid network retries: "abc"')
-      expect(run.networkRetries).to.equal(Run.defaults.networkRetries)
-      expect(request.defaults.retries).to.equal(Run.defaults.networkRetries)
-    })
-  })
-
-  // --------------------------------------------------------------------------
-  // networkTimeout
-  // --------------------------------------------------------------------------
-
-  describe('networkTimeout', () => {
-    it('change', () => {
-      const run = new Run()
-      run.networkTimeout = 12345
-      expect(run.networkTimeout).to.equal(12345)
-      expect(request.defaults.timeout).to.equal(12345)
+      it('throws if invalid', () => {
+        const run = new Run()
+        expect(() => { run.network = undefined }).to.throw('Unsupported network: undefined')
+        expect(() => { run.network = null }).to.throw('Unsupported network: null')
+        expect(() => { run.network = ['main'] }).to.throw('Unsupported network: [object Array]')
+        expect(() => { run.network = -1 }).to.throw('Unsupported network: -1')
+        expect(() => { run.network = true }).to.throw('Unsupported network: true')
+        expect(() => { run.network = '' }).to.throw('Unsupported network: ""')
+        expect(run.network).to.equal(Run.defaults.network)
+      })
     })
 
-    // ------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
+    // networkRetries
+    // --------------------------------------------------------------------------
 
-    it('throws if invalid', () => {
-      const run = new Run()
-      expect(() => { run.networkTimeout = undefined }).to.throw('Invalid network timeout: undefined')
-      expect(() => { run.networkTimeout = null }).to.throw('Invalid network timeout: null')
-      expect(() => { run.networkTimeout = Infinity }).to.throw('Invalid network timeout: Infinity')
-      expect(() => { run.networkTimeout = -1 }).to.throw('Invalid network timeout: -1')
-      expect(() => { run.networkTimeout = true }).to.throw('Invalid network timeout: true')
-      expect(() => { run.networkTimeout = 'abc' }).to.throw('Invalid network timeout: "abc"')
-      expect(run.networkTimeout).to.equal(Run.defaults.networkTimeout)
-      expect(request.defaults.timeout).to.equal(Run.defaults.networkTimeout)
+    describe('networkRetries', () => {
+      it('change', () => {
+        const run = new Run()
+        run.networkRetries = 10
+        expect(run.networkRetries).to.equal(10)
+        expect(request.defaults.retries).to.equal(10)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const run = new Run()
+        expect(() => { run.networkRetries = undefined }).to.throw('Invalid network retries: undefined')
+        expect(() => { run.networkRetries = null }).to.throw('Invalid network retries: null')
+        expect(() => { run.networkRetries = 100.1 }).to.throw('Invalid network retries: 100.1')
+        expect(() => { run.networkRetries = -1 }).to.throw('Invalid network retries: -1')
+        expect(() => { run.networkRetries = true }).to.throw('Invalid network retries: true')
+        expect(() => { run.networkRetries = 'abc' }).to.throw('Invalid network retries: "abc"')
+        expect(run.networkRetries).to.equal(Run.defaults.networkRetries)
+        expect(request.defaults.retries).to.equal(Run.defaults.networkRetries)
+      })
     })
-  })
 
-  // --------------------------------------------------------------------------
-  // state
-  // --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
+    // networkTimeout
+    // --------------------------------------------------------------------------
 
-  describe('state', () => {
-    it('change', () => {
-      const run = new Run()
-      const state = { state: () => { } }
-      run.state = state
-      expect(run.state).to.equal(state)
+    describe('networkTimeout', () => {
+      it('change', () => {
+        const run = new Run()
+        run.networkTimeout = 12345
+        expect(run.networkTimeout).to.equal(12345)
+        expect(request.defaults.timeout).to.equal(12345)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const run = new Run()
+        expect(() => { run.networkTimeout = undefined }).to.throw('Invalid network timeout: undefined')
+        expect(() => { run.networkTimeout = null }).to.throw('Invalid network timeout: null')
+        expect(() => { run.networkTimeout = Infinity }).to.throw('Invalid network timeout: Infinity')
+        expect(() => { run.networkTimeout = -1 }).to.throw('Invalid network timeout: -1')
+        expect(() => { run.networkTimeout = true }).to.throw('Invalid network timeout: true')
+        expect(() => { run.networkTimeout = 'abc' }).to.throw('Invalid network timeout: "abc"')
+        expect(run.networkTimeout).to.equal(Run.defaults.networkTimeout)
+        expect(request.defaults.timeout).to.equal(Run.defaults.networkTimeout)
+      })
     })
 
-    // ------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
+    // state
+    // --------------------------------------------------------------------------
 
-    it('throws if invalid', () => {
-      const run = new Run()
-      const state = run.state
-      expect(() => { run.state = undefined }).to.throw('Invalid state: undefined')
-      expect(() => { run.state = null }).to.throw('Invalid state: null')
-      expect(() => { run.state = { state: new Map() } }).to.throw('Invalid state: [object Object]')
-      expect(() => { run.state = false }).to.throw('Invalid state: false')
-      expect(run.state).to.equal(state)
+    describe('state', () => {
+      it('change', () => {
+        const run = new Run()
+        const state = { state: () => { } }
+        run.state = state
+        expect(run.state).to.equal(state)
+      })
+
+      // ------------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const run = new Run()
+        const state = run.state
+        expect(() => { run.state = undefined }).to.throw('Invalid state: undefined')
+        expect(() => { run.state = null }).to.throw('Invalid state: null')
+        expect(() => { run.state = { state: new Map() } }).to.throw('Invalid state: [object Object]')
+        expect(() => { run.state = false }).to.throw('Invalid state: false')
+        expect(run.state).to.equal(state)
+      })
     })
   })
 
