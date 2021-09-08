@@ -1506,6 +1506,21 @@ describe('Run', () => {
         expect(run.purse instanceof LocalPurse).to.equal(true)
         expect(run.purse.privkey).to.equal(privkey)
       })
+
+      // ----------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const run = new Run()
+        const purse = run.purse
+        expect(() => { run.purse = undefined }).to.throw('Invalid purse: undefined')
+        expect(() => { run.purse = null }).to.throw('Invalid purse: null')
+        expect(() => { run.purse = { sign: () => { } } }).to.throw('Invalid purse: [object Object]')
+        expect(() => { run.purse = { nextOwner: () => { } } }).to.throw('Invalid purse: [object Object]')
+        expect(() => { run.purse = { sign: 'abc', nextOwner: () => { } } }).to.throw('Invalid purse: [object Object]')
+        expect(() => { run.purse = false }).to.throw('Invalid purse: false')
+        expect(() => { run.purse = 'abc' }).to.throw('Invalid purse: "abc"')
+        expect(run.purse).to.equal(purse)
+      })
     })
 
     // ------------------------------------------------------------------------

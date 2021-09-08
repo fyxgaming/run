@@ -57,6 +57,14 @@ describe('LocalPurse', () => {
         const blockchain = new Run({ network: 'test' }).blockchain
         expect(() => new LocalPurse({ privkey, blockchain })).to.throw('Private key network mismatch')
       })
+
+      // ----------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const privkey = 'abc'
+        const blockchain = new Mockchain()
+        expect(() => new LocalPurse({ privkey, blockchain })).to.throw('Invalid private key: "abc"')
+      })
     })
 
     // --------------------------------------------------------------------------
