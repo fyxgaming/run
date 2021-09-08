@@ -706,8 +706,11 @@ describe('Run', () => {
 
       // ------------------------------------------------------------------------
 
-      it.skip('private key string', () => {
-        // TODO
+      it('private key string', () => {
+        const owner = new bsv.PrivateKey().toString()
+        const run = new Run({ owner })
+        expect(run.owner instanceof LocalOwner).to.equal(true)
+        expect(run.owner.privkey).to.equal(owner)
       })
 
       // ------------------------------------------------------------------------
