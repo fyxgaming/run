@@ -2334,23 +2334,6 @@ describe('Run', () => {
     })
   })
 
-  describe('load', () => {
-    it('should throw if inactive', async () => {
-      const run = new Run()
-      class A { }
-      await run.deploy(A)
-      new Run() // eslint-disable-line
-      await expect(run.load(A.location)).to.be.rejectedWith('This Run instance is not active')
-    })
-
-    it('should throw for invalid arg', async () => {
-      const run = new Run()
-      await expect(run.load()).to.be.rejectedWith('Location must be a string: undefined')
-      await expect(run.load(123)).to.be.rejectedWith('Location must be a string: 123')
-      await expect(run.load({})).to.be.rejectedWith('Location must be a string: [object Object]')
-    })
-  })
-
   describe('misc', () => {
     it('should support same owner and purse', async () => {
       const key = new PrivateKey('testnet')
