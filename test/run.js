@@ -1862,8 +1862,12 @@ describe('Run', () => {
     // ------------------------------------------------------------------------
 
     describe('wallet', () => {
-      it.skip('change', () => {
-        // TODO
+      it('change', () => {
+        const run = new Run()
+        const wallet = { nextOwner: () => { }, sign: () => { }, pay: () => { } }
+        run.wallet = wallet
+        expect(run.owner).to.equal(wallet)
+        expect(run.purse).to.equal(wallet)
       })
 
       // ----------------------------------------------------------------------
