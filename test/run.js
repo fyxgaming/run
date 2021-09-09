@@ -1186,8 +1186,15 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it.skip('throws if invalid', () => {
-        // TODO
+      it('throws if invalid', () => {
+        expect(() => new Run({ trust: undefined })).to.throw('Not trustable: undefined')
+        expect(() => new Run({ trust: null })).to.throw('Not trustable: null')
+        expect(() => new Run({ trust: {} })).to.throw('Not trustable: [object Object]')
+        expect(() => new Run({ trust: 'abc' })).to.throw('Not trustable: "abc"')
+        expect(() => new Run({ trust: 0 })).to.throw('Not trustable: 0')
+        expect(() => new Run({ trust: true })).to.throw('Not trustable: true')
+        expect(() => new Run({ trust: () => {} })).to.throw('Not trustable: [anonymous function]')
+        expect(() => new Run({ trust: [null] })).to.throw('Not trustable: null')
       })
     })
 
