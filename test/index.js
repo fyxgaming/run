@@ -92,6 +92,7 @@ require('./kernel/upgradable')
 require('./kernel/version')
 
 require('./plugins/browser-cache')
+require('./plugins/disk-cache')
 require('./plugins/indexeddb-cache')
 require('./plugins/inventory')
 require('./plugins/local-cache')
