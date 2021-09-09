@@ -1203,11 +1203,20 @@ describe('Run', () => {
     // ------------------------------------------------------------------------
 
     describe('wallet', () => {
+      it('undefined if different owner and purse', () => {
+        const run = new Run()
+        expect(run.owner).not.to.equal(run.purse)
+        expect(run.wallet).to.equal(undefined)
+      })
+
+      // ----------------------------------------------------------------------
+
       it('sets to owner and purse', () => {
         const wallet = { nextOwner: () => { }, sign: () => { }, pay: () => { } }
         const run = new Run({ wallet })
         expect(run.owner).to.equal(wallet)
         expect(run.purse).to.equal(wallet)
+        expect(run.wallet).to.equal(wallet)
       })
 
       // ----------------------------------------------------------------------
@@ -1868,6 +1877,7 @@ describe('Run', () => {
         run.wallet = wallet
         expect(run.owner).to.equal(wallet)
         expect(run.purse).to.equal(wallet)
+        expect(run.wallet).to.equal(wallet)
       })
 
       // ----------------------------------------------------------------------
