@@ -1170,8 +1170,18 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it.skip('array', () => {
-        // TODO
+      it('array', async () => {
+        const defaultTrust = Run.defaults.trust
+        Run.defaults.trust = []
+        const run = new Run()
+        class A {}
+        run.deploy(A)
+        await run.sync()
+        const txid = A.location.slice(0, 64)
+        run.deactivate()
+        const run2 = new Run({ blockchain: run.blockchain, trust: [txid, 'cache', '*'] })
+        await run2.load(A.location)
+        Run.defaults.trust = defaultTrust
       })
 
       // ----------------------------------------------------------------------
