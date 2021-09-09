@@ -2266,6 +2266,16 @@ describe('Run', () => {
       expect(Run.defaults.purse).to.equal(purse)
       Run.defaults = defaults
     })
+
+    // ------------------------------------------------------------------------
+
+    it.only('owner', () => {
+      const defaults = Run.defaults
+      const owner = new bsv.PrivateKey().publicKey.toString()
+      Run.configure({ OWNER: owner })
+      expect(Run.defaults.owner).to.equal(owner)
+      Run.defaults = defaults
+    })
   })
 
   // TODO
