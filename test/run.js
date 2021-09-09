@@ -2044,8 +2044,14 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it.skip('throws if invalid', () => {
-        // TODO
+      it('throws if invalid', () => {
+        const sha256 = Run.util.sha256
+        expect(() => { Run.util.sha256 = undefined }).to.throw('Invalid sha256: undefined')
+        expect(() => { Run.util.sha256 = null }).to.throw('Invalid sha256: null')
+        expect(() => { Run.util.sha256 = 1 }).to.throw('Invalid sha256: 1')
+        expect(() => { Run.util.sha256 = false }).to.throw('Invalid sha256: false')
+        expect(() => { Run.util.sha256 = {} }).to.throw('Invalid sha256: [object Object]')
+        expect(Run.util.sha256).to.equal(sha256)
       })
     })
 
