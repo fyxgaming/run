@@ -8,6 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const fs = require('fs')
 const Run = require('../env/run')
+const { BROWSER } = require('../env/config')
 const { DiskCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
@@ -15,6 +16,21 @@ const { DiskCache } = Run.plugins
 // ------------------------------------------------------------------------------------------------
 
 describe('DiskCache', () => {
+  // --------------------------------------------------------------------------
+  // browser
+  // --------------------------------------------------------------------------
+
+  // Tests when running in node where IndexedDbCache is not supported
+  if (BROWSER) {
+    describe('browser', () => {
+      it('null if not a browser', () => {
+        expect(DiskCache).to.equal(null)
+      })
+    })
+
+    return // Don't run any other tests
+  }
+
   // --------------------------------------------------------------------------
   // constructor
   // --------------------------------------------------------------------------
@@ -47,7 +63,7 @@ describe('DiskCache', () => {
 
     it('swallows error if fails to create directory', () => {
       let dir = 'x'
-      for (let i = 0; i < 10; i++) dir = dir + dir
+      for (let i = 0; i < 20; i++) dir = dir + dir
       new DiskCache({ dir }) // eslint-disable-line
       expect(fs.existsSync(dir)).to.equal(false)
     })
