@@ -1978,6 +1978,22 @@ describe('Run', () => {
     })
 
     // ------------------------------------------------------------------------
+    // import
+    // ------------------------------------------------------------------------
+
+    describe('import', () => {
+      it('publish', async () => {
+        const run = new Run()
+        class A { }
+        const tx = new Run.Transaction()
+        tx.update(() => run.deploy(A))
+        const rawtx = await tx.export()
+        const tx2 = await run.import(rawtx)
+        await tx2.publish()
+      })
+    })
+
+    // ------------------------------------------------------------------------
     // load
     // ------------------------------------------------------------------------
 
