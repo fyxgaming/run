@@ -1219,8 +1219,9 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it.skip('throws if purse different from wallet', () => {
-        // TODO
+      it('throws if purse different from wallet', () => {
+        const wallet = { nextOwner: () => { }, sign: () => { }, pay: () => { } }
+        expect(() => new Run({ wallet, purse: new bsv.PrivateKey() })).to.throw('Cannot set different purse and wallet')
       })
 
       // ----------------------------------------------------------------------
