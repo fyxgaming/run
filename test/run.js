@@ -2246,6 +2246,16 @@ describe('Run', () => {
       expect(Run.defaults.network).to.equal('stn')
       Run.defaults = defaults
     })
+
+    // ------------------------------------------------------------------------
+
+    it('purse', () => {
+      const defaults = Run.defaults
+      const purse = new bsv.PrivateKey().toString()
+      Run.configure({ PURSE: purse })
+      expect(Run.defaults.purse).to.equal(purse)
+      Run.defaults = defaults
+    })
   })
 
   // TODO
