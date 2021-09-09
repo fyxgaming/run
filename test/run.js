@@ -1955,27 +1955,6 @@ describe('Run', () => {
   })
 
   // --------------------------------------------------------------------------
-  // install
-  // --------------------------------------------------------------------------
-
-  describe('install', () => {
-    it('creates code', () => {
-      class A { }
-      const CA = Run.util.install(A)
-      expect(CA instanceof Run.Code).to.equal(true)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('returns same code twice', () => {
-      function f () { }
-      const cf = Run.util.install(f)
-      const cf2 = Run.util.install(f)
-      expect(cf).to.equal(cf2)
-    })
-  })
-
-  // --------------------------------------------------------------------------
   // trust
   // --------------------------------------------------------------------------
 
@@ -2017,35 +1996,62 @@ describe('Run', () => {
   })
 
   // --------------------------------------------------------------------------
-  // unify
+  // util
   // --------------------------------------------------------------------------
 
-  describe('unify', () => {
-    it('unifies', async () => {
-      const run = new Run()
-      const A2 = run.deploy(class A extends Jig { f () { this.n = 1 } })
-      A2.auth()
-      await A2.sync()
-      const A1 = await run.load(A2.origin)
-      const a1 = new A1()
-      const a2 = new A2()
-      expect(a1.constructor.location).not.to.equal(a2.constructor.location)
-      Run.util.unify(a1, a2)
-      expect(a1.constructor.location).to.equal(a2.constructor.location)
+  describe('util', () => {
+    // ------------------------------------------------------------------------
+    // install
+    // ------------------------------------------------------------------------
+
+    describe('install', () => {
+      it('creates code', () => {
+        class A { }
+        const CA = Run.util.install(A)
+        expect(CA instanceof Run.Code).to.equal(true)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('returns same code twice', () => {
+        function f () { }
+        const cf = Run.util.install(f)
+        const cf2 = Run.util.install(f)
+        expect(cf).to.equal(cf2)
+      })
     })
-  })
 
-  // --------------------------------------------------------------------------
-  // uninstall
-  // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
+    // unify
+    // ------------------------------------------------------------------------
 
-  describe('uninstall', () => {
-    it('returns different code when installed', () => {
-      function f () { }
-      const cf = Run.util.install(f)
-      Run.util.uninstall(f)
-      const cf2 = Run.util.install(f)
-      expect(cf).not.to.equal(cf2)
+    describe('unify', () => {
+      it('unifies', async () => {
+        const run = new Run()
+        const A2 = run.deploy(class A extends Jig { f () { this.n = 1 } })
+        A2.auth()
+        await A2.sync()
+        const A1 = await run.load(A2.origin)
+        const a1 = new A1()
+        const a2 = new A2()
+        expect(a1.constructor.location).not.to.equal(a2.constructor.location)
+        Run.util.unify(a1, a2)
+        expect(a1.constructor.location).to.equal(a2.constructor.location)
+      })
+    })
+
+    // ------------------------------------------------------------------------
+    // uninstall
+    // ------------------------------------------------------------------------
+
+    describe('uninstall', () => {
+      it('returns different code when installed', () => {
+        function f () { }
+        const cf = Run.util.install(f)
+        Run.util.uninstall(f)
+        const cf2 = Run.util.install(f)
+        expect(cf).not.to.equal(cf2)
+      })
     })
   })
 
