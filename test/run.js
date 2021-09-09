@@ -2208,10 +2208,19 @@ describe('Run', () => {
 
     // ------------------------------------------------------------------------
 
-    it('debug logger', () => {
+    it('logger debug', () => {
       const defaults = Run.defaults
       Run.configure({ LOGGER: 'debug' })
       expect(Run.defaults.logger).to.equal(console)
+      Run.defaults = defaults
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('network', () => {
+      const defaults = Run.defaults
+      Run.configure({ NETWORK: 'stn' })
+      expect(Run.defaults.network).to.equal('stn')
       Run.defaults = defaults
     })
   })
