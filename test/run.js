@@ -2351,23 +2351,6 @@ describe('Run', () => {
     })
   })
 
-  describe('deploy', () => {
-    it('should throw if inactive', async () => {
-      class A { }
-      const run = new Run()
-      new Run() // eslint-disable-line
-      await expect(run.deploy(A)).to.be.rejectedWith('This Run instance is not active')
-    })
-
-    it('should support batch deploy', async () => {
-      class A { }
-      const run = new Run()
-      run.transaction.begin()
-      await run.deploy(A)
-      run.transaction.end()
-    })
-  })
-
   describe('misc', () => {
     it('should support same owner and purse', async () => {
       const key = new PrivateKey('testnet')
