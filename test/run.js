@@ -1226,8 +1226,14 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it.skip('throws if invalid', () => {
-        // TODO
+      it('throws if invalid', () => {
+        expect(() => new Run({ wallet: undefined })).to.throw('Invalid wallet: undefined')
+        expect(() => new Run({ wallet: null })).to.throw('Invalid wallet: null')
+        expect(() => new Run({ wallet: 1 })).to.throw('Invalid wallet: 1')
+        expect(() => new Run({ wallet: false })).to.throw('Invalid wallet: false')
+        expect(() => new Run({ wallet: { sign: () => { }, pay: () => { } } })).to.throw('wallet does not implement the Owner API')
+        expect(() => new Run({ wallet: { nextOwner: () => { }, pay: () => { } } })).to.throw('wallet does not implement the Owner API')
+        expect(() => new Run({ wallet: { nextOwner: () => { }, sign: () => { } } })).to.throw('wallet does not implement the Purse API')
       })
     })
   })
