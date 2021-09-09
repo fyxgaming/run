@@ -35,6 +35,16 @@ describe('DiskCache', () => {
 
     // ------------------------------------------------------------------------
 
+    it('does not throw if directory already exists', () => {
+      const dir = Math.random().toString()
+      new DiskCache({ dir }) // eslint-disable-line
+      new DiskCache({ dir }) // eslint-disable-line
+      expect(fs.existsSync(dir)).to.equal(true)
+      fs.rmdirSync(dir)
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('swallows error if fails to create directory', () => {
       // TODO
     })
