@@ -45,8 +45,11 @@ describe('DiskCache', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('swallows error if fails to create directory', () => {
-      // TODO
+    it('swallows error if fails to create directory', () => {
+      let dir = 'x'
+      for (let i = 0; i < 10; i++) dir = dir + dir
+      new DiskCache({ dir }) // eslint-disable-line
+      expect(fs.existsSync(dir)).to.equal(false)
     })
   })
 })
