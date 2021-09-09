@@ -1975,6 +1975,15 @@ describe('Run', () => {
         expect(CA.toString()).to.equal(A.toString())
         expect(CA instanceof Run.Code).to.equal(true)
       })
+
+      // ----------------------------------------------------------------------
+
+      it('throws if not active', async () => {
+        const run = new Run()
+        class A { }
+        run.deactivate()
+        expect(() => run.deploy(A)).to.throw('This Run instance is not active')
+      })
     })
 
     // ------------------------------------------------------------------------
@@ -2006,6 +2015,17 @@ describe('Run', () => {
         const CA = await run.load(A.location)
         expect(CA.location).to.equal(A.location)
       })
+
+      // ----------------------------------------------------------------------
+
+      it('throws if not active', async () => {
+        const run = new Run()
+        class A { }
+        run.deploy(A)
+        await run.sync()
+        run.deactivate()
+        expect(() => run.load(A.location)).to.throw('This Run instance is not active')
+      })
     })
 
     // ------------------------------------------------------------------------
@@ -2033,6 +2053,14 @@ describe('Run', () => {
         const CA = run.transaction(() => run.deploy(A))
         await run.sync()
         expect(CA.location).to.equal(A.location)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('throws if not active', async () => {
+        const run = new Run()
+        run.deactivate()
+        expect(() => run.transaction(() => {})).to.throw('This Run instance is not active')
       })
     })
 
