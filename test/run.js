@@ -2016,6 +2016,20 @@ describe('Run', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // uninstall
+  // --------------------------------------------------------------------------
+
+  describe('uninstall', () => {
+    it('returns different code when installed', () => {
+      function f () { }
+      const cf = Run.util.install(f)
+      Run.util.uninstall(f)
+      const cf2 = Run.util.install(f)
+      expect(cf).not.to.equal(cf2)
+    })
+  })
+
   // TODO
   /*
   describe('constructor', () => {
