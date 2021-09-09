@@ -2269,10 +2269,20 @@ describe('Run', () => {
 
     // ------------------------------------------------------------------------
 
-    it.only('owner', () => {
+    it('owner', () => {
       const defaults = Run.defaults
       const owner = new bsv.PrivateKey().publicKey.toString()
       Run.configure({ OWNER: owner })
+      expect(Run.defaults.owner).to.equal(owner)
+      Run.defaults = defaults
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('owner testnet', () => {
+      const defaults = Run.defaults
+      const owner = new bsv.PrivateKey().publicKey.toString()
+      Run.configure({ OWNER_TEST: owner }, 'test')
       expect(Run.defaults.owner).to.equal(owner)
       Run.defaults = defaults
     })
