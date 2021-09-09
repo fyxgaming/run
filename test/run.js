@@ -669,6 +669,7 @@ describe('Run', () => {
         test(1000000.5)
         test(Number.MAX_SAFE_INTEGER)
         test(Number.MAX_VALUE)
+        test(Infinity)
       })
 
       // ----------------------------------------------------------------------
@@ -681,7 +682,6 @@ describe('Run', () => {
         expect(() => new Run({ networkTimeout: () => {} })).to.throw('Invalid network timeout: [anonymous function]')
         expect(() => new Run({ networkTimeout: -1 })).to.throw('Invalid network timeout: -1')
         expect(() => new Run({ networkTimeout: NaN })).to.throw('Invalid network timeout: NaN')
-        expect(() => new Run({ networkTimeout: Infinity })).to.throw('Invalid network timeout: Infinity')
         expect(() => new Run({ networkTimeout: -1.5 })).to.throw('Invalid network timeout: -1.5')
         expect(request.defaults.timeout).to.equal(timeoutBefore)
       })
@@ -1107,6 +1107,7 @@ describe('Run', () => {
         test(1000000.5)
         test(Number.MAX_SAFE_INTEGER)
         test(Number.MAX_VALUE)
+        test(Infinity)
       })
 
       // ----------------------------------------------------------------------
@@ -1118,7 +1119,6 @@ describe('Run', () => {
         expect(() => new Run({ timeout: () => {} })).to.throw('Invalid timeout: [anonymous function]')
         expect(() => new Run({ timeout: -1 })).to.throw('Invalid timeout: -1')
         expect(() => new Run({ timeout: NaN })).to.throw('Invalid timeout: NaN')
-        expect(() => new Run({ timeout: Infinity })).to.throw('Invalid timeout: Infinity')
         expect(() => new Run({ timeout: -1.5 })).to.throw('Invalid timeout: -1.5')
       })
     })
@@ -1670,7 +1670,6 @@ describe('Run', () => {
         const run = new Run()
         expect(() => { run.networkTimeout = undefined }).to.throw('Invalid network timeout: undefined')
         expect(() => { run.networkTimeout = null }).to.throw('Invalid network timeout: null')
-        expect(() => { run.networkTimeout = Infinity }).to.throw('Invalid network timeout: Infinity')
         expect(() => { run.networkTimeout = -1 }).to.throw('Invalid network timeout: -1')
         expect(() => { run.networkTimeout = true }).to.throw('Invalid network timeout: true')
         expect(() => { run.networkTimeout = 'abc' }).to.throw('Invalid network timeout: "abc"')
@@ -1862,7 +1861,6 @@ describe('Run', () => {
         const run = new Run()
         expect(() => { run.timeout = undefined }).to.throw('Invalid timeout: undefined')
         expect(() => { run.timeout = null }).to.throw('Invalid timeout: null')
-        expect(() => { run.timeout = Infinity }).to.throw('Invalid timeout: Infinity')
         expect(() => { run.timeout = -1 }).to.throw('Invalid timeout: -1')
         expect(() => { run.timeout = true }).to.throw('Invalid timeout: true')
         expect(() => { run.timeout = 'abc' }).to.throw('Invalid timeout: "abc"')
