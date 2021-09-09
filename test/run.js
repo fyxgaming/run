@@ -255,9 +255,12 @@ describe('Run', () => {
 
       it('defaults to default', () => {
         const defaultBlockchain = Run.defaults.blockchain
+        const defaultNetwork = Run.defaults.network
         Run.defaults.blockchain = new MatterCloud()
+        Run.defaults.network = undefined
         expect(new Run().blockchain).to.equal(Run.defaults.blockchain)
         Run.defaults.blockchain = defaultBlockchain
+        Run.defaults.network = defaultNetwork
       })
 
       // ----------------------------------------------------------------------
@@ -587,11 +590,12 @@ describe('Run', () => {
       // ----------------------------------------------------------------------
 
       it('throws if invalid', () => {
-        expect(() => new Run({ network: '' })).to.throw('Unsupported network')
-        expect(() => new Run({ network: 'mainnet' })).to.throw('Unsupported network')
-        expect(() => new Run({ network: 'tester' })).to.throw('Unsupported network')
-        expect(() => new Run({ network: 'mocknet' })).to.throw('Unsupported network')
-        expect(() => new Run({ network: null })).to.throw('Unsupported network')
+        expect(() => new Run({ network: '' })).to.throw('Invalid network: ""')
+        expect(() => new Run({ network: 'mainnet' })).to.throw('Invalid network: "mainnet"')
+        expect(() => new Run({ network: 'tester' })).to.throw('Invalid network: "tester"')
+        expect(() => new Run({ network: 'mocknet' })).to.throw('Invalid network: "mocknet"')
+        expect(() => new Run({ network: null })).to.throw('Invalid network: null')
+        expect(() => new Run({ network: 123 })).to.throw('Invalid network: 123')
       })
     })
 
@@ -1611,12 +1615,12 @@ describe('Run', () => {
 
       it('throws if invalid', () => {
         const run = new Run()
-        expect(() => { run.network = undefined }).to.throw('Unsupported network: undefined')
-        expect(() => { run.network = null }).to.throw('Unsupported network: null')
-        expect(() => { run.network = ['main'] }).to.throw('Unsupported network: [object Array]')
-        expect(() => { run.network = -1 }).to.throw('Unsupported network: -1')
-        expect(() => { run.network = true }).to.throw('Unsupported network: true')
-        expect(() => { run.network = '' }).to.throw('Unsupported network: ""')
+        expect(() => { run.network = undefined }).to.throw('Invalid network: undefined')
+        expect(() => { run.network = null }).to.throw('Invalid network: null')
+        expect(() => { run.network = ['main'] }).to.throw('Invalid network: [object Array]')
+        expect(() => { run.network = -1 }).to.throw('Invalid network: -1')
+        expect(() => { run.network = true }).to.throw('Invalid network: true')
+        expect(() => { run.network = '' }).to.throw('Invalid network: ""')
         expect(run.network).to.equal(Run.defaults.network)
       })
     })
