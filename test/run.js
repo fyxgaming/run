@@ -838,7 +838,7 @@ describe('Run', () => {
         expect(() => new Run({ owner: '' })).to.throw('Invalid owner: ""')
         expect(() => new Run({ owner: 'abc' })).to.throw('Invalid owner: "abc"')
         expect(() => new Run({ owner: 0 })).to.throw('Invalid owner: 0')
-        expect(() => new Run({ owner: new LocalPurse({ blockchain: new Mockchain() }) })).to.throw('Invalid owner: [object LocalPurse]')
+        expect(() => new Run({ owner: new LocalPurse({ blockchain: new Mockchain() }) })).to.throw('Invalid owner')
         expect(() => new Run({ owner: { sign: () => { } } })).to.throw('Invalid owner: [object Object]')
         expect(() => new Run({ owner: { nextOwner: () => { } } })).to.throw('Invalid owner: [object Object]')
         expect(() => new Run({ owner: { sign: () => { }, nextOwner: 1 } })).to.throw('Invalid owner: [object Object]')
@@ -875,7 +875,7 @@ describe('Run', () => {
         expect(() => new Run({ preverify: undefined })).to.throw('Invalid preverify: undefined')
         expect(() => new Run({ preverify: null })).to.throw('Invalid preverify: null')
         expect(() => new Run({ preverify: -1 })).to.throw('Invalid preverify: -1')
-        expect(() => new Run({ preverify: new Mockchain() })).to.throw('Invalid preverify: [object Mockchain]')
+        expect(() => new Run({ preverify: new Mockchain() })).to.throw('Invalid preverify')
       })
     })
 
@@ -991,7 +991,7 @@ describe('Run', () => {
         expect(() => new Run({ rollbacks: undefined })).to.throw('Invalid rollbacks: undefined')
         expect(() => new Run({ rollbacks: null })).to.throw('Invalid rollbacks: null')
         expect(() => new Run({ rollbacks: -1 })).to.throw('Invalid rollbacks: -1')
-        expect(() => new Run({ rollbacks: new LocalOwner() })).to.throw('Invalid rollbacks: [object LocalOwner]')
+        expect(() => new Run({ rollbacks: new LocalOwner() })).to.throw('Invalid rollbacks')
       })
     })
 
