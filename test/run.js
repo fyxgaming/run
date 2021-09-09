@@ -2194,6 +2194,15 @@ describe('Run', () => {
     })
   })
 
+  describe('configure', () => {
+    it('debug logger', () => {
+      const defaults = Run.defaults
+      Run.configure({ LOGGER: 'debug' })
+      expect(Run.defaults.logger).to.equal(console)
+      Run.defaults = defaults
+    })
+  })
+
   // TODO
   /*
   describe('constructor', () => {
