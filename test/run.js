@@ -2194,7 +2194,20 @@ describe('Run', () => {
     })
   })
 
+  // --------------------------------------------------------------------------
+  // configure
+  // --------------------------------------------------------------------------
+
   describe('configure', () => {
+    it('app', () => {
+      const defaults = Run.defaults
+      Run.configure({ APP: 'abc' })
+      expect(Run.defaults.app).to.equal('abc')
+      Run.defaults = defaults
+    })
+
+    // ------------------------------------------------------------------------
+
     it('debug logger', () => {
       const defaults = Run.defaults
       Run.configure({ LOGGER: 'debug' })
