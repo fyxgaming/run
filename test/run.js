@@ -2199,6 +2199,15 @@ describe('Run', () => {
   // --------------------------------------------------------------------------
 
   describe('configure', () => {
+    it('api', () => {
+      const defaults = Run.defaults
+      Run.configure({ API: 'mattercloud' })
+      expect(Run.defaults.api).to.equal('mattercloud')
+      Run.defaults = defaults
+    })
+
+    // ------------------------------------------------------------------------
+
     it('app', () => {
       const defaults = Run.defaults
       Run.configure({ APP: 'abc' })
