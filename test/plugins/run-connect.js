@@ -10,7 +10,7 @@ require('chai').use(require('chai-as-promised'))
 const { stub } = require('sinon')
 const Run = require('../env/run')
 const { NETWORK } = require('../env/config')
-const { RunConnect } = Run.plugins
+const { RunConnect, LocalCache } = Run.plugins
 const { Cache } = Run.api
 
 // ------------------------------------------------------------------------------------------------
@@ -76,15 +76,15 @@ describe('RunConnect', () => {
   })
 
   // --------------------------------------------------------------------------
-  // get
+  // state
   // --------------------------------------------------------------------------
 
-  describe('get', () => {
+  describe('state', () => {
     if (NETWORK !== 'main') return
 
     it('gets all states and transactions', async () => {
-      const connect = new RunConnect()
-      const state = await connect.get('jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2')
+      const connect = new RunConnect({ cache: new LocalCache() })
+      const state = await connect.state('bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2')
       expect(typeof state).to.equal('object')
       const expectedKeys = [
         'jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2',
@@ -120,8 +120,8 @@ describe('RunConnect', () => {
 
     it('gets transaction data if state is missing', async () => {
       const berryTxid = '2a5b8bd98125efb65e1b1ff7537fb6aaa3e5af5e2149e18cb4630f8ea7682d90'
-      const connect = new RunConnect()
-      const state = await connect.get(`jig://${berryTxid}_o1`)
+      const connect = new RunConnect({ cache: new LocalCache() })
+      const state = await connect.state(`${berryTxid}_o1`)
       expect(typeof state).to.equal('undefined')
       const rawtx = await connect.cache.get(`tx://${berryTxid}`)
       expect(typeof rawtx).to.equal('string')
@@ -130,22 +130,10 @@ describe('RunConnect', () => {
     // ------------------------------------------------------------------------
 
     it('returns error if connection down', async () => {
-      const connect = new RunConnect()
+      const connect = new RunConnect({ cache: new LocalCache() })
       stub(connect, 'request').throws(new Error('Bad request'))
-      const key = 'jig://3b7ef411185bbe3d01caeadbe6f115b0103a546c4ef0ac7474aa6fbb71aff208_o1'
-      await expect(connect.get(key)).to.be.rejectedWith('Bad request')
-    })
-  })
-
-  // --------------------------------------------------------------------------
-  // set
-  // --------------------------------------------------------------------------
-
-  describe('set', () => {
-    it('sets on local cache', async () => {
-      const connect = new RunConnect()
-      await connect.set('abc', 123)
-      expect(await connect.cache.get('abc')).to.equal(123)
+      const location = '3b7ef411185bbe3d01caeadbe6f115b0103a546c4ef0ac7474aa6fbb71aff208_o1'
+      await expect(connect.state(location)).to.be.rejectedWith('Bad request')
     })
   })
 })
