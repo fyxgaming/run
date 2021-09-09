@@ -2217,6 +2217,15 @@ describe('Run', () => {
 
     // ------------------------------------------------------------------------
 
+    it('apiKey for api', () => {
+      const defaults = Run.defaults
+      Run.configure({ APIKEY_WHATSONCHAIN: 'abc', API: 'whatsonchain' })
+      expect(Run.defaults.apiKey).to.equal('abc')
+      Run.defaults = defaults
+    })
+
+    // ------------------------------------------------------------------------
+
     it('app', () => {
       const defaults = Run.defaults
       Run.configure({ APP: 'abc' })
