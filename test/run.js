@@ -1894,104 +1894,110 @@ describe('Run', () => {
   })
 
   // --------------------------------------------------------------------------
-  // activate
+  // methods
   // --------------------------------------------------------------------------
 
-  describe('activate', () => {
-    it('assigns instance', () => {
-      const run = new Run({ debug: false })
-      new Run({ debug: true }) // eslint-disable-line
-      run.activate()
-      expect(Run.instance).to.equal(run)
+  describe('methods', () => {
+    // ------------------------------------------------------------------------
+    // activate
+    // ------------------------------------------------------------------------
+
+    describe('activate', () => {
+      it('assigns instance', () => {
+        const run = new Run({ debug: false })
+        new Run({ debug: true }) // eslint-disable-line
+        run.activate()
+        expect(Run.instance).to.equal(run)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('assigns debug to log', () => {
+        const run = new Run({ debug: false })
+        new Run({ debug: true }) // eslint-disable-line
+        run.activate()
+        expect(Log._enableDebug).to.equal(false)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('assigns logger to log', () => {
+        const run = new Run({ logger: { info: () => { } } })
+        new Run({ logger: { warn: () => { } } }) // eslint-disable-line
+        run.activate()
+        expect(Log._logger).to.equal(run.logger)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('assigns network retries to request', () => {
+        const run = new Run({ networkRetries: 10 })
+        new Run({ networkRetries: 11 }) // eslint-disable-line
+        run.activate()
+        expect(request.defaults.retries).to.equal(10)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('assigns network timeout to request', () => {
+        const run = new Run({ networkTimeout: 1200 })
+        new Run({ networkTimeout: 1100 }) // eslint-disable-line
+        run.activate()
+        expect(request.defaults.timeout).to.equal(1200)
+      })
     })
 
     // ------------------------------------------------------------------------
+    // deactivate
+    // ------------------------------------------------------------------------
 
-    it('assigns debug to log', () => {
-      const run = new Run({ debug: false })
-      new Run({ debug: true }) // eslint-disable-line
-      run.activate()
-      expect(Log._enableDebug).to.equal(false)
+    describe('deactivate', () => {
+      it('clears instance', () => {
+        const run = new Run()
+        run.deactivate()
+        expect(Run.instance).to.equal(null)
+      })
     })
 
     // ------------------------------------------------------------------------
-
-    it('assigns logger to log', () => {
-      const run = new Run({ logger: { info: () => { } } })
-      new Run({ logger: { warn: () => { } } }) // eslint-disable-line
-      run.activate()
-      expect(Log._logger).to.equal(run.logger)
-    })
-
+    // trust
     // ------------------------------------------------------------------------
 
-    it('assigns network retries to request', () => {
-      const run = new Run({ networkRetries: 10 })
-      new Run({ networkRetries: 11 }) // eslint-disable-line
-      run.activate()
-      expect(request.defaults.retries).to.equal(10)
-    })
+    describe('trust', () => {
+      it('trust valid values', () => {
+        const run = new Run()
+        run.trust('*')
+        run.trust('cache')
+        run.trust('61e1265acb3d93f1bf24a593d70b2a6b1c650ec1df90ddece8d6954ae3cdd915')
+        run.trust('1111111111111111111111111111111111111111111111111111111111111111')
+      })
 
-    // ------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
-    it('assigns network timeout to request', () => {
-      const run = new Run({ networkTimeout: 1200 })
-      new Run({ networkTimeout: 1100 }) // eslint-disable-line
-      run.activate()
-      expect(request.defaults.timeout).to.equal(1200)
-    })
-  })
+      it('trust array of valid values', () => {
+        const run = new Run()
+        run.trust([
+          '*',
+          'cache',
+          '61e1265acb3d93f1bf24a593d70b2a6b1c650ec1df90ddece8d6954ae3cdd915',
+          '1111111111111111111111111111111111111111111111111111111111111111'
+        ])
+      })
 
-  // --------------------------------------------------------------------------
-  // deactivate
-  // --------------------------------------------------------------------------
+      // ----------------------------------------------------------------------
 
-  describe('deactivate', () => {
-    it('clears instance', () => {
-      const run = new Run()
-      run.deactivate()
-      expect(Run.instance).to.equal(null)
-    })
-  })
-
-  // --------------------------------------------------------------------------
-  // trust
-  // --------------------------------------------------------------------------
-
-  describe('trust', () => {
-    it('trust valid values', () => {
-      const run = new Run()
-      run.trust('*')
-      run.trust('cache')
-      run.trust('61e1265acb3d93f1bf24a593d70b2a6b1c650ec1df90ddece8d6954ae3cdd915')
-      run.trust('1111111111111111111111111111111111111111111111111111111111111111')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('trust array of valid values', () => {
-      const run = new Run()
-      run.trust([
-        '*',
-        'cache',
-        '61e1265acb3d93f1bf24a593d70b2a6b1c650ec1df90ddece8d6954ae3cdd915',
-        '1111111111111111111111111111111111111111111111111111111111111111'
-      ])
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if invalid values', () => {
-      const run = new Run()
-      expect(() => run.trust('61e1265acb3d93f1bf24a593d70b2a6b1c650ec1df90ddece8d6954ae3cdd915_o1')).to.throw('Not trustable')
-      expect(() => run.trust('')).to.throw('Not trustable')
-      expect(() => run.trust(null)).to.throw('Not trustable')
-      expect(() => run.trust(1)).to.throw('Not trustable')
-      expect(() => run.trust('cache2')).to.throw('Not trustable')
-      expect(() => run.trust('-')).to.throw('Not trustable')
-      expect(() => run.trust('all')).to.throw('Not trustable')
-      expect(() => run.trust([''])).to.throw('Not trustable')
-      expect(() => run.trust(['*', ''])).to.throw('Not trustable')
+      it('throws if invalid values', () => {
+        const run = new Run()
+        expect(() => run.trust('61e1265acb3d93f1bf24a593d70b2a6b1c650ec1df90ddece8d6954ae3cdd915_o1')).to.throw('Not trustable')
+        expect(() => run.trust('')).to.throw('Not trustable')
+        expect(() => run.trust(null)).to.throw('Not trustable')
+        expect(() => run.trust(1)).to.throw('Not trustable')
+        expect(() => run.trust('cache2')).to.throw('Not trustable')
+        expect(() => run.trust('-')).to.throw('Not trustable')
+        expect(() => run.trust('all')).to.throw('Not trustable')
+        expect(() => run.trust([''])).to.throw('Not trustable')
+        expect(() => run.trust(['*', ''])).to.throw('Not trustable')
+      })
     })
   })
 
