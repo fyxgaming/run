@@ -1140,8 +1140,17 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it.skip('wildcard', () => {
-        // TODO
+      it('wildcard', async () => {
+        const defaultTrust = Run.defaults.trust
+        Run.defaults.trust = []
+        const run = new Run()
+        class A {}
+        run.deploy(A)
+        await run.sync()
+        run.deactivate()
+        const run2 = new Run({ blockchain: run.blockchain, trust: '*' })
+        await run2.load(A.location)
+        Run.defaults.trust = defaultTrust
       })
 
       // ----------------------------------------------------------------------
