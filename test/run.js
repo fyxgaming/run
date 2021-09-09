@@ -2208,6 +2208,15 @@ describe('Run', () => {
 
     // ------------------------------------------------------------------------
 
+    it('apiKey', () => {
+      const defaults = Run.defaults
+      Run.configure({ APIKEY: 'abc' })
+      expect(Run.defaults.apiKey).to.equal('abc')
+      Run.defaults = defaults
+    })
+
+    // ------------------------------------------------------------------------
+
     it('app', () => {
       const defaults = Run.defaults
       Run.configure({ APP: 'abc' })
