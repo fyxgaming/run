@@ -20,6 +20,12 @@ describe('DiskCache', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
+    it('defaults to .runcache dir', () => {
+      expect(new DiskCache().dir).to.equal('./.runcache')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('creates directory', () => {
       const dir = Math.random().toString()
       new DiskCache({ dir }) // eslint-disable-line
