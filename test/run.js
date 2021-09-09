@@ -2212,6 +2212,17 @@ describe('Run', () => {
       const defaults = Run.defaults
       Run.configure({ LOGGER: 'debug' })
       expect(Run.defaults.logger).to.equal(console)
+      expect(Run.defaults.debug).to.equal(true)
+      Run.defaults = defaults
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('logger on', () => {
+      const defaults = Run.defaults
+      Run.configure({ LOGGER: '1' })
+      expect(Run.defaults.logger).to.equal(console)
+      expect(Run.defaults.debug).to.equal(false)
       Run.defaults = defaults
     })
 
