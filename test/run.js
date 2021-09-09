@@ -2017,6 +2017,25 @@ describe('Run', () => {
   })
 
   // --------------------------------------------------------------------------
+  // unify
+  // --------------------------------------------------------------------------
+
+  describe('unify', () => {
+    it('unifies', async () => {
+      const run = new Run()
+      const A2 = run.deploy(class A extends Jig { f () { this.n = 1 } })
+      A2.auth()
+      await A2.sync()
+      const A1 = await run.load(A2.origin)
+      const a1 = new A1()
+      const a2 = new A2()
+      expect(a1.constructor.location).not.to.equal(a2.constructor.location)
+      Run.util.unify(a1, a2)
+      expect(a1.constructor.location).to.equal(a2.constructor.location)
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // uninstall
   // --------------------------------------------------------------------------
 
