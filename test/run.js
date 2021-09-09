@@ -1212,8 +1212,9 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it.skip('throws if owner different from wallet', () => {
-        // TODO
+      it('throws if owner different from wallet', () => {
+        const wallet = { nextOwner: () => { }, sign: () => { }, pay: () => { } }
+        expect(() => new Run({ wallet, owner: new LocalOwner() })).to.throw('Cannot set different owner and wallet')
       })
 
       // ----------------------------------------------------------------------
