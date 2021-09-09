@@ -1882,8 +1882,13 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it.skip('throws if invalid', () => {
-        // TODO
+      it('throws if invalid', () => {
+        const run = new Run()
+        expect(() => { run.wallet = undefined }).to.throw('Invalid wallet: undefined')
+        expect(() => { run.wallet = null }).to.throw('Invalid wallet: null')
+        expect(() => { run.wallet = 123 }).to.throw('Invalid wallet: 123')
+        expect(() => { run.wallet = { sign: () => { }, pay: () => { } } }).to.throw('wallet does not implement the Owner API')
+        expect(run.wallet).to.equal(undefined)
       })
     })
   })
