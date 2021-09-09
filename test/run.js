@@ -2228,6 +2228,18 @@ describe('Run', () => {
 
     // ------------------------------------------------------------------------
 
+    it('logger off', () => {
+      const defaults = Run.defaults
+      Run.configure({ LOGGER: 'false' })
+      expect(typeof Run.defaults.logger.info).to.equal('undefined')
+      expect(typeof Run.defaults.logger.warn).to.equal('undefined')
+      expect(typeof Run.defaults.logger.error).to.equal('undefined')
+      expect(typeof Run.defaults.logger.debug).to.equal('undefined')
+      Run.defaults = defaults
+    })
+
+    // ------------------------------------------------------------------------
+
     it('network', () => {
       const defaults = Run.defaults
       Run.configure({ NETWORK: 'stn' })
