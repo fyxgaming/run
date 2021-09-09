@@ -13,8 +13,20 @@ const { DiskCache } = Run.plugins
 // ------------------------------------------------------------------------------------------------
 
 describe('DiskCache', () => {
-  it.skip('test', () => {
-    console.log(DiskCache)
+  // --------------------------------------------------------------------------
+  // constructor
+  // --------------------------------------------------------------------------
+
+  describe('constructor', () => {
+    it.skip('creates directory', () => {
+      console.log(DiskCache)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('swallows error if fails to create directory', () => {
+        // TODO
+    })
   })
 })
 
