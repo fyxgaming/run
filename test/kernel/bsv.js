@@ -9,6 +9,7 @@ const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+const { stub } = require('sinon')
 const { _calculateDust, _scripthash, _dedupUtxos } = unmangle(unmangle(Run)._bsv)
 
 // ------------------------------------------------------------------------------------------------
@@ -80,13 +81,17 @@ describe('bsv', () => {
     // ------------------------------------------------------------------------
 
     it('logs warning', () => {
-      let lastWarning = null
       const Log = unmangle(unmangle(Run)._Log)
-      Log._logger = { warn: (time, tag, ...warning) => { lastWarning = warning.join(' ') } }
-      const a = { txid: 'abc', vout: 1, script: '2', satoshis: 3 }
-      expect(_dedupUtxos([a, a])).to.deep.equal([a])
-      expect(lastWarning).to.equal('[bsv] Duplicate utxo returned from server: abc_o1')
-      Log._logger = Log._defaultLogger
+      const previousLogger = Log._logger
+      try {
+        Log._logger = stub({ warn: () => {} })
+        const a = { txid: 'abc', vout: 1, script: '2', satoshis: 3 }
+        expect(_dedupUtxos([a, a])).to.deep.equal([a])
+        const lastWarning = Log._logger.warn.lastCall.args.join(' ')
+        expect(lastWarning.includes('[bsv] Duplicate utxo returned from server: abc_o1')).to.equal(true)
+      } finally {
+        Log._logger = previousLogger
+      }
     })
   })
 })

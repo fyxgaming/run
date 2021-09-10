@@ -4,7 +4,7 @@
  * Tests for lib/kernel/log.js
  */
 
-const { describe, it } = require('mocha')
+const { describe, it, beforeEach, afterEach } = require('mocha')
 const { expect } = require('chai')
 const { stub } = require('sinon')
 const Run = require('../env/run')
@@ -16,6 +16,11 @@ const Log = unmangle(unmangle(Run)._Log)
 // ------------------------------------------------------------------------------------------------
 
 describe('Log', () => {
+  // Don't allow the test to override the global logger we had previously set
+  let previousLogger = null
+  beforeEach(() => { previousLogger = Log._logger })
+  afterEach(() => { Log._logger = previousLogger })
+
   it('info', () => {
     const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
     Log._logger = logger
@@ -27,7 +32,6 @@ describe('Log', () => {
     expect(logger.info.args[0][2]).to.equal('[TAG]')
     expect(logger.info.args[0][3]).to.equal('hello')
     expect(logger.info.args[0][4]).to.equal('world')
-    Log._logger = Log._defaultLogger
   })
 
   // --------------------------------------------------------------------------
@@ -43,7 +47,6 @@ describe('Log', () => {
     expect(logger.warn.args[0][2]).to.equal('[TAG]')
     expect(logger.warn.args[0][3]).to.equal(123)
     expect(logger.warn.args[0][4]).to.equal(true)
-    Log._logger = Log._defaultLogger
   })
 
   // --------------------------------------------------------------------------
@@ -59,7 +62,6 @@ describe('Log', () => {
     expect(logger.error.args[0][1]).to.equal('ERROR')
     expect(logger.error.args[0][2]).to.equal('[TAG]')
     expect(logger.error.args[0][3]).to.equal(e)
-    Log._logger = Log._defaultLogger
   })
 
   // --------------------------------------------------------------------------
@@ -75,7 +77,6 @@ describe('Log', () => {
     expect(logger.debug.args[0][1]).to.equal('DEBUG')
     expect(logger.debug.args[0][2]).to.equal('[TAG]')
     expect(logger.debug.args[0][3]).to.equal(o)
-    Log._logger = Log._defaultLogger
   })
 
   // --------------------------------------------------------------------------
@@ -88,7 +89,6 @@ describe('Log', () => {
     Log._error('C', 3)
     Log._debug('D', 4)
     expect(logger.info.called).to.equal(true)
-    Log._logger = Log._defaultLogger
   })
 
   // --------------------------------------------------------------------------
@@ -99,7 +99,6 @@ describe('Log', () => {
     Log._warn('B', 2)
     Log._error('C', 3)
     Log._debug('D', 4)
-    Log._logger = Log._defaultLogger
   })
 
   // --------------------------------------------------------------------------
@@ -110,7 +109,6 @@ describe('Log', () => {
     Log._warn('B', 2)
     Log._error('C', 3)
     Log._debug('D', 4)
-    Log._logger = Log._defaultLogger
   })
 
   // --------------------------------------------------------------------------
@@ -121,7 +119,6 @@ describe('Log', () => {
     expect(Log._warnOn).to.equal(true)
     expect(Log._errorOn).to.equal(true)
     expect(Log._debugOn).to.equal(true)
-    Log._logger = Log._defaultLogger
   })
 
   // --------------------------------------------------------------------------
@@ -137,7 +134,6 @@ describe('Log', () => {
     expect(Log._warnOn).to.equal(false)
     expect(Log._errorOn).to.equal(false)
     expect(Log._debugOn).to.equal(false)
-    Log._logger = Log._defaultLogger
   })
 })
 
