@@ -1,7 +1,7 @@
 /**
  * build.js
  *
- * Tests that check properties of the transactions RUN builds
+ * Tests that check properties of the transactions Run builds
  */
 
 const { describe, it, afterEach } = require('mocha')

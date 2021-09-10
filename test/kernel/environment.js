@@ -40,7 +40,7 @@ describe('_check', () => {
     // ----------------------------------------------------------------------
 
     it('bsv 2.x throws an error', () => {
-      const error = 'RUN requires version 1.x of the bsv library'
+      const error = 'Run requires version 1.x of the bsv library'
       expect(() => testBsvVersion('2.0.0')).to.throw(error)
       expect(() => testBsvVersion('v2.0.0')).to.throw(error)
     })
@@ -48,7 +48,7 @@ describe('_check', () => {
     // ----------------------------------------------------------------------
 
     it('invalid bsv version throws an error', () => {
-      const error = 'RUN requires version 1.x of the bsv library'
+      const error = 'Run requires version 1.x of the bsv library'
       expect(() => testBsvVersion('0.1')).to.throw(error)
       expect(() => testBsvVersion(undefined)).to.throw(error)
     })
@@ -91,14 +91,14 @@ describe('_check', () => {
     // ----------------------------------------------------------------------
 
     it('node > 16 not supported', () => {
-      const error = 'RUN is supported only on Node 16 and below'
+      const error = 'Run is supported only on Node 16 and below'
       expect(() => testNodeVersion('v17.0.0')).to.throw(error)
     })
 
     // ----------------------------------------------------------------------
 
     it('node < 10 not supported', () => {
-      const error = 'RUN is supported only on Node 10 and above'
+      const error = 'Run is supported only on Node 10 and above'
       expect(() => testNodeVersion('v9.11.2')).to.throw(error)
       expect(() => testNodeVersion('v8.16.0')).to.throw(error)
     })
@@ -120,7 +120,7 @@ describe('_check', () => {
           enumerable: true,
           writable: true
         })
-        const error = 'RUN is not supported on Internet Explorer. Please upgrade to Edge.'
+        const error = 'Run is not supported on Internet Explorer. Please upgrade to Edge.'
         expect(() => _check()).to.throw(error)
       } finally {
         Object.defineProperty(window, 'navigator', oldNavigatorDesc)
@@ -138,7 +138,7 @@ describe('_check', () => {
           enumerable: true,
           writable: true
         })
-        const error = 'RUN is not supported on this iOS version. Please upgrade to iOS 13 or above.'
+        const error = 'Run is not supported on this iOS version. Please upgrade to iOS 13 or above.'
         expect(() => _check()).to.throw(error)
       } finally {
         Object.defineProperty(window, 'navigator', oldNavigatorDesc)

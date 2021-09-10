@@ -8,6 +8,6 @@ A test data file has the following form:
 {
     "tests": [<txid>],            // RUN transactions to import
     "txns": {<txid>: <rawtx>},    // Test txns and the supporting txns needed to load them
-    "network": <network-string>   // RUN network to use
+    "network": <network-string>   // Run network to use
 }
 ```

@@ -103,7 +103,7 @@ class WaitForNameCachePlugin {
   }
 }
 
-// RUN library terser settings
+// Run library terser settings
 const terserPluginConfig = {
   // The nameCache requires parallel to be off
   parallel: false,
