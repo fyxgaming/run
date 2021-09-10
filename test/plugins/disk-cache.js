@@ -51,21 +51,25 @@ describe('DiskCache', () => {
 
     // ------------------------------------------------------------------------
 
-    it('does not throw if directory already exists', () => {
+    it('silently swallows error if directory already exists', () => {
       const dir = Math.random().toString()
       new DiskCache({ dir }) // eslint-disable-line
       new DiskCache({ dir }) // eslint-disable-line
       expect(fs.existsSync(dir)).to.equal(true)
       fs.rmdirSync(dir)
+
+      // TODO
     })
 
     // ------------------------------------------------------------------------
 
-    it('swallows error if fails to create directory', () => {
+    it('logs error if fails to create directory', () => {
       let dir = 'x'
       for (let i = 0; i < 20; i++) dir = dir + dir
       new DiskCache({ dir }) // eslint-disable-line
       expect(fs.existsSync(dir)).to.equal(false)
+
+      // TODO
     })
   })
 
@@ -74,7 +78,15 @@ describe('DiskCache', () => {
   // --------------------------------------------------------------------------
 
   describe('set', () => {
-    // TODO
+    it.skip('saves to file', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('fails silently', async () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -82,7 +94,21 @@ describe('DiskCache', () => {
   // --------------------------------------------------------------------------
 
   describe('get', () => {
-    // TODO
+    it.skip('reads file', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('save race condition', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('fails silently', async () => {
+      // TODO
+    })
   })
 })
 
