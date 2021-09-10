@@ -34,7 +34,7 @@
       mocha.timeout(30000)
 
       const urlParams = new URLSearchParams(window.location.search)
-      mocha.Mocha.reporters.Base.useColors = JSON.parse(urlParams.get('colors')) || chrome
+      mocha.Mocha.reporters.Base.useColors = JSON.parse(urlParams.get('colors')) || typeof chrome !== 'undefined'
       mocha.Mocha.reporters.Base.consoleLog = (...args) => console.log(...args)
 
       const original = Object.assign({}, console)
