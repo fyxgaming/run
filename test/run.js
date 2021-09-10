@@ -830,12 +830,30 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it('defaults to default', () => {
+      it('defaults to LocalOwner default', () => {
         const defaultOwner = Run.defaults.owner
-        Run.defaults.owner = new LocalOwner()
-        const run = new Run()
-        expect(run.owner).to.equal(Run.defaults.owner)
-        Run.defaults.owner = defaultOwner
+        try {
+          Run.defaults.owner = new LocalOwner()
+          const run = new Run()
+          expect(run.owner).to.equal(Run.defaults.owner)
+        } finally {
+          Run.defaults.owner = defaultOwner
+        }
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('defaults to string default', () => {
+        const defaultOwner = Run.defaults.owner
+        try {
+          const blockchain = new Mockchain()
+          Run.defaults.owner = new bsv.PrivateKey().toString()
+          const run = new Run({ blockchain })
+          expect(run.owner instanceof LocalOwner).to.equal(true)
+          expect(run.owner.privkey).to.equal(Run.defaults.owner)
+        } finally {
+          Run.defaults.owner = defaultOwner
+        }
       })
 
       // ----------------------------------------------------------------------
@@ -952,23 +970,29 @@ describe('Run', () => {
 
       it('defaults to LocalPurse default', () => {
         const defaultPurse = Run.defaults.purse
-        const blockchain = new Mockchain()
-        Run.defaults.purse = new LocalPurse({ blockchain })
-        const run = new Run({ blockchain })
-        expect(run.purse).to.equal(Run.defaults.purse)
-        Run.defaults.purse = defaultPurse
+        try {
+          const blockchain = new Mockchain()
+          Run.defaults.purse = new LocalPurse({ blockchain })
+          const run = new Run({ blockchain })
+          expect(run.purse).to.equal(Run.defaults.purse)
+        } finally {
+          Run.defaults.purse = defaultPurse
+        }
       })
 
       // ----------------------------------------------------------------------
 
       it('defaults to string default', () => {
         const defaultPurse = Run.defaults.purse
-        const blockchain = new Mockchain()
-        Run.defaults.purse = new bsv.PrivateKey().toString()
-        const run = new Run({ blockchain })
-        expect(run.purse instanceof LocalPurse).to.equal(true)
-        expect(run.purse.privkey).to.equal(Run.defaults.purse)
-        Run.defaults.purse = defaultPurse
+        try {
+          const blockchain = new Mockchain()
+          Run.defaults.purse = new bsv.PrivateKey().toString()
+          const run = new Run({ blockchain })
+          expect(run.purse instanceof LocalPurse).to.equal(true)
+          expect(run.purse.privkey).to.equal(Run.defaults.purse)
+        } finally {
+          Run.defaults.purse = defaultPurse
+        }
       })
 
       // ----------------------------------------------------------------------
