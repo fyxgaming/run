@@ -932,12 +932,24 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it('defaults to default', () => {
+      it('defaults to LocalPurse default', () => {
         const defaultPurse = Run.defaults.purse
         const blockchain = new Mockchain()
         Run.defaults.purse = new LocalPurse({ blockchain })
         const run = new Run({ blockchain })
         expect(run.purse).to.equal(Run.defaults.purse)
+        Run.defaults.purse = defaultPurse
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('defaults to string default', () => {
+        const defaultPurse = Run.defaults.purse
+        const blockchain = new Mockchain()
+        Run.defaults.purse = new bsv.PrivateKey().toString()
+        const run = new Run({ blockchain })
+        expect(run.purse instanceof LocalPurse).to.equal(true)
+        expect(run.purse.privkey).to.equal(Run.defaults.purse)
         Run.defaults.purse = defaultPurse
       })
 
