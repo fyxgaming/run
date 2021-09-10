@@ -1968,20 +1968,44 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it('assigns debug to log', () => {
-        const run = new Run({ debug: false })
-        new Run({ debug: true }) // eslint-disable-line
+      it('assigns logger with debug to log', () => {
+        const logger = stub({ info: () => {}, warn: () => {}, error: () => {}, debug: () => {} })
+        const run = new Run({ logger, debug: true })
+        new Run({ debug: false }) // eslint-disable-line
         run.activate()
-        expect(Log._enableDebug).to.equal(false)
+        expect(Log._infoOn).to.equal(true)
+        expect(Log._warnOn).to.equal(true)
+        expect(Log._errorOn).to.equal(true)
+        expect(Log._debugOn).to.equal(true)
+        Log._info('tag', 'a')
+        Log._warn('tag', 'b')
+        Log._error('tag', 'c')
+        Log._debug('tag', 'd')
+        expect(logger.info.lastCall.lastArg).to.equal('a')
+        expect(logger.warn.lastCall.lastArg).to.equal('b')
+        expect(logger.error.lastCall.lastArg).to.equal('c')
+        expect(logger.debug.lastCall.lastArg).to.equal('d')
       })
 
       // ----------------------------------------------------------------------
 
-      it('assigns logger to log', () => {
-        const run = new Run({ logger: { info: () => { } } })
-        new Run({ logger: { warn: () => { } } }) // eslint-disable-line
+      it('assigns logger without debug to log', () => {
+        const logger = stub({ info: () => {}, warn: () => {}, error: () => {}, debug: () => {} })
+        const run = new Run({ logger, debug: false })
+        new Run({ debug: true }) // eslint-disable-line
         run.activate()
-        expect(Log._logger).to.equal(run.logger)
+        expect(Log._infoOn).to.equal(true)
+        expect(Log._warnOn).to.equal(true)
+        expect(Log._errorOn).to.equal(true)
+        expect(Log._debugOn).to.equal(false)
+        Log._info('tag', 'a')
+        Log._warn('tag', 'b')
+        Log._error('tag', 'c')
+        Log._debug('tag', 'd')
+        expect(logger.info.lastCall.lastArg).to.equal('a')
+        expect(logger.warn.lastCall.lastArg).to.equal('b')
+        expect(logger.error.lastCall.lastArg).to.equal('c')
+        expect(logger.debug.getCalls().length).to.equal(0)
       })
 
       // ----------------------------------------------------------------------

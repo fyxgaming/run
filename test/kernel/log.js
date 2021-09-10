@@ -115,30 +115,13 @@ describe('Log', () => {
 
   // --------------------------------------------------------------------------
 
-  it('logger method on without debug', () => {
-    const previousDebug = Log._enableDebug
+  it('logger method on', () => {
     Log._logger = console
-    Log._enableDebug = false
-    expect(Log._infoOn).to.equal(true)
-    expect(Log._warnOn).to.equal(true)
-    expect(Log._errorOn).to.equal(true)
-    expect(Log._debugOn).to.equal(false)
-    Log._logger = Log._defaultLogger
-    Log._enableDebug = previousDebug
-  })
-
-  // --------------------------------------------------------------------------
-
-  it('logger method on with debug', () => {
-    const previousDebug = Log._enableDebug
-    Log._logger = console
-    Log._enableDebug = true
     expect(Log._infoOn).to.equal(true)
     expect(Log._warnOn).to.equal(true)
     expect(Log._errorOn).to.equal(true)
     expect(Log._debugOn).to.equal(true)
     Log._logger = Log._defaultLogger
-    Log._enableDebug = previousDebug
   })
 
   // --------------------------------------------------------------------------
