@@ -4,9 +4,10 @@
  * Tests for lib/plugins/disk-cache.js
  */
 
-const { describe, it } = require('mocha')
+const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const fs = require('fs')
+const path = require('path')
 const Run = require('../env/run')
 const { BROWSER } = require('../env/config')
 const { DiskCache } = Run.plugins
@@ -16,6 +17,19 @@ const { DiskCache } = Run.plugins
 // ------------------------------------------------------------------------------------------------
 
 describe('DiskCache', () => {
+  const TMP = '.tmp'
+
+  // Clean up the tempory test directory after each test
+  afterEach(() => {
+    try {
+      if (fs.existsSync(TMP)) {
+        fs.rmdirSync(TMP, { recursive: true })
+      }
+    } catch (e) {
+      console.warn(`Failed to remove ${TMP}: ${e}`)
+    }
+  })
+
   // --------------------------------------------------------------------------
   // browser
   // --------------------------------------------------------------------------
@@ -55,31 +69,23 @@ describe('DiskCache', () => {
     // ------------------------------------------------------------------------
 
     it('silently swallows error if directory already exists', () => {
-      const dir = Math.random().toString()
-      try {
-        new DiskCache({ dir }) // eslint-disable-line
-        new DiskCache({ dir }) // eslint-disable-line
-        expect(fs.existsSync(dir)).to.equal(true)
+      const dir = path.join(TMP, Math.random().toString())
+      new DiskCache({ dir }) // eslint-disable-line
+      new DiskCache({ dir }) // eslint-disable-line
+      expect(fs.existsSync(dir)).to.equal(true)
 
       // TODO
-      } finally {
-        try { fs.rmdirSync(dir) } catch (e) { }
-      }
     })
 
     // ------------------------------------------------------------------------
 
     it('logs error if fails to create directory', () => {
-      let dir = 'x'
-      try {
-        for (let i = 0; i < 16; i++) dir = dir + dir
-        new DiskCache({ dir }) // eslint-disable-line
-        expect(fs.existsSync(dir)).to.equal(false)
+      let dir = path.join(TMP, 'x')
+      for (let i = 0; i < 16; i++) dir = dir + dir
+      new DiskCache({ dir }) // eslint-disable-line
+      expect(fs.existsSync(dir)).to.equal(false)
 
       // TODO
-      } finally {
-        try { fs.rmdirSync(dir) } catch (e) { }
-      }
     })
   })
 
