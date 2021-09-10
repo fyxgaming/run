@@ -40,8 +40,26 @@ describe('Run', () => {
     // ------------------------------------------------------------------------
 
     describe('api', () => {
-      it('defaults to default', () => {
-        expect(new Run().api).to.equal(Run.defaults.api)
+      it('defaults to undefined default', () => {
+        const previousDefault = Run.defaults.api
+        try {
+          Run.defaults.api = undefined
+          expect(new Run().api).to.equal(undefined)
+        } finally {
+          Run.defaults.api = previousDefault
+        }
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('defaults to string default', () => {
+        const previousDefault = Run.defaults.api
+        try {
+          Run.defaults.api = 'mattercloud'
+          expect(new Run({ network: 'main' }).api).to.equal('mattercloud')
+        } finally {
+          Run.defaults.api = previousDefault
+        }
       })
 
       // ----------------------------------------------------------------------
