@@ -44,32 +44,42 @@ describe('DiskCache', () => {
 
     it('creates directory', () => {
       const dir = Math.random().toString()
-      new DiskCache({ dir }) // eslint-disable-line
-      expect(fs.existsSync(dir)).to.equal(true)
-      fs.rmdirSync(dir)
+      try {
+        new DiskCache({ dir }) // eslint-disable-line
+        expect(fs.existsSync(dir)).to.equal(true)
+      } finally {
+        fs.rmdirSync(dir)
+      }
     })
 
     // ------------------------------------------------------------------------
 
     it('silently swallows error if directory already exists', () => {
       const dir = Math.random().toString()
-      new DiskCache({ dir }) // eslint-disable-line
-      new DiskCache({ dir }) // eslint-disable-line
-      expect(fs.existsSync(dir)).to.equal(true)
-      fs.rmdirSync(dir)
+      try {
+        new DiskCache({ dir }) // eslint-disable-line
+        new DiskCache({ dir }) // eslint-disable-line
+        expect(fs.existsSync(dir)).to.equal(true)
 
       // TODO
+      } finally {
+        try { fs.rmdirSync(dir) } catch (e) { }
+      }
     })
 
     // ------------------------------------------------------------------------
 
     it('logs error if fails to create directory', () => {
       let dir = 'x'
-      for (let i = 0; i < 20; i++) dir = dir + dir
-      new DiskCache({ dir }) // eslint-disable-line
-      expect(fs.existsSync(dir)).to.equal(false)
+      try {
+        for (let i = 0; i < 16; i++) dir = dir + dir
+        new DiskCache({ dir }) // eslint-disable-line
+        expect(fs.existsSync(dir)).to.equal(false)
 
       // TODO
+      } finally {
+        try { fs.rmdirSync(dir) } catch (e) { }
+      }
     })
   })
 
