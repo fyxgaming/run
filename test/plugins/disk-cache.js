@@ -74,7 +74,7 @@ describe('DiskCache', () => {
     it('silently swallows error if directory already exists', () => {
       const previousLogger = Log._logger
       try {
-        Log._logger = stub({ error: () => {}, warn: () => {}} )
+        Log._logger = stub({ error: () => {}, warn: () => {} })
         const dir = path.join(TMP, Math.random().toString())
         new DiskCache({ dir }) // eslint-disable-line
         new DiskCache({ dir }) // eslint-disable-line
@@ -89,12 +89,17 @@ describe('DiskCache', () => {
     // ------------------------------------------------------------------------
 
     it('logs error if fails to create directory', () => {
-      let dir = path.join(TMP, 'x')
-      for (let i = 0; i < 16; i++) dir = dir + dir
-      new DiskCache({ dir }) // eslint-disable-line
-      expect(fs.existsSync(dir)).to.equal(false)
-
-      // TODO
+      const previousLogger = Log._logger
+      try {
+        Log._logger = stub({ error: () => {}, warn: () => {} })
+        let dir = path.join(TMP, 'x')
+        for (let i = 0; i < 16; i++) dir = dir + dir
+        new DiskCache({ dir }) // eslint-disable-line
+        expect(fs.existsSync(dir)).to.equal(false)
+        expect(Log._logger.error.called).to.equal(true)
+      } finally {
+        Log._logger = previousLogger
+      }
     })
   })
 
