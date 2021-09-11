@@ -181,8 +181,17 @@ describe('DiskCache', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('doesnt exist', async () => {
-      // TODO
+    it('doesnt exist', async () => {
+      const previousLogger = Log._logger
+      try {
+        Log._logger = stub({ error: () => {}, warn: () => {} })
+        const dir = path.join(TMP, Math.random().toString())
+        const cache = new DiskCache({ dir })
+        expect(await cache.get('a')).to.equal(undefined)
+        expect(Log._logger.error.called).to.equal(false)
+      } finally {
+        Log._logger = previousLogger
+      }
     })
 
     // ------------------------------------------------------------------------
