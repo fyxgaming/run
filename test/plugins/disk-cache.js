@@ -112,7 +112,7 @@ describe('DiskCache', () => {
       const dir = path.join(TMP, Math.random().toString())
       const cache = new DiskCache({ dir })
       await cache.set('abc', 'def')
-      const filename = await cache._filename('abc')
+      const filename = await unmangle(cache)._filename('abc')
       expect(fs.existsSync(filename)).to.equal(true)
       expect(fs.readFileSync(filename, 'utf8')).to.equal('"def"')
     })
@@ -125,7 +125,7 @@ describe('DiskCache', () => {
       let key = path.join(TMP, 'x')
       for (let i = 0; i < 16; i++) key = key + key
       await cache.set(key, [1, 2, 3])
-      const filename = await cache._filename(key)
+      const filename = await unmangle(cache)._filename(key)
       expect(fs.existsSync(filename)).to.equal(true)
       expect(fs.readFileSync(filename, 'utf8')).to.equal('[1,2,3]')
     })
@@ -141,7 +141,7 @@ describe('DiskCache', () => {
         fs.rmdirSync(dir, { recursive: true })
         await cache.set('xyz', 'zyx')
         expect(Log._logger.error.called).to.equal(true)
-        const filename = await cache._filename('xyz')
+        const filename = await unmangle(cache)._filename('xyz')
         expect(fs.existsSync(filename)).to.equal(false)
       } finally {
         Log._logger = previousLogger
@@ -157,7 +157,7 @@ describe('DiskCache', () => {
     it('reads file', async () => {
       const dir = path.join(TMP, Math.random().toString())
       const cache = new DiskCache({ dir })
-      const filename = await cache._filename('mmm')
+      const filename = await unmangle(cache)._filename('mmm')
       fs.writeFileSync(filename, '"nnn"')
       expect(await cache.get('mmm')).to.equal('nnn')
     })
@@ -170,7 +170,7 @@ describe('DiskCache', () => {
         Log._logger = stub({ error: () => {}, warn: () => {} })
         const dir = path.join(TMP, Math.random().toString())
         const cache = new DiskCache({ dir })
-        const filename = await cache._filename('mmm')
+        const filename = await unmangle(cache)._filename('mmm')
         fs.writeFileSync(filename, '[{a')
         expect(await cache.get('mmm')).to.equal(undefined)
         expect(Log._logger.error.called).to.equal(true)
