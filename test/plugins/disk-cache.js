@@ -119,6 +119,19 @@ describe('DiskCache', () => {
 
     // ------------------------------------------------------------------------
 
+    it('long key', async () => {
+      const dir = path.join(TMP, Math.random().toString())
+      const cache = new DiskCache({ dir })
+      let key = path.join(TMP, 'x')
+      for (let i = 0; i < 16; i++) key = key + key
+      await cache.set(key, [1, 2, 3])
+      const filename = await cache._filename(key)
+      expect(fs.existsSync(filename)).to.equal(true)
+      expect(fs.readFileSync(filename, 'utf8')).to.equal('[1,2,3]')
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('logs error if fails', async () => {
       // TODO
     })
