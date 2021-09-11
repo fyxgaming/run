@@ -164,8 +164,19 @@ describe('DiskCache', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('invalid json', async () => {
-      // TODO
+    it('invalid json', async () => {
+      const previousLogger = Log._logger
+      try {
+        Log._logger = stub({ error: () => {}, warn: () => {} })
+        const dir = path.join(TMP, Math.random().toString())
+        const cache = new DiskCache({ dir })
+        const filename = await cache._filename('mmm')
+        fs.writeFileSync(filename, '[{a')
+        expect(await cache.get('mmm')).to.equal(undefined)
+        expect(Log._logger.error.called).to.equal(true)
+      } finally {
+        Log._logger = previousLogger
+      }
     })
 
     // ------------------------------------------------------------------------
