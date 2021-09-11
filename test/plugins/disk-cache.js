@@ -196,8 +196,15 @@ describe('DiskCache', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('save race condition', async () => {
-      // TODO
+    it('race condition', async () => {
+      const dir = path.join(TMP, Math.random().toString())
+      const cache = new DiskCache({ dir })
+      await cache.set('b', '0')
+      for (let i = 1; i <= 100; i++) {
+        await cache.set('b', i.toString())
+        const num = await cache.get('b')
+        expect(Number.isInteger(parseInt(num))).to.equal(true)
+      }
     })
   })
 })
