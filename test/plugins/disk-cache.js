@@ -6,11 +6,14 @@
 
 const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
+const { stub } = require('sinon')
 const fs = require('fs')
 const path = require('path')
 const Run = require('../env/run')
 const { BROWSER } = require('../env/config')
 const { DiskCache } = Run.plugins
+const unmangle = require('../env/unmangle')
+const Log = unmangle(unmangle(Run)._Log)
 
 // ------------------------------------------------------------------------------------------------
 // DiskCache
@@ -69,12 +72,18 @@ describe('DiskCache', () => {
     // ------------------------------------------------------------------------
 
     it('silently swallows error if directory already exists', () => {
-      const dir = path.join(TMP, Math.random().toString())
-      new DiskCache({ dir }) // eslint-disable-line
-      new DiskCache({ dir }) // eslint-disable-line
-      expect(fs.existsSync(dir)).to.equal(true)
-
-      // TODO
+      const previousLogger = Log._logger
+      try {
+        Log._logger = stub({ error: () => {}, warn: () => {}} )
+        const dir = path.join(TMP, Math.random().toString())
+        new DiskCache({ dir }) // eslint-disable-line
+        new DiskCache({ dir }) // eslint-disable-line
+        expect(fs.existsSync(dir)).to.equal(true)
+        expect(Log._logger.warn.called).to.equal(false)
+        expect(Log._logger.error.called).to.equal(false)
+      } finally {
+        Log._logger = previousLogger
+      }
     })
 
     // ------------------------------------------------------------------------
