@@ -108,13 +108,18 @@ describe('DiskCache', () => {
   // --------------------------------------------------------------------------
 
   describe('set', () => {
-    it.skip('saves to file', async () => {
-      // TODO
+    it('saves to file', async () => {
+      const dir = path.join(TMP, Math.random().toString())
+      const cache = new DiskCache({ dir })
+      await cache.set('abc', 'def')
+      const filename = await cache._filename('abc')
+      expect(fs.existsSync(filename)).to.equal(true)
+      expect(fs.readFileSync(filename, 'utf8')).to.equal('"def"')
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('fails silently', async () => {
+    it.skip('logs error if fails', async () => {
       // TODO
     })
   })
@@ -136,7 +141,7 @@ describe('DiskCache', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('fails silently', async () => {
+    it.skip('logs error if fails', async () => {
       // TODO
     })
   })
