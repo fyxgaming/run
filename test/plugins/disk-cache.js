@@ -154,19 +154,29 @@ describe('DiskCache', () => {
   // --------------------------------------------------------------------------
 
   describe('get', () => {
-    it.skip('reads file', async () => {
+    it('reads file', async () => {
+      const dir = path.join(TMP, Math.random().toString())
+      const cache = new DiskCache({ dir })
+      const filename = await cache._filename('mmm')
+      fs.writeFileSync(filename, '"nnn"')
+      expect(await cache.get('mmm')).to.equal('nnn')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('invalid json', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('doesnt exist', async () => {
       // TODO
     })
 
     // ------------------------------------------------------------------------
 
     it.skip('save race condition', async () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('logs error if fails', async () => {
       // TODO
     })
   })
