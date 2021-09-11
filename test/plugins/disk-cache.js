@@ -132,8 +132,20 @@ describe('DiskCache', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs error if fails', async () => {
-      // TODO
+    it('logs error if fails', async () => {
+      const previousLogger = Log._logger
+      try {
+        Log._logger = stub({ error: () => {}, warn: () => {} })
+        const dir = path.join(TMP, Math.random().toString())
+        const cache = new DiskCache({ dir })
+        fs.rmdirSync(dir, { recursive: true })
+        await cache.set('xyz', 'zyx')
+        expect(Log._logger.error.called).to.equal(true)
+        const filename = await cache._filename('xyz')
+        expect(fs.existsSync(filename)).to.equal(false)
+      } finally {
+        Log._logger = previousLogger
+      }
     })
   })
 
