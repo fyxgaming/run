@@ -11,6 +11,7 @@ const fs = require('fs')
 const path = require('path')
 const Run = require('../env/run')
 const { BROWSER } = require('../env/config')
+const { rmrfSync } = require('../env/misc')
 const { DiskCache } = Run.plugins
 const unmangle = require('../env/unmangle')
 const Log = unmangle(unmangle(Run)._Log)
@@ -23,15 +24,7 @@ describe('DiskCache', () => {
   const TMP = '.tmp'
 
   // Clean up the tempory test directory after each test
-  afterEach(() => {
-    try {
-      if (fs.existsSync(TMP)) {
-        fs.rmdirSync(TMP, { recursive: true })
-      }
-    } catch (e) {
-      console.warn(`Failed to remove ${TMP}: ${e}`)
-    }
-  })
+  afterEach(() => { try { rmrfSync(TMP) } catch (e) { console.warn(`Failed to remove ${TMP}: ${e}`) } })
 
   // --------------------------------------------------------------------------
   // browser
@@ -66,7 +59,7 @@ describe('DiskCache', () => {
         new DiskCache() // eslint-disable-line
         expect(fs.existsSync(DiskCache.defaults.dir)).to.equal(true)
       } finally {
-        fs.rmdirSync(DiskCache.defaults.dir, { recursive: true })
+        rmrfSync(DiskCache.defaults.dir)
         DiskCache.defaults.dir = defaultDir
       }
     })
@@ -152,7 +145,7 @@ describe('DiskCache', () => {
         Log._logger = stub({ error: () => {}, warn: () => {} })
         const dir = path.join(TMP, Math.random().toString())
         const cache = new DiskCache({ dir })
-        fs.rmdirSync(dir, { recursive: true })
+        rmrfSync(dir)
         await cache.set('xyz', 'zyx')
         expect(Log._logger.error.called).to.equal(true)
         const filename = await unmangle(cache)._filename('xyz')

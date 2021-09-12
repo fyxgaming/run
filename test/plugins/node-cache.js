@@ -9,7 +9,7 @@ const { expect } = require('chai')
 const { spy } = require('sinon')
 const Run = require('../env/run')
 const { BROWSER } = require('../env/config')
-const fs = require('fs')
+const { rmrfSync } = require('../env/misc')
 const { NodeCache, LocalCache, DiskCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ describe('NodeCache', () => {
   // Use a temporary directory and clean it up after
   let previousDir = null
   beforeEach(() => { previousDir = DiskCache.defaults.dir; DiskCache.defaults.dir = './.tmp' })
-  afterEach(() => { fs.rmdirSync(DiskCache.defaults.dir, { recursive: true }); DiskCache.defaults.dir = previousDir })
+  afterEach(() => { rmrfSync(DiskCache.defaults.dir); DiskCache.defaults.dir = previousDir })
 
   // --------------------------------------------------------------------------
   // browser
