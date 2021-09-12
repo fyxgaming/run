@@ -40,7 +40,7 @@ describe('DiskCache', () => {
   // Tests when running in node where IndexedDbCache is not supported
   if (BROWSER) {
     describe('browser', () => {
-      it('null if not a browser', () => {
+      it('null if browser', () => {
         expect(DiskCache).to.equal(null)
       })
     })
@@ -53,8 +53,22 @@ describe('DiskCache', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('defaults to .runcache dir', () => {
-      expect(new DiskCache().dir).to.equal('./.runcache')
+    it('defaults to runcache dir', () => {
+      expect(DiskCache.defaults.dir).to.equal('./.runcache')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('uses default dir if not specified', () => {
+      const defaultDir = DiskCache.defaults.dir
+      try {
+        DiskCache.defaults.dir = './.abcdef'
+        new DiskCache() // eslint-disable-line
+        expect(fs.existsSync(DiskCache.defaults.dir)).to.equal(true)
+      } finally {
+        fs.rmdirSync(DiskCache.defaults.dir, { recursive: true })
+        DiskCache.defaults.dir = defaultDir
+      }
     })
 
     // ------------------------------------------------------------------------
