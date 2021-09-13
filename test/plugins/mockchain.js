@@ -54,20 +54,6 @@ describe('Mockchain', () => {
 
   // --------------------------------------------------------------------------
 
-  describe('utxos', () => {
-    it('query by address and bsv script', async () => {
-      const mockchain = new Mockchain()
-      const privkey = new PrivateKey('testnet')
-      const address = privkey.toAddress()
-      const script = Script.fromAddress(address)
-      await mockchain.utxos(address)
-      await mockchain.utxos(address.toString())
-      await mockchain.utxos(script)
-    })
-  })
-
-  // --------------------------------------------------------------------------
-
   describe('block', () => {
     it('respects 1000 chain limit', async function () {
       this.timeout(30000)
