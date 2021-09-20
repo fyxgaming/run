@@ -52,7 +52,7 @@ jobs:
 
     - name: RunConnect Mainnet Tests
       run:
-        npm run test:cover test/plugins/blockchain.js
+        npm run test:cover test/kernel/blockchain.js
       env: 
         API: run
         NETWORK: main
