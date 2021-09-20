@@ -14,7 +14,7 @@ const unmangle = require('./env/unmangle')
 const { Jig } = Run
 const {
   RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, LocalOwner, LocalPurse,
-  LocalState, BrowserCache, NodeCache, Inventory, StateServer, Viewer
+  LocalState, BrowserCache, NodeCache, Inventory, StateServer, Viewer, RunDB
 } = Run.plugins
 const { BROWSER } = require('./env/config')
 const request = unmangle(Run)._request
@@ -423,6 +423,13 @@ describe('Run', () => {
         expect(() => new Run({ cache: { set: () => { } } })).to.throw('Invalid cache: [object Object]')
         expect(() => new Run({ cache: { get: () => { }, set: 1 } })).to.throw('Invalid cache: [object Object]')
         expect(() => new Run({ cache: { get: null, set: () => {} } })).to.throw('Invalid cache: [object Object]')
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('throws helpful error message if run-db', () => {
+        const error = 'The RunDB plugin is now a State API implementation, not a Cache'
+        expect(() => new Run({ cache: new RunDB() })).to.throw(error)
       })
     })
 
