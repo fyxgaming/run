@@ -26,14 +26,14 @@ describe('StateServer', () => {
       expect(new StateServer() instanceof RunSDKState).to.equal(true)
     })
 
-    // --------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     it('creates with defaults', () => {
       const connect = new StateServer()
       expect(connect.network).to.equal('main')
     })
 
-    // --------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     it('create on supported network', () => {
       const mainnetConnect = new StateServer({ network: 'main' })
@@ -42,14 +42,14 @@ describe('StateServer', () => {
       expect(testnetConnect.network).to.equal('test')
     })
 
-    // --------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     it('throws if unsupported network', () => {
       expect(() => new StateServer({ network: '' })).to.throw('RunConnect API does not support the "" network')
       expect(() => new StateServer({ network: 'stn' })).to.throw('RunConnect API does not support the "stn" network')
     })
 
-    // --------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     it('throws if invalid network', () => {
       expect(() => new StateServer({ network: null })).to.throw('Invalid network: null')
@@ -58,10 +58,78 @@ describe('StateServer', () => {
   })
 
   // --------------------------------------------------------------------------
-  // state
+  // pull
   // --------------------------------------------------------------------------
 
-  describe('state', () => {
+  describe('pull', () => {
+    it('makes api call with all=0 and tx=0', async () => {
+      const stateServer = new StateServer({ network: 'main' })
+      stateServer.request = stub().returns({ abc: 'def' })
+      const options = { all: false, tx: false }
+      await stateServer.pull('jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2', options)
+      expect(stateServer.request.callCount).to.equal(1)
+      expect(stateServer.request.firstCall.firstArg.startsWith(`${stateServer.host}/v1/main/state/bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2?all=0&tx=0&filter=`)).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('makes api call with all=1 and tx=1', async () => {
+      const stateServer = new StateServer({ network: 'main' })
+      stateServer.request = stub().returns({ abc: 'def' })
+      const options = { all: true, tx: true }
+      await stateServer.pull('jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2', options)
+      expect(stateServer.request.callCount).to.equal(1)
+      expect(stateServer.request.firstCall.firstArg.startsWith(`${stateServer.host}/v1/main/state/bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2?all=1&tx=1&filter=`)).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('caches entries on 404 error', async () => {
+      const stateServer = new StateServer({ network: 'main' })
+      stateServer.hook(new LocalCache())
+      stateServer.request = stub().throws({ reason: { abc: 'def' }, status: 404 })
+      await stateServer.pull('jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2')
+      expect(stateServer.request.callCount).to.equal(1)
+      expect(await stateServer.cache.get('abc')).to.equal('def')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('caches entries on non-404 error', async () => {
+      const stateServer = new StateServer({ network: 'main' })
+      stateServer.hook(new LocalCache())
+      stateServer.request = stub().throws({ reason: { abc: 'def' }, status: 500 })
+      await expect(stateServer.pull('jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2')).to.be.rejected
+      expect(stateServer.request.callCount).to.equal(1)
+      expect(await stateServer.cache.get('abc')).to.equal('def')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('does not cache entries if none returned on error', async () => {
+      const stateServer = new StateServer({ network: 'main' })
+      stateServer.hook(new Map())
+      stateServer.request = stub().throws({ reason: 'hello', status: 500 })
+      await expect(stateServer.pull('jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2')).to.be.rejected
+      expect(stateServer.request.callCount).to.equal(1)
+      expect(stateServer.cache.size).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('non-state keys do not pull', async () => {
+      const stateServer = new StateServer({ network: 'test' })
+      stateServer.request = stub()
+      await stateServer.pull('trust://abc')
+      expect(stateServer.request.callCount).to.equal(0)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // live
+  // --------------------------------------------------------------------------
+
+  describe('live', () => {
     if (NETWORK !== 'main') return
 
     it('gets all states and transactions', async () => {
