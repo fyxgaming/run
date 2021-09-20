@@ -215,7 +215,7 @@ describe('Inventory', () => {
       const a = new A()
       await a.sync()
       const run2 = new Run({ owner: run.owner })
-      stub(run2.blockchain, 'fetch').throws(new Run.errors.RequestError())
+      stub(run2.blockchain, 'utxos').throws(new Run.errors.RequestError())
       await expect(run2.inventory.sync()).to.be.rejectedWith(Run.errors.RequestError)
     })
   })
