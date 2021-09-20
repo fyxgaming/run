@@ -588,7 +588,7 @@ describe('Run', () => {
       it('RunConnect used for test network', () => {
         const run = new Run({ network: 'test' })
         expect(run.blockchain instanceof RunConnect).to.equal(true)
-        expect(run.state instanceof LocalState).to.equal(true)
+        expect(run.state instanceof StateServer).to.equal(true)
         expect(run.api).to.equal('run')
       })
 
@@ -1066,15 +1066,15 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it('defaults to LocalState on testnet', () => {
-        const run = new Run({ network: 'test' })
-        expect(run.state instanceof LocalState).to.equal(true)
+      it('defaults to StateServer on testnet', () => {
+        const run = new Run({ network: 'test', api: 'whatsonchain' })
+        expect(run.state instanceof StateServer).to.equal(true)
       })
 
       // ----------------------------------------------------------------------
 
-      it('defaults to LocalState on non-run api', () => {
-        const run = new Run({ network: 'main', api: 'mattercloud' })
+      it('defaults to LocalState on mock network', () => {
+        const run = new Run({ network: 'mock' })
         expect(run.state instanceof LocalState).to.equal(true)
       })
 
@@ -1352,8 +1352,7 @@ describe('Run', () => {
         run.api = 'mattercloud'
         expect(run.api).to.equal('mattercloud')
         expect(run.blockchain instanceof MatterCloud).to.equal(true)
-        expect(run.state instanceof StateServer).to.equal(false)
-        expect(run.cache instanceof StateServer).to.equal(false)
+        expect(run.state instanceof StateServer).to.equal(true)
         expect(run.network).to.equal('main')
       })
 
@@ -1364,8 +1363,7 @@ describe('Run', () => {
         run.api = 'whatsonchain'
         expect(run.api).to.equal('whatsonchain')
         expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
-        expect(run.state instanceof StateServer).to.equal(false)
-        expect(run.cache instanceof StateServer).to.equal(false)
+        expect(run.state instanceof StateServer).to.equal(true)
         expect(run.network).to.equal('test')
       })
 
