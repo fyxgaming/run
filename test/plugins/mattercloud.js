@@ -7,7 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { MatterCloud } = Run.plugins
+const { MatterCloud, RunSDKBlockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // MatterCloud
@@ -19,6 +19,12 @@ describe('MatterCloud', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
+    it('is RunSDKBlockchain', () => {
+      expect(new MatterCloud() instanceof RunSDKBlockchain).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('with defaults', () => {
       const connect = new MatterCloud()
       expect(connect.network).to.equal('main')

@@ -11,7 +11,7 @@ const { HDPrivateKey, Transaction } = require('bsv')
 const Run = require('../env/run')
 const { STRESS, API, NETWORK } = require('../env/config')
 const { Jig } = Run
-const { PayServer } = Run.plugins
+const { PayServer, RunSDKPurse } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Keys
@@ -42,6 +42,12 @@ describe('PayServer', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
+    it('is RunSDKPurse', () => {
+      expect(new PayServer() instanceof RunSDKPurse).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('should detect network', () => {
       const purse = new PayServer(apiKey)
       expect(purse.network).to.equal(NETWORK)

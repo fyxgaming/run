@@ -509,24 +509,40 @@ describe('Purse API ', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('State API ', () => {
-  describe('state', () => {
+  describe('pull', () => {
     it('throws NotImplementedError by default', async () => {
-      await expect(new State().state()).to.be.rejectedWith(NotImplementedError)
+      await expect(new State().pull()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+
+  describe('locations', () => {
+    it('throws NotImplementedError by default', async () => {
+      await expect(new State().locations()).to.be.rejectedWith(NotImplementedError)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+
+  describe('broadcast', () => {
+    it('throws NotImplementedError by default', async () => {
+      await expect(new State().broadcast()).to.be.rejectedWith(NotImplementedError)
     })
   })
 
   // --------------------------------------------------------------------------
 
   describe('instanceof', () => {
-    it('returns true if state method is present', () => {
-      const state = { state: () => {} }
+    it('returns true if pull method is present', () => {
+      const state = { pull: () => {} }
       expect(state instanceof State).to.equal(true)
       expect(Object.assign(function () {}, state) instanceof State).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it('returns false if state method is missing or invalid', () => {
+    it('returns false if pull method is missing or invalid', () => {
       expect(({}) instanceof State).to.equal(false)
       expect((() => {}) instanceof State).to.equal(false)
       expect(({ pay: null }) instanceof State).to.equal(false)

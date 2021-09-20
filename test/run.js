@@ -14,7 +14,7 @@ const unmangle = require('./env/unmangle')
 const { Jig } = Run
 const {
   RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, LocalOwner, LocalPurse,
-  BrowserCache, NodeCache, Inventory, Viewer
+  LocalState, BrowserCache, NodeCache, Inventory, StateServer, Viewer
 } = Run.plugins
 const { BROWSER } = require('./env/config')
 const request = unmangle(Run)._request
@@ -572,8 +572,7 @@ describe('Run', () => {
       it('RunConnect used for main network', () => {
         const run = new Run({ network: 'main' })
         expect(run.blockchain instanceof RunConnect).to.equal(true)
-        expect(run.state instanceof RunConnect).to.equal(true)
-        expect(run.cache instanceof RunConnect).to.equal(false)
+        expect(run.state instanceof StateServer).to.equal(true)
         expect(run.api).to.equal('run')
       })
 
@@ -582,8 +581,7 @@ describe('Run', () => {
       it('RunConnect used for test network', () => {
         const run = new Run({ network: 'test' })
         expect(run.blockchain instanceof RunConnect).to.equal(true)
-        expect(run.state instanceof RunConnect).to.equal(false)
-        expect(run.cache instanceof RunConnect).to.equal(false)
+        expect(run.state instanceof LocalState).to.equal(true)
         expect(run.api).to.equal('run')
       })
 
@@ -592,7 +590,7 @@ describe('Run', () => {
       it('WhatsOnChain used for stn network', () => {
         const run = new Run({ network: 'stn' })
         expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
-        expect(run.cache instanceof RunConnect).to.equal(false)
+        expect(run.state instanceof LocalState).to.equal(true)
         expect(run.api).to.equal('whatsonchain')
       })
 
@@ -601,7 +599,7 @@ describe('Run', () => {
       it('Mockchain used for mock network', () => {
         const run = new Run({ network: 'mock' })
         expect(run.blockchain instanceof Mockchain).to.equal(true)
-        expect(run.cache instanceof RunConnect).to.equal(false)
+        expect(run.state instanceof LocalState).to.equal(true)
         expect(run.api).to.equal(undefined)
       })
 
@@ -1054,30 +1052,30 @@ describe('Run', () => {
     // ------------------------------------------------------------------------
 
     describe('state', () => {
-      it('defaults to RunConnect on mainnet', () => {
+      it('defaults to StateServer on mainnet', () => {
         const run = new Run({ network: 'main' })
-        expect(run.state instanceof RunConnect).to.equal(true)
+        expect(run.state instanceof StateServer).to.equal(true)
       })
 
       // ----------------------------------------------------------------------
 
-      it('defaults to undefined on testnet', () => {
+      it('defaults to LocalState on testnet', () => {
         const run = new Run({ network: 'test' })
-        expect(run.state).to.equal(undefined)
+        expect(run.state instanceof LocalState).to.equal(true)
       })
 
       // ----------------------------------------------------------------------
 
-      it('defaults to undefined on non-run api', () => {
+      it('defaults to LocalState on non-run api', () => {
         const run = new Run({ network: 'main', api: 'mattercloud' })
-        expect(run.state).to.equal(undefined)
+        expect(run.state instanceof LocalState).to.equal(true)
       })
 
       // ----------------------------------------------------------------------
 
       it('defaults to default', () => {
         const stateBefore = Run.defaults.state
-        Run.defaults.state = { state: () => { } }
+        Run.defaults.state = { pull: () => { } }
         const run = new Run({ network: 'main', api: 'mattercloud' })
         expect(run.state).to.equal(Run.defaults.state)
         Run.defaults.state = stateBefore
@@ -1086,15 +1084,15 @@ describe('Run', () => {
       // ----------------------------------------------------------------------
 
       it('custom state', () => {
-        const state = { state: () => { } }
+        const state = { pull: () => { } }
         const run = new Run({ state })
         expect(run.state).to.equal(state)
       })
 
       // ----------------------------------------------------------------------
 
-      it('specify RunConnect with other api', () => {
-        const state = new RunConnect()
+      it('specify StateServer with other api', () => {
+        const state = new StateServer()
         const run = new Run({ api: 'mattercloud', network: 'main', state })
         expect(run.state).to.equal(state)
       })
@@ -1102,7 +1100,7 @@ describe('Run', () => {
       // ----------------------------------------------------------------------
 
       it('reuses state if same network and api', () => {
-        const state = { state: () => { } }
+        const state = { pull: () => { } }
         new Run({ state }) // eslint-disable-line
         const run2 = new Run()
         expect(run2.state).to.equal(state)
@@ -1111,7 +1109,7 @@ describe('Run', () => {
       // ----------------------------------------------------------------------
 
       it('does not reuse state if different network', () => {
-        const state = { state: () => { } }
+        const state = { pull: () => { } }
         new Run({ state, network: 'main' }) // eslint-disable-line
         const run2 = new Run({ network: 'test' })
         expect(run2.state).not.to.equal(state)
@@ -1120,7 +1118,7 @@ describe('Run', () => {
       // ----------------------------------------------------------------------
 
       it('does not reuse state if different api', () => {
-        const state = { state: () => { } }
+        const state = { pull: () => { } }
         new Run({ state, network: 'main' }) // eslint-disable-line
         const run2 = new Run({ api: 'mattercloud', network: 'main' })
         expect(run2.state).not.to.equal(state)
@@ -1228,6 +1226,21 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
+      it('state', async () => {
+        const defaultTrust = Run.defaults.trust
+        Run.defaults.trust = []
+        const run = new Run()
+        class A {}
+        run.deploy(A)
+        await run.sync()
+        run.deactivate()
+        const run2 = new Run({ blockchain: run.blockchain, cache: run.cache, trust: 'state' })
+        await run2.load(A.location)
+        Run.defaults.trust = defaultTrust
+      })
+
+      // ----------------------------------------------------------------------
+
       it('array', async () => {
         const defaultTrust = Run.defaults.trust
         Run.defaults.trust = []
@@ -1237,7 +1250,7 @@ describe('Run', () => {
         await run.sync()
         const txid = A.location.slice(0, 64)
         run.deactivate()
-        const run2 = new Run({ blockchain: run.blockchain, trust: [txid, 'cache', '*'] })
+        const run2 = new Run({ blockchain: run.blockchain, trust: [txid, 'state', '*'] })
         await run2.load(A.location)
         Run.defaults.trust = defaultTrust
       })
@@ -1320,8 +1333,8 @@ describe('Run', () => {
         run.api = 'run'
         expect(run.api).to.equal('run')
         expect(run.blockchain instanceof RunConnect).to.equal(true)
-        expect(run.state instanceof RunConnect).to.equal(true)
-        expect(run.cache instanceof RunConnect).to.equal(false)
+        expect(run.state instanceof StateServer).to.equal(true)
+        expect(run.cache instanceof StateServer).to.equal(false)
         expect(run.network).to.equal('main')
       })
 
@@ -1332,7 +1345,8 @@ describe('Run', () => {
         run.api = 'mattercloud'
         expect(run.api).to.equal('mattercloud')
         expect(run.blockchain instanceof MatterCloud).to.equal(true)
-        expect(run.cache instanceof RunConnect).to.equal(false)
+        expect(run.state instanceof StateServer).to.equal(false)
+        expect(run.cache instanceof StateServer).to.equal(false)
         expect(run.network).to.equal('main')
       })
 
@@ -1343,7 +1357,8 @@ describe('Run', () => {
         run.api = 'whatsonchain'
         expect(run.api).to.equal('whatsonchain')
         expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
-        expect(run.cache instanceof RunConnect).to.equal(false)
+        expect(run.state instanceof StateServer).to.equal(false)
+        expect(run.cache instanceof StateServer).to.equal(false)
         expect(run.network).to.equal('test')
       })
 
@@ -1880,7 +1895,7 @@ describe('Run', () => {
     describe('state', () => {
       it('change', () => {
         const run = new Run()
-        const state = { state: () => { } }
+        const state = { pull: () => { } }
         run.state = state
         expect(run.state).to.equal(state)
       })
@@ -2159,7 +2174,7 @@ describe('Run', () => {
         const run = new Run()
         run.trust([
           '*',
-          'cache',
+          'state',
           '61e1265acb3d93f1bf24a593d70b2a6b1c650ec1df90ddece8d6954ae3cdd915',
           '1111111111111111111111111111111111111111111111111111111111111111'
         ])

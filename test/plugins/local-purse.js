@@ -12,7 +12,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { payFor } = require('../env/misc')
 const { Jig } = Run
-const { LocalPurse, Mockchain, RunConnect } = Run.plugins
+const { LocalPurse, Mockchain, RunConnect, RunSDKPurse } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // LocalPurse tests
@@ -24,6 +24,13 @@ describe('LocalPurse', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
+    it('is RunSDKPurse', () => {
+      const blockchain = new Run().blockchain
+      expect(new LocalPurse({ blockchain }) instanceof RunSDKPurse).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
     describe('key', () => {
       it('generates random purse if unspecified', () => {
         const blockchain = new Run().blockchain

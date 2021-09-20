@@ -61,7 +61,7 @@ describe('Error', () => {
     const hint = 'Hint: Trust this txid using run.trust(txid) if you know it is safe'
     expect(error.message).to.equal(`Cannot load untrusted code via replay: abc\n\n${hint}`)
     expect(error.txid).to.equal('abc')
-    expect(error.method).to.equal('replay')
+    expect(error.from).to.equal('replay')
   })
 })
 

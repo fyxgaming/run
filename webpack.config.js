@@ -49,6 +49,11 @@ const reservedNames = [
   'Jig', 'JigDeps', 'Berry', 'BerryDeps', 'Code', 'CodeDeps', 'Creation', 'CreationDeps', 'CommonLock',
   // Extras
   'asm', 'B', 'Base58', 'expect', 'Group', 'Hex', 'sha256', 'Token', 'Tx', 'txo',
+  // Plugins
+  'BrowserCache', 'DiskCache', 'IndexedDBCache', 'Inventory', 'LocalCache', 'LocalOwner', 'LocalPurse',
+  'LocalState', 'MatterCloud', 'Mockchain', 'NodeCache', 'PayServer', 'RunConnect', 'RunDB',
+  'RunSDKBlockchain', 'RunSDKCache', 'RunSDKOwner', 'RunSDKPurse', 'RunSDKState', 'StateServer', 'Viewer',
+  'WhatsOnChain',
   // Errors
   'ArgumentError', 'ClientModeError', 'InternalError', 'NotImplementedError', 'RequestError',
   'TimeoutError', 'TrustError', 'ExecutionError'

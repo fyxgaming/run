@@ -7,7 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { WhatsOnChain } = Run.plugins
+const { WhatsOnChain, RunSDKBlockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // WhatsOnChain
@@ -19,6 +19,12 @@ describe('WhatsOnChain', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
+    it('is RunSDKBlockchain', () => {
+      expect(new WhatsOnChain() instanceof RunSDKBlockchain).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('with defaults', () => {
       const connect = new WhatsOnChain()
       expect(connect.network).to.equal('main')

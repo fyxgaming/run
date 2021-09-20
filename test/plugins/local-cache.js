@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { LocalCache } = Run.plugins
+const { LocalCache, RunSDKCache } = Run.plugins
 const unmangle = require('../env/unmangle')
 const StateFilter = unmangle(Run)._StateFilter
 
@@ -28,6 +28,12 @@ describe('LocalCache', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
+    it('is RunSDKCache', () => {
+      expect(new LocalCache() instanceof RunSDKCache).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('valid maxSizeMB', () => {
       new LocalCache({ maxSizeMB: 0 }) // eslint-disable-line
       new LocalCache({ maxSizeMB: 0.5 }) // eslint-disable-line
@@ -145,23 +151,6 @@ describe('LocalCache', () => {
       await expect(cache.set('undefined', undefined)).to.be.rejectedWith('Cannot cache undefined')
       await expect(cache.set('NaN', NaN)).to.be.rejectedWith('Cannot cache number')
       await expect(cache.set('Infinity', Infinity)).to.be.rejectedWith('Cannot cache number')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws if set different value', async () => {
-      const cache = new LocalCache()
-      const error = 'Attempt to set different values for the same key'
-      const prefixes = ['jig://', 'berry://', 'tx://']
-      for (const prefix of prefixes) {
-        const key = prefix + Math.random().toString()
-        await cache.set(key, { n: 1 })
-        await expect(cache.set(key, 0)).to.be.rejectedWith(error)
-        await expect(cache.set(key, 'hello')).to.be.rejectedWith(error)
-        await expect(cache.set(key, { n: 2 })).to.be.rejectedWith(error)
-        await expect(cache.set(key, { n: 1, m: 2 })).to.be.rejectedWith(error)
-        await cache.set(key, { n: 1 })
-      }
     })
 
     // ------------------------------------------------------------------------

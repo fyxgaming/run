@@ -10,13 +10,19 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { STRESS } = require('../env/config')
-const { Mockchain } = Run.plugins
+const { Mockchain, RunSDKBlockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Mockchain Functional Tests
 // ------------------------------------------------------------------------------------------------
 
 describe('Mockchain', () => {
+  it('is RunSDKBlockchain', () => {
+    expect(new Mockchain() instanceof RunSDKBlockchain).to.equal(true)
+  })
+
+  // ------------------------------------------------------------------------
+
   describe('mempoolChainLimit', () => {
     it('disable', async () => {
       const mockchain = new Mockchain()
