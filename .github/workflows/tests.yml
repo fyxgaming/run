@@ -58,6 +58,7 @@ jobs:
         NETWORK: main
         CLEAN: false
         PURSE_MAIN: ${{ secrets.PURSE_MAINNET }}
+      continue-on-error: true
       
     - name: MatterCloud Mainnet Tests
       run:
