@@ -428,7 +428,7 @@ describe('Run', () => {
       // ----------------------------------------------------------------------
 
       it('throws helpful error message if run-db', () => {
-        const error = 'The RunDB plugin is now a State API implementation, not a Cache'
+        const error = 'The RunDB plugin is now a state provider, not a cache'
         expect(() => new Run({ cache: new RunDB() })).to.throw(error)
       })
     })
