@@ -10,7 +10,7 @@ require('chai').use(require('chai-as-promised'))
 const { stub } = require('sinon')
 const Run = require('../env/run')
 const { NETWORK } = require('../env/config')
-const { StateServer, RunSDKState } = Run.plugins
+const { StateServer, RunSDKState, LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // StateServer
@@ -65,8 +65,10 @@ describe('StateServer', () => {
     if (NETWORK !== 'main') return
 
     it('gets all states and transactions', async () => {
-      const connect = new StateServer()
-      const state = await connect.state('bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2')
+      const cache = new LocalCache()
+      const stateServer = new StateServer()
+      stateServer.hook(cache)
+      const state = await stateServer.pull('jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2')
       expect(typeof state).to.equal('object')
       const expectedKeys = [
         'jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2',
@@ -93,7 +95,7 @@ describe('StateServer', () => {
         'tx://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92'
       ]
       for (const key of expectedKeys) {
-        const data = await connect.cache.get(key)
+        const data = await cache.get(key)
         expect(typeof data).not.to.equal('undefined')
       }
     })
@@ -102,20 +104,22 @@ describe('StateServer', () => {
 
     it('gets transaction data if state is missing', async () => {
       const berryTxid = '2a5b8bd98125efb65e1b1ff7537fb6aaa3e5af5e2149e18cb4630f8ea7682d90'
-      const connect = new StateServer()
-      const state = await connect.state(`${berryTxid}_o1`)
+      const cache = new LocalCache()
+      const stateServer = new StateServer()
+      stateServer.hook(cache)
+      const state = await stateServer.pull(`jig://${berryTxid}_o1`)
       expect(typeof state).to.equal('undefined')
-      const rawtx = await connect.cache.get(`tx://${berryTxid}`)
+      const rawtx = await cache.get(`tx://${berryTxid}`)
       expect(typeof rawtx).to.equal('string')
     })
 
     // ------------------------------------------------------------------------
 
     it('returns error if connection down', async () => {
-      const connect = new StateServer()
-      stub(connect, 'request').throws(new Error('Bad request'))
+      const stateServer = new StateServer()
+      stateServer.request = stub().throws(new Error('Bad request'))
       const location = '3b7ef411185bbe3d01caeadbe6f115b0103a546c4ef0ac7474aa6fbb71aff208_o1'
-      await expect(connect.state(location)).to.be.rejectedWith('Bad request')
+      await expect(stateServer.pull('jig://' + location)).to.be.rejectedWith('Bad request')
     })
   })
 })
