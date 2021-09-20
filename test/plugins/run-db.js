@@ -16,7 +16,8 @@ const { LocalCache, RunDB, RunSDKState } = Run.plugins
 // Globals
 // ------------------------------------------------------------------------------------------------
 
-const HOST = 'http://localhost:8000'
+// const HOST = 'http://localhost:8000'
+const HOST = 'https://api.run.network/v1/main/run-db'
 
 // ------------------------------------------------------------------------------------------------
 // RunDB
@@ -211,6 +212,7 @@ describe('RunDB', () => {
       const run = new Run({ state: rundb, client: true, network: 'main', trust: [] })
       const ShuaCoin = await run.load('ce8629aa37a1777d6aa64d0d33cd739fd4e231dc85cfe2f9368473ab09078b78_o1')
       await ShuaCoin.sync()
+      expect(ShuaCoin.nonce > 40).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
