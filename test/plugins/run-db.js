@@ -149,10 +149,10 @@ describe('RunDB', () => {
   describe('locations', () => {
     it('requests jig utxos', async () => {
       const rundb = new RunDB(HOST)
-      rundb.request = stub()
-      await rundb.locations('abc')
+      rundb.request = stub().returns([])
+      await rundb.locations('abcd')
       expect(rundb.request.callCount).to.equal(1)
-      const abchash = '3138466b469a9194520dc6f004cceb53884834ca86aa84f144dd82f1f7807d08'
+      const abchash = '6b0a005d09ccf4cb2e9f40c995345af0100ac6dd6a0f3a1b0a60d1f27e4c3d12'
       expect(rundb.request.firstCall.firstArg).to.deep.equal(`${HOST}/unspent?scripthash=${abchash}`)
     })
   })
