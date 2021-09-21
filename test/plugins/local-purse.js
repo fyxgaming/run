@@ -387,9 +387,10 @@ describe('LocalPurse', () => {
   // --------------------------------------------------------------------------
 
   describe('utxos', () => {
-    it('returns only non-jig utxos', async () => {
+    it('returns only non-jig utxos if jigFilter is on', async () => {
       // Valid run transaction
       const run = new Run()
+      expect(run.purse.jigFilter).to.equal(true)
       const run2 = new Run({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain })
       run.purse.splits = 10
       run2.purse.splits = 10
@@ -420,6 +421,20 @@ describe('LocalPurse', () => {
       const tx4 = await payFor(tx3, run)
       await run2.blockchain.broadcast(tx4.toString('hex'))
       expect((await run2.purse.utxos()).length).to.equal(12)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns all utxos if jigFilter is off', async () => {
+      const run = new Run()
+      run.owner = run.purse.privkey
+      class A extends Jig { init () { this.satoshis = 888 } }
+      const a = new A()
+      await a.sync()
+      run.purse.jigFilter = true
+      expect((await run.purse.utxos()).length).to.equal(1)
+      run.purse.jigFilter = false
+      expect((await run.purse.utxos()).length).to.equal(3)
     })
   })
 })
