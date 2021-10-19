@@ -1377,8 +1377,8 @@ describe('Transaction', () => {
       const run = new Run()
       const purse1 = run.purse
       const purse2 = new LocalPurse({ blockchain: run.blockchain })
-      stub(purse1, 'pay').callThrough()
-      stub(purse2, 'pay').callThrough()
+      const purse1PayStub = stub(purse1, 'pay').callThrough()
+      const purse2PayStub = stub(purse2, 'pay').callThrough()
       const tx = new Transaction()
       tx.update(() => run.deploy(class A { }))
       run.purse = purse1
@@ -1386,8 +1386,8 @@ describe('Transaction', () => {
       run.purse = purse2
       await tx.pay()
       await tx.publish({ pay: false })
-      expect(purse1.pay.calledOnce).to.equal(true)
-      expect(purse2.pay.calledOnce).to.equal(true)
+      expect(purse1PayStub.calledOnce).to.equal(true)
+      expect(purse2PayStub.calledOnce).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -1497,8 +1497,8 @@ describe('Transaction', () => {
       const run = new Run()
       const owner1 = run.owner
       const owner2 = new LocalOwner()
-      stub(owner1, 'sign').callThrough()
-      stub(owner2, 'sign').callThrough()
+      const owner1SignStub = stub(owner1, 'sign').callThrough()
+      const owner2SignStub = stub(owner2, 'sign').callThrough()
       const tx = new Transaction()
       tx.update(() => run.deploy(class A { }))
       await tx.pay()
@@ -1507,8 +1507,8 @@ describe('Transaction', () => {
       run.owner = owner2
       await tx.sign()
       await tx.publish({ sign: false })
-      expect(owner1.sign.calledOnce).to.equal(true)
-      expect(owner2.sign.calledOnce).to.equal(true)
+      expect(owner1SignStub.calledOnce).to.equal(true)
+      expect(owner2SignStub.calledOnce).to.equal(true)
     })
 
     // ------------------------------------------------------------------------

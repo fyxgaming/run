@@ -50,7 +50,7 @@ function unmangle (x) {
 // ------------------------------------------------------------------------------------------------
 
 /**
- * Transforms an object so that every key is mangled to be used within RUN
+ * Transforms an object so that every key is mangled to be used within Run
  */
 function mangle (x) {
   if (!mangled) return x

@@ -52,11 +52,13 @@ jobs:
 
     - name: RunConnect Mainnet Tests
       run:
-        npm run test:cover test/plugins/run-connect.js
+        npm run test:cover test/kernel/blockchain.js
       env: 
         API: run
         NETWORK: main
         CLEAN: false
+        PURSE_MAIN: ${{ secrets.PURSE_MAINNET }}
+      continue-on-error: true
       
     - name: MatterCloud Mainnet Tests
       run:
@@ -66,7 +68,7 @@ jobs:
         NETWORK: main
         STRESS: true
         CLEAN: false
-        PURSE_MAIN: ${{ secrets.PURSE_MAINNET }}
+        PURSE_MAIN: ${{ secrets.PURSE_MAINNET2 }}
       
     - name: WhatsOnChain Testnet Tests
       run:
@@ -84,6 +86,14 @@ jobs:
       env: 
         API: run
         NETWORK: test
+        CLEAN: false
+
+    - name: StateServer Mainnet Tests
+      run:
+        npm run test:cover test/plugins/state-server.js
+      env: 
+        API: run
+        NETWORK: main
         CLEAN: false
 
     - name: Publish Coverage

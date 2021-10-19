@@ -10,13 +10,19 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { STRESS } = require('../env/config')
-const { Mockchain } = Run.plugins
+const { Mockchain, RunSDKBlockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Mockchain Functional Tests
 // ------------------------------------------------------------------------------------------------
 
 describe('Mockchain', () => {
+  it('is RunSDKBlockchain', () => {
+    expect(new Mockchain() instanceof RunSDKBlockchain).to.equal(true)
+  })
+
+  // ------------------------------------------------------------------------
+
   describe('mempoolChainLimit', () => {
     it('disable', async () => {
       const mockchain = new Mockchain()
@@ -49,20 +55,6 @@ describe('Mockchain', () => {
       const fundutxo = { txid: fundtxid, vout: 1, satoshis: fundout.satoshis, script: fundout.script }
       const tx = new Transaction().from(fundutxo).change(address).sign(privkey)
       await mockchain.broadcast(tx)
-    })
-  })
-
-  // --------------------------------------------------------------------------
-
-  describe('utxos', () => {
-    it('query by address and bsv script', async () => {
-      const mockchain = new Mockchain()
-      const privkey = new PrivateKey('testnet')
-      const address = privkey.toAddress()
-      const script = Script.fromAddress(address)
-      await mockchain.utxos(address)
-      await mockchain.utxos(address.toString())
-      await mockchain.utxos(script)
     })
   })
 

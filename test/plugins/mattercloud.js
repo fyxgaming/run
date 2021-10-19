@@ -7,8 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { MatterCloud } = Run.plugins
-const { Cache } = Run.api
+const { MatterCloud, RunSDKBlockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // MatterCloud
@@ -20,23 +19,16 @@ describe('MatterCloud', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
+    it('is RunSDKBlockchain', () => {
+      expect(new MatterCloud() instanceof RunSDKBlockchain).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('with defaults', () => {
       const connect = new MatterCloud()
       expect(connect.network).to.equal('main')
-      expect(connect.cache instanceof Cache).to.equal(true)
       expect(connect.api).to.equal('mattercloud')
-    })
-
-    // --------------------------------------------------------------------------------------------
-
-    it('with custom cache', () => {
-      class CustomCache {
-        async set (key, value) { }
-        async get (key) { }
-      }
-      const cache = new CustomCache()
-      const connect = new MatterCloud({ cache })
-      expect(connect.cache).to.equal(cache)
     })
 
     // --------------------------------------------------------------------------------------------
@@ -68,15 +60,6 @@ describe('MatterCloud', () => {
     it('throws if invalid network', () => {
       expect(() => new MatterCloud({ network: null })).to.throw('Invalid network: null')
       expect(() => new MatterCloud({ network: 0 })).to.throw('Invalid network: 0')
-    })
-
-    // --------------------------------------------------------------------------------------------
-
-    it('throws if create with invalid cache', () => {
-      expect(() => new MatterCloud({ cache: '' })).to.throw('Unsupported cache: ')
-      expect(() => new MatterCloud({ cache: null })).to.throw('Unsupported cache: null')
-      expect(() => new MatterCloud({ cache: {} })).to.throw('Unsupported cache: [object Object]')
-      expect(() => new MatterCloud({ cache: { set: () => { } } })).to.throw('Unsupported cache: [object Object]')
     })
   })
 })

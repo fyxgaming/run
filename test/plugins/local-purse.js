@@ -12,7 +12,7 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const { payFor } = require('../env/misc')
 const { Jig } = Run
-const { LocalPurse, Mockchain, RunConnect } = Run.plugins
+const { LocalPurse, Mockchain, RunConnect, RunSDKPurse } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // LocalPurse tests
@@ -24,6 +24,13 @@ describe('LocalPurse', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
+    it('is RunSDKPurse', () => {
+      const blockchain = new Run().blockchain
+      expect(new LocalPurse({ blockchain }) instanceof RunSDKPurse).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
     describe('key', () => {
       it('generates random purse if unspecified', () => {
         const blockchain = new Run().blockchain
@@ -56,6 +63,14 @@ describe('LocalPurse', () => {
         const privkey = new PrivateKey('mainnet').toString()
         const blockchain = new Run({ network: 'test' }).blockchain
         expect(() => new LocalPurse({ privkey, blockchain })).to.throw('Private key network mismatch')
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('throws if invalid', () => {
+        const privkey = 'abc'
+        const blockchain = new Mockchain()
+        expect(() => new LocalPurse({ privkey, blockchain })).to.throw('Invalid private key: "abc"')
       })
     })
 
@@ -372,9 +387,10 @@ describe('LocalPurse', () => {
   // --------------------------------------------------------------------------
 
   describe('utxos', () => {
-    it('returns only non-jig utxos', async () => {
+    it('returns only non-jig utxos if jigFilter is on', async () => {
       // Valid run transaction
       const run = new Run()
+      expect(run.purse.jigFilter).to.equal(true)
       const run2 = new Run({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain })
       run.purse.splits = 10
       run2.purse.splits = 10
@@ -405,6 +421,20 @@ describe('LocalPurse', () => {
       const tx4 = await payFor(tx3, run)
       await run2.blockchain.broadcast(tx4.toString('hex'))
       expect((await run2.purse.utxos()).length).to.equal(12)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('returns all utxos if jigFilter is off', async () => {
+      const run = new Run()
+      run.owner = run.purse.privkey
+      class A extends Jig { init () { this.satoshis = 888 } }
+      const a = new A()
+      await a.sync()
+      run.purse.jigFilter = true
+      expect((await run.purse.utxos()).length).to.equal(1)
+      run.purse.jigFilter = false
+      expect((await run.purse.utxos()).length).to.equal(3)
     })
   })
 })

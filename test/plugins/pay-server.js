@@ -7,11 +7,13 @@
 const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
-const { HDPrivateKey, Transaction } = require('bsv')
+const { stub } = require('sinon')
+const bsv = require('bsv')
+const { HDPrivateKey, Transaction } = bsv
 const Run = require('../env/run')
 const { STRESS, API, NETWORK } = require('../env/config')
 const { Jig } = Run
-const { PayServer } = Run.plugins
+const { PayServer, RunSDKPurse } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Keys
@@ -22,29 +24,39 @@ const apiKeys = {
   test: 'tpubD9fidjoMPrsVEnYutakv62cR6acAAfWW5hTfgrEoedyijTiVkPnnkq2VyvUpx5WnssWLDrCsHYEKMvmp1nQSj8kH2AGhyeyAw1Fb3wiy8Bh'
 }
 
+const apiKey = apiKeys[NETWORK] || new HDPrivateKey().toString()
+
 // ------------------------------------------------------------------------------------------------
 // PayServer
 // ------------------------------------------------------------------------------------------------
 
 describe('PayServer', () => {
-  if (NETWORK !== 'test' || API !== 'run') return
-
   // Wait for every test to finish. This makes debugging easier.
   afterEach(() => Run.instance && Run.instance.sync())
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
-
-  const apiKey = apiKeys[NETWORK]
-  if (!apiKey) return
 
   // --------------------------------------------------------------------------
   // constructor
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('should detect network', () => {
-      const purse = new PayServer(apiKey)
-      expect(purse.network).to.equal(NETWORK)
+    it('is RunSDKPurse', () => {
+      expect(new PayServer(apiKey) instanceof RunSDKPurse).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('should detect network on mainnet', () => {
+      const purse = new PayServer(apiKeys.main)
+      expect(purse.network).to.equal('main')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('should detect network on testnet', () => {
+      const purse = new PayServer(apiKeys.test)
+      expect(purse.network).to.equal('test')
     })
 
     // ------------------------------------------------------------------------
@@ -62,6 +74,27 @@ describe('PayServer', () => {
   // --------------------------------------------------------------------------
 
   describe('pay', () => {
+    it('makes api call', async () => {
+      const purse = new PayServer(apiKey)
+      purse.request = stub().returns({ rawtx: new bsv.Transaction().toString() })
+      const run = new Run({ purse })
+      class A {}
+      const tx = new Run.Transaction()
+      tx.update(() => run.deploy(A))
+      await tx.pay()
+      expect(purse.request.callCount).to.equal(1)
+      expect(purse.request.firstCall.firstArg).to.deep.equal(`${purse.host}/v1/${purse.network}/pay`)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // live
+  // --------------------------------------------------------------------------
+
+  describe('live', () => {
+    // Only run the live tests on testnet with run api
+    if (NETWORK !== 'test' || API !== 'run') return
+
     it('pay for jig transactions', async () => {
       const purse = new PayServer(apiKey)
       const run = new Run({ purse })

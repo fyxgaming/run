@@ -7,14 +7,8 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
-const LocalCache = require('../../lib/plugins/local-cache')
+const { LocalCache } = Run.plugins
 const { Jig } = Run
-
-// ------------------------------------------------------------------------------------------------
-// Globals
-// ------------------------------------------------------------------------------------------------
-
-const CONFIG_KEY_CODE_FILTER = 'config://code-filter'
 
 // ------------------------------------------------------------------------------------------------
 // Cache
@@ -216,7 +210,7 @@ describe('Cache', () => {
       class A extends Jig { }
       run.deploy(A)
       await run.sync()
-      const filter = await run.cache.get(CONFIG_KEY_CODE_FILTER)
+      const filter = await run.cache.get('config://code-filter')
       expect(filter.buckets.some(x => x > 0)).to.equal(true)
     })
 
@@ -228,11 +222,11 @@ describe('Cache', () => {
       class A extends Jig { }
       run.deploy(A)
       await run.sync()
-      const buckets1 = Array.from((await run.cache.get(CONFIG_KEY_CODE_FILTER)).buckets)
+      const buckets1 = Array.from((await run.cache.get('config://code-filter')).buckets)
       class B extends Jig { }
       run.deploy(B)
       await run.sync()
-      const buckets2 = Array.from((await run.cache.get(CONFIG_KEY_CODE_FILTER)).buckets)
+      const buckets2 = Array.from((await run.cache.get('config://code-filter')).buckets)
       expect(buckets1).not.to.deep.equal(buckets2)
     })
 
@@ -243,10 +237,10 @@ describe('Cache', () => {
       class A extends Jig { }
       run.deploy(A)
       await run.sync()
-      const buckets1 = Array.from((await run.cache.get(CONFIG_KEY_CODE_FILTER)).buckets)
+      const buckets1 = Array.from((await run.cache.get('config://code-filter')).buckets)
       const a = new A()
       await a.sync()
-      const buckets2 = Array.from((await run.cache.get(CONFIG_KEY_CODE_FILTER)).buckets)
+      const buckets2 = Array.from((await run.cache.get('config://code-filter')).buckets)
       expect(buckets1).to.deep.equal(buckets2)
     })
   })

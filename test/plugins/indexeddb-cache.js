@@ -10,7 +10,7 @@ require('chai').use(require('chai-as-promised'))
 const unmangle = require('../env/unmangle')
 const { BROWSER } = require('../env/config')
 const Run = require('../env/run')
-const { IndexedDbCache } = Run.plugins
+const { IndexedDbCache, RunSDKCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // IndexedDbCache
@@ -37,6 +37,12 @@ describe('IndexedDbCache', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
+    it('is RunSDKCache', () => {
+      expect(new IndexedDbCache() instanceof RunSDKCache).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('opens database', async () => {
       const cache = new IndexedDbCache()
       const key = Math.random().toString()

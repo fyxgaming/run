@@ -215,7 +215,7 @@ describe('Inventory', () => {
       const a = new A()
       await a.sync()
       const run2 = new Run({ owner: run.owner })
-      stub(run2.blockchain, 'fetch').throws(new Run.errors.RequestError())
+      stub(run2.blockchain, 'utxos').throws(new Run.errors.RequestError())
       await expect(run2.inventory.sync()).to.be.rejectedWith(Run.errors.RequestError)
     })
   })
@@ -225,7 +225,7 @@ describe('Inventory', () => {
   // --------------------------------------------------------------------------
 
   describe('load', () => {
-    it('load via cache does not add to inventory', async () => {
+    it('load via state does not add to inventory', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()
@@ -256,7 +256,7 @@ describe('Inventory', () => {
   // --------------------------------------------------------------------------
 
   describe('jig sync', () => {
-    it('sync after load via cache adds to inventory', async () => {
+    it('sync after load via state adds to inventory', async () => {
       const run = new Run()
       class A extends Jig { }
       const a = new A()

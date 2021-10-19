@@ -2189,7 +2189,7 @@ describe('Deploy', () => {
   // Errors
   // --------------------------------------------------------------------------
 
-  describe('errors', () => {
+  describe('error', () => {
     it('rolls back if fail to publish', async () => {
       const run = new Run()
       class A { }

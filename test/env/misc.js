@@ -5,6 +5,8 @@
  */
 
 const { Transaction } = require('bsv')
+const fs = require('fs')
+const path = require('path')
 const Run = require('./run')
 const unmangle = require('./unmangle')
 const { expect } = require('chai')
@@ -158,5 +160,23 @@ async function getExtrasBlockchain () {
 }
 
 // ------------------------------------------------------------------------------------------------
+// rmrfSync
+// ------------------------------------------------------------------------------------------------
 
-module.exports = { populatePreviousOutputs, payFor, expectTx, testRecord, getExtrasBlockchain }
+function rmrfSync (dir) {
+  if (fs.existsSync(dir)) {
+    fs.readdirSync(dir).forEach((file, index) => {
+      const subpath = path.join(dir, file)
+      if (fs.lstatSync(subpath).isDirectory()) {
+        rmrfSync(subpath)
+      } else {
+        fs.unlinkSync(subpath)
+      }
+    })
+    fs.rmdirSync(dir)
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+module.exports = { populatePreviousOutputs, payFor, expectTx, testRecord, getExtrasBlockchain, rmrfSync }

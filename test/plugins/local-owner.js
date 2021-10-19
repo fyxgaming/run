@@ -15,7 +15,7 @@ const Run = require('../env/run')
 const { Jig } = Run
 const { Group } = Run.extra
 const { CommonLock } = Run.util
-const { LocalOwner, Mockchain } = Run.plugins
+const { LocalOwner, Mockchain, RunSDKOwner } = Run.plugins
 const unmangle = require('../env/unmangle')
 const { _getSignedPubkeys } = unmangle(LocalOwner)
 
@@ -34,6 +34,12 @@ describe('LocalOwner', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
+    it('is RunSDKOwner', () => {
+      expect(new LocalOwner() instanceof RunSDKOwner).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('create and set properties', () => {
       const privateKey = new PrivateKey('testnet')
       const owner = new LocalOwner(privateKey)

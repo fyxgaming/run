@@ -9,7 +9,7 @@ const { expect } = require('chai')
 const { PrivateKey, Transaction } = require('bsv')
 const Run = require('../env/run')
 const { Jig } = Run
-const { Viewer } = Run.plugins
+const { Viewer, RunSDKOwner } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Viewer
@@ -21,6 +21,13 @@ describe('Viewer', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
+    it('is RunSDKOwner', () => {
+      const address = new PrivateKey().toAddress().toString()
+      expect(new Viewer(address) instanceof RunSDKOwner).to.equal(true)
+    })
+
+    // --------------------------------------------------------------------------------------------
+
     it('address owners', () => {
       const address = new PrivateKey().toAddress().toString()
       const viewer = new Viewer(address)
@@ -61,14 +68,14 @@ describe('Viewer', () => {
   // --------------------------------------------------------------------------
 
   describe('nextOwner', () => {
-    it('always returns the lock', () => {
+    it('always returns the lock', async () => {
       class CustomLock {
         script () { return '010203' }
         domain () { return 1 }
       }
       const lock = new CustomLock()
       const viewer = new Viewer(lock)
-      expect(viewer.nextOwner()).to.equal(lock)
+      expect(await viewer.nextOwner()).to.equal(lock)
     })
   })
 
@@ -82,7 +89,7 @@ describe('Viewer', () => {
       const viewer = new Viewer(address)
       const tx = new Transaction()
       const hashBefore = tx.hash
-      expect(await viewer.sign(tx, [])).to.equal(tx)
+      expect(await viewer.sign(tx.toString())).to.equal(tx.toString())
       expect(tx.hash).to.equal(hashBefore)
     })
   })
