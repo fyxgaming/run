@@ -152,8 +152,14 @@ describe('deps', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('returns referenced jig transactions', () => {
-    // TODO
+  it('returns referenced jig transactions', async () => {
+    const run = new Run()
+    class A extends Jig { }
+    const CA = run.deploy(A)
+    const a = new A()
+    await run.sync()
+    const rawtx = await run.blockchain.fetch(a.location.slice(0, 64))
+    expect(Run.util.deps(rawtx)).to.deep.equal([CA.origin.slice(0, 64)])
   })
 
   // --------------------------------------------------------------------------
