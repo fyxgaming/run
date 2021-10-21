@@ -140,8 +140,14 @@ describe('metadata', () => {
 // ------------------------------------------------------------------------------------------------
 
 describe('deps', () => {
-  it.skip('returns jig inputs', () => {
-    // TODO
+  it('returns jig inputs', async () => {
+    const run = new Run()
+    class A { }
+    const CA = run.deploy(A)
+    CA.auth()
+    await CA.sync()
+    const rawtx = await run.blockchain.fetch(CA.location.slice(0, 64))
+    expect(Run.util.deps(rawtx)).to.deep.equal([CA.origin.slice(0, 64)])
   })
 
   // --------------------------------------------------------------------------
