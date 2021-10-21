@@ -201,8 +201,13 @@ describe('deps', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('does not return native:// references', () => {
-    // TODO
+  it('does not return native:// references', async () => {
+    const run = new Run()
+    class A extends Jig { }
+    const CA = run.deploy(A)
+    await CA.sync()
+    const rawtx = await run.blockchain.fetch(CA.location.slice(0, 64))
+    expect(Run.util.deps(rawtx)).to.deep.equal([])
   })
 
   // --------------------------------------------------------------------------
