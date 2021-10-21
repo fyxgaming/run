@@ -144,16 +144,10 @@ describe('deps', () => {
     const run = new Run()
     class A { }
     const CA = run.deploy(A)
-    CA.auth()
+    CA.destroy()
     await CA.sync()
     const rawtx = await run.blockchain.fetch(CA.location.slice(0, 64))
     expect(Run.util.deps(rawtx)).to.deep.equal([CA.origin.slice(0, 64)])
-  })
-
-  // --------------------------------------------------------------------------
-
-  it.skip('does not return payment inputs', () => {
-    // TODO
   })
 
   // --------------------------------------------------------------------------
@@ -178,6 +172,19 @@ describe('deps', () => {
 
   it.skip('returns referenced berry class transactions', () => {
     // TODO
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('does not return payment inputs', async () => {
+    const run = new Run()
+    class A { }
+    const CA = run.deploy(A)
+    CA.auth()
+    await CA.sync()
+    const rawtx = await run.blockchain.fetch(CA.location.slice(0, 64))
+    expect(new bsv.Transaction(rawtx).inputs.length > 1).to.equal(true)
+    expect(Run.util.deps(rawtx).length).to.equal(1)
   })
 
   // --------------------------------------------------------------------------
