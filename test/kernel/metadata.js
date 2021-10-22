@@ -181,8 +181,19 @@ describe('deps', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('returns referenced berry objects with txids', () => {
-    // TODO
+  it('returns referenced berry objects with txids', async () => {
+    const run = new Run()
+    class B extends Berry { static async loadWithMetadata (data) { return this.load(JSON.stringify(data)) } }
+    run.deploy(B)
+    await run.sync()
+    const berryTxid = '0000000000000000000000000000000000000000000000000000000000000000'
+    const b = await B.loadWithMetadata({ txid: berryTxid, data: 'abc' })
+    class A { }
+    A.b = b
+    const CA = run.deploy(A)
+    await CA.sync()
+    const rawtx = await run.blockchain.fetch(CA.location.slice(0, 64))
+    expect(Run.util.deps(rawtx)).to.deep.equal([B.location.slice(0, 64), berryTxid])
   })
 
   // --------------------------------------------------------------------------
