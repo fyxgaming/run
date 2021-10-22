@@ -1776,7 +1776,7 @@ describe('Transaction', () => {
       const slpoutput = new bsv.Transaction.Output({ script: slpscript, satoshis: 0 })
       const tx = new bsv.Transaction().addOutput(slpoutput).to(run.purse.address, 1000)
       const rawtx = tx.toString('hex')
-      const error = 'Not a run transaction: invalid op_return protocol'
+      const error = 'Not a RUN transaction: invalid OP_RETURN protocol'
       await expect(run.import(rawtx)).to.be.rejectedWith(error)
     })
 
@@ -1810,7 +1810,7 @@ describe('Transaction', () => {
       const runoutput = new bsv.Transaction.Output({ script: runscript, satoshis: 0 })
       const tx = new bsv.Transaction().addOutput(runoutput).to(run.purse.address, 1000)
       const rawtx = tx.toString('hex')
-      const error = 'Not a run transaction: invalid run metadata'
+      const error = 'Not a RUN transaction: invalid RUN metadata'
       await expect(run.import(rawtx)).to.be.rejectedWith(error)
     })
   })

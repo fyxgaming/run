@@ -31,7 +31,7 @@ describe('Invalid', () => {
       const run = new Run()
       const bsvtx = new bsv.Transaction()
       const rawtx = bsvtx.toString('hex')
-      await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid op_return protocol')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Not a RUN transaction: invalid OP_RETURN protocol')
     })
 
     // ------------------------------------------------------------------------
@@ -39,7 +39,7 @@ describe('Invalid', () => {
     it('throws if empty metadata', async () => {
       const run = new Run()
       const rawtx = createRunTransaction({ metadata: {} })
-      await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Not a RUN transaction: invalid RUN metadata')
     })
 
     // ------------------------------------------------------------------------
@@ -110,7 +110,7 @@ describe('Invalid', () => {
       const config = buildDeployConfig()
       config.metadata.author = 'alice'
       const rawtx = createRunTransaction(config)
-      await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Not a RUN transaction: invalid RUN metadata')
     })
   })
 
@@ -124,7 +124,7 @@ describe('Invalid', () => {
       const config = buildDeployConfig()
       config.prefix = 'slp'
       const rawtx = createRunTransaction(config)
-      await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid op_return protocol')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Not a RUN transaction: invalid OP_RETURN protocol')
     })
 
     // ------------------------------------------------------------------------
@@ -144,7 +144,7 @@ describe('Invalid', () => {
       const config = buildDeployConfig()
       config.extraData = 'abc'
       const rawtx = createRunTransaction(config)
-      await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid op_return protocol')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Not a RUN transaction: invalid OP_RETURN protocol')
     })
   })
 
@@ -242,7 +242,7 @@ describe('Invalid', () => {
       const callConfig = buildCallConfig(deployRawtx)
       callConfig.metadata.in = [1]
       const callRawtx = createRunTransaction(callConfig)
-      await expect(run.import(callRawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
+      await expect(run.import(callRawtx)).to.be.rejectedWith('Not a RUN transaction: invalid RUN metadata')
     })
 
     // ------------------------------------------------------------------------
@@ -340,7 +340,7 @@ describe('Invalid', () => {
       const config = buildDeployConfig()
       config.metadata.out = [null]
       const rawtx = createRunTransaction(config)
-      await expect(run.import(rawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Not a RUN transaction: invalid RUN metadata')
     })
   })
 
@@ -386,7 +386,7 @@ describe('Invalid', () => {
       const destroyConfig = buildDestroyConfig(deployRawtx)
       destroyConfig.metadata.del = [{}]
       const destroyRawtx = createRunTransaction(destroyConfig)
-      await expect(run.import(destroyRawtx)).to.be.rejectedWith('Not a run transaction: invalid run metadata')
+      await expect(run.import(destroyRawtx)).to.be.rejectedWith('Not a RUN transaction: invalid RUN metadata')
     })
   })
 

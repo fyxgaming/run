@@ -63,7 +63,7 @@ describe('metadata', () => {
   // ------------------------------------------------------------------------
 
   it('throws if other op_return protocol', () => {
-    const error = 'Not a run transaction: invalid op_return protocol'
+    const error = 'Not a RUN transaction: invalid OP_RETURN protocol'
     expect(() => Run.util.metadata(new bsv.Transaction().toString())).to.throw(error)
     expect(() => Run.util.metadata(new bsv.Transaction().addSafeData('run').toString())).to.throw(error)
     expect(() => Run.util.metadata(new bsv.Transaction().addSafeData('b').toString())).to.throw(error)
@@ -73,7 +73,7 @@ describe('metadata', () => {
   // ------------------------------------------------------------------------
 
   it('throws if not op_false op_return', () => {
-    const error = 'Not a run transaction: invalid op_return protocol'
+    const error = 'Not a RUN transaction: invalid OP_RETURN protocol'
     const metadata = { in: 0, ref: [], out: [], del: [], cre: [], exec: [] }
     const Buffer = bsv.deps.Buffer
     const prefix = Buffer.from('run', 'utf8')
@@ -89,7 +89,7 @@ describe('metadata', () => {
   // ------------------------------------------------------------------------
 
   it('throws if invalid prefix', () => {
-    const error = 'Not a run transaction: invalid op_return protocol'
+    const error = 'Not a RUN transaction: invalid OP_RETURN protocol'
     const metadata = { in: 0, ref: [], out: [], del: [], cre: [], exec: [] }
     const Buffer = bsv.deps.Buffer
     const prefix = Buffer.from('run2', 'utf8')
@@ -105,7 +105,7 @@ describe('metadata', () => {
   // ------------------------------------------------------------------------
 
   it('throws if invalid del metadata', () => {
-    const error = 'Not a run transaction: invalid run metadata'
+    const error = 'Not a RUN transaction: invalid RUN metadata'
     const metadata = { in: 0, ref: [], out: [], del: [null], cre: [], exec: [] }
     const Buffer = bsv.deps.Buffer
     const prefix = Buffer.from('run', 'utf8')
@@ -121,7 +121,7 @@ describe('metadata', () => {
   // ------------------------------------------------------------------------
 
   it('throws if extra version metadata', () => {
-    const error = 'Not a run transaction: invalid run metadata'
+    const error = 'Not a RUN transaction: invalid RUN metadata'
     const metadata = { version: '06', in: 0, ref: [], out: [], del: [], cre: [], exec: [] }
     const Buffer = bsv.deps.Buffer
     const prefix = Buffer.from('run', 'utf8')
@@ -262,14 +262,15 @@ describe('deps', () => {
     tx.base = new bsv.Transaction().addSafeData('123').toString()
     const CA = tx.update(() => run.deploy(class A {}))
     await tx.publish()
+    expect(CA.location.endsWith('_o2')).to.equal(true)
     const rawtx = await run.blockchain.fetch(CA.location.slice(0, 64))
     expect(Run.util.deps(rawtx)).to.deep.equal([])
   })
 
   // --------------------------------------------------------------------------
 
-  it.skip('throws if not a RUN transaction', () => {
-    // TODO
+  it('throws if not a RUN transaction', () => {
+    expect(() => Run.util.deps(new bsv.Transaction().toString())).to.throw('Not a RUN transaction')
   })
 
   // --------------------------------------------------------------------------

@@ -95,7 +95,7 @@ describe('Load', () => {
       const location = `${txid}_o0`
       await expect(run.load(location)).to.be.rejected
       const value = await run.cache.get(`ban://${location}`)
-      expect(value).to.deep.equal({ reason: 'ExecutionError: Not a run transaction: invalid op_return protocol' })
+      expect(value).to.deep.equal({ reason: 'ExecutionError: Not a RUN transaction: invalid OP_RETURN protocol' })
     })
 
     // ------------------------------------------------------------------------
