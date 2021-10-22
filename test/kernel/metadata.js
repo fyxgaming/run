@@ -211,8 +211,20 @@ describe('deps', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('does not return duplicate txids', async () => {
-    // TODO
+  it('does not return duplicate txids', async () => {
+    const run = new Run()
+    const [CA, CB] = run.transaction(() => {
+      return [run.deploy(class A {}), run.deploy(class B {})]
+    })
+    await run.sync()
+    expect(CA.location.slice(0, 64)).to.equal(CB.location.slice(0, 64))
+    class C {}
+    C.A = CA
+    C.B = CB
+    const CC = run.deploy(C)
+    await run.sync()
+    const rawtx = await run.blockchain.fetch(CC.location.slice(0, 64))
+    expect(Run.util.deps(rawtx)).to.deep.equal([CA.location.slice(0, 64)])
   })
 
   // --------------------------------------------------------------------------
