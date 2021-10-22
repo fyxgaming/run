@@ -33,7 +33,7 @@ describe('request', () => {
     it('get returns json', async function () {
       this.timeout(timeout)
       const status = await request('https://api.run.network/v1/test/status', { timeout })
-      expect(status.version > 0).to.equal(true)
+      expect(status.ok).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
