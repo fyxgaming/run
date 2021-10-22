@@ -272,12 +272,6 @@ describe('deps', () => {
   it('throws if not a RUN transaction', () => {
     expect(() => Run.util.deps(new bsv.Transaction().toString())).to.throw('Not a RUN transaction')
   })
-
-  // --------------------------------------------------------------------------
-
-  it.skip('throws if invalid RUN metadata', () => {
-    // TODO
-  })
 })
 
 // ------------------------------------------------------------------------------------------------
