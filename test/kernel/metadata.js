@@ -198,12 +198,6 @@ describe('deps', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('returns referenced berry class transactions', () => {
-    // TODO
-  })
-
-  // --------------------------------------------------------------------------
-
   it('does not return payment inputs', async () => {
     const run = new Run()
     class A { }
@@ -217,14 +211,24 @@ describe('deps', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('does not return duplicate txids', () => {
+  it.skip('does not return duplicate txids', async () => {
     // TODO
   })
 
   // --------------------------------------------------------------------------
 
-  it.skip('does not return berry paths if not txids', async () => {
-    // TODO
+  it('does not return berry paths if not txids', async () => {
+    const run = new Run()
+    class B extends Berry { }
+    run.deploy(B)
+    await run.sync()
+    const b = await B.load('abc')
+    class A { }
+    A.b = b
+    const CA = run.deploy(A)
+    await CA.sync()
+    const rawtx = await run.blockchain.fetch(CA.location.slice(0, 64))
+    expect(Run.util.deps(rawtx)).to.deep.equal([B.location.slice(0, 64)])
   })
 
   // --------------------------------------------------------------------------
