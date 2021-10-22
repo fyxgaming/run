@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
-const { Jig } = Run
+const { Jig, Berry } = Run
 
 // ------------------------------------------------------------------------------------------------
 // metadata
@@ -164,8 +164,19 @@ describe('deps', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('returns referenced berry txids', () => {
-    // TODO
+  it('returns referenced berry txids', async () => {
+    const run = new Run()
+    class B extends Berry { }
+    run.deploy(B)
+    await run.sync()
+    const berryTxid = '0000000000000000000000000000000000000000000000000000000000000000'
+    const b = await B.load(berryTxid)
+    class A { }
+    A.b = b
+    const CA = run.deploy(A)
+    await CA.sync()
+    const rawtx = await run.blockchain.fetch(CA.location.slice(0, 64))
+    expect(Run.util.deps(rawtx)).to.deep.equal([B.location.slice(0, 64), berryTxid])
   })
 
   // --------------------------------------------------------------------------
@@ -196,6 +207,12 @@ describe('deps', () => {
   // --------------------------------------------------------------------------
 
   it.skip('does not return duplicate txids', () => {
+    // TODO
+  })
+
+  // --------------------------------------------------------------------------
+
+  it.skip('does not return berry paths if not txids', async () => {
     // TODO
   })
 
