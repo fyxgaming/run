@@ -256,8 +256,14 @@ describe('deps', () => {
 
   // --------------------------------------------------------------------------
 
-  it.skip('supports metadata in not first output', () => {
-    // TODO
+  it('supports metadata in not first output', async () => {
+    const run = new Run()
+    const tx = new Run.Transaction()
+    tx.base = new bsv.Transaction().addSafeData('123').toString()
+    const CA = tx.update(() => run.deploy(class A {}))
+    await tx.publish()
+    const rawtx = await run.blockchain.fetch(CA.location.slice(0, 64))
+    expect(Run.util.deps(rawtx)).to.deep.equal([])
   })
 
   // --------------------------------------------------------------------------
