@@ -10,7 +10,9 @@ const bsv = require('bsv')
 const Run = require('../env/run')
 const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
+const mangle = unmangle.mangle
 const Codec = unmangle(Run)._Codec
+const { _encode, _decode } = unmangle(Codec)
 const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
 const HI = unmangle(unmangle(Run)._Sandbox)._hostIntrinsics
 
@@ -19,16 +21,16 @@ const HI = unmangle(unmangle(Run)._Sandbox)._hostIntrinsics
 // ------------------------------------------------------------------------------------------------
 
 function encodePass (x, y) {
-  const codec = unmangle(new Codec())
-  const encoded = codec._encode(x)
+  const encoded = _encode(x)
   const jsonString = JSON.stringify(encoded)
   const json = JSON.parse(jsonString)
   expect(json).to.deep.equal(y)
+  const codec = unmangle(new Codec())
   const decoded = codec._decode(json)
   expect(decoded).to.deep.equal(x)
 }
 
-const encodeFail = x => expect(() => unmangle(new Codec())._encode(x)).to.throw('Cannot encode')
+const encodeFail = x => expect(() => _encode(x)).to.throw('Cannot encode')
 const decodeFail = y => expect(() => unmangle(new Codec())._decode(y)).to.throw('Cannot decode')
 
 // ------------------------------------------------------------------------------------------------
@@ -272,7 +274,7 @@ describe('Codec', () => {
       o[2] = 2
       o[10] = 1
       o.n = 3
-      const encoded = unmangle(new Codec())._encode(o)
+      const encoded = _encode(o)
       const json = JSON.parse(JSON.stringify(encoded))
       const o2 = unmangle(new Codec())._decode(json)
       expect(Object.keys(o2)).to.deep.equal(['2', '3', '10', 'n', 'x'])
@@ -281,8 +283,8 @@ describe('Codec', () => {
     // ------------------------------------------------------------------------
 
     it('defaults to host intrinsics', () => {
-      expect(unmangle(new Codec())._encode({}).constructor).to.equal(Object)
-      expect(unmangle(new Codec())._encode([]).constructor).to.equal(Array)
+      expect(_encode({}).constructor).to.equal(Object)
+      expect(_encode([]).constructor).to.equal(Array)
     })
 
     // ------------------------------------------------------------------------
@@ -339,6 +341,146 @@ describe('Codec', () => {
       encodeFail(new VMSet())
       encodeFail(new VMMap())
       encodeFail(new VMUint8Array())
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throws for functions that are not code jigs', () => {
+      const opts = mangle({ _encodeJig: x => '123' })
+      expect(() => _encode(Math.random, opts)).to.throw('Cannot encode')
+      expect(() => _encode(Array.prototype.indexOf, opts)).to.throw('Cannot encode')
+      expect(() => _encode(WeakSet.prototype.has, opts)).to.throw('Cannot encode')
+      expect(() => _encode(String.prototype.endsWith, opts)).to.throw('Cannot encode')
+      expect(() => _encode(isNaN, opts)).to.throw('Cannot encode')
+      expect(() => _encode(isFinite, opts)).to.throw('Cannot encode')
+      expect(() => _encode(parseInt, opts)).to.throw('Cannot encode')
+      expect(() => _encode(escape, opts)).to.throw('Cannot encode')
+      expect(() => _encode(eval, opts)).to.throw('Cannot encode') // eslint-disable-line
+      expect(() => _encode(() => {}, opts)).to.throw('Cannot encode')
+      expect(() => _encode(function a () { }, opts)).to.throw('Cannot encode')
+      expect(() => _encode(class A { }, opts)).to.throw('Cannot encode')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('sandbox intrinsics', () => {
+      const opts = mangle({ _intrinsics: SI })
+      // Primitives
+      expect(_encode({}, opts).constructor).to.equal(SI.Object)
+      expect(_encode({ $: 1 }, opts).$obj.constructor).to.equal(SI.Object)
+      expect(_encode(undefined, opts).constructor).to.equal(SI.Object)
+      expect(_encode(-0, opts).constructor).to.equal(SI.Object)
+      expect(_encode(NaN, opts).constructor).to.equal(SI.Object)
+      expect(_encode(Infinity, opts).constructor).to.equal(SI.Object)
+      expect(_encode(-Infinity, opts).constructor).to.equal(SI.Object)
+      // Array
+      expect(_encode([], opts).constructor).to.equal(SI.Array)
+      const a = []
+      a.x = 1
+      expect(_encode(a, opts).constructor).to.equal(SI.Object)
+      expect(_encode(a, opts).$arr.constructor).to.equal(SI.Object)
+      // Set
+      const s = new Set()
+      s.x = 1
+      expect(_encode(s, opts).constructor).to.equal(SI.Object)
+      expect(_encode(s, opts).$set.constructor).to.equal(SI.Array)
+      expect(_encode(s, opts).props.constructor).to.equal(SI.Object)
+      // Map
+      const m = new Map()
+      m.x = 1
+      expect(_encode(m, opts).constructor).to.equal(SI.Object)
+      expect(_encode(m, opts).$map.constructor).to.equal(SI.Array)
+      expect(_encode(m, opts).props.constructor).to.equal(SI.Object)
+      // Uint8Array
+      const b = new Uint8Array()
+      expect(_encode(b, opts).constructor).to.equal(SI.Object)
+      // Dups
+      const o = { }
+      expect(_encode([o, o], opts).constructor).to.equal(SI.Array)
+      expect(_encode([o, o], opts)[1].$dup.constructor).to.equal(SI.Array)
+      // Jigs
+      new Run() // eslint-disable-line
+      class Dragon extends Jig { }
+      const dragon = new Dragon()
+      const json = _encode(dragon, mangle({ _encodeJig: x => '123', _intrinsics: SI }))
+      expect(json.constructor).to.equal(SI.Object)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('jig', () => {
+      new Run() // eslint-disable-line
+      class Dragon extends Jig { }
+      const dragon = new Dragon()
+      const json = _encode(dragon, mangle({ _encodeJig: x => '123' }))
+      expect(json).to.deep.equal({ $jig: '123' })
+      expect(json.constructor).to.equal(HI.Object)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('code', () => {
+      const opts = mangle({ _encodeJig: x => '123' })
+      const CB = Run.util.install(class B { constructor () { this.x = 1 } })
+      expect(_encode(CB, opts)).to.deep.equal({ $jig: '123' })
+      const cadd = Run.util.install(function add (a, b) { return a + b })
+      expect(_encode(cadd, opts)).to.deep.equal({ $jig: '123' })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('berry', async () => {
+      new Run() // eslint-disable-line
+      class B extends Berry {
+        static async pluck () { return new B() }
+      }
+      const berry = await B.load('abc')
+      const json = _encode(berry, mangle({ _encodeJig: x => '123' }))
+      expect(json).to.deep.equal({ $jig: '123' })
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('basic arbitrary objects', () => {
+      const jigs = []
+      const A2 = Run.util.install(class A { })
+      const a = new A2()
+      a.n = 1
+      const json = _encode(a, mangle({ _encodeJig: x => { jigs.push(x); return jigs.length - 1 } }))
+      const expected = { $arb: { n: 1 }, T: { $jig: 0 } }
+      expect(json).to.deep.equal(expected)
+      const decoded = _decode(json, mangle({ _decodeJig: x => jigs[x] }))
+      expect(decoded).to.deep.equal(a)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('arbitrary objects with circular references', () => {
+      const jigs = []
+      const A2 = Run.util.install(class A { })
+      const a = new A2()
+      a.a = a
+      const json = _encode(a, mangle({ _encodeJig: x => { jigs.push(x); return jigs.length - 1 } }))
+      const expected = { $arb: { a: { $dup: [] } }, T: { $jig: 0 } }
+      expect(json).to.deep.equal(expected)
+      const decoded = _decode(json, mangle({ _decodeJig: x => jigs[x] }))
+      expect(decoded).to.deep.equal(a)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('arbitrary objects with duplicate inners', () => {
+      const jigs = []
+      const o = {}
+      const A2 = Run.util.install(class A { })
+      const a = new A2()
+      a.o1 = o
+      a.o2 = o
+      const expected = { $arb: { o1: { }, o2: { $dup: ['$arb', 'o1'] } }, T: { $jig: 0 } }
+      const json = _encode(a, mangle({ _encodeJig: x => { jigs.push(x); return jigs.length - 1 } }))
+      expect(json).to.deep.equal(expected)
+      const decoded = _decode(json, mangle({ _decodeJig: x => jigs[x] }))
+      expect(decoded).to.deep.equal(a)
     })
   })
 
@@ -408,53 +550,10 @@ describe('Codec', () => {
       expect(unmangle(new Codec())._decode({}).constructor).to.equal(Object)
       expect(unmangle(new Codec())._decode([]).constructor).to.equal(Array)
     })
-  })
-
-  // --------------------------------------------------------------------------
-  // _toSandbox
-  // --------------------------------------------------------------------------
-
-  describe('_toSandbox', () => {
-    it('encodes to sandbox intrinsics', () => {
-      const codec = unmangle(new Codec())._toSandbox()
-      // Primitives
-      expect(codec._encode({}).constructor).to.equal(SI.Object)
-      expect(codec._encode({ $: 1 }).$obj.constructor).to.equal(SI.Object)
-      expect(codec._encode(undefined).constructor).to.equal(SI.Object)
-      expect(codec._encode(-0).constructor).to.equal(SI.Object)
-      expect(codec._encode(NaN).constructor).to.equal(SI.Object)
-      expect(codec._encode(Infinity).constructor).to.equal(SI.Object)
-      expect(codec._encode(-Infinity).constructor).to.equal(SI.Object)
-      // Array
-      expect(codec._encode([]).constructor).to.equal(SI.Array)
-      const a = []
-      a.x = 1
-      expect(codec._encode(a).constructor).to.equal(SI.Object)
-      expect(codec._encode(a).$arr.constructor).to.equal(SI.Object)
-      // Set
-      const s = new Set()
-      s.x = 1
-      expect(codec._encode(s).constructor).to.equal(SI.Object)
-      expect(codec._encode(s).$set.constructor).to.equal(SI.Array)
-      expect(codec._encode(s).props.constructor).to.equal(SI.Object)
-      // Map
-      const m = new Map()
-      m.x = 1
-      expect(codec._encode(m).constructor).to.equal(SI.Object)
-      expect(codec._encode(m).$map.constructor).to.equal(SI.Array)
-      expect(codec._encode(m).props.constructor).to.equal(SI.Object)
-      // Uint8Array
-      const b = new Uint8Array()
-      expect(codec._encode(b).constructor).to.equal(SI.Object)
-      // Dups
-      const o = { }
-      expect(codec._encode([o, o]).constructor).to.equal(SI.Array)
-      expect(codec._encode([o, o])[1].$dup.constructor).to.equal(SI.Array)
-    })
 
     // ------------------------------------------------------------------------
 
-    it('decodes to sandbox intrinsics', () => {
+    it('sandbox intrinsics', () => {
       const codec = unmangle(new Codec())._toSandbox()
       expect(codec._decode({}).constructor).to.equal(SI.Object)
       expect(codec._decode({ $obj: {} }).constructor).to.equal(SI.Object)
@@ -463,57 +562,6 @@ describe('Codec', () => {
       expect(codec._decode({ $set: [] }).constructor).to.equal(SI.Set)
       expect(codec._decode({ $map: [] }).constructor).to.equal(SI.Map)
       expect(codec._decode({ $ui8a: '' }).constructor).to.equal(SI.Uint8Array)
-    })
-  })
-
-  // --------------------------------------------------------------------------
-  // Jigs
-  // --------------------------------------------------------------------------
-
-  describe('Jigs', () => {
-    it('saves jigs with location', () => {
-      new Run() // eslint-disable-line
-      class Dragon extends Jig { }
-      const dragon = new Dragon()
-      const codec = unmangle(new Codec())._saveJigs(x => '123')
-      const json = codec._encode(dragon)
-      expect(json).to.deep.equal({ $jig: '123' })
-      expect(json.constructor).to.equal(HI.Object)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('to sandbox intrinsics', () => {
-      new Run() // eslint-disable-line
-      class Dragon extends Jig { }
-      const dragon = new Dragon()
-      const codec = unmangle(new Codec())._toSandbox()._saveJigs(x => '123')
-      const json = codec._encode(dragon)
-      expect(json.constructor).to.equal(SI.Object)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('loads jigs from location', () => {
-      new Run() // eslint-disable-line
-      class Dragon extends Jig { }
-      const dragon = new Dragon()
-      const codec = unmangle(new Codec())._loadJigs(x => dragon)
-      expect(codec._decode({ $jig: '123' })).to.equal(dragon)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('saves and loads jigs in complex structures', () => {
-      new Run() // eslint-disable-line
-      class Dragon extends Jig { }
-      const dragon = new Dragon()
-      const codec = unmangle(new Codec())._saveJigs(x => '123')._loadJigs(x => dragon)
-      const x = [dragon, { dragon }, new Set([dragon])]
-      const json = codec._encode(x)
-      const parsed = JSON.parse(JSON.stringify(json))
-      const output = codec._decode(parsed)
-      expect(output).to.deep.equal(x)
     })
 
     // ------------------------------------------------------------------------
@@ -526,95 +574,27 @@ describe('Codec', () => {
 
     // ------------------------------------------------------------------------
 
-    it('replaces code with location', () => {
-      const codec = unmangle(new Codec())._saveJigs(x => '123')
-      expect(codec._encode(Run.util.install(class B { constructor () { this.x = 1 } }))).to.deep.equal({ $jig: '123' })
-      expect(codec._encode(Run.util.install(function add (a, b) { return a + b }))).to.deep.equal({ $jig: '123' })
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('throws for functions that are not code jigs', () => {
-      const codec = unmangle(new Codec())._saveJigs(x => '123')
-      expect(() => codec._encode(Math.random)).to.throw('Cannot encode')
-      expect(() => codec._encode(Array.prototype.indexOf)).to.throw('Cannot encode')
-      expect(() => codec._encode(WeakSet.prototype.has)).to.throw('Cannot encode')
-      expect(() => codec._encode(String.prototype.endsWith)).to.throw('Cannot encode')
-      expect(() => codec._encode(isNaN)).to.throw('Cannot encode')
-      expect(() => codec._encode(isFinite)).to.throw('Cannot encode')
-      expect(() => codec._encode(parseInt)).to.throw('Cannot encode')
-      expect(() => codec._encode(escape)).to.throw('Cannot encode')
-      expect(() => codec._encode(eval)).to.throw('Cannot encode') // eslint-disable-line
-      expect(() => codec._encode(() => {})).to.throw('Cannot encode')
-      expect(() => codec._encode(function a () { })).to.throw('Cannot encode')
-      expect(() => codec._encode(class A { })).to.throw('Cannot encode')
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('replaces and revives berries', async () => {
+    it('jig', () => {
       new Run() // eslint-disable-line
-      class B extends Berry {
-        static async pluck () { return new B() }
-      }
-      const berry = await B.load('abc')
-      const codec = unmangle(new Codec())._saveJigs(x => '123')
-      const json = codec._encode(berry)
-      expect(json).to.deep.equal({ $jig: '123' })
-    })
-  })
-
-  // --------------------------------------------------------------------------
-  // Arbitrary objects
-  // --------------------------------------------------------------------------
-
-  describe('Arbitrary objects', () => {
-    it('basic arbitrary objects', () => {
-      const jigs = []
-      const codec = unmangle(new Codec())
-        ._saveJigs(x => { jigs.push(x); return jigs.length - 1 })
-        ._loadJigs(x => jigs[x])
-      const A2 = Run.util.install(class A { })
-      const a = new A2()
-      a.n = 1
-      const json = codec._encode(a)
-      const expected = { $arb: { n: 1 }, T: { $jig: 0 } }
-      expect(json).to.deep.equal(expected)
-      expect(codec._decode(json)).to.deep.equal(a)
+      class Dragon extends Jig { }
+      const dragon = new Dragon()
+      const codec = unmangle(new Codec())._loadJigs(x => dragon)
+      expect(codec._decode({ $jig: '123' })).to.equal(dragon)
     })
 
     // ------------------------------------------------------------------------
 
-    it('arbitrary objects with circular references', () => {
-      const jigs = []
-      const codec = unmangle(new Codec())
-        ._saveJigs(x => { jigs.push(x); return jigs.length - 1 })
-        ._loadJigs(x => jigs[x])
-      const A2 = Run.util.install(class A { })
-      const a = new A2()
-      a.a = a
-      const json = codec._encode(a)
-      const expected = { $arb: { a: { $dup: [] } }, T: { $jig: 0 } }
-      expect(json).to.deep.equal(expected)
-      expect(codec._decode(json)).to.deep.equal(a)
-    })
-
-    // ------------------------------------------------------------------------
-
-    it('arbitrary objects with duplicate inners', () => {
-      const jigs = []
-      const codec = unmangle(new Codec())
-        ._saveJigs(x => { jigs.push(x); return jigs.length - 1 })
-        ._loadJigs(x => jigs[x])
-      const o = {}
-      const A2 = Run.util.install(class A { })
-      const a = new A2()
-      a.o1 = o
-      a.o2 = o
-      const expected = { $arb: { o1: { }, o2: { $dup: ['$arb', 'o1'] } }, T: { $jig: 0 } }
-      const json = codec._encode(a)
-      expect(json).to.deep.equal(expected)
-      expect(codec._decode(json)).to.deep.equal(a)
+    it('jig in complex structure', () => {
+      new Run() // eslint-disable-line
+      class Dragon extends Jig { }
+      const dragon = new Dragon()
+      const encodeOptions = mangle({ _encodeJig: x => '123' })
+      const decodeOptions = mangle({ _decodeJig: x => dragon })
+      const x = [dragon, { dragon }, new Set([dragon])]
+      const json = _encode(x, encodeOptions)
+      const parsed = JSON.parse(JSON.stringify(json))
+      const output = _decode(parsed, decodeOptions)
+      expect(output).to.deep.equal(x)
     })
   })
 })
