@@ -136,7 +136,7 @@ describe('StateServer', () => {
       const cache = new LocalCache()
       const stateServer = new StateServer()
       stateServer.hook(cache)
-      const state = await stateServer.pull('jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2')
+      const state = await stateServer.pull('jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2', { all: true, tx: true })
       expect(typeof state).to.equal('object')
       const expectedKeys = [
         'jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2',
@@ -175,7 +175,7 @@ describe('StateServer', () => {
       const cache = new LocalCache()
       const stateServer = new StateServer()
       stateServer.hook(cache)
-      const state = await stateServer.pull(`jig://${berryTxid}_o1`)
+      const state = await stateServer.pull(`jig://${berryTxid}_o1`, { all: true, tx: true })
       expect(typeof state).to.equal('undefined')
       const rawtx = await cache.get(`tx://${berryTxid}`)
       expect(typeof rawtx).to.equal('string')
