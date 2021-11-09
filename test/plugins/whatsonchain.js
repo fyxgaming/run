@@ -5,8 +5,10 @@
  */
 
 const { describe, it } = require('mocha')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
+const { NotImplementedError } = Run.errors
 const { WhatsOnChain, RunSDKBlockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
@@ -70,6 +72,18 @@ describe('WhatsOnChain', () => {
     it('throws if invalid network', () => {
       expect(() => new WhatsOnChain({ network: null })).to.throw('Invalid network: null')
       expect(() => new WhatsOnChain({ network: 0 })).to.throw('Invalid network: 0')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // spends
+  // --------------------------------------------------------------------------
+
+  describe('spends', () => {
+    it('not supported', async () => {
+      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
+      const blockchain = new WhatsOnChain({ network: 'main' })
+      await expect(blockchain.spends(txid, 0)).to.be.rejectedWith(NotImplementedError)
     })
   })
 })

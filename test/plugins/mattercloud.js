@@ -5,9 +5,11 @@
  */
 
 const { describe, it } = require('mocha')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { MatterCloud, RunSDKBlockchain } = Run.plugins
+const { NotImplementedError } = Run.errors
 
 // ------------------------------------------------------------------------------------------------
 // MatterCloud
@@ -60,6 +62,18 @@ describe('MatterCloud', () => {
     it('throws if invalid network', () => {
       expect(() => new MatterCloud({ network: null })).to.throw('Invalid network: null')
       expect(() => new MatterCloud({ network: 0 })).to.throw('Invalid network: 0')
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // spends
+  // --------------------------------------------------------------------------
+
+  describe('spends', () => {
+    it('not supported', async () => {
+      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
+      const blockchain = new MatterCloud({ network: 'main' })
+      await expect(blockchain.spends(txid, 0)).to.be.rejectedWith(NotImplementedError)
     })
   })
 })

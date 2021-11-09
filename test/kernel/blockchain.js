@@ -294,9 +294,11 @@ describe('Blockchain', () => {
   // --------------------------------------------------------------------------
 
   describe('spends', () => {
+    if (new Run().blockchain.api === 'whatsonchain') return // Not supported
+    if (new Run().blockchain.api === 'mattercloud') return // Not supported
+
     it('returns mempool spending txid', async () => {
       const run = new Run()
-      if (run.blockchain.api === 'whatsonchain') return // Not supported
       const prevtxid = mempoolTx.inputs[0].prevTxId.toString('hex')
       const prevvout = mempoolTx.inputs[0].outputIndex
       expect(await run.blockchain.spends(prevtxid, prevvout)).to.equal(mempoolTxid)
@@ -306,7 +308,6 @@ describe('Blockchain', () => {
 
     it('returns mempool unspent as null', async () => {
       const run = new Run()
-      if (run.blockchain.api === 'whatsonchain') return // Not supported
       expect(await run.blockchain.spends(mempoolTxid, 1)).to.equal(null)
     })
 
@@ -314,7 +315,6 @@ describe('Blockchain', () => {
 
     it('returns block spending txid', async () => {
       const run = new Run()
-      if (run.blockchain.api === 'whatsonchain') return // Not supported
       const spenttxid = spentAndConfirmedTxid
       const spentrawtx = await run.blockchain.fetch(spenttxid)
       const spenttx = new bsv.Transaction(spentrawtx)
@@ -327,7 +327,6 @@ describe('Blockchain', () => {
 
     it('returns block unspent as null', async () => {
       const run = new Run()
-      if (run.blockchain.api === 'whatsonchain') return // Not supported
       expect(await run.blockchain.spends(spentAndConfirmedTxid, 0)).to.equal(null)
     })
 
@@ -335,7 +334,6 @@ describe('Blockchain', () => {
 
     it('large number of outputs', async () => {
       const run = new Run()
-      if (run.blockchain.api === 'whatsonchain') return // Not supported
       const txid = await transactionWithManyOutputs(run.blockchain)
       await run.blockchain.spends(txid, 0)
     })
