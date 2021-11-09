@@ -134,7 +134,7 @@ describe('Invalid', () => {
       const config = buildDeployConfig()
       config.version = '04'
       const rawtx = createRunTransaction(config)
-      await expect(run.import(rawtx)).to.be.rejectedWith('Unsupported metadata version: 04')
+      await expect(run.import(rawtx)).to.be.rejectedWith('Unsupported RUN transaction version: 04')
     })
 
     // ------------------------------------------------------------------------

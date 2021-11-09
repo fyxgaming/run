@@ -49,11 +49,12 @@ describe('_parseMetadataVersion', () => {
   // --------------------------------------------------------------------------
 
   it('throws if unsupported', () => {
-    expect(() => _parseMetadataVersion()).to.throw('Unsupported metadata version: undefined')
-    expect(() => _parseMetadataVersion(5)).to.throw('Unsupported metadata version: 5')
-    expect(() => _parseMetadataVersion('04')).to.throw('Unsupported metadata version: 04')
-    expect(() => _parseMetadataVersion('06')).to.throw('Unsupported metadata version: 06')
-    expect(() => _parseMetadataVersion('0005')).to.throw('Unsupported metadata version: 0005')
+    const hint = 'Hint: Upgrade your Run SDK to load this transaction'
+    expect(() => _parseMetadataVersion()).to.throw('Unsupported RUN transaction version: undefined')
+    expect(() => _parseMetadataVersion(5)).to.throw('Unsupported RUN transaction version: 5')
+    expect(() => _parseMetadataVersion('04')).to.throw('Unsupported RUN transaction version: 04')
+    expect(() => _parseMetadataVersion('06')).to.throw(`Unsupported RUN transaction version: 06\n\n${hint}`)
+    expect(() => _parseMetadataVersion('0005')).to.throw('Unsupported RUN transaction version: 0005')
   })
 })
 
