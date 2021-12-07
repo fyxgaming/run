@@ -12,7 +12,7 @@ const { Jig, Berry } = Run
 const unmangle = require('../env/unmangle')
 const Sandbox = unmangle(Run)._Sandbox
 const {
-  _kernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _basicObject,
+  _activeKernel, _assert, _bsvNetwork, _parent, _parentName, _extendsFrom, _text, _basicObject,
   _basicArray, _basicSet, _basicMap, _basicUint8Array, _arbitraryObject, _defined,
   _intrinsic, _serializable, _protoLen, _anonymous, _getOwnProperty, _hasOwnProperty,
   _setOwnProperty, _ownGetters, _ownMethods, _limit, _Timeout, _negativeZero, _filterInPlace
@@ -28,17 +28,17 @@ describe('Misc', () => {
   // _kernel
   // ----------------------------------------------------------------------------------------------
 
-  describe('_kernel', () => {
+  describe('_activeKernel', () => {
     it('return active run kernel', () => {
       const run = unmangle(new Run())
-      expect(_kernel()).to.equal(run._kernel)
+      expect(_activeKernel()).to.equal(run._kernel)
     })
 
     // ------------------------------------------------------------------------
 
     it('throws if no run instance is active', () => {
       new Run().deactivate() // eslint-disable-line
-      expect(() => _kernel()).to.throw('Run instance not active')
+      expect(() => _activeKernel()).to.throw('Run instance not active')
     })
   })
 
