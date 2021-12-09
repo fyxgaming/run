@@ -4,20 +4,26 @@
  * Tests for owner binding changes
  */
 
-const { describe, it } = require('mocha')
+const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { expectTx } = require('../env/misc')
 const { Jig } = Run
 const { LocalCache } = Run.plugins
-const PrivateKey = require('bsv/lib/privatekey')
+const bsv = require('bsv')
+const { PrivateKey } = bsv
 
 // ------------------------------------------------------------------------------------------------
 // Owner
 // ------------------------------------------------------------------------------------------------
 
 describe('Owner', () => {
+  // Wait for every test to finish. This makes debugging easier.
+  afterEach(() => Run.instance && Run.instance.sync())
+  // Deactivate the current run instance. This stops leaks across tests.
+  afterEach(() => Run.instance && Run.instance.deactivate())
+
   it('assigned to creator owner', async () => {
     const run = new Run()
     class A extends Jig { init () { this.ownerAtInit = this.owner } }
