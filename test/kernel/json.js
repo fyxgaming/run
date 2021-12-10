@@ -256,7 +256,7 @@ describe('Json', () => {
     // ------------------------------------------------------------------------
 
     it('jigs', () => {
-       new Run() // eslint-disable-line
+      new Run() // eslint-disable-line
       // Basic jig
       class A extends Jig { }
       const a = new A()
@@ -281,7 +281,7 @@ describe('Json', () => {
     // ------------------------------------------------------------------------
 
     it('berries', async () => {
-       new Run() // eslint-disable-line
+      new Run() // eslint-disable-line
       class B extends Berry {
         static async pluck () { return new B() }
       }
@@ -375,7 +375,7 @@ describe('Json', () => {
       expect(_encode([o, o], opts).constructor).to.equal(SI.Array)
       expect(_encode([o, o], opts)[1].$dup.constructor).to.equal(SI.Array)
       // Jigs
-       new Run() // eslint-disable-line
+      new Run() // eslint-disable-line
       class Dragon extends Jig { }
       const dragon = new Dragon()
       const json = _encode(dragon, mangle({ _encodeJig: x => '123', _intrinsics: SI }))
@@ -422,10 +422,10 @@ describe('Json', () => {
       encodeFail(Uint8ClampedArray, err)
       encodeFail(Float32Array, err)
       encodeFail(Float64Array, err)
-       if (typeof BigInt64Array !== 'undefined') encodeFail(BigInt64Array, err) // eslint-disable-line
-       if (typeof BigUint64Array !== 'undefined') encodeFail(BigUint64Array, err) // eslint-disable-line
-       if (typeof BigInt !== 'undefined') encodeFail(BigInt, err) // eslint-disable-line
-       if (typeof WebAssembly !== 'undefined') encodeFail(WebAssembly, err) // eslint-disable-line
+      if (typeof BigInt64Array !== 'undefined') encodeFail(BigInt64Array, err) // eslint-disable-line
+      if (typeof BigUint64Array !== 'undefined') encodeFail(BigUint64Array, err) // eslint-disable-line
+      if (typeof BigInt !== 'undefined') encodeFail(BigInt, err) // eslint-disable-line
+      if (typeof WebAssembly !== 'undefined') encodeFail(WebAssembly, err) // eslint-disable-line
       encodeFail(SI.Object, err)
       encodeFail(SI.Array, err)
       encodeFail(SI.Set, err)
@@ -477,7 +477,7 @@ describe('Json', () => {
       expect(() => _encode(isFinite, opts)).to.throw('Cannot encode')
       expect(() => _encode(parseInt, opts)).to.throw('Cannot encode')
       expect(() => _encode(escape, opts)).to.throw('Cannot encode')
-       expect(() => _encode(eval, opts)).to.throw('Cannot encode') // eslint-disable-line
+      expect(() => _encode(eval, opts)).to.throw('Cannot encode') // eslint-disable-line
       expect(() => _encode(() => {}, opts)).to.throw('Cannot encode')
       expect(() => _encode(function a () { }, opts)).to.throw('Cannot encode')
       expect(() => _encode(class A { }, opts)).to.throw('Cannot encode')
@@ -487,7 +487,7 @@ describe('Json', () => {
 
     it('throws if reserved property', () => {
       const err = 'Reserved key'
-       new Run() // eslint-disable-line
+      new Run() // eslint-disable-line
       RESERVED_PROPS.forEach(key => {
         const o = {}
         const a = []
@@ -639,7 +639,7 @@ describe('Json', () => {
     // ------------------------------------------------------------------------
 
     it.skip('throws if bad arbitrary object', async () => {
-       new Run() // eslint-disable-line
+      new Run() // eslint-disable-line
       const CA = Run.util.install(class A {})
       const CB = Run.util.install(class B extends Berry {})
       const CC = Run.util.install(class C extends Jig { })
@@ -664,7 +664,7 @@ describe('Json', () => {
 
     it('throws if reserved prop', () => {
       const err = 'Reserved key'
-       new Run() // eslint-disable-line
+      new Run() // eslint-disable-line
       RESERVED_PROPS.forEach(key => {
         decodeFail({ [key]: 1 }, err)
         decodeFail({ $obj: { [key]: {} } }, err)
