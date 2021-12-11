@@ -77,11 +77,12 @@ describe('Load', () => {
       const C = run.deploy(A)
       await run.sync()
       const run2 = new Run({ trust: [], owner: run.owner.privkey })
-      await expect(run2.load(C.location)).to.be.rejected
+      await expect(run2.load(C.location)).to.be.rejectedWith('Cannot load untrusted code')
       const value = await run2.cache.get(`ban://${C.location}`)
       expect(typeof value).to.equal('object')
       expect(value.untrusted).to.equal(C.location.slice(0, 64))
       expect(typeof value.reason).to.equal('string')
+      await expect(run2.load(C.location)).to.be.rejectedWith('Cannot load untrusted code')
     })
 
     // ------------------------------------------------------------------------
@@ -140,7 +141,7 @@ describe('Load', () => {
       const C = run.deploy(A)
       await run.sync()
       const run2 = new Run({ trust: [], owner: run.owner.privkey })
-      await expect(run2.load(C.location)).to.be.rejected
+      await expect(run2.load(C.location)).to.be.rejectedWith('Cannot load untrusted code')
       run2.trust(C.origin.slice(0, 64))
       expect((await run2.load(C.location)).location).to.equal(C.location)
       const value = await run2.cache.get(`ban://${C.location}`)
