@@ -1,19 +1,16 @@
 /**
- * local-state.js
+ * wrapped-state.js
  *
- * A local state API that uses the cache to store and retrieve results
+ * Tests for lib/plugins/wrapped-state.js
  */
 
-const WrappedState = require('./wrapped-state')
+const { describe } = require('mocha')
 
 // ------------------------------------------------------------------------------------------------
-// LocalState
+// WrappedState
 // ------------------------------------------------------------------------------------------------
 
-class LocalState extends WrappedState {
-  async pull () { /* no-op */ }
-}
+describe('WrappedState', () => {
+})
 
 // ------------------------------------------------------------------------------------------------
-
-module.exports = LocalState

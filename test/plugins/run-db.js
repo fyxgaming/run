@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const { stub } = require('sinon')
 const Run = require('../env/run')
 const { RequestError, TimeoutError } = Run.errors
-const { LocalCache, RunDB, RunSDKState } = Run.plugins
+const { LocalCache, RunDB, WrappedState } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Globals
@@ -24,8 +24,8 @@ const HOST = 'https://api.run.network/v1/main/run-db'
 // ------------------------------------------------------------------------------------------------
 
 describe('RunDB', () => {
-  it('is RunSDKState', () => {
-    expect(new RunDB() instanceof RunSDKState).to.equal(true)
+  it('is WrappedState', () => {
+    expect(new RunDB() instanceof WrappedState).to.equal(true)
   })
 
   // --------------------------------------------------------------------------
