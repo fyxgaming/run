@@ -9,7 +9,7 @@ const { expect } = require('chai')
 const { PrivateKey, Transaction } = require('bsv')
 const Run = require('../env/run')
 const { Jig } = Run
-const { Viewer, RunSDKOwner } = Run.plugins
+const { Viewer, WrappedOwner } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Viewer
@@ -21,9 +21,9 @@ describe('Viewer', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('is RunSDKOwner', () => {
+    it('is WrappedOwner', () => {
       const address = new PrivateKey().toAddress().toString()
-      expect(new Viewer(address) instanceof RunSDKOwner).to.equal(true)
+      expect(new Viewer(address) instanceof WrappedOwner).to.equal(true)
     })
 
     // --------------------------------------------------------------------------------------------

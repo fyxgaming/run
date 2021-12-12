@@ -52,8 +52,8 @@ const reservedNames = [
   // Plugins
   'BrowserCache', 'DiskCache', 'IndexedDBCache', 'Inventory', 'LocalCache', 'LocalOwner', 'LocalPurse',
   'LocalState', 'MatterCloud', 'Mockchain', 'NodeCache', 'PayServer', 'RunConnect', 'RunDB',
-  'RunSDKOwner', 'RunSDKPurse', 'RunSDKState', 'StateServer', 'Viewer', 'WhatsOnChain',
-  'WrappedBlockchain', 'WrappedCache',
+  'RunSDKPurse', 'RunSDKState', 'StateServer', 'Viewer', 'WhatsOnChain', 'WrappedBlockchain',
+  'WrappedCache', 'WrappedOwner',
   // Errors
   'ArgumentError', 'ClientModeError', 'InternalError', 'NotImplementedError', 'RequestError',
   'TimeoutError', 'TrustError', 'ExecutionError'
