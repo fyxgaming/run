@@ -13,7 +13,7 @@ const { HDPrivateKey, Transaction } = bsv
 const Run = require('../env/run')
 const { STRESS, API, NETWORK } = require('../env/config')
 const { Jig } = Run
-const { PayServer, RunSDKPurse } = Run.plugins
+const { PayServer, WrappedPurse } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Keys
@@ -41,8 +41,8 @@ describe('PayServer', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('is RunSDKPurse', () => {
-      expect(new PayServer(apiKey) instanceof RunSDKPurse).to.equal(true)
+    it('is WrappedPurse', () => {
+      expect(new PayServer(apiKey) instanceof WrappedPurse).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
