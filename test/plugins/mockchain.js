@@ -10,15 +10,15 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { STRESS } = require('../env/config')
-const { Mockchain, RunSDKBlockchain } = Run.plugins
+const { Mockchain, WrappedBlockchain } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Mockchain Functional Tests
 // ------------------------------------------------------------------------------------------------
 
 describe('Mockchain', () => {
-  it('is RunSDKBlockchain', () => {
-    expect(new Mockchain() instanceof RunSDKBlockchain).to.equal(true)
+  it('is WrappedBlockchain', () => {
+    expect(new Mockchain() instanceof WrappedBlockchain).to.equal(true)
   })
 
   // ------------------------------------------------------------------------
