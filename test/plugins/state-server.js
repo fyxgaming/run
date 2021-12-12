@@ -10,7 +10,7 @@ require('chai').use(require('chai-as-promised'))
 const { stub } = require('sinon')
 const Run = require('../env/run')
 const { NETWORK } = require('../env/config')
-const { StateServer, RunSDKState, LocalCache } = Run.plugins
+const { StateServer, WrappedState } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // StateServer
@@ -22,8 +22,8 @@ describe('StateServer', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('is RunSDKState', () => {
-      expect(new StateServer() instanceof RunSDKState).to.equal(true)
+    it('is WrappedState', () => {
+      expect(new StateServer() instanceof WrappedState).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -86,7 +86,6 @@ describe('StateServer', () => {
 
     it('caches entries on 404 error', async () => {
       const stateServer = new StateServer({ network: 'main' })
-      stateServer.hook(new LocalCache())
       stateServer.request = stub().throws({ reason: { abc: 'def' }, status: 404 })
       await stateServer.pull('jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2')
       expect(stateServer.request.callCount).to.equal(1)
@@ -97,7 +96,6 @@ describe('StateServer', () => {
 
     it('caches entries on non-404 error', async () => {
       const stateServer = new StateServer({ network: 'main' })
-      stateServer.hook(new LocalCache())
       stateServer.request = stub().throws({ reason: { abc: 'def' }, status: 500 })
       await expect(stateServer.pull('jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2')).to.be.rejected
       expect(stateServer.request.callCount).to.equal(1)
@@ -108,7 +106,7 @@ describe('StateServer', () => {
 
     it('does not cache entries if none returned on error', async () => {
       const stateServer = new StateServer({ network: 'main' })
-      stateServer.hook(new Map())
+      stateServer.cache = new Map()
       stateServer.request = stub().throws({ reason: 'hello', status: 500 })
       await expect(stateServer.pull('jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2')).to.be.rejected
       expect(stateServer.request.callCount).to.equal(1)
@@ -133,9 +131,7 @@ describe('StateServer', () => {
     if (NETWORK !== 'main') return
 
     it('gets all states and transactions', async () => {
-      const cache = new LocalCache()
       const stateServer = new StateServer()
-      stateServer.hook(cache)
       const state = await stateServer.pull('jig://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92_o2', { all: true, tx: true })
       expect(typeof state).to.equal('object')
       const expectedKeys = [
@@ -163,7 +159,7 @@ describe('StateServer', () => {
         'tx://bf5506e4d752cb2a2fa1d4140368e5c226004567fcd8f8cccc25f13de49b3b92'
       ]
       for (const key of expectedKeys) {
-        const data = await cache.get(key)
+        const data = await stateServer.cache.get(key)
         expect(typeof data).not.to.equal('undefined')
       }
     })
@@ -172,12 +168,10 @@ describe('StateServer', () => {
 
     it('gets transaction data if state is missing', async () => {
       const berryTxid = '2a5b8bd98125efb65e1b1ff7537fb6aaa3e5af5e2149e18cb4630f8ea7682d90'
-      const cache = new LocalCache()
       const stateServer = new StateServer()
-      stateServer.hook(cache)
       const state = await stateServer.pull(`jig://${berryTxid}_o1`, { all: true, tx: true })
       expect(typeof state).to.equal('undefined')
-      const rawtx = await cache.get(`tx://${berryTxid}`)
+      const rawtx = await stateServer.cache.get(`tx://${berryTxid}`)
       expect(typeof rawtx).to.equal('string')
     })
 
