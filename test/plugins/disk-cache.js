@@ -12,7 +12,7 @@ const path = require('path')
 const Run = require('../env/run')
 const { BROWSER } = require('../env/config')
 const { rmrfSync } = require('../env/misc')
-const { DiskCache, RunSDKCache } = Run.plugins
+const { DiskCache, WrappedCache } = Run.plugins
 const unmangle = require('../env/unmangle')
 const Log = unmangle(unmangle(Run)._Log)
 
@@ -46,8 +46,8 @@ describe('DiskCache', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('is RunSDKCache', () => {
-      expect(new DiskCache() instanceof RunSDKCache).to.equal(true)
+    it('is WrappedCache', () => {
+      expect(new DiskCache() instanceof WrappedCache).to.equal(true)
     })
 
     // ------------------------------------------------------------------------

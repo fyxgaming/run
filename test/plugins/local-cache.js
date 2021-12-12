@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { LocalCache, RunSDKCache } = Run.plugins
+const { LocalCache, WrappedCache } = Run.plugins
 const unmangle = require('../env/unmangle')
 const StateFilter = unmangle(Run)._StateFilter
 
@@ -28,8 +28,8 @@ describe('LocalCache', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('is RunSDKCache', () => {
-      expect(new LocalCache() instanceof RunSDKCache).to.equal(true)
+    it('is WrappedCache', () => {
+      expect(new LocalCache() instanceof WrappedCache).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -146,11 +146,11 @@ describe('LocalCache', () => {
 
     it('throws for non-json values', async () => {
       const cache = new LocalCache()
-      await expect(cache.set('function', x => x)).to.be.rejectedWith('Cannot cache function')
-      await expect(cache.set('symbol', Symbol.hasInstance)).to.be.rejectedWith('Cannot cache symbol')
+      await expect(cache.set('function', x => x)).to.be.rejectedWith('Cannot cache [anonymous function]')
+      await expect(cache.set('symbol', Symbol.hasInstance)).to.be.rejectedWith('Cannot cache Symbol(Symbol.hasInstance)')
       await expect(cache.set('undefined', undefined)).to.be.rejectedWith('Cannot cache undefined')
-      await expect(cache.set('NaN', NaN)).to.be.rejectedWith('Cannot cache number')
-      await expect(cache.set('Infinity', Infinity)).to.be.rejectedWith('Cannot cache number')
+      await expect(cache.set('NaN', NaN)).to.be.rejectedWith('Cannot cache NaN')
+      await expect(cache.set('Infinity', Infinity)).to.be.rejectedWith('Cannot cache Infinity')
     })
 
     // ------------------------------------------------------------------------
