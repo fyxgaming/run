@@ -1,20 +1,16 @@
 /**
- * wrapped-cache.js
+ * purse-wrapper.js
  *
- * Tests for lib/plugins/wrapped-cache.js
+ * Tests for lib/plugins/purse-wrapper.js
  */
 
-const { describe, it } = require('mocha')
-const Run = require('../env/run')
+const { describe } = require('mocha')
 
 // ------------------------------------------------------------------------------------------------
-// WrappedCache
+// PurseWrapper
 // ------------------------------------------------------------------------------------------------
 
-describe('WrappedCache', () => {
-  it('test', () => {
-    console.log(Run.plugins.WrappedCache)
-  })
+describe('PurseWrapper', () => {
 })
 
 // ------------------------------------------------------------------------------------------------

@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { LocalCache, WrappedCache } = Run.plugins
+const { LocalCache, CacheWrapper } = Run.plugins
 const unmangle = require('../env/unmangle')
 const StateFilter = unmangle(Run)._StateFilter
 
@@ -28,8 +28,8 @@ describe('LocalCache', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('is WrappedCache', () => {
-      expect(new LocalCache() instanceof WrappedCache).to.equal(true)
+    it('is CacheWrapper', () => {
+      expect(new LocalCache() instanceof CacheWrapper).to.equal(true)
     })
 
     // ------------------------------------------------------------------------

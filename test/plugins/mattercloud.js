@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { MatterCloud, WrappedBlockchain } = Run.plugins
+const { MatterCloud, BlockchainWrapper } = Run.plugins
 const { NotImplementedError } = Run.errors
 
 // ------------------------------------------------------------------------------------------------
@@ -21,8 +21,8 @@ describe('MatterCloud', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('is WrappedBlockchain', () => {
-      expect(new MatterCloud() instanceof WrappedBlockchain).to.equal(true)
+    it('is BlockchainWrapper', () => {
+      expect(new MatterCloud() instanceof BlockchainWrapper).to.equal(true)
     })
 
     // ------------------------------------------------------------------------

@@ -10,7 +10,7 @@ const { spy } = require('sinon')
 const Run = require('../env/run')
 const { BROWSER } = require('../env/config')
 const { rmrfSync } = require('../env/misc')
-const { NodeCache, LocalCache, DiskCache, WrappedCache } = Run.plugins
+const { NodeCache, LocalCache, DiskCache, CacheWrapper } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // NodeCache
@@ -42,8 +42,8 @@ describe('NodeCache', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('is WrappedCache', () => {
-      expect(new NodeCache() instanceof WrappedCache).to.equal(true)
+    it('is CacheWrapper', () => {
+      expect(new NodeCache() instanceof CacheWrapper).to.equal(true)
     })
 
     // ------------------------------------------------------------------------

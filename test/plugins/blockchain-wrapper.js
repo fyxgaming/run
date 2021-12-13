@@ -1,16 +1,16 @@
 /**
- * wrapped-blockchain.js
+ * blockchain-wrapper.js
  *
- * Tests for lib/plugins/wrapped-blockchain.js
+ * Tests for lib/plugins/blockchain-wrapper.js
  */
 
 const { describe } = require('mocha')
 
 // ------------------------------------------------------------------------------------------------
-// WrappedBlockchain
+// BlockchainWrapper
 // ------------------------------------------------------------------------------------------------
 
-describe('WrappedBlockchain', () => {
+describe('BlockchainWrapper', () => {
 })
 
 // ------------------------------------------------------------------------------------------------

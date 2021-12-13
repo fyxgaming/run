@@ -10,7 +10,7 @@ require('chai').use(require('chai-as-promised'))
 const { stub } = require('sinon')
 const Run = require('../env/run')
 const { NETWORK } = require('../env/config')
-const { StateServer, WrappedState } = Run.plugins
+const { StateServer, StateWrapper } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // StateServer
@@ -22,8 +22,8 @@ describe('StateServer', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('is WrappedState', () => {
-      expect(new StateServer() instanceof WrappedState).to.equal(true)
+    it('is StateWrapper', () => {
+      expect(new StateServer() instanceof StateWrapper).to.equal(true)
     })
 
     // ------------------------------------------------------------------------

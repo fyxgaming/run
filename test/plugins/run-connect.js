@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 require('chai').use(require('chai-as-promised'))
 const Run = require('../env/run')
-const { RunConnect, WrappedBlockchain } = Run.plugins
+const { RunConnect, BlockchainWrapper } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // RunConnect
@@ -20,8 +20,8 @@ describe('RunConnect', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('is WrappedBlockchain', () => {
-      expect(new RunConnect() instanceof WrappedBlockchain).to.equal(true)
+    it('is BlockchainWrapper', () => {
+      expect(new RunConnect() instanceof BlockchainWrapper).to.equal(true)
     })
 
     // ------------------------------------------------------------------------

@@ -1,16 +1,16 @@
 /**
- * wrapped-owner.js
+ * owner-wrapper.js
  *
- * Tests for lib/plugins/wrapped-owner.js
+ * Tests for lib/plugins/owner-wrapper.js
  */
 
 const { describe } = require('mocha')
 
 // ------------------------------------------------------------------------------------------------
-// WrappedOwner
+// OwnerWrapper
 // ------------------------------------------------------------------------------------------------
 
-describe('WrappedOwner', () => {
+describe('OwnerWrapper', () => {
 })
 
 // ------------------------------------------------------------------------------------------------

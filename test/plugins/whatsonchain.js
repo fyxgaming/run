@@ -9,7 +9,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { NotImplementedError } = Run.errors
-const { WhatsOnChain, WrappedBlockchain } = Run.plugins
+const { WhatsOnChain, BlockchainWrapper } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // WhatsOnChain
@@ -21,8 +21,8 @@ describe('WhatsOnChain', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('is WrappedBlockchain', () => {
-      expect(new WhatsOnChain() instanceof WrappedBlockchain).to.equal(true)
+    it('is BlockchainWrapper', () => {
+      expect(new WhatsOnChain() instanceof BlockchainWrapper).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
