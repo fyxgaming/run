@@ -25,8 +25,11 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
-  it('wraps set', () => {
-    // TODO
+  it('wraps set', async () => {
+    const cache = stub({ get: () => {}, set: () => {} })
+    const wrapper = new CacheWrapper(cache)
+    await wrapper.set('123', 456)
+    expect(cache.set.calledWith('123', 456)).to.equal(true)
   })
 
   // --------------------------------------------------------------------------
