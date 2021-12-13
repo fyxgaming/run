@@ -42,7 +42,7 @@ describe('CacheWrapper', () => {
     const cache = stub({ get: () => {}, set: () => {} })
     const wrapper = new CacheWrapper(cache)
     await wrapper.get('123')
-    expect(logger.info.args[0].join(' ').includes('[Cache] Get 123')).to.equal(true)
+    expect(logger.info.args.some(args => args.join(' ').includes('[Cache] Get 123'))).to.equal(true)
   })
 
   // --------------------------------------------------------------------------
@@ -57,7 +57,7 @@ describe('CacheWrapper', () => {
     const cache = stub(new MyCache())
     const wrapper = new CacheWrapper(cache)
     await wrapper.get('123')
-    expect(logger.info.args[0].join(' ').includes('[MyCache] Get 123')).to.equal(true)
+    expect(logger.info.args.some(args => args.join(' ').includes('[MyCache] Get 123'))).to.equal(true)
   })
 
   // --------------------------------------------------------------------------
@@ -68,7 +68,7 @@ describe('CacheWrapper', () => {
     const cache = stub({ get: () => {}, set: () => {} })
     const wrapper = new CacheWrapper(cache)
     await wrapper.set('123', [])
-    expect(logger.info.args[0].join(' ').includes('[Cache] Set 123')).to.equal(true)
+    expect(logger.info.args.some(args => args.join(' ').includes('[Cache] Set 123'))).to.equal(true)
   })
 
   // --------------------------------------------------------------------------
@@ -79,13 +79,18 @@ describe('CacheWrapper', () => {
     const cache = stub({ get: () => {}, set: () => {} })
     const wrapper = new CacheWrapper(cache)
     await wrapper.get('123')
-    expect(logger.debug.args[0].join(' ').includes('[Cache] Get (end): ')).to.equal(true)
+    expect(logger.debug.args.some(args => args.join(' ').includes('[Cache] Get (end): '))).to.equal(true)
   })
 
   // --------------------------------------------------------------------------
 
-  it('logs set performance in debug', () => {
-    // TODO
+  it('logs set performance in debug', async () => {
+    const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+    Log._logger = logger
+    const cache = stub({ get: () => {}, set: () => {} })
+    const wrapper = new CacheWrapper(cache)
+    await wrapper.set('123', [])
+    expect(logger.debug.args.some(args => args.join(' ').includes('[Cache] Set (end): '))).to.equal(true)
   })
 
   // --------------------------------------------------------------------------
@@ -97,8 +102,7 @@ describe('CacheWrapper', () => {
     cache.get.returns(true)
     const wrapper = new CacheWrapper(cache)
     await wrapper.get('123')
-    console.log(logger.debug.args[1].join(' '))
-    expect(logger.debug.args[1].join(' ').includes('[Cache] Value: true')).to.equal(true)
+    expect(logger.debug.args.some(args => args.join(' ').includes('[Cache] Value: true'))).to.equal(true)
   })
 
   // --------------------------------------------------------------------------
