@@ -90,6 +90,19 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
+  it('logs get value in debug', async () => {
+    const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+    Log._logger = logger
+    const cache = stub({ get: () => {}, set: () => {} })
+    cache.get.returns(true)
+    const wrapper = new CacheWrapper(cache)
+    await wrapper.get('123')
+    console.log(logger.debug.args[1].join(' '))
+    expect(logger.debug.args[1].join(' ').includes('[Cache] Value: true')).to.equal(true)
+  })
+
+  // --------------------------------------------------------------------------
+
   it('validates get arguments', () => {
     // TODO
   })
