@@ -73,8 +73,13 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
-  it('logs get performance in debug', () => {
-    // TODO
+  it('logs get performance in debug', async () => {
+    const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+    Log._logger = logger
+    const cache = stub({ get: () => {}, set: () => {} })
+    const wrapper = new CacheWrapper(cache)
+    await wrapper.get('123')
+    expect(logger.debug.args[0].join(' ').includes('[Cache] Get (end): ')).to.equal(true)
   })
 
   // --------------------------------------------------------------------------
