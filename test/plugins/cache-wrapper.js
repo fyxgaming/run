@@ -179,8 +179,11 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
-  it('updates code filter', () => {
-    // TODO
+  it('updates code filter', async () => {
+    const cache = stub({ get: () => {}, set: () => {} })
+    const wrapper = new CacheWrapper(cache)
+    await wrapper.set('jig://abc', { kind: 'code' })
+    expect(cache.set.args.some(args => args[0] === 'config://code-filter')).to.equal(true)
   })
 
   // --------------------------------------------------------------------------
@@ -191,7 +194,7 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
-  it('enable wrapping', () => {
+  it('reenable wrapping', () => {
     // TODO
   })
 })
