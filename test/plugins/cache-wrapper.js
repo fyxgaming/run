@@ -119,7 +119,7 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
-  it('validates get arguments', async () => {
+  it('validates get key is string', async () => {
     const cache = stub({ get: () => {}, set: () => {} })
     const wrapper = new CacheWrapper(cache)
     await expect(wrapper.get(null)).to.be.rejectedWith('Invalid key: null')
@@ -130,8 +130,15 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
-  it('validates get response', () => {
-    // TODO
+  it('validates get response is json or undefined', async () => {
+    const cache = stub({ get: () => {}, set: () => {} })
+    const wrapper = new CacheWrapper(cache)
+    cache.get.returns(new Set())
+    await expect(wrapper.get('123')).to.be.rejectedWith('Invalid value retrieved for 123')
+    cache.get.returns(Infinity)
+    await expect(wrapper.get('123')).to.be.rejectedWith('Invalid value retrieved for 123')
+    cache.get.returns([Infinity])
+    await expect(wrapper.get('123')).to.be.rejectedWith('Invalid value retrieved for 123')
   })
 
   // --------------------------------------------------------------------------
