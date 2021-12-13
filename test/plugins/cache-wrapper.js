@@ -107,6 +107,17 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
+  it('logs set value in debug', async () => {
+    const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+    Log._logger = logger
+    const cache = stub({ get: () => {}, set: () => {} })
+    const wrapper = new CacheWrapper(cache)
+    await wrapper.set('123', null)
+    expect(logger.debug.args.some(args => args.join(' ').includes('[Cache] Value: null'))).to.equal(true)
+  })
+
+  // --------------------------------------------------------------------------
+
   it('validates get arguments', () => {
     // TODO
   })
