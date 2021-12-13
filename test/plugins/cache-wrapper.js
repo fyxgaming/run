@@ -9,6 +9,8 @@ const { expect } = require('chai')
 const { stub } = require('sinon')
 const Run = require('../env/run')
 const { CacheWrapper } = Run.plugins
+const unmangle = require('../env/unmangle')
+const Log = unmangle(unmangle(Run)._Log)
 
 // ------------------------------------------------------------------------------------------------
 // CacheWrapper
@@ -34,8 +36,28 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
-  it('logs get call', () => {
-    // TODO
+  it('logs get call', async () => {
+    const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+    Log._logger = logger
+    const cache = stub({ get: () => {}, set: () => {} })
+    const wrapper = new CacheWrapper(cache)
+    await wrapper.get('123')
+    expect(logger.info.args[0].join(' ').includes('[Cache] Get 123')).to.equal(true)
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('logs preferably with class name', async () => {
+    const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+    Log._logger = logger
+    class MyCache {
+      get () {}
+      set () {}
+    }
+    const cache = stub(new MyCache())
+    const wrapper = new CacheWrapper(cache)
+    await wrapper.get('123')
+    expect(logger.info.args[0].join(' ').includes('[MyCache] Get 123')).to.equal(true)
   })
 
   // --------------------------------------------------------------------------
