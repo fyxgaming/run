@@ -62,8 +62,13 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
-  it('logs set call', () => {
-    // TODO
+  it('logs set call', async () => {
+    const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+    Log._logger = logger
+    const cache = stub({ get: () => {}, set: () => {} })
+    const wrapper = new CacheWrapper(cache)
+    await wrapper.set('123', [])
+    expect(logger.info.args[0].join(' ').includes('[Cache] Set 123')).to.equal(true)
   })
 
   // --------------------------------------------------------------------------
