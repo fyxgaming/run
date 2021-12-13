@@ -164,8 +164,14 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
-  it('enforces immutable keys', () => {
-    // TODO
+  it('enforces immutable keys', async () => {
+    const cache = stub({ get: () => {}, set: () => {} })
+    cache.get.returns(true)
+    const wrapper = new CacheWrapper(cache)
+    await wrapper.set('abc://xyz', false)
+    await expect(wrapper.set('tx://abc', false)).to.be.rejected
+    await expect(wrapper.set('jig://abc', false)).to.be.rejected
+    await expect(wrapper.set('berry://abc', false)).to.be.rejected
   })
 
   // --------------------------------------------------------------------------
