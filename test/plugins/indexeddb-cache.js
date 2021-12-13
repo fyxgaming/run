@@ -10,7 +10,7 @@ require('chai').use(require('chai-as-promised'))
 const unmangle = require('../env/unmangle')
 const { BROWSER } = require('../env/config')
 const Run = require('../env/run')
-const { IndexedDbCache, WrappedCache } = Run.plugins
+const { IndexedDbCache, CacheWrapper } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // IndexedDbCache
@@ -37,8 +37,8 @@ describe('IndexedDbCache', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('is WrappedCache', () => {
-      expect(new IndexedDbCache() instanceof WrappedCache).to.equal(true)
+    it('is CacheWrapper', () => {
+      expect(new IndexedDbCache() instanceof CacheWrapper).to.equal(true)
     })
 
     // ------------------------------------------------------------------------

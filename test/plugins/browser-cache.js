@@ -10,7 +10,7 @@ const { spy } = require('sinon')
 const unmangle = require('../env/unmangle')
 const Run = require('../env/run')
 const { BROWSER } = require('../env/config')
-const { BrowserCache, LocalCache, IndexedDbCache, WrappedCache } = Run.plugins
+const { BrowserCache, LocalCache, IndexedDbCache, CacheWrapper } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // BrowserCache
@@ -37,8 +37,8 @@ describe('BrowserCache', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('is WrappedCache', () => {
-      expect(new BrowserCache() instanceof WrappedCache).to.equal(true)
+    it('is CacheWrapper', () => {
+      expect(new BrowserCache() instanceof CacheWrapper).to.equal(true)
     })
 
     // ------------------------------------------------------------------------

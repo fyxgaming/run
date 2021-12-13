@@ -1,16 +1,16 @@
 /**
- * wrapped-state.js
+ * state-wrapper.js
  *
- * Tests for lib/plugins/wrapped-state.js
+ * Tests for lib/plugins/state-wrapper.js
  */
 
 const { describe } = require('mocha')
 
 // ------------------------------------------------------------------------------------------------
-// WrappedState
+// StateWrapper
 // ------------------------------------------------------------------------------------------------
 
-describe('WrappedState', () => {
+describe('StateWrapper', () => {
 })
 
 // ------------------------------------------------------------------------------------------------
