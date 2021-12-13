@@ -5,17 +5,22 @@
  */
 
 const { describe, it } = require('mocha')
+const { expect } = require('chai')
+const { stub } = require('sinon')
 const Run = require('../env/run')
-
-console.log(Run)
+const { CacheWrapper } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // CacheWrapper
 // ------------------------------------------------------------------------------------------------
 
 describe('CacheWrapper', () => {
-  it('wraps get', () => {
-    // TODO
+  it('wraps get', async () => {
+    const cache = stub({ get: () => {}, set: () => {} })
+    const wrapper = new CacheWrapper(cache)
+    cache.get.returns(456)
+    const response = await wrapper.get('123')
+    expect(response).to.equal(456)
   })
 
   // --------------------------------------------------------------------------
