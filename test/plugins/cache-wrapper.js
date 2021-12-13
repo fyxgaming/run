@@ -154,8 +154,12 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
-  it('validates set value is json', () => {
-    // TODO
+  it('validates set value is json', async () => {
+    const cache = stub({ get: () => {}, set: () => {} })
+    const wrapper = new CacheWrapper(cache)
+    await expect(wrapper.set('abc', Infinity)).to.be.rejectedWith('Cannot cache')
+    await expect(wrapper.set('abc', new Error())).to.be.rejectedWith('Cannot cache')
+    await expect(wrapper.set('abc', undefined)).to.be.rejectedWith('Cannot cache')
   })
 
   // --------------------------------------------------------------------------
