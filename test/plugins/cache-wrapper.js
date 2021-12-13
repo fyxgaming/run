@@ -143,7 +143,18 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
-  it('validates set arguments', () => {
+  it('validates set key is string', async () => {
+    const cache = stub({ get: () => {}, set: () => {} })
+    const wrapper = new CacheWrapper(cache)
+    await expect(wrapper.set(null, true)).to.be.rejectedWith('Invalid key: null')
+    await expect(wrapper.set('', true)).to.be.rejectedWith('Invalid key: ""')
+    await expect(wrapper.set([], true)).to.be.rejectedWith('Invalid key: [object Array]')
+    await expect(wrapper.set(true, true)).to.be.rejectedWith('Invalid key: true')
+  })
+
+  // --------------------------------------------------------------------------
+
+  it('validates set value is json', () => {
     // TODO
   })
 
