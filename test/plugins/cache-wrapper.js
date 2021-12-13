@@ -188,8 +188,11 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
-  it('disable wrapping', () => {
-    // TODO
+  it('disable wrapping', async () => {
+    const cache = stub({ get: () => {}, set: () => {} })
+    const wrapper = new CacheWrapper(cache)
+    wrapper.setWrappingEnabled(false)
+    await wrapper.set(null, new Set())
   })
 
   // --------------------------------------------------------------------------
