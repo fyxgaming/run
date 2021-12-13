@@ -5,6 +5,7 @@
  */
 
 const { describe, it } = require('mocha')
+require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const { stub } = require('sinon')
 const Run = require('../env/run')
@@ -118,8 +119,13 @@ describe('CacheWrapper', () => {
 
   // --------------------------------------------------------------------------
 
-  it('validates get arguments', () => {
-    // TODO
+  it('validates get arguments', async () => {
+    const cache = stub({ get: () => {}, set: () => {} })
+    const wrapper = new CacheWrapper(cache)
+    await expect(wrapper.get(null)).to.be.rejectedWith('Invalid key: null')
+    await expect(wrapper.get('')).to.be.rejectedWith('Invalid key: ""')
+    await expect(wrapper.get([])).to.be.rejectedWith('Invalid key: [object Array]')
+    await expect(wrapper.get(true)).to.be.rejectedWith('Invalid key: true')
   })
 
   // --------------------------------------------------------------------------
