@@ -38,6 +38,15 @@ describe('request', () => {
 
     // ------------------------------------------------------------------------
 
+    it('get returns buffer', async function () {
+      this.timeout(timeout)
+      const txid = '5332c013476cd2a2c18710a01188695bc27a5ef1748a51d4a5910feb1111dab4'
+      const rawtx = await request(`https://api.run.network/v1/main/rawtx/${txid}`, { timeout })
+      expect(rawtx.toString('hex').length).to.equal(3184)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('posts json', async function () {
       this.timeout(timeout)
       const options = { method: 'POST', body: 'hello', timeout }
