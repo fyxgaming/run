@@ -178,8 +178,17 @@ describe('Purse', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('called if transaction is rolled back', () => {
-      // TODO
+    it('called if sign fails during transaction publish', async () => {
+      const run = new Run()
+      run.purse.cancel = () => { }
+      spy(run.purse)
+      run.owner.sign = () => { throw new Error('abc') }
+      const tx = new Run.Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await expect(tx.publish()).to.be.rejected
+      expect(run.purse.cancel.callCount).to.equal(1)
+      const paidtx = await run.purse.pay.returnValues[0]
+      expect(run.purse.cancel.args[0][0]).to.equal(paidtx)
     })
 
     // ------------------------------------------------------------------------
