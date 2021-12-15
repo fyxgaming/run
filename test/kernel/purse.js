@@ -150,8 +150,16 @@ describe('Purse', () => {
   // --------------------------------------------------------------------------
 
   describe('cancel', () => {
-    it.skip('called if sign fails', () => {
-      // TODO
+    it('called if sign fails', async () => {
+      const run = new Run()
+      run.purse.cancel = () => { }
+      spy(run.purse)
+      run.owner.sign = () => { throw new Error('abc') }
+      run.deploy(class A { })
+      await expect(run.sync()).to.be.rejected
+      expect(run.purse.cancel.callCount).to.equal(1)
+      const paidtx = await run.purse.pay.returnValues[0]
+      expect(run.purse.cancel.args[0][0]).to.equal(paidtx)
     })
 
     // ------------------------------------------------------------------------
