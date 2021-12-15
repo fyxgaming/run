@@ -9,6 +9,7 @@ const { expect } = require('chai')
 require('chai').use(require('chai-as-promised'))
 const bsv = require('bsv')
 const Run = require('../env/run')
+const { Jig } = Run
 const { spy } = require('sinon')
 
 // ------------------------------------------------------------------------------------------------
@@ -34,6 +35,26 @@ describe('Purse', () => {
       expect(() => new bsv.Transaction(rawtx)).not.to.throw()
       expect(Array.isArray(parents)).to.equal(true)
       expect(parents.length).to.equal(0)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('called with parents', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await run.sync()
+      const parentRawtx = await run.blockchain.fetch(a.location.slice(0, 64))
+      const parentTx = new bsv.Transaction(parentRawtx)
+      spy(run.purse)
+      a.auth()
+      await run.sync()
+      expect(run.purse.pay.callCount).to.equal(1)
+      const parents = run.purse.pay.args[0][1]
+      expect(Array.isArray(parents)).to.equal(true)
+      expect(parents.length).to.equal(1)
+      expect(parents[0].script).to.equal(parentTx.outputs[1].script.toHex())
+      expect(parents[0].satoshis).to.equal(parentTx.outputs[1].satoshis)
     })
   })
 
