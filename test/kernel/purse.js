@@ -9,14 +9,40 @@ const { expect } = require('chai')
 require('chai').use(require('chai-as-promised'))
 const bsv = require('bsv')
 const Run = require('../env/run')
+const { spy } = require('sinon')
 
 // ------------------------------------------------------------------------------------------------
 // Purse
 // ------------------------------------------------------------------------------------------------
 
 describe('Purse', () => {
+  // --------------------------------------------------------------------------
+  // pay
+  // --------------------------------------------------------------------------
+
+  describe('pay', () => {
+    it('called during publish', async () => {
+      const run = new Run()
+      spy(run.purse)
+      run.deploy(class A { })
+      await run.sync()
+      expect(run.purse.pay.callCount).to.equal(1)
+      const rawtx = run.purse.pay.args[0][0]
+      const parents = run.purse.pay.args[0][1]
+      expect(typeof rawtx).to.equal('string')
+      expect(rawtx.length > 0).to.equal(true)
+      expect(() => new bsv.Transaction(rawtx)).not.to.throw()
+      expect(Array.isArray(parents)).to.equal(true)
+      expect(parents.length).to.equal(0)
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // broadcast
+  // --------------------------------------------------------------------------
+
   describe('broadcast', () => {
-    it('notifies with tx', async () => {
+    it('called with signed tx', async () => {
       const run = new Run()
       let broadcasted = null
       run.purse.broadcast = async rawtx => { broadcasted = rawtx }
