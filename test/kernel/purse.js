@@ -208,8 +208,12 @@ describe('Purse', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('supports no cancel method', () => {
-      // TODO
+    it('supports no cancel method', async () => {
+      const run = new Run()
+      run.purse.cancel = undefined
+      run.owner.sign = () => { throw new Error('abc') }
+      run.deploy(class A { })
+      await expect(run.sync()).to.be.rejectedWith('abc')
     })
   })
 })
