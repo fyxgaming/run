@@ -137,8 +137,11 @@ describe('Purse', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('supports no broadcast method', () => {
-      // TODO
+    it('supports no broadcast method', async () => {
+      const run = new Run()
+      run.purse.broadcast = undefined
+      run.deploy(class A { })
+      await run.sync()
     })
   })
 
