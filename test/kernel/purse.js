@@ -101,7 +101,7 @@ describe('Purse', () => {
   // --------------------------------------------------------------------------
 
   describe('broadcast', () => {
-    it('called with signed tx', async () => {
+    it('called with tx', async () => {
       const run = new Run()
       let broadcasted = null
       run.purse.broadcast = async rawtx => { broadcasted = rawtx }
@@ -109,6 +109,19 @@ describe('Purse', () => {
       run.deploy(A)
       await run.sync()
       expect(new bsv.Transaction(broadcasted).hash).to.equal(A.location.slice(0, 64))
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('called before blockchain.broadcast', async () => {
+      const run = new Run()
+      let beforeBlockchainBroadcast = null
+      spy(run.blockchain)
+      run.purse.broadcast = async rawtx => { beforeBlockchainBroadcast = !run.blockchain.broadcast.called }
+      class A { }
+      run.deploy(A)
+      await run.sync()
+      expect(beforeBlockchainBroadcast).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
