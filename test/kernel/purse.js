@@ -4,7 +4,7 @@
  * Test for universal purse functionality in relation to the kernel
  */
 
-const { describe, it } = require('mocha')
+const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 require('chai').use(require('chai-as-promised'))
 const bsv = require('bsv')
@@ -17,6 +17,11 @@ const { spy } = require('sinon')
 // ------------------------------------------------------------------------------------------------
 
 describe('Purse', () => {
+  // Wait for every test to finish. This makes debugging easier.
+  afterEach(() => Run.instance && Run.instance.sync())
+  // Deactivate the current run instance. This stops leaks across tests.
+  afterEach(() => Run.instance && Run.instance.deactivate())
+
   // --------------------------------------------------------------------------
   // pay
   // --------------------------------------------------------------------------
@@ -55,6 +60,39 @@ describe('Purse', () => {
       expect(parents.length).to.equal(1)
       expect(parents[0].script).to.equal(parentTx.outputs[1].script.toHex())
       expect(parents[0].satoshis).to.equal(parentTx.outputs[1].satoshis)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('called during transaction pay', async () => {
+      const run = new Run()
+      spy(run.purse)
+      const tx = new Run.Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await tx.pay()
+      expect(run.purse.pay.callCount).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('called during transaction publish', async () => {
+      const run = new Run()
+      spy(run.purse)
+      const tx = new Run.Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await tx.publish()
+      expect(run.purse.pay.callCount).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('called during transaction export', async () => {
+      const run = new Run()
+      spy(run.purse)
+      const tx = new Run.Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await tx.export()
+      expect(run.purse.pay.callCount).to.equal(1)
     })
   })
 
