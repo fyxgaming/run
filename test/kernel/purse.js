@@ -134,6 +134,12 @@ describe('Purse', () => {
       await expect(run.sync()).to.be.rejectedWith('abc')
       expect(() => C.nonce).to.throw('Deploy failed')
     })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('supports no broadcast method', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -154,6 +160,12 @@ describe('Purse', () => {
     // ------------------------------------------------------------------------
 
     it.skip('called if transaction is rolled back', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('supports no cancel method', () => {
       // TODO
     })
   })
