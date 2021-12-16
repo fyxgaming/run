@@ -70,7 +70,7 @@ describe('Timeout', () => {
     const run = new Run()
     class A extends Jig { }
     const sleep = ms => new Promise((resolve, reject) => setTimeout(resolve, ms))
-    stub(run.purse, 'pay').callsFake(x => sleep(1000))
+    stub(run.purse, 'pay').callsFake(async x => { await sleep(1000); return x })
     run.timeout = 10
     const tx = new Run.Transaction()
     tx.update(() => run.deploy(A))

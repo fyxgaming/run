@@ -1047,7 +1047,7 @@ describe('Transaction', () => {
       const run = new Run()
       const tx = new Transaction()
       tx.update(() => run.deploy(class A { }))
-      stub(run.purse, 'pay').onFirstCall().throws()
+      stub(run.purse, 'pay').callsFake(x => x).onFirstCall().throws()
       await expect(tx.export()).to.be.rejected
       await tx.export()
     })
