@@ -110,14 +110,19 @@ describe('Purse', () => {
   // --------------------------------------------------------------------------
 
   describe('broadcast', () => {
-    it('called with finalized tx', async () => {
+    it('called with final tx', async () => {
       const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await run.sync()
       let broadcasted = null
       run.purse.broadcast = async rawtx => { broadcasted = rawtx }
-      class A { }
-      run.deploy(A)
+      a.auth()
       await run.sync()
-      expect(new bsv.Transaction(broadcasted).hash).to.equal(A.location.slice(0, 64))
+      const tx = new bsv.Transaction(broadcasted)
+      expect(tx.hash).to.equal(a.location.slice(0, 64))
+      expect(tx.inputs.length >= 2).to.equal(true)
+      expect(tx.outputs.length >= 3).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -321,22 +326,5 @@ describe('Purse', () => {
     // Errors stop tx broadcast and rollback
     // Backed jigs
     // Change from backed jigs
-  })
-
-  describe('broadcast', () => {
-    it('should be called with finalized transaction', async () => {
-      const run = new Run()
-      // Hook purse.broadcast to check that the transaction we received looks correct
-      run.purse.broadcast = hex => {
-        expect(typeof hex).to.equal('string')
-        const tx = new Transaction(hex)
-        expect(tx.inputs.length >= 1).to.equal(true)
-        expect(tx.outputs.length >= 4).to.equal(true)
-      }
-      spy(run.purse)
-      class Dragon extends Jig { }
-      const dragon = new Dragon()
-      await dragon.sync()
-    })
   })
   */
