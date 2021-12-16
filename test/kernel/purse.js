@@ -339,27 +339,41 @@ describe('Purse', () => {
       await expect(run.sync()).to.be.rejectedWith('abc')
     })
   })
+
+  // --------------------------------------------------------------------------
+  // Backed jigs
+  // --------------------------------------------------------------------------
+
+  describe('Backed jigs', () => {
+    it.skip('backs jig', async () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('adds to purse when satoshis descreased', async () => {
+      // TODO
+      /*
+      const run = createHookedRun()
+      class A extends Jig { f (satoshis) { this.satoshis = satoshis; return this }}
+      const a = new A()
+      expectAction(a, 'init', [], [], [a], [])
+      await a.f(5000).sync()
+      expectAction(a, 'f', [5000], [a], [a], [])
+      const before = await run.purse.balance()
+      await a.f(0).sync()
+      expectAction(a, 'f', [0], [a], [a], [])
+      const after = await run.purse.balance()
+      expect(after - before > 3000).to.equal(true)
+      */
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('adds to purse when jig destroyed', async () => {
+      // TODO
+    })
+  })
 })
 
 // ------------------------------------------------------------------------------------------------
-
-// TODO
-
-/*
-    it('adds to purse when satoshis decreased', async () => {
-        const run = createHookedRun()
-        class A extends Jig { f (satoshis) { this.satoshis = satoshis; return this }}
-        const a = new A()
-        expectAction(a, 'init', [], [], [a], [])
-        await a.f(5000).sync()
-        expectAction(a, 'f', [5000], [a], [a], [])
-        const before = await run.purse.balance()
-        await a.f(0).sync()
-        expectAction(a, 'f', [0], [a], [a], [])
-        const after = await run.purse.balance()
-        expect(after - before > 3000).to.equal(true)
-      })
-
-    // Backed jigs
-    // Change from backed jigs
-  */
