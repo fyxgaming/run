@@ -201,14 +201,64 @@ describe('Purse', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if return empty transaction', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('throws if return different transaction', () => {
-      // TODO
+    it('throws if return modified transaction', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init () { A.auth() }
+      }
+      run.deploy(A)
+      await run.sync()
+      async function testFail (f) {
+        run.purse.pay = f
+        const error = 'Purse illegally modified tx during payment'
+        const a = new A()
+        await expect(a.sync()).to.be.rejectedWith(error)
+      }
+      await testFail(() => new bsv.Transaction().toString())
+      await testFail(rawtx => {
+        const tx = new bsv.Transaction(rawtx)
+        tx.nLockTime = tx.nLockTime + 1
+        return tx.toString()
+      })
+      await testFail(rawtx => {
+        const tx = new bsv.Transaction(rawtx)
+        tx.version = tx.version + 1
+        return tx.toString()
+      })
+      await testFail(rawtx => {
+        const tx = new bsv.Transaction(rawtx)
+        tx.inputs = []
+        return tx.toString()
+      })
+      await testFail(rawtx => {
+        const tx = new bsv.Transaction(rawtx)
+        tx.inputs[0].sequenceNumber = 123
+        return tx.toString()
+      })
+      await testFail(rawtx => {
+        const tx = new bsv.Transaction(rawtx)
+        tx.inputs[0].outputIndex = tx.inputs[0].outputIndex + 1
+        return tx.toString()
+      })
+      await testFail(rawtx => {
+        const tx = new bsv.Transaction(rawtx)
+        tx.outputs = []
+        return tx.toString()
+      })
+      await testFail(rawtx => {
+        const tx = new bsv.Transaction(rawtx)
+        const script = new bsv.Script()
+        const satoshis = tx.outputs[0].satoshis
+        tx.outputs[0] = new bsv.Transaction.Output({ script, satoshis })
+        return tx.toString()
+      })
+      await testFail(rawtx => {
+        const tx = new bsv.Transaction(rawtx)
+        const script = tx.outputs[0].script
+        const satoshis = tx.outputs[0].satoshis + 1
+        tx.outputs[0] = new bsv.Transaction.Output({ script, satoshis })
+        return tx.toString()
+      })
     })
   })
 
