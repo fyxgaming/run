@@ -76,11 +76,12 @@ describe('PayServer', () => {
   describe('pay', () => {
     it('makes api call', async () => {
       const purse = new PayServer(apiKey)
-      purse.request = stub().returns({ rawtx: new bsv.Transaction().toString() })
       const run = new Run({ purse })
       class A {}
       const tx = new Run.Transaction()
       tx.update(() => run.deploy(A))
+      const rawtx = await tx.export({ pay: false, sign: false })
+      purse.request = stub().returns({ rawtx })
       await tx.pay()
       expect(purse.request.callCount).to.equal(1)
       expect(purse.request.firstCall.firstArg).to.deep.equal(`${purse.host}/v1/${purse.network}/pay`)
