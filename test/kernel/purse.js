@@ -354,6 +354,9 @@ describe('Purse', () => {
       await run.sync()
       a.f(5000)
       await run.sync()
+      const rawtx = await run.blockchain.fetch(a.location.slice(0, 64))
+      const tx = new bsv.Transaction(rawtx)
+      expect(tx.outputs[1].satoshis).to.equal(5000)
     })
 
     // ------------------------------------------------------------------------
