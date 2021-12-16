@@ -140,7 +140,7 @@ describe('Purse', () => {
 
     // ------------------------------------------------------------------------
 
-    it('called before blockchain.broadcast', async () => {
+    it('called before blockchain broadcast', async () => {
       const run = new Run()
       let beforeBlockchainBroadcast = null
       spy(run.blockchain)
@@ -181,6 +181,20 @@ describe('Purse', () => {
       const C = run.deploy(A)
       await expect(run.sync()).to.be.rejectedWith('abc')
       expect(() => C.nonce).to.throw('Deploy failed')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('throw will rollback', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      const a = new A()
+      await run.sync()
+      run.purse.broadcast = async rawtx => { throw new Error('abc') }
+      a.auth()
+      await expect(run.sync()).to.be.rejectedWith('abc')
+      expect(a.nonce).to.equal(1)
+      expect(a.location).to.equal(a.origin)
     })
 
     // ------------------------------------------------------------------------
@@ -334,7 +348,6 @@ describe('Purse', () => {
       expect(run.owner.sign.args[0][0]).to.equal(hex)
     })
 
-    // Errors stop tx broadcast and rollback
     // Backed jigs
     // Change from backed jigs
   })
