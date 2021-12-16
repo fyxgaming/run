@@ -180,6 +180,27 @@ describe('Purse', () => {
 
     // ------------------------------------------------------------------------
 
+    it('throws if return non-transaction', async () => {
+      const run = new Run()
+      class A extends Jig {}
+      run.deploy(A)
+      await run.sync()
+      async function testFail (f) {
+        run.purse.pay = f
+        const error = 'Invalid raw transaction returned by purse'
+        const a = new A()
+        await expect(a.sync()).to.be.rejectedWith(error)
+      }
+      await testFail(() => undefined)
+      await testFail(() => null)
+      await testFail(() => new bsv.Transaction())
+      await testFail(() => true)
+      await testFail(() => 'abc')
+      await testFail(rawtx => new bsv.Transaction(rawtx))
+    })
+
+    // ------------------------------------------------------------------------
+
     it.skip('throws if return empty transaction', () => {
       // TODO
     })
