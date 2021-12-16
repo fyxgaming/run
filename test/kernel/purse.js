@@ -163,6 +163,20 @@ describe('Purse', () => {
       for (let i = 0; i < 100; i++) { new A() } // eslint-disable-line
       await run.sync()
     })
+
+    // ------------------------------------------------------------------------
+
+    it('passes paid transaction to sign()', async () => {
+      const run = new Run()
+      spy(run.purse)
+      spy(run.owner)
+      class Sword extends Jig { upgrade () { this.upgraded = true } }
+      const sword = new Sword()
+      await sword.sync()
+      const rawtx = await run.purse.pay.returnValues[0]
+      expect(run.owner.sign.calledOnce).to.equal(true)
+      expect(run.owner.sign.args[0][0]).to.equal(rawtx)
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -332,8 +346,6 @@ describe('Purse', () => {
 // TODO
 
 /*
-    // ------------------------------------------------------------------------
-
     it('adds to purse when satoshis decreased', async () => {
         const run = createHookedRun()
         class A extends Jig { f (satoshis) { this.satoshis = satoshis; return this }}
@@ -347,24 +359,7 @@ describe('Purse', () => {
         const after = await run.purse.balance()
         expect(after - before > 3000).to.equal(true)
       })
-      */
-
-// TODO
-/*
-  describe('pay', () => {
-    it('should pass paid transaction to sign()', async () => {
-      const run = new Run()
-      spy(run.purse)
-      spy(run.owner)
-      class Sword extends Jig { upgrade () { this.upgraded = true } }
-      const sword = new Sword()
-      await sword.sync()
-      const hex = await run.purse.pay.returnValues[0]
-      expect(run.owner.sign.calledOnce).to.equal(true)
-      expect(run.owner.sign.args[0][0]).to.equal(hex)
-    })
 
     // Backed jigs
     // Change from backed jigs
-  })
   */
