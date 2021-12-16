@@ -170,12 +170,24 @@ describe('Purse', () => {
       const run = new Run()
       spy(run.purse)
       spy(run.owner)
-      class Sword extends Jig { upgrade () { this.upgraded = true } }
-      const sword = new Sword()
-      await sword.sync()
+      class A extends Jig { f () { this.n = true } }
+      const a = new A()
+      await a.sync()
       const rawtx = await run.purse.pay.returnValues[0]
       expect(run.owner.sign.calledOnce).to.equal(true)
       expect(run.owner.sign.args[0][0]).to.equal(rawtx)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if return empty transaction', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if return different transaction', () => {
+      // TODO
     })
   })
 
