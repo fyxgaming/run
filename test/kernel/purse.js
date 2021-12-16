@@ -318,30 +318,6 @@ describe('Purse', () => {
       await dragon.sync()
     })
 
-    it('should be called before actual broadcast', async () => {
-      const run = new Run()
-      // Hook purse.broadcast to check that we are called after sign() and before broadcast()
-      run.purse.broadcast = tx => {
-        return new Promise((resolve, reject) => {
-          expect(run.owner.sign.called).to.equal(true)
-          expect(run.blockchain.broadcast.called).to.equal(false)
-          resolve()
-        })
-      }
-      // Listen for calls to our modules
-      spy(run.purse)
-      spy(run.blockchain)
-      spy(run.owner)
-      // Create and sync a jig
-      class Dragon extends Jig { }
-      const dragon = new Dragon()
-      await dragon.sync()
-      // Check that our broadcast was called
-      expect(run.purse.broadcast.called).to.equal(true)
-      expect(run.blockchain.broadcast.called).to.equal(true)
-      run.deactivate()
-    })
-
     it('should log but still broadcast tx if errors are thrown', async () => {
       const logger = spy({ error: () => {} })
       const run = new Run({ logger })
