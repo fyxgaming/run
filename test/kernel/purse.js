@@ -70,6 +70,27 @@ describe('Purse', () => {
 
     // ------------------------------------------------------------------------
 
+    it('called when destroy jig', async () => {
+      const run = new Run()
+      const CA = run.deploy(class A {})
+      await run.sync()
+      spy(run.purse)
+      CA.destroy()
+      await run.sync()
+      expect(run.purse.pay.callCount).to.equal(1)
+      const rawtx = run.purse.pay.args[0][0]
+      const parents = run.purse.pay.args[0][1]
+      expect(typeof rawtx).to.equal('string')
+      expect(rawtx.length > 0).to.equal(true)
+      const tx = new bsv.Transaction(rawtx)
+      expect(tx.inputs.length).to.equal(1)
+      expect(tx.outputs.length).to.equal(1)
+      expect(Array.isArray(parents)).to.equal(true)
+      expect(parents.length).to.equal(1)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('called with parents', async () => {
       const run = new Run()
       class A extends Jig { }
