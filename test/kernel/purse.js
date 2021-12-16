@@ -345,33 +345,42 @@ describe('Purse', () => {
   // --------------------------------------------------------------------------
 
   describe('Backed jigs', () => {
-    it.skip('backs jig', async () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('adds to purse when satoshis descreased', async () => {
-      // TODO
-      /*
-      const run = createHookedRun()
-      class A extends Jig { f (satoshis) { this.satoshis = satoshis; return this }}
+    it('backs jig', async () => {
+      const run = new Run()
+      class A extends Jig {
+        f (satoshis) { this.satoshis = satoshis }
+      }
       const a = new A()
-      expectAction(a, 'init', [], [], [a], [])
-      await a.f(5000).sync()
-      expectAction(a, 'f', [5000], [a], [a], [])
-      const before = await run.purse.balance()
-      await a.f(0).sync()
-      expectAction(a, 'f', [0], [a], [a], [])
-      const after = await run.purse.balance()
-      expect(after - before > 3000).to.equal(true)
-      */
+      await run.sync()
+      a.f(5000)
+      await run.sync()
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('adds to purse when jig destroyed', async () => {
-      // TODO
+    it('decreases satoshis', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init (satoshis) { this.satoshis = satoshis }
+        f () { this.satoshis = 0 }
+      }
+      const a = new A(5000)
+      await run.sync()
+      a.f()
+      await run.sync()
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('destroys backed jig', async () => {
+      const run = new Run()
+      class A extends Jig {
+        init (satoshis) { this.satoshis = satoshis }
+      }
+      const a = new A(5000)
+      await run.sync()
+      a.destroy()
+      await run.sync()
     })
   })
 })
