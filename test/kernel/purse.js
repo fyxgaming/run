@@ -94,6 +94,15 @@ describe('Purse', () => {
       await tx.export()
       expect(run.purse.pay.callCount).to.equal(1)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('long mempool chain', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      for (let i = 0; i < 100; i++) { new A() } // eslint-disable-line
+      await run.sync()
+    })
   })
 
   // --------------------------------------------------------------------------
@@ -239,15 +248,6 @@ describe('Purse', () => {
         expect(after - before > 3000).to.equal(true)
       })
       */
-
-/*
-    it('long mempool chain for purse', async () => {
-      const run = createHookedRun()
-      class A extends Jig { }
-      for (let i = 0; i < 100; i++) { new A() } // eslint-disable-line
-      await run.sync()
-    })
-    */
 
 // TODO
 /*
