@@ -351,7 +351,7 @@ describe('Owner', () => {
       // expect(nextCount).to.equal(2)
     })
 
-    it.skip('should support creating new locks for every resource', async () => {
+    it.skip('should support creating new locks for every creation', async () => {
       class HDOwner {
         constructor () {
           this.master = new HDPrivateKey()
@@ -391,7 +391,7 @@ describe('Owner', () => {
       expect(f.owner).to.equal(owner.addr(2))
     })
 
-    it.skip('should fail to create resources if next() throws', () => {
+    it.skip('should fail to create creations if next() throws', () => {
       // Hook next() to throw
       const owner = new Run().owner
       owner.next = () => { throw new Error('failed to get next') }
@@ -492,15 +492,15 @@ describe('Owner', () => {
     it('should throw if partially signed', () => {
     })
 
-    it('should pass CommonLock for address resource owner', () => {
+    it('should pass CommonLock for address creation owner', () => {
       // Jig / Code
     })
 
-    it('should pass CommonLock for pubkey resource owner', () => {
+    it('should pass CommonLock for pubkey creation owner', () => {
       // Jig / Code
     })
 
-    it('should pass custom lock for custom resource owner', () => {
+    it('should pass custom lock for custom creation owner', () => {
       // Jig / Code
     })
 
@@ -508,7 +508,7 @@ describe('Owner', () => {
       // Jig / Code
     })
 
-    it('should pass locks for resource inputs and undefined for payment inputs', () => {
+    it('should pass locks for creation inputs and undefined for payment inputs', () => {
       // Custom lock
       // Payment input
     })
@@ -521,22 +521,22 @@ describe('Owner', () => {
     it('should throw if Run owner is a Lock', () => {
     })
 
-    it('should sync resources using lock', () => {
+    it('should sync creations using lock', () => {
     })
 
-    it('should create new resources with owner as lock', () => {
+    it('should create new creations with owner as lock', () => {
       // export
     })
   })
 
   describe('changing owners', () => {
-    it('should call next on the new owner for new resources', () => {
+    it('should call next on the new owner for new creations', () => {
     })
 
-    it('should use prior owner for resources enqueued', () => {
+    it('should use prior owner for creations enqueued', () => {
     })
 
-    it('should call sign on owner that was assigned when resource was created', () => {
+    it('should call sign on owner that was assigned when creation was created', () => {
     })
 
     it('should create a new inventory when owner changes', () => {
