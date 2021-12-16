@@ -116,6 +116,24 @@ describe('Owner API', () => {
   // --------------------------------------------------------------------------
 
   describe('nextOwner', () => {
+    it('throws if returns invalid owner', async () => {
+      const run = new Run()
+      class A extends Jig { }
+      run.deploy(A)
+      await run.sync()
+      async function testFail (owner) {
+        run.owner.nextOwner = () => owner
+        new A() // eslint-disable-line
+        const error = 'Invalid owner'
+        await expect(run.sync()).to.be.rejectedWith(error)
+      }
+      await testFail(undefined)
+      await testFail(null)
+      await testFail(123)
+      await testFail('abc')
+      await testFail({})
+    })
+
     // TODO - Add tests
   })
 })
