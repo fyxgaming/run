@@ -75,6 +75,19 @@ describe('Purse', () => {
 
     // ------------------------------------------------------------------------
 
+    it('called for each transaction pay', async () => {
+      const run = new Run()
+      spy(run.purse)
+      const tx = new Run.Transaction()
+      tx.update(() => run.deploy(class A { }))
+      await tx.pay()
+      await tx.pay()
+      await tx.pay()
+      expect(run.purse.pay.callCount).to.equal(3)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('called during transaction publish', async () => {
       const run = new Run()
       spy(run.purse)
@@ -321,8 +334,6 @@ describe('Purse', () => {
       expect(run.owner.sign.args[0][0]).to.equal(hex)
     })
 
-    // Run.transaction.pay() calls pay
-    // Calls pay more than once?
     // Errors stop tx broadcast and rollback
     // Backed jigs
     // Change from backed jigs
