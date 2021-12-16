@@ -110,7 +110,7 @@ describe('Purse', () => {
   // --------------------------------------------------------------------------
 
   describe('broadcast', () => {
-    it('called with tx', async () => {
+    it('called with finalized tx', async () => {
       const run = new Run()
       let broadcasted = null
       run.purse.broadcast = async rawtx => { broadcasted = rawtx }
@@ -131,6 +131,27 @@ describe('Purse', () => {
       run.deploy(A)
       await run.sync()
       expect(beforeBlockchainBroadcast).to.equal(true)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('called publishing imported transactions', async () => {
+      const run = new Run()
+      run.purse.broadcast = () => { }
+      spy(run.purse)
+      class Dragon extends Jig { }
+      const tx = new Run.Transaction()
+      tx.update(() => new Dragon())
+      const rawtx = await tx.export({ pay: false, sign: false })
+      tx.rollback()
+      expect(run.purse.pay.called).to.equal(false)
+      expect(run.purse.broadcast.called).to.equal(false)
+      const tx2 = await run.import(rawtx)
+      await tx2.pay()
+      await tx2.sign()
+      await tx2.publish()
+      expect(run.purse.pay.called).to.equal(true)
+      expect(run.purse.broadcast.called).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -316,25 +337,6 @@ describe('Purse', () => {
       class Dragon extends Jig { }
       const dragon = new Dragon()
       await dragon.sync()
-    })
-
-    it('should be called for imported transactions', async () => {
-      const run = new Run()
-      run.purse.broadcast = () => { }
-      spy(run.purse)
-      class Dragon extends Jig { }
-      run.transaction.begin()
-      new Dragon() // eslint-disable-line
-      const tx = run.transaction.export()
-      run.transaction.rollback()
-      expect(run.purse.broadcast.called).to.equal(false)
-      await run.transaction.import(new Transaction(tx.toString('hex')))
-      await run.transaction.pay()
-      await run.transaction.sign()
-      run.transaction.end()
-      await run.sync()
-      expect(run.purse.broadcast.called).to.equal(true)
-      run.deactivate()
     })
   })
   */
