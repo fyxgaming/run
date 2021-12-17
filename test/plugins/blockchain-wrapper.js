@@ -102,14 +102,26 @@ describe('BlockchainWrapper', () => {
       const tx = mockTransaction()
       blockchain.broadcast.returns(tx.hash)
       await wrapper.broadcast(tx.toString())
-      console.log(logger.info.args)
       expect(logger.info.args.some(args => args.join(' ').includes(`[Blockchain] Broadcast ${tx.hash}`))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs with class name', () => {
-      // TODO
+    it('logs with class name', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+      Log._logger = logger
+      const tx = mockTransaction()
+      class MyBlockchain extends BlockchainWrapper {
+        get network () { 'abc' }
+        broadcast () { return tx.hash }
+        fetch () { }
+        utxos () { }
+        spends () { }
+        time () { }
+      }
+      const wrapper = new MyBlockchain()
+      await wrapper.broadcast(tx.toString())
+      expect(logger.info.args.some(args => args.join(' ').includes(`[MyBlockchain] Broadcast ${tx.hash}`))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
