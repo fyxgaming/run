@@ -615,13 +615,36 @@ describe('BlockchainWrapper', () => {
       const address = new bsv.PrivateKey().toAddress().toString()
       const script = bsv.Script.fromAddress(address).toHex()
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
+      // Not an array
       blockchain.utxos.returns(null)
       await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
       blockchain.utxos.returns({})
       await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
-      blockchain.utxos.returns([{ txid, vout: 0, script, satoshis: -1 }])
+      // Bad txid
+      blockchain.utxos.returns([{ txid: null, vout: 0, script, satoshis: 0 }])
       await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
-      blockchain.utxos.returns([{ vout: 0, script, satoshis: 0 }])
+      blockchain.utxos.returns([{ txid: 'abc', vout: 0, script, satoshis: 0 }])
+      await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
+      blockchain.utxos.returns([{ txid: 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ', vout: 0, script, satoshis: 0 }])
+      await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
+      // Bad vout
+      blockchain.utxos.returns([{ txid, vout: '0', script, satoshis: 0 }])
+      await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
+      blockchain.utxos.returns([{ txid, vout: 0.5, script, satoshis: 0 }])
+      await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
+      blockchain.utxos.returns([{ txid, vout: -1, script, satoshis: 0 }])
+      await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
+      // Bad script
+      blockchain.utxos.returns([{ txid, vout: 0, script: null, satoshis: 0 }])
+      await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
+      blockchain.utxos.returns([{ txid, vout: 0, script: 'ZZ', satoshis: 0 }])
+      await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
+      // Bad satoshis
+      blockchain.utxos.returns([{ txid, vout: 0, script, satoshis: true }])
+      await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
+      blockchain.utxos.returns([{ txid, vout: 0, script, satoshis: 1000.1 }])
+      await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
+      blockchain.utxos.returns([{ txid, vout: 0, script, satoshis: -1 }])
       await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
     })
 
