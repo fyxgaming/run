@@ -260,8 +260,17 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('caches tx', () => {
-      // TODO
+    it('caches tx', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = mockTransaction()
+      const rawtx = tx.toString()
+      const txid = tx.hash
+      blockchain.broadcast.returns(txid)
+      await wrapper.broadcast(rawtx)
+      const key = `tx://${txid}`
+      const value = await wrapper.cache.get(key)
+      expect(value).to.equal(rawtx)
     })
 
     // ------------------------------------------------------------------------
