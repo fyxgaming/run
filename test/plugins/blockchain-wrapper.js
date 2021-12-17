@@ -679,8 +679,11 @@ describe('BlockchainWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('setWrappingEnabled', () => {
-    it.skip('disable', () => {
-      // TODO
+    it('disable', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      wrapper.setWrappingEnabled(false)
+      await wrapper.fetch('abc')
     })
 
     // ------------------------------------------------------------------------
