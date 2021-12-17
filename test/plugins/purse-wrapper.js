@@ -6,6 +6,7 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+const { stub } = require('sinon')
 const Run = require('../env/run')
 const { PurseWrapper } = Run.plugins
 
@@ -33,8 +34,12 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('wraps methods when passed in', () => {
-      // TODO
+    it('wraps methods when passed in', () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      expect(wrapper.pay).not.to.equal(purse.pay)
+      expect(wrapper.broadcast).not.to.equal(purse.broadcast)
+      expect(wrapper.cancel).not.to.equal(purse.cancel)
     })
 
     // ------------------------------------------------------------------------
