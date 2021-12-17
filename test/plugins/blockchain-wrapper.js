@@ -446,7 +446,7 @@ describe('BlockchainWrapper', () => {
     // ------------------------------------------------------------------------
 
     it('logs call', async () => {
-      const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+      const logger = stub({ info: x => x, warn: x => x, error: x => x })
       Log._logger = logger
       const blockchain = stubBlockchain()
       const wrapper = new BlockchainWrapper(blockchain)
@@ -459,8 +459,16 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs performance in debug', () => {
-      // TODO
+    it('logs performance in debug', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+      Log._logger = logger
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const address = new bsv.PrivateKey().toAddress().toString()
+      const script = bsv.Script.fromAddress(address).toHex()
+      blockchain.utxos.returns([])
+      await wrapper.utxos(script)
+      expect(logger.debug.args.some(args => args.join(' ').includes('[Blockchain] Utxos (end): '))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
