@@ -473,8 +473,13 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates script', () => {
-      // TODO
+    it('validates script', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      await expect(wrapper.utxos()).to.be.rejectedWith('Invalid script')
+      await expect(wrapper.utxos(null)).to.be.rejectedWith('Invalid script')
+      await expect(wrapper.utxos({})).to.be.rejectedWith('Invalid script')
+      await expect(wrapper.utxos('a b c d e f')).to.be.rejectedWith('Invalid script')
     })
 
     // ------------------------------------------------------------------------
