@@ -580,11 +580,11 @@ describe('BlockchainWrapper', () => {
     it('wraps', async () => {
       const blockchain = stubBlockchain()
       const wrapper = new BlockchainWrapper(blockchain)
-      const location = '0000000000000000000000000000000000000000000000000000000000000000_o0'
-      const txid = '1111111111111111111111111111111111111111111111111111111111111111'
-      blockchain.spends.returns(txid)
-      const response = await wrapper.spends(location)
-      expect(response).to.deep.equal(txid)
+      const a = '0000000000000000000000000000000000000000000000000000000000000000'
+      const b = '1111111111111111111111111111111111111111111111111111111111111111'
+      blockchain.spends.returns(b)
+      const response = await wrapper.spends(a, 0)
+      expect(response).to.deep.equal(b)
     })
 
     // ------------------------------------------------------------------------
@@ -594,11 +594,11 @@ describe('BlockchainWrapper', () => {
       Log._logger = logger
       const blockchain = stubBlockchain()
       const wrapper = new BlockchainWrapper(blockchain)
-      const location = '0000000000000000000000000000000000000000000000000000000000000000_o0'
-      const txid = '1111111111111111111111111111111111111111111111111111111111111111'
-      blockchain.spends.returns(txid)
-      await wrapper.spends(location)
-      expect(logger.info.args.some(args => args.join(' ').includes(`[Blockchain] Spends ${location}`))).to.equal(true)
+      const a = '0000000000000000000000000000000000000000000000000000000000000000'
+      const b = '1111111111111111111111111111111111111111111111111111111111111111'
+      blockchain.spends.returns(b)
+      await wrapper.spends(a, 0)
+      expect(logger.info.args.some(args => args.join(' ').includes(`[Blockchain] Spends ${a}_o0`))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -608,16 +608,28 @@ describe('BlockchainWrapper', () => {
       Log._logger = logger
       const blockchain = stubBlockchain()
       const wrapper = new BlockchainWrapper(blockchain)
-      const location = '0000000000000000000000000000000000000000000000000000000000000000_o0'
-      const txid = '1111111111111111111111111111111111111111111111111111111111111111'
-      blockchain.spends.returns(txid)
-      await wrapper.spends(location)
+      const a = '0000000000000000000000000000000000000000000000000000000000000000'
+      const b = '1111111111111111111111111111111111111111111111111111111111111111'
+      blockchain.spends.returns(b)
+      await wrapper.spends(a, 0)
       expect(logger.debug.args.some(args => args.join(' ').includes('[Blockchain] Spends (end)'))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates location', () => {
+    it.skip('validates txid', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('validates vout', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('accepts location', () => {
       // TODO
     })
 
