@@ -385,8 +385,15 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('gets from cache if exists', () => {
-      // TODO
+    it('gets from cache if exists', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = mockTransaction()
+      const rawtx = tx.toString()
+      const txid = tx.hash
+      await wrapper.cache.set(`tx://${txid}`, rawtx)
+      expect(await wrapper.fetch(txid)).to.equal(rawtx)
+      expect(blockchain.fetch.callCount).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
