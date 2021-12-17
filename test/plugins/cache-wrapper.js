@@ -23,7 +23,19 @@ describe('CacheWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it('wraps methods', () => {
+    it('wraps methods when extended', () => {
+      class MyCache extends CacheWrapper {
+        get () { }
+        set () { }
+      }
+      const wrapper = new MyCache()
+      expect(wrapper.get).not.to.equal(MyCache.prototype.get)
+      expect(wrapper.set).not.to.equal(MyCache.prototype.set)
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('wraps methods when passed in', () => {
       const cache = stub({ get: () => {}, set: () => {} })
       const wrapper = new CacheWrapper(cache)
       expect(wrapper.get).not.to.equal(cache.get)
@@ -44,7 +56,7 @@ describe('CacheWrapper', () => {
       expect(response).to.equal(456)
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     it('logs call', async () => {
       const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
@@ -55,7 +67,7 @@ describe('CacheWrapper', () => {
       expect(logger.info.args.some(args => args.join(' ').includes('[Cache] Get 123'))).to.equal(true)
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     it('logs with class name', async () => {
       const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
@@ -70,7 +82,7 @@ describe('CacheWrapper', () => {
       expect(logger.info.args.some(args => args.join(' ').includes('[MyCache] Get 123'))).to.equal(true)
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     it('logs performance in debug', async () => {
       const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
@@ -81,7 +93,7 @@ describe('CacheWrapper', () => {
       expect(logger.debug.args.some(args => args.join(' ').includes('[Cache] Get (end): '))).to.equal(true)
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     it('logs value in debug', async () => {
       const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
@@ -93,7 +105,7 @@ describe('CacheWrapper', () => {
       expect(logger.debug.args.some(args => args.join(' ').includes('[Cache] Value: true'))).to.equal(true)
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     it('validates key is string', async () => {
       const cache = stub({ get: () => {}, set: () => {} })
@@ -104,7 +116,7 @@ describe('CacheWrapper', () => {
       await expect(wrapper.get(true)).to.be.rejectedWith('Invalid key: true')
     })
 
-    // --------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     it('validates response is json or undefined', async () => {
       const cache = stub({ get: () => {}, set: () => {} })
