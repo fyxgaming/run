@@ -747,15 +747,22 @@ describe('BlockchainWrapper', () => {
       const wrapper = new BlockchainWrapper(blockchain)
       const txid = '1111111111111111111111111111111111111111111111111111111111111111'
       const time = Date.now()
-      await blockchain.cache.set(`time://${txid}`, time)
+      await wrapper.cache.set(`time://${txid}`, time)
       const response = await wrapper.time(txid)
       expect(response).to.deep.equal(time)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('caches time', () => {
-      // TODO
+    it('caches time', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const txid = '1111111111111111111111111111111111111111111111111111111111111111'
+      const time = Date.now()
+      blockchain.time.returns(time)
+      await wrapper.time(txid)
+      const value = await wrapper.cache.get(`time://${txid}`)
+      expect(value).to.deep.equal(time)
     })
   })
 
