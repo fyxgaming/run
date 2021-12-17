@@ -373,8 +373,14 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates rawtx matches in debug mode', () => {
-      // TODO
+    it('validates rawtx matches in debug mode', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+      Log._logger = logger
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const txid = new bsv.Transaction().hash
+      blockchain.fetch.returns(mockTransaction().toString())
+      await expect(wrapper.fetch(txid)).to.be.rejectedWith('Transaction fetch mismatch')
     })
 
     // ------------------------------------------------------------------------
