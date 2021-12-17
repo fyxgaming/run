@@ -275,8 +275,18 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('updates recent broadcasts', () => {
-      // TODO
+    it('updates recent broadcasts', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = mockTransaction()
+      const rawtx = tx.toString()
+      const txid = tx.hash
+      blockchain.broadcast.returns(txid)
+      await wrapper.broadcast(rawtx)
+      const key = 'config://recent-broadcasts'
+      const value = await wrapper.cache.get(key)
+      expect(Array.isArray(value)).to.equal(true)
+      expect(value.length).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
