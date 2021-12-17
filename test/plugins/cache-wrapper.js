@@ -187,22 +187,26 @@ describe('CacheWrapper', () => {
   })
 
   // --------------------------------------------------------------------------
-
-  it('disable wrapping', async () => {
-    const cache = stub({ get: () => {}, set: () => {} })
-    const wrapper = new CacheWrapper(cache)
-    wrapper.setWrappingEnabled(false)
-    await wrapper.set(null, new Set())
-  })
-
+  // setWrappingEnabled
   // --------------------------------------------------------------------------
 
-  it('reenable wrapping', async () => {
-    const cache = stub({ get: () => {}, set: () => {} })
-    const wrapper = new CacheWrapper(cache)
-    wrapper.setWrappingEnabled(false)
-    wrapper.setWrappingEnabled(true)
-    await expect(wrapper.set(null, new Set())).to.be.rejected
+  describe('setWrappingEnabled', () => {
+    it('disable', async () => {
+      const cache = stub({ get: () => {}, set: () => {} })
+      const wrapper = new CacheWrapper(cache)
+      wrapper.setWrappingEnabled(false)
+      await wrapper.set(null, new Set())
+    })
+
+    // ------------------------------------------------------------------------
+
+    it('reenable', async () => {
+      const cache = stub({ get: () => {}, set: () => {} })
+      const wrapper = new CacheWrapper(cache)
+      wrapper.setWrappingEnabled(false)
+      wrapper.setWrappingEnabled(true)
+      await expect(wrapper.set(null, new Set())).to.be.rejected
+    })
   })
 })
 
