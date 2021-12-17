@@ -730,8 +730,14 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates response', () => {
-      // TODO
+    it('validates response', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const txid = '1111111111111111111111111111111111111111111111111111111111111111'
+      blockchain.time.returns('abc')
+      await expect(wrapper.time(txid)).to.be.rejectedWith('Invalid time')
+      blockchain.time.returns(-1)
+      await expect(wrapper.time(txid)).to.be.rejectedWith('Invalid time')
     })
 
     // ------------------------------------------------------------------------
