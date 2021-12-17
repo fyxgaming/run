@@ -10,6 +10,29 @@ const { stub } = require('sinon')
 const bsv = require('bsv')
 const Run = require('../env/run')
 const { BlockchainWrapper } = Run.plugins
+const unmangle = require('../env/unmangle')
+const Log = unmangle(unmangle(Run)._Log)
+
+// ------------------------------------------------------------------------------------------------
+// Helpers
+// ------------------------------------------------------------------------------------------------
+
+function stubBlockchain () {
+  return stub({
+    network: 'abc',
+    broadcast: () => {},
+    fetch: () => {},
+    utxos: () => {},
+    spends: () => {},
+    time: () => {}
+  })
+}
+
+function mockTransaction () {
+  return new bsv.Transaction()
+    .from({ txid: '0000000000000000000000000000000000000000000000000000000000000000', vout: 0, script: '', satoshis: 0 })
+    .to(new bsv.PrivateKey().toAddress(), 0)
+}
 
 // ------------------------------------------------------------------------------------------------
 // BlockchainWrapper
@@ -42,14 +65,7 @@ describe('BlockchainWrapper', () => {
     // ------------------------------------------------------------------------
 
     it('wraps methods when passed in', () => {
-      const blockchain = stub({
-        network: 'abc',
-        broadcast: () => {},
-        fetch: () => {},
-        utxos: () => {},
-        spends: () => {},
-        time: () => {}
-      })
+      const blockchain = stubBlockchain()
       const wrapper = new BlockchainWrapper(blockchain)
       expect(wrapper.broadcast).not.to.equal(blockchain.broadcast)
       expect(wrapper.fetch).not.to.equal(blockchain.fetch)
@@ -66,18 +82,9 @@ describe('BlockchainWrapper', () => {
 
   describe('broadcast', () => {
     it('wraps', async () => {
-      const blockchain = stub({
-        network: 'abc',
-        broadcast: () => {},
-        fetch: () => {},
-        utxos: () => {},
-        spends: () => {},
-        time: () => {}
-      })
+      const blockchain = stubBlockchain()
       const wrapper = new BlockchainWrapper(blockchain)
-      const tx = new bsv.Transaction()
-        .from({ txid: '0000000000000000000000000000000000000000000000000000000000000000', vout: 0, script: '', satoshis: 0 })
-        .to(new bsv.PrivateKey().toAddress(), 0)
+      const tx = mockTransaction()
       const rawtx = tx.toString()
       const txid = tx.hash
       blockchain.broadcast.returns(txid)
@@ -87,8 +94,16 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs call', () => {
-      // TODO
+    it('logs call with txid', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+      Log._logger = logger
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = mockTransaction()
+      blockchain.broadcast.returns(tx.hash)
+      await wrapper.broadcast(tx.toString())
+      console.log(logger.info.args)
+      expect(logger.info.args.some(args => args.join(' ').includes(`[Blockchain] Broadcast ${tx.hash}`))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
