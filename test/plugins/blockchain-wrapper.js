@@ -91,6 +91,7 @@ describe('BlockchainWrapper', () => {
       blockchain.broadcast.returns(txid)
       const response = await wrapper.broadcast(rawtx)
       expect(response).to.equal(txid)
+      expect(blockchain.broadcast.args[0][0]).to.equal(rawtx)
     })
 
     // ------------------------------------------------------------------------
@@ -318,6 +319,7 @@ describe('BlockchainWrapper', () => {
       blockchain.fetch.returns(rawtx)
       const response = await wrapper.fetch(txid)
       expect(response).to.equal(rawtx)
+      expect(blockchain.fetch.args[0][0]).to.equal(txid)
     })
 
     // ------------------------------------------------------------------------
@@ -441,6 +443,7 @@ describe('BlockchainWrapper', () => {
       blockchain.utxos.returns(utxos)
       const response = await wrapper.utxos(script)
       expect(response).to.deep.equal(utxos)
+      expect(blockchain.utxos.args[0][0]).to.equal(script)
     })
 
     // ------------------------------------------------------------------------
