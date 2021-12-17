@@ -683,8 +683,15 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('caches spend', () => {
-      // TODO
+    it('caches spend', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const a = '0000000000000000000000000000000000000000000000000000000000000000'
+      const b = '1111111111111111111111111111111111111111111111111111111111111111'
+      blockchain.spends.returns(b)
+      await wrapper.spends(a, 0)
+      const value = await wrapper.cache.get(`spend://${a}_o0`)
+      expect(value).to.equal(b)
     })
   })
 
