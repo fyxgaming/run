@@ -56,8 +56,11 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('supports no cancel method', () => {
-      // TODO
+    it('supports no cancel method', () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      expect(wrapper.pay).not.to.equal(purse.pay)
+      expect(typeof wrapper.cancel).to.equal('undefined')
     })
   })
 
