@@ -161,8 +161,12 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('accepts bsv transaction', () => {
-      // TODO
+    it('accepts bsv transaction', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = mockTransaction()
+      blockchain.broadcast.returns(tx.hash)
+      await wrapper.broadcast(tx)
     })
 
     // ------------------------------------------------------------------------
