@@ -688,8 +688,12 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('reenable', () => {
-      // TODO
+    it('reenable', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      wrapper.setWrappingEnabled(false)
+      wrapper.setWrappingEnabled(true)
+      await expect(wrapper.fetch('abc')).to.be.rejected
     })
   })
 })
