@@ -195,13 +195,20 @@ describe('PurseWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('send', () => {
-    it.skip('makes payment', () => {
-      // TODO
+    it('makes payment', async () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      purse.pay.callsFake(rawtx => rawtx)
+      const address = new bsv.PrivateKey().toAddress().toString()
+      const script = bsv.Script.fromAddress(address).toHex()
+      await wrapper.send(script, 100)
+      const paidtx = purse.pay.returnValues[0]
+      expect(purse.broadcast.calledWith(paidtx)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('calls pay and broadcast', () => {
+    it.skip('calls cancel if broadcast fails', () => {
       // TODO
     })
 
