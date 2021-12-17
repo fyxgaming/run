@@ -617,8 +617,15 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs call', () => {
-      // TODO
+    it('logs call', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x })
+      Log._logger = logger
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const txid = '1111111111111111111111111111111111111111111111111111111111111111'
+      blockchain.time.returns(Date.now())
+      await wrapper.time(txid)
+      expect(logger.info.args.some(args => args.join(' ').includes(`[Blockchain] Time ${txid}`))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
