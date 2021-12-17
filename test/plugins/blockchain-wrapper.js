@@ -659,8 +659,14 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates response', () => {
-      // TODO
+    it('validates response', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const a = '0000000000000000000000000000000000000000000000000000000000000000'
+      blockchain.spends.returns(undefined)
+      await expect(wrapper.spends(a, 0)).to.be.rejectedWith('Invalid spend txid')
+      blockchain.spends.returns('abc')
+      await expect(wrapper.spends(a, 0)).to.be.rejectedWith('Invalid spend txid')
     })
 
     // ------------------------------------------------------------------------
