@@ -144,7 +144,7 @@ describe('BlockchainWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('broadcast', () => {
-    it('wraps', async () => {
+    it('wraps call', async () => {
       const blockchain = stubBlockchain()
       const wrapper = new BlockchainWrapper(blockchain)
       const tx = mockTransaction()
@@ -387,7 +387,7 @@ describe('BlockchainWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('fetch', () => {
-    it('wraps', async () => {
+    it('wraps call', async () => {
       const blockchain = stubBlockchain()
       const wrapper = new BlockchainWrapper(blockchain)
       const tx = mockTransaction()
@@ -510,7 +510,7 @@ describe('BlockchainWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('utxos', () => {
-    it('wraps', async () => {
+    it('wraps call', async () => {
       const blockchain = stubBlockchain()
       const wrapper = new BlockchainWrapper(blockchain)
       const address = new bsv.PrivateKey().toAddress().toString()
@@ -704,7 +704,7 @@ describe('BlockchainWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('spends', () => {
-    it('wraps', async () => {
+    it('wraps call', async () => {
       const blockchain = stubBlockchain()
       const wrapper = new BlockchainWrapper(blockchain)
       const a = '0000000000000000000000000000000000000000000000000000000000000000'
@@ -824,7 +824,7 @@ describe('BlockchainWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('time', () => {
-    it('wraps', async () => {
+    it('wraps call', async () => {
       const blockchain = stubBlockchain()
       const wrapper = new BlockchainWrapper(blockchain)
       const txid = '1111111111111111111111111111111111111111111111111111111111111111'

@@ -54,6 +54,7 @@ describe('CacheWrapper', () => {
       cache.get.returns(456)
       const response = await wrapper.get('123')
       expect(response).to.equal(456)
+      expect(cache.get.calledWith('123')).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
