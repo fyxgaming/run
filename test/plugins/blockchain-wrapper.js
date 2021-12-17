@@ -7,6 +7,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const { stub } = require('sinon')
+const bsv = require('bsv')
 const Run = require('../env/run')
 const { BlockchainWrapper } = Run.plugins
 
@@ -64,8 +65,24 @@ describe('BlockchainWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('broadcast', () => {
-    it.skip('wraps', () => {
-      // TODO
+    it('wraps', async () => {
+      const blockchain = stub({
+        network: 'abc',
+        broadcast: () => {},
+        fetch: () => {},
+        utxos: () => {},
+        spends: () => {},
+        time: () => {}
+      })
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = new bsv.Transaction()
+        .from({ txid: '0000000000000000000000000000000000000000000000000000000000000000', vout: 0, script: '', satoshis: 0 })
+        .to(new bsv.PrivateKey().toAddress(), 0)
+      const rawtx = tx.toString()
+      const txid = tx.hash
+      blockchain.broadcast.returns(txid)
+      const response = await wrapper.broadcast(rawtx)
+      expect(response).to.equal(txid)
     })
 
     // ------------------------------------------------------------------------
@@ -83,6 +100,12 @@ describe('BlockchainWrapper', () => {
     // ------------------------------------------------------------------------
 
     it.skip('logs performance in debug', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('validates txid in debug mode', () => {
       // TODO
     })
 
