@@ -435,7 +435,7 @@ describe('BlockchainWrapper', () => {
       const blockchain = stubBlockchain()
       const wrapper = new BlockchainWrapper(blockchain)
       const address = new bsv.PrivateKey().toAddress().toString()
-      const script = bsv.Script.fromAddress(address)
+      const script = bsv.Script.fromAddress(address).toHex()
       const txid = '0000000000000000000000000000000000000000000000000000000000000000'
       const utxos = [{ txid, vout: 0, script, satoshis: 0 }]
       blockchain.utxos.returns(utxos)
@@ -445,8 +445,16 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs call', () => {
-      // TODO
+    it('logs call', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+      Log._logger = logger
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const address = new bsv.PrivateKey().toAddress().toString()
+      const script = bsv.Script.fromAddress(address).toHex()
+      blockchain.utxos.returns([])
+      await wrapper.utxos(script)
+      expect(logger.info.args.some(args => args.join(' ').includes(`[Blockchain] Utxos ${script}`))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
