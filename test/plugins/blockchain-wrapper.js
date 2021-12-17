@@ -597,8 +597,14 @@ describe('BlockchainWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('time', () => {
-    it.skip('wraps', () => {
-      // TODO
+    it('wraps', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const txid = '1111111111111111111111111111111111111111111111111111111111111111'
+      const time = Date.now()
+      blockchain.time.returns(time)
+      const response = await wrapper.time(txid)
+      expect(response).to.deep.equal(time)
     })
 
     // ------------------------------------------------------------------------
