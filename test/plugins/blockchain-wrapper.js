@@ -201,8 +201,14 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if duplicate inputs', () => {
-      // TODO
+    it('throws if duplicate inputs', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = new bsv.Transaction()
+        .from({ txid: '0000000000000000000000000000000000000000000000000000000000000000', vout: 0, script: '', satoshis: 0 })
+        .from({ txid: '0000000000000000000000000000000000000000000000000000000000000000', vout: 0, script: '', satoshis: 0 })
+        .to(new bsv.PrivateKey().toAddress(), 0)
+      await expect(wrapper.broadcast(tx.toString())).to.be.rejected
     })
 
     // ------------------------------------------------------------------------
