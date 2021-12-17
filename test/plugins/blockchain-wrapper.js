@@ -245,8 +245,17 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('caches spent inputs', () => {
-      // TODO
+    it('caches spent inputs', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = mockTransaction()
+      const rawtx = tx.toString()
+      const txid = tx.hash
+      blockchain.broadcast.returns(txid)
+      await wrapper.broadcast(rawtx)
+      const key = `spend://${tx.inputs[0].prevTxId.toString('hex')}_o${tx.inputs[0].outputIndex}`
+      const value = await wrapper.cache.get(key)
+      expect(value).to.equal(txid)
     })
 
     // ------------------------------------------------------------------------
