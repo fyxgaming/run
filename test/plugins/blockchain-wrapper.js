@@ -6,6 +6,7 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+require('chai').use(require('chai-as-promised'))
 const { stub } = require('sinon')
 const bsv = require('bsv')
 const Run = require('../env/run')
@@ -139,8 +140,15 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates txid in debug mode', () => {
-      // TODO
+    it('validates txid response matches in debug mode', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+      Log._logger = logger
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = mockTransaction()
+      const rawtx = tx.toString()
+      blockchain.broadcast.returns('0000000000000000000000000000000000000000000000000000000000000000')
+      await expect(wrapper.broadcast(rawtx)).to.be.rejectedWith('Txid response mismatch')
     })
 
     // ------------------------------------------------------------------------
