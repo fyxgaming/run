@@ -5,6 +5,9 @@
  */
 
 const { describe, it } = require('mocha')
+const { expect } = require('chai')
+const Run = require('../env/run')
+const { PurseWrapper } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // PurseWrapper
@@ -16,8 +19,16 @@ describe('PurseWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it.skip('wraps methods when extended', () => {
-      // TODO
+    it('wraps methods when extended', () => {
+      class MyPurse extends PurseWrapper {
+        pay () { }
+        broadcast () { }
+        cancel () { }
+      }
+      const wrapper = new MyPurse()
+      expect(wrapper.pay).not.to.equal(MyPurse.prototype.pay)
+      expect(wrapper.broadcast).not.to.equal(MyPurse.prototype.broadcast)
+      expect(wrapper.cancel).not.to.equal(MyPurse.prototype.cancel)
     })
 
     // ------------------------------------------------------------------------
