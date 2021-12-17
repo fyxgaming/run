@@ -74,7 +74,13 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('supports not passing parents', () => {
+    it.skip('validates parents', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('supports no parents', () => {
       // TODO
     })
 
