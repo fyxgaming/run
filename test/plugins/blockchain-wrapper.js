@@ -645,8 +645,16 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('accepts location', () => {
-      // TODO
+    it('accepts location', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const a = '0000000000000000000000000000000000000000000000000000000000000000'
+      const b = '1111111111111111111111111111111111111111111111111111111111111111'
+      blockchain.spends.returns(b)
+      const response = await wrapper.spends(`${a}_o${0}`)
+      expect(response).to.deep.equal(b)
+      expect(blockchain.spends.args[0][0]).to.equal(a)
+      expect(blockchain.spends.args[0][1]).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
