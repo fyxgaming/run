@@ -557,8 +557,16 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs call', () => {
-      // TODO
+    it('logs call', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x })
+      Log._logger = logger
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const location = '0000000000000000000000000000000000000000000000000000000000000000_o0'
+      const txid = '1111111111111111111111111111111111111111111111111111111111111111'
+      blockchain.spends.returns(txid)
+      await wrapper.spends(location)
+      expect(logger.info.args.some(args => args.join(' ').includes(`[Blockchain] Spends ${location}`))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
