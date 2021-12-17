@@ -163,8 +163,12 @@ describe('PurseWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('cancel', () => {
-    it.skip('wraps call', () => {
-      // TODO
+    it('wraps call', async () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      const rawtx = new bsv.Transaction().toString()
+      await wrapper.cancel(rawtx)
+      expect(purse.cancel.calledWith(rawtx)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
