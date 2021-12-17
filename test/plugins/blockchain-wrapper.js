@@ -352,8 +352,13 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates txid', () => {
-      // TODO
+    it('validates txid', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      await expect(wrapper.fetch('abcxyz')).to.be.rejectedWith('Invalid txid')
+      await expect(wrapper.fetch(null)).to.be.rejectedWith('Invalid txid')
+      await expect(wrapper.fetch(undefined)).to.be.rejectedWith('Invalid txid')
+      await expect(wrapper.fetch('00000000000000000000000000000000000000000000000000000000000000001')).to.be.rejectedWith('Invalid txid')
     })
 
     // ------------------------------------------------------------------------
