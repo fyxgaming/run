@@ -322,8 +322,17 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs call', () => {
-      // TODO
+    it('logs call', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+      Log._logger = logger
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = mockTransaction()
+      const rawtx = tx.toString()
+      const txid = tx.hash
+      blockchain.fetch.returns(rawtx)
+      await wrapper.fetch(txid)
+      expect(logger.info.args.some(args => args.join(' ').includes(`[Blockchain] Fetch ${txid}`))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -341,6 +350,12 @@ describe('BlockchainWrapper', () => {
     // ------------------------------------------------------------------------
 
     it.skip('validates response', () => {
+      // TODO
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('validates rawtx matches in debug mode', () => {
       // TODO
     })
 
