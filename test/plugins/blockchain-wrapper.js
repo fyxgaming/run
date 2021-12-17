@@ -309,8 +309,15 @@ describe('BlockchainWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('fetch', () => {
-    it.skip('wraps', () => {
-      // TODO
+    it('wraps', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = mockTransaction()
+      const rawtx = tx.toString()
+      const txid = tx.hash
+      blockchain.fetch.returns(rawtx)
+      const response = await wrapper.fetch(txid)
+      expect(response).to.equal(rawtx)
     })
 
     // ------------------------------------------------------------------------
