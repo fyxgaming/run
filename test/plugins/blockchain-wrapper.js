@@ -550,7 +550,7 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs warning if dupped utxos', () => {
+    it.skip('logs warning if duplicate utxos', () => {
       // TODO
 
       /*
