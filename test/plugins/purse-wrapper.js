@@ -6,6 +6,7 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+require('chai').use(require('chai-as-promised'))
 const { stub } = require('sinon')
 const Run = require('../env/run')
 const { PurseWrapper } = Run.plugins
@@ -226,8 +227,12 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('reenable', () => {
-      // TODO
+    it('reenable', async () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      wrapper.setWrappingEnabled(false)
+      wrapper.setWrappingEnabled(true)
+      await expect(wrapper.pay(null, null)).to.be.rejected
     })
   })
 })
