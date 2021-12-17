@@ -183,6 +183,19 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
+    it('validates txid', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+      Log._logger = logger
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = mockTransaction()
+      const rawtx = tx.toString()
+      blockchain.broadcast.returns(null)
+      await expect(wrapper.broadcast(rawtx)).to.be.rejectedWith('Invalid response txid: null')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('validates txid response matches in debug mode', async () => {
       const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
       Log._logger = logger
