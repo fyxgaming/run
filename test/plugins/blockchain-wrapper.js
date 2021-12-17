@@ -363,8 +363,12 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates response', () => {
-      // TODO
+    it('validates response', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const txid = new bsv.Transaction().hash
+      blockchain.fetch.returns('abc')
+      await expect(wrapper.fetch(txid)).to.be.rejectedWith('Invalid rawtx')
     })
 
     // ------------------------------------------------------------------------
