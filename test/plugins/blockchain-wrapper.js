@@ -532,8 +532,20 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates response', () => {
-      // TODO
+    it('validates response', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const address = new bsv.PrivateKey().toAddress().toString()
+      const script = bsv.Script.fromAddress(address).toHex()
+      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
+      blockchain.utxos.returns(null)
+      await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
+      blockchain.utxos.returns({})
+      await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
+      blockchain.utxos.returns([{ txid, vout: 0, script, satoshis: -1 }])
+      await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
+      blockchain.utxos.returns([{ vout: 0, script, satoshis: 0 }])
+      await expect(wrapper.utxos(script)).to.be.rejectedWith('Received invalid utxos')
     })
 
     // ------------------------------------------------------------------------
