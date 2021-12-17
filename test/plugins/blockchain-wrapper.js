@@ -213,20 +213,34 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if coinbase', () => {
-      // TODO
+    it('caches time if exists', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = mockTransaction()
+      const rawtx = tx.toString()
+      const txid = tx.hash
+      blockchain.broadcast.returns(txid)
+      await wrapper.broadcast(rawtx)
+      const key = `time://${txid}`
+      const value = await wrapper.cache.get(key)
+      expect(typeof value).to.equal('number')
+      expect(value > Date.now() - 1000).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('caches time if exists', () => {
-      // TODO
-    })
-
-    // ------------------------------------------------------------------------
-
-    it.skip('does not cache time if exists', () => {
-      // TODO
+    it('does not cache time if already exists', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = mockTransaction()
+      const rawtx = tx.toString()
+      const txid = tx.hash
+      blockchain.broadcast.returns(txid)
+      const key = `time://${txid}`
+      await wrapper.cache.set(key, 1234)
+      await wrapper.broadcast(rawtx)
+      const value = await wrapper.cache.get(key)
+      expect(value).to.equal(1234)
     })
 
     // ------------------------------------------------------------------------
