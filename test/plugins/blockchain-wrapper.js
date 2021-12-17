@@ -565,22 +565,18 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs warning if duplicate utxos', () => {
-      // TODO
-
-      /*
-      const Log = unmangle(unmangle(Run)._Log)
-      const previousLogger = Log._logger
-      try {
-        Log._logger = stub({ warn: () => {} })
-        const a = { txid: 'abc', vout: 1, script: '2', satoshis: 3 }
-        expect(_dedupUtxos([a, a])).to.deep.equal([a])
-        const lastWarning = Log._logger.warn.lastCall.args.join(' ')
-        expect(lastWarning.includes('[bsv] Duplicate utxo returned from server: abc_o1')).to.equal(true)
-      } finally {
-        Log._logger = previousLogger
-      }
-      */
+    it('logs warning if duplicate utxos', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x })
+      Log._logger = logger
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const address = new bsv.PrivateKey().toAddress().toString()
+      const script = bsv.Script.fromAddress(address).toHex()
+      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
+      const a = { txid, vout: 1, script: '', satoshis: 3 }
+      blockchain.utxos.returns([a, a])
+      await wrapper.utxos(script)
+      expect(logger.warn.args.some(args => args.join(' ').includes('[Blockchain] Duplicate utxo returned from server'))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
