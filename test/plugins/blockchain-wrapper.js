@@ -671,8 +671,14 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('gets from cache if exists', () => {
-      // TODO
+    it('gets from cache if exists', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const a = '0000000000000000000000000000000000000000000000000000000000000000'
+      const b = '1111111111111111111111111111111111111111111111111111111111111111'
+      await wrapper.cache.set(`spend://${a}_o0`, b)
+      const value = await wrapper.spends(a, 0)
+      expect(value).to.equal(b)
     })
 
     // ------------------------------------------------------------------------
