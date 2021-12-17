@@ -153,8 +153,10 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates tx is valid', () => {
-      // TODO
+    it('validates tx is valid', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      await expect(wrapper.broadcast('abc')).to.be.rejectedWith('Invalid transaction')
     })
 
     // ------------------------------------------------------------------------
