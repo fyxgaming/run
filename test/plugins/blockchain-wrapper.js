@@ -484,8 +484,16 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('accepts bsv script', () => {
-      // TODO
+    it('accepts bsv script', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const address = new bsv.PrivateKey().toAddress().toString()
+      const script = bsv.Script.fromAddress(address).toHex()
+      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
+      const utxos = [{ txid, vout: 0, script, satoshis: 0 }]
+      blockchain.utxos.returns(utxos)
+      const response = await wrapper.utxos(new bsv.Script(script))
+      expect(response).to.deep.equal(utxos)
     })
 
     // ------------------------------------------------------------------------
