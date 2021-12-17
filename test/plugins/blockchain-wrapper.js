@@ -96,6 +96,27 @@ describe('BlockchainWrapper', () => {
       await wrapper.time(txid)
       await wrapper.spends(txid, 0)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('supports no logger', async () => {
+      Log._logger = null
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain, null)
+      const tx = mockTransaction()
+      const rawtx = tx.toString()
+      const txid = tx.hash
+      blockchain.broadcast.returns(txid)
+      blockchain.fetch.returns(rawtx)
+      blockchain.utxos.returns([])
+      blockchain.spends.returns(null)
+      blockchain.time.returns(Date.now())
+      await wrapper.broadcast(rawtx)
+      await wrapper.fetch(txid)
+      await wrapper.utxos(tx.outputs[0].script.toHex())
+      await wrapper.time(txid)
+      await wrapper.spends(txid, 0)
+    })
   })
 
   // --------------------------------------------------------------------------
