@@ -593,6 +593,7 @@ describe('BlockchainWrapper', () => {
     // ------------------------------------------------------------------------
 
     it('dedups utxos', async () => {
+      Log._logger = null
       const blockchain = stubBlockchain()
       const wrapper = new BlockchainWrapper(blockchain)
       const address = new bsv.PrivateKey().toAddress().toString()
