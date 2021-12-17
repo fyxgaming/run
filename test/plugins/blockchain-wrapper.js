@@ -700,8 +700,13 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates txid', () => {
-      // TODO
+    it('validates txid', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      await expect(wrapper.time()).to.be.rejectedWith('Invalid txid')
+      await expect(wrapper.time(null)).to.be.rejectedWith('Invalid txid')
+      await expect(wrapper.time('abc')).to.be.rejectedWith('Invalid txid')
+      await expect(wrapper.time({})).to.be.rejectedWith('Invalid txid')
     })
 
     // ------------------------------------------------------------------------
