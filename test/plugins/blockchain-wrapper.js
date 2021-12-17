@@ -5,6 +5,9 @@
  */
 
 const { describe, it } = require('mocha')
+const { expect } = require('chai')
+const Run = require('../env/run')
+const { BlockchainWrapper } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // BlockchainWrapper
@@ -16,8 +19,22 @@ describe('BlockchainWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('constructor', () => {
-    it.skip('wraps methods when extended', () => {
-      // TODO
+    it('wraps methods when extended', () => {
+      class MyBlockchain extends BlockchainWrapper {
+        get network () { 'abc' }
+        broadcast () { }
+        fetch () { }
+        utxos () { }
+        spends () { }
+        time () { }
+      }
+      const wrapper = new MyBlockchain()
+      expect(wrapper.broadcast).not.to.equal(MyBlockchain.prototype.broadcast)
+      expect(wrapper.fetch).not.to.equal(MyBlockchain.prototype.fetch)
+      expect(wrapper.utxos).not.to.equal(MyBlockchain.prototype.utxos)
+      expect(wrapper.spends).not.to.equal(MyBlockchain.prototype.spends)
+      expect(wrapper.time).not.to.equal(MyBlockchain.prototype.time)
+      expect(wrapper.network).to.equal(MyBlockchain.prototype.network)
     })
 
     // ------------------------------------------------------------------------
