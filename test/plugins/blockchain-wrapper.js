@@ -343,6 +343,8 @@ describe('BlockchainWrapper', () => {
       blockchain.broadcast.returns(txid)
       await wrapper.broadcast(rawtx)
       await wrapper.broadcast(rawtx)
+      Log._logger = null
+      await wrapper.broadcast(rawtx)
       expect(blockchain.broadcast.callCount).to.equal(1)
     })
   })
