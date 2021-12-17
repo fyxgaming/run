@@ -13,6 +13,7 @@ const Run = require('../env/run')
 const { BlockchainWrapper } = Run.plugins
 const unmangle = require('../env/unmangle')
 const Log = unmangle(unmangle(Run)._Log)
+const RecentBroadcasts = unmangle(unmangle(Run)._RecentBroadcasts)
 
 // ------------------------------------------------------------------------------------------------
 // Helpers
@@ -581,8 +582,20 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('corrects utxos with recent broadcasts', () => {
-      // TODO
+    it('corrects utxos with recent broadcasts', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const address = new bsv.PrivateKey().toAddress().toString()
+      const script = bsv.Script.fromAddress(address).toHex()
+      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
+      const utxo = { txid, vout: 1, script, satoshis: 3 }
+      blockchain.utxos.returns([utxo])
+      const spendTx = new bsv.Transaction().from(utxo).to(address, 4)
+      const spendTxid = spendTx.hash
+      const spendUtxo = { txid: spendTxid, vout: 0, script, satoshis: 4 }
+      await RecentBroadcasts._addToCache(wrapper.cache, spendTx, spendTxid)
+      const value = await wrapper.utxos(script)
+      expect(value).to.deep.equal([spendUtxo])
     })
   })
 
