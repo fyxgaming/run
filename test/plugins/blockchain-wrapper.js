@@ -180,8 +180,12 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if no outputs', () => {
-      // TODO
+    it('throws if no outputs', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = new bsv.Transaction()
+        .from({ txid: '0000000000000000000000000000000000000000000000000000000000000000', vout: 0, script: '', satoshis: 0 })
+      await expect(wrapper.broadcast(tx.toString())).to.be.rejectedWith('tx has no outputs')
     })
 
     // ------------------------------------------------------------------------
