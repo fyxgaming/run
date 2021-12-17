@@ -171,8 +171,11 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if no inputs', () => {
-      // TODO
+    it('throws if no inputs', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = new bsv.Transaction().to(new bsv.PrivateKey().toAddress(), 0)
+      await expect(wrapper.broadcast(tx.toString())).to.be.rejectedWith('tx has no inputs')
     })
 
     // ------------------------------------------------------------------------
