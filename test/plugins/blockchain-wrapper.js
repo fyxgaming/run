@@ -6,6 +6,7 @@
 
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
+const { stub } = require('sinon')
 const Run = require('../env/run')
 const { BlockchainWrapper } = Run.plugins
 
@@ -39,8 +40,22 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('wraps methods when passed in', () => {
-      // TODO
+    it('wraps methods when passed in', () => {
+      const blockchain = stub({
+        network: 'abc',
+        broadcast: () => {},
+        fetch: () => {},
+        utxos: () => {},
+        spends: () => {},
+        time: () => {}
+      })
+      const wrapper = new BlockchainWrapper(blockchain)
+      expect(wrapper.broadcast).not.to.equal(blockchain.broadcast)
+      expect(wrapper.fetch).not.to.equal(blockchain.fetch)
+      expect(wrapper.utxos).not.to.equal(blockchain.utxos)
+      expect(wrapper.spends).not.to.equal(blockchain.spends)
+      expect(wrapper.time).not.to.equal(blockchain.time)
+      expect(wrapper.network).to.equal(blockchain.network)
     })
   })
 
