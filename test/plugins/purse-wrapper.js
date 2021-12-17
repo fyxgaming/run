@@ -44,8 +44,14 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('supports no broadcast method', () => {
-      // TODO
+    it('supports no broadcast method', () => {
+      class MyPurse extends PurseWrapper {
+        pay () { }
+        cancel () { }
+      }
+      const wrapper = new MyPurse()
+      expect(wrapper.pay).not.to.equal(MyPurse.prototype.pay)
+      expect(typeof wrapper.broadcast).to.equal('undefined')
     })
 
     // ------------------------------------------------------------------------
