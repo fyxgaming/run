@@ -545,8 +545,14 @@ describe('BlockchainWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('spends', () => {
-    it.skip('wraps', () => {
-      // TODO
+    it('wraps', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const location = '0000000000000000000000000000000000000000000000000000000000000000_o0'
+      const txid = '1111111111111111111111111111111111111111111111111111111111111111'
+      blockchain.spends.returns(txid)
+      const response = await wrapper.spends(location)
+      expect(response).to.deep.equal(txid)
     })
 
     // ------------------------------------------------------------------------
