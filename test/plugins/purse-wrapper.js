@@ -217,8 +217,11 @@ describe('PurseWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('setWrappingEnabled', () => {
-    it.skip('disable', () => {
-      // TODO
+    it('disable', async () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      wrapper.setWrappingEnabled(false)
+      await wrapper.pay(null, null)
     })
 
     // ------------------------------------------------------------------------
