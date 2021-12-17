@@ -1,7 +1,7 @@
 /**
  * state-filter.js
  *
- * Tests for src/state-filter.js
+ * Tests for lib/plugins/state-filter.js
  */
 
 const { describe, it } = require('mocha')
