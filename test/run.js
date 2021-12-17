@@ -14,7 +14,8 @@ const unmangle = require('./env/unmangle')
 const { Jig } = Run
 const {
   RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, LocalOwner, LocalPurse,
-  LocalState, BrowserCache, NodeCache, Inventory, StateServer, Viewer, RunDB
+  LocalState, BrowserCache, NodeCache, Inventory, StateServer, Viewer, RunDB,
+  BlockchainWrapper, StateWrapper, PurseWrapper
 } = Run.plugins
 const { BROWSER } = require('./env/config')
 const request = unmangle(Run)._request
@@ -279,6 +280,14 @@ describe('Run', () => {
         expect(new Run().blockchain).to.equal(Run.defaults.blockchain)
         Run.defaults.blockchain = defaultBlockchain
         Run.defaults.network = defaultNetwork
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('sets cache if blockchain wrapper', () => {
+        const blockchain = new Mockchain()
+        const run = new Run({ blockchain })
+        expect(run.blockchain.cache).to.equal(run.cache)
       })
 
       // ----------------------------------------------------------------------
@@ -1002,6 +1011,14 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
+      it('sets blockchain if purse wrapper', () => {
+        const purse = new LocalPurse({ blockchain: new Mockchain() })
+        const run = new Run({ purse })
+        expect(run.purse.blockchain).to.equal(run.blockchain)
+      })
+
+      // ----------------------------------------------------------------------
+
       it('does not reuse', () => {
         const run = new Run({ network: 'main' })
         const run2 = new Run({ network: 'main' })
@@ -1102,6 +1119,14 @@ describe('Run', () => {
         const state = new StateServer()
         const run = new Run({ api: 'mattercloud', network: 'main', state })
         expect(run.state).to.equal(state)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('sets cache if state wrapper', () => {
+        const state = new LocalState()
+        const run = new Run({ state })
+        expect(run.state.cache).to.equal(run.cache)
       })
 
       // ----------------------------------------------------------------------
@@ -1488,6 +1513,33 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
+      it('sets cache if blockchain wrapper', () => {
+        const run = new Run()
+        run.blockchain = new Mockchain()
+        expect(run.blockchain.cache).to.equal(run.cache)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('sets to purse wrapper', () => {
+        const purse = new LocalPurse({ blockchain: new Mockchain() })
+        expect(purse instanceof PurseWrapper).to.equal(true)
+        const run = new Run({ purse })
+        run.blockchain = new Mockchain()
+        expect(run.purse.blockchain).to.equal(run.blockchain)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('does not change custom purse', () => {
+        const purse = { pay: () => { } }
+        const run = new Run({ purse })
+        run.blockchain = new Mockchain()
+        expect(run.purse.blockchain).not.to.equal(run.blockchain)
+      })
+
+      // ----------------------------------------------------------------------
+
       it('throws if invalid', () => {
         const run = new Run()
         const blockchain = run.blockchain
@@ -1510,6 +1562,44 @@ describe('Run', () => {
         run.cache = cache
         expect(run.cache === cache).to.equal(true)
         expect(cache.size).to.equal(0)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('sets to blockchain wrapper', () => {
+        const blockchain = new Mockchain()
+        expect(blockchain instanceof BlockchainWrapper).to.equal(true)
+        const run = new Run({ blockchain })
+        run.cache = new LocalCache()
+        expect(run.blockchain.cache).to.equal(run.cache)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('sets to state wrapper', () => {
+        const state = new LocalState()
+        expect(state instanceof StateWrapper).to.equal(true)
+        const run = new Run({ state })
+        run.cache = new LocalCache()
+        expect(run.state.cache).to.equal(run.cache)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('does not change custom blockchain', () => {
+        const blockchain = { broadcast: () => {}, fetch: () => {}, utxos: () => {}, spends: () => {}, time: () => {}, network: 'test' }
+        const run = new Run({ blockchain })
+        run.cache = new LocalCache()
+        expect(run.blockchain.cache).not.to.equal(run.cache)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('does not change custom state', () => {
+        const state = { pull: () => { } }
+        const run = new Run({ state })
+        run.cache = new LocalCache()
+        expect(run.state.cache).not.to.equal(run.cache)
       })
 
       // ----------------------------------------------------------------------
@@ -1848,6 +1938,14 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
+      it('sets blockchain if purse wrapper', () => {
+        const run = new Run()
+        run.purse = new LocalPurse({ blockchain: new Mockchain() })
+        expect(run.purse.blockchain).to.equal(run.blockchain)
+      })
+
+      // ----------------------------------------------------------------------
+
       it('throws if invalid', () => {
         const run = new Run()
         const purse = run.purse
@@ -1903,6 +2001,14 @@ describe('Run', () => {
         const state = { pull: () => { } }
         run.state = state
         expect(run.state).to.equal(state)
+      })
+
+      // ----------------------------------------------------------------------
+
+      it('sets cache if state wrapper', () => {
+        const run = new Run()
+        run.state = new LocalState()
+        expect(run.state.cache).to.equal(run.cache)
       })
 
       // ----------------------------------------------------------------------
