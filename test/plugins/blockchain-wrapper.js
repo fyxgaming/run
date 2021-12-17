@@ -742,8 +742,14 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('gets from cache if exists', () => {
-      // TODO
+    it('gets from cache if exists', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const txid = '1111111111111111111111111111111111111111111111111111111111111111'
+      const time = Date.now()
+      await blockchain.cache.set(`time://${txid}`, time)
+      const response = await wrapper.time(txid)
+      expect(response).to.deep.equal(time)
     })
 
     // ------------------------------------------------------------------------
