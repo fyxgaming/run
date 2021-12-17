@@ -291,8 +291,16 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('does not broadcast if recently broadcast', () => {
-      // TODO
+    it('does not broadcast if recently broadcast', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const tx = mockTransaction()
+      const rawtx = tx.toString()
+      const txid = tx.hash
+      blockchain.broadcast.returns(txid)
+      await wrapper.broadcast(rawtx)
+      await wrapper.broadcast(rawtx)
+      expect(blockchain.broadcast.callCount).to.equal(1)
     })
   })
 
