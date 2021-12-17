@@ -8,6 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 require('chai').use(require('chai-as-promised'))
 const { stub } = require('sinon')
+const bsv = require('bsv')
 const Run = require('../env/run')
 const { PurseWrapper } = Run.plugins
 
@@ -70,8 +71,16 @@ describe('PurseWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('pay', () => {
-    it.skip('wraps', () => {
-      // TODO
+    it('wraps call', async () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      const rawtx = new bsv.Transaction().toString()
+      const paidtx = new bsv.Transaction().toString()
+      purse.pay.returns(paidtx)
+      const parents = []
+      const resp = await wrapper.pay(rawtx, parents)
+      expect(resp).to.equal(paidtx)
+      expect(purse.pay.calledWith(rawtx, parents)).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
@@ -122,7 +131,7 @@ describe('PurseWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('broadcast', () => {
-    it.skip('wraps', () => {
+    it.skip('wraps call', () => {
       // TODO
     })
 
@@ -150,7 +159,7 @@ describe('PurseWrapper', () => {
   // --------------------------------------------------------------------------
 
   describe('cancel', () => {
-    it.skip('wraps', () => {
+    it.skip('wraps call', () => {
       // TODO
     })
 
