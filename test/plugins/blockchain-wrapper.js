@@ -76,6 +76,26 @@ describe('BlockchainWrapper', () => {
       expect(wrapper.time).not.to.equal(blockchain.time)
       expect(wrapper.network).to.equal(blockchain.network)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('supports no cache', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain, null)
+      const tx = mockTransaction()
+      const rawtx = tx.toString()
+      const txid = tx.hash
+      blockchain.broadcast.returns(txid)
+      blockchain.fetch.returns(rawtx)
+      blockchain.utxos.returns([])
+      blockchain.spends.returns(null)
+      blockchain.time.returns(Date.now())
+      await wrapper.broadcast(rawtx)
+      await wrapper.fetch(txid)
+      await wrapper.utxos(tx.outputs[0].script.toHex())
+      await wrapper.time(txid)
+      await wrapper.spends(txid, 0)
+    })
   })
 
   // --------------------------------------------------------------------------
