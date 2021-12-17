@@ -494,12 +494,22 @@ describe('BlockchainWrapper', () => {
       blockchain.utxos.returns(utxos)
       const response = await wrapper.utxos(new bsv.Script(script))
       expect(response).to.deep.equal(utxos)
+      expect(blockchain.utxos.args[0][0]).to.equal(script)
     })
 
     // ------------------------------------------------------------------------
 
-    it.skip('accepts address', () => {
-      // TODO
+    it('accepts address', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const address = new bsv.PrivateKey().toAddress().toString()
+      const script = bsv.Script.fromAddress(address).toHex()
+      const txid = '0000000000000000000000000000000000000000000000000000000000000000'
+      const utxos = [{ txid, vout: 0, script, satoshis: 0 }]
+      blockchain.utxos.returns(utxos)
+      const response = await wrapper.utxos(address)
+      expect(response).to.deep.equal(utxos)
+      expect(blockchain.utxos.args[0][0]).to.equal(script)
     })
 
     // ------------------------------------------------------------------------
