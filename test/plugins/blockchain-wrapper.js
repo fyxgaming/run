@@ -585,6 +585,8 @@ describe('BlockchainWrapper', () => {
       blockchain.spends.returns(b)
       const response = await wrapper.spends(a, 0)
       expect(response).to.deep.equal(b)
+      expect(blockchain.spends.args[0][0]).to.equal(a)
+      expect(blockchain.spends.args[0][1]).to.equal(0)
     })
 
     // ------------------------------------------------------------------------
