@@ -633,8 +633,14 @@ describe('BlockchainWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates vout', () => {
-      // TODO
+    it('validates vout', async () => {
+      const blockchain = stubBlockchain()
+      const wrapper = new BlockchainWrapper(blockchain)
+      const txid = '1111111111111111111111111111111111111111111111111111111111111111'
+      await expect(wrapper.spends(txid)).to.be.rejectedWith('Invalid vout')
+      await expect(wrapper.spends(txid, null)).to.be.rejectedWith('Invalid vout')
+      await expect(wrapper.spends(txid, 0.5)).to.be.rejectedWith('Invalid vout')
+      await expect(wrapper.spends(txid, -1)).to.be.rejectedWith('Invalid vout')
     })
 
     // ------------------------------------------------------------------------
