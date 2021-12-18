@@ -66,6 +66,21 @@ describe('PurseWrapper', () => {
       expect(wrapper.pay).not.to.equal(purse.pay)
       expect(typeof wrapper.cancel).to.equal('undefined')
     })
+
+    // ------------------------------------------------------------------------
+
+    it('supports no logger', async () => {
+      Log._logger = null
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      const rawtx = new bsv.Transaction().toString()
+      const paidtx = new bsv.Transaction().toString()
+      purse.pay.returns(paidtx)
+      const parents = []
+      await wrapper.pay(rawtx, parents)
+      await wrapper.broadcast(rawtx)
+      await wrapper.cancel(rawtx)
+    })
   })
 
   // --------------------------------------------------------------------------
