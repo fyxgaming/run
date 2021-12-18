@@ -278,6 +278,19 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
+    it('swallows cancel if broadcast fails', async () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      purse.pay.callsFake(rawtx => rawtx)
+      const address = new bsv.PrivateKey().toAddress().toString()
+      const script = bsv.Script.fromAddress(address).toHex()
+      purse.broadcast.throws(new Error('abc'))
+      purse.cancel.throws(new Error('def'))
+      await expect(wrapper.send(script, 100)).to.be.rejectedWith('abc')
+    })
+
+    // ------------------------------------------------------------------------
+
     it('logs call', async () => {
       const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
       Log._logger = logger
