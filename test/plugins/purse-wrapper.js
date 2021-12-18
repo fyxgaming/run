@@ -75,11 +75,13 @@ describe('PurseWrapper', () => {
       const wrapper = new PurseWrapper(purse)
       const rawtx = new bsv.Transaction().toString()
       const paidtx = new bsv.Transaction().toString()
+      const address = new bsv.PrivateKey().toAddress().toString()
       purse.pay.returns(paidtx)
       const parents = []
       await wrapper.pay(rawtx, parents)
       await wrapper.broadcast(rawtx)
       await wrapper.cancel(rawtx)
+      await wrapper.send(address, 100)
     })
   })
 
