@@ -319,6 +319,23 @@ describe('PurseWrapper', () => {
       expect(new bsv.Transaction(paidtx).outputs[0].script.toHex()).to.equal(bsvscript.toHex())
       expect(purse.broadcast.calledWith(paidtx)).to.equal(true)
     })
+
+    // ------------------------------------------------------------------------
+
+    it('throws if invalid script', async () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      await expect(wrapper.send(null, 100)).to.be.rejectedWith('Invalid script')
+      await expect(wrapper.send('zzz', 100)).to.be.rejectedWith('Invalid script')
+      await expect(wrapper.send(undefined, 100)).to.be.rejectedWith('Invalid script')
+      await expect(wrapper.send({}, 100)).to.be.rejectedWith('Invalid script')
+    })
+
+    // ------------------------------------------------------------------------
+
+    it.skip('throws if invalid satoshis', () => {
+      // TODO
+    })
   })
 
   // --------------------------------------------------------------------------
