@@ -166,8 +166,19 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates response', () => {
-      // TODO
+    it('validates response', async () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      const rawtx = new bsv.Transaction().toString()
+      const parents = []
+      purse.pay.returns(undefined)
+      await expect(wrapper.pay(rawtx, parents)).to.be.rejectedWith('Invalid paid tx')
+      purse.pay.returns(null)
+      await expect(wrapper.pay(rawtx, parents)).to.be.rejectedWith('Invalid paid tx')
+      purse.pay.returns(new bsv.Transaction())
+      await expect(wrapper.pay(rawtx, parents)).to.be.rejectedWith('Invalid paid tx')
+      purse.pay.returns('abc')
+      await expect(wrapper.pay(rawtx, parents)).to.be.rejectedWith('Invalid paid tx')
     })
   })
 
