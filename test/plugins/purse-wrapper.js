@@ -333,8 +333,16 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('throws if invalid satoshis', () => {
-      // TODO
+    it('throws if invalid satoshis', async () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      const address = new bsv.PrivateKey().toAddress().toString()
+      const script = bsv.Script.fromAddress(address).toHex()
+      await expect(wrapper.send(script, undefined)).to.be.rejectedWith('Invalid satoshis')
+      await expect(wrapper.send(script, null)).to.be.rejectedWith('Invalid satoshis')
+      await expect(wrapper.send(script, -100)).to.be.rejectedWith('Invalid satoshis')
+      await expect(wrapper.send(script, 1.5)).to.be.rejectedWith('Invalid satoshis')
+      await expect(wrapper.send(script, {})).to.be.rejectedWith('Invalid satoshis')
     })
   })
 
