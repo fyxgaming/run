@@ -141,8 +141,15 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates parents', () => {
-      // TODO
+    it('validates parents', () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      const rawtx = new bsv.Transaction().toString()
+      expect(wrapper.pay(rawtx, null)).to.be.rejectedWith('Invalid parents')
+      expect(wrapper.pay(rawtx, {})).to.be.rejectedWith('Invalid parents')
+      expect(wrapper.pay(rawtx, 123)).to.be.rejectedWith('Invalid parents')
+      expect(wrapper.pay(rawtx, [{ satoshis: 123 }])).to.be.rejectedWith('Invalid parents')
+      expect(wrapper.pay(rawtx, [{ script: '' }])).to.be.rejectedWith('Invalid parents')
     })
 
     // ------------------------------------------------------------------------
