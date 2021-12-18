@@ -258,8 +258,16 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs call', () => {
-      // TODO
+    it('logs call', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+      Log._logger = logger
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      purse.pay.callsFake(rawtx => rawtx)
+      const address = new bsv.PrivateKey().toAddress().toString()
+      const script = bsv.Script.fromAddress(address).toHex()
+      await wrapper.send(script, 100)
+      expect(logger.info.args.some(args => args.join(' ').includes(`[Purse] Send ${script} 100`))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
