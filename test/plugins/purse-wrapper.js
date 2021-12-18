@@ -82,6 +82,9 @@ describe('PurseWrapper', () => {
       await wrapper.broadcast(rawtx)
       await wrapper.cancel(rawtx)
       await wrapper.send(address, 100)
+      purse.broadcast.throws(new Error('abc'))
+      purse.cancel.throws(new Error())
+      await expect(wrapper.send(address, 100)).to.be.rejectedWith('abc')
     })
   })
 
