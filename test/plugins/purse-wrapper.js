@@ -217,8 +217,14 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs performance in debug', () => {
-      // TODO
+    it('logs performance in debug', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+      Log._logger = logger
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      const rawtx = new bsv.Transaction().toString()
+      await wrapper.cancel(rawtx)
+      expect(logger.debug.args.some(args => args.join(' ').includes('[Purse] Cancel (end)'))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
