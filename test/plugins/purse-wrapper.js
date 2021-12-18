@@ -11,6 +11,8 @@ const { stub } = require('sinon')
 const bsv = require('bsv')
 const Run = require('../env/run')
 const { PurseWrapper } = Run.plugins
+const unmangle = require('../env/unmangle')
+const Log = unmangle(unmangle(Run)._Log)
 
 // ------------------------------------------------------------------------------------------------
 // PurseWrapper
@@ -85,8 +87,17 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs call', () => {
-      // TODO
+    it('logs call', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+      Log._logger = logger
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      const rawtx = new bsv.Transaction().toString()
+      const paidtx = new bsv.Transaction().toString()
+      purse.pay.returns(paidtx)
+      const parents = []
+      await wrapper.pay(rawtx, parents)
+      expect(logger.info.args.some(args => args.join(' ').includes('[Purse] Pay'))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
