@@ -161,8 +161,14 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('logs call', () => {
-      // TODO
+    it('logs call', async () => {
+      const logger = stub({ info: x => x, warn: x => x, error: x => x, debug: x => x })
+      Log._logger = logger
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      const rawtx = new bsv.Transaction().toString()
+      await wrapper.broadcast(rawtx)
+      expect(logger.info.args.some(args => args.join(' ').includes('[Purse] Broadcast'))).to.equal(true)
     })
 
     // ------------------------------------------------------------------------
