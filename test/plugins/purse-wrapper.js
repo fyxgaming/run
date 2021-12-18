@@ -185,8 +185,13 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates transaction', () => {
-      // TODO
+    it('validates transaction', async () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      await expect(wrapper.broadcast(undefined)).to.be.rejectedWith('Invalid tx to broadcast')
+      await expect(wrapper.broadcast(null)).to.be.rejectedWith('Invalid tx to broadcast')
+      await expect(wrapper.broadcast('0000')).to.be.rejectedWith('Invalid tx to broadcast')
+      await expect(wrapper.broadcast(123)).to.be.rejectedWith('Invalid tx to broadcast')
     })
   })
 
