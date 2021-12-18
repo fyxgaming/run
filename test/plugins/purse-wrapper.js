@@ -229,8 +229,13 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('validates transaction', () => {
-      // TODO
+    it('validates transaction', async () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      await expect(wrapper.cancel(undefined)).to.be.rejectedWith('Invalid tx to cancel')
+      await expect(wrapper.cancel(null)).to.be.rejectedWith('Invalid tx to cancel')
+      await expect(wrapper.cancel('0000')).to.be.rejectedWith('Invalid tx to cancel')
+      await expect(wrapper.cancel(123)).to.be.rejectedWith('Invalid tx to cancel')
     })
   })
 
