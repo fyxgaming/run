@@ -147,8 +147,14 @@ describe('PurseWrapper', () => {
 
     // ------------------------------------------------------------------------
 
-    it.skip('supports no parents', () => {
-      // TODO
+    it('supports no parents', async () => {
+      const purse = stub({ pay: () => {}, broadcast: () => {}, cancel: () => {} })
+      const wrapper = new PurseWrapper(purse)
+      const rawtx = new bsv.Transaction().toString()
+      const paidtx = new bsv.Transaction().toString()
+      purse.pay.returns(paidtx)
+      await wrapper.pay(rawtx)
+      expect(purse.pay.args[0][0]).to.equal(rawtx)
     })
 
     // ------------------------------------------------------------------------
