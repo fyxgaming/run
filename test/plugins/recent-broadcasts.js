@@ -41,6 +41,7 @@ describe('RecentBroadcasts', () => {
       await RecentBroadcasts._addToCache(cache, tx, tx.hash)
       const recentBroadcasts = cache.get(CONFIG_KEY_RECENT_BROADCASTS)
       expect(recentBroadcasts.length).to.equal(1)
+      expect(recentBroadcasts[0].txid).to.equal(tx.hash)
       expect(recentBroadcasts[0].rawtx).to.equal(tx.toString())
       expect(recentBroadcasts[0].time >= date).to.equal(true)
       expect(recentBroadcasts[0].inputs).to.deep.equal([{ txid: prevTxId, vout: 123 }])
