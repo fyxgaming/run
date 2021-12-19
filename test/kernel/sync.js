@@ -113,7 +113,7 @@ describe('Sync', () => {
       class A extends Jig { }
       const a = new A()
       await a.sync()
-      run.blockchain.spends = () => '123'
+      run.blockchain.spends = () => '0000000000000000000000000000000000000000000000000000000000000000'
       try {
         await expect(a.sync()).to.be.rejectedWith('No such mempool or blockchain transaction')
       } finally {
