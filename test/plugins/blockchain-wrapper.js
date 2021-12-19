@@ -377,7 +377,8 @@ describe('BlockchainWrapper', () => {
       await wrapper.broadcast(rawtx)
       await wrapper.broadcast(rawtx)
       Log._logger = null
-      await wrapper.broadcast(rawtx)
+      const resp = await wrapper.broadcast(rawtx)
+      expect(resp).to.equal(txid)
       expect(blockchain.broadcast.callCount).to.equal(1)
     })
   })
