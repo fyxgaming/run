@@ -1044,11 +1044,11 @@ Line 3`
       new Run() // eslint-disable-line
       class B extends Berry {
         static async pluck (path, fetch) {
-          await fetch('123')
+          await fetch('0000000000000000000000000000000000000000000000000000000000000000')
           return new B()
         }
       }
-      const error = 'No such mempool or blockchain transaction: 123'
+      const error = 'No such mempool or blockchain transaction: 0000000000000000000000000000000000000000000000000000000000000000'
       await expect(B.load('')).to.be.rejectedWith(error)
     })
 
@@ -1073,11 +1073,11 @@ Line 3`
       new Run() // eslint-disable-line
       class B extends Berry {
         static async pluck (path, fetch) {
-          try { await fetch('123') } catch (e) { }
+          try { await fetch('0000000000000000000000000000000000000000000000000000000000000000') } catch (e) { }
           return new B()
         }
       }
-      const error = 'No such mempool or blockchain transaction: 123'
+      const error = 'No such mempool or blockchain transaction: 0000000000000000000000000000000000000000000000000000000000000000'
       await expect(B.load('')).to.be.rejectedWith(error)
     })
   })
