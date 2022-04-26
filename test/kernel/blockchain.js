@@ -383,7 +383,7 @@ function errors (blockchain) {
     ERR_NO_OUTPUTS: 'tx has no outputs',
     ERR_FEE_TOO_LOW: 'insufficient priority',
     ERR_NOT_SIGNED: 'mandatory-script-verify-flag-failed',
-    ERR_DUP_INPUT: /transaction input [0-9]* duplicate input/,
+    ERR_DUP_INPUT: 'bad-txns-inputs-duplicate',
     ERR_MISSING_INPUTS: 'Missing inputs',
     ERR_MEMPOOL_CONFLICT: 'txn-mempool-conflict',
     ERR_BAD_SIGNATURE: 'mandatory-script-verify-flag-failed',
