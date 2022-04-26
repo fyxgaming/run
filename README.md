@@ -24,7 +24,7 @@ Various environment variables may be used to configure the tests:
 | `BROWSER`         | Browser used for testing                        | `chrome`, `firefox`, `safari`, `MicrosoftEdge` | `chrome`    |
 | `STRESS`          | Whether to run the stress tests                 | `true`, `false`                                | `false`     |
 | `PURSE_[network]` | Purse key used on a specific network            | your string privkey                            | `undefined` |
-| `API`             | Blockchain API when not using the mock network  | `run`, `mattercloud`, `whatsonchain`           | `undefined` |
+| `API`             | Blockchain API when not using the mock network  | `run`, `whatsonchain`                          | `undefined` |
 | `APIKEY_[api]`    | API key used with a specific blockchain API     | your string api key                            | `undefined` |
 | `LOGGER`          | Whether to log internal messages to the console | `true`, `false`                                | `false`     |
 

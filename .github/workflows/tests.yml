@@ -60,16 +60,6 @@ jobs:
         PURSE_MAIN: ${{ secrets.PURSE_MAINNET }}
       continue-on-error: true
       
-    - name: MatterCloud Mainnet Tests
-      run:
-        npm run test:cover test/kernel/blockchain.js
-      env: 
-        API: mattercloud
-        NETWORK: main
-        STRESS: true
-        CLEAN: false
-        PURSE_MAIN: ${{ secrets.PURSE_MAINNET2 }}
-      
     - name: WhatsOnChain Testnet Tests
       run:
         npm run test:cover test/kernel/blockchain.js

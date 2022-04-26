@@ -9,8 +9,8 @@ const { describe, it, before, after } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { MatterCloud } = Run.plugins
 const { PrivateKey, Script, Transaction } = bsv
+const { RunConnect } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain tests
@@ -295,7 +295,6 @@ describe('Blockchain', () => {
 
   describe('spends', () => {
     if (new Run().blockchain.api === 'whatsonchain') return // Not supported
-    if (new Run().blockchain.api === 'mattercloud') return // Not supported
 
     it('returns mempool spending txid', async () => {
       const run = new Run()
@@ -379,30 +378,16 @@ describe('Blockchain', () => {
 const randomTx = () => new Transaction().addSafeData(Math.random().toString())
 
 function errors (blockchain) {
-  if (blockchain instanceof MatterCloud) {
-    return {
-      ERR_NO_INPUTS: 'tx has no inputs',
-      ERR_NO_OUTPUTS: 'tx has no outputs',
-      ERR_FEE_TOO_LOW: 'Not enough fees',
-      ERR_NOT_SIGNED: 'mandatory-script-verify-flag-failed',
-      ERR_DUP_INPUT: /transaction input [0-9]* duplicate input/,
-      ERR_MISSING_INPUTS: '', // Usually 'Missing inputs', sometimes 502 gateway error
-      ERR_MEMPOOL_CONFLICT: 'txn-mempool-conflict',
-      ERR_BAD_SIGNATURE: 'mandatory-script-verify-flag-failed',
-      ERR_TX_NOT_FOUND: 'No such mempool or blockchain transaction'
-    }
-  } else {
-    return {
-      ERR_NO_INPUTS: 'tx has no inputs',
-      ERR_NO_OUTPUTS: 'tx has no outputs',
-      ERR_FEE_TOO_LOW: 'insufficient priority',
-      ERR_NOT_SIGNED: 'mandatory-script-verify-flag-failed',
-      ERR_DUP_INPUT: /transaction input [0-9]* duplicate input/,
-      ERR_MISSING_INPUTS: 'Missing inputs',
-      ERR_MEMPOOL_CONFLICT: 'txn-mempool-conflict',
-      ERR_BAD_SIGNATURE: 'mandatory-script-verify-flag-failed',
-      ERR_TX_NOT_FOUND: 'No such mempool or blockchain transaction'
-    }
+  return {
+    ERR_NO_INPUTS: 'tx has no inputs',
+    ERR_NO_OUTPUTS: 'tx has no outputs',
+    ERR_FEE_TOO_LOW: 'insufficient priority',
+    ERR_NOT_SIGNED: 'mandatory-script-verify-flag-failed',
+    ERR_DUP_INPUT: /transaction input [0-9]* duplicate input/,
+    ERR_MISSING_INPUTS: 'Missing inputs',
+    ERR_MEMPOOL_CONFLICT: 'txn-mempool-conflict',
+    ERR_BAD_SIGNATURE: 'mandatory-script-verify-flag-failed',
+    ERR_TX_NOT_FOUND: 'No such mempool or blockchain transaction'
   }
 }
 

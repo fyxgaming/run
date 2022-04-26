@@ -13,7 +13,7 @@ const Run = require('./env/run')
 const unmangle = require('./env/unmangle')
 const { Jig } = Run
 const {
-  RunConnect, MatterCloud, WhatsOnChain, Mockchain, LocalCache, LocalOwner, LocalPurse,
+  RunConnect, WhatsOnChain, Mockchain, LocalCache, LocalOwner, LocalPurse,
   LocalState, BrowserCache, NodeCache, Inventory, StateServer, Viewer, RunDB,
   BlockchainWrapper, StateWrapper, PurseWrapper
 } = Run.plugins
@@ -56,8 +56,8 @@ describe('Run', () => {
       it('defaults to string default', () => {
         const previousDefault = Run.defaults.api
         try {
-          Run.defaults.api = 'mattercloud'
-          expect(new Run({ network: 'main' }).api).to.equal('mattercloud')
+          Run.defaults.api = 'whatsonchain'
+          expect(new Run({ network: 'main' }).api).to.equal('whatsonchain')
         } finally {
           Run.defaults.api = previousDefault
         }
@@ -71,12 +71,6 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it('mattercloud', () => {
-        expect(new Run({ api: 'mattercloud', network: 'main' }).blockchain instanceof MatterCloud).to.equal(true)
-      })
-
-      // ----------------------------------------------------------------------
-
       it('whatsonchain', () => {
         expect(new Run({ api: 'whatsonchain', network: 'test' }).blockchain instanceof WhatsOnChain).to.equal(true)
       })
@@ -86,7 +80,6 @@ describe('Run', () => {
       it('throws if unsupported', () => {
         expect(() => new Run({ api: 'run', network: 'mock' })).to.throw('"mock" network is not compatible with the "run" api')
         expect(() => new Run({ api: 'run', network: 'stn' })).to.throw('RunConnect API does not support the "stn" network')
-        expect(() => new Run({ api: 'mattercloud', network: 'test' })).to.throw('MatterCloud API does not support the "test" network')
       })
 
       // ----------------------------------------------------------------------
@@ -112,7 +105,7 @@ describe('Run', () => {
       // ----------------------------------------------------------------------
 
       it('assigns api key for run', () => {
-        expect(new Run({ network: 'main', api: 'mattercloud', apiKey: 'abc' }).apiKey).to.equal('abc')
+        expect(new Run({ network: 'main', api: 'whatsonchain', apiKey: 'abc' }).apiKey).to.equal('abc')
       })
 
       // ----------------------------------------------------------------------
@@ -228,19 +221,6 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
-      it('mattercloud', () => {
-        const blockchain = new MatterCloud({ apiKey: 'abc' })
-        const run = new Run({ blockchain })
-        expect(run.blockchain).to.equal(blockchain)
-        expect(run.network).to.equal('main')
-        expect(run.api).to.equal(undefined)
-        expect(run.apiKey).to.equal(undefined)
-        expect(run.blockchain.api).to.equal('mattercloud')
-        expect(run.blockchain.apiKey).to.equal('abc')
-      })
-
-      // ----------------------------------------------------------------------
-
       it('whatsonchain', () => {
         const blockchain = new WhatsOnChain({ network: 'test', apiKey: '123' })
         const run = new Run({ blockchain })
@@ -275,7 +255,7 @@ describe('Run', () => {
       it('defaults to default', () => {
         const defaultBlockchain = Run.defaults.blockchain
         const defaultNetwork = Run.defaults.network
-        Run.defaults.blockchain = new MatterCloud()
+        Run.defaults.blockchain = new WhatsOnChain()
         Run.defaults.network = undefined
         expect(new Run().blockchain).to.equal(Run.defaults.blockchain)
         Run.defaults.blockchain = defaultBlockchain
@@ -309,7 +289,7 @@ describe('Run', () => {
       // ----------------------------------------------------------------------
 
       it('does not reuse blockchain if different apis', () => {
-        const run = new Run({ api: 'mattercloud', apiKey: 'abc', network: 'main' })
+        const run = new Run({ ap: 'run'})
         const run2 = new Run({ api: 'whatsonchain', apiKey: 'abc', network: 'main' })
         expect(run.blockchain).not.to.equal(run2.blockchain)
       })
@@ -317,8 +297,8 @@ describe('Run', () => {
       // ----------------------------------------------------------------------
 
       it('does not reuse blockchain if different api keys', () => {
-        const run = new Run({ api: 'mattercloud', apiKey: 'abc', network: 'main' })
-        const run2 = new Run({ api: 'mattercloud', apiKey: 'def', network: 'main' })
+        const run = new Run({ api: 'whatsonchain', apiKey: 'abc', network: 'main' })
+        const run2 = new Run({ api: 'whatsonchain', apiKey: 'def', network: 'main' })
         expect(run.blockchain).not.to.equal(run2.blockchain)
       })
 
@@ -1100,7 +1080,7 @@ describe('Run', () => {
       it('defaults to default', () => {
         const stateBefore = Run.defaults.state
         Run.defaults.state = { pull: () => { } }
-        const run = new Run({ network: 'main', api: 'mattercloud' })
+        const run = new Run({ network: 'main', api: 'whatsonchain' })
         expect(run.state).to.equal(Run.defaults.state)
         Run.defaults.state = stateBefore
       })
@@ -1117,7 +1097,7 @@ describe('Run', () => {
 
       it('specify StateServer with other api', () => {
         const state = new StateServer()
-        const run = new Run({ api: 'mattercloud', network: 'main', state })
+        const run = new Run({ api: 'whatsonchain', network: 'main', state })
         expect(run.state).to.equal(state)
       })
 
@@ -1152,7 +1132,7 @@ describe('Run', () => {
       it('does not reuse state if different api', () => {
         const state = { pull: () => { } }
         new Run({ state, network: 'main' }) // eslint-disable-line
-        const run2 = new Run({ api: 'mattercloud', network: 'main' })
+        const run2 = new Run({ api: 'whatsonchain', network: 'main' })
         expect(run2.state).not.to.equal(state)
       })
 
@@ -1361,23 +1341,12 @@ describe('Run', () => {
 
     describe('api', () => {
       it('run', () => {
-        const run = new Run({ api: 'mattercloud', network: 'main' })
+        const run = new Run({ api: 'whatsonchain', network: 'main' })
         run.api = 'run'
         expect(run.api).to.equal('run')
         expect(run.blockchain instanceof RunConnect).to.equal(true)
         expect(run.state instanceof StateServer).to.equal(true)
         expect(run.cache instanceof StateServer).to.equal(false)
-        expect(run.network).to.equal('main')
-      })
-
-      // ----------------------------------------------------------------------
-
-      it('mattercloud', () => {
-        const run = new Run({ api: 'run', network: 'main' })
-        run.api = 'mattercloud'
-        expect(run.api).to.equal('mattercloud')
-        expect(run.blockchain instanceof MatterCloud).to.equal(true)
-        expect(run.state instanceof StateServer).to.equal(true)
         expect(run.network).to.equal('main')
       })
 
@@ -1389,16 +1358,6 @@ describe('Run', () => {
         expect(run.api).to.equal('whatsonchain')
         expect(run.blockchain instanceof WhatsOnChain).to.equal(true)
         expect(run.state instanceof StateServer).to.equal(true)
-        expect(run.network).to.equal('test')
-      })
-
-      // ----------------------------------------------------------------------
-
-      it('throws if unsupported', () => {
-        const run = new Run({ api: 'run', network: 'test' })
-        expect(() => { run.api = 'mattercloud' }).to.throw('MatterCloud API does not support the "test" network')
-        expect(run.api).to.equal('run')
-        expect(run.blockchain instanceof RunConnect).to.equal(true)
         expect(run.network).to.equal('test')
       })
 
@@ -1434,11 +1393,11 @@ describe('Run', () => {
 
     describe('apiKey', () => {
       it('change', () => {
-        const run = new Run({ api: 'mattercloud', network: 'main' })
+        const run = new Run({ api: 'whatsonchain', network: 'main' })
         run.apiKey = '123'
         expect(run.apiKey).to.equal(run.blockchain.apiKey)
         expect(run.apiKey).to.equal('123')
-        expect(run.api).to.equal('mattercloud')
+        expect(run.api).to.equal('whatsonchain')
       })
     })
 
@@ -2403,8 +2362,8 @@ describe('Run', () => {
   describe('configure', () => {
     it('api', () => {
       const defaults = Run.defaults
-      Run.configure({ API: 'mattercloud' })
-      expect(Run.defaults.api).to.equal('mattercloud')
+      Run.configure({ API: 'whatsonchain' })
+      expect(Run.defaults.api).to.equal('whatsonchain')
       Run.defaults = defaults
     })
 
