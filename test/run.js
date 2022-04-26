@@ -289,7 +289,7 @@ describe('Run', () => {
       // ----------------------------------------------------------------------
 
       it('does not reuse blockchain if different apis', () => {
-        const run = new Run({ ap: 'run'})
+        const run = new Run({ ap: 'run' })
         const run2 = new Run({ api: 'whatsonchain', apiKey: 'abc', network: 'main' })
         expect(run.blockchain).not.to.equal(run2.blockchain)
       })

@@ -41,6 +41,15 @@ describe('satoshis', () => {
 
   // ------------------------------------------------------------------------
 
+  it('update backing limit', () => {
+    const oldBackingLimit = Run.defaults.backingLimit
+    Run.defaults.backingLimit = 200000000
+    testSatoshisPass(100000001)
+    Run.defaults.backingLimit = oldBackingLimit
+  })
+
+  // ------------------------------------------------------------------------
+
   function testFailToSet (amount, error) {
     new Run() // eslint-disable-line
     class A extends Jig { f (s) { this.satoshis = s } }
