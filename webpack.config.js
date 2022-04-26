@@ -51,7 +51,7 @@ const reservedNames = [
   'asm', 'B', 'Base58', 'expect', 'Group', 'Hex', 'sha256', 'Token', 'Tx', 'txo',
   // Plugins
   'BrowserCache', 'DiskCache', 'IndexedDBCache', 'Inventory', 'LocalCache', 'LocalOwner', 'LocalPurse',
-  'LocalState', 'MatterCloud', 'Mockchain', 'NodeCache', 'PayServer', 'RunConnect', 'RunDB',
+  'LocalState', 'Mockchain', 'NodeCache', 'PayServer', 'RunConnect', 'RunDB',
   'StateServer', 'Viewer', 'WhatsOnChain',
   // Wrappers
   'BlockchainWrapper', 'CacheWrapper', 'OwnerWrapper', 'PurseWrapper', 'StateWrapper',
