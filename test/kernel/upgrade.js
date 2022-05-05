@@ -1425,9 +1425,9 @@ describe('Upgrade', () => {
       function O () { }
       const CO = run.deploy(O)
       class A { static get x () { } }
-      class B { static set x (value) { } }
+      class B { static set x (value) { } } // eslint-disable-line
       class C { get x () { } }
-      class D { set x (value) { } }
+      class D { set x (value) { } } // eslint-disable-line
       const error = 'Getters and setters not supported'
       expect(() => CO.upgrade(A)).to.throw(error)
       expect(() => CO.upgrade(B)).to.throw(error)
