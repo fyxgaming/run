@@ -57,7 +57,7 @@ describe('Json', () => {
       encodePass(1, 1)
       encodePass(-1, -1)
       encodePass(1.5, 1.5)
-      encodePass(-0.1234567890987654321, -0.1234567890987654321)
+      encodePass(-0.1234567890987654321, -0.1234567890987654321) // eslint-disable-line
       encodePass(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER)
       encodePass(Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER)
       encodePass(Number.MAX_VALUE, Number.MAX_VALUE)

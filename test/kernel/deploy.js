@@ -2313,9 +2313,9 @@ describe('Deploy', () => {
     it('throws if accessors', () => {
       const run = new Run()
       class A { static get x () { } }
-      class B { static set x (value) { } }
+      class B { static set x (value) { } } // eslint-disable-line
       class C { get x () { } }
-      class D { set x (value) { } }
+      class D { set x (value) { } } // eslint-disable-line
       const error = 'Getters and setters not supported'
       expect(() => run.deploy(A)).to.throw(error)
       expect(() => run.deploy(B)).to.throw(error)

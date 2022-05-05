@@ -10,7 +10,6 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { PrivateKey, Script, Transaction } = bsv
-const { RunConnect } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Blockchain tests

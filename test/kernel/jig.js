@@ -466,7 +466,7 @@ describe('Jig', () => {
       try {
         new Run() // eslint-disable-line
         let n = 1 // eslint-disable-line
-        class A extends Jig { init () { n = 2 } }
+        class A extends Jig { init () { n = 2 } } // eslint-disable-line
         expect(() => new A()).to.throw()
         global.x = 1 // eslint-disable-line
         class B extends Jig { init () { x = 2 } } // eslint-disable-line
