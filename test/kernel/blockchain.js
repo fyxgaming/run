@@ -395,7 +395,7 @@ describe('Blockchain', () => {
 const randomTx = () => new Transaction().addSafeData(Math.random().toString())
 
 function errors (blockchain) {
-  return {
+  const errors = {
     ERR_NO_INPUTS: 'tx has no inputs',
     ERR_NO_OUTPUTS: 'tx has no outputs',
     ERR_FEE_TOO_LOW: 'insufficient priority',
@@ -407,6 +407,12 @@ function errors (blockchain) {
     ERR_BAD_SIGNATURE: 'mandatory-script-verify-flag-failed',
     ERR_TX_NOT_FOUND: 'No such mempool or blockchain transaction'
   }
+
+  if (blockchain instanceof Run.plugins.RunConnect) {
+    errors.ERR_TXNS_IN_BELOW_OUT = errors.ERR_FEE_TOO_LOW
+  }
+
+  return errors
 }
 
 // Gets a txid that spent an input 0 and is confirmed, whose output 0 is unspent
