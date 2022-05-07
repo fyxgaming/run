@@ -118,17 +118,35 @@ describe('Blockchain', () => {
 
     // ------------------------------------------------------------------------
 
-    it('throws if fee too low', async () => {
+    // WhatsOnChain does not have a lower fee limit that we can see
+    if (Run.defaults.api !== 'whatsonchain') {
+      it('throws if fee too low', async () => {
+        const run = new Run()
+        const utxos = await run.purse.utxos()
+        const rawtx = new Transaction()
+          .from(utxos)
+          .change(run.purse.address)
+          .fee(0)
+          .sign(run.purse.bsvPrivateKey)
+          .toString('hex')
+        const { ERR_FEE_TOO_LOW } = errors(run.blockchain)
+        await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_FEE_TOO_LOW)
+      })
+    }
+
+    // ------------------------------------------------------------------------
+
+    it('throws if not enough satoshis', async () => {
       const run = new Run()
       const utxos = await run.purse.utxos()
+      const satoshisIn = utxos.reduce((prev, curr) => prev + curr.satoshis, 0)
       const rawtx = new Transaction()
         .from(utxos)
-        .change(run.purse.address)
-        .fee(0)
+        .to(run.purse.address, satoshisIn + 1)
         .sign(run.purse.bsvPrivateKey)
         .toString('hex')
-      const { ERR_FEE_TOO_LOW } = errors(run.blockchain)
-      await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_FEE_TOO_LOW)
+      const { ERR_TXNS_IN_BELOW_OUT } = errors(run.blockchain)
+      await expect(run.blockchain.broadcast(rawtx)).to.be.rejectedWith(ERR_TXNS_IN_BELOW_OUT)
     })
 
     // ------------------------------------------------------------------------
@@ -381,6 +399,7 @@ function errors (blockchain) {
     ERR_NO_INPUTS: 'tx has no inputs',
     ERR_NO_OUTPUTS: 'tx has no outputs',
     ERR_FEE_TOO_LOW: 'insufficient priority',
+    ERR_TXNS_IN_BELOW_OUT: 'bad-txns-in-belowout',
     ERR_NOT_SIGNED: 'mandatory-script-verify-flag-failed',
     ERR_DUP_INPUT: 'bad-txns-inputs-duplicate',
     ERR_MISSING_INPUTS: 'Missing inputs',
