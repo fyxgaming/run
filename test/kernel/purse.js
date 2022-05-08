@@ -414,6 +414,20 @@ describe('Purse', () => {
 
     // ------------------------------------------------------------------------
 
+    it('called if broadcast fails', async () => {
+      const run = new Run()
+      run.purse.cancel = () => { }
+      spy(run.purse)
+      run.blockchain.broadcast = () => { throw new Error('abc') }
+      run.deploy(class A { })
+      await expect(run.sync()).to.be.rejected
+      expect(run.purse.cancel.callCount).to.equal(1)
+      const paidtx = await run.purse.pay.returnValues[0]
+      expect(run.purse.cancel.args[0][0]).to.equal(paidtx)
+    })
+
+    // ------------------------------------------------------------------------
+
     it('supports no cancel method', async () => {
       const run = new Run()
       run.purse.cancel = undefined
