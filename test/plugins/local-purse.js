@@ -394,6 +394,8 @@ describe('LocalPurse', () => {
       const run2 = new Run({ owner: run.purse.bsvPrivateKey, blockchain: run.blockchain })
       run.purse.splits = 10
       run2.purse.splits = 10
+      run.purse.cacheUtxos = false
+      run2.purse.cacheUtxos = false
       class A extends Jig { init () { this.satoshis = 888 } }
       const a = new A()
       await a.sync()
