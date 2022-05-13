@@ -50,6 +50,25 @@ describe('satoshis', () => {
 
   // ------------------------------------------------------------------------
 
+  it('loads higher backing limit', async () => {
+    const oldBackingLimit = Run.defaults.backingLimit
+    const run = new Run()
+    run.backingLimit = 200000000
+    class A extends Jig { f (s) { this.satoshis = s } }
+    const a = new A()
+    const amount = 100000001
+    a.f(amount)
+    await a.sync()
+    run.backingLimit = oldBackingLimit
+    const a2 = await run.load(a.location)
+    expect(a2.satoshis).to.equal(amount)
+    run.cache = new LocalCache()
+    const a3 = await run.load(a.location)
+    expect(a3.satoshis).to.equal(amount)
+  })
+
+  // ------------------------------------------------------------------------
+
   function testFailToSet (amount, error) {
     new Run() // eslint-disable-line
     class A extends Jig { f (s) { this.satoshis = s } }
