@@ -1363,6 +1363,13 @@ describe('Run', () => {
 
       // ----------------------------------------------------------------------
 
+      it('mattercloud throws clear error', () => {
+        const run = new Run({ api: 'run', network: 'test' })
+        expect(() => { run.api = 'mattercloud' }).to.throw('MatterCloud API is no longer supported')
+      })
+
+      // ----------------------------------------------------------------------
+
       it('throws if invalid', () => {
         const run = new Run({ api: 'run', network: 'test' })
         expect(() => { run.api = 'mock' }).to.throw('Invalid api: "mock"')
