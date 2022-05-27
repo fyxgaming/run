@@ -62,6 +62,7 @@ if (COVER) {
   Run.cover('expect')
   Run.cover('Group')
   Run.cover('Hex')
+  Run.cover('NFT')
   Run.cover('sha256')
   Run.cover('Token')
   Run.cover('Tx')
