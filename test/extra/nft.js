@@ -6,7 +6,7 @@
 
 const { describe, it, beforeEach, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
-const { assert } = require('chai')
+const { assert, expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { COVER } = require('../env/config')
@@ -70,6 +70,11 @@ describe('NFT', () => {
     it('throws when using constructor', async () => {
       class TestNFT2 extends NFT { }
       assert.throws(() => new TestNFT2(), 'Must create token using mint()')
+    })
+
+    it('with metadata', () => {
+      const token1 = nftCode.mint(undefined, { name: '123' })
+      expect(token1.metadata.name).to.equal('123')
     })
 
     if (!COVER) {
