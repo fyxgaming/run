@@ -55,6 +55,9 @@ Run.configure({
   APIKEY_WHATSONCHAIN: process.env.APIKEY_WHATSONCHAIN
 })
 
+// Don't store test caches to disk
+Run.defaults.cache = new Run.plugins.LocalCache()
+
 if (COVER) {
   Run.cover('asm')
   // Run.cover('B') - Breaks tests because of common usage of B

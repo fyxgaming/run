@@ -193,7 +193,7 @@ describe('Lock', () => {
     // ------------------------------------------------------------------------
 
     it('newly deployed lock goes into inventory', async () => {
-      const run = new Run()
+      const run = new Run({ cache: new Run.plugins.LocalCache() })
       class L {
         script () { return '' }
         domain () { return 0 }
