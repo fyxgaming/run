@@ -118,8 +118,8 @@ describe('Blockchain', () => {
 
     // ------------------------------------------------------------------------
 
-    // WhatsOnChain does not have a lower fee limit that we can see
-    if (Run.defaults.api !== 'whatsonchain') {
+    // The latest node does not have a lower fee limit that we can see
+    if (Run.defaults.api !== 'whatsonchain' && Run.defaults.api !== 'run') {
       it('throws if fee too low', async () => {
         const run = new Run()
         const utxos = await run.purse.utxos()
@@ -406,10 +406,6 @@ function errors (blockchain) {
     ERR_MEMPOOL_CONFLICT: 'txn-mempool-conflict',
     ERR_BAD_SIGNATURE: 'mandatory-script-verify-flag-failed',
     ERR_TX_NOT_FOUND: 'No such mempool or blockchain transaction'
-  }
-
-  if (blockchain instanceof Run.plugins.RunConnect) {
-    errors.ERR_TXNS_IN_BELOW_OUT = errors.ERR_FEE_TOO_LOW
   }
 
   return errors
