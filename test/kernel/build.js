@@ -105,7 +105,7 @@ describe('Build', () => {
       new Run() // eslint-disable-line
       const tx = new Run.Transaction()
       class A extends Jig { init (satoshis) { this.satoshis = satoshis } }
-      tx.update(() => new A(50))
+      tx.update(() => new A(10))
       const rawtx = await tx.export()
       const bsvtx = new bsv.Transaction(rawtx)
       const dust = _calculateDust(bsvtx.outputs[1].script.toBuffer().length, bsv.Transaction.FEE_PER_KB)
@@ -166,7 +166,7 @@ describe('Build', () => {
       base.to(new bsv.PrivateKey().toAddress(), 200)
       const tx = new Run.Transaction()
       tx.base = base.toString('hex')
-      tx.update(() => new A(200))
+      tx.update(() => new A(20))
       tx.update(() => new A(2000))
       const rawtx = await tx.export()
       const bsvtx = new bsv.Transaction(rawtx)
