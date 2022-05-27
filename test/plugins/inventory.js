@@ -11,6 +11,7 @@ const { expect } = require('chai')
 const { stub } = require('sinon')
 const { PrivateKey, Transaction } = require('bsv')
 const Run = require('../env/run')
+const { bsv } = require('../../lib/run')
 const { Jig } = Run
 const { LocalCache } = Run.plugins
 
@@ -471,12 +472,14 @@ describe('Inventory', () => {
 
     // ------------------------------------------------------------------------
 
-    it('disabled if nextOwner fails', async () => {
-      const run0 = new Run()
-      stub(run0.owner, 'nextOwner').throws()
-      const run = new Run({ owner: run0.owner })
-      await run.inventory.sync()
-      run.owner.nextOwner.restore()
+    it('throws if nextOwner fails', async () => {
+      const owner = {
+        async nextOwner () { throw new Error('bad owner') },
+        async sign (rawtx) { return rawtx }
+      }
+      const run = new Run({ owner })
+      await expect(run.inventory.sync()).to.be.rejectedWith('bad owner')
+      run.owner.nextOwner = () => new bsv.PrivateKey().toAddress().toString()
       class A extends Jig { }
       const a = new A()
       await a.sync()
@@ -486,13 +489,13 @@ describe('Inventory', () => {
 
     // ------------------------------------------------------------------------
 
-    it('supports deprecated owner api', async () => {
+    it('throws if nextOwner function doesnt exist', async () => {
       const owner = {
         async owner () { return new PrivateKey().toAddress().toString() },
         async sign () { }
       }
       const run = new Run({ owner })
-      await run.inventory.sync()
+      await expect(run.inventory.sync()).to.be.rejectedWith('Inventory cannot determine owner')
     })
 
     // ------------------------------------------------------------------------

@@ -201,6 +201,7 @@ describe('Lock', () => {
       run.owner = { sign: x => x, nextOwner: () => new L() }
       run.deploy(class A {})
       await run.sync()
+      await run.inventory.sync()
       expect(run.inventory.code.length).to.equal(2)
     })
 
