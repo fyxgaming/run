@@ -21,4 +21,9 @@ describe('recreateJigsFromStates', () => {
     expect(jigs[a.location] instanceof Jig).to.equal(true)
     expect(jigs[a.location] instanceof jigs[A.location]).to.equal(true)
   })
+
+  it('recreate extras', () => {
+    Run.util.recreateJigsFromStates(require('../../../lib/extra/states').mainnet)
+    Run.util.recreateJigsFromStates(require('../../../lib/extra/states').testnet)
+  })
 })
