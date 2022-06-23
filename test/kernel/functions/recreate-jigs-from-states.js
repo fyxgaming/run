@@ -22,6 +22,24 @@ describe('recreateJigsFromStates', () => {
     expect(jigs[a.location] instanceof jigs[A.location]).to.equal(true)
   })
 
+  it('extended class', async () => {
+    const run = new Run()
+    class A extends Jig { }
+    class B extends A { }
+    run.deploy(A)
+    run.deploy(B)
+    await run.sync()
+    const classAState = await run.cache.get(`jig://${A.location}`)
+    const classBState = await run.cache.get(`jig://${B.location}`)
+    const states = {
+      [`jig://${A.location}`]: classAState,
+      [`jig://${B.location}`]: classBState
+    }
+    const jigs = Run.util.recreateJigsFromStates(states)
+    expect(jigs[A.location] instanceof Code).to.equal(true)
+    expect(jigs[B.location] instanceof Code).to.equal(true)
+  })
+
   it('recreate extras', () => {
     Run.util.recreateJigsFromStates(require('../../../lib/extra/states-mainnet'))
     Run.util.recreateJigsFromStates(require('../../../lib/extra/states-testnet'))
