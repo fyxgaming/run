@@ -4,7 +4,7 @@ const Run = require('../../env/run')
 const { Jig, Code } = Run
 
 describe('recreateJigsFromStates', () => {
-  it('test', async () => {
+  it('basic class and instance', async () => {
     const run = new Run()
     class A extends Jig { }
     run.deploy(A)
