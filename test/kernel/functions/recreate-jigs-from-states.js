@@ -23,8 +23,8 @@ describe('recreateJigsFromStates', () => {
   })
 
   it('recreate extras', () => {
-    Run.util.recreateJigsFromStates(require('../../../lib/extra/states').mainnet)
-    Run.util.recreateJigsFromStates(require('../../../lib/extra/states').testnet)
+    Run.util.recreateJigsFromStates(require('../../../lib/extra/states-mainnet'))
+    Run.util.recreateJigsFromStates(require('../../../lib/extra/states-testnet'))
   })
 
   it('recreate instance', () => {
