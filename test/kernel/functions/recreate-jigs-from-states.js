@@ -52,7 +52,7 @@ describe('recreateJigsFromStates', () => {
     expect(jigs.d281ccb8887f1aaeb713432a2d4d8ecaeaa883e378d2fc8246c5089c182d77df_o1 instanceof Jig).to.equal(true)
   })
 
-  it.only('test', () => {
+  it('real world example', () => {
     /*eslint-disable */
     const state = {
       'jig://84769a5ac4cec62270093648c9978016640aeccb62c11b717313d41a4c74640c_o2': {
@@ -317,9 +317,7 @@ describe('recreateJigsFromStates', () => {
     }
     /* eslint-enable */
 
-    const jigs = Run.util.recreateJigsFromStates(state)
-
-    console.log(jigs)
+    Run.util.recreateJigsFromStates(state)
   })
 
   it('does not recreate if missing dependency', async () => {
