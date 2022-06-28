@@ -131,12 +131,12 @@ function testRecord (f) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// getExtrasBlockchain
+// getTestExtrasBlockchain
 // ------------------------------------------------------------------------------------------------
 
 // If on mock, pre-deploy the built-in classes to a common mockchain and make
 // that mockchain available for those tests that need it.
-async function getExtrasBlockchain () {
+async function getTestExtrasBlockchain () {
   if (Run.defaults.network !== 'mock') return undefined
 
   if (EXTRAS_MOCKCHAIN) return EXTRAS_MOCKCHAIN
@@ -148,10 +148,10 @@ async function getExtrasBlockchain () {
 }
 
 // ------------------------------------------------------------------------------------------------
-// createExtrasCache
+// createTestExtrasCache
 // ------------------------------------------------------------------------------------------------
 
-async function createExtrasCache () {
+async function createTestExtrasCache () {
   const cache = new Run.plugins.LocalCache()
 
   for (const [key, value] of Object.entries(Run.extra.test.states)) {
@@ -162,13 +162,13 @@ async function createExtrasCache () {
 }
 
 // ------------------------------------------------------------------------------------------------
-// createExtrasRun
+// createTestExtrasRun
 // ------------------------------------------------------------------------------------------------
 
-async function createExtrasRun () {
+async function createTestExtrasRun () {
   const run = new Run({
-    blockchain: await getExtrasBlockchain(),
-    cache: await createExtrasCache()
+    blockchain: await getTestExtrasBlockchain(),
+    cache: await createTestExtrasCache()
   })
 
   run.trust('state')
@@ -201,8 +201,8 @@ module.exports = {
   payFor,
   expectTx,
   testRecord,
-  getExtrasBlockchain,
-  createExtrasCache,
-  createExtrasRun,
+  getTestExtrasBlockchain,
+  createTestExtrasCache,
+  createTestExtrasRun,
   rmrfSync
 }

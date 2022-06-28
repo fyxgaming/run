@@ -8,7 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { createExtrasRun } = require('../env/misc')
+const { createTestExtrasRun } = require('../env/misc')
 const { Jig, Berry, Code } = Run
 const { LocalCache } = Run.plugins
 
@@ -514,7 +514,7 @@ describe('Interactive', () => {
 
   describe('Use cases', () => {
     it('mint non-interactive tokens', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class A extends Run.extra.test.Token { }
       A.interactive = false
       const CA = run.deploy(A)
@@ -525,7 +525,7 @@ describe('Interactive', () => {
     // ------------------------------------------------------------------------
 
     it('combine non-interactive tokens', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class A extends Run.extra.test.Token { }
       A.interactive = false
       const CA = run.deploy(A)
@@ -551,7 +551,7 @@ describe('Interactive', () => {
     // ------------------------------------------------------------------------
 
     it('throws if use different two tokens that are non-interactive', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class A extends Run.extra.test.Token { }
       A.interactive = false
       class B extends Run.extra.test.Token { }
@@ -570,7 +570,7 @@ describe('Interactive', () => {
     // ------------------------------------------------------------------------
 
     it('throws if send from non-interactive jig', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class A extends Run.extra.test.Token { }
       A.interactive = false
       class B extends Jig { static f (a, owner) { a.send(owner) } }

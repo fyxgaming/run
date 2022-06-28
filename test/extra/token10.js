@@ -10,7 +10,7 @@ const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { COVER, STRESS } = require('../env/config')
-const { createExtrasRun, createExtrasCache } = require('../env/misc')
+const { createTestExtrasRun, createTestExtrasCache } = require('../env/misc')
 const Token = Run.extra.test.Token10
 
 // ------------------------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ describe('Token10', () => {
 
   describe('mint', () => {
     it('new tokens', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const token = TestToken.mint(100)
@@ -43,7 +43,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('updates supply', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       const TestToken = run.deploy(class TestToken extends Token { })
       TestToken.mint(100)
       TestToken.mint(200)
@@ -54,14 +54,14 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('throws if class is not extended', async () => {
-      await createExtrasRun()
+      await createTestExtrasRun()
       expect(() => Token.mint(100)).to.throw('Token must be extended')
     })
 
     // ------------------------------------------------------------------------
 
     it('large amounts', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       expect(TestToken.mint(2147483647).amount).to.equal(2147483647)
@@ -71,7 +71,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('throws for bad amounts', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       expect(() => TestToken.mint()).to.throw('amount is not a number')
@@ -87,12 +87,12 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('throws if try to fake class', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       await run.sync()
 
-      const run2 = await createExtrasRun()
+      const run2 = await createTestExtrasRun()
       class HackToken extends TestToken { }
       run2.deploy(HackToken)
       await expect(run2.sync()).to.be.rejectedWith('Missing signature for TestToken')
@@ -101,7 +101,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('sender is null', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const token = TestToken.mint(1)
@@ -110,7 +110,7 @@ describe('Token10', () => {
       if (COVER) return
       const token2 = await run.load(token.location)
       expect(token2.sender).to.equal(null)
-      run.cache = await createExtrasCache()
+      run.cache = await createTestExtrasCache()
       const token3 = await run.load(token.location)
       expect(token3.sender).to.equal(null)
     })
@@ -122,7 +122,7 @@ describe('Token10', () => {
 
   describe('send', () => {
     it('full amount', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const address = new PrivateKey().toAddress().toString()
@@ -139,7 +139,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('partial amount', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const address = new PrivateKey().toAddress().toString()
@@ -157,7 +157,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('throws if send too much', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const address = new PrivateKey().toAddress().toString()
@@ -168,7 +168,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('throws if send bad amount', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const address = new PrivateKey().toAddress().toString()
@@ -186,7 +186,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('throws if send to bad owner', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const token = TestToken.mint(100)
@@ -198,7 +198,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('sender on sent token is sending owner', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const sender = TestToken.mint(2)
@@ -209,7 +209,7 @@ describe('Token10', () => {
       if (COVER) return
       const sent2 = await run.load(sent.location)
       expect(sent2.sender).to.equal(sender.owner)
-      run.cache = await createExtrasCache()
+      run.cache = await createTestExtrasCache()
       const sent3 = await run.load(sent.location)
       expect(sent3.sender).to.equal(sender.owner)
     })
@@ -217,7 +217,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('sender on sending token is null', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const orig = TestToken.mint(2)
@@ -230,7 +230,7 @@ describe('Token10', () => {
       if (COVER) return
       const sender2 = await run.load(sender.location)
       expect(sender2.sender).to.equal(null)
-      run.cache = await createExtrasCache()
+      run.cache = await createTestExtrasCache()
       const sender3 = await run.load(sender.location)
       expect(sender3.sender).to.equal(null)
     })
@@ -238,7 +238,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('custom lock', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       const CustomLock = await run.deploy(class CustomLock {
         script () { return '' }
         domain () { return 0 }
@@ -252,7 +252,7 @@ describe('Token10', () => {
       expect(b.owner instanceof CustomLock).to.equal(true)
       await b.sync()
       if (COVER) return
-      run.cache = await createExtrasCache()
+      run.cache = await createTestExtrasCache()
       const b2 = await run.load(b.location)
       expect(b2.owner instanceof CustomLock).to.equal(true)
     })
@@ -264,7 +264,7 @@ describe('Token10', () => {
 
   describe('combine', () => {
     it('two tokens', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(30)
@@ -283,7 +283,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('many tokens', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const tokens = []
@@ -303,7 +303,7 @@ describe('Token10', () => {
 
     // load() does not work in cover mode for preinstalls
     it('load after combine', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(30)
@@ -311,7 +311,7 @@ describe('Token10', () => {
       const c = new TestToken(a, b)
       await run.sync()
       if (COVER) return
-      run.cache = await createExtrasCache()
+      run.cache = await createTestExtrasCache()
       const c2 = await run.load(c.location)
       expect(c2.amount).to.equal(c.amount)
     })
@@ -319,7 +319,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('throws if combine different owners without signatures', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(1)
@@ -333,7 +333,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('throws if empty', async () => {
-      await createExtrasRun()
+      await createTestExtrasRun()
       class TestToken extends Token { }
       expect(() => new TestToken()).to.throw('Invalid tokens to combine')
     })
@@ -341,7 +341,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('throws if one', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const token = TestToken.mint(1)
@@ -351,7 +351,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('throws if combined amount is too large', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(Number.MAX_SAFE_INTEGER)
@@ -362,7 +362,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('throws if combine non-tokens', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const error = 'Cannot combine different token classes'
@@ -374,7 +374,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('throws if combine different token classes', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const error = 'Cannot combine different token classes'
@@ -389,7 +389,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('throws if combine duplicate tokens', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const token = TestToken.mint(1)
@@ -399,7 +399,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('sender on combined token is null', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(2)
@@ -412,7 +412,7 @@ describe('Token10', () => {
       if (COVER) return
       const combined2 = await run.load(combined.location)
       expect(combined2.sender).to.equal(null)
-      run.cache = await createExtrasCache()
+      run.cache = await createTestExtrasCache()
       const combined3 = await run.load(combined.location)
       expect(combined3.sender).to.equal(null)
     })
@@ -424,7 +424,7 @@ describe('Token10', () => {
 
   describe('destroy', () => {
     it('amount is 0', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const token = TestToken.mint(2)
@@ -433,7 +433,7 @@ describe('Token10', () => {
       expect(token.amount).to.equal(0)
       await run.sync()
       if (COVER) return
-      run.cache = await createExtrasCache()
+      run.cache = await createTestExtrasCache()
       const token2 = await run.load(token.location)
       expect(token2.amount).to.equal(0)
       const token3 = await run.load(token.location)
@@ -443,7 +443,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('sender is null', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const orig = TestToken.mint(2)
@@ -454,7 +454,7 @@ describe('Token10', () => {
       expect(token.sender).to.equal(null)
       await run.sync()
       if (COVER) return
-      run.cache = await createExtrasCache()
+      run.cache = await createTestExtrasCache()
       const token2 = await run.load(token.location)
       expect(token2.sender).to.equal(null)
       const token3 = await run.load(token.location)
@@ -464,7 +464,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('cannot be combined', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(2)
@@ -477,7 +477,7 @@ describe('Token10', () => {
     // ------------------------------------------------------------------------
 
     it('cannot be sent', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(2)
@@ -527,7 +527,7 @@ describe('Token10', () => {
 
           // Loading from scratch
           b.activate()
-          b.cache = await createExtrasCache()
+          b.cache = await createTestExtrasCache()
           await b.inventory.sync()
         })
       }

@@ -9,7 +9,7 @@ const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
-const { createExtrasRun } = require('../env/misc')
+const { createTestExtrasRun } = require('../env/misc')
 const { Jig, Berry } = Run
 const { asm } = Run.extra
 const { _calculateDust } = unmangle(unmangle(Run)._bsv)
@@ -66,7 +66,7 @@ describe('Build', () => {
     // ------------------------------------------------------------------------
 
     it('custom scripts for custom locks', async () => {
-      const run = await createExtrasRun()
+      const run = await createTestExtrasRun()
       class A extends Jig { static send (owner) { this.owner = owner } }
       class L {
         script () { return asm('OP_1 abcd') }

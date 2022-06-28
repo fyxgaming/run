@@ -11,7 +11,7 @@ const bsv = require('bsv')
 const { PrivateKey, Script } = bsv
 const Run = require('../env/run')
 const { COVER } = require('../env/config')
-const { createExtrasRun, createExtrasCache } = require('../env/misc')
+const { createTestExtrasRun, createTestExtrasCache } = require('../env/misc')
 const { Jig } = Run
 const { Group } = Run.extra.test
 
@@ -120,7 +120,7 @@ describe('Group', () => {
   // --------------------------------------------------------------------------
 
   it('assign as jig owner', async () => {
-    const run = await createExtrasRun()
+    const run = await createTestExtrasRun()
     class A extends Jig { init (owner) { this.owner = owner } }
     const group = new Group([run.owner.pubkey])
     const a = new A(group)
@@ -130,7 +130,7 @@ describe('Group', () => {
     if (!COVER) {
       const a2 = await run.load(a.location)
       test(a2)
-      run.cache = await createExtrasCache()
+      run.cache = await createTestExtrasCache()
       const a3 = await run.load(a.location)
       test(a3)
     }

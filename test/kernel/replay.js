@@ -10,7 +10,7 @@ require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
-const { payFor, createExtrasRun } = require('../env/misc')
+const { payFor, createTestExtrasRun } = require('../env/misc')
 const { Jig } = Run
 const { Mockchain, LocalCache } = Run.plugins
 
@@ -78,7 +78,7 @@ describe('Replay', () => {
 
   it('many actions', async () => {
     class A extends Run.extra.test.Token { }
-    const run = await createExtrasRun()
+    const run = await createTestExtrasRun()
     run.preverify = false
     run.deploy(A)
     const a = A.mint(1000000)
