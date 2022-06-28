@@ -168,10 +168,10 @@ async function createTestExtrasCache () {
 async function createTestExtrasRun () {
   const run = new Run({
     blockchain: await getTestExtrasBlockchain(),
-    cache: await createTestExtrasCache()
+    cache: await createTestExtrasCache(),
+    preverify: false,
+    trust: ['state']
   })
-
-  run.trust('state')
 
   return run
 }

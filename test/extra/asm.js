@@ -8,7 +8,7 @@ const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const bsv = require('bsv')
 const Run = require('../env/run')
-const { asm } = Run.extra
+const { asm } = Run.extra.test
 
 // ------------------------------------------------------------------------------------------------
 // Globals
