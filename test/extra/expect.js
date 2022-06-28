@@ -10,7 +10,7 @@ const Run = require('../env/run')
 const { Jig } = Run
 const { COVER } = require('../env/config')
 const unmangle = require('../env/unmangle')
-const { getExtrasBlockchain } = require('../env/misc')
+const { createExtrasRun } = require('../env/misc')
 const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
 const HI = unmangle(unmangle(Run)._Sandbox)._hostIntrinsics
 const TI = COVER ? HI : SI
@@ -28,7 +28,6 @@ describe('expect', () => {
   // --------------------------------------------------------------------------
 
   it('toBe', async () => {
-    new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
     expect(() => Run.extra.expect(1).toBe(1)).not.to.throw()
     expect(() => Run.extra.expect('hello').toBe('hello')).not.to.throw()
     expect(() => Run.extra.expect(null).toBe(null)).not.to.throw()
@@ -36,6 +35,7 @@ describe('expect', () => {
     expect(() => Run.extra.expect(1).not.toBe(2)).not.to.throw()
     expect(() => Run.extra.expect({}).not.toBe({})).not.to.throw()
     expect(() => Run.extra.expect(null).not.toBe(null)).to.throw('expected value not to be null but was null')
+    await createExtrasRun()
     class A extends Jig { }
     const a = new A() // an un-synced jig
     expect(() => Run.extra.expect(a).toBe(a)).not.to.throw()
