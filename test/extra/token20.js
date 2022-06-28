@@ -10,9 +10,8 @@ const { expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { COVER, STRESS } = require('../env/config')
-const { getExtrasBlockchain } = require('../env/misc')
+const { createExtrasRun, createExtrasCache } = require('../env/misc')
 const { Token } = Run.extra.test
-const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
 // Token20
@@ -32,14 +31,7 @@ describe('Token20', () => {
 
   describe('mint', () => {
     it('new tokens', async () => {
-      // const run = createExtrasRun()
-      // TODO
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
-      for (const [key, value] of Object.entries(Run.extra.test.states)) {
-        await run.cache.set(key, value)
-      }
-      // run.preverify = false
-      run.trust('state')
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const token = TestToken.mint(100)
@@ -51,7 +43,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('new tokens with custom owner', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const address = new PrivateKey().toAddress().toString()
@@ -64,7 +56,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('updates supply', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       const TestToken = run.deploy(class TestToken extends Token { })
       TestToken.mint(100)
       TestToken.mint(200)
@@ -76,7 +68,7 @@ describe('Token20', () => {
 
     if (!COVER) {
       it('throws if class is not extended', async () => {
-        new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
+        await createExtrasRun()
         expect(() => Token.mint(100)).to.throw('Token must be extended')
       })
     }
@@ -84,7 +76,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('large amounts', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       expect(TestToken.mint(2147483647).amount).to.equal(2147483647)
@@ -94,7 +86,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('throws for bad amounts', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       expect(() => TestToken.mint()).to.throw('amount is not a number')
@@ -110,12 +102,12 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('throws if try to fake class', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       await run.sync()
 
-      const run2 = new Run({ blockchain: await getExtrasBlockchain() })
+      const run2 = await createExtrasRun()
       class HackToken extends TestToken { }
       run2.deploy(HackToken)
       await expect(run2.sync()).to.be.rejectedWith('Missing signature for TestToken')
@@ -124,7 +116,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('sender is null', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const token = TestToken.mint(1)
@@ -133,7 +125,7 @@ describe('Token20', () => {
       if (COVER) return
       const token2 = await run.load(token.location)
       expect(token2.sender).to.equal(null)
-      run.cache = new LocalCache()
+      run.cache = await createExtrasCache()
       const token3 = await run.load(token.location)
       expect(token3.sender).to.equal(null)
     })
@@ -141,7 +133,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('throws if create using constructor', async () => {
-      new Run({ blockchain: await getExtrasBlockchain() }) // eslint-disable-line
+      await createExtrasRun()
       class TestToken extends Token { }
       expect(() => new TestToken(1)).to.throw('Must create token using mint()')
     })
@@ -153,7 +145,7 @@ describe('Token20', () => {
 
   describe('send', () => {
     it('full amount', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const address = new PrivateKey().toAddress().toString()
@@ -170,7 +162,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('partial amount', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const address = new PrivateKey().toAddress().toString()
@@ -188,7 +180,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('throws if send too much', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const address = new PrivateKey().toAddress().toString()
@@ -199,7 +191,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('throws if send bad amount', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const address = new PrivateKey().toAddress().toString()
@@ -217,7 +209,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('throws if send to bad owner', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const token = TestToken.mint(100)
@@ -229,7 +221,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('sender on sent token is sending owner', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const sender = TestToken.mint(2)
@@ -240,7 +232,7 @@ describe('Token20', () => {
       if (COVER) return
       const sent2 = await run.load(sent.location)
       expect(sent2.sender).to.equal(sender.owner)
-      run.cache = new LocalCache()
+      run.cache = await createExtrasCache()
       const sent3 = await run.load(sent.location)
       expect(sent3.sender).to.equal(sender.owner)
     })
@@ -248,7 +240,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('sender on sending token is null', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const orig = TestToken.mint(2)
@@ -261,7 +253,7 @@ describe('Token20', () => {
       if (COVER) return
       const sender2 = await run.load(sender.location)
       expect(sender2.sender).to.equal(null)
-      run.cache = new LocalCache()
+      run.cache = await createExtrasCache()
       const sender3 = await run.load(sender.location)
       expect(sender3.sender).to.equal(null)
     })
@@ -269,7 +261,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('custom lock', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       const CustomLock = await run.deploy(class CustomLock {
         script () { return '' }
         domain () { return 0 }
@@ -283,7 +275,7 @@ describe('Token20', () => {
       expect(b.owner instanceof CustomLock).to.equal(true)
       await b.sync()
       if (COVER) return
-      run.cache = new LocalCache()
+      run.cache = await createExtrasCache()
       const b2 = await run.load(b.location)
       expect(b2.owner instanceof CustomLock).to.equal(true)
     })
@@ -295,7 +287,7 @@ describe('Token20', () => {
 
   describe('combine', () => {
     it('two tokens', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(30)
@@ -312,7 +304,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('many tokens', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const tokens = []
@@ -333,7 +325,7 @@ describe('Token20', () => {
 
     // load() does not work in cover mode for preinstalls
     it('load after combine', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(30)
@@ -341,7 +333,7 @@ describe('Token20', () => {
       a.combine(b)
       await run.sync()
       if (COVER) return
-      run.cache = new LocalCache()
+      run.cache = await createExtrasCache()
       const a2 = await run.load(a.location)
       expect(a2.amount).to.equal(a.amount)
     })
@@ -349,7 +341,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('empty', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(1)
@@ -362,7 +354,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('throws if combine different owners without signatures', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(1)
@@ -376,7 +368,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('throws if combined amount is too large', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(Number.MAX_SAFE_INTEGER)
@@ -387,7 +379,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('throws if combine non-tokens', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const error = 'Cannot combine different token classes'
@@ -399,7 +391,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('throws if combine different token classes', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const error = 'Cannot combine different token classes'
@@ -414,7 +406,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('throws if combine duplicate tokens', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const token = TestToken.mint(1)
@@ -424,7 +416,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('sender on combined token is null', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(2)
@@ -437,7 +429,7 @@ describe('Token20', () => {
       if (COVER) return
       const combined2 = await run.load(combined.location)
       expect(combined2.sender).to.equal(null)
-      run.cache = new LocalCache()
+      run.cache = await createExtrasCache()
       const combined3 = await run.load(combined.location)
       expect(combined3.sender).to.equal(null)
     })
@@ -449,7 +441,7 @@ describe('Token20', () => {
 
   describe('destroy', () => {
     it('amount is 0', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const token = TestToken.mint(2)
@@ -458,7 +450,7 @@ describe('Token20', () => {
       expect(token.amount).to.equal(0)
       await run.sync()
       if (COVER) return
-      run.cache = new LocalCache()
+      run.cache = await createExtrasCache()
       const token2 = await run.load(token.location)
       expect(token2.amount).to.equal(0)
       const token3 = await run.load(token.location)
@@ -468,7 +460,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('sender is null', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const token = TestToken.mint(2)
@@ -480,7 +472,7 @@ describe('Token20', () => {
       expect(token.sender).to.equal(null)
       await run.sync()
       if (COVER) return
-      run.cache = new LocalCache()
+      run.cache = await createExtrasCache()
       const token2 = await run.load(token.location)
       expect(token2.sender).to.equal(null)
       const token3 = await run.load(token.location)
@@ -490,7 +482,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('cannot be combined', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(2)
@@ -503,7 +495,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('cannot be sent', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(2)
@@ -518,7 +510,7 @@ describe('Token20', () => {
 
   describe('Batch', () => {
     it('combine and send', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(2)
@@ -541,7 +533,7 @@ describe('Token20', () => {
       const b2 = await run.load(b.location)
       const c2 = await run.load(c.location)
       test(a2, b2, c2)
-      run.cache = new LocalCache()
+      run.cache = await createExtrasCache()
       const a3 = await run.load(a.location)
       const b3 = await run.load(b.location)
       const c3 = await run.load(c.location)
@@ -551,7 +543,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('send multiple', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const a = TestToken.mint(6)
@@ -573,7 +565,7 @@ describe('Token20', () => {
       const b2 = await run.load(b.location)
       const c2 = await run.load(c.location)
       test(a2, b2, c2)
-      run.cache = new LocalCache()
+      run.cache = await createExtrasCache()
       const a3 = await run.load(a.location)
       const b3 = await run.load(b.location)
       const c3 = await run.load(c.location)
@@ -583,7 +575,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('mint multiple', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       const TestTokenCode = run.deploy(TestToken)
       run.transaction(() => {
@@ -601,7 +593,7 @@ describe('Token20', () => {
       const TestToken2 = await run.load(TestTokenCode.location)
       await TestToken2.sync()
       test(TestToken2)
-      run.cache = new LocalCache()
+      run.cache = await createExtrasCache()
       const TestToken3 = await run.load(TestToken2.location)
       await TestToken3.sync()
       test(TestToken3)
@@ -610,7 +602,7 @@ describe('Token20', () => {
     // ------------------------------------------------------------------------
 
     it('throws if mint and send', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestToken extends Token { }
       run.deploy(TestToken)
       const address = new PrivateKey().toAddress().toString()
@@ -659,22 +651,12 @@ describe('Token20', () => {
 
           // Loading from scratch
           b.activate()
-          b.cache = new LocalCache()
+          b.cache = await createExtrasCache()
           await b.inventory.sync()
         })
       }
     })
   }
-
-  // ------------------------------------------------------------------------
-
-  it.skip('deploy', async () => {
-    // Hint: Run with env NETWORK=<network> to deploy with keys
-    const run = new Run()
-    run.deploy(Run.extra.Token20)
-    await run.sync()
-    console.log(Run.extra.Token20)
-  })
 })
 
 // ------------------------------------------------------------------------------------------------

@@ -148,6 +148,35 @@ async function getExtrasBlockchain () {
 }
 
 // ------------------------------------------------------------------------------------------------
+// createExtrasCache
+// ------------------------------------------------------------------------------------------------
+
+async function createExtrasCache () {
+  const cache = new Run.plugins.LocalCache()
+
+  for (const [key, value] of Object.entries(Run.extra.test.states)) {
+    await cache.set(key, value)
+  }
+
+  return cache
+}
+
+// ------------------------------------------------------------------------------------------------
+// createExtrasRun
+// ------------------------------------------------------------------------------------------------
+
+async function createExtrasRun () {
+  const run = new Run({
+    blockchain: await getExtrasBlockchain(),
+    cache: await createExtrasCache()
+  })
+
+  run.trust('state')
+
+  return run
+}
+
+// ------------------------------------------------------------------------------------------------
 // rmrfSync
 // ------------------------------------------------------------------------------------------------
 
@@ -167,4 +196,13 @@ function rmrfSync (dir) {
 
 // ------------------------------------------------------------------------------------------------
 
-module.exports = { populatePreviousOutputs, payFor, expectTx, testRecord, getExtrasBlockchain, rmrfSync }
+module.exports = {
+  populatePreviousOutputs,
+  payFor,
+  expectTx,
+  testRecord,
+  getExtrasBlockchain,
+  createExtrasCache,
+  createExtrasRun,
+  rmrfSync
+}
