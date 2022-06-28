@@ -144,21 +144,6 @@ async function getExtrasBlockchain () {
   const { CAPTURE_UNITS, CaptureMockchain } = require('../data/capture')
   EXTRAS_MOCKCHAIN = CAPTURE_UNITS ? new CaptureMockchain() : new Mockchain()
 
-  const run = new Run({ blockchain: EXTRAS_MOCKCHAIN })
-  run.transaction(() => {
-    run.deploy(Run.extra.asm)
-    run.deploy(Run.extra.B)
-    run.deploy(Run.extra.expect)
-    run.deploy(Run.extra.Group)
-    run.deploy(Run.extra.Hex)
-    run.deploy(Run.extra.Token10)
-    run.deploy(Run.extra.Token20)
-    run.deploy(Run.extra.Tx)
-    run.deploy(Run.extra.txo)
-  })
-  await run.sync()
-  run.deactivate()
-
   return EXTRAS_MOCKCHAIN
 }
 

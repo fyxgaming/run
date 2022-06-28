@@ -11,7 +11,7 @@ const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { COVER, STRESS } = require('../env/config')
 const { getExtrasBlockchain } = require('../env/misc')
-const { Token } = Run.extra
+const { Token } = Run.extra.test
 const { LocalCache } = Run.plugins
 
 // ------------------------------------------------------------------------------------------------
@@ -32,7 +32,14 @@ describe('Token20', () => {
 
   describe('mint', () => {
     it('new tokens', async () => {
+      // const run = createExtrasRun()
+      // TODO
       const run = new Run({ blockchain: await getExtrasBlockchain() })
+      for (const [key, value] of Object.entries(Run.extra.test.states)) {
+        await run.cache.set(key, value)
+      }
+      // run.preverify = false
+      run.trust('state')
       class TestToken extends Token { }
       run.deploy(TestToken)
       const token = TestToken.mint(100)
