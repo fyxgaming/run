@@ -10,10 +10,10 @@ const { expect } = require('chai')
 const bsv = require('bsv')
 const { Address, PrivateKey, PublicKey, Transaction } = bsv
 const { COVER } = require('../env/config')
-const { getExtrasBlockchain } = require('../env/misc')
+const { createExtrasRun } = require('../env/misc')
 const Run = require('../env/run')
 const { Jig } = Run
-const { Group } = Run.extra
+const { Group } = Run.extra.test
 const { CommonLock } = Run.util
 const { LocalOwner, Mockchain, OwnerWrapper } = Run.plugins
 const unmangle = require('../env/unmangle')
@@ -176,7 +176,7 @@ describe('LocalOwner', () => {
 
   describe('Group', () => {
     it('should sign 1-1 group lock', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class A extends Jig {
         init (owner) { this.owner = owner }
         set () { this.n = 1 }
@@ -189,9 +189,9 @@ describe('LocalOwner', () => {
     // ----------------------------------------------------------------------
 
     it('should sign 2-3 group lock using export and import', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
-      const run2 = new Run({ blockchain: await getExtrasBlockchain() })
-      const run3 = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
+      const run2 = await createExtrasRun()
+      const run3 = await createExtrasRun()
       class A extends Jig {
         init (owner) { this.owner = owner }
         set () { this.n = 1 }
@@ -218,9 +218,9 @@ describe('LocalOwner', () => {
     // ----------------------------------------------------------------------
 
     it('should sign 2-3 group lock by changing owners', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
-      const run2 = new Run({ blockchain: await getExtrasBlockchain() })
-      const run3 = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
+      const run2 = await createExtrasRun()
+      const run3 = await createExtrasRun()
       class A extends Jig {
         init (owner) { this.owner = owner }
         set () { this.n = 1 }
@@ -244,7 +244,7 @@ describe('LocalOwner', () => {
     // ----------------------------------------------------------------------
 
     it('should not sign group lock if already signed', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
 
       class A extends Jig {
         init (owner) { this.owner = owner }
@@ -275,8 +275,8 @@ describe('LocalOwner', () => {
     // ----------------------------------------------------------------------
 
     it('should not sign group lock if not our pubkey', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
-      const run2 = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
+      const run2 = await createExtrasRun()
 
       class A extends Jig {
         init (owner) { this.owner = owner }
@@ -309,7 +309,7 @@ describe('LocalOwner', () => {
     // ----------------------------------------------------------------------
 
     it('sign out of order', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
 
       const privkey1 = new bsv.PrivateKey()
       const privkey2 = new bsv.PrivateKey()
