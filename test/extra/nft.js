@@ -10,8 +10,8 @@ const { assert, expect } = require('chai')
 const { PrivateKey } = require('bsv')
 const Run = require('../env/run')
 const { COVER } = require('../env/config')
-const { getExtrasBlockchain } = require('../env/misc')
-const { NFT } = Run.extra
+const { createExtrasRun } = require('../env/misc')
+const { NFT } = Run.extra.test
 
 // ------------------------------------------------------------------------------------------------
 // NFT
@@ -32,7 +32,7 @@ describe('NFT', () => {
   describe('mint()', () => {
     let nftCode
     beforeEach(async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
+      const run = await createExtrasRun()
       class TestNFT extends NFT { }
       nftCode = await run.deploy(TestNFT)
     })
@@ -92,7 +92,7 @@ describe('NFT', () => {
     let nftCode, nft, run
     beforeEach(async () => {
       class TestNFT extends NFT { }
-      run = new Run({ blockchain: await getExtrasBlockchain() })
+      run = await createExtrasRun()
       nftCode = await run.deploy(TestNFT)
       nft = nftCode.mint()
       await nft.sync()
