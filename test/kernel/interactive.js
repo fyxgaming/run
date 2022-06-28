@@ -8,7 +8,7 @@ const { describe, it, afterEach } = require('mocha')
 require('chai').use(require('chai-as-promised'))
 const { expect } = require('chai')
 const Run = require('../env/run')
-const { getExtrasBlockchain } = require('../env/misc')
+const { createExtrasRun } = require('../env/misc')
 const { Jig, Berry, Code } = Run
 const { LocalCache } = Run.plugins
 
@@ -514,8 +514,8 @@ describe('Interactive', () => {
 
   describe('Use cases', () => {
     it('mint non-interactive tokens', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class A extends Run.extra.Token { }
+      const run = await createExtrasRun()
+      class A extends Run.extra.test.Token { }
       A.interactive = false
       const CA = run.deploy(A)
       const a = CA.mint(100)
@@ -525,8 +525,8 @@ describe('Interactive', () => {
     // ------------------------------------------------------------------------
 
     it('combine non-interactive tokens', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class A extends Run.extra.Token { }
+      const run = await createExtrasRun()
+      class A extends Run.extra.test.Token { }
       A.interactive = false
       const CA = run.deploy(A)
       const a = CA.mint(100)
@@ -551,10 +551,10 @@ describe('Interactive', () => {
     // ------------------------------------------------------------------------
 
     it('throws if use different two tokens that are non-interactive', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class A extends Run.extra.Token { }
+      const run = await createExtrasRun()
+      class A extends Run.extra.test.Token { }
       A.interactive = false
-      class B extends Run.extra.Token { }
+      class B extends Run.extra.test.Token { }
       B.interactive = false
       const CA = run.deploy(A)
       const CB = run.deploy(B)
@@ -570,8 +570,8 @@ describe('Interactive', () => {
     // ------------------------------------------------------------------------
 
     it('throws if send from non-interactive jig', async () => {
-      const run = new Run({ blockchain: await getExtrasBlockchain() })
-      class A extends Run.extra.Token { }
+      const run = await createExtrasRun()
+      class A extends Run.extra.test.Token { }
       A.interactive = false
       class B extends Jig { static f (a, owner) { a.send(owner) } }
       const CA = run.deploy(A)
