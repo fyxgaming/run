@@ -23,8 +23,6 @@ describe('NFT', () => {
   // Deactivate the current run instance. This stops leaks across tests.
   afterEach(() => Run.instance && Run.instance.deactivate())
 
-  if (COVER) Run.cover('TestNFT')
-
   // --------------------------------------------------------------------------
   // mint
   // --------------------------------------------------------------------------

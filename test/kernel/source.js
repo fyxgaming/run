@@ -124,14 +124,6 @@ describe('Source', () => {
       expect(() => _deanonymize('() => { }', '')).to.throw('Bad source code')
       expect(() => _deanonymize('class{}', '')).to.throw('Bad source code')
     })
-
-    // ------------------------------------------------------------------------
-
-    if (COVER) {
-      it('does not deanonymize if under coverage', () => {
-        expect(_deanonymize('class Token { }', 'Token')).to.equal('class Token { }')
-      })
-    }
   })
 
   // ----------------------------------------------------------------------------------------------

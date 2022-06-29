@@ -55,23 +55,6 @@ Run.configure({
   APIKEY_WHATSONCHAIN: process.env.APIKEY_WHATSONCHAIN
 })
 
-if (COVER) {
-  Run.cover('asm')
-  // Run.cover('B') - Breaks tests because of common usage of B
-  Run.cover('Base58')
-  Run.cover('expect')
-  Run.cover('Group')
-  Run.cover('Hex')
-  Run.cover('NFT')
-  Run.cover('sha256')
-  Run.cover('Token')
-  Run.cover('Tx')
-  Run.cover('txo')
-
-  // Replays do not work in cover mode so we disable preverification
-  Run.defaults.preverify = false
-}
-
 // ------------------------------------------------------------------------------------------------
 
 module.exports = Run
