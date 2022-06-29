@@ -168,7 +168,7 @@ async function createTestExtrasCache () {
 async function createTestExtrasRun () {
   const run = new Run({
     blockchain: await getTestExtrasBlockchain(),
-    cache: await createTestExtrasCache(),
+    cache: (Run.instance && Run.instance.cache) || await createTestExtrasCache(),
     preverify: false,
     trust: ['state']
   })
