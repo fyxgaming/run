@@ -9,7 +9,6 @@ const { expect } = require('chai')
 const Run = require('../env/run')
 const unmangle = require('../env/unmangle')
 const { _sandbox, _anonymize, _deanonymize, _check } = unmangle(unmangle(Run)._source)
-const { COVER } = require('../env/config')
 
 // ----------------------------------------------------------------------------------------------
 // Source

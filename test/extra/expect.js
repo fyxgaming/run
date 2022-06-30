@@ -8,7 +8,6 @@ const { describe, it, afterEach } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../env/run')
 const { Jig } = Run
-const { COVER } = require('../env/config')
 const unmangle = require('../env/unmangle')
 const { createTestExtrasRun } = require('../env/misc')
 const SI = unmangle(unmangle(Run)._Sandbox)._intrinsics
