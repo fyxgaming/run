@@ -89,6 +89,9 @@ require('./kernel/upgrade')
 require('./kernel/upgradable')
 require('./kernel/version')
 
+require('./kernel/functions/encode-jig-json')
+require('./kernel/functions/recreate-jigs-from-states')
+
 require('./plugins/blockchain-wrapper')
 require('./plugins/browser-cache')
 require('./plugins/cache-wrapper')
