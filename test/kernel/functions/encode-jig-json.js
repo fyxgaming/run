@@ -1,7 +1,7 @@
 const { describe, it } = require('mocha')
 const { expect } = require('chai')
 const Run = require('../../env/run')
-const { Jig, Code } = Run
+const { Jig } = Run
 
 describe('recreateJigsFromStates', () => {
   it('basic class and instance', async () => {
