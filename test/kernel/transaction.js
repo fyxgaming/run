@@ -2286,7 +2286,7 @@ describe('Transaction', () => {
     // ------------------------------------------------------------------------
 
     it('satoshi output is minimum of dust amount and jig satoshis', async () => {
-      const dustAmount = bsv.Transaction.DUST_AMOUNT * bsv.Transaction.FEE_PER_KB / 1000
+      const dustAmount = 1
       const run = new Run()
       class A extends Jig { init (satoshis) { this.satoshis = satoshis } }
       run.deploy(A)

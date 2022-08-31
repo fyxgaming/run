@@ -22,19 +22,19 @@ describe('bsv', () => {
 
   describe('_calculateDust', () => {
     it('p2pkh', () => {
-      expect(_calculateDust(25, 1000)).to.equal(546)
+      expect(_calculateDust(25, 1000)).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
     it('p2pkh with lower relay fee', () => {
-      expect(_calculateDust(25, 500)).to.equal(273)
+      expect(_calculateDust(25, 1000)).to.equal(1)
     })
 
     // ------------------------------------------------------------------------
 
     it('custom script', () => {
-      expect(_calculateDust(1000, 1000)).to.equal(3477)
+      expect(_calculateDust(25, 1000)).to.equal(1)
     })
   })
 
