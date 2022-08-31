@@ -1,6 +1,6 @@
 {
   "name": "@fyxgaming/run",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Run Javascript library",
   "license": "MIT",
   "main": "dist/run.node.min.js",
